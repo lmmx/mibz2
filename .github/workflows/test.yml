@@ -72,9 +72,9 @@ jobs:
           cargo build --release --features character --example character
           mkdir chr-smoke
           python3 bench/character_run.py --bin target/release/examples/character --corpus chr.bz2 \
-            --single chr.bz2 --out chr-smoke --rounds 2 --reps 1 --settle 0 --per-block-rounds 1 \
-            --pmu-repeats 1 --api-rounds 1
-          python3 -c 'import json,sys; r=[json.loads(l) for l in open("chr-smoke/runs.jsonl")]; g=[x for x in r if x.get("section")=="grid"]; bad=[x["k"] for x in g if not x.get("identities_ok")]; f=[x for x in r if x.get("kind")=="failed"]; print(len(g), "grid decodes; identities failing at", bad, "; failed", len(f)); sys.exit(1 if bad or f or len(g)!=40 else 0)'
+            --single chr.bz2 --out chr-smoke --rounds 2 --band-rounds 2 --reps 1 --settle 0 \
+            --per-block-rounds 1 --pmu-repeats 1 --api-rounds 1 --prewarm 0
+          python3 -c 'import json,sys; r=[json.loads(l) for l in open("chr-smoke/runs.jsonl")]; g=[x for x in r if x.get("section")=="grid"]; bad=[(x["k"], [c["name"] + ": " + c["detail"][:300] for c in x["identities"] if not c["ok"]]) for x in g if not x.get("identities_ok")]; f=[x for x in r if x.get("kind")=="failed"]; print(len(g), "grid decodes; identities failing at", bad, "; failed", len(f)); sys.exit(1 if bad or f or len(g)!=40 else 0)'
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::

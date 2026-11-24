@@ -1950,24 +1950,25 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # occupancy). Every decode in a fresh process (examples/character.rs), driven by
 # bench/character_run.py:
 # - the grid: production's lazy workers at every count from 1 to 20 (a window of 4k), 12
-#   randomised complete rounds, an observation 3 decodes, the ledgers on, settle 1 s; every
-#   block's row in the first 4 rounds;
+#   randomised complete rounds and 4 more at 7 to 16 (the noisy band), after 50 s of discarded
+#   pre-warm; an observation 3 decodes, each in its own process with the ledgers on, settle 1 s;
+#   every block's row in the first 4 rounds;
 # - the ledgers' cost, interleaved: 6 pairs, off and on, at 1, 10 and 20;
-# - the counters at 1, 6, 8, 10, 12 and 20 (two groups, 3 each), where the PMU counts; the
+# - the counters at 1, 8, 10, 16 and 20 (two groups, 3 each), where the PMU counts; the
 #   memory controller where `perf stat -a` can count it;
 # - the public API's sweep: `BzReader::parallel` at 1 to 20 threads asked, 3 rounds.
 # bench/character.py reports each count's demand, waits, occupancy and limit, the operational
 # laws, k* with its interval and the near-optimal set, and writes the TSVs for math-targets.
-# About 20 minutes with the build. DRY (the first positional argument: two rounds, one decode
+# About 23 minutes with the build. DRY (the first positional argument: two rounds, one decode
 # an observation, no settle; not evidence) checks the wiring.
 #   just submit bench-character
 bench-character DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
-    COPIES=4 ROUNDS=12 REPS=3 SETTLE=1 SEED=20261124 BLOCK_ROUNDS=4 PMU_REPEATS=3 API_ROUNDS=3
+    COPIES=4 ROUNDS=12 BAND_ROUNDS=16 REPS=3 SETTLE=1 SEED=20261124 BLOCK_ROUNDS=4 PMU_REPEATS=3 API_ROUNDS=3 PREWARM=50
     dry="{{DRY}}"
-    [ -z "$dry" ] || { ROUNDS=2; REPS=1; SETTLE=0; BLOCK_ROUNDS=1; PMU_REPEATS=1; API_ROUNDS=1; }
+    [ -z "$dry" ] || { ROUNDS=2; BAND_ROUNDS=3; REPS=1; SETTLE=0; BLOCK_ROUNDS=1; PMU_REPEATS=1; API_ROUNDS=1; PREWARM=2; }
     W=$PWD/target/character
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
@@ -2032,17 +2033,20 @@ bench-character DRY="":
     done > "$O/frequency-policy.txt"
     echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
     echo "thp: $(cat /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    echo "rapl energy readable: $([ -r /sys/class/powercap/intel-rapl:0/energy_uj ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+    grep -m1 microcode /proc/cpuinfo >> "$O/frequency-policy.txt" || true
     uname -a > "$O/uname.txt"
     # the census of the open kernel's blocks (one copy, untimed), for the features' join
     "$CEN" "$corpus" "$O/census.tsv"
     # the run
     python3 bench/character_run.py --bin "$CH" --corpus "$W/wikidata-x$COPIES.bz2" --single "$corpus" \
-      --out "$O" --rounds $ROUNDS --reps $REPS --settle $SETTLE --seed $SEED \
+      --out "$O" --rounds $ROUNDS --band-rounds $BAND_ROUNDS --reps $REPS --settle $SETTLE --seed $SEED --prewarm $PREWARM \
       --per-block-rounds $BLOCK_ROUNDS --pmu-repeats $PMU_REPEATS --api-rounds $API_ROUNDS \
       || echo "bench-character: the driver failed (console.log says why); the bundle is kept"
     date -u +%FT%TZ > "$O/timed.txt"
     python3 bench/character.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --features "$O/features.tsv" \
-      --lscpu-e "$O/lscpu-e.txt" --blocks-dir "$O" --tsv-dir "$O/tsv" --rounds $ROUNDS --reps $REPS --api-rounds $API_ROUNDS \
+      --lscpu-e "$O/lscpu-e.txt" --blocks-dir "$O" --tsv-dir "$O/tsv" --rounds $ROUNDS --band-rounds $BAND_ROUNDS --reps $REPS --api-rounds $API_ROUNDS \
       --seed $SEED | tee "$O/report.txt" \
       || echo "bench-character: VOID, no report (report.txt says why); the bundle is kept"
     date -u +%FT%TZ > "$O/finished.txt"

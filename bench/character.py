@@ -41,15 +41,19 @@ import sys
 
 ACT = [
     "A0", "feed_wait", "in_wait", "in_maint", "A2", "A3", "slot_wait", "issue", "job_wait",
-    "A5", "pool", "A6a", "A6b", "A6c", "A7", "A8", "A9", "publish", "A10", "read_wait", "resid",
+    "A5", "pool", "A6a", "A6b", "A6c", "A7", "A8", "A9", "publish", "A10", "read_wait",
+    "lock_state", "lock_jobs", "resid",
 ]  # fmt: skip
-WAITS = {"feed_wait", "in_wait", "slot_wait", "job_wait", "read_wait"}
+WAITS = {"feed_wait", "in_wait", "slot_wait", "job_wait", "read_wait", "lock_state", "lock_jobs"}
 WORKER_ACT = ["A5", "pool", "A6a", "A6b", "A6c", "A7", "A8", "A9", "publish", "resid"]
 SCANNER_ACT = ["in_maint", "A2", "A3", "issue", "resid"]
 BUFFERS = ["admitted", "queued", "executing", "ready", "ready_bytes"]
 GRID = list(range(1, 21))
 COST_COUNTS = [1, 10, 20]
-ANCHORS = [1, 6, 8, 10, 12, 20]
+ANCHORS = [1, 8, 10, 16, 20]
+BAND = list(range(7, 17))
+# counters whose time running is under this share of their time enabled are rejected
+COVERAGE = 0.99
 OUT_BYTES = 4 * 209_700_196
 PROC = ["wall_s", "bytes", "base_kb", "peak_kb", "mean_kb", "rss_kb_s", "user_s", "sys_s",
         "minflt", "majflt", "nvcsw", "nivcsw"]  # fmt: skip
@@ -197,15 +201,25 @@ def validate(recs: list[dict], a, lscpu: str) -> tuple[list[str], list[str]]:
             void.append(f"grid k {x['k']}: window {x.get('window')}")
         if x.get("on") != 1:
             void.append(f"grid k {x['k']}: the ledgers off")
-    for r in range(a.rounds):
-        for k in GRID:
+    for r in range(max(a.rounds, a.band_rounds)):
+        counts = GRID if r < a.rounds else BAND
+        for k in counts:
             for rep in range(a.reps):
                 n = seen.get((r, k, rep), 0)
                 if n != 1:
                     void.append(f"grid round {r} k {k} rep {rep}: {n} decodes")
+        got = sorted(x["k"] for x in grid if x["round"] == r and x["rep"] == 0)
+        if got != counts:
+            void.append(f"grid round {r}: counts {got}, not the round's {len(counts)}")
         orders = sorted(x["order"] for x in grid if x["round"] == r and x["rep"] == 0)
-        if orders != list(range(20)):
-            void.append(f"grid round {r}: its order is not a permutation of the 20 counts")
+        if orders != list(range(len(counts))):
+            void.append(f"grid round {r}: its order is not a permutation of its counts")
+    # (the corpus resident in the page cache: no decode may fault a page in from disk)
+    for x in dec:
+        if x.get("majflt", 0) > 0:
+            void.append(
+                f"{x.get('section')} k {x.get('k', x.get('requested'))}: {x['majflt']} major faults (the corpus not resident)"
+            )
     cost = [x for x in dec if x.get("section") == "cost"]
     pairs = a.rounds // 2
     for p in range(pairs):
@@ -253,6 +267,7 @@ def main() -> int:
     ap.add_argument("--blocks-dir", required=True)
     ap.add_argument("--tsv-dir", required=True)
     ap.add_argument("--rounds", type=int, default=12)
+    ap.add_argument("--band-rounds", type=int, default=16)
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--api-rounds", type=int, default=3)
     ap.add_argument("--out-bytes", type=int, default=OUT_BYTES)
@@ -279,8 +294,11 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
     notes = [x for x in recs if x.get("kind") == "note"]
     print("# bench-character, stage 1 (diagnostic: decides nothing)\n")
     print(
-        f"{len(grid)} grid decodes ({a.rounds} rounds x 20 counts x {a.reps}), {len(cost)} cost-check decodes, {len(pmu)} counter decodes, {len(imc)} memory-controller decodes, {len(api)} public-API decodes"
+        f"{len(grid)} grid decodes ({a.rounds} rounds of the 20 counts, then rounds to {a.band_rounds} of 7 to 16,"
+        f" {a.reps} decodes an observation), {len(cost)} cost-check decodes, {len(pmu)} counter decodes,"
+        f" {len(imc)} memory-controller decodes, {len(api)} public-API decodes"
     )
+
     for n in notes:
         print(f"note ({n['section']}): {n['note']}")
     if incomplete:
@@ -462,6 +480,7 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         )
     demands(grid, a)
     placement(grid, a)
+    contention(grid, a)
     print(
         "\n## The reader (s a decode, medians: its copy out and the decoder's work in its reads, the"
     )
@@ -479,8 +498,9 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
     boot = []
     by_round = {(x["round"], k): x["gap"] for k in GRID for x in per_obs[k]}
     for _ in range(BOOT):
+        # (the rounds resampled together; a count outside the band has no round past the 12th)
         pick = [rnd.choice(rounds) for _ in rounds]
-        g = {k: [by_round[(r, k)] for r in pick] for k in GRID}
+        g = {k: [by_round[(r, k)] for r in pick if (r, k) in by_round] for k in GRID}
         boot.append(kstar(g))
     found = sorted(b for b in boot if b is not None)
     none = sum(1 for b in boot if b is None)
@@ -566,7 +586,13 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
                 if not xs:
                     continue
                 for ev in xs[0]["pmu"]:
-                    vals = [x["pmu"][ev] for x in xs if x["pmu"].get(ev)]
+                    allv = [x["pmu"][ev] for x in xs if x["pmu"].get(ev)]
+                    # (an observation whose counter ran under 0.99 of its time enabled is rejected)
+                    vals = [v for v in allv if v[1] and v[2] / v[1] >= COVERAGE]
+                    if len(vals) < len(allv):
+                        print(
+                            f"k {k} {ev}: {len(allv) - len(vals)} of {len(allv)} rejected (coverage under {COVERAGE})"
+                        )
                     if not vals:
                         continue
                     scaled = [v[0] * v[1] / v[2] if v[2] else float("nan") for v in vals]
@@ -750,6 +776,73 @@ def demands(grid: list[dict], a) -> None:
             f" {g('idle_admission_ns') / kw:>7.3f} {g('idle_startup_ns') / kw:>7.3f} {g('idle_drain_ns') / kw:>7.3f}"
             f" {g('hol_ns') / 1e9:>10.3f} {g('hol_byte_ns') / 1e9 / wall / 2**20:>8.2f} {g('ready_rest_ns') / 1e9:>11.3f}"
         )
+
+
+def contention(grid: list[dict], a) -> None:
+    """The review decisions §1: the locks' waits apart from the condition variables', each wait
+    for admission's head-of-line block, the phases' faults and system time, and the achieved
+    frequency from cycles over reference cycles (every decode, where the PMU counts)"""
+    m = re.search(r"@\s*([0-9.]+)\s*GHz", open(a.lscpu).read())
+    nominal = float(m.group(1)) if m else float("nan")
+    print(
+        "\n## Locks, admission's head of the line, the phases' faults, the clock (medians a decode)\n"
+        "locks: each role's time acquiring the state lock and the job queue's (ms), apart from its"
+        "\ncondition-variable waits; admission: the scanner's waits by what held them (window,"
+        "\ncap, both), the head-of-line block's state then (queued, executing, ready), its mean age"
+        "\n(ms); the phases' minor faults and system time (ms); GHz: cycles over reference cycles"
+        f"\nat the nominal {nominal} GHz\n"
+    )
+    print(
+        "k   lock scan  wkr   read  | waits w/c/b   HOL q/x/r   age  | minflt s/st/d        sys ms s/st/d    | GHz"
+    )
+    rows = []
+    for k in GRID:
+        xs = [x for x in grid if x["k"] == k]
+        if not xs:
+            continue
+
+        def lock(role):
+            return med(
+                sum(
+                    sum(p[ACT.index("lock_state")] + p[ACT.index("lock_jobs")] for p in t["states"])
+                    for t in x["threads"]
+                    if t["role"] == role
+                )
+                / 1e6
+                for x in xs
+            )
+
+        r = {
+            "k": k,
+            "lock_scanner_ms": lock("Scanner"),
+            "lock_workers_ms": lock("Worker"),
+            "lock_reader_ms": lock("Reader"),
+        }
+        for i, n in enumerate(["window", "cap", "both"]):
+            r[f"adm_{n}"] = med(x.get("admission", {}).get("waits", [0, 0, 0])[i] for x in xs)
+        for i, n in enumerate(["queued", "executing", "ready"]):
+            r[f"hol_{n}"] = med(
+                x.get("admission", {}).get("hol_state", [0, 0, 0, 0])[i] for x in xs
+            )
+        r["hol_age_ms"] = med(x.get("admission", {}).get("hol_age_mean_ns", 0) / 1e6 for x in xs)
+        for i, ph in enumerate(["startup", "steady", "drain"]):
+            r[f"minflt_{ph}"] = med(x["phase_use"][i][0] for x in xs if "phase_use" in x)
+            r[f"sys_ms_{ph}"] = med(x["phase_use"][i][1] * 1e3 for x in xs if "phase_use" in x)
+        ghz = [
+            x["pmu"]["cycles"][0] / x["pmu"]["ref-cycles"][0] * nominal
+            for x in xs
+            if (x.get("pmu") or {}).get("cycles")
+            and (x.get("pmu") or {}).get("ref-cycles")
+            and x["pmu"]["ref-cycles"][0]
+        ]
+        r["ghz"] = med(ghz)
+        rows.append(r)
+        print(
+            f"{k:<3} {r['lock_scanner_ms']:>5.2f} {r['lock_workers_ms']:>5.2f} {r['lock_reader_ms']:>5.2f} |"
+            f" {r['adm_window']:>4.0f}/{r['adm_cap']:.0f}/{r['adm_both']:<4.0f} {r['hol_queued']:>3.0f}/{r['hol_executing']:.0f}/{r['hol_ready']:<4.0f} {r['hol_age_ms']:>5.1f} |"
+            f" {r['minflt_startup']:>5.0f}/{r['minflt_steady']:.0f}/{r['minflt_drain']:<6.0f} {r['sys_ms_startup']:>5.1f}/{r['sys_ms_steady']:.1f}/{r['sys_ms_drain']:<6.1f} | {r['ghz']:.2f}"
+        )
+    write_tsv(os.path.join(a.tsv_dir, "contention.tsv"), list(rows[0].keys()), rows)
 
 
 def placement(grid: list[dict], a) -> None:

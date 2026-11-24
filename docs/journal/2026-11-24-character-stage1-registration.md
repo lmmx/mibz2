@@ -13,7 +13,37 @@ The Coordinator's QUEUED item A folds in ChatGPT Pro's design review (`external/
 - **k\* renamed k_balance** (review §4). The busy-time gap's crossing does not by itself show the scanner limiting: a consumer-limited pipeline can have a positive gap. What shows the scanner limiting is now measured directly: the workers' idle time while the scanner is active (neither waiting for input nor for admission), beside their idle time while it waits for input, and while it waits for admission.
 - **The bound** (review §4): the resources' demands are summed before bounding, X ≤ min(1/D_scan, k/D_wkr, 1/D_read, 1/D_feed), and the report names the resource that binds. The window is an admission ceiling, not a population, so N/ΣD and its knee are labelled a surrogate.
 
-The pinned scanner-profile variant (item B) is a recipe of its own.
+The pinned scanner-profile variant (item B) is a recipe of its own; the review decisions below fold it into stage 2's placement contrast.
+
+## Amended before the data: the review decisions (`briefs/character-review-decisions.md` §1 at 3d273257)
+
+The Coordinator's decisions on all three design reviews (ChatGPT Pro's, Neon's, MONODROMY's record 128; journal §60). Their §1 lists what stage 1 records before its ready tag. Items 1, 3 (the window and cap predicates, the scanner's and reader's own blocks), 4 and 6 are in the section above. The rest:
+- **§1.2, lock waits apart from condition-variable waits.** Every acquisition of the decoder's state lock (`Shared::lock`) and the job queue's (`Jobs::lock`) is an activity of its own (`lock_state`, `lock_jobs`), nested inside whatever the thread was doing. The condition-variable waits (the scanner's for admission, a worker's for a job, the reader's for the next block) are the time left. The lock waits are waits: they count in no thread's busy time.
+- **§1.3, the head-of-line block.** Each wait for admission records `taken`, the block the reader waits for. The report gives, at each count, the waits by what held them (window, cap, both), the head-of-line block's state at each (queued, executing, or ready while the reader was busy), and its mean age since issued.
+- **§1.5, frequency per observation.** Every decode, ledgers on or off, also counts cycles and reference cycles (two fixed counters, no general one taken), enabled for the stopwatch's region. The achieved frequency is cycles over reference cycles at the nominal 3.7 GHz, beside the sampled `scaling_cur_freq`, temperature and throttles. Power: whether RAPL's energy counter is readable is recorded. It is root's on recent kernels, and no sudo is asked.
+- **§1.7, launch hygiene.**
+  - Every child runs with a fixed minimal environment (`PATH`, `LANG`, `LC_ALL`), whatever the shell's.
+  - Every decode has one argument layout: the count two digits wide, the same block-file path, and the treatment named (`none`).
+  - ASLR is left on and recorded, with the microcode.
+  - Any decode with a major fault is VOID: the corpus must be resident.
+  - 50 s of decodes at 10 workers before round 0 are discarded (the thermal pre-warm).
+  - Each line records its position in the run and the count before it, as covariates.
+- **§1.8, one binary for both stages.** The treatments stage 2 needs are runtime switches of this binary (`character::treat`), all off in stage 1. They are read from a treatment file named on the command line, so no environment string changes with the treatment. Off, an activity's end pays one relaxed load more.
+  - **Pacing:** a dependent multiply-add chain of a given iteration count at an activity's end (a fixed count of core cycles, no memory touched).
+  - **The memory dose:** a stream or chase of a given number of bytes of the thread's own scratch, at an activity's end. `src/dose.rs` cannot serve here: its pad runs only on blocks the Cells kernel admits, and on this path LazyCells refuses every block before it.
+  - **The ready bytes' cap.**
+  - **The scanner's CPU.**
+  - **The oracle arms** (#821's supplied codes and #835's scan replay) are on unmerged branches. The Pathfinder has proposed that stage 2 runs them from the four-arm binary, against its own arm A; the Coordinator decides.
+- **§1.9, the phases' faults and system time.** The sampler reads the process's minor faults and system time every 5 ms. The report splits both at the start-up's and steady state's bounds.
+- **§1.10, rounds:** 16 randomised rounds at k = 7–16, 12 elsewhere. Rounds 12–15 hold the band's ten counts alone, in a drawn order.
+- **§1.11, the counters:**
+  - the whole decoder's two groups at {1, 8, 10, 16, 20};
+  - at most 4 general-purpose events a group, the rest fixed;
+  - the manifest (each event's name, type and encoding) in examples/character.rs;
+  - an observation whose counter ran under 0.99 of its time enabled is rejected;
+  - counters gated to the stopwatch.
+- **§1.12, the corpus count.** The 1,724 blocks are 431 distinct × 4. 932 take Open (233 distinct × 4) and 792 do not (198 distinct × 4).
+- **A fix found in CI, not a design change.** On a short input at high counts every block can be issued before the first is taken. That put the steady phase's bounds in the wrong order, so a thread's phases dropped time and the partition check failed (3 in 100 decodes of CI's 15-block smoke input). The steady phase is now empty there: 0 in 200. It cannot occur on the 1,724-block corpus.
 
 ## The question
 
@@ -117,16 +147,16 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
 
 ## The run
 
-- **The grid.** Every count from 1 to 20, in **12 randomised complete rounds**. Each round is every count once, in an order drawn from seed 20261124 (`random.Random(seed·1000 + r)`), never a rising sweep. An observation is 3 decodes with the ledgers on: 240 observations, 720 decodes. Every block's row is kept for the first decode of each observation in rounds 0–3 (80 observations × 1,724 blocks), the rest as totals.
+- **The grid.** Every count from 1 to 20, in **12 randomised complete rounds**, then **4 more rounds at 7–16** (the noisy band; §1.10). Each round is its counts once, in an order drawn from seed 20261124 (`random.Random(seed·1000 + r)`), never a rising sweep. An observation is 3 decodes, each in its own process with the ledgers on: 280 observations, 840 decodes, after 50 s of discarded pre-warm. Every block's row is kept for the first decode of each observation in rounds 0–3 (80 observations × 1,724 blocks), the rest as totals.
 - **The ledgers' cost** (brief §3), interleaved so as to share the drift. After every second round comes one pair at 1, 10 and 20 workers, in a drawn order:
   - 3 decodes with the ledgers off and 3 on;
   - the arm first alternating by pair;
   - 6 pairs in all.
-- **The counters** (brief §3), with the ledgers off. At the anchors 1, 6, 8, 10, 12 and 20, in a drawn order:
+- **The counters** (brief §3; decisions §1.11), with the ledgers off. At the anchors 1, 8, 10, 16 and 20, in a drawn order:
   - **group 1:** cycles, instructions, ref-cycles, branches and branch misses;
   - **group 2:** LLC load misses, `l2_rqsts.miss`, dTLB load misses and `cycle_activity.stalls_mem_any` (Comet Lake's raw codes).
 
-  Each group runs 3 times at each anchor: 36 observations. The counters are opened in-process before the decoder, inherited by its threads, enabled for the decode alone and read once its threads are joined, with each counter's time enabled and running (its coverage). In the preflight, the software group's inherited counts agreed with `getrusage` over the same decode: task clock 0.508 s against 0.509 s, and 576 context switches against 576. Where no hardware PMU counts, the runs are skipped and that is recorded.
+  Each group runs 3 times at each anchor: 30 observations. The counters are opened in-process before the decoder, inherited by its threads, enabled for the decode alone and read once its threads are joined, with each counter's time enabled and running (its coverage). In the preflight, the software group's inherited counts agreed with `getrusage` over the same decode: task clock 0.508 s against 0.509 s, and 576 context switches against 576. Where no hardware PMU counts, the runs are skipped and that is recorded.
 - **The memory controller,** where `perf stat -a` can count `uncore_imc/data_reads/` and `data_writes/` (a `perf_event_paranoid` of 0 or less, or root), at each anchor 3 times, around the whole decode's process. It counts system-wide, so the input's read is included; as uncore bytes they are not attributable per stage. Skipped and recorded where it cannot count; no sudo is asked.
 - **The public API:** 3 rounds, each asking for every count from 1 to 20 once in a drawn order, one decode each.
 - **The structural features,** untimed:
@@ -139,8 +169,9 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
   - minor and major faults, voluntary and involuntary switches;
   - the base, peak and time-weighted mean resident memory (and its kB-seconds);
   - with the ledgers on, each thread's migrations.
-- **The time:** about 20 minutes on the i9 with the build:
-  - the grid: about 4.5 minutes of decoding, 4 of settle and 2 of process starts;
+- **The time:** about 23 minutes on the i9 with the build:
+  - the pre-warm: 50 s;
+  - the grid: about 5.5 minutes of decoding, 4.7 of settle and 2.3 of process starts;
   - the cost check: about 2 minutes;
   - the counters and the memory controller: about 2;
   - the public API: about 1.5.
@@ -209,7 +240,9 @@ The report gives the limits' moves across k.
 - an output is not 4 × 209,700,196 bytes;
 - a grid window is not 4k, or a grid decode ran with the ledgers off;
 - a round's order is not a permutation;
-- a decode lacks its memory or scheduling figures.
+- a decode lacks its memory or scheduling figures;
+- a decode faults a page in from disk (a major fault: the corpus not resident);
+- a band round holds other counts than 7–16.
 
 ## What stage 1 leaves to stage 2
 
@@ -231,7 +264,7 @@ The report gives the limits' moves across k.
   - every block's points come once each;
   - every buffer is empty at the end, its arrivals are the blocks, and Little's law holds exactly;
   - with the ledgers off, nothing is recorded.
-- **`bench/test_character.py`:** 25 checks of the report's rules on synthetic records: k_balance and its absence; each limit; the cost bound; INCOMPLETE; each VOID.
+- **`bench/test_character.py`:** 28 checks of the report's rules on synthetic records: k_balance and its absence; each limit; the cost bound; INCOMPLETE; each VOID.
 - **CI** runs both, then the harness and its driver on the repository's own text (15 blocks, the refused and column routes among them). Every decode's identities must hold in the harness's own check.
 - **A container smoke run** (4 CPUs, 1 copy, 4 rounds of 2; not evidence for the i9) held every identity in all 160 decodes but one. That one was Little's law before its point and its change shared a clock reading, and it is what led to the shared reading.
 

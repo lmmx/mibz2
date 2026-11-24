@@ -5,15 +5,19 @@ every decode in a process of its own (examples/character.rs), in this order.
 1. **The features** (untimed): one copy of the corpus at 1 worker, each block's route, n, r,
    bytes and h1 (`--features`).
 2. **The grid, interleaved with the cost check:**
+   - first, PREWARM seconds of decodes at 10 workers, discarded (the thermal pre-warm);
    - ROUNDS randomised complete rounds: in each, every count from 1 to 20 once, in an order
-     drawn from SEED (never a rising sweep). An observation is REPS decodes at that count, back
-     to back, each with the ledgers on, after SETTLE seconds of sleep.
+     drawn from SEED (never a rising sweep); then rounds to BAND_ROUNDS at 7 to 16 alone (the
+     noisy band). An observation is REPS decodes at that count, back to back, each in its own
+     process with the ledgers on, after SETTLE seconds of sleep. Each child runs in a fixed
+     minimal environment with one argument layout (the count two digits wide), and its line
+     records its position in the run and the count before it.
    - Every block's row is kept for the first decode of each observation in the first
      PER_BLOCK_ROUNDS rounds (`blocks-rNN.tsv`).
    - After every second round, one pair of the instrumentation's cost check: at 1, 10 and 20
      workers in a drawn order, REPS decodes with the ledgers off and REPS on, the arm first
      alternating by pair.
-3. **The counters:** at the anchors 1, 6, 8, 10, 12 and 20, groups 1 and 2, PMU_REPEATS times
+3. **The counters:** at the anchors 1, 8, 10, 16 and 20, groups 1 and 2, PMU_REPEATS times
    each, in a drawn order, the ledgers off. Where the first reads nothing (no hardware PMU),
    the rest are skipped and that is recorded.
 4. **The memory controller:** where `perf stat -a` can count `uncore_imc/data_reads/` and
@@ -38,8 +42,12 @@ import tempfile
 import time
 
 GRID = list(range(1, 21))
+# the noisy band (the review decisions §1.10): 16 rounds there, 12 elsewhere
+BAND = list(range(7, 17))
 COST_COUNTS = [1, 10, 20]
-ANCHORS = [1, 6, 8, 10, 12, 20]
+ANCHORS = [1, 8, 10, 16, 20]
+# the children's environment: fixed and minimal (the decisions §1.7), whatever the shell's
+ENV = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
 BLOCK_COLS = (
     "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tcpu_scan\tcpu_work\tt_issued\tt_enqueued"
     "\tt_got\tt_ready\tt_taken\tt_scan_start\tt_consumed\tq_issued\tq_enqueued\tq_got\tq_ready"
@@ -56,6 +64,10 @@ def main() -> int:
     ap.add_argument("--single", required=True, help="one copy, for the features")
     ap.add_argument("--out", required=True)
     ap.add_argument("--rounds", type=int, default=12)
+    ap.add_argument("--band-rounds", type=int, default=16, help="the rounds at 7-16")
+    ap.add_argument(
+        "--prewarm", type=float, default=50.0, help="seconds of discarded decodes first"
+    )
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--settle", type=float, default=1.0)
     ap.add_argument("--seed", type=int, default=20261124)
@@ -68,9 +80,17 @@ def main() -> int:
     runs = open(os.path.join(out, "runs.jsonl"), "a")
     t0 = time.time()
 
+    position = [0]
+    prev_k = [0]
+
     def child(args: list[str], extra: dict, wrap: list[str] | None = None) -> dict | None:
         cmd = (wrap or []) + [a.bin] + args
-        p = subprocess.run(cmd, capture_output=True, text=True)
+        p = subprocess.run(cmd, capture_output=True, text=True, env=ENV)
+        if extra.get("section") != "prewarm":
+            k = int(args[2]) if args[0] in ("--one", "--api") else 0
+            extra = dict(extra, position=position[0], prev_k=prev_k[0])
+            position[0] += 1
+            prev_k[0] = k
         if p.returncode != 0 or not p.stdout.strip():
             rec = {
                 "kind": "failed",
@@ -96,9 +116,23 @@ def main() -> int:
 
     # 2. the grid and the cost check
     tmp = tempfile.mkdtemp(prefix="character-")
+    tb = os.path.join(tmp, "b.tsv")
+
+    def one(k: int, on: int, pmu: int = 0) -> list[str]:
+        # (one layout for every decode: the count two digits wide, the same block file, the
+        # treatment named, so no argument's length changes with the count or the arm)
+        if os.path.exists(tb):
+            os.remove(tb)
+        return ["--one", a.corpus, f"{k:02d}", str(on), tb, str(pmu), "none"]
+
+    # the thermal pre-warm, discarded (the decisions §1.7): decodes at 10 workers
+    t_warm = time.time()
+    while time.time() - t_warm < a.prewarm:
+        subprocess.run([a.bin] + one(10, 0), capture_output=True, env=ENV)
+    print(f"pre-warm: {time.time() - t_warm:.0f} s, discarded", flush=True)
     pair = 0
-    for r in range(a.rounds):
-        order = GRID[:]
+    for r in range(max(a.rounds, a.band_rounds)):
+        order = (GRID if r < a.rounds else BAND)[:]
         random.Random(a.seed * 1000 + r).shuffle(order)
         bpath = os.path.join(out, f"blocks-r{r:02d}.tsv")
         if r < a.per_block_rounds:
@@ -108,11 +142,8 @@ def main() -> int:
             time.sleep(a.settle)
             for rep in range(a.reps):
                 keep = r < a.per_block_rounds and rep == 0
-                tb = os.path.join(tmp, "b.tsv")
-                if os.path.exists(tb):
-                    os.remove(tb)
                 rec = child(
-                    ["--one", a.corpus, str(k), "1", tb if keep else "-"],
+                    one(k, 1),
                     {"section": "grid", "round": r, "order": o, "rep": rep},
                 )
                 if keep and rec is not None and os.path.exists(tb):
@@ -120,10 +151,10 @@ def main() -> int:
                         for line in g:
                             f.write(f"{k}\t{line}")
             print(
-                f"grid round {r} count {k} ({o + 1}/20), {time.time() - t0:.0f} s",
+                f"grid round {r} count {k} ({o + 1}/{len(order)}), {time.time() - t0:.0f} s",
                 flush=True,
             )
-        if (r + 1) % a.cost_every == 0:
+        if r < a.rounds and (r + 1) % a.cost_every == 0:
             counts = COST_COUNTS[:]
             random.Random(a.seed * 1000 + 500 + pair).shuffle(counts)
             arms = [1, 0] if pair % 2 == 0 else [0, 1]
@@ -132,12 +163,11 @@ def main() -> int:
                     time.sleep(a.settle)
                     for rep in range(a.reps):
                         child(
-                            ["--one", a.corpus, str(k), str(arm), "-"],
+                            one(k, arm),
                             {"section": "cost", "pair": pair, "round": r, "rep": rep, "arm": arm},
                         )
             print(f"cost pair {pair}, {time.time() - t0:.0f} s", flush=True)
             pair += 1
-    shutil.rmtree(tmp, ignore_errors=True)
 
     # 3. the counters
     cells = [(k, g, i) for k in ANCHORS for g in (1, 2) for i in range(a.pmu_repeats)]
@@ -145,10 +175,7 @@ def main() -> int:
     pmu_ok = None
     for n, (k, g, i) in enumerate(cells):
         time.sleep(a.settle)
-        rec = child(
-            ["--one", a.corpus, str(k), "0", "-", str(g)],
-            {"section": "pmu", "repeat": i, "order": n},
-        )
+        rec = child(one(k, 0, g), {"section": "pmu", "repeat": i, "order": n})
         if pmu_ok is None and rec is not None:
             pmu_ok = any(v is not None for v in rec.get("pmu", {}).values())
             if not pmu_ok:
@@ -197,7 +224,7 @@ def main() -> int:
             fd, path = tempfile.mkstemp(prefix="imc-")
             os.close(fd)
             rec = child(
-                ["--one", a.corpus, str(k), "0", "-"],
+                one(k, 0),
                 {"section": "imc", "repeat": i, "order": n},
                 wrap=["perf", "stat", "-a", "-x", ",", "-o", path, *imc, "--"],
             )
@@ -229,8 +256,9 @@ def main() -> int:
         random.Random(a.seed * 1000 + 990 + r).shuffle(order)
         for o, t in enumerate(order):
             time.sleep(a.settle)
-            child(["--api", a.corpus, str(t)], {"section": "api", "round": r, "order": o})
+            child(["--api", a.corpus, f"{t:02d}"], {"section": "api", "round": r, "order": o})
     print(f"public API done, {time.time() - t0:.0f} s", flush=True)
+    shutil.rmtree(tmp, ignore_errors=True)
     runs.close()
     return 0
 

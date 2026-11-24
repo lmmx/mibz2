@@ -133,6 +133,8 @@ mod pmu {
                     0xA3 | 0x14 << 8 | 20 << 24,
                 ),
             ],
+            // (the achieved frequency, every decode: two fixed counters, no general one taken)
+            4 => vec![("cycles", HW, 0), ("ref-cycles", HW, 9)],
             // (the software group: the counters' check where there is no hardware PMU)
             3 => vec![
                 ("task-clock", SW, 1),
@@ -245,6 +247,10 @@ struct Proc {
     temp_mc: Option<(f64, u64)>,
     /// the thermal throttle events over the decode: the cores' summed, the package's
     throttle: (Option<u64>, Option<u64>),
+    /// the process's minor faults and system time at the start, at each sample (ns from the
+    /// ledgers' epoch) and at the end, for the phases' split
+    series: Vec<(u64, f64, f64)>,
+    start_use: [f64; 6],
 }
 
 impl Proc {
@@ -355,12 +361,15 @@ fn measured<R: Read>(
             let (mut sum, mut n) = (0u64, 0u64);
             let mut freq = vec![(0u64, 0u64); th2.freq.len()];
             let (mut tsum, mut tmax, mut tn) = (0u64, 0u64, 0u64);
+            let mut series = Vec::new();
             let mut i = 0u64;
             while !st.load(std::sync::atomic::Ordering::Relaxed) {
                 if let Some(kb) = rss_kb() {
                     sum += kb;
                     n += 1;
                 }
+                let u = usage();
+                series.push((ch::now_ns(), u[2], u[1]));
                 if i % THERMAL_EVERY == 0 {
                     for (f, p) in freq.iter_mut().zip(&th2.freq) {
                         if let Some(v) = read_u64(p) {
@@ -377,7 +386,7 @@ fn measured<R: Read>(
                 i += 1;
                 std::thread::sleep(SAMPLE);
             }
-            (sum, n, freq, tsum, tmax, tn)
+            (sum, n, freq, tsum, tmax, tn, series)
         })
         .expect("the sampler");
     let mut buf = vec![0u8; 4 << 20];
@@ -396,7 +405,7 @@ fn measured<R: Read>(
     let wall = s.elapsed().as_secs_f64();
     stop_hook();
     stop.store(true, std::sync::atomic::Ordering::Relaxed);
-    let (sum, n, freq, tsum, tmax, tn) = sampler.join().expect("the sampler");
+    let (sum, n, freq, tsum, tmax, tn, series) = sampler.join().expect("the sampler");
     let u1 = usage();
     let throttle1 = th.throttles();
     let mut use_ = [0.0; 6];
@@ -422,6 +431,8 @@ fn measured<R: Read>(
                 delta(throttle0.0, throttle1.0),
                 delta(throttle0.1, throttle1.1),
             ),
+            series,
+            start_use: u0,
         },
         r,
     )
@@ -513,6 +524,9 @@ struct ThreadOut {
     cpus: std::collections::BTreeMap<u16, u64>,
     /// its ledger's events past their preallocation
     overflows: u64,
+    /// the scanner's waits for admission: when, the head-of-line block (`taken`), the
+    /// predicates' packing
+    bounds: Vec<(u64, u32, u64)>,
     /// its waits' intervals: the scanner's for admission, a worker's for a job
     gaps: Vec<(u64, u64)>,
     /// the scanner's waits for input
@@ -574,6 +588,7 @@ fn walk(
         abandon: (None, None),
         cpus: std::collections::BTreeMap::new(),
         overflows: l.overflows,
+        bounds: Vec::new(),
         moments: [(0, 0.0, 0.0); NA],
         gaps: Vec::new(),
         in_gaps: Vec::new(),
@@ -743,6 +758,7 @@ fn walk(
                         wait_v = 0;
                     }
                 } else if k == ch::Tag::Bound as u8 {
+                    o.bounds.push((e.ns, e.place, e.x));
                     bound = match ch::bound::unpack(e.x) {
                         (true, true, ..) => 2,
                         (false, true, ..) => 1,
@@ -770,20 +786,55 @@ fn walk(
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     match a.get(1).map(String::as_str) {
-        Some("--one") if a.len() == 6 || a.len() == 7 => one(
-            &a[2],
-            a[3].parse().expect("K"),
-            a[4] == "1",
-            &a[5],
-            a.get(6).map_or(0, |g| g.parse().expect("PMU")),
-        ),
+        Some("--one") if (6..=8).contains(&a.len()) => {
+            treatments(a.get(7).map_or("none", String::as_str));
+            one(
+                &a[2],
+                a[3].parse().expect("K"),
+                a[4] == "1",
+                &a[5],
+                a.get(6).map_or(0, |g| g.parse().expect("PMU")),
+            )
+        }
         Some("--api") if a.len() == 4 => api(&a[2], a[3].parse().expect("THREADS")),
         Some("--features") if a.len() == 4 => features(&a[2], &a[3]),
         _ => {
             eprintln!(
-                "usage: character --one FILE.bz2 K ON BLOCKS.tsv|- [PMU]\n       character --api FILE.bz2 THREADS"
+                "usage: character --one FILE.bz2 K ON BLOCKS.tsv|- [PMU [TREAT]]\n       character --api FILE.bz2 THREADS"
             );
             std::process::exit(2);
+        }
+    }
+}
+
+/// The treatments switched on (`src/character.rs`' `treat`), from TREAT: `none`, or a file of
+/// lines `pace ACTIVITY ITERATIONS`, `dose ACTIVITY BYTES stream|chase`, `ready_cap BYTES`,
+/// `scanner_cpu CPU` (stage 2's; stage 1 runs with none, the same binary)
+fn treatments(spec: &str) {
+    if spec == "none" {
+        return;
+    }
+    let text = std::fs::read_to_string(spec).expect("TREAT");
+    let act = |n: &str| {
+        ACTIVITIES
+            .iter()
+            .position(|a| *a == n)
+            .unwrap_or_else(|| panic!("TREAT: no activity {n}"))
+    };
+    for line in text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+    {
+        let w: Vec<&str> = line.split_whitespace().collect();
+        match w.as_slice() {
+            ["pace", a, n] => ch::treat::set_pace(act(a), n.parse().expect("pace")),
+            ["dose", a, b, k] => {
+                ch::treat::set_dose(Some(act(a)), b.parse().expect("dose"), *k == "chase")
+            }
+            ["ready_cap", b] => ch::treat::set_ready_cap(Some(b.parse().expect("ready_cap"))),
+            ["scanner_cpu", c] => ch::treat::set_scanner_cpu(Some(c.parse().expect("scanner_cpu"))),
+            _ => panic!("TREAT: {line}"),
         }
     }
 }
@@ -889,7 +940,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let data: &'static [u8] = std::fs::read(file).expect("read the input").leak();
     let slots = mibz2::parallel::SLOTS_PER_THREAD * k;
     assert!(!(on && group > 0), "the counters run with the ledgers off");
-    let counters = (group > 0).then(|| pmu::Counters::open(group));
+    // (every decode counts cycles and reference cycles, for its achieved frequency: group 4,
+    // two fixed counters; a counter run's group in their place)
+    let counters = Some(pmu::Counters::open(if group > 0 { group } else { 4 }));
     // the ledgers preallocated for the work ahead (no reallocation while decoding; an overflow
     // is counted): at most a block per 8 KiB of input, about 16 events a block on the scanner
     // and the reader, 20 on a worker
@@ -921,8 +974,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     // (the decoder's threads joined: their counts folded into the inherited counters)
     drop(r);
     let mut line = format!(
-        "{{\"kind\":\"decode\",\"k\":{k},\"on\":{},\"window\":{window},{}",
+        "{{\"kind\":\"decode\",\"k\":{k},\"on\":{},\"window\":{window},\"treat\":{},{}",
         u8::from(on),
+        js(&ch::treat::describe()),
         p.json()
     );
     if let Some(c) = &counters {
@@ -979,7 +1033,30 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             .map(|e| e.ns)
     };
     let t1 = pts(ch::Tag::Taken).min().unwrap_or(0);
-    let t2 = pts(ch::Tag::Issued).max().unwrap_or(0);
+    // (where every block is issued before the first is taken, as on a short input, the steady
+    // phase is empty: its bounds kept in order, so the phases partition each timeline)
+    let t2 = pts(ch::Tag::Issued).max().unwrap_or(0).max(t1);
+    // the phases' minor faults and system time (the sampler's, every 5 ms: each bound's last
+    // reading at or before it)
+    let at = |t: u64| {
+        p.series
+            .iter()
+            .rev()
+            .find(|x| x.0 <= t)
+            .map_or((p.start_use[2], p.start_use[1]), |x| (x.1, x.2))
+    };
+    let (f0, s0) = (p.start_use[2], p.start_use[1]);
+    let ((f1, s1), (f2, s2)) = (at(t1), at(t2));
+    let (f3, s3) = (f0 + p.use_[2], s0 + p.use_[1]);
+    let phase_use = format!(
+        "[[{:.0},{:.6}],[{:.0},{:.6}],[{:.0},{:.6}]]",
+        f1 - f0,
+        s1 - s0,
+        f2 - f1,
+        s2 - s1,
+        f3 - f2,
+        s3 - s2
+    );
     let mut pending_wait = 0;
     let mut threads = Vec::new();
     let mut wi = 0i64;
@@ -1178,7 +1255,7 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         .filter(|t| t.role == Role::Worker)
         .map(|t| {
             (0..NA)
-                .filter(|&i| !ch::is_wait(i as u8))
+                .filter(|&i| !ch::is_wait(i as u8) && !ch::is_lock(i as u8))
                 .map(|i| t.unattributed[i])
                 .sum::<u64>()
         })
@@ -1189,6 +1266,36 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         format!("{wk_un} ns of worker activity outside any block"),
     ));
     let all_ok = checks.iter().all(|c| c.1);
+    // ---- each wait for admission: what held it, and the head-of-line block (the review's §1:
+    // its state then, queued, executing or ready, and its age since issued) ----
+    let mut adm = [0u64; 3]; // window alone, cap alone, both
+    let mut hol_state = [0u64; 4]; // queued, executing, ready (the reader's own pace), unknown
+    let (mut hol_age, mut hol_n) = (0u128, 0u64);
+    for t in threads.iter().filter(|t| t.role == Role::Scanner) {
+        for &(at, taken, x) in &t.bounds {
+            let (w, c, _, _) = ch::bound::unpack(x);
+            adm[match (w, c) {
+                (true, true) => 2,
+                (false, true) => 1,
+                _ => 0,
+            }] += 1;
+            match blocks.get(taken as usize) {
+                Some(b) => {
+                    let st = if b.t[3] <= at {
+                        2
+                    } else if b.t[2] <= at {
+                        1
+                    } else {
+                        0
+                    };
+                    hol_state[st] += 1;
+                    hol_age += u128::from(at.saturating_sub(b.t[0]));
+                    hol_n += 1;
+                }
+                None => hol_state[3] += 1,
+            }
+        }
+    }
     // ---- the gap to the bound, from the timestamps (the queueing-discipline lead) ----
     // the workers' idle time while the scanner waits for admission; in the start-up and in the
     // drain; and the head-of-line blocking: a block ready while an earlier one is not, so the
@@ -1254,8 +1361,16 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     // ---- the line ----
     let _ = write!(
         line,
-        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"gap\":{{\"idle_ns\":{idle_all},\"idle_scanner_active_ns\":{idle_active},\"idle_scanner_input_ns\":{idle_input},\"idle_admission_ns\":{idle_adm},\"idle_startup_ns\":{idle_start},\"idle_drain_ns\":{idle_drain},\"hol_ns\":{hol},\"hol_byte_ns\":{hol_bytes},\"ready_rest_ns\":{ready_rest}}},\"identities_ok\":{all_ok},\"identities\":[",
-        PHASES.map(js).join(",")
+        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"phase_use\":{phase_use},\"admission\":{{\"waits\":[{},{},{}],\"hol_state\":[{},{},{},{}],\"hol_age_mean_ns\":{}}},\"gap\":{{\"idle_ns\":{idle_all},\"idle_scanner_active_ns\":{idle_active},\"idle_scanner_input_ns\":{idle_input},\"idle_admission_ns\":{idle_adm},\"idle_startup_ns\":{idle_start},\"idle_drain_ns\":{idle_drain},\"hol_ns\":{hol},\"hol_byte_ns\":{hol_bytes},\"ready_rest_ns\":{ready_rest}}},\"identities_ok\":{all_ok},\"identities\":[",
+        PHASES.map(js).join(","),
+        adm[0],
+        adm[1],
+        adm[2],
+        hol_state[0],
+        hol_state[1],
+        hol_state[2],
+        hol_state[3],
+        if hol_n > 0 { hol_age / u128::from(hol_n) } else { 0 }
     );
     for (i, (name, ok, why)) in checks.iter().enumerate() {
         let _ = write!(

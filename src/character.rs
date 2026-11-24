@@ -79,6 +79,12 @@ pub enum Tag {
     Read = 18,
     /// waiting for the next block in order
     ReadWait = 19,
+    // any thread
+    /// waiting to acquire the decoder's state lock (`Shared::lock`), apart from waiting on its
+    /// condition variables
+    LockState = 20,
+    /// waiting to acquire the job queue's lock (`Jobs::lock`)
+    LockJobs = 21,
     // points
     /// the scanner: a block given its place (`x`: its symbols' bytes)
     Issued = 32,
@@ -108,7 +114,7 @@ pub enum Tag {
 }
 
 /// The activities and waits, in `Tag` order (their names in the ledgers)
-pub const ACTIVITIES: [&str; 20] = [
+pub const ACTIVITIES: [&str; 22] = [
     "A0",
     "feed_wait",
     "in_wait",
@@ -129,11 +135,203 @@ pub const ACTIVITIES: [&str; 20] = [
     "publish",
     "A10",
     "read_wait",
+    "lock_state",
+    "lock_jobs",
 ];
 
 /// Whether an activity is a wait (its begin and end read the thread's CPU time)
 pub fn is_wait(t: u8) -> bool {
     matches!(t, 1 | 2 | 6 | 8 | 19)
+}
+
+/// Whether an activity is a lock's acquisition (a wait, but too short and frequent for the CPU
+/// time's system call at its ends: about 7 a block)
+pub fn is_lock(t: u8) -> bool {
+    matches!(t, 20 | 21)
+}
+
+/// Research treatments switched at run time, so that one binary serves stage 1 (all off) and
+/// stage 2 (the brief's pacing, gates, placement and memory dose). Off, `end` pays one relaxed
+/// load more.
+pub mod treat {
+    use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, AtomicUsize, Ordering};
+
+    pub(super) static ANY: AtomicBool = AtomicBool::new(false);
+    /// each activity's pacing: dependent-ALU iterations at its end (0: none)
+    pub(super) static PACE: [AtomicU64; super::ACTIVITIES.len()] =
+        [const { AtomicU64::new(0) }; super::ACTIVITIES.len()];
+    /// the memory dose: its activity (`u64::MAX`: none), its bytes, and whether a chase
+    pub(super) static DOSE_AT: AtomicU64 = AtomicU64::new(u64::MAX);
+    pub(super) static DOSE_BYTES: AtomicUsize = AtomicUsize::new(0);
+    pub(super) static DOSE_CHASE: AtomicBool = AtomicBool::new(false);
+    /// the ready bytes' cap (0: the decoder's own)
+    pub(super) static READY_CAP: AtomicUsize = AtomicUsize::new(0);
+    /// the scanner's CPU (-1: unpinned)
+    pub(super) static SCANNER_CPU: AtomicI32 = AtomicI32::new(-1);
+
+    /// The pacing of activity `t`: `iters` iterations of a dependent multiply-add chain at each of
+    /// its ends (no memory touched; a fixed count of core cycles, not a wall-clock deadline,
+    /// which droop and preemption would shorten)
+    pub fn set_pace(t: usize, iters: u64) {
+        PACE[t].store(iters, Ordering::SeqCst);
+        refresh();
+    }
+    /// The memory dose at each end of activity `t`: `bytes` of this thread's own scratch,
+    /// streamed (one read and one write a 64-byte line) or chased (one dependent load a line,
+    /// a random single cycle); `None` for none
+    pub fn set_dose(at: Option<usize>, bytes: usize, chase: bool) {
+        DOSE_AT.store(at.map_or(u64::MAX, |t| t as u64), Ordering::SeqCst);
+        DOSE_BYTES.store(bytes, Ordering::SeqCst);
+        DOSE_CHASE.store(chase, Ordering::SeqCst);
+        refresh();
+    }
+    /// The ready bytes' cap for decoders built from now on (`None`: the decoder's own)
+    pub fn set_ready_cap(bytes: Option<usize>) {
+        READY_CAP.store(bytes.unwrap_or(0), Ordering::SeqCst);
+    }
+    /// The scanner pinned to `cpu` for decoders built from now on (`None`: unpinned)
+    pub fn set_scanner_cpu(cpu: Option<usize>) {
+        SCANNER_CPU.store(cpu.map_or(-1, |c| c as i32), Ordering::SeqCst);
+    }
+    fn refresh() {
+        let any = PACE.iter().any(|p| p.load(Ordering::Relaxed) > 0)
+            || DOSE_AT.load(Ordering::Relaxed) != u64::MAX;
+        ANY.store(any, Ordering::SeqCst);
+    }
+    /// What is switched on, for the record
+    pub fn describe() -> String {
+        let pace: Vec<String> = PACE
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.load(Ordering::Relaxed) > 0)
+            .map(|(i, p)| format!("{}={}", super::ACTIVITIES[i], p.load(Ordering::Relaxed)))
+            .collect();
+        let dose = DOSE_AT.load(Ordering::Relaxed);
+        format!(
+            "pace[{}] dose[{}] ready_cap[{}] scanner_cpu[{}]",
+            pace.join(","),
+            if dose == u64::MAX {
+                String::new()
+            } else {
+                format!(
+                    "{}:{}:{}",
+                    super::ACTIVITIES[dose as usize],
+                    DOSE_BYTES.load(Ordering::Relaxed),
+                    if DOSE_CHASE.load(Ordering::Relaxed) {
+                        "chase"
+                    } else {
+                        "stream"
+                    }
+                )
+            },
+            READY_CAP.load(Ordering::Relaxed),
+            SCANNER_CPU.load(Ordering::Relaxed)
+        )
+    }
+}
+
+/// (the decoder) the ready bytes' cap switched at run time, if it is
+pub(crate) fn ready_cap() -> Option<usize> {
+    Some(treat::READY_CAP.load(Ordering::Relaxed)).filter(|&c| c > 0)
+}
+
+/// (the scanner, at its start) pinned to its CPU, if one is switched on
+pub(crate) fn place_scanner() {
+    let cpu = treat::SCANNER_CPU.load(Ordering::Relaxed);
+    if cpu < 0 {
+        return;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+        }
+        let mut mask = [0u64; 16];
+        let c = cpu as usize;
+        if c < 1024 {
+            mask[c / 64] |= 1 << (c % 64);
+            // SAFETY: this thread (0), a mask of the size given
+            unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) };
+        }
+    }
+}
+
+/// A dependent multiply-add chain of `n` iterations (the pacing): no memory touched
+#[inline(never)]
+fn spin(n: u64) {
+    let mut x = std::hint::black_box(0x9E37_79B9_7F4A_7C15u64);
+    for _ in 0..n {
+        x = x
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+    }
+    std::hint::black_box(x);
+}
+
+thread_local! {
+    /// the memory dose's scratch, this thread's own: its bytes, and the chase's cycle
+    static SCRATCH: RefCell<(Vec<u8>, Vec<u32>)> = const { RefCell::new((Vec::new(), Vec::new())) };
+}
+
+/// The memory dose: `bytes` of this thread's scratch streamed or chased
+#[inline(never)]
+fn dose(bytes: usize, chase: bool) {
+    SCRATCH.with(|s| {
+        let mut s = s.borrow_mut();
+        let lines = bytes / 64;
+        if lines == 0 {
+            return;
+        }
+        if !chase {
+            if s.0.len() < lines * 64 {
+                s.0 = vec![1u8; lines * 64];
+            }
+            for l in s.0[..lines * 64].chunks_exact_mut(64) {
+                l[0] = l[0].wrapping_add(l[32]);
+            }
+        } else {
+            if s.1.len() != lines * 16 {
+                // a random single cycle through the lines (Sattolo's, a fixed seed), each
+                // line's first word the next line's index
+                let mut perm: Vec<u32> = (0..lines as u32).collect();
+                let mut r = 0x2545_F491_4F6C_DD1Du64;
+                for i in (1..lines).rev() {
+                    r ^= r << 13;
+                    r ^= r >> 7;
+                    r ^= r << 17;
+                    let j = (r % i as u64) as usize;
+                    perm.swap(i, j);
+                }
+                s.1 = vec![0u32; lines * 16];
+                for (i, &next) in perm.iter().enumerate() {
+                    s.1[i * 16] = next;
+                }
+            }
+            let mut at = 0u32;
+            for _ in 0..lines {
+                at = s.1[at as usize * 16];
+            }
+            std::hint::black_box(at);
+        }
+    });
+}
+
+/// (an activity's end) the treatments switched on for it
+#[inline(never)]
+fn treat_at(t: u8) {
+    let i = usize::from(t);
+    if let Some(p) = treat::PACE.get(i) {
+        let n = p.load(Ordering::Relaxed);
+        if n > 0 {
+            spin(n);
+        }
+    }
+    if treat::DOSE_AT.load(Ordering::Relaxed) == i as u64 {
+        dose(
+            treat::DOSE_BYTES.load(Ordering::Relaxed),
+            treat::DOSE_CHASE.load(Ordering::Relaxed),
+        );
+    }
 }
 
 /// A block's routes (`Tag::Route`'s low byte)
@@ -412,9 +610,13 @@ pub fn begin(t: Tag) {
     with(|b| b.push(t, 1, CURRENT, 0, is_wait(t)));
 }
 
-/// An activity ended on this thread (the one on top of its stack)
+/// An activity ended on this thread (the one on top of its stack); a treatment switched on
+/// for it runs first, inside the activity
 #[inline]
 pub fn end(t: Tag) {
+    if treat::ANY.load(Ordering::Relaxed) {
+        treat_at(t as u8);
+    }
     if !on() {
         return;
     }

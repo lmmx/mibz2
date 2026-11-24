@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Checks of bench/character.py, bench-character's report (stage 1), on synthetic records: k*
-and its absence, each count's limit (SCANNER-, WORKER-, ADMISSION-LIMITED, MIXED), the ledgers'
+"""Checks of bench/character.py, bench-character's report (stage 1), on synthetic records:
+k_balance and its absence, each count's limit (SCANNER-, WORKER-, ADMISSION-LIMITED, MIXED), the ledgers'
 cost bound (PERTURBED), INCOMPLETE, and each VOID. The harness's own identities are checked on
 real decodes by tests/character.rs and CI's smoke run."""
 
@@ -13,12 +13,16 @@ import character as cr  # noqa: E402
 
 I9 = "Model name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n"
 XEON = "Model name:                           Intel(R) Xeon(R) Processor @ 2.10GHz\n"
-ROUNDS, REPS, API_ROUNDS = 4, 2, 1
+ROUNDS, BAND_ROUNDS, REPS, API_ROUNDS = 4, 6, 2, 1
 
 
 def args():
     return argparse.Namespace(
-        rounds=ROUNDS, reps=REPS, api_rounds=API_ROUNDS, out_bytes=cr.OUT_BYTES
+        rounds=ROUNDS,
+        band_rounds=BAND_ROUNDS,
+        reps=REPS,
+        api_rounds=API_ROUNDS,
+        out_bytes=cr.OUT_BYTES,
     )
 
 
@@ -30,8 +34,8 @@ def proc(wall=0.3):
 
 def records():
     recs = []
-    for r in range(ROUNDS):
-        for o, k in enumerate(cr.GRID):
+    for r in range(BAND_ROUNDS):
+        for o, k in enumerate(cr.GRID if r < ROUNDS else cr.BAND):
             for rep in range(REPS):
                 x = {"kind": "decode", "section": "grid", "round": r, "order": o, "rep": rep, "k": k,
                      "on": 1, "window": 4 * k, "identities_ok": True, "identities": []}  # fmt: skip
@@ -108,6 +112,9 @@ def main():
         ("a cost arm short", lambda r: r.remove(next(x for x in r if x.get("section") == "cost" and x["k"] == 10)), "cost pair"),
         ("an API count missing", lambda r: r.remove(next(x for x in r if x.get("section") == "api" and x["requested"] == 13)), "api round"),
         ("the ledgers off in the grid", lambda r: next(x for x in r if x.get("section") == "grid").update(on=0), "ledgers off"),
+        ("a major fault (the corpus not resident)", lambda r: next(x for x in r if x.get("section") == "grid" and x["k"] == 9).update(majflt=3), "major faults"),
+        ("a band round missing a count", lambda r: r.remove(next(x for x in r if x.get("section") == "grid" and x["round"] == ROUNDS and x["k"] == 12 and x["rep"] == 0)), "decodes"),
+        ("a count outside the band in a band round", lambda r: r.append(dict(next(x for x in r if x.get("section") == "grid" and x["k"] == 3), round=ROUNDS + 1, order=10)), "counts"),
     ]  # fmt: skip
     for name, fn, phrase in cases:
         void, _ = mutated(fn)

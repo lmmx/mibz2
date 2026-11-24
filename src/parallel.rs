@@ -201,7 +201,10 @@ struct JobQueue {
 
 impl Jobs {
     fn lock(&self) -> std::sync::MutexGuard<'_, JobQueue> {
-        self.q.lock().unwrap_or_else(|e| e.into_inner())
+        ch!(begin LockJobs);
+        let q = self.q.lock().unwrap_or_else(|e| e.into_inner());
+        ch!(end LockJobs);
+        q
     }
 
     fn push(&self, job: Job) {
@@ -375,7 +378,10 @@ impl Shared {
     fn lock(&self) -> std::sync::MutexGuard<'_, State> {
         // (a panic while holding the lock is caught where it happens; the state is
         // consistent at every unlock, so a poisoned lock is still usable)
-        self.state.lock().unwrap_or_else(|e| e.into_inner())
+        ch!(begin LockState);
+        let st = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        ch!(end LockState);
+        st
     }
 
     /// The decode cancelled (under the lock held as `st`): the ready blocks dropped
@@ -678,7 +684,13 @@ impl StreamDecoder {
         slots: usize,
         k: Kernels,
     ) -> StreamDecoder {
-        Self::with_inverse_capped::<I>(threads, slots, k, READY_BYTES)
+        // (research, `character`: the ready bytes' cap switched at run time, for stage 2's gate
+        // contrast; unset, `READY_BYTES`)
+        #[cfg(feature = "character")]
+        let cap = crate::character::ready_cap().unwrap_or(READY_BYTES);
+        #[cfg(not(feature = "character"))]
+        let cap = READY_BYTES;
+        Self::with_inverse_capped::<I>(threads, slots, k, cap)
     }
 
     /// `with_inverse`, with `cap` decoded bytes ready (unread) in place of `READY_BYTES`
@@ -1079,6 +1091,9 @@ impl Source for ChannelSource<'_> {
 }
 
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    // (research, `character`: the scanner pinned to a CPU, switched at run time; unset, none)
+    #[cfg(feature = "character")]
+    crate::character::place_scanner();
     let src = ChannelSource {
         rx,
         buf: Vec::new(),
@@ -1116,7 +1131,8 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 let cap = shared
                     .cap
                     .is_some_and(|c| st.ready.bytes >= c.bytes && ahead >= c.floor);
-                ch!(point Bound, st.issued, crate::character::bound::pack(window, cap, ahead, st.ready.bytes as u64));
+                // (at the head of the line, the block the reader waits for: `taken`)
+                ch!(point Bound, st.taken, crate::character::bound::pack(window, cap, ahead, st.ready.bytes as u64));
             }
             while !st.cancelled && shared.full(&st) {
                 #[cfg(test)]
