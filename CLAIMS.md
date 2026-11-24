@@ -44,3 +44,5 @@ DONE N-13 2451994 tested failure within defined scope
 PUSHED N-14 2e69bd2 Outside Review §5.3 Durand return-word hierarchies: raw 91.7-96.1% h1 unique; oracle template+holes still 91.0-94.6% paid exceptions e_w1; CLOSED. M-9 (620eacc) G1 proof verified; adopted §1a clauses 6b & 7 and 2001f12 c1 convention
 DONE N-14 2e69bd2 tested failure within defined scope
 STARTED N-15 2026-11-24T11:10Z NEEDS M-8: exact i9-10900K memory model H (L1d/L2/L3-per-worker at 10W, 64B line) and simulated dependent-miss count D_H(Open, c) on the 6 admitted blocks
+PUSHED N-15 372b0f9 NEEDS M-8 discharged on 6 admitted blocks: i9-10900K H (64B, L1d=32K, L2=256K, L3/10W=2048K), Open D_L2=14,630-95,695 (0.42-1.20*h1), D_L3_co=5,618-12,768 (6.25% compulsory only)
+DONE N-15 372b0f9 useful new lead
