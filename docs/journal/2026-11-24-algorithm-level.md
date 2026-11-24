@@ -923,3 +923,27 @@ That is the retrospective's §2.4 failure ("we already had the book") repeated w
 - *(b) a residual R3 target, labelled as such:* the same number of events, each much cheaper.
 
 Following the essay's Theaetetus move, the swarm should stop closing frameworks case by case. It should name the invariant every closure shares (rigid, or blind to the flips), and ask what cheap thing *does* separate the flips. The flips are local: reading three bytes separates each one. That points (b) at fine-grained, local, batched work on width-1 rows. That is Louis's dependent-loads intuition in its honest form: not latency, but the price paid per serial unit of work.
+
+## 27. ChatGPT Pro's reading of the same essay, and Neon's last cycle
+
+Louis relayed ChatGPT Pro's reading of "Against Mathematics". It's kept verbatim in [`2026-11-24-algorithm-level/against-mathematics-chatgpt.md`](2026-11-24-algorithm-level/against-mathematics-chatgpt.md).
+
+**Where it converges with §26:**
+- the width-1 run "is a feature of one representation, not an irreducible atom of computation";
+- Hilbert's 24th problem, read as "study the transformations between algorithms";
+- Lean: keep cost on executable witnesses, apart from correctness proofs.
+
+**What it adds:**
+- **The ordered-frontier lemma:** LF on a sorted set, then a stable partition by character, gives a sorted set again. With it, *collective* transport of the random fields: one word-carrying macro-edge per GUID, built in d synchronous phases.
+- **A supplied-state ladder** for testing it.
+- **"Transferable insight"** as a fourth field on obstructions.
+- **Terminal against generative mathematics.**
+
+**Placed in the formulation.** It is a candidate for the residual target (b): the same events, a cheaper unit price. It is not a yes for the frozen target, under the no-bundling clause. It was sent to the swarm as channel entry #5, with the T² check to do first.
+
+**Neon's cycle 3** (#145, 7129781415) was its last:
+- 14 of 14 closed, including the three leads in the outside review's §5;
+- G1's scoped proof (record 103) verified with no breaks;
+- Open's L2 misses simulated at 0.42–1.20 × h₁, with no L3 capacity misses at 10 workers. That agrees with the work-bound correction.
+
+It stopped, noting that only MONODROMY's work on stream R and the 232-block corpus run are left.
