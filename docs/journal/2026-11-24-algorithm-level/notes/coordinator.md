@@ -69,4 +69,8 @@
 - Louis asked whether anything besides copy_if could use the idea. That went to MONODROMY (channel #37).
 
 ## 24 Nov, 22:55 — the evening's report
-- Written at Louis's request as `reports/2026-11-24-evening.md` (journal §50). It covers the formulation, the system, the mathematics and the toy problem, with every figure sourced from a record.
+- Written at Louis's request as `reports/2026-11-24-from-search-to-formulated-problem.md` (journal §50). It covers the formulation, the system, the mathematics and the toy problem, with every figure sourced from a record.
+
+## 24 Nov, 23:10 — ChatGPT Pro's decomposition answer; the recipe brief
+- ChatGPT Pro's answer is recorded verbatim (`external/chatgpt-decomposition.md`). Compared with MONODROMY's and Neon's in journal §51, and merged into `briefs/character.md` for the Pathfinder, to follow the scanner profile.
+- The report is renamed by content, at Louis's instruction: `reports/2026-11-24-from-search-to-formulated-problem.md`.

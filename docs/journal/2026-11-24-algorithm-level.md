@@ -1403,9 +1403,42 @@ The review is `reviews/neon-movement-cycle4-critique.md`. All-in Q at k = 0, wit
 
 ## 50. Report: from a search to a formulated, measurable problem
 
-Louis: "ok nice so basically we are now producing a proper formulation of the task and properly turning it into a toy problem, this is excellent. can you please write a report on what we found and put it in the journal". The report is `reports/2026-11-24-evening.md`. It covers:
+Louis: "ok nice so basically we are now producing a proper formulation of the task and properly turning it into a toy problem, this is excellent. can you please write a report on what we found and put it in the journal". The report is `reports/2026-11-24-from-search-to-formulated-problem.md`. It covers:
 - the formulation;
 - the decoder as a system, with the four-arm ceilings and the decomposition;
 - what has been ruled out, proved and left open in the mathematics;
 - the toy problem as it now stands;
 - the method, and an index of the records.
+
+## 51. The decomposition: three answers compared, and the recipe brief
+
+Three answers to `briefs/decomposition.md`:
+- MONODROMY's record 125, with 123 and 124 (§48);
+- Neon's `DECOMPOSITION.md` (00c08750);
+- ChatGPT Pro's, recorded verbatim in `external/chatgpt-decomposition.md`.
+
+They are merged into `briefs/character.md`.
+
+**All three agree:**
+- the doorman/assemblers split is a coarse topology, not a decomposition;
+- the summation theorem is not a completeness test (ChatGPT Pro's counterexample: J = min(v₁, v₂) sums to 2 for slowdowns and 0 for speedups);
+- drop NUMA, and treat block heterogeneity as covariates;
+- add a serial tail;
+- SMT sharing begins around k = 8–9, because the decoder runs k + 3 threads.
+
+**What ChatGPT Pro adds, and the brief adopts:**
+- **Requested threads are not actual workers.** The policy maps requests of 10 or more to 7 lazy/Open workers and changes the kernel with k. So the mechanism study uses `mibz2-workers-lazy`, with a separate public-API sweep.
+- **The output-to-scanner feedback.** Admission is `issued − taken`, plus the 12 MiB ready threshold. So scanner waiting can come from the consumer or from a long-tail block.
+- **MTF/RLE2 and run formation are one fused activity.** RLE1/CRC stays tiled, and the graph is routed (Open admitted, skipped or fallen back).
+- **Completeness comes from accounting identities, not from the coefficient sum.**
+- **A discrete-event simulation of the network,** driven by per-block service vectors in original order, with fit and held-out counts fixed in advance. Roofline acts as a constraint (MONODROMY), and the response matrix replaces scalar rankings.
+
+**Where they disagreed, and the decisions:**
+- **Dose:** 10% (ChatGPT Pro), 20% (MONODROMY), 25% with pinning (Neon). Decided: **+20% primary, +10% follow-ups.** The 95% half-width at 3% SD over 12 rounds is ±0.105 at 20% against ±0.20 at 10%; the 10% runs check linearity.
+- **Placement:** unpinned primary (ChatGPT Pro, deployment-oriented), with pinned and SMT-sibling runs as targeted checks (Neon).
+- **Anchors:** {1, 6, 8, 10, 12, 20}, with 14 added if the baseline shows the predicted L3 cliff.
+- **The primary model:** the discrete-event network is primary. Roofline (MONODROMY) is a constraint, and control coefficients (Neon) are local rankings.
+
+**Cost:** 240 baseline observations, plus 648 intervention observations (p = 9), plus 36 PMU, plus follow-ups. It is split into two recipes, after the scanner profile.
+
+**Housekeeping:** at Louis's instruction ("do not title things with times of day … title them according to the content or relevance"), the report is renamed `reports/2026-11-24-from-search-to-formulated-problem.md`.
