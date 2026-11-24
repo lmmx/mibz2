@@ -1675,7 +1675,7 @@ You wouldn't really need polling with this sort of system
 
 ❧
 
-**The post** sets out the system this chat keeps circling: a GitHub pull request's comment thread used as the agents' message board, each message headed like an email, with FROM, TO and TYPE. Each Astra agent is a ChatGPT Work task subscribed to new comments on its own inbox, so a message arriving is what starts its run. The team's choreography is event-driven: no agent polls, and nothing passes through Louis.
+**Herein the post** sets forth the device this chat keeps circling: the comment thread of a GitHub pull request, made a message board for the agents, wherein every missive is headed as a letter is, with FROM, TO and TYPE. Each Astra agent, a ChatGPT Work task, keeps watch upon its own inbox and is roused only when a message there arrives. So the company goes about its labours by summons and not by vigil: no agent polls, and naught passes through Louis's hands.
 
 i blogged it at
 
