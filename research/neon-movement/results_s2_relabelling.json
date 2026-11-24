@@ -1,0 +1,759 @@
+{
+  "synth-hex-iid-65536": {
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "s2a_periodic_strided": {
+      "n_segments": 235,
+      "pure_mu1_segments": 230,
+      "by_p_segments": {
+        "2": 212,
+        "3": 23
+      },
+      "by_p_rows": {
+        "2": 864,
+        "3": 140
+      },
+      "by_p_w1": {
+        "2": 835,
+        "3": 125
+      },
+      "w1_in_periodic": 960,
+      "w1_in_periodic_frac": 0.01671,
+      "w1_saved_upper_bound": 469,
+      "w1_saved_frac": 0.00816,
+      "used_affine_steps": 1004,
+      "byte_exact": true,
+      "cost": {
+        "Q": 65536,
+        "Q_over_h1": 1.1406,
+        "Q_acq": 0,
+        "Q_run": 65536,
+        "D": 65536,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.172,
+        "S": 273424,
+        "S_over_n": 4.172,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 346,
+      "ramp_rows": 1049,
+      "ramp_w1": 986,
+      "ramp_w1_frac": 0.01716,
+      "max_ramp_len": 4
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 38131,
+        "param_classes": 15,
+        "collapse_ratio": 2542.07,
+        "exact_shared_w1_frac": 0.5863,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.642,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 34,
+        "mean_rank_discrepancy": 43.5,
+        "zero_discrepancy_pairs": 42
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 57352,
+        "param_classes": 188,
+        "collapse_ratio": 305.06,
+        "exact_shared_w1_frac": 0.0037,
+        "param_shared_w1_frac": 0.9998,
+        "avg_distinct_bytes_in_kmer": 5.141,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 21,
+        "mean_rank_discrepancy": 26.7,
+        "zero_discrepancy_pairs": 77
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 57457,
+        "param_classes": 2197,
+        "collapse_ratio": 26.15,
+        "exact_shared_w1_frac": 0.0,
+        "param_shared_w1_frac": 0.9889,
+        "avg_distinct_bytes_in_kmer": 6.461,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 33,
+        "mean_rank_discrepancy": 43.0,
+        "zero_discrepancy_pairs": 51
+      }
+    }
+  },
+  "synth-tmpl-hex-1000x40": {
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "s2a_periodic_strided": {
+      "n_segments": 166,
+      "pure_mu1_segments": 152,
+      "by_p_segments": {
+        "2": 143,
+        "3": 20,
+        "4": 3
+      },
+      "by_p_rows": {
+        "2": 585,
+        "3": 129,
+        "4": 26
+      },
+      "by_p_w1": {
+        "2": 555,
+        "3": 74,
+        "4": 12
+      },
+      "w1_in_periodic": 641,
+      "w1_in_periodic_frac": 0.01606,
+      "w1_saved_upper_bound": 296,
+      "w1_saved_frac": 0.00742,
+      "used_affine_steps": 740,
+      "byte_exact": true,
+      "cost": {
+        "Q": 81000,
+        "Q_over_h1": 2.0296,
+        "Q_acq": 0,
+        "Q_run": 81000,
+        "D": 81000,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.098,
+        "S": 331968,
+        "S_over_n": 4.098,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 241,
+      "ramp_rows": 742,
+      "ramp_w1": 709,
+      "ramp_w1_frac": 0.01777,
+      "max_ramp_len": 5
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 27302,
+        "param_classes": 15,
+        "collapse_ratio": 1820.13,
+        "exact_shared_w1_frac": 0.4769,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.572,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 128,
+        "mean_rank_discrepancy": 503.5,
+        "zero_discrepancy_pairs": 89
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 34539,
+        "param_classes": 187,
+        "collapse_ratio": 184.7,
+        "exact_shared_w1_frac": 0.1462,
+        "param_shared_w1_frac": 0.9996,
+        "avg_distinct_bytes_in_kmer": 5.094,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 287,
+        "mean_rank_discrepancy": 837.0,
+        "zero_discrepancy_pairs": 90
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 34565,
+        "param_classes": 1802,
+        "collapse_ratio": 19.18,
+        "exact_shared_w1_frac": 0.1449,
+        "param_shared_w1_frac": 0.9871,
+        "avg_distinct_bytes_in_kmer": 6.457,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 256,
+        "mean_rank_discrepancy": 578.9,
+        "zero_discrepancy_pairs": 90
+      }
+    }
+  },
+  "block-0.L": {
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "s2a_periodic_strided": {
+      "n_segments": 659,
+      "pure_mu1_segments": 463,
+      "by_p_segments": {
+        "2": 438,
+        "3": 147,
+        "4": 74
+      },
+      "by_p_rows": {
+        "2": 2029,
+        "3": 1026,
+        "4": 670
+      },
+      "by_p_w1": {
+        "2": 1691,
+        "3": 398,
+        "4": 134
+      },
+      "w1_in_periodic": 2223,
+      "w1_in_periodic_frac": 0.0633,
+      "w1_saved_upper_bound": 936,
+      "w1_saved_frac": 0.02665,
+      "used_affine_steps": 3725,
+      "byte_exact": true,
+      "cost": {
+        "Q": 899931,
+        "Q_over_h1": 25.6274,
+        "Q_acq": 0,
+        "Q_run": 899931,
+        "D": 899931,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.035,
+        "S": 3631356,
+        "S_over_n": 4.035,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 167,
+      "ramp_rows": 509,
+      "ramp_w1": 450,
+      "ramp_w1_frac": 0.01281,
+      "max_ramp_len": 5
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 23503,
+        "param_classes": 15,
+        "collapse_ratio": 1566.87,
+        "exact_shared_w1_frac": 0.4766,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.678,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 936,
+        "mean_rank_discrepancy": 1689.7,
+        "zero_discrepancy_pairs": 15
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 28784,
+        "param_classes": 176,
+        "collapse_ratio": 163.55,
+        "exact_shared_w1_frac": 0.232,
+        "param_shared_w1_frac": 0.9997,
+        "avg_distinct_bytes_in_kmer": 5.217,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1715,
+        "mean_rank_discrepancy": 3233.2,
+        "zero_discrepancy_pairs": 17
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 29570,
+        "param_classes": 1485,
+        "collapse_ratio": 19.91,
+        "exact_shared_w1_frac": 0.1897,
+        "param_shared_w1_frac": 0.9872,
+        "avg_distinct_bytes_in_kmer": 6.541,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 3213,
+        "mean_rank_discrepancy": 4876.3,
+        "zero_discrepancy_pairs": 9
+      }
+    }
+  },
+  "block-2.L": {
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "s2a_periodic_strided": {
+      "n_segments": 667,
+      "pure_mu1_segments": 440,
+      "by_p_segments": {
+        "2": 413,
+        "3": 173,
+        "4": 81
+      },
+      "by_p_rows": {
+        "2": 1995,
+        "3": 1216,
+        "4": 726
+      },
+      "by_p_w1": {
+        "2": 1613,
+        "3": 488,
+        "4": 129
+      },
+      "w1_in_periodic": 2230,
+      "w1_in_periodic_frac": 0.06509,
+      "w1_saved_upper_bound": 919,
+      "w1_saved_frac": 0.02682,
+      "used_affine_steps": 3937,
+      "byte_exact": true,
+      "cost": {
+        "Q": 900000,
+        "Q_over_h1": 26.2682,
+        "Q_acq": 0,
+        "Q_run": 900000,
+        "D": 900000,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.036,
+        "S": 3632016,
+        "S_over_n": 4.036,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 185,
+      "ramp_rows": 561,
+      "ramp_w1": 481,
+      "ramp_w1_frac": 0.01404,
+      "max_ramp_len": 4
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 22966,
+        "param_classes": 15,
+        "collapse_ratio": 1531.07,
+        "exact_shared_w1_frac": 0.4654,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.683,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 854,
+        "mean_rank_discrepancy": 1782.5,
+        "zero_discrepancy_pairs": 16
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 27549,
+        "param_classes": 171,
+        "collapse_ratio": 161.11,
+        "exact_shared_w1_frac": 0.2459,
+        "param_shared_w1_frac": 0.9997,
+        "avg_distinct_bytes_in_kmer": 5.199,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1515,
+        "mean_rank_discrepancy": 3312.4,
+        "zero_discrepancy_pairs": 10
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 28150,
+        "param_classes": 1440,
+        "collapse_ratio": 19.55,
+        "exact_shared_w1_frac": 0.2145,
+        "param_shared_w1_frac": 0.9881,
+        "avg_distinct_bytes_in_kmer": 6.512,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 3124,
+        "mean_rank_discrepancy": 5297.8,
+        "zero_discrepancy_pairs": 11
+      }
+    }
+  },
+  "block-85.L": {
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "s2a_periodic_strided": {
+      "n_segments": 990,
+      "pure_mu1_segments": 645,
+      "by_p_segments": {
+        "2": 600,
+        "3": 252,
+        "4": 138
+      },
+      "by_p_rows": {
+        "2": 3031,
+        "3": 2100,
+        "4": 1344
+      },
+      "by_p_w1": {
+        "2": 2433,
+        "3": 806,
+        "4": 268
+      },
+      "w1_in_periodic": 3507,
+      "w1_in_periodic_frac": 0.06318,
+      "w1_saved_upper_bound": 1496,
+      "w1_saved_frac": 0.02695,
+      "used_affine_steps": 6475,
+      "byte_exact": true,
+      "cost": {
+        "Q": 899935,
+        "Q_over_h1": 16.2139,
+        "Q_acq": 0,
+        "Q_run": 899935,
+        "D": 899935,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.053,
+        "S": 3647260,
+        "S_over_n": 4.053,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 330,
+      "ramp_rows": 1009,
+      "ramp_w1": 871,
+      "ramp_w1_frac": 0.01569,
+      "max_ramp_len": 5
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 34423,
+        "param_classes": 15,
+        "collapse_ratio": 2294.87,
+        "exact_shared_w1_frac": 0.5228,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.693,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 648,
+        "mean_rank_discrepancy": 2165.9,
+        "zero_discrepancy_pairs": 17
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 43719,
+        "param_classes": 181,
+        "collapse_ratio": 241.54,
+        "exact_shared_w1_frac": 0.2576,
+        "param_shared_w1_frac": 0.9998,
+        "avg_distinct_bytes_in_kmer": 5.222,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1067,
+        "mean_rank_discrepancy": 2306.3,
+        "zero_discrepancy_pairs": 19
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 44228,
+        "param_classes": 1672,
+        "collapse_ratio": 26.45,
+        "exact_shared_w1_frac": 0.2424,
+        "param_shared_w1_frac": 0.9925,
+        "avg_distinct_bytes_in_kmer": 6.542,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 2554,
+        "mean_rank_discrepancy": 4146.9,
+        "zero_discrepancy_pairs": 8
+      }
+    }
+  },
+  "block-143.L": {
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "s2a_periodic_strided": {
+      "n_segments": 1443,
+      "pure_mu1_segments": 869,
+      "by_p_segments": {
+        "2": 842,
+        "3": 350,
+        "4": 251
+      },
+      "by_p_rows": {
+        "2": 3865,
+        "3": 2397,
+        "4": 2267
+      },
+      "by_p_w1": {
+        "2": 2967,
+        "3": 740,
+        "4": 317
+      },
+      "w1_in_periodic": 4024,
+      "w1_in_periodic_frac": 0.05544,
+      "w1_saved_upper_bound": 1385,
+      "w1_saved_frac": 0.01908,
+      "used_affine_steps": 8529,
+      "byte_exact": true,
+      "cost": {
+        "Q": 899869,
+        "Q_over_h1": 12.3986,
+        "Q_acq": 0,
+        "Q_run": 899869,
+        "D": 899869,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.077,
+        "S": 3668740,
+        "S_over_n": 4.077,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 395,
+      "ramp_rows": 1209,
+      "ramp_w1": 1026,
+      "ramp_w1_frac": 0.01414,
+      "max_ramp_len": 5
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 45774,
+        "param_classes": 15,
+        "collapse_ratio": 3051.6,
+        "exact_shared_w1_frac": 0.5152,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.702,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 512,
+        "mean_rank_discrepancy": 3525.7,
+        "zero_discrepancy_pairs": 31
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 57909,
+        "param_classes": 177,
+        "collapse_ratio": 327.17,
+        "exact_shared_w1_frac": 0.2519,
+        "param_shared_w1_frac": 0.9999,
+        "avg_distinct_bytes_in_kmer": 5.26,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 658,
+        "mean_rank_discrepancy": 3681.6,
+        "zero_discrepancy_pairs": 31
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 59343,
+        "param_classes": 1799,
+        "collapse_ratio": 32.99,
+        "exact_shared_w1_frac": 0.2239,
+        "param_shared_w1_frac": 0.9938,
+        "avg_distinct_bytes_in_kmer": 6.616,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1664,
+        "mean_rank_discrepancy": 4007.6,
+        "zero_discrepancy_pairs": 23
+      }
+    }
+  },
+  "block-210.L": {
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "s2a_periodic_strided": {
+      "n_segments": 1368,
+      "pure_mu1_segments": 883,
+      "by_p_segments": {
+        "2": 845,
+        "3": 305,
+        "4": 218
+      },
+      "by_p_rows": {
+        "2": 3998,
+        "3": 2035,
+        "4": 1920
+      },
+      "by_p_w1": {
+        "2": 3191,
+        "3": 692,
+        "4": 276
+      },
+      "w1_in_periodic": 4159,
+      "w1_in_periodic_frac": 0.04285,
+      "w1_saved_upper_bound": 1636,
+      "w1_saved_frac": 0.01686,
+      "used_affine_steps": 7953,
+      "byte_exact": true,
+      "cost": {
+        "Q": 899959,
+        "Q_over_h1": 9.2728,
+        "Q_acq": 0,
+        "Q_run": 899959,
+        "D": 899959,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.073,
+        "S": 3665500,
+        "S_over_n": 4.073,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 537,
+      "ramp_rows": 1655,
+      "ramp_w1": 1454,
+      "ramp_w1_frac": 0.01498,
+      "max_ramp_len": 6
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 55553,
+        "param_classes": 15,
+        "collapse_ratio": 3703.53,
+        "exact_shared_w1_frac": 0.5981,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.702,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 314,
+        "mean_rank_discrepancy": 2913.3,
+        "zero_discrepancy_pairs": 38
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 79310,
+        "param_classes": 179,
+        "collapse_ratio": 443.07,
+        "exact_shared_w1_frac": 0.2221,
+        "param_shared_w1_frac": 0.9999,
+        "avg_distinct_bytes_in_kmer": 5.261,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 675,
+        "mean_rank_discrepancy": 2983.1,
+        "zero_discrepancy_pairs": 25
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 80438,
+        "param_classes": 1981,
+        "collapse_ratio": 40.6,
+        "exact_shared_w1_frac": 0.2039,
+        "param_shared_w1_frac": 0.9952,
+        "avg_distinct_bytes_in_kmer": 6.58,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1377,
+        "mean_rank_discrepancy": 2945.9,
+        "zero_discrepancy_pairs": 17
+      }
+    }
+  },
+  "block-207.L": {
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "s2a_periodic_strided": {
+      "n_segments": 1188,
+      "pure_mu1_segments": 793,
+      "by_p_segments": {
+        "2": 773,
+        "3": 246,
+        "4": 169
+      },
+      "by_p_rows": {
+        "2": 4075,
+        "3": 1662,
+        "4": 1516
+      },
+      "by_p_w1": {
+        "2": 3189,
+        "3": 508,
+        "4": 214
+      },
+      "w1_in_periodic": 3911,
+      "w1_in_periodic_frac": 0.06267,
+      "w1_saved_upper_bound": 1722,
+      "w1_saved_frac": 0.02759,
+      "used_affine_steps": 7253,
+      "byte_exact": true,
+      "cost": {
+        "Q": 899998,
+        "Q_over_h1": 14.4214,
+        "Q_acq": 0,
+        "Q_run": 899998,
+        "D": 899998,
+        "D_over_n": 1.0,
+        "P": 2,
+        "P_acq": 1,
+        "P_run": 1,
+        "P_bytes": 1.063,
+        "S": 3657016,
+        "S_over_n": 4.063,
+        "s_cursors": 256,
+        "notes": "1-step strided representation proves exact affine law; contraction on h1 bounded by w1_saved"
+      }
+    },
+    "s2b_monotone_ramps": {
+      "min_len": 3,
+      "n_ramps": 312,
+      "ramp_rows": 954,
+      "ramp_w1": 851,
+      "ramp_w1_frac": 0.01364,
+      "max_ramp_len": 5
+    },
+    "s2c_parameterized_S_sigma": {
+      "k=4": {
+        "bell_bound": 15,
+        "exact_classes": 39223,
+        "param_classes": 15,
+        "collapse_ratio": 2614.87,
+        "exact_shared_w1_frac": 0.5135,
+        "param_shared_w1_frac": 1.0,
+        "avg_distinct_bytes_in_kmer": 3.704,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 450,
+        "mean_rank_discrepancy": 2286.4,
+        "zero_discrepancy_pairs": 17
+      },
+      "k=6": {
+        "bell_bound": 203,
+        "exact_classes": 49521,
+        "param_classes": 173,
+        "collapse_ratio": 286.25,
+        "exact_shared_w1_frac": 0.2543,
+        "param_shared_w1_frac": 0.9999,
+        "avg_distinct_bytes_in_kmer": 5.261,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 616,
+        "mean_rank_discrepancy": 2079.8,
+        "zero_discrepancy_pairs": 11
+      },
+      "k=8": {
+        "bell_bound": 4140,
+        "exact_classes": 50443,
+        "param_classes": 1768,
+        "collapse_ratio": 28.53,
+        "exact_shared_w1_frac": 0.2338,
+        "param_shared_w1_frac": 0.9923,
+        "avg_distinct_bytes_in_kmer": 6.601,
+        "sampled_nontrivial_phi_pairs": 5000,
+        "median_rank_discrepancy": 1863,
+        "mean_rank_discrepancy": 3764.4,
+        "zero_discrepancy_pairs": 7
+      }
+    }
+  }
+}
