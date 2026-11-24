@@ -41,3 +41,8 @@
 - The update adds memory and scheduling metrics per decode: peak and time-averaged RSS, user and system CPU, page faults and context switches.
 - Each decode now runs in a fresh process. In one long-lived process, glibc's per-thread arenas carried earlier decodes' heap forward (1 worker peaked at 80 MB first, 236 MB after 20 workers). A fresh process avoids that without an allocator change.
 - Its last commit also modified 35 unrelated bench files (+3,154/−908), apparently an accidental add of working-tree changes. Returned for a revert commit; no tag until the diff is scoped.
+
+## 24 Nov, 22:20 — the full character: a finer decomposition, put to every member
+- `briefs/decomposition.md`: eight stages and three shared resources.
+- Three linear methods, built around metabolic control analysis (flux control coefficients from small injected slowdowns; the summation theorem checks the decomposition is complete).
+- Sent to MONODROMY (channel #34). Paste prompts were given to Louis for ChatGPT Pro and Neon. The answers become a recipe brief for the Pathfinder after #838 runs.

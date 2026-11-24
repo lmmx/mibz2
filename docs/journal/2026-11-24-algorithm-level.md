@@ -1323,3 +1323,16 @@ Path map, old to new, all under `docs/journal/2026-11-24-algorithm-level/`. Earl
 - `targets.tsv`: T1–T6, each with its stage, oracle, ceilings, obstacle, owner and status;
 - `metrics.tsv`: what is measured and what isn't;
 - `data/measurements-four-arm.tsv`, derived by `scripts/extract_four_arm.py` from the bundle's raw rows, which are kept in `data/`.
+
+## 47. Beyond doorman and assemblers: the full character, measured linearly
+
+Louis asked whether the two-stage picture (scanner and workers) is the true decomposition. He asked for a finer one that establishes "the full character" across 1–20 workers without an exponential run, recalling the systems-biology analogy from the conversation post of 22 November. He wanted it put to every member. The brief is `briefs/decomposition.md`. It covers:
+- **Eight stages and three shared resources:**
+  - S0 input; S1 headers; S2 Huffman; S3 hand-off;
+  - S4 MTF/RLE2; S5 construction; S6 emission; S7 RLE1/CRC/output;
+  - R1 memory bandwidth and LLC; R2 the allocator and faults; R3 SMT pairing.
+- **Three methods, each linear in the number of stages:**
+  1. instrument every boundary, once per count;
+  2. metabolic control analysis: each stage's *flux control coefficient*, from small injected slowdowns, with the summation theorem as a check that the decomposition is complete;
+  3. a queueing-network model fitted to the data and validated on held-out counts.
+- **To MONODROMY (channel #34), ChatGPT Pro and Neon (by paste):** is the decomposition right? What is the minimal design? What should be reasoned about rather than measured? Are control coefficients the right formalism, or are elasticities, causal profiling (Coz) or roofline models better?
