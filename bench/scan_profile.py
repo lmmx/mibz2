@@ -414,7 +414,7 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("--lscpu", required=True)
-    ap.add_argument("--workers", default="1,2,3,4,5,6,7,8,9,10,11,12,14,16,20")
+    ap.add_argument("--workers", default="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20")
     ap.add_argument("--judged", type=int, default=10)
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)

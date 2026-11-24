@@ -5,10 +5,12 @@
 7145028132, commissioned after the four-arm verdict (LOG 7144221012; journal §44).
 
 **Amended before any data** to Louis's finer grid (the brief's amendment at c74884ce, which
-supersedes its grid): every worker count from 1 to 12, then 14, 16 and 20. The amendment also
+supersedes its grid, as Louis then corrected it through the Coordinator): every worker count
+from 1 to 20 inclusive. The amendment also
 adds, at each count, the scanner's and the workers' busy and idle time and the measured
 crossover, and a fitted pipeline model's shift point, checked against the measured grid. The
-first draft's head was e1ba6833; its instrument is unchanged. The recipe is
+first draft's head was e1ba6833, and the first amended one's (1 to 12, 14, 16, 20) a7e251ef;
+the instrument is unchanged. The recipe is
 `just bench-scan-profile`, run as `just submit bench-scan-profile`. The report is
 `bench/scan_profile.py`'s, tested by `bench/test_scan_profile.py`. The workstation conventions are
 bench-four-arm's.*
@@ -66,20 +68,22 @@ estimate, not a measurement.
 - **The corpus and decoder:** 4 copies of `corpora/wikidata.bz2` (checked by its SHA-256), read
   into memory once; production's lazy workers (`BzReader::parallel_workers`, lazy: `OpenCells`, 4
   blocks a worker), unpinned, as in bench-four-arm.
-- **The grid:** every worker count from 1 to 12, then 14, 16 and 20 (15 counts). All unpinned:
+- **The grid:** every worker count from 1 to 20 (20 counts). All unpinned:
   production's lazy workers at exactly k, with the scanner on its own thread beside them, as
   bench-four-arm and bench-supplied-codes ran them.
 - **The rounds:** 20. Each round decodes the corpus twice at each count, the timers on and off:
-  - the counts are rotated by `r mod 15`;
+  - the counts are rotated by `r mod 20`, so each count takes each position exactly once in the
+    20 rounds;
   - the timed decode runs first in even rounds;
   - 2 s of settle precede each decode.
 - **The records:** every timed decode's block totals (summed over its blocks), with the harness's
   check that its blocks are one each of 0..N−1, and every worker's record. Every block's own
-  record is kept only for the first two rounds (30 decodes), which feed the per-block fit and
-  quantiles. Kept for all 300, the file would pass the bundle's 50 MB limit.
-- **The estimate:** about 28 minutes on the i9, the build included. That is 600 decodes: 20
-  minutes of settle and about 3.5 minutes of decoding (§30's and §44's walls: about 1.3 s at 1
-  worker, falling as 1/k to about 0.2 s from 7), plus the build and the corpus.
+  record is kept only for the first two rounds (40 decodes), which feed the per-block fit and
+  quantiles. Kept for all 400, the file would pass the bundle's 50 MB limit.
+- **The estimate:** about 35 minutes on the i9, the build included, within the 40 allowed. That
+  is 800 decodes: about 27 minutes of settle and about 4 minutes of decoding (§30's and §44's
+  walls: about 1.3 s at 1 worker, falling as 1/k to about 0.2 s from 7), plus the build and the
+  corpus.
 - **The expected precision:** the report gives the 95% interval's half-width of each count's mean
   scanner work and mean worker busy time. From the earlier 20-round runs on this decoder, I
   expect it about ±1% at low counts and ±2–3% at 8 or more workers. On the paired timed/untimed

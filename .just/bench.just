@@ -1942,7 +1942,7 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     bash bench/bundle.sh "$O"
 
 # The parallel decoder's serial scanner profiled: work against waiting, by component, at every
-# worker count from 1 to 12, then 14, 16 and 20 (registration
+# worker count from 1 to 20 (registration
 # docs/journal/2026-11-24-scan-profile-registration.md, its classification frozen before the
 # data; the brief docs/journal/2026-11-24-algorithm-level/SCANNER-BRIEF.md at c74884ce, part 1,
 # with Louis's amendment of the grid). DIAGNOSTIC: it
@@ -1959,14 +1959,14 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # the workers' busy and idle time and rho (the scanner's rate over the workers' combined rate);
 # the measured crossover (rho falling through 1) and a pipeline model's fit (a serial stage
 # feeding k workers) with its shift point and residuals; classified at every count, judged at 10
-# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED. About 28 minutes with the build. DRY (the
+# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED. About 35 minutes with the build. DRY (the
 # first positional argument: two rounds, no settle; not evidence) checks the wiring.
 #   just submit bench-scan-profile
 bench-scan-profile DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     PIN=d2705dadd09f70b6af4a0c5ab02156f60d57cba5
-    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,2,3,4,5,6,7,8,9,10,11,12,14,16,20 JUDGED=10
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 JUDGED=10
     dry="{{DRY}}"
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
     W=$PWD/target/scan-profile
