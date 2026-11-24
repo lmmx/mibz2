@@ -44,6 +44,7 @@ BLOCK_COLS = (
     "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tt_issued\tt_enqueued\tt_got\tt_ready"
     "\tt_taken\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool"
     "\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait"
+    "\tv_in_wait\tv_in_maint\tv_A2\tv_A3\tv_slot_wait\tv_r_wait"
 )
 
 

@@ -1,6 +1,6 @@
 # bench-character, stage 1: the decoder's character across 1–20 workers (registration)
 
-*Registered before any data. Brief: `docs/journal/2026-11-24-algorithm-level/briefs/character.md` at c57640c4 (§1–§4, §7a's operational laws, §8), on `docs/journal-algorithm-level`; assignment by the Coordinator, 24 November. Stage 1 of two: the baseline with the public API's sweep. Stage 2 (the interventions, the fractional factorial, the models) is a recipe of its own, after this one's data. A C1a diagnostic: its rule is posted on #145 before the data, and it decides nothing.*
+*Registered before any data. Brief: `docs/journal/2026-11-24-algorithm-level/briefs/character.md` at c57640c4 (§1–§4, §7a's operational laws, §8), with §7b's analysis additions (bbb1a10f; the Coordinator's request of 24 November for visits, service times with their C², classes and occupancy per activity per block), on `docs/journal-algorithm-level`; assignment by the Coordinator, 24 November. Stage 1 of two: the baseline with the public API's sweep. Stage 2 (the interventions, the fractional factorial, the models) is a recipe of its own, after this one's data. A C1a diagnostic: its rule is posted on #145 before the data, and it decides nothing.*
 
 ## The question
 
@@ -70,7 +70,8 @@ Each change is timed under the buffers' own lock, with one clock reading shared 
 
 **The harness** reads every thread's ledger after the decode, in-process. It writes:
 - one JSON line a decode: the process figures, each thread's states (per phase), CPU, waits, scheduler and migrations, the occupancy, the routes and the identities;
-- every block's row: its route, n, r, its bytes, its timestamps and its demand at each activity (scanner and worker), and its reader wait.
+- **each activity's visits' service moments** on each thread: the count, the sum and the sum of squares of each visit's time (begin to end), so the mean service a visit S and its C² come from every decode;
+- every block's row: its route (its class), n, r, its bytes, its timestamps (which rebuild the admission and ready-byte occupancy series exactly), its demand at each activity (scanner and worker), its reader wait, and **its visits** to the activities a block can visit more than once (the scanner's input waits and maintenance, A2 and A3 with their retries, the admission waits, the reader's waits). A worker's visits are its route's, one each (forced flow, checked).
 
 **The phases** (brief §1: steady, start-up and drain apart):
 - start-up, to the first block taken by the reader;
@@ -144,6 +145,8 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
   - the mean worker's utilisation and starvation share;
 - **the buffers:** each one's time-averaged occupancy and high-water mark;
 - **the laws:** each identity's count of decodes holding and failing; the utilisation and bottleneck table;
+- **visits, service and demand** (brief §7b): at each count, each activity's visits a block V, mean service a visit S, its C², and its demand D = V·S;
+- **the closed network** (brief §7b), its population the window N = 4k, its stations the scanner (one server), the workers (k), the reader and the feeder (one each): each station's demand a block, the asymptotic bound X ≤ min(N/ΣD, 1/max(D/servers)), the knee N\* = ΣD/max(D/servers), and the measured X;
 - **k\* and the near-optimal set,** and each count's limit with the limit's moves;
 - **the ledgers' cost,** the counters, the memory controller and the public API;
 - **each route's blocks:** their count, n, r/n and h₁, and their demand per row at each activity at 1, 10 and 20 workers.
@@ -151,7 +154,10 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
 It writes into the bundle's `tsv/`, for the journal's math-targets project (`math-targets/data/`, with their script, once read):
 - `observations.tsv`: one row a decode;
 - `threads.tsv`: one row a thread a grid decode, its states per phase;
+- `service.tsv`: one row a (grid decode, role, activity): its visits, mean service a visit and C²;
 - `per_k.tsv`, `cost.tsv`, `pmu.tsv`, `imc.tsv` where counted, and `api.tsv`.
+
+The rest of §7b is analysis on these same records, for the math-targets scripts and stage 2: the balanced-job bounds, the job classes' demands (the block rows by route), the multiplicative (log) models and the allocation of variation, the fluid approximation's closed-form check on k\*, and the sample-path laws on the fixed trace.
 
 Beside them in the bundle: the block rows (`blocks-r00.tsv` … `blocks-r03.tsv`), `features.tsv` and `census.tsv`.
 

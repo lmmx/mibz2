@@ -451,6 +451,7 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         print(
             f"{s['k']:<3}{X:>8.1f}{1e3 * ds:>11.4f}{1e3 * dw:>12.4f}{1 / max(ds, dw):>19.1f}{X * ds:>8.3f}{X * dw:>7.3f}"
         )
+    demands(grid, a)
     # ---- k* ----
     gaps = {k: [x["gap"] for x in per_obs[k]] for k in GRID}
     ks = kstar(gaps)
@@ -605,6 +606,98 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         + f"k* = {ks}; near-optimal {near}; limits "
         + ", ".join(f"{s['k']}:{s['limit']}" for s in summary)
     )
+
+
+def moments(x: dict) -> dict[tuple[str, str], tuple[float, float, float]]:
+    """{(role, activity): (visits, sum ns, sum of squares)} summed over the role's threads"""
+    out: dict[tuple[str, str], list[float]] = {}
+    for t in x["threads"]:
+        for i, m in enumerate(t.get("moments", [])):
+            if m[0]:
+                v = out.setdefault((t["role"], ACT[i]), [0.0, 0.0, 0.0])
+                v[0] += m[0]
+                v[1] += m[1]
+                v[2] += m[2]
+    return {k: tuple(v) for k, v in out.items()}
+
+
+# the stations of the closed network (brief §7b): a role's activities, and its servers
+STATIONS = [
+    ("scanner", "Scanner", ["in_maint", "A2", "A3", "issue"], lambda k: 1),
+    (
+        "workers",
+        "Worker",
+        ["A5", "pool", "A6a", "A6b", "A6c", "A7", "A8", "A9", "publish"],
+        lambda k: k,
+    ),
+    ("reader", "Reader", ["A10"], lambda k: 1),
+    ("feeder", "Feeder", ["A0"], lambda k: 1),
+]
+SHOWN = [("Scanner", "A2"), ("Scanner", "A3"), ("Scanner", "issue"), ("Scanner", "slot_wait"), ("Worker", "A5"),
+         ("Worker", "pool"), ("Worker", "A6a"), ("Worker", "A6b"), ("Worker", "A6c"), ("Worker", "A7"),
+         ("Worker", "A8"), ("Worker", "A9"), ("Worker", "job_wait"), ("Reader", "read_wait")]  # fmt: skip
+
+
+def demands(grid: list[dict], a) -> None:
+    """Brief §7b: each activity's visits a block V, service a visit S and its C², and its demand
+    D = V·S, at each count (medians over the grid's decodes); the closed network's asymptotic
+    bound and knee, its population the window N = 4k"""
+    rows = []
+    per_k: dict[int, dict[tuple[str, str], list[tuple[float, float, float]]]] = {}
+    for x in grid:
+        for (role, act), (n, sm, sq) in moments(x).items():
+            mean = sm / n
+            var = max(sq / n - mean * mean, 0.0)
+            c2 = var / (mean * mean) if mean > 0 else float("nan")
+            rows.append({"round": x["round"], "k": x["k"], "rep": x["rep"], "role": role, "activity": act,
+                         "visits": n, "blocks": x["blocks"], "mean_ns": mean, "c2": c2})  # fmt: skip
+            per_k.setdefault(x["k"], {}).setdefault((role, act), []).append(
+                (n / x["blocks"], mean, c2)
+            )
+    write_tsv(
+        os.path.join(a.tsv_dir, "service.tsv"),
+        ["round", "k", "rep", "role", "activity", "visits", "blocks", "mean_ns", "c2"],
+        rows,
+    )
+    print(
+        "\n## Visits, service and demand (brief §7b; V visits a block, S µs a visit, C², D = V·S µs a block)\n"
+    )
+    print("k   " + "".join(f"{(r[0] + '.' + c)[:17]:>19}" for r, c in SHOWN))
+    for k in GRID:
+        cells = []
+        for key in SHOWN:
+            v = per_k.get(k, {}).get(key, [])
+            if not v:
+                cells.append(f"{'-':>19}")
+                continue
+            V, S, C = med(t[0] for t in v), med(t[1] for t in v) / 1e3, med(t[2] for t in v)
+            cells.append(f"{V:>5.2f}/{S:>6.1f}/{C:>5.1f}")
+        print(f"{k:<3} " + "".join(cells))
+    print(
+        "\nThe closed network (population N = the window 4k; D each station's demand a block, ms; X blocks a second):"
+    )
+    print("k   N    D_scan  D_wkr/k D_read  D_feed  ΣD      X bound  N*      X measured")
+    for k in GRID:
+        xs = [x for x in grid if x["k"] == k]
+        ds = {}
+        for name, role, acts, servers in STATIONS:
+            vals = []
+            for x in xs:
+                m = moments(x)
+                tot = sum(m.get((role, act), (0, 0.0, 0.0))[1] for act in acts)
+                if role == "Reader":
+                    tot -= m.get(("Reader", "read_wait"), (0, 0.0, 0.0))[1]
+                vals.append(tot / x["blocks"] / 1e6)
+            ds[name] = (med(vals), servers(k))
+        total = sum(d for d, _ in ds.values())
+        dmax = max(d / c for d, c in ds.values())
+        n = 4 * k
+        bound = min(n / total, 1 / dmax) * 1e3
+        knee = total / dmax
+        xm = med(x["blocks"] / x["wall_s"] for x in xs)
+        print(
+            f"{k:<3} {n:<4} {ds['scanner'][0]:>7.4f} {ds['workers'][0] / k:>7.4f} {ds['reader'][0]:>7.4f} {ds['feeder'][0]:>7.4f} {total:>7.4f} {bound:>8.1f} {knee:>6.1f} {xm:>10.1f}"
+        )
 
 
 def blocks_report(a) -> None:

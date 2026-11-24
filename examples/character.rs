@@ -365,6 +365,9 @@ struct Block {
     scan: [u64; NA + 1],
     work: [u64; NA + 1],
     read_wait: u64,
+    /// visits: the scanner's to each activity for this block, and the reader's waits for it
+    scan_v: [u32; NA + 1],
+    read_wait_v: u32,
 }
 
 struct ThreadOut {
@@ -388,6 +391,9 @@ struct ThreadOut {
     unattributed: [u64; NA + 1],
     /// the scanner's waits for admission by what held it: the window, the ready bytes' cap
     slot_bound: [u64; 2],
+    /// each activity's visits' service times (wall, begin to end, nested activities within):
+    /// their count, sum (ns) and sum of squares (ns²), for the means and C²
+    moments: [(u64, f64, f64); NA],
 }
 
 /// Split `[a, b)` across the phases' bounds, adding to `out[phase][i]`
@@ -439,6 +445,7 @@ fn walk(
         visits: [0; NA],
         unattributed: [0; NA + 1],
         slot_bound: [0; 2],
+        moments: [(0, 0.0, 0.0); NA],
     };
     let mut bound = 0usize;
     if ev.is_empty() {
@@ -455,6 +462,9 @@ fn walk(
         o.balanced = false;
     }
     let mut stack: Vec<u8> = Vec::new();
+    let mut opened: Vec<u64> = Vec::new();
+    let mut pend_v = [0u32; NA + 1];
+    let mut wait_v = 0u32;
     let mut last = start.ns;
     let mut wait_from: Option<(u64, u64)> = None;
     // the block this thread's time goes to: a worker's current, or the scanner's pending
@@ -485,8 +495,14 @@ fn walk(
         match e.edge {
             1 => {
                 stack.push(e.tag);
+                opened.push(e.ns);
                 if let Some(a) = act(e.tag) {
                     o.visits[a] += 1;
+                    match ro {
+                        Role::Scanner => pend_v[a] += 1,
+                        Role::Reader if a == ch::Tag::ReadWait as usize => wait_v += 1,
+                        _ => {}
+                    }
                 }
                 if ch::is_wait(e.tag) {
                     wait_from = Some((e.ns, e.cpu));
@@ -498,6 +514,13 @@ fn walk(
             2 => {
                 if stack.pop() != Some(e.tag) {
                     o.balanced = false;
+                }
+                if let (Some(t0), Some(a)) = (opened.pop(), act(e.tag)) {
+                    let d = e.ns.saturating_sub(t0) as f64;
+                    let m = &mut o.moments[a];
+                    m.0 += 1;
+                    m.1 += d;
+                    m.2 += d * d;
                 }
                 if ch::is_wait(e.tag) {
                     if let Some((w0, c0)) = wait_from.take() {
@@ -520,7 +543,11 @@ fn walk(
                         for (a, b) in blocks[p].scan.iter_mut().zip(pend.iter()) {
                             *a += b;
                         }
+                        for (a, b) in blocks[p].scan_v.iter_mut().zip(pend_v.iter()) {
+                            *a += b;
+                        }
                         pend = [0; NA + 1];
+                        pend_v = [0; NA + 1];
                     }
                 }
             }
@@ -560,7 +587,9 @@ fn walk(
                     if let Some(p) = b(blocks, 4) {
                         blocks[p].t[4] = e.ns;
                         blocks[p].read_wait = wait_acc;
+                        blocks[p].read_wait_v = wait_v;
                         wait_acc = 0;
+                        wait_v = 0;
                     }
                 } else if k == ch::Tag::Bound as u8 {
                     bound = usize::from(e.x == 1);
@@ -971,7 +1000,7 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     for (i, t) in threads.iter().enumerate() {
         let _ = write!(
             line,
-            "{}{{\"name\":{},\"role\":\"{:?}\",\"life_ns\":{},\"cpu_ns\":{},\"wait_wall_ns\":{},\"wait_cpu_ns\":{},\"events\":{},\"sched\":[{}],\"migrations\":{},\"states\":[{}],\"visits\":[{}],\"unattributed\":[{}],\"slot_bound\":[{},{}]}}",
+            "{}{{\"name\":{},\"role\":\"{:?}\",\"life_ns\":{},\"cpu_ns\":{},\"wait_wall_ns\":{},\"wait_cpu_ns\":{},\"events\":{},\"sched\":[{}],\"migrations\":{},\"states\":[{}],\"visits\":[{}],\"unattributed\":[{}],\"slot_bound\":[{},{}],\"moments\":[{}]}}",
             if i > 0 { "," } else { "" },
             js(&t.name),
             t.role,
@@ -990,7 +1019,12 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             t.visits.map(|x| x.to_string()).join(","),
             t.unattributed.map(|x| x.to_string()).join(","),
             t.slot_bound[0],
-            t.slot_bound[1]
+            t.slot_bound[1],
+            t.moments
+                .iter()
+                .map(|m| format!("[{},{:.0},{:.6e}]", m.0, m.1, m.2))
+                .collect::<Vec<_>>()
+                .join(",")
         );
     }
     line += "]}";
@@ -1017,7 +1051,11 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             for i in WORK_COLS {
                 let _ = write!(s, "\t{}", b.work[i]);
             }
-            let _ = writeln!(s, "\t{}", b.read_wait);
+            let _ = write!(s, "\t{}", b.read_wait);
+            for i in SCAN_VISITS {
+                let _ = write!(s, "\t{}", b.scan_v[i]);
+            }
+            let _ = writeln!(s, "\t{}", b.read_wait_v);
         }
         f.write_all(s.as_bytes()).expect("write BLOCKS.tsv");
     }
@@ -1026,12 +1064,15 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
 /// The scanner's columns of a block's row: in_wait, in_maint, A2, A3, slot_wait, issue,
 /// residual
 const SCAN_COLS: [usize; 7] = [2, 3, 4, 5, 6, 7, NA];
+/// The scanner's visits in a block's row: in_wait, in_maint, A2, A3, slot_wait (a worker's
+/// visits are its route's, one each: forced flow, checked)
+const SCAN_VISITS: [usize; 5] = [2, 3, 4, 5, 6];
 /// A worker's: A5, pool, A6a, A6b, A6c, A7, A8, A9, publish, residual
 const WORK_COLS: [usize; 10] = [9, 10, 11, 12, 13, 14, 15, 16, 17, NA];
 
 /// The block rows' header (`BLOCKS.tsv`, before the harness's own leading columns)
 #[allow(dead_code)]
-const BLOCK_COLS: &str = "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tt_issued\tt_enqueued\tt_got\tt_ready\tt_taken\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait";
+const BLOCK_COLS: &str = "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tt_issued\tt_enqueued\tt_got\tt_ready\tt_taken\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait\tv_in_wait\tv_in_maint\tv_A2\tv_A3\tv_slot_wait\tv_r_wait";
 
 fn js(s: &str) -> String {
     let mut o = String::from("\"");
