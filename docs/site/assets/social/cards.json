@@ -265,6 +265,13 @@
     "section": " · Research blog",
     "title": "Two centuries of tools: a claimed Riemann proof's toolkit, and our search"
   },
+  "assets/social/blog-2026-11-24-results-without-reasons.png": {
+    "description": "An essay says AI gives mathematics results without reasons. Two models read it and proposed breakthroughs for our decoder; our records undid both.",
+    "foot": "lmmx.github.io/mibz2 · 24 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Results without reasons: checking two AI eurekas against our own records"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
