@@ -34,6 +34,8 @@ def S (c) : ℕ := openPeakScratch c   -- state beyond the output: at most shipp
 
 **Residual, labelled, not a relaxation:** G1 floors the *count* of width-1 events. Nothing here floors their *unit price* α. A route that keeps c₁ ≥ h₁ and lowers α is outside this theorem and is neither a yes nor a no of it.
 
+**Clause 2, made operational (record 108; the stricter reading where the frozen text was silent):** a pass over the run records is charged one event per row whose record it reads to determine something about that row. A pure fold to O(1) words per block (a histogram, a moment) is free. So bulk composition (doubling, T², a frontier round, acquiring a copy plan by walking) is charged per row. Under this convention no known or proposed mechanism reaches the yes; record 108 §3 shows the answer is set by this convention and K, and names what stays open as residuals (b) unit price and (c) instruction count with supplied plans.
+
 5. **Fixed before the data.** These values are fixed before Neon's N-0 measurement (h₁R/h₁ on 𝓕). Under C2 they are never relaxed after any data is seen. Where MONODROMY and Neon disagree, the stricter reading holds, logged in CLAIMS.md.
 
 ## 2. The calculus 𝓡 and its cost (record 98 §1)
