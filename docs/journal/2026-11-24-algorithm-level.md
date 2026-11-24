@@ -1369,3 +1369,34 @@ They differ in two places:
 - **What they add:** MONODROMY adds the leader/helper split inside teams; Neon adds k+3 threads, so SMT oversubscription starts at k = 8–9, turbo droop, and CFS placement.
 
 ChatGPT Pro's answer is pending.
+
+## 49. Neon (movement) cycle 4 reviewed: nothing gets below h₁ with every charge counted
+
+The review is `reviews/neon-movement-cycle4-critique.md`. All-in Q at k = 0, with both acquisition (IET) and emission payload added (Neon's tables added one or the other):
+
+| route | all-in Q / h₁ |
+|---|---|
+| Open walk | 4.31–6.88 |
+| M-17 flat | 1.66–2.83 |
+| CL1 flat | 1.48–2.59 |
+| R⁴ pair flat | 1.32–2.33 |
+
+**Referee's ruling on the edge case.** With R⁴'s four-word payload inlined in its record, Q would be 0.79–1.51·h₁, below h₁ on three blocks. That needs about 2k concurrent cursors and a 3.5 MB per-block record array, with its 4n build uncharged. Π allows s ≤ |Σ| + O(1) cursors (council comparison; channel #18), and under that limit R⁴ costs 2.67–4.18·h₁. **Not admissible.** It is recorded as a metric artefact.
+
+**Results that stand:**
+- **NEEDS M-27 closed negatively,** under record 120's pre-registered rule. Lazy thin contraction leaves m/m₁₆ at 0.89–0.93. The new mechanism: removing interior rows fragments the read schedule 4.1–8.7×, so a 9% cut in links becomes a 15–81% loss.
+- **IET acquisition (0.10–0.34·h₁)** puts acquisition back at its true scale. It is not new: Open's constructor, and record 120 §1.
+
+**Overclaims:**
+- "−70% against Open" counts L1 dictionary reads; link for link the cut is 63–67%.
+- T5.1 and T5.2 show that final LF values depend on the whole input. They do not exclude cheap deferred riders; record 121's Proposition M carries such riders.
+- ΔQ = 0 holds by construction, since every rider is streamed.
+- The four-arm attribution does not follow from the theorems.
+- "Before SMT" contradicts the k + 3 thread count.
+- Passes are understated.
+
+**Recommendations taken into the recipe brief:**
+- Estimate k* from the per-round starvation gap, with a bootstrap interval, rather than a global fit. Fit USL only on k = 1–9.
+- Q-to-seconds exchange rates for emission and construction, from the 232 census blocks.
+- Fuse the `runs.rs` front end into Open's Pass 1 inside the worker, saving a pass. Unmeasured.
+- Pass the Huffman selectors on as a regime hint. Unmeasured.
