@@ -92,6 +92,13 @@ owned-writer = []
 # Changes that visibility and nothing else; never on a production path. Retain while the
 # scorer is in use
 moonshot = []
+# Research only: the census of the open kernel's blocks' structure (src/census.rs,
+# examples/census.rs; docs/journal/2026-11-24-wikidata-block-census.md, #145 LOG 7126445058):
+# each block the open kernel takes gets one record of its retained rows, runs, strips and the
+# retained map's cycles and locality, from an O(n) pass beside the kernel. Never on a
+# production path. Retain while the census's features are in use; remove at the first release
+# review after
+census = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -127,6 +134,11 @@ overflow-checks = true
 # examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+
+# The block census needs its recorder
+[[example]]
+name = "census"
+required-features = ["census"]
 
 # The occupancy instrument (#39) needs the decoder's timeline
 [[example]]

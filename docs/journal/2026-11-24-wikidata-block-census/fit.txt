@@ -1,0 +1,3 @@
+emit: chosen ['rows4_16_share', 'log_strips', 'log_d_p50'] held-out R² 0.656 (cv 0.710); m-only 0.349; gain +0.307; best of 1793 0.667 ['strips_per_m', 'd_lt1024', 'd_lt8192'] (null max p95 0.057263629850690174); ceiling 0.984
+construct: chosen ['log_mean_run', 'strips_per_m', 'log_d_p50'] held-out R² 0.964 (cv 0.953); m-only 0.524; gain +0.440; best of 1793 0.964 ['log_mean_run', 'strips_per_m', 'log_d_p50'] (null max p95 0.05126613403464951); ceiling 0.998
+verdict: ADOPT AS SPEC {'construct': ['m', 'log_mean_run', 'strips_per_m']}

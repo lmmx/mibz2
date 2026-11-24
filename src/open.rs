@@ -754,11 +754,14 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
         if let Some(cap) = Self::cap(r.records().len(), n, p) {
-            if self
+            let ran = self
                 .open
-                .try_run::<true, true>(r.records(), n, p, LIMIT, cap, out)
-                .is_some()
-            {
+                .try_run::<true, true>(r.records(), n, p, LIMIT, cap, out);
+            #[cfg(feature = "census")]
+            if let Some(c) = &ran {
+                crate::census::record(r.records(), n, p, LIMIT, c);
+            }
+            if ran.is_some() {
                 #[cfg(test)]
                 {
                     self.opened += 1;
