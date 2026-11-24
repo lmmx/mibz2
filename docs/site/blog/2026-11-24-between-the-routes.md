@@ -1,7 +1,7 @@
 ---
 title: "Between the routes: Hilbert's lost problem and three ways to undo the BWT"
 image: assets/social/blog-2026-11-24-between-the-routes.png
-description: "An essay against AI mathematics revives Hilbert's lost 24th problem, which names what links our three decoders and what none can remove."
+description: "An essay against AI mathematics revives Hilbert's lost 24th problem, and for our three decoders it shows which steps each saves and which none can."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "An essay against AI mathematics revives Hilbert's lost 24th proble
 
 # Between the routes: Hilbert's lost problem and three ways to undo the BWT
 
-An essay against AI mathematics revives Hilbert's lost 24th problem, which names what links our three decoders and what none can remove.
+An essay against AI mathematics revives Hilbert's lost 24th problem, and for our three decoders it shows which steps each saves and which none can.
 {: .post-dek }
 
 24 November 2026 · 13 min read · [Meta](#6-where-the-question-stands)
@@ -32,10 +32,10 @@ the essay draws three distinctions, and the third of them, a problem Hilbert wro
 published, turns out to be a precise question about mibz2's decoders.
 
 This post sets out the essay's distinctions (§1), our three ways of undoing bzip2's block sort
-(§2), two proposals that readings of the essay produced and what each amounts to (§3), the
+(§2), two proposals that follow from the essay and what each amounts to (§3), the
 transformation between our decoders that Hilbert's problem asks for (§4), what a faster fourth
-decoder would have to be (§5), and where the question stands (§6). Two models' readings of the
-essay, and an audit of the records that answered them, are kept verbatim in our
+decoder would have to be (§5), and where the question stands (§6). The readings and records it
+draws on are kept verbatim in our
 [source record](https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md); the post draws on all of them.
 
 ## 1. The essay: result, proof and method
@@ -85,18 +85,18 @@ We have three exact routes along LF, at very different costs:
 
 No route can shortcut a **width-1 row**, a run of one letter whose neighbours differ, so no stretch
 carries it. On our Wikidata benchmark most of these rows come from
-[random statement IDs](2026-11-20-where-the-decoding-work-goes.md). Our mathematician agent has
-proved a lower bound, G1: in the family of methods these routes belong to, every width-1 row costs
+[random statement IDs](2026-11-20-where-the-decoding-work-goes.md). We have proved a lower
+bound, G1: in the family of methods these routes belong to, every width-1 row costs
 at least one step, which we call an event.
 
 ## 3. Two proposals, and what they amount to
 
-Two models read the essay and, asked for a breakthrough, each proposed one for our decoder.
+So, two ways the essay's ideas might speed up our decoder.
 
 ### Moving scattered rows together
 
-The walk follows one random ID letter by letter before it reaches the next. ChatGPT proposed
-moving all the IDs at once: take the sorted set of rows where the IDs begin, apply LF to all of
+The walk follows one random ID letter by letter before it reaches the next. The first proposal is
+to move all the IDs at once: take the sorted set of rows where the IDs begin, apply LF to all of
 them, and group the results by the letter each row emits. Within one letter LF keeps order, and
 smaller letters land below larger ones, so the result is sorted again with no comparison sort.
 
@@ -128,7 +128,7 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
 
 ### The count of events against their price
 
-The second reading, by Claude, separated two things G1 runs together. G1 floors the *number* of
+The second proposal separates two things G1 runs together. G1 floors the *number* of
 width-1 events. Nothing floors the *price* of each one. A decoder that took the same events far more
 cheaply would sit outside the bound.
 
@@ -260,11 +260,11 @@ to carry.
 
 - doomslide, ["Against Mathematics: A religion of the dead, by the dead, for the dead"](https://doomslide.substack.com/p/against-mathematics),
   Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
-- [The source record](https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md): the prompt, ChatGPT's and Claude's readings, ChatGPT's figures
-  (described), and ChatGPT's audit of the records below (§6), all verbatim.
+- [The source record](https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md): two readings of the essay, their figures
+  (described) and an audit of the records below (§6), all verbatim.
 - [The ordered frontier and the transformation between decoders](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md) and
-  [abbreviation, batching and the block checksum](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md), the mathematician agent's records.
+  [abbreviation, batching and the block checksum](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md), our research records.
 - [Toy-transfer](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md), the lanes experiments with their later correction, and
   [the squared map](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md).
 - The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes
-  test are from ChatGPT's audit (source record §6); the witnesses were checked independently.
+  test are from the audit (source record §6); the witnesses were checked independently.
