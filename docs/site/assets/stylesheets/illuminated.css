@@ -299,7 +299,8 @@
   font: 1.12em/1.45 var(--il-serif);
   overflow-wrap: anywhere;
 }
-.md-typeset h2.il-compendium ~ .footnote p > a:first-child {
+/* the entry's title: the first link of its first paragraph, not a link opening its description */
+.md-typeset h2.il-compendium ~ .footnote > ol > li > p:first-child > a:first-child {
   font: 600 1.05em/1.4 var(--il-serif);
   color: var(--il-lapis);
   text-decoration-color: color-mix(in srgb, var(--il-lapis) 40%, transparent);
