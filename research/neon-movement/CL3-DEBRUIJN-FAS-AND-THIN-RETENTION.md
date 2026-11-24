@@ -1,8 +1,8 @@
 # CL3 — De Bruijn 2-Digit FAS Key $\kappa$ (MONODROMY 116 §4) & Thin-Run Retention Sweep (Channel `#27`)
 
-- **Script:** [`cl3_debruijn_fas_and_thin_retention.py`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/cl3_debruijn_fas_and_thin_retention.py)
-- **Raw data:** [`results_cl3_debruijn_fas_and_thin_retention.json`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/results_cl3_debruijn_fas_and_thin_retention.json)
-- **Verification:** Byte-exact against [`common.reference_decode`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/common.py) on `synth-hex-iid-65536` (both row order and $\kappa$-order, both M-17 and CL1) and across all $6 \times 5 = 30$ `(block, L_min)` configurations on the 6 admitted Wikidata blocks.
+- **Script:** [`cl3_debruijn_fas_and_thin_retention.py`](cl3_debruijn_fas_and_thin_retention.py)
+- **Raw data:** [`results_cl3_debruijn_fas_and_thin_retention.json`](results_cl3_debruijn_fas_and_thin_retention.json)
+- **Verification:** Byte-exact against [`common.reference_decode`](common.py) on `synth-hex-iid-65536` (both row order and $\kappa$-order, both M-17 and CL1) and across all $6 \times 5 = 30$ `(block, L_min)` configurations on the 6 admitted Wikidata blocks.
 
 ---
 
@@ -31,7 +31,7 @@ By Theorem O, every non-trivial $3$-cycle $(a, b) \to (c, a) \to (b, c) \to (a, 
 
 ### 2.2 Results on $B(16, 2)$ and `synth-hex-iid-65536` ($n = 65,536$, $h_1 = 57,458$)
 
-Swap local search ([`build_debruijn_fas_key_hex`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/cl3_debruijn_fas_and_thin_retention.py#L43-L146)) finds a fixed 256-entry key $\kappa$ with **$2,703 / 4,096 = 65.99\%$** descents — only **$17 / 4,096$ ($0.42\%$) below Theorem O's $2/3$ ceiling** (vs `2,040 / 4,096 = 49.80%` for lexicographic order).
+Swap local search ([`build_debruijn_fas_key_hex`](cl3_debruijn_fas_and_thin_retention.py#L43-L146)) finds a fixed 256-entry key $\kappa$ with **$2,703 / 4,096 = 65.99\%$** descents — only **$17 / 4,096$ ($0.42\%$) below Theorem O's $2/3$ ceiling** (vs `2,040 / 4,096 = 49.80%` for lexicographic order).
 
 | Order on `synth-hex-iid-65536` (raw `LF`, byte-exact) | Empirical descent frac | 1-sweep M-17 links (`mean len`, `/ h_1`) | `CL1` 2-sweep links (`mean len`, `/ h_1`) | Exact `+1` `LF` segments in order |
 |---|---:|---:|---:|---:|

@@ -1,16 +1,16 @@
 # CL4 — Zero-Per-Row-Glue Endpoint-Only Acquisition of `CL1`'s $B_P$ Schedule
 
 - **Task:** Third requirement of `chatgpt-closure.md` §5 & Channel `#27` (*"its construction must not require following the transitions it replaces"*), plus the positive answer to Channel `#27`'s sharp enrichment question (*"which later operation is necessary only because an earlier stage failed to retain information it already met?"*).
-- **Script & Data:** [`cl4_endpoint_schedule_acquisition.py`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/cl4_endpoint_schedule_acquisition.py), [`results_cl4_endpoint_schedule_acquisition.json`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/results_cl4_endpoint_schedule_acquisition.json).
-- **Verification:** Byte-exact against [`common.reference_decode`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/common.py) on all **8/8 blocks** (pure novel hex, templated 40-hex, and all 6 admitted Wikidata blocks), running `CL1` Sweep 1 + Sweep 2 directly from the endpoint-built schedule with **`R[0..m)` and `R_word_id[0..m)` never allocated**.
+- **Script & Data:** [`cl4_endpoint_schedule_acquisition.py`](cl4_endpoint_schedule_acquisition.py), [`results_cl4_endpoint_schedule_acquisition.json`](results_cl4_endpoint_schedule_acquisition.json).
+- **Verification:** Byte-exact against [`common.reference_decode`](common.py) on all **8/8 blocks** (pure novel hex, templated 40-hex, and all 6 admitted Wikidata blocks), running `CL1` Sweep 1 + Sweep 2 directly from the endpoint-built schedule with **`R[0..m)` and `R_word_id[0..m)` never allocated**.
 
 ---
 
 ## 1. Exact Construction (Retaining `src/runs.rs` Interval Structure)
 
-In [`common.build_retained_system_genuine`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/common.py), wiring `R[0..m)` and `R_word_id[0..m)` after thick-strip contraction required `Q_acq_glue = m` per-row lookups (`89,874–204,281` probes on Wikidata) and `8m` bytes (`702–1,596 KB`) to store `(R, R_word_id)`. That per-row glue pass was necessary **only** because the earlier stage (`src/runs.rs`) discarded the contiguous run intervals of retained rows after classifying thick vs thin runs.
+In [`common.build_retained_system_genuine`](common.py), wiring `R[0..m)` and `R_word_id[0..m)` after thick-strip contraction required `Q_acq_glue = m` per-row lookups (`89,874–204,281` probes on Wikidata) and `8m` bytes (`702–1,596 KB`) to store `(R, R_word_id)`. That per-row glue pass was necessary **only** because the earlier stage (`src/runs.rs`) discarded the contiguous run intervals of retained rows after classifying thick vs thin runs.
 
-[`build_p_schedule_endpoint_only`](file:///home/antigravity/lmmx/mibz2/research/neon-movement/cl4_endpoint_schedule_acquisition.py#L43-L350) retains those interval endpoints directly:
+[`build_p_schedule_endpoint_only`](cl4_endpoint_schedule_acquisition.py#L43-L350) retains those interval endpoints directly:
 
 1. **Single streaming pass over `IN` (`r` runs, $Q = 0$, $s = 256$ cursors):**
    - Collect maximal contiguous retained intervals `M_intervals` (`1,353–4,115` intervals on Wikidata) with prefix retained-rank offsets `m_rank_off` (and locate `mark_rank` in $O(|\text{M\_intervals}|)$).

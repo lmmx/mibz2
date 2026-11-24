@@ -71,6 +71,36 @@ Following [`ESSENCE.md`](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba6
 
 ---
 
+## Cycle 3 — The Closure Problem (`CL1–CL4`, Channel `#26–#27`, `chatgpt-closure.md` §5)
+
+Following channel entries `#26–#27`, journal §42, `chatgpt-closure.md` (at `c1eee5da`), and MONODROMY record 116:
+- **Channel `#26` corrections applied** (`c2f7e0b`): superseded Cycle-1 claims struck in place in `README.md`, `S4`, `S5`; Cycle-2 claims tightened in `E1`, `S7`, `S8`, `S9`, `R1`.
+- **Coordinator corrections adopted (`#27`):** `G1` is not a proved machine lower bound; the supplied-codes `16%` figure (§30) is not a ceiling; cheap text-position computation is legitimate (only unpaid acquisition is ruled out).
+
+**Headline verdict (Cycle 3 — The Closure Problem):** The Closure Problem **splits sharply at depth 2**:
+1. **Depth 2 — SOLVED constructively with zero fragmentation and zero per-row glue (`CL1 + CL4`):**
+   - Exact reproduction of `chatgpt-closure.md` on `block-0.L` (`m = 89,874`, `B_P = 2,148`, M-17 GS `cap=8 / cap=16 / uncapped = 44,814 / 46,671 / 52,319` segments, `42,325 / 40,009 / 32,833` links, `2.51 MB` flat words).
+   - **`CL1` (Mirror-Factored Two-Sweep):** Keep the compact $B_P$-piece $P \circ \mathrm{LF}_v$ schedule intact; Sweep 1 ascends on $D_1 = \{j : R[j] < j\}$ reading `sched` forward, Sweep 2 descends on $A_1 = \{j : R[j] > j\}$ reading the **exact same `sched` backward** (**`650–1,939` cache16 segments** = **`44×–133×` less fragmented than M-17 GS**), using the exact same $|D_1| + |A_1| = m - 1$ reads as 1 M-17 sweep, cutting emit links **`10–12%` below uncapped M-17 GS** (`0.672–1.081 h_1` on Wikidata, `0.325 h_1` on pure novel hex), replacing `2.77–3.01 MB` flat words with an `8m` (`0.70–1.60 MB` added) zero-copy binary DAG, and verified byte-exact on **8/8 blocks + periodic `b"abcd"*25` + 200 multi-cycle corrupt columns**.
+   - **`CL4` (Zero-Per-Row-Glue Endpoint Acquisition):** Constructs `CL1`'s `(target_rank_start, seg_len, full_wid)` schedule (`2,039–5,552` pieces, `23.9–65.1 KB`) directly from `src/runs.rs` interval endpoints via `2,446–6,788` linear endpoint merges (`Q_acq_glue = 0`, saving `89.9k–204.3k` row lookups and cutting total acquisition probes `30–72%`), **never allocating `R[0..m)` or `R_word_id[0..m)`** (8/8 byte-exact).
+2. **Depth 3+ — BLOCKED representation-independently for exact-`+1` monotone cursors (`CL2` Thm CL2.1):**
+   - **Theorem CL2.1 (proved & equality verified 8/8):** For any bijection $T$ and *any* labelling $\ell$, $\mathrm{seg}_{+1}(T, \ell) \ge q_{\min}(T) := 1 + \mathrm{desc}(T^{-1})$.
+   - On `CL1`'s surviving valleys $R_2 : M_2 \to M_2$, **`q_min(R_2) = 6,373–14,655` (`19.0–24.5%` of `|M_2|` on Wikidata; `38.9%` on pure hex)** — proving no relabelling can keep a **third** exact-`+1` monotone-cursor sweep compact on $M_2$.
+   - Uniform depth-2 squaring $R^2$ under 2-byte `(v[j], v[R[j]])` has `6,339–16,785` segments (`2.9–3.9×` of $B_P$, **`6–11×` less fragmented than M-17 GS**; `133×` on templated 40-hex), though iterating grows classes as $|\Sigma|^k$.
+3. **De Bruijn FAS key $\kappa$ & Thin-Run Retention Sweep (`CL3`):**
+   - **MONODROMY 116 §4 confirmed:** Static 256-entry $\kappa$ on $B(16, 2)$ hits **`0.6599` descents** (`17 / 4,096` below Thm O's `2/3` ceiling) and pushes **1-sweep M-17 past $e = 2.718$ to `3.256` bytes/link (`-15.5%` links)** on novel hex (`3,248` $\le 16^3$ segments; needs `16 KB` $M_3$ for cursor offsets).
+   - **Channel `#27` thin-run sweep ($L_{\min} \in \{2, 3, 5, 9, 17\}$):** Retaining width $2\text{–}16$ runs inside eager strip contraction cuts `CL1` emit links to `0.325–0.328 h_1` at $L_{\min} = 2$ (matching novel hex!), **but loses in total $Q$** (`3.2×–5.5×` more `Q_acq_strips` per saved row even at $L_{\min} = 9$; `12.9–45.5 h_1` at $L_{\min} = 2$). The strict cross-stage win from `src/runs.rs` is retaining interval endpoints at $L_{\min} = 17$ (`CL4`), not eager splitting of thin runs.
+
+### Side-by-Side Cycle 3 Summary (All 8/8 Byte-Exact)
+
+| Item | Core Object / Theorem | Novel Random Hex (`65k` / `tmpl 40-hex`) | Six Admitted Wikidata Blocks (`900k`) | Referee `(Q, D, P, S)` under `Π` | Report |
+|---|---|---|---|---|---|
+| **CL1** | Mirror-factored 2-sweep (`D_1 ↑`, `A_1 ↓`) on $P \circ \mathrm{LF}_v$ + 8B DAG | S2 c16 `3,169` / **`16`**; links **`0.325`** / **`0.364 h_1`** (`-11%` vs M17) | S2 c16 **`650–1,939`** (`44–133×` < M17); links **`0.672–1.081 h_1`** (`-10..12%`); DAG `0.70–1.60 MB` | `P=2`, `m-1` monotone cursor reads; exact on periodic + 200 multi-cycle corrupt columns | [`CL1`](CL1-MIRROR-FACTORED-CLOSURE.md) |
+| **CL2** | **Thm CL2.1** $\mathrm{seg}_{+1}(T,\ell)\ge q_{\min}(T)$ + $R^2$ pair grouping | $q_{\min}(R_2)=38.9\% / 34.9\%$; $R^2$ tmpl `343` (`133×` < M17) | $q_{\min}(R_2)=\mathbf{6.4\text{–}14.7\text{k}}$ (`19–25%` of `|M_2|`); $R^2$ `(v,v_R)` `6.3–16.8k` (`6–11×` < M17) | Proves Sweep 3+ exact-`+1` cursor wall on $M_2$; $R^2$ grows as $|\Sigma|^k$ | [`CL2`](CL2-CLOSURE-OBSTRUCTION-ANATOMY.md) |
+| **CL3** | 2-digit $B(16,2)$ FAS $\kappa$ (116 §4) + $L_{\min} \in \{2,3,5,9,17\}$ sweep | $\kappa$: `0.660` desc, 1-sw M17 **`3.256`** (`-15.5%` vs `2.751`), `3,248` segs | $L_{\min}=2$: `CL1` **`0.325–0.328 h_1`** but `Q_acq_strips=12.9–45.5 h_1` (`3.2–5.5×` loss even at `L=9`) | $\kappa$ wins on pure hex (`16 KB` $M_3$); eager thin-strip retention loses in total $Q$ | [`CL3`](CL3-DEBRUIJN-FAS-AND-THIN-RETENTION.md) |
+| **CL4** | Endpoint-only $B_P$ schedule acquisition (`Q_acq_glue = 0`, no `R[0..m)`) | `Q_glue=0` (`-57k`/`-47k`); acq `6.4×`/`131×` less; `0.4–118 KB` sched | **`Q_glue=0`** (`-89.9..204.3k` rows, **`-30..72%` acq probes**); `2.4–6.8k` merges; `23.9–65.1 KB` sched | Satisfies `chatgpt-closure.md` §5(3): `Q_acq = 56.5–163.7k` (`0.88–4.07 h_1`), zero `R[0..m)` array | [`CL4`](CL4-ENDPOINT-SCHEDULE-ACQUISITION.md) |
+
+---
+
 ## Reproducing All Checks
 
 ```bash
@@ -91,7 +121,14 @@ python3 research/neon-movement/s7_pairing_obstruction_bidir_wave.py
 python3 research/neon-movement/s8_count_targeted_landmarks.py
 python3 research/neon-movement/s9_unitig_endpoint_merge.py
 python3 research/neon-movement/r1_renormalisation_leads.py
+
+# Cycle 3 (CL1-CL4)
+python3 research/neon-movement/cl1_mirror_factored_closure.py
+python3 research/neon-movement/cl2_closure_obstruction_anatomy.py
+python3 research/neon-movement/cl3_debruijn_fas_and_thin_retention.py
+python3 research/neon-movement/cl4_endpoint_schedule_acquisition.py
 ```
 
 Every script reads the six admitted blocks directly from `origin/data/admitted-bwt` (verifying SHA-256 against `manifest.json`) and asserts `decoded == T_ref` byte-for-byte against the independent textbook `LF` oracle on every block.
+
 
