@@ -652,3 +652,46 @@ those runs collectively, through what they share (format, alphabet), not one by 
 quantity is small on real blocks is now a measurable question, to be asked of every candidate.
 
 Added to FRONTIER.md's target as "the viability check" (PR #816).
+
+## 19. MONODROMY's answer on "fewer than h₁" (record 98)
+
+MONODROMY's REVIEW on #145 (comment 7128634595; record 98,
+`docs/journal/monodromy/2026-11-24-fewer-than-h1.md` at eae9ca91), offered as inputs to Louis's
+formulation:
+
+- **The class made precise: a calculus 𝓡 of "rigid facts".** A fact says LF^h(x) = x + t on an
+  interval, with one emitted word. Facts come one per run, from its record, and are restricted,
+  composed and joined. The LF walk, Cells (Rauzy–Veech), Open, lanes and T² are all in 𝓡. Its cost
+  c₁ counts width-1 events *anywhere*, construction and helpers included, which puts induction steps
+  and walk steps in one currency (the condition of §16). G1 (argued): c₁ ≥ h₁ for every decoder in 𝓡.
+  **So Rauzy–Veech is inside the class: it cannot be the answer.**
+- **"Fewer than h₁" is not well-posed as worded.** Three repairs: a *count*, not a depth (two-ended
+  Open already halves the depth); a *streaming budget* K (sort-based list ranking has c₁ = 0 in
+  Θ(log n) passes, a known and slower algorithm); and *per block over a stated family 𝓕*. Proposed:
+  exact inversion of every column in 𝓕 with c₁ < h₁(column), in at most K streaming passes (fixed in
+  advance, e.g. 3) and O(r) words beyond the output. K and 𝓕 are Louis's to fix.
+- **The escapes** (drop "every fact is a translation on an interval"):
+  - E1, class facts: blocked on random content (keys shatter by k ≈ 5);
+  - **E2, positional facts: one open cell.** Blocked when labels come first (record 84), at O(1)
+    depth (Gamma's G1) and as rigid segment composition; **open** for a global, non-rigid,
+    non-O(1)-depth procedure in K passes, with neither a construction nor an obstruction;
+  - E3, sort-based: native, but fails K;
+  - E4, another input or problem: narrow, since a standard bzip2 stream carries only L and `origPtr`.
+- **Conjectured:** on random-digit content (the GUIDs), no O(1)-pass decoder meets the target. A yes,
+  if one exists, lives in E2's open cell on non-random content; the copy sector is a candidate, where
+  E1's classes do group rows. The missing step: getting that grouping without each row's first step.
+- **R0–R3, amended:** R1 = in 𝓡; R2 = a fact type outside 𝓡, within K. Decidable syntactically for a
+  candidate written in the calculus; for Rust code it needs an audit mapping operations to rules.
+- **Lean:** about 600–1,000 lines (facts and derivations, Lemma 3, G1's injectivity), second after the
+  shared specification. A checked G1 makes the class boundary exact; it does not make escapes
+  impossible.
+
+**The Coordinator's reading for the formulation.** The search space for the bouleversement has been
+narrowed from "anything new" to one named open cell: **positional facts by a global, non-rigid
+procedure, within a few streaming passes, on non-random content**. Utility then turns on
+cost-weighted applicability: random identifiers own 54–67% of width-1 rows, so a yes confined to
+non-random content pays only on the remainder, and the census can say how much kernel time that is
+before anything is built. The random-content conjecture, if it holds, says the GUIDs need a real R3:
+a format change, not a new inversion.
+
+Folded into FRONTIER.md's target section in PR #816.
