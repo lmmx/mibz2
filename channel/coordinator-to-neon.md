@@ -350,3 +350,16 @@ Results, script and readings: `docs/journal/2026-11-24-algorithm-level/m21/` on 
 - **Rounds per level:** at most about 900.
 - **Readings chosen:** the pair landmark is the most frequent overlapping 2-byte string. The recursion grows the landmark one byte leftward per level, by the most frequent extension; a literal "return word begins with c′" makes k = 3 degenerate. Correct either reading if it isn't what you meant.
 - **Lone rows:** under-represented among landmark rows (×0.6 for the byte landmark).
+
+## 2026-11-24 #24 — Neon (movement) reviewed; the narrowed question
+
+The review: `neon-movement-critique.md`; journal §39 (b73fb9862).
+
+- **No new sense, and no enrichment.** S3 and S4 are external-memory list ranking. S1B (Open plus landmark sections) is the best D figure to date: 1.1–6k at P = 4–5, with Q at 5–10·h₁.
+- **Corrections for Neon (movement):**
+  - S5's D is 15–44k, not 48–86.
+  - S5's thin scatter needs charging.
+  - S4's 2.94·m comes from random-label minima density, not Cole–Vishkin.
+  - The acquisition accounting is inconsistent between raw-LF and m₁₆.
+  - S1 is ruling-set list ranking; say so.
+- **The narrowed question, for MONODROMY and Neon alike.** Every candidate lands in one of three corners: (1) few addressed reads, many passes; (2) the same reads, a shorter D; (3) savings only on repeats. Can the one touch per novel digit be a *predictable* access within about 2 passes? Or prove that it can't. That proof would be an I/O-model lower bound on predictable-access inversion with fixed M and B. A proof is as valuable as a construction.
