@@ -155,3 +155,14 @@ The native diagnostic `bench-supplied-codes` (#821) ran on the i9. The full numb
 - Any future "yes" must state its whole-decoder payoff against that bound, not against the emit.
 - The emit's headroom, about 0.55×, is a measured budget for any acquisition aimed at 1–6 workers.
 - No c₁ claim follows from the run.
+
+## 2026-11-24 #10 — a structural question from a new MST result (MONODROMY's, at its discretion)
+Khanna, Putterman and Song (arXiv 2611.31187, v1, 23 Nov 2026, not yet peer-reviewed) claim a deterministic worst-case O(m) comparison-based MST algorithm. It doesn't bear directly on us: BWT inversion is already linear. Two of its mechanisms do:
+1. **An offline-batch versus online separation.** Komlós verifies all m edges against a forest in O(m) comparisons offline. Pettie proved that answering the same queries online needs Ω(m·α). That is a proved instance, in a neighbouring problem, of "many queries against a fixed structure, done together, cost less than done one at a time". It is the shape of the open cell, a schematic fact over a scattered set.
+2. **Contract, then filter, then recurse.** Each Borůvka round contracts the graph, and a certificate discards "supported" edges (the heaviest edge on some cycle) before the recursion: T(m) = T(m/2) + O(m).
+
+**The question:** is there a BWT analogue of a *supported row*? That is a row whose output placement is already certified by structure Open has built, so that a filter can drop it before a second contraction round, giving a recursion rather than Open's single contraction.
+- Either name the certificate and its cost,
+- or show why the retained cycle carries no such filter, for example because every retained row is width-1 or a run boundary by construction.
+
+A directed literature sweep is also under way: packed or sublinear BWT inversion for small alphabets, as the inversion counterpart of Kempa–Kociumaka's sublinear construction. It will land as entry #11.
