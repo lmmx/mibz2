@@ -1,0 +1,249 @@
+# Source text: https://www.cs.cmu.edu/~harchol/Perfclass/classtheory.html (fetched 24 Nov 2026, HTML stripped)
+
+Mor Harchol-Balter: Class 
+ 15-849b Theory of Performance Modeling (FALL 03) 
+ Starting 9/03/03, MW 10:30 - 12, WEAN 4601 
+ Extra-theoretical version of the traditional Performance
+Modeling Course. Offered only every 2 or 3 years! 
+ Class lecture notes are here: Lecture notes and Homeworks 
+Queueing theory is an old area of mathematics which has recently
+become very hot. The goal of queueing theory has always been to
+improve the design/performance of systems, e.g. networks, servers,
+memory, distributed systems, etc., by finding smarter schemes for
+allocating resources to jobs. In this class we will study the
+beautiful mathematical techniques used in queueing theory, including
+stochastic analysis, discrete-time and continuous-time Markov chains,
+renewal theory, product-form, Laplace transforms, supplementary random
+variables, fluid theory, scheduling theory, matrix-geometric
+techniques, and more. Throughout the class we will emphasize realistic
+workloads, in particular heavy-tailed workloads.
+The techniques studied in this class are useful to students in
+Computer Science, Mathematics, ACO, GSIA, Statistics, and Engineering.
+This course is packed with open problems -- problems which if solved
+are not just interesting theoretically, but which have huge
+applicability to the design of computer systems today.
+ Class Reviews 
+ MEETING TIMES: 
+ Monday and Wednesday 10:30-12, Wean Hall 4601 
+ PREREQUISITES: 
+Recommended only for those comfortable with probability. Highly
+recommended for CS theory students, ACO students, GSIA students.
+Ph.D. students only. Assumes knowledge of continuous and discrete
+distributions, conditional probability, conditional expectation,
+moments, and some previous exposure to Markov Chains. Assumed material can be found in: "Introduction to
+Probability Models" by Sheldon M. Ross, Chapters 1-3. You can borrow
+this book from my office. No auditors
+allowed. 
+ TEACHING STAFF: 
+ Instructor: Mor Harchol-Balter 
+ Teaching Assistant: Taka Osogami (volunteer-basis only)
+ Teaching Assistant: David McWherter (volunteer-basis only)
+ OFFICE HOURS: 
+ Tuesdays 4:00 - 5:30 (Mor -- Wean Hall 8119)
+ Wednesday 3:00 - 4:00 (Taka -- Wean Hall 7203)
+ Mondays 3:00 - 4:00 (David -- Wean Hall 3719)
+ TEXTBOOK: 
+ I will pass out my own course notes and some supplementary 
+handouts and papers at the end of each class.
+Some good reference texts are listed
+here: BOOK LIST . 
+You can borrow most of these books from my office.
+ GRADING: 
+ 7 homeworks -- worth 60% total.
+ Midterm 1 -- 18%.
+ Midterm 2 -- 18%.
+ One grading meeting during semester -- 4%.
+ COLLABORATING vs. CHEATING: 
+You will receive one
+homework every week or 10 days. These will be difficult. Start immediately
+so that you can take full advantage of office hours. You will find
+office hours very helpful!
+Some of these homework problems will
+be repeated from previous years. The reason is that I have made up
+all the problems myself and it takes a very long time to think up good
+problems. Do not ask people who took this course in previous years to
+help you with the homeworks. This is considered cheating and will be reported to the dean.
+On the other hand, I strongly encourage you to collaborate with your
+ current classmates to solve the homework problems after you have tried
+solving them by yourself. Each person must turn in a separate writeup. You should
+note on your homework specifically which problems were a collaborative
+effort and with whom. 
+ TOPICS COVERED IN THIS CLASS:
+PART I: Introduction, Operational Laws (laws that hold independent of any assumptions), Back-of-the-Envelope Bounds, and Modification Analysis. 
+ Overview + Motivating examples of power of queueing theory 
+ Queueing Terminology and Applications 
+ Introduce queueing theory terminology
+ Define open networks with examples
+ Define performance metrics for open networks: response time, throughput, utilization
+ Define closed networks with examples: batch network, terminal-driven network
+ Define performance metrics for closed networks: response time, throughput, utilization
+ Hopefully start Little's Law !
+ Little's Law 
+ Time averages vs. Ensemble Averages with applications to Simulations.
+ Little's Law for Open system.
+ Little's Law for Closed system.
+ Full Proof of Little's Thm for open system.
+ Full Proof of Little's Thm for closed system.
+ Examples.
+ Operation Law: Response Time Law.
+ Asymptotic Bounds and Modification Analysis 
+ Another Operational Law: Forced Flow Law
+ Another Operation Law: Bottleneck Law.
+ Practice using Operation Laws in Combination.
+ Asymptotic Bounds for Closed Systems.
+ Modification Analysis for Closed Systems.
+ Examples.
+ Differences between open and closed networks. 
+ PART II: Traditional Queueing Theory (with all the usual assumptions:
+Exponential Service, Poisson Arrivals, FCFS Scheduling). Strong 
+emphasis on applications/case studies. 
+ Discrete-Time Markov Chains 
+ Markov property: examples
+ Limiting probabilities 
+ Definitions
+ Ergodicity theorems
+ Method 1 for solving for limiting probabilities: Stationary Eqns
+ Examples using stationary eqns + Solving via Mathematica
+ Discrete-Time Markov Chains Continued 
+ More on Ensemble Averages vs. Time Averages 
+ Limiting probability as rate
+ Time-reversibility
+ Method 2 for solving for limiting probabilities: Time-reversibility
+ Practical applications of time-reversibility
+ Examples -- how google.com uses DTMCs
+ Exponential Distribution and Poisson Process 
+ Exponential Distribution
+ Memorylessness
+ Relationship between Exponential and Geometric
+ Sum of Exponentials
+ Probability Event 1 occurs before Event 2
+ Poisson Process
+ 3 Definitions and proof of equivalence
+ Merging Poisson Processes
+ Bernoulli splitting
+ Uniformity
+ Continuous Time Markov Chains (CTMC) 
+ Transition from Discrete Time Markov Chains to CTMCs.
+ Balance Equations
+ M/M/1 and Performance Metrics
+ M/M/1 and variations 
+ Applications of M/M/1
+ PASTA
+ Full distribution of Time in System for M/M/1
+ Finite buffers
+ M/M/m/m
+ M/M/m
+ Applications 
+ All this is under exponential context!
+ Comparison of distributed server configurations.
+ Many hosts or single host?
+ To balance load or not to balance load?
+ To migrate or not to migrate?
+ Solving finite state CTMCs
+ Examples -- including evaluating Ethernet efficiency.
+ Buildup to Open Networks of EXP/FCFS queues 
+ Time-reversibility
+ Burke's Thm
+ Tandem queues
+ Jackson Networks 
+ Jackson networks of queues
+ Full Soln via local balance approach
+ Applications
+ Generalizations of Open Networks of EXP/FCFS queues 
+ Motivating examples
+ Classed networks
+ Full proof via local balance approach
+ Closed networks
+ Full derivation via local balance
+ Applications
+ BCMP 
+ BCMP theorems and proof 
+ What queueing theory can't model ...
+ Matrix-Geometric Techniques 
+ Motivating examples
+ Solution method
+ Recent results
+ PART III: "MODERN" Applied Queueing Theory: Measured
+Heavy-tailed Workloads, Corrolated Arrivals, Preemptive Service
+Disciplines. (Applications include: Load Balancing in NOWs, Task
+Assignment in Super-Computing Centers, Scheduling in a Web Server,
+Scheduling in a Distributed Web Server.)
+ Empirical Measurements of Job sizes 
+ Pareto distribution measurements
+ Application: Load balancing in Network of Workstations
+ M/G/1 
+ Tagged Job -- first moment
+ M/D/1
+ M/EK/1
+ M/H2/1
+ M/G/1
+ Renewal Theory
+ Renewal Reward Theorem
+ More topics on Simulations
+ Inspection Paradox
+ Transforms 
+ Laplace Transforms
+ Moments
+ Linearity properties
+ Z-Transforms
+ Moments
+ Linearity properties
+ Theorems on Laplace and z-transforms
+ Examples
+ Application of transforms to determining busy periods.
+ M/G/1 
+ All moments via Laplace Transforms 
+ Supplementary Random Variable 
+ Technique
+ Examples of use.
+ Fluid Approximations 
+ Technique
+ Examples of use.
+ Applications of M/G/1 
+ To balance load or not to balance? 
+ Many hosts or single host?
+ Task assignment in a distributed server of FCFS hosts.
+ M/G/k
+ Confidence Intervals -- LIKELY SKIP
+ Definition
+ Proofs
+ Examples
+ Why confidence intervals don't work
+ Measured Arrival Processes -- Self-similarity -- LIKELY SKIP
+ Effect of Variability in Arrival Process: 
+M/M/1 vs. Ek/M/1 vs. H2/M/1 vs. Ph/M/1 vs. G/M/1
+ Why Poisson Process is Used -- Model of Inf # cust. each with GI/G/1
+ When the Poisson Process approximation doesn't make sense 
+ Illustrations of Measured Arrival Processes
+ Short-range auto corrolations -- 
+ The case for compositions of Poisson Processes
+ Long-range auto corrolations -- Self-Similarity -- alpha parameter
+ Model: Superposition of processes with heavy-tailed on-times
+ How to measure your arrival process.
+ How to tell if it's Poisson.
+ How to tell if there's correlation.
+ Estimating the alpha parameter.
+ Examples and Homework Examples -- go out and get measurements.
+ Open research 
+ What is the effect of getting the arrival 
+ process wrong? 
+ E.g., In deriving good load balancing algorithm, 
+ getting the workload right is crucial -- how about getting 
+ the arrival process right?
+ Scheduling: Part I -- all of scheduling will contain
+full proofs vial Laplace Transforms! 
+ Performance metrics
+ Non-preemptive scheduling policies 
+ Scheduling: Part II 
+ Processor-Sharing 
+ Task assignment in Processor-Sharing distributed server
+ Preemptive-LCFS 
+ Scheduling: Part III 
+ Comparison of Scheduling algorithms
+ Priority Queueing
+ Non-preemptive priority
+ Preemptive priority
+ Scheduling: Part IV 
+ SJF
+ SRPT
+ Application: Scheduling in Web servers.

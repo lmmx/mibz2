@@ -1461,3 +1461,24 @@ Louis restated the aim. The toy problem and simulation set-up are for a Jain-sty
 - the operational laws (Little, utilisation, forced flow) are the completeness checks;
 - mean-value analysis of the closed network (W = 4k) sits beside the discrete-event simulation;
 - a 2^(9−4) resolution-IV fractional factorial at k = 8 and 10 replaces one-factor-at-a-time there, so that two-factor interactions are not confounded with main effects. The four-arm result was itself an interaction.
+
+## 53. Three performance-analysis courses, read in full
+
+Louis asked ChatGPT Pro what three courses contain: Jain's IUCEE course, Harchol-Balter's 15-857, and her theory course 15-849b. He then asked for it to be recorded "durably … properly, full text not glossed", and for the Coordinator to answer the same question by reading the full material, without summarising subagents.
+- **The exchange and ChatGPT Pro's first answer,** verbatim: `external/chatgpt-performance-resources.md`. Its second answer was pending.
+- **The Coordinator's answer:** `methodology/performance-courses.md`. It was read directly:
+  - the three pages;
+  - all 30 Jain module topic lists, and six slide decks in full (k_02, 16, 19, 25, 33, 34);
+  - the textbook's contents;
+  - the Fall 2025 schedule;
+  - the theory course's topic list and book list.
+
+  The stripped source texts are kept in `methodology/sources/`.
+
+**What it adds to `briefs/character.md` (§7b):**
+- device demands Dᵢ = Vᵢ·Sᵢ per activity, with asymptotic and balanced-job bounds for the closed network at each k;
+- **modification analysis** (Harchol-Balter ch. 7) to price each mathematical candidate as a change to one demand, before it is built;
+- multiplicative (log) models with allocation of variation (Jain ch. 18–19);
+- a fluid approximation as a closed-form check on k\*;
+- sample-path analysis, rather than stochastic assumptions, for the fixed block trace;
+- job classes for the Open and fallback routes (classed networks).

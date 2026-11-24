@@ -79,3 +79,8 @@
 - Louis restated the aim: toy problem → Jain-style performance analysis → systems-biology model → where new mathematics fits.
 - `programme.md` gives the eight steps and their status.
 - `briefs/character.md` is amended (§52): operational laws as identities, MVA for the closed network, and a fractional factorial at k = 8 and 10. The Pathfinder is told.
+
+## 24 Nov, 23:40 — the performance courses, recorded in full and read in full
+- ChatGPT Pro's resources answer is recorded verbatim, with Louis's question.
+- The Coordinator's own answer, from direct reading, is `methodology/performance-courses.md`, with the sources in `methodology/sources/`.
+- `briefs/character.md` §7b adds device demands and bounds, modification analysis, job classes, log models, a fluid check on k\*, and sample-path laws. The Pathfinder is told.
