@@ -1002,3 +1002,14 @@ It is the same failure as the retrospective's §2.4, and the essay's Hearer erro
 - A schematic fact needs an executable Build/Advance/Emit interface; a short proof is not enough.
 - The frozen yes must remove most of W, not only h₁.
 - The next test is a supplied-state experiment: Open's word codes in output order, timed natively.
+
+## 30. The supplied-codes test: the emitter halves, the decoder doesn't move
+
+Louis approved commissioning the outside review's proposed experiment. The recipe `bench-supplied-codes` (#821) was built, reviewed and queued (#822), with its rule frozen before data (LOG 7131301798). The workstation ran it on the i9 (`supplied-codes/run-20261124T131518Z`, evidence e45314e0).
+
+**The results:**
+- *Supplying Open's word codes in output order, free, roughly halves the emitter:* 0.53 at 1 worker, 0.55 at 10.
+- *At 1 worker* that takes about 16% off the whole decode (0.838).
+- *At 10 workers, the default,* the whole decoder barely moves: **0.988 [0.957, 1.020]**. The verdict is **STOP**.
+
+**The reading.** At ten workers the decode is bounded outside Open's emit, by the serial front end or by shared bandwidth. So the search's "price" question has a second floor beneath it: a structural step inside the kernel pays in wall time only where the kernel is the bound. Verdict LOG 7132792060; channel entry #9.
