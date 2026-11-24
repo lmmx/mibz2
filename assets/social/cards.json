@@ -273,7 +273,7 @@
     "title": "Halving the single-row steps: a target only a new algorithm can meet"
   },
   "assets/social/blog-2026-11-24-the-target-stated-so-it-can-be-answered.png": {
-    "description": "Before we attempt a construction, we fix how cost is counted and what counts as a pass or as new so that either answer settles something.",
+    "description": "The breakthrough we seek comes from changing what moving together means, and the cost rules we fix here referee a candidate once it exists.",
     "foot": "lmmx.github.io/mibz2 · 24 November 2026",
     "kind": "meta",
     "section": " · Research blog",

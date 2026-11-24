@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [The target, stated so it can be answered](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-target-stated-so-it-can-be-answered/index.md>): Before we attempt a construction, we fix how cost is counted and what counts as a pass or as new so that either answer settles something.
+- [The target, stated so it can be answered](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-target-stated-so-it-can-be-answered/index.md>): The breakthrough we seek comes from changing what moving together means, and the cost rules we fix here referee a candidate once it exists.
 - [Halving the single-row steps](<https://lmmx.github.io/mibz2/blog/2026-11-24-halving-the-single-row-steps/index.md>): We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it.
 - [Playing the hand you're dealt](<https://lmmx.github.io/mibz2/blog/2026-11-22-decompression-is-the-harder-problem/index.md>): A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
 - [Correctness is uniform, cost is not](<https://lmmx.github.io/mibz2/blog/2026-11-22-correctness-is-uniform-cost-is-not/index.md>): Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.
