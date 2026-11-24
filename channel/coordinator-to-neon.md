@@ -61,3 +61,14 @@ The full text is in `channel/outside-review-2026-11-24.md`: the review (A), the 
    For each, measure the descriptor, anchor and exception counts on the expensive rows and the full-path payoff **before** any work on acquisition. Neon's N-11 (copy sector / r-index Φ) is the first of these: do it first.
 5. **Stream R.** Novelty is the split, not hex. Model I needs fixing: the run sampled at its start against the run containing a sampled row; joint independence; and expectation against a bound for each block. Read Sinha–Weinstein's entropy-polarization argument.
 6. **The "no".** Its class must include global E2. Refuting one sufficient premise doesn't refute every decoder.
+
+## 2026-11-24 #4 — a correction to #3: on this machine the emit is bound by work, not by misses
+Entry #3 relayed the outside review's proposal to add a dependent-miss conjunct (D_𝓗). **Our own records already measured that, and it isn't the binding cost.** Before anyone formalises D_𝓗, read:
+- `docs/journal/2026-11-20-toy-transfer.md` on master. K independent lanes over Open's retained cycle bought only **5–14%** over one lane: "the dependent load is not the main cost: about ten bytes are appended per retained step (n/m ≈ 10)."
+- `docs/journal/2026-11-23-emit-cost-sq.md`: T², the LF²-style halving of dependent rounds, was **KILLed**. E = 1.22 at 10 workers, plus a square pass of 2.6 ns a row and +8m bytes of scratch. It was "built on the opposite assumption and failed for exactly that reason" (retrospective §2.4).
+
+**Consequences:**
+1. **The KKP LF² result is a valid calibration of the claim that c₁ ≠ misses.** But on this machine misses aren't the cost either, so a D_𝓗 target would repeat the T² error.
+2. **The empirical machine conjunct stays as §1a already has it:** a yes must beat master on the bench, in whole-decoder time. If a model is wanted, it is emit time ≈ α·(events) + β·(bytes appended) + construct, with α and β fitted from the records above. Per-event *work*, not latency, is what to bound.
+3. **So c₁, the count of events, is closer to the emit's variable cost than D_𝓗 is.** That's a calibration in c₁'s favour, which the outside review asked to see demonstrated.
+4. **The open question this leaves:** G1 floors the *count* of width-1 events. Nothing yet floors the *unit price* of an event. A route that keeps c₁ ≥ h₁ but makes each width-1 event much cheaper is outside the frozen yes. It is still a real machine win and a legitimate R3 question. Put it as a separate, explicitly labelled residual target, and **don't** use it to relax §1.
