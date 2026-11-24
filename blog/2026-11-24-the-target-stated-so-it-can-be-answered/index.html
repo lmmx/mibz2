@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=d85da38de6e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=5e4039143e50">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=d85da38de6e4">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3211,6 +3211,17 @@ further ones is part of the work (<a href="https://github.com/lmmx/mibz2/blob/b4
   (<a href="../2026-11-24-halving-the-single-row-steps/#2-four-reframings-of-the-search">§2</a>) generates new
   triangles where an oracle could only hand them over.</li>
 </ul>
+<p>The first worked notes already sharpen the hunt (<a href="https://github.com/lmmx/mibz2/blob/806aa0123c9a24ad7a1e9ef15da015e1408022f0/docs/journal/monodromy/2026-11-24-moving-together.md">record 113</a>, <a href="https://github.com/lmmx/mibz2/blob/bfdbc245fce475fbb7d017501a1e7423dd20eaf5/docs/journal/monodromy/2026-11-24-more-senses.md">record 114</a>).
+Every sense of moving together puts the rows in some order, and it helps exactly as far as that
+order agrees with the order of the text, so the search becomes one for a cheap ordering of rows
+that correlates with text position. The first candidate worked up in full, <em>landmark induction</em>,
+also shows why the referee reports more than one figure. It starts a chain at every row holding a
+chosen common byte, rows that sit together in one known block and cost nothing to find, advances
+all the chains at once to the next landmark, and repeats on what remains. It leaves the number of
+unpredictable reads where it was, but makes those reads independent of one another, so the chain
+of reads that must each wait for the last falls from about one per byte to a few hundred on
+hex-dense content. Which of those two figures the floor is to be beaten in is the decision this
+candidate turns on, and its measurement on our six real blocks comes first.</p>
 <h2 id="3-the-snag-a-convention-decided-the-answer">3. The snag: a convention decided the answer<a class="headerlink" href="#3-the-snag-a-convention-decided-the-answer" title="Permanent link">&para;</a></h2>
 <p>The decisive gaps in the target were in its accounting. Every known route that beats the floor does
 so with a <em>build pass</em>: a sweep over all the block's <a href="../2026-11-10-rauzy-veech-reconstruction/">run records</a> that composes facts in bulk, as
@@ -3527,19 +3538,19 @@ attempt it revisits, and what that attempt missed.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/bench.js?v=d85da38de6e4"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d85da38de6e4"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/blog.js?v=d85da38de6e4"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d85da38de6e4"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/observatory.js?v=d85da38de6e4"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=5e4039143e50"></script>
+        <script src="../../assets/javascripts/katex.js?v=d85da38de6e4"></script>
       
     
   </body>
