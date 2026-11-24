@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=ae442d4b7d67">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6793043730e4">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=ae442d4b7d67">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3168,30 +3168,59 @@
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>For most of its life, mibz2's research has moved in small steps. Each change made the existing
-decoder a few per cent faster, and the bench judged it. What we are actually after is bigger: a new
-decoder, a different way to undo bzip2's block sort, as different from ours as Rauzy–Veech induction
-was from the row-by-row walk it replaced. In the past week we changed the size of step we attempt.
-We set a target that no edit to our decoder can meet, by theorem, and built what it takes to pursue
-it:</p>
+<p>There is no new decoder yet. What this post reports is a change in the size of step we attempt,
+and what it has already established. Our current family of decoders provably can't halve the
+number of rows it settles one at a time, so any decoder that does must be a new algorithm. That is
+now a yes-or-no target. The first test of a candidate representation has also come back: handed
+the decoding order for free, the whole decoder ran 16% faster on one thread, and barely faster on
+ten.</p>
+<p>A few terms carry the post:</p>
 <ul>
-<li><strong>A target that is met or not.</strong> It was frozen before the new measurements. An exact decoder must
-  pay at most half the width-1 events that the current kind must, in two passes over the block and
-  no more memory than Open, and then beat Open on the bench.</li>
-<li><strong>A proved lower bound, G1,</strong> for every route of the current kind. Anything below it is a new
-  algorithm, not an increment.</li>
-<li><strong>A census of our benchmark's blocks.</strong> It predicts the cost of building Open's structures from
-  block structure alone.</li>
-<li><strong>Fourteen candidate frameworks closed.</strong> Each keeps its counterexample, its scope and what would
-  get past it.</li>
-<li><strong>The transformation that connects our three decoders,</strong> with the one thing it can never remove.</li>
+<li><strong>The BWT and LF.</strong> bzip2 sorts the rotations of each block of text and keeps the last letter of
+  each, the Burrows–Wheeler transform (BWT). Undoing it follows a map, LF, from each row of the
+  sorted table to the row one letter earlier in the text
+  (<a href="../2026-11-08-inverse-bwt-navigation/">the structure of that map</a>).</li>
+<li><strong>Our three decoders.</strong> The walk applies LF one row at a time.
+  <a href="../2026-11-10-rauzy-veech-reconstruction/">Cells</a> and <a href="../2026-11-19-open-returns/">Open</a> move
+  whole stretches of rows at once, wherever neighbouring rows share their letter, and Open walks
+  the thin stretches.</li>
+<li><strong>The current family.</strong> Decoders that move intervals of rows by fixed translations and compose
+  those moves. The walk, Cells and Open all belong to it.</li>
+<li><strong>A width-1 row</strong> is a run of one letter, so no stretch carries it. A block has h₁ of them, and
+  on our benchmark <a href="../2026-11-20-where-the-decoding-work-goes/">most come from random IDs</a>.</li>
+<li><strong>An event</strong> is a step that settles one row on its own
+  (<a href="../2026-11-18-what-decoding-pays-for/">what decoding pays for</a> counts them). Open's events are its m retained steps:
+  one on each width-1 row, and the rest on rows of wider runs. Each retained step writes a word,
+  the letters between it and the next.</li>
 </ul>
-<p>This post reads our own search. In the past week it has been reframed four times: use everything,
-count the cost, set a target that is met or not, and keep the method rather than the result. Each
-reframing changed what we count as progress (§§1–2). The last one came from an essay against AI mathematics, and it
-turned into a precise question about our decoders. The rest of the post works that question
-through. It sets out the routes we have (§3) and the transformation between them (§4). It then
-tests two proposals against it (§5), says what a new route would have to be (§6), and ends on
+<p>Until now our research moved in small steps, each making a decoder a few per cent faster. What we
+are after is a new decoder, as different from ours as Rauzy–Veech induction, the mathematics
+behind Cells, was from the walk. In the past week we built what it takes to pursue one:</p>
+<ul>
+<li><strong><a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">A target that is met or not</a>.</strong> An exact decoder must settle every block with at most h₁/2
+  events in all, in two passes over the block and no more memory than Open, and beat Open's whole
+  decoding time.</li>
+<li><strong><a href="https://github.com/lmmx/mibz2/blob/620eacc724988238fe6341c1102b9b2320847279/docs/journal/monodromy/2026-11-24-g1-scoped.md">A proved lower bound, G1</a>.</strong> Every decoder in the current family pays at least one event per
+  width-1 row, so at least h₁. Anything that meets the target is a new algorithm, not an increment.</li>
+<li><strong><a href="https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md">A census of our benchmark's blocks</a>.</strong> Three structural features of a block predict the time
+  Open spends building its structures, with a held-out R² of 0.96.</li>
+<li><strong><a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">Fourteen candidate frameworks closed</a>,</strong> each kept with its counterexample, its scope and what
+  would get past it.</li>
+<li><strong>The transformation that connects our three decoders,</strong> with the one thing it can never remove
+  (§4).</li>
+</ul>
+<aside class="il-gloss">
+<p><strong>Rauzy–Veech induction</strong> studies a line cut into intervals and
+shuffled, an interval exchange, by cutting off the shorter end again and again until the pieces
+repeat. A block's runs of equal letters form such an exchange, so the same steps move whole runs at
+a time. The kernel built on it is told in <a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a>,
+and the dictionary between the two worlds in <a href="../2026-11-16-mathematical-dictionary/">Towers, words and loops</a>.</p>
+</aside>
+<p>The search was reframed four times on the way: use everything, count the cost, set a target that is
+met or not, and keep the method rather than the result (§§1–2). The last came from an essay against
+AI mathematics, and it became a precise question about our decoders. The rest of the post works that
+question through. It sets out the routes we have (§3) and the transformation between them (§4). It
+then tests two proposals against it (§5), says what a new route would have to be (§6), and ends on
 where the search stands (§7).</p>
 <h2 id="1-the-goal-a-new-algorithm-not-a-faster-one">1. The goal: a new algorithm, not a faster one<a class="headerlink" href="#1-the-goal-a-new-algorithm-not-a-faster-one" title="Permanent link">&para;</a></h2>
 <p>The step from the walk to induction is the model. The walk follows the block's cycle one row at a
@@ -3212,22 +3241,37 @@ algorithm with a different cost. So the search is for a new proof of an old fact
 element alongside correctness. Without that cost element, an algorithm can be changed and kept
 correct indefinitely, and whether it helps is discovered only at the end.</p>
 <h2 id="2-four-reframings-of-the-search">2. Four reframings of the search<a class="headerlink" href="#2-four-reframings-of-the-search" title="Permanent link">&para;</a></h2>
-<p><strong>Use everything.</strong> A claimed proof of the Riemann hypothesis, built on
+<p><strong>Use everything.</strong> A claimed proof of the Riemann hypothesis, still awaiting independent checking,
+built on
 <a href="../2026-11-22-two-centuries-of-tools/">fifty older tools reaching back two centuries</a>, made
 mathematical distance look cheap. Our <a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md">method</a> adopted mathematical maximalism: no limit on
 how far a framework sits from compression, and chains of worlds, where one representation's job is
-to carry the problem into another. It produced many frameworks tried and closed, and a register of
+to carry the problem into another. It produced fourteen frameworks tried and closed, and a register of
 obstructions. It did not produce the step.</p>
-<p><strong>Count the cost.</strong> A paper analysing the simplex method "by the book" (Bach, Black, Huiberts and
-Kafer) puts cost theorems beside correctness theorems. We did the same. A census of our benchmark's
-blocks now predicts the cost of building Open's structures from block structure alone, and a lower
-bound, G1 (§3), says what every route of our current kind must pay.</p>
+<p><strong>Count the cost.</strong> A paper analysing the simplex method "by the book"
+(<a href="https://arxiv.org/abs/2510.21613">Bach, Black, Huiberts and Kafer</a>) puts cost theorems beside
+correctness theorems. We did the same. A census of our benchmark's blocks now predicts the time
+Open spends building its structures from three features of a block (held-out R² 0.96), and a lower
+bound, G1 (§3), says what every decoder in the current family must pay.</p>
+<aside class="il-gloss">
+<p><strong><a href="https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md">The census</a></strong> timed Open on each of the 232 distinct
+blocks of our Wikidata benchmark, one worker at a time, and asked whether a few features of a
+block's structure predict where the time goes. For building Open's structures they do: three
+features explain 96% of the variation on blocks held out of the fit. For writing the output they
+don't, which is one reason the price of an event (§5) stays an open question.</p>
+</aside>
 <p><strong>Set a target that is met or not.</strong> A Super Mario 64 project asked whether a level's challenge
 could be done with <em>fewer than one</em> press of the A button. That is a minimisation turned into a
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
-working backwards: it supplied the impossible-looking condition in a test fixture, confirmed the
-payoff, and only then found how the game could produce it, one supplied condition at a time.
-Payoff first, mechanism second.</p>
+working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
+confirmed the payoff, and only then found how the real game could produce it, one supplied
+condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.</p>
+<aside class="il-gloss">
+<p><strong>The A-button challenge</strong> is a long-running game among Super
+Mario 64 players: finish each star with as few presses of the jump button as can be managed. Where
+the record stood at one press, one project asked whether a star could be had with none, and set
+out to answer it either with a route or with a proof, checked by machine, that no route exists.</p>
+</aside>
 <p>What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every
 ordinary route relies on. mibz2 has an exact counterpart.</p>
 <table>
@@ -3247,27 +3291,27 @@ ordinary route relies on. mibz2 has an exact counterpart.</p>
 <tr>
 <td><strong>The best known</strong></td>
 <td>one A press</td>
-<td>Open: h₁ width-1 steps among its m retained steps</td>
+<td>Open: m events, h₁ of them on width-1 rows</td>
 </tr>
 <tr>
 <td><strong>The class's floor</strong></td>
 <td>ordinary routes need at least one</td>
-<td>G1: every route of the current kind pays at least one event per width-1 row</td>
+<td>G1: every decoder in the current family pays at least h₁</td>
 </tr>
 <tr>
 <td><strong>The challenge</strong></td>
 <td>fewer than one</td>
-<td>at most h₁/2</td>
+<td>at most h₁/2 events in all</td>
 </tr>
 </tbody>
 </table>
-<p>Here h₁ is the block's number of width-1 runs, and h₁/m is 0.30, 0.39 and 0.83 at the minimum,
-median and maximum across Wikidata's distinct blocks. Because no route of the current kind goes
-below the floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a
+<p>On our benchmark, an extract of Wikidata, h₁/m is 0.30, 0.39 and 0.83 at the minimum, median and
+maximum across its 232 distinct blocks. Because no decoder in the current family goes below the
+floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a
 new algorithm or an increment stops being a judgement and becomes a consequence of the bound.</p>
 <p>Our <a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">target</a> now has the same form: invert every block
-exactly, in two passes and no more memory than Open, with at most half the single-row events that
-every route of the current kind must pay, and then beat our current decoder on the bench. A candidate either crosses
+exactly, in two passes and no more memory than Open, with at most h₁/2 events in all, and then
+beat Open's whole decoding time. A candidate either crosses
 that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder
 what the new idea would compute, for free, and measure what it buys.</p>
 <p><strong>Keep the method, not the result.</strong> In October the essayist doomslide published
@@ -3357,8 +3401,9 @@ letter earlier in the text. With C[c] the number of letters smaller than c,</p>
   the thin ones.</li>
 </ul>
 <p>A <strong>width-1 row</strong> is a run of one letter whose neighbours differ, so no stretch carries it. We have
-proved a lower bound, G1: in the family of methods these three routes belong to, every width-1 row
-costs at least one step, which we call an event.</p>
+proved a lower bound, G1: every decoder in the current family pays at least one event on each
+width-1 row. Its scope is that family. Rules that move several rows on a shared context need an
+argument of their own (§6).</p>
 <p>On our Wikidata benchmark most of these rows come from
 <a href="../2026-11-20-where-the-decoding-work-goes/">random statement IDs</a>. On six blocks we measured
 closely, about 65% of the width-1 rows lie in hexadecimal tokens that occur only once, 18% in hex
@@ -3370,7 +3415,7 @@ over the two.</p>
 <h2 id="4-between-the-routes-we-have">4. Between the routes we have<a class="headerlink" href="#4-between-the-routes-we-have" title="Permanent link">&para;</a></h2>
 <p>Put to mibz2, Hilbert's instruction asks: what transformation turns the walk into Cells, and Cells
 into Open? What does it keep, what does it remove, and what can it never remove? Our
-<a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">record</a> answers it for these three, with proofs.</p>
+<a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">record</a> answers it for these three; the proofs are there.</p>
 <p>The answer is <strong>contraction along compose</strong>. Think of a decoder as tiling the block's cycle with
 steps. Two consecutive steps can be replaced by their composite, and wherever a whole stretch of
 rows stays inside runs of one letter, the composite covers the stretch in one step:</p>
@@ -3418,7 +3463,7 @@ the random IDs, has another.</p>
 those rows go needs at least 4 bits per row. That bounds the <em>size</em> of the description, not the
 <em>number of events</em> needed to apply it. A description applied in few, wide steps isn't ruled out.</p>
 <h2 id="5-two-proposals-and-what-they-amount-to">5. Two proposals, and what they amount to<a class="headerlink" href="#5-two-proposals-and-what-they-amount-to" title="Permanent link">&para;</a></h2>
-<p>So, two ways the reframed search might move a decoder forward, and what each turns out to be.</p>
+<p>Two outside readings of the essay each proposed a way forward. Here is what each turns out to be.</p>
 <h3 id="moving-scattered-rows-together">Moving scattered rows together<a class="headerlink" href="#moving-scattered-rows-together" title="Permanent link">&para;</a></h3>
 <p>The walk follows one random ID letter by letter before it reaches the next. The first proposal is
 to move all the IDs at once: take the sorted set of rows where the IDs begin, apply LF to all of
@@ -3438,10 +3483,11 @@ smaller letters land below larger ones, so the result is sorted again with no co
 
 <p>What the <a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">frontier</a> amounts to:</p>
 <ul>
-<li><strong>A known step.</strong> It is the step of batched backward search.</li>
-<li><strong>The same number of events, built record by record.</strong> Each record step composes one row with
-  the next, matching the walk's steps one for one: G fields of d letters cost G·d events either
-  way, as G1 requires. A packed implementation of the partition, moving many rows per machine
+<li><strong>A known step.</strong> Search tools for compressed text already use it when they look for many
+  patterns at once (batched backward search).</li>
+<li><strong>The same number of events, built entry by entry.</strong> Each frontier entry is a row together with
+  the ID it belongs to, and each step moves one entry one row, matching the walk's steps one for
+  one: G IDs of d letters cost G·d events either way, as G1 requires. A packed implementation of the partition, moving many rows per machine
   word, is a different object and would need pricing in its own right.</li>
 <li><strong>Cheap starting rows, unpriced assembly.</strong> The rows where IDs begin lie in one contiguous range
   and take one scan to find. Placing each ID's letters in the output is a further job.</li>
@@ -3450,12 +3496,17 @@ smaller letters land below larger ones, so the result is sorted again with no co
   <span class="arithmatex">\(LF(x_i) = b_c + \sum_{j&lt;i} g_j\)</span>. One step of the frontier is a matter of counting letters in
   gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.</li>
 </ul>
+<p><aside class="il-gloss" markdown><strong>Backward search</strong> is how a compressed full-text index finds a
+pattern. It reads the pattern from its last letter to its first, and each letter narrows an
+interval of sorted rows by one LF step. Searching for many patterns at once moves all their
+intervals together, which is the frontier's step in another use.</aside></p>
 <p>The random IDs show what the frontier changes and what it doesn't:</p>
 <figure class="bf-fig">
 <p class="bf-title">The same random IDs, decoded along each ID or across all of them</p>
 <div class="fx-panels"><svg viewBox="0 0 360 300" role="img" aria-label="One ID at a time: three chains of eight dependent steps, each letter waiting for the one before."><defs><marker id="fx6-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="fx-head" d="M0,1 L9,5 L0,9 Z"/></marker></defs><text class="bf-ts" x="180" y="20" text-anchor="middle">One ID at a time</text><text class="fx-row" x="28" y="74" text-anchor="middle">ID 1</text><circle class="fx-bead" cx="64" cy="70" r="12"/><text class="fx-letter-s" x="64" y="75" text-anchor="middle">a</text><path class="fx-chain" d="M75,70 L89,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="101" cy="70" r="12"/><text class="fx-letter-s" x="101" y="75" text-anchor="middle">7</text><path class="fx-chain" d="M112,70 L126,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="138" cy="70" r="12"/><text class="fx-letter-s" x="138" y="75" text-anchor="middle">f</text><path class="fx-chain" d="M149,70 L163,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="175" cy="70" r="12"/><text class="fx-letter-s" x="175" y="75" text-anchor="middle">9</text><path class="fx-chain" d="M186,70 L200,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="212" cy="70" r="12"/><text class="fx-letter-s" x="212" y="75" text-anchor="middle">2</text><path class="fx-chain" d="M223,70 L237,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="249" cy="70" r="12"/><text class="fx-letter-s" x="249" y="75" text-anchor="middle">b</text><path class="fx-chain" d="M260,70 L274,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="286" cy="70" r="12"/><text class="fx-letter-s" x="286" y="75" text-anchor="middle">0</text><path class="fx-chain" d="M297,70 L311,70" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="323" cy="70" r="12"/><text class="fx-letter-s" x="323" y="75" text-anchor="middle">1</text><text class="fx-row" x="28" y="136" text-anchor="middle">ID 2</text><circle class="fx-bead" cx="64" cy="132" r="12"/><text class="fx-letter-s" x="64" y="137" text-anchor="middle">3</text><path class="fx-chain" d="M75,132 L89,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="101" cy="132" r="12"/><text class="fx-letter-s" x="101" y="137" text-anchor="middle">b</text><path class="fx-chain" d="M112,132 L126,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="138" cy="132" r="12"/><text class="fx-letter-s" x="138" y="137" text-anchor="middle">c</text><path class="fx-chain" d="M149,132 L163,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="175" cy="132" r="12"/><text class="fx-letter-s" x="175" y="137" text-anchor="middle">9</text><path class="fx-chain" d="M186,132 L200,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="212" cy="132" r="12"/><text class="fx-letter-s" x="212" y="137" text-anchor="middle">4</text><path class="fx-chain" d="M223,132 L237,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="249" cy="132" r="12"/><text class="fx-letter-s" x="249" y="137" text-anchor="middle">e</text><path class="fx-chain" d="M260,132 L274,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="286" cy="132" r="12"/><text class="fx-letter-s" x="286" y="137" text-anchor="middle">7</text><path class="fx-chain" d="M297,132 L311,132" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="323" cy="132" r="12"/><text class="fx-letter-s" x="323" y="137" text-anchor="middle">2</text><text class="fx-row" x="28" y="198" text-anchor="middle">ID 3</text><circle class="fx-bead" cx="64" cy="194" r="12"/><text class="fx-letter-s" x="64" y="199" text-anchor="middle">f</text><path class="fx-chain" d="M75,194 L89,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="101" cy="194" r="12"/><text class="fx-letter-s" x="101" y="199" text-anchor="middle">e</text><path class="fx-chain" d="M112,194 L126,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="138" cy="194" r="12"/><text class="fx-letter-s" x="138" y="199" text-anchor="middle">7</text><path class="fx-chain" d="M149,194 L163,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="175" cy="194" r="12"/><text class="fx-letter-s" x="175" y="199" text-anchor="middle">2</text><path class="fx-chain" d="M186,194 L200,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="212" cy="194" r="12"/><text class="fx-letter-s" x="212" y="199" text-anchor="middle">0</text><path class="fx-chain" d="M223,194 L237,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="249" cy="194" r="12"/><text class="fx-letter-s" x="249" y="199" text-anchor="middle">4</text><path class="fx-chain" d="M260,194 L274,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="286" cy="194" r="12"/><text class="fx-letter-s" x="286" y="199" text-anchor="middle">a</text><path class="fx-chain" d="M297,194 L311,194" marker-end="url(#fx6-head)"/><circle class="fx-bead" cx="323" cy="194" r="12"/><text class="fx-letter-s" x="323" y="199" text-anchor="middle">9</text><text class="fx-pair" x="180" y="254" text-anchor="middle">24 letters in 3 chains</text><text class="fx-pair" x="180" y="274" text-anchor="middle">of 8 dependent steps</text><text class="bf-tm" x="180" y="292" text-anchor="middle">each step waits for the one before</text></svg><svg viewBox="0 0 360 300" role="img" aria-label="Phase by phase: the same 24 letters in eight rounds; each round moves all three records and re-sorts them."><text class="bf-ts" x="180" y="20" text-anchor="middle">Phase by phase</text><rect class="fx-round" x="33" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="48" y="72" text-anchor="middle">a</text><text class="fx-letter-s" x="48" y="116" text-anchor="middle">3</text><text class="fx-letter-s" x="48" y="160" text-anchor="middle">f</text><text class="fx-row" x="48" y="204" text-anchor="middle">1</text><rect class="fx-round" x="69" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="84" y="72" text-anchor="middle">7</text><text class="fx-letter-s" x="84" y="116" text-anchor="middle">b</text><text class="fx-letter-s" x="84" y="160" text-anchor="middle">e</text><text class="fx-row" x="84" y="204" text-anchor="middle">2</text><rect class="fx-round" x="105" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="120" y="72" text-anchor="middle">f</text><text class="fx-letter-s" x="120" y="116" text-anchor="middle">c</text><text class="fx-letter-s" x="120" y="160" text-anchor="middle">7</text><text class="fx-row" x="120" y="204" text-anchor="middle">3</text><rect class="fx-round" x="141" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="156" y="72" text-anchor="middle">9</text><text class="fx-letter-s" x="156" y="116" text-anchor="middle">9</text><text class="fx-letter-s" x="156" y="160" text-anchor="middle">2</text><text class="fx-row" x="156" y="204" text-anchor="middle">4</text><rect class="fx-round" x="177" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="192" y="72" text-anchor="middle">2</text><text class="fx-letter-s" x="192" y="116" text-anchor="middle">4</text><text class="fx-letter-s" x="192" y="160" text-anchor="middle">0</text><text class="fx-row" x="192" y="204" text-anchor="middle">5</text><rect class="fx-round" x="213" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="228" y="72" text-anchor="middle">b</text><text class="fx-letter-s" x="228" y="116" text-anchor="middle">e</text><text class="fx-letter-s" x="228" y="160" text-anchor="middle">4</text><text class="fx-row" x="228" y="204" text-anchor="middle">6</text><rect class="fx-round" x="249" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="264" y="72" text-anchor="middle">0</text><text class="fx-letter-s" x="264" y="116" text-anchor="middle">7</text><text class="fx-letter-s" x="264" y="160" text-anchor="middle">a</text><text class="fx-row" x="264" y="204" text-anchor="middle">7</text><rect class="fx-round" x="285" y="46" width="30" height="140" rx="15"/><text class="fx-letter-s" x="300" y="72" text-anchor="middle">1</text><text class="fx-letter-s" x="300" y="116" text-anchor="middle">2</text><text class="fx-letter-s" x="300" y="160" text-anchor="middle">9</text><text class="fx-row" x="300" y="204" text-anchor="middle">8</text><path class="fx-brace" d="M33,218 L33,223 L315,223 L315,218"/><text class="fx-pair" x="174" y="240" text-anchor="middle">8 rounds</text><path class="fx-brace" d="M326,50 L331,50 L331,182 L326,182"/><text class="fx-pair" x="338" y="108" text-anchor="start">3 in</text><text class="fx-pair" x="338" y="126" text-anchor="start">flight</text><text class="bf-tm" x="180" y="274" text-anchor="middle">each round moves all 3 records, re-sorted</text><text class="bf-tm" x="180" y="292" text-anchor="middle">the rounds don't reduce the 24 letters' worth of work</text></svg></div>
 <figcaption>Conceptual, with illustrative IDs. The letters are random, but every ID has the same shape, so the frontier can step all of them together. The count of events is the same either way (G·d = 3 × 8); what changes is which memory each round touches. The three totals are different kinds of number, so they aren't drawn on one scale.</figcaption>
 </figure>
+
 <p>As a whole decoder, it would still have three jobs to do:</p>
 <figure class="bf-fig">
 <p class="bf-title">The frontier as a whole decoder: what is in hand and what is open</p>
@@ -3469,41 +3520,43 @@ width-1 events. Nothing floors the <em>price</em> of each one. A decoder that to
 cheaply would sit outside the bound.</p>
 <p>What our records say about the price:</p>
 <ul>
-<li><strong>Lanes, in a C harness.</strong> Running up to eight independent walks side by side over Open's cycle
-  bought 5–14% while each step's append was branchy and variable-length. Once each append was a
-  single 16-byte store, eight lanes cut the emit to 0.55–0.78 of its time, though either change
-  alone barely moved it (<a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">toy-transfer</a>). Hiding the wait for memory pays once the work per
+<li><strong>Lanes, in a test program.</strong> Running up to eight independent walks side by side (lanes) over
+  Open's cycle, in a small C program, bought 5–14% while each step's append, the write of its
+  letters to the output, was branchy and variable-length. Once each append was a single 16-byte
+  store, eight lanes cut the time spent writing the output to 0.55–0.78 of what it was, though
+  either change alone barely moved it (<a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">toy-transfer</a>). Hiding the wait for memory pays once the work per
   step is small.</li>
 <li><strong>Lanes in the decoder itself.</strong> mibz2 already has that store
   (<a href="../2026-11-21-sixteen-at-a-stroke/">Sixteen at a stroke</a>); there, eight lanes were 13% faster on
-  one thread and 5% slower once eight workers shared the processor
+  one thread and 5% slower once eight decoding threads shared the processor
   (<a href="../2026-11-21-fast-alone-slow-in-a-crowd/">Fast alone, slow in a crowd</a>).</li>
-<li><strong>Halving the dependent steps.</strong> A <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md">squared map</a> that halved the number of dependent steps
-  emitted 1.22 times as slowly per step on ten workers, and the whole decode took about 1.3 times as
-  long. It also changed the footprint and the preprocessing, and recorded no miss counts.</li>
+<li><strong>Halving the dependent steps.</strong> A version of Open that applied LF twice per step, a
+  <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md">squared map</a> halving the number of steps that wait on memory, took 1.22 times as
+  long per step to write the output on ten threads, and the whole decode about 1.3 times as long. It also changed the footprint and the preprocessing, and recorded no miss counts.</li>
 </ul>
 <p>So neither the event count nor the count of memory waits sets the time on its own. The work in
 each step and the waits between steps interact, and only the whole decoder's time decides. The
 price per event is an open question in its own right.</p>
 <h2 id="6-what-a-new-route-would-have-to-be">6. What a new route would have to be<a class="headerlink" href="#6-what-a-new-route-would-have-to-be" title="Permanent link">&para;</a></h2>
 <p><strong>Not a short proof.</strong> Lower bounds on proof size are classically escaped by abbreviation: name a
-composite once and reuse it, as extension variables shorten propositional proofs. G1 already charges
+composite once and reuse it. G1 already charges
 shared work only once, and <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">survives it</a>. Nor is a short statement enough. The formula in
 §3 is already a one-line rule for every row of every block, and applying it row by row is the walk.
 Short to state, short to prove and cheap to execute are three different properties.</p>
 <p><strong>An interface with its costs exposed.</strong> A candidate would have to take the form</p>
 <div class="arithmatex">\[\mathrm{Build}(L) \to z, \qquad \mathrm{Advance}(z, h) \to z', \qquad \mathrm{Emit}(z') \to T,\]</div>
 <p>with a fixed language for the description z, its size, and the cost of building, composing and
-reading it, every access to L counted. If Emit's first act is to enumerate rows and rank each one,
+reading it, every access to L counted. If Emit's first act is to enumerate rows and count the earlier copies of each one's letter,
 the candidate has moved the walk, not removed it. A useful test is to supply z for free and look
 at what consumes it.</p>
 <p><strong>Carrying identities, not only sets.</strong> Compressing the set of rows is not enough. For the set of
 all rows, <span class="arithmatex">\(LF^h\)</span> of the set is the set itself, a constant description for every h, and nothing is
 decoded. What a decoder needs is the labelled map <span class="arithmatex">\(x \mapsto LF^h(x)\)</span>, carrying each start's
 identity to its place in the output.</p>
-<p><strong>Beyond the swap argument.</strong> Our lower bounds for rules that read only aggregate counts rest on
-swaps: two letters exchanged so that a column stays valid, every count is unchanged, and the output
-differs. A cheap order-sensitive summary defeats every such swap. With letters coded as numbers,
+<p><strong>Beyond the swap argument.</strong> We also have lower bounds for rules that read only aggregate counts,
+such as how many of each letter lie in an interval. They rest on swaps: two letters exchanged so
+that the column is still the BWT of some text (a valid column), every count is unchanged, and the
+output differs. A cheap order-sensitive summary defeats every such swap. With letters coded as numbers,
 the first moment</p>
 <div class="arithmatex">\[A(L) = \sum_i i \cdot \mathrm{code}(L[i])\]</div>
 <p>changes by <span class="arithmatex">\((i-j)(\mathrm{code}(L[j]) - \mathrm{code}(L[i])) \ne 0\)</span> under any swap of unequal letters
@@ -3537,6 +3590,12 @@ translation, and positions come only from labels on the start rows of those fact
 decoder of that kind pays <span class="arithmatex">\(c_1 \ge h_1 - |B|\)</span> events, where <span class="arithmatex">\(B\)</span> is the set of width-1 rows placed
 by a label read off an uncharged observation. All of the theorem's content is in how large <span class="arithmatex">\(B\)</span> can
 be.</p>
+<aside class="il-gloss">
+<p><strong>An uncharged observation</strong> is something a decoder may read
+for free under our counting rules: a summary that folds the whole block into a few numbers, such as
+how many of each letter it holds, or the first moment below. Only reading a single row's own record
+to settle that row costs an event, so the question is how much such free summaries can place.</p>
+</aside>
 <p>A row can be placed from an observation only if every valid column with the same observation puts
 it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into
 counting. Across all 5,880 valid columns of ten letters over three symbols, the histogram plus the
@@ -3558,44 +3617,47 @@ column above. None comes near half on real blocks:</p>
 <p>A negative result in this shape is one theorem over a stated class, with a section saying what it
 does not cover, and the nearest decoders outside it measured.</p>
 <h2 id="7-where-the-search-stands">7. Where the search stands<a class="headerlink" href="#7-where-the-search-stands" title="Permanent link">&para;</a></h2>
-<p>The frozen target is precise. On every block, an exact decoder must pay at most half of h₁ in
-single-row events, in at most two passes over the block and no more scratch memory than Open. It
+<p>The target is precise, and it was fixed before any candidate was tested. On every block, an exact
+decoder must pay at most h₁/2 events in all, in at most two passes over the block and no more scratch memory than Open. It
 must be one fixed program with no stored answers, and it must beat our current decoder on whole
 decoding time.</p>
 <p>The target is harder than its headline. Counted strictly, Open pays one event for every retained
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 <span class="arithmatex">\(h_1/m \ge 2/3\)</span>. Across the 232 distinct blocks of our benchmark, <span class="arithmatex">\(h_1/m\)</span> is 0.41 overall and
-0.30 to 0.83 block by block. A yes therefore has to carry all of the retained words more cheaply,
-not just the random IDs.</p>
+0.30 to 0.83 block by block. A yes therefore has to write the word of every retained step more
+cheaply, not just the random IDs.</p>
 <p>The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
 work proves one, closes one, or measures what one would need.</p>
 <figure class="bf-fig">
 <p class="bf-title">The main theorem, as premises</p>
-<svg viewBox="0 0 720 348" role="img" aria-label="The main theorem as seven premises with their status: the split partly measured, additivity proved, stream N, stream R, glue and budget open, and the margin failing while random rows cost one event each; together they would give an exact decoder with at most half of h1 single-row events."><rect class="bf-card" x="0.0" y="8.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="30.0" text-anchor="start">split</text><text class="bf-ttiny" x="110.0" y="30.0" text-anchor="start">sort width-1 rows into random (R) and the rest (N), from the run records</text><rect class="bf-pill-next" x="580.0" y="14.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="29.0" text-anchor="middle">partly measured</text><rect class="bf-card" x="0.0" y="48.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="70.0" text-anchor="start">additivity</text><text class="bf-ttiny" x="110.0" y="70.0" text-anchor="start">events add over stream N, stream R and the wide rows</text><rect class="bf-pill-hi" x="580.0" y="54.0" width="128.0" height="22.0" rx="11"/><text class="bf-t-green" x="644.0" y="69.0" text-anchor="middle">proved</text><rect class="bf-card" x="0.0" y="88.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="110.0" text-anchor="start">stream N</text><text class="bf-ttiny" x="110.0" y="110.0" text-anchor="start">a procedure for the non-random width-1 rows, below their count</text><rect class="bf-pill-ready" x="580.0" y="94.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="109.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="128.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="150.0" text-anchor="start">stream R</text><text class="bf-ttiny" x="110.0" y="150.0" text-anchor="start">random rows cost a events each: a ≥ 1 for the current kind; best known a = 1</text><rect class="bf-pill-ready" x="580.0" y="134.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="149.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="168.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="190.0" text-anchor="start">glue</text><text class="bf-ttiny" x="110.0" y="190.0" text-anchor="start">the streams&#x27; outputs interleave exactly; each boundary is an event unless placed</text><rect class="bf-pill-ready" x="580.0" y="174.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="189.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="208.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="230.0" text-anchor="start">budget</text><text class="bf-ttiny" x="110.0" y="230.0" text-anchor="start">two passes and Open&#x27;s memory, across both streams and the glue</text><rect class="bf-pill-ready" x="580.0" y="214.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="229.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="248.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="270.0" text-anchor="start">margin</text><text class="bf-ttiny" x="110.0" y="270.0" text-anchor="start">stream N + stream R + wide rows + glue ≤ h₁/2</text><rect class="bf-pill-next" x="580.0" y="254.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="269.0" text-anchor="middle">fails at a = 1</text><path class="bf-arrow" d="M360.0,288.0 L360.0,304.0"/><path class="bf-arrow" d="M357.0,297.7 L360.0,304.0 L363.0,297.7"/><rect class="bf-card-hi" x="90.0" y="306.0" width="540.0" height="34.0" rx="6"/><text class="bf-t" x="360.0" y="328.0" text-anchor="middle">⇒ an exact decoder outside the current kind, with at most h₁/2 single-row events</text></svg>
+<svg viewBox="0 0 720 348" role="img" aria-label="The main theorem as seven premises with their status: the split partly measured, additivity proved, stream N, stream R, glue and budget open, and the margin failing while random rows cost one event each; together they would give an exact decoder with at most half of h1 events in all."><rect class="bf-card" x="0.0" y="8.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="30.0" text-anchor="start">split</text><text class="bf-ttiny" x="110.0" y="30.0" text-anchor="start">sort width-1 rows into random (R) and the rest (N), from the run records</text><rect class="bf-pill-next" x="580.0" y="14.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="29.0" text-anchor="middle">partly measured</text><rect class="bf-card" x="0.0" y="48.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="70.0" text-anchor="start">additivity</text><text class="bf-ttiny" x="110.0" y="70.0" text-anchor="start">events add over stream N, stream R and the wide rows</text><rect class="bf-pill-hi" x="580.0" y="54.0" width="128.0" height="22.0" rx="11"/><text class="bf-t-green" x="644.0" y="69.0" text-anchor="middle">proved</text><rect class="bf-card" x="0.0" y="88.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="110.0" text-anchor="start">stream N</text><text class="bf-ttiny" x="110.0" y="110.0" text-anchor="start">a procedure for the non-random width-1 rows, below their count</text><rect class="bf-pill-ready" x="580.0" y="94.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="109.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="128.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="150.0" text-anchor="start">stream R</text><text class="bf-ttiny" x="110.0" y="150.0" text-anchor="start">random rows cost a events each: a ≥ 1 in the current family; best known a = 1</text><rect class="bf-pill-ready" x="580.0" y="134.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="149.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="168.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="190.0" text-anchor="start">glue</text><text class="bf-ttiny" x="110.0" y="190.0" text-anchor="start">the streams&#x27; outputs interleave exactly; each boundary is an event unless placed</text><rect class="bf-pill-ready" x="580.0" y="174.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="189.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="208.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="230.0" text-anchor="start">budget</text><text class="bf-ttiny" x="110.0" y="230.0" text-anchor="start">two passes and Open&#x27;s memory, across both streams and the glue</text><rect class="bf-pill-ready" x="580.0" y="214.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="229.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="248.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="270.0" text-anchor="start">margin</text><text class="bf-ttiny" x="110.0" y="270.0" text-anchor="start">stream N + stream R + wide rows + glue ≤ h₁/2</text><rect class="bf-pill-next" x="580.0" y="254.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="269.0" text-anchor="middle">fails at a = 1</text><path class="bf-arrow" d="M360.0,288.0 L360.0,304.0"/><path class="bf-arrow" d="M357.0,297.7 L360.0,304.0 L363.0,297.7"/><rect class="bf-card-hi" x="90.0" y="306.0" width="540.0" height="34.0" rx="6"/><text class="bf-t" x="360.0" y="328.0" text-anchor="middle">⇒ an exact decoder outside the current family, with at most h₁/2 events in all</text></svg>
 <figcaption>Status as of 24 November 2026. The theorem is conditional: if every premise holds on every block, a decoder meeting the target exists. Random rows are well over half of h₁ on the blocks measured, so while each still costs one event (a = 1) the margin cannot hold; meeting it means beating the floor on random content itself.</figcaption>
 </figure>
 
 <ul>
-<li><strong>The count.</strong> G1 holds for routes built by contracting stretches, with sharing. What it doesn't
+<li><strong>The count.</strong> G1 holds for the current family, with shared work counted once. What it doesn't
   cover is a rule applied to a whole scattered set, with a short description that is also cheap to
   apply: the Build, Advance and Emit of §6.</li>
 <li><strong>The price.</strong> A separate question. The records show the price per event moving with the work in
   each step and with how steps overlap, not with either count alone.</li>
-<li><strong>The next test.</strong> Supply Open's existing word codes in output order, for free, and time the
-  unchanged consumer against Open. If even that leaves too little headroom, this representation is
-  closed. If it leaves room, the room is the budget for building the order natively.</li>
+<li><strong>The supplied test has run.</strong> Handed its word codes already in output order, for free, Open
+  spent half as long writing the output (0.55 of its time). The whole decoder took 0.988 of its
+  time on ten threads, and 0.838 on one (<a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-7132792060">the result</a>). On ten threads that is far below the
+  10% our method asks of a perfect version before building a native prototype, so this
+  representation stops here: even a free order buys little once ten threads share the machine.
+  On one thread there is 16% to win.</li>
 <li><strong>Exactness.</strong> mibz2 must be exact on every block, so checking a guessed decoding against bzip2's
   32-bit block checksum, which would accept a wrong guess about once in four billion, is not a route.</li>
 </ul>
 <figure class="bf-fig">
 <p class="bf-title">The next test: supply the order, keep everything else</p>
 <svg class="fx-solo" style="max-width:360px" viewBox="0 0 360 430" role="img" aria-label="Two pipelines. Today&#x27;s Open builds its structures, walks the retained cycle and appends words. The test receives the word codes already in output order and runs the same append code."><text class="bf-ts" x="4" y="24" text-anchor="start">today's Open</text><path class="fx-rail" d="M36,50 L328,50"/><circle class="fx-stop-done" cx="36" cy="50" r="8"/><circle class="fx-stop-done" cx="136" cy="50" r="8"/><circle class="fx-stop-done" cx="240" cy="50" r="8"/><circle class="fx-stop-text" cx="328" cy="50" r="8"/><text class="bf-tm" x="36" y="76" text-anchor="middle">Open's</text><text class="bf-tm" x="36" y="90" text-anchor="middle">construction</text><text class="bf-tm" x="136" y="76" text-anchor="middle">walk the</text><text class="bf-tm" x="136" y="90" text-anchor="middle">retained cycle</text><text class="bf-tm" x="240" y="76" text-anchor="middle">same</text><text class="bf-tm" x="240" y="90" text-anchor="middle">append code</text><text class="bf-tm" x="328" y="76" text-anchor="middle">text</text><text class="fx-pair" x="180" y="116" text-anchor="middle">the baseline</text><text class="bf-ts" x="4" y="152" text-anchor="start">the supplied test</text><path class="fx-rail" d="M36,196 L328,196"/><circle class="fx-stop-done" cx="36" cy="196" r="8"/><rect class="fx-inset" x="82" y="166" width="108" height="60" rx="14"/><circle class="fx-stop-done" cx="240" cy="196" r="8"/><circle class="fx-stop-text" cx="328" cy="196" r="8"/><text class="bf-tm" x="36" y="222" text-anchor="middle">Open's</text><text class="bf-tm" x="36" y="236" text-anchor="middle">construction</text><text class="fx-inset-t" x="136" y="186" text-anchor="middle">word codes in</text><text class="fx-inset-t" x="136" y="200" text-anchor="middle">output order,</text><text class="fx-inset-t" x="136" y="214" text-anchor="middle">supplied free</text><text class="bf-tm" x="240" y="222" text-anchor="middle">same</text><text class="bf-tm" x="240" y="236" text-anchor="middle">append code</text><text class="bf-tm" x="328" y="222" text-anchor="middle">text</text><text class="fx-pair" x="180" y="270" text-anchor="middle">an upper bound on what any</text><text class="fx-pair" x="180" y="287" text-anchor="middle">producer of that order can win</text><text class="bf-tm" x="180" y="342" text-anchor="middle">if even the free order leaves less than 10%</text><text class="bf-tm" x="180" y="357" text-anchor="middle">of whole-decoder time to win, this representation is closed</text><path class="fx-axis" d="M30,376 L330,376"/><rect class="fx-gate-zone" x="30" y="367" width="30" height="18"/><path class="fx-gate" d="M60,363 L60,389"/><text class="fx-pair" x="60" y="404" text-anchor="middle">10%</text><text class="fx-row" x="30" y="404" text-anchor="middle">0</text><text class="fx-row" x="330" y="404" text-anchor="end">whole-decoder time</text></svg>
-<figcaption>A proposed experiment, not yet run. Supplying the order for free bounds what any way of producing it could win, before anyone builds one. The 10% bar is our method's headroom gate for a native prototype.</figcaption>
+<figcaption>Run on 24 November: the free order cut the output writing to 0.55 of its time, and the whole decoder to 0.988 on ten threads and 0.838 on one. Supplying the order for free bounds what any way of producing it could win, before anyone builds one. Our method builds a native prototype only if a perfect version beats Open by at least 10% end to end.</figcaption>
 </figure>
 
 <p>Read together, the four reframings say what the search now values. Using everything supplies
-the material. The book supplies the cost. The yes-or-no target supplies the line a candidate has
+the material. Counting the cost supplies the measure. The yes-or-no target supplies the line a candidate has
 to cross. The last says what to keep from each attempt: not the verdict alone, but the method
 behind it, the transformation with its invariant, which can generate the next route. The three
 decoders are results. Contraction along compose is a method: it explains why each route costs what
@@ -3611,8 +3673,10 @@ it is what we now count as progress.</p>
   (described) and an audit of the records below (§6), all verbatim.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">The ordered frontier and the transformation between decoders</a> and
   <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">abbreviation, batching and the block checksum</a>, our research records.</li>
-<li>The two streams and the totals: <a href="https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md">the six-block measurements</a> and <a href="https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md">the 232-block baseline</a>. The frozen target: <a href="https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md">the main theorem</a>, §1.</li>
+<li>The two streams and the totals: <a href="https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md">the six-block measurements</a> and <a href="https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md">the 232-block baseline</a>. The target: <a href="https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md">the main theorem</a>, §1.</li>
 <li>The scoped no: <a href="https://github.com/lmmx/mibz2/blob/bc1429ed92baab9b3e468fd5b5b8718ccd555741/docs/journal/monodromy/2026-11-24-mixed-calculus-repair.md">Theorem N′</a>, <a href="https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n18-complete-observation-fibres.md">the observation fibres</a> and <a href="https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n19-theorem-nprime-output-model.md">the three decoders outside the class</a>.</li>
+<li>Bach, Black, Huiberts and Kafer, <a href="https://arxiv.org/abs/2510.21613">"Beyond Smoothed Analysis: Analyzing the Simplex Method by the Book"</a>.</li>
+<li><a href="https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md">The census of the benchmark's blocks</a> and <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-7132792060">the supplied-codes result</a>.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">Toy-transfer</a>, the lanes experiments with their later correction, and
   <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md">the squared map</a>.</li>
 <li>The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes
@@ -3778,19 +3842,19 @@ it is what we now count as progress.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/bench.js?v=ae442d4b7d67"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=ae442d4b7d67"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/blog.js?v=ae442d4b7d67"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=ae442d4b7d67"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/observatory.js?v=ae442d4b7d67"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=6793043730e4"></script>
+        <script src="../../assets/javascripts/katex.js?v=ae442d4b7d67"></script>
       
     
   </body>

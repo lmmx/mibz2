@@ -6,15 +6,27 @@ We now search for a new way to undo bzip2's block sort by forbidding the obvious
 
 24 November 2026 · 15 min read · [Meta](<#7-where-the-search-stands>)
 
-For most of its life, mibz2's research has moved in small steps. Each change made the existing decoder a few per cent faster, and the bench judged it. What we are actually after is bigger: a new decoder, a different way to undo bzip2's block sort, as different from ours as Rauzy–Veech induction was from the row-by-row walk it replaced. In the past week we changed the size of step we attempt. We set a target that no edit to our decoder can meet, by theorem, and built what it takes to pursue it:
+There is no new decoder yet. What this post reports is a change in the size of step we attempt, and what it has already established. Our current family of decoders provably can't halve the number of rows it settles one at a time, so any decoder that does must be a new algorithm. That is now a yes-or-no target. The first test of a candidate representation has also come back: handed the decoding order for free, the whole decoder ran 16% faster on one thread, and barely faster on ten.
 
-- **A target that is met or not.** It was frozen before the new measurements. An exact decoder must pay at most half the width-1 events that the current kind must, in two passes over the block and no more memory than Open, and then beat Open on the bench.
-- **A proved lower bound, G1,** for every route of the current kind. Anything below it is a new algorithm, not an increment.
-- **A census of our benchmark's blocks.** It predicts the cost of building Open's structures from block structure alone.
-- **Fourteen candidate frameworks closed.** Each keeps its counterexample, its scope and what would get past it.
-- **The transformation that connects our three decoders,** with the one thing it can never remove.
+A few terms carry the post:
 
-This post reads our own search. In the past week it has been reframed four times: use everything, count the cost, set a target that is met or not, and keep the method rather than the result. Each reframing changed what we count as progress (§§1–2). The last one came from an essay against AI mathematics, and it turned into a precise question about our decoders. The rest of the post works that question through. It sets out the routes we have (§3) and the transformation between them (§4). It then tests two proposals against it (§5), says what a new route would have to be (§6), and ends on where the search stands (§7).
+- **The BWT and LF.** bzip2 sorts the rotations of each block of text and keeps the last letter of each, the Burrows–Wheeler transform (BWT). Undoing it follows a map, LF, from each row of the sorted table to the row one letter earlier in the text ([the structure of that map](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>)).
+- **Our three decoders.** The walk applies LF one row at a time. [Cells](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) and [Open](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>) move whole stretches of rows at once, wherever neighbouring rows share their letter, and Open walks the thin stretches.
+- **The current family.** Decoders that move intervals of rows by fixed translations and compose those moves. The walk, Cells and Open all belong to it.
+- **A width-1 row** is a run of one letter, so no stretch carries it. A block has h₁ of them, and on our benchmark [most come from random IDs](<https://lmmx.github.io/mibz2/blog/2026-11-20-where-the-decoding-work-goes/index.md>).
+- **An event** is a step that settles one row on its own ([what decoding pays for](<https://lmmx.github.io/mibz2/blog/2026-11-18-what-decoding-pays-for/index.md>) counts them). Open's events are its m retained steps: one on each width-1 row, and the rest on rows of wider runs. Each retained step writes a word, the letters between it and the next.
+
+Until now our research moved in small steps, each making a decoder a few per cent faster. What we are after is a new decoder, as different from ours as Rauzy–Veech induction, the mathematics behind Cells, was from the walk. In the past week we built what it takes to pursue one:
+
+- **[A target that is met or not](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md>).** An exact decoder must settle every block with at most h₁/2 events in all, in two passes over the block and no more memory than Open, and beat Open's whole decoding time.
+- **[A proved lower bound, G1](<https://github.com/lmmx/mibz2/blob/620eacc724988238fe6341c1102b9b2320847279/docs/journal/monodromy/2026-11-24-g1-scoped.md>).** Every decoder in the current family pays at least one event per width-1 row, so at least h₁. Anything that meets the target is a new algorithm, not an increment.
+- **[A census of our benchmark's blocks](<https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md>).** Three structural features of a block predict the time Open spends building its structures, with a held-out R² of 0.96.
+- **[Fourteen candidate frameworks closed](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md>),** each kept with its counterexample, its scope and what would get past it.
+- **The transformation that connects our three decoders,** with the one thing it can never remove (§4).
+
+**Rauzy–Veech induction** studies a line cut into intervals and shuffled, an interval exchange, by cutting off the shorter end again and again until the pieces repeat. A block's runs of equal letters form such an exchange, so the same steps move whole runs at a time. The kernel built on it is told in [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>), and the dictionary between the two worlds in [Towers, words and loops](<https://lmmx.github.io/mibz2/blog/2026-11-16-mathematical-dictionary/index.md>).
+
+The search was reframed four times on the way: use everything, count the cost, set a target that is met or not, and keep the method rather than the result (§§1–2). The last came from an essay against AI mathematics, and it became a precise question about our decoders. The rest of the post works that question through. It sets out the routes we have (§3) and the transformation between them (§4). It then tests two proposals against it (§5), says what a new route would have to be (§6), and ends on where the search stands (§7).
 
 ## 1\. The goal: a new algorithm, not a faster one
 
@@ -28,24 +40,28 @@ That gives the goal its shape. A constructive proof that the transform can be in
 
 ## 2\. Four reframings of the search
 
-**Use everything.** A claimed proof of the Riemann hypothesis, built on [fifty older tools reaching back two centuries](<https://lmmx.github.io/mibz2/blog/2026-11-22-two-centuries-of-tools/index.md>), made mathematical distance look cheap. Our [method](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md>) adopted mathematical maximalism: no limit on how far a framework sits from compression, and chains of worlds, where one representation's job is to carry the problem into another. It produced many frameworks tried and closed, and a register of obstructions. It did not produce the step.
+**Use everything.** A claimed proof of the Riemann hypothesis, still awaiting independent checking, built on [fifty older tools reaching back two centuries](<https://lmmx.github.io/mibz2/blog/2026-11-22-two-centuries-of-tools/index.md>), made mathematical distance look cheap. Our [method](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md>) adopted mathematical maximalism: no limit on how far a framework sits from compression, and chains of worlds, where one representation's job is to carry the problem into another. It produced fourteen frameworks tried and closed, and a register of obstructions. It did not produce the step.
 
-**Count the cost.** A paper analysing the simplex method "by the book" (Bach, Black, Huiberts and Kafer) puts cost theorems beside correctness theorems. We did the same. A census of our benchmark's blocks now predicts the cost of building Open's structures from block structure alone, and a lower bound, G1 (§3), says what every route of our current kind must pay.
+**Count the cost.** A paper analysing the simplex method "by the book" ([Bach, Black, Huiberts and Kafer](<https://arxiv.org/abs/2510.21613>)) puts cost theorems beside correctness theorems. We did the same. A census of our benchmark's blocks now predicts the time Open spends building its structures from three features of a block (held-out R² 0.96), and a lower bound, G1 (§3), says what every decoder in the current family must pay.
 
-**Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge could be done with *fewer than one* press of the A button. That is a minimisation turned into a yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from working backwards: it supplied the impossible-looking condition in a test fixture, confirmed the payoff, and only then found how the game could produce it, one supplied condition at a time. Payoff first, mechanism second.
+**[The census](<https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md>)** timed Open on each of the 232 distinct blocks of our Wikidata benchmark, one worker at a time, and asked whether a few features of a block's structure predict where the time goes. For building Open's structures they do: three features explain 96% of the variation on blocks held out of the fit. For writing the output they don't, which is one reason the price of an event (§5) stays an open question.
+
+**Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge could be done with *fewer than one* press of the A button. That is a minimisation turned into a yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from working backwards. It set the impossible-looking condition by hand in a modified copy of the game, confirmed the payoff, and only then found how the real game could produce it, one supplied condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.
+
+**The A-button challenge** is a long-running game among Super Mario 64 players: finish each star with as few presses of the jump button as can be managed. Where the record stood at one press, one project asked whether a star could be had with none, and set out to answer it either with a route or with a proof, checked by machine, that no route exists.
 
 What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every ordinary route relies on. mibz2 has an exact counterpart.
 
 |  | The Mario 64 challenge | mibz2 |
 | --- | --- | --- |
 | **The obvious mechanism** | the A press | following the block's cycle, one row at a time |
-| **The best known** | one A press | Open: h₁ width-1 steps among its m retained steps |
-| **The class's floor** | ordinary routes need at least one | G1: every route of the current kind pays at least one event per width-1 row |
-| **The challenge** | fewer than one | at most h₁/2 |
+| **The best known** | one A press | Open: m events, h₁ of them on width-1 rows |
+| **The class's floor** | ordinary routes need at least one | G1: every decoder in the current family pays at least h₁ |
+| **The challenge** | fewer than one | at most h₁/2 events in all |
 
-Here h₁ is the block's number of width-1 runs, and h₁/m is 0.30, 0.39 and 0.83 at the minimum, median and maximum across Wikidata's distinct blocks. Because no route of the current kind goes below the floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a new algorithm or an increment stops being a judgement and becomes a consequence of the bound.
+On our benchmark, an extract of Wikidata, h₁/m is 0.30, 0.39 and 0.83 at the minimum, median and maximum across its 232 distinct blocks. Because no decoder in the current family goes below the floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a new algorithm or an increment stops being a judgement and becomes a consequence of the bound.
 
-Our [target](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md>) now has the same form: invert every block exactly, in two passes and no more memory than Open, with at most half the single-row events that every route of the current kind must pay, and then beat our current decoder on the bench. A candidate either crosses that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder what the new idea would compute, for free, and measure what it buys.
+Our [target](<https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md>) now has the same form: invert every block exactly, in two passes and no more memory than Open, with at most h₁/2 events in all, and then beat Open's whole decoding time. A candidate either crosses that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder what the new idea would compute, for free, and measure what it buys.
 
 **Keep the method, not the result.** In October the essayist doomslide published ["Against Mathematics"](<https://doomslide.substack.com/p/against-mathematics>), a polemic about what machines are doing to the subject. It tells the history of mathematics as a creature with three heads, each paid at a different rate: a proud head that discovers, a blind head that checks, and a slow head that understands. Proof assistants have already replaced the blind head. The essay reads this year's AI results, such as a batch of 722 machine-written manuscripts released on 6 October, as the proud head's turn: results arrive with machine-checked proofs and nobody to explain them. Those reports are the essay's.
 
@@ -99,13 +115,13 @@ We have three exact routes along LF, at very different costs:
 - **Cells**, our [Rauzy–Veech kernel](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>), moves whole stretches of rows at once, wherever neighbouring rows share their letter;
 - **Open** ([Open Returns](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>)) does the same for thick stretches and walks the thin ones.
 
-A **width-1 row** is a run of one letter whose neighbours differ, so no stretch carries it. We have proved a lower bound, G1: in the family of methods these three routes belong to, every width-1 row costs at least one step, which we call an event.
+A **width-1 row** is a run of one letter whose neighbours differ, so no stretch carries it. We have proved a lower bound, G1: every decoder in the current family pays at least one event on each width-1 row. Its scope is that family. Rules that move several rows on a shared context need an argument of their own (§6).
 
 On our Wikidata benchmark most of these rows come from [random statement IDs](<https://lmmx.github.io/mibz2/blog/2026-11-20-where-the-decoding-work-goes/index.md>). On six blocks we measured closely, about 65% of the width-1 rows lie in hexadecimal tokens that occur only once, 18% in hex tokens that repeat and 17% in everything else. Repetition is not the difficulty. Across 3,645 repeated 40-character SHA-1 hashes on those blocks, only 3 bytes fall in width-1 runs. Each novel hash has about 36 of its 40 bytes in them, close to the \\((15/16)^2 \\times 40 \\approx 35\\) that random hex predicts. So a block splits into two streams, the random rows and the rest, and the cost adds over the two.
 
 ## 4\. Between the routes we have
 
-Put to mibz2, Hilbert's instruction asks: what transformation turns the walk into Cells, and Cells into Open? What does it keep, what does it remove, and what can it never remove? Our [record](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) answers it for these three, with proofs.
+Put to mibz2, Hilbert's instruction asks: what transformation turns the walk into Cells, and Cells into Open? What does it keep, what does it remove, and what can it never remove? Our [record](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) answers it for these three; the proofs are there.
 
 The answer is **contraction along compose**. Think of a decoder as tiling the block's cycle with steps. Two consecutive steps can be replaced by their composite, and wherever a whole stretch of rows stays inside runs of one letter, the composite covers the stretch in one step:
 
@@ -128,7 +144,7 @@ One limit is sharp. The IDs' letters are random, about 4 bits a row, so any desc
 
 ## 5\. Two proposals, and what they amount to
 
-So, two ways the reframed search might move a decoder forward, and what each turns out to be.
+Two outside readings of the essay each proposed a way forward. Here is what each turns out to be.
 
 ### Moving scattered rows together
 
@@ -147,10 +163,12 @@ Use Next and Back, or Play. Green is a, blue n, amber b. This column's LF splits
 
 What the [frontier](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) amounts to:
 
-- **A known step.** It is the step of batched backward search.
-- **The same number of events, built record by record.** Each record step composes one row with the next, matching the walk's steps one for one: G fields of d letters cost G·d events either way, as G1 requires. A packed implementation of the partition, moving many rows per machine word, is a different object and would need pricing in its own right.
+- **A known step.** Search tools for compressed text already use it when they look for many patterns at once (batched backward search).
+- **The same number of events, built entry by entry.** Each frontier entry is a row together with the ID it belongs to, and each step moves one entry one row, matching the walk's steps one for one: G IDs of d letters cost G·d events either way, as G1 requires. A packed implementation of the partition, moving many rows per machine word, is a different object and would need pricing in its own right.
 - **Cheap starting rows, unpriced assembly.** The rows where IDs begin lie in one contiguous range and take one scan to find. Placing each ID's letters in the output is a further job.
 - **Gap counts.** Within one letter c, the gap between consecutive destinations is the number of c's between the two source rows: with \\(b\_c = LF(x\_0)\\) and \\(g\_i\\) the count of c in \\(\[x\_i, x\_{i+1})\\), \\(LF(x\_i) = b\_c + \\sum\_{j\<i} g\_j\\). One step of the frontier is a matter of counting letters in gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.
+
+**Backward search** is how a compressed full-text index finds a pattern. It reads the pattern from its last letter to its first, and each letter narrows an interval of sorted rows by one LF step. Searching for many patterns at once moves all their intervals together, which is the frontier's step in another use.
 
 The random IDs show what the frontier changes and what it doesn't:
 
@@ -170,25 +188,25 @@ The second proposal separates two things G1 runs together. G1 floors the *number
 
 What our records say about the price:
 
-- **Lanes, in a C harness.** Running up to eight independent walks side by side over Open's cycle bought 5–14% while each step's append was branchy and variable-length. Once each append was a single 16-byte store, eight lanes cut the emit to 0.55–0.78 of its time, though either change alone barely moved it ([toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>)). Hiding the wait for memory pays once the work per step is small.
-- **Lanes in the decoder itself.** mibz2 already has that store ([Sixteen at a stroke](<https://lmmx.github.io/mibz2/blog/2026-11-21-sixteen-at-a-stroke/index.md>)); there, eight lanes were 13% faster on one thread and 5% slower once eight workers shared the processor ([Fast alone, slow in a crowd](<https://lmmx.github.io/mibz2/blog/2026-11-21-fast-alone-slow-in-a-crowd/index.md>)).
-- **Halving the dependent steps.** A [squared map](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md>) that halved the number of dependent steps emitted 1.22 times as slowly per step on ten workers, and the whole decode took about 1.3 times as long. It also changed the footprint and the preprocessing, and recorded no miss counts.
+- **Lanes, in a test program.** Running up to eight independent walks side by side (lanes) over Open's cycle, in a small C program, bought 5–14% while each step's append, the write of its letters to the output, was branchy and variable-length. Once each append was a single 16-byte store, eight lanes cut the time spent writing the output to 0.55–0.78 of what it was, though either change alone barely moved it ([toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>)). Hiding the wait for memory pays once the work per step is small.
+- **Lanes in the decoder itself.** mibz2 already has that store ([Sixteen at a stroke](<https://lmmx.github.io/mibz2/blog/2026-11-21-sixteen-at-a-stroke/index.md>)); there, eight lanes were 13% faster on one thread and 5% slower once eight decoding threads shared the processor ([Fast alone, slow in a crowd](<https://lmmx.github.io/mibz2/blog/2026-11-21-fast-alone-slow-in-a-crowd/index.md>)).
+- **Halving the dependent steps.** A version of Open that applied LF twice per step, a [squared map](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md>) halving the number of steps that wait on memory, took 1.22 times as long per step to write the output on ten threads, and the whole decode about 1.3 times as long. It also changed the footprint and the preprocessing, and recorded no miss counts.
 
 So neither the event count nor the count of memory waits sets the time on its own. The work in each step and the waits between steps interact, and only the whole decoder's time decides. The price per event is an open question in its own right.
 
 ## 6\. What a new route would have to be
 
-**Not a short proof.** Lower bounds on proof size are classically escaped by abbreviation: name a composite once and reuse it, as extension variables shorten propositional proofs. G1 already charges shared work only once, and [survives it](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>). Nor is a short statement enough. The formula in §3 is already a one-line rule for every row of every block, and applying it row by row is the walk. Short to state, short to prove and cheap to execute are three different properties.
+**Not a short proof.** Lower bounds on proof size are classically escaped by abbreviation: name a composite once and reuse it. G1 already charges shared work only once, and [survives it](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>). Nor is a short statement enough. The formula in §3 is already a one-line rule for every row of every block, and applying it row by row is the walk. Short to state, short to prove and cheap to execute are three different properties.
 
 **An interface with its costs exposed.** A candidate would have to take the form
 
 \\\[\\mathrm{Build}(L) \\to z, \\qquad \\mathrm{Advance}(z, h) \\to z', \\qquad \\mathrm{Emit}(z') \\to T,\\\]
 
-with a fixed language for the description z, its size, and the cost of building, composing and reading it, every access to L counted. If Emit's first act is to enumerate rows and rank each one, the candidate has moved the walk, not removed it. A useful test is to supply z for free and look at what consumes it.
+with a fixed language for the description z, its size, and the cost of building, composing and reading it, every access to L counted. If Emit's first act is to enumerate rows and count the earlier copies of each one's letter, the candidate has moved the walk, not removed it. A useful test is to supply z for free and look at what consumes it.
 
 **Carrying identities, not only sets.** Compressing the set of rows is not enough. For the set of all rows, \\(LF^h\\) of the set is the set itself, a constant description for every h, and nothing is decoded. What a decoder needs is the labelled map \\(x \\mapsto LF^h(x)\\), carrying each start's identity to its place in the output.
 
-**Beyond the swap argument.** Our lower bounds for rules that read only aggregate counts rest on swaps: two letters exchanged so that a column stays valid, every count is unchanged, and the output differs. A cheap order-sensitive summary defeats every such swap. With letters coded as numbers, the first moment
+**Beyond the swap argument.** We also have lower bounds for rules that read only aggregate counts, such as how many of each letter lie in an interval. They rest on swaps: two letters exchanged so that the column is still the BWT of some text (a valid column), every count is unchanged, and the output differs. A cheap order-sensitive summary defeats every such swap. With letters coded as numbers, the first moment
 
 \\\[A(L) = \\sum\_i i \\cdot \\mathrm{code}(L\[i\])\\\]
 
@@ -206,6 +224,8 @@ Exact, on a valid column whose LF is one cycle of 18 rows. Green: rows 1 and 3, 
 
 **The scoped no, and what lies just outside it.** These pieces combine into one theorem over a declared class of decoders. Suppose every byte is written by a rigid fact, an interval moved by one translation, and positions come only from labels on the start rows of those facts. Then every decoder of that kind pays \\(c\_1 \\ge h\_1 - |B|\\) events, where \\(B\\) is the set of width-1 rows placed by a label read off an uncharged observation. All of the theorem's content is in how large \\(B\\) can be.
 
+**An uncharged observation** is something a decoder may read for free under our counting rules: a summary that folds the whole block into a few numbers, such as how many of each letter it holds, or the first moment below. Only reading a single row's own record to settle that row costs an event, so the question is how much such free summaries can place.
+
 A row can be placed from an observation only if every valid column with the same observation puts it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into counting. Across all 5,880 valid columns of ten letters over three symbols, the histogram plus the first moment leaves 96.4% of them sharing their observation with a column that decodes differently, and pins down only 22% of the width-1 rows. On our six measured blocks, observations made of interval histograms and declared run records place half the width-1 rows only after 6,903 to 14,120 separate observations. That is reading the block row by row under another name.
 
 Just outside the class, the bound does break, and the way it breaks is informative. Three exact decoders beat it on small witnesses. One fills the last unwritten slots from the histogram, one copies a stretch of output already written, and one moves a shared context, as in the 18-row column above. None comes near half on real blocks:
@@ -218,9 +238,9 @@ A negative result in this shape is one theorem over a stated class, with a secti
 
 ## 7\. Where the search stands
 
-The frozen target is precise. On every block, an exact decoder must pay at most half of h₁ in single-row events, in at most two passes over the block and no more scratch memory than Open. It must be one fixed program with no stored answers, and it must beat our current decoder on whole decoding time.
+The target is precise, and it was fixed before any candidate was tested. On every block, an exact decoder must pay at most h₁/2 events in all, in at most two passes over the block and no more scratch memory than Open. It must be one fixed program with no stored answers, and it must beat our current decoder on whole decoding time.
 
-The target is harder than its headline. Counted strictly, Open pays one event for every retained step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the steps on wide runs would remain, so a decoder that cheapens only the random rows needs \\(h\_1/m \\ge 2/3\\). Across the 232 distinct blocks of our benchmark, \\(h\_1/m\\) is 0.41 overall and 0.30 to 0.83 block by block. A yes therefore has to carry all of the retained words more cheaply, not just the random IDs.
+The target is harder than its headline. Counted strictly, Open pays one event for every retained step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the steps on wide runs would remain, so a decoder that cheapens only the random rows needs \\(h\_1/m \\ge 2/3\\). Across the 232 distinct blocks of our benchmark, \\(h\_1/m\\) is 0.41 overall and 0.30 to 0.83 block by block. A yes therefore has to write the word of every retained step more cheaply, not just the random IDs.
 
 The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of work proves one, closes one, or measures what one would need.
 
@@ -228,16 +248,16 @@ The main theorem, as premises
 
 Status as of 24 November 2026. The theorem is conditional: if every premise holds on every block, a decoder meeting the target exists. Random rows are well over half of h₁ on the blocks measured, so while each still costs one event (a = 1) the margin cannot hold; meeting it means beating the floor on random content itself.
 
-- **The count.** G1 holds for routes built by contracting stretches, with sharing. What it doesn't cover is a rule applied to a whole scattered set, with a short description that is also cheap to apply: the Build, Advance and Emit of §6.
+- **The count.** G1 holds for the current family, with shared work counted once. What it doesn't cover is a rule applied to a whole scattered set, with a short description that is also cheap to apply: the Build, Advance and Emit of §6.
 - **The price.** A separate question. The records show the price per event moving with the work in each step and with how steps overlap, not with either count alone.
-- **The next test.** Supply Open's existing word codes in output order, for free, and time the unchanged consumer against Open. If even that leaves too little headroom, this representation is closed. If it leaves room, the room is the budget for building the order natively.
+- **The supplied test has run.** Handed its word codes already in output order, for free, Open spent half as long writing the output (0.55 of its time). The whole decoder took 0.988 of its time on ten threads, and 0.838 on one ([the result](<https://github.com/lmmx/mibz2/pull/145#issuecomment-7132792060>)). On ten threads that is far below the 10% our method asks of a perfect version before building a native prototype, so this representation stops here: even a free order buys little once ten threads share the machine. On one thread there is 16% to win.
 - **Exactness.** mibz2 must be exact on every block, so checking a guessed decoding against bzip2's 32-bit block checksum, which would accept a wrong guess about once in four billion, is not a route.
 
 The next test: supply the order, keep everything else
 
-A proposed experiment, not yet run. Supplying the order for free bounds what any way of producing it could win, before anyone builds one. The 10% bar is our method's headroom gate for a native prototype.
+Run on 24 November: the free order cut the output writing to 0.55 of its time, and the whole decoder to 0.988 on ten threads and 0.838 on one. Supplying the order for free bounds what any way of producing it could win, before anyone builds one. Our method builds a native prototype only if a perfect version beats Open by at least 10% end to end.
 
-Read together, the four reframings say what the search now values. Using everything supplies the material. The book supplies the cost. The yes-or-no target supplies the line a candidate has to cross. The last says what to keep from each attempt: not the verdict alone, but the method behind it, the transformation with its invariant, which can generate the next route. The three decoders are results. Contraction along compose is a method: it explains why each route costs what it does, and names the one thing, the width-1 rows, that a new route must find another way to carry. When results can be produced cheaply, that kind of understanding is the scarce part, and it is what we now count as progress.
+Read together, the four reframings say what the search now values. Using everything supplies the material. Counting the cost supplies the measure. The yes-or-no target supplies the line a candidate has to cross. The last says what to keep from each attempt: not the verdict alone, but the method behind it, the transformation with its invariant, which can generate the next route. The three decoders are results. Contraction along compose is a method: it explains why each route costs what it does, and names the one thing, the width-1 rows, that a new route must find another way to carry. When results can be produced cheaply, that kind of understanding is the scarce part, and it is what we now count as progress.
 
 ---
 
@@ -246,7 +266,9 @@ Read together, the four reframings say what the search now values. Using everyth
 - doomslide, ["Against Mathematics: A religion of the dead, by the dead, for the dead"](<https://doomslide.substack.com/p/against-mathematics>), Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
 - [The source record](<https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md>): two readings of the essay, their figures (described) and an audit of the records below (§6), all verbatim.
 - [The ordered frontier and the transformation between decoders](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) and [abbreviation, batching and the block checksum](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>), our research records.
-- The two streams and the totals: [the six-block measurements](<https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md>) and [the 232-block baseline](<https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md>). The frozen target: [the main theorem](<https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md>), §1.
+- The two streams and the totals: [the six-block measurements](<https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md>) and [the 232-block baseline](<https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md>). The target: [the main theorem](<https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md>), §1.
 - The scoped no: [Theorem N′](<https://github.com/lmmx/mibz2/blob/bc1429ed92baab9b3e468fd5b5b8718ccd555741/docs/journal/monodromy/2026-11-24-mixed-calculus-repair.md>), [the observation fibres](<https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n18-complete-observation-fibres.md>) and [the three decoders outside the class](<https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n19-theorem-nprime-output-model.md>).
+- Bach, Black, Huiberts and Kafer, ["Beyond Smoothed Analysis: Analyzing the Simplex Method by the Book"](<https://arxiv.org/abs/2510.21613>).
+- [The census of the benchmark's blocks](<https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md>) and [the supplied-codes result](<https://github.com/lmmx/mibz2/pull/145#issuecomment-7132792060>).
 - [Toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>), the lanes experiments with their later correction, and [the squared map](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md>).
 - The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes test are from the audit (source record §6); the witnesses were checked independently.
