@@ -182,8 +182,19 @@ Beside it:
   nothing for the i9): every count was recorded and classified. The measured crossover was
   k = 5.89 and the predicted shift point 6.11. The wall fit is poor there (RMS 0.052 s), because
   4 CPUs cannot run more than 4 workers at once.
-- **The DRY preflight of the amended recipe** (`just bench-scan-profile 1`, two rounds, no settle, at
-  43ea3b3f, the full grid) ran the whole recipe here, and is archived as
+- **The DRY preflight of the recipe as frozen** (`just bench-scan-profile 1`, two rounds, no
+  settle, at 95de8d09, counts 1 to 20) ran the whole recipe here, and is archived as
+  `2026-11-24-scan-profile-registration/run-20261124T215052Z.tar.gz`:
+  - all 20 counts were decoded at 838,800,784 bytes each;
+  - every timed decode's block check and worker records passed;
+  - the records were 4.8 MB with every block's record in both rounds (the run keeps them for its
+    first two);
+  - the report voided the run on the machine alone.
+
+  On these 4 CPUs (meaning nothing for the i9), the measured crossover was k = 5.91 and the
+  predicted shift point 5.85.
+- **The DRY preflight of the first amendment** (`just bench-scan-profile 1`, two rounds, no settle, at
+  43ea3b3f, counts 1 to 12, 14, 16, 20) ran the whole recipe here, and is archived as
   `2026-11-24-scan-profile-registration/run-20261124T214833Z.tar.gz`:
   - all 15 counts were decoded at 838,800,784 bytes each;
   - every timed decode's block check and worker records passed;
