@@ -1940,3 +1940,99 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The open kernel's emitter handed the block's own dictionary word codes in marked-cycle output
+# order (arm B, `supplied`) against the kernel as shipped (arm A, `open`), in production's own
+# workers, on this machine (registration docs/journal/2026-11-24-supplied-codes-registration.md,
+# frozen before the data). DIAGNOSTIC: it decides no production default, only whether a
+# capability that compiles retained records into output-order word codes is worth building an
+# acquisition for. One build, this checkout at the ready tag: master PIN (f438f38d) plus the
+# `supplied-codes` research feature (src/supplied_codes.rs, src/open/supplied.rs, the hooks in
+# src/open.rs and src/lib.rs, the scratch counts' cfg in src/open/outq.rs and
+# src/open/endpoint.rs) and its harness (examples/supplied_codes.rs); the src it adds to PIN is
+# checked to be those files alone. By rustc 1.99.1. The whole Wikidata corpus
+# (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end, read into memory once.
+# First an oracle pass outside every clock records each open block's codes in output order;
+# then each round decodes the corpus with production's lazy workers (`BzReader::parallel_workers`,
+# lazy: `OpenCells`) in each cell of {1, 10} workers x {open, supplied} x {cond 0, cond 1} (cond 1:
+# both arms' consumer inputs read once before the consumer's clock), the arm switched between
+# decodes in the one process, within each count and cond the arms in both orders (open first in
+# even rounds), the conds' pairs in both orders (every two rounds), the counts rotated every four
+# rounds; and a check decode a round compares every block's arm-B bytes with arm A's. Unpinned,
+# ROUNDS rounds, SETTLE s before each decode. Judged by bench/supplied_codes.py at 10 workers on
+# the cond-0 decodes' paired wall ratio B/A (geometric mean, 95% t interval on the logs):
+# ADVANCE iff its upper bound < 0.90, STOP iff its lower bound > 0.95, else INCONCLUSIVE. VOID on
+# any mismatch, missing decode or wrong output. About 15 minutes with the build.
+#   just submit bench-supplied-codes
+bench-supplied-codes:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=f438f38dbc2d25d3aa964633abf48ee9c453b35f
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,10 JUDGED=10
+    W=$PWD/target/supplied-codes
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-supplied-codes (docs/journal/2026-11-24-supplied-codes-registration.md; diagnostic) at $(git rev-parse HEAD): the open kernel's emitter on supplied output-order codes against the kernel as shipped, master $PIN with the supplied-codes feature, production's lazy workers at $WORKERS, unpinned, $ROUNDS rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-supplied-codes: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-supplied-codes: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the build, checked: master's decoder at PIN, plus the research feature's files alone
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/open/supplied\.rs$|^src/open/outq\.rs$|^src/open/endpoint\.rs$|^src/lib\.rs$|^src/supplied_codes\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-supplied-codes: the build differs from $PIN beyond the supplied-codes feature: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-supplied-codes: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features supplied-codes --example supplied_codes --example ab --example windows
+    SC=$PWD/target/release/examples/supplied_codes
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$SC" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-supplied-codes: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the run: the oracle pass, then the rounds (the counts rotated, the arms and conds in both
+    # orders) and each round's check; the process's peak memory too, when /usr/bin/time is there
+    run=("$SC" "$W/wikidata-x$COPIES.bz2" "$WORKERS" "$ROUNDS" "$SETTLE" "$O/blocks.tsv")
+    if [ -x /usr/bin/time ]; then run=(/usr/bin/time -v -o "$O/time-v.txt" "${run[@]}"); fi
+    "${run[@]}" || echo "bench-supplied-codes: the harness failed (console.log says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/supplied_codes.py "$O/blocks.tsv" --lscpu "$O/lscpu.txt" --workers "$WORKERS" \
+      --judged $JUDGED --rounds $ROUNDS | tee "$O/report.txt" \
+      || echo "bench-supplied-codes: VOID, no verdict (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"

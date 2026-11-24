@@ -116,6 +116,11 @@ pub mod phase;
 mod read;
 pub mod rle;
 pub mod runs;
+// (research only, `supplied-codes`: the open kernel's emitter handed its word codes in output
+// order, the bench-supplied-codes diagnostic's switch, store and records)
+#[cfg(feature = "supplied-codes")]
+#[doc(hidden)]
+pub mod supplied_codes;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;

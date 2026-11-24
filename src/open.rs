@@ -619,10 +619,19 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
-        let (stats, mark, bits) =
-            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
-        self.walk(n, stats.retained, mark, bits, out);
-        Some(stats)
+        // (research only, `supplied-codes`: the stages timed, and the emitter's input switched
+        // by `supplied_codes::mode`; in its `open` mode the kernel as shipped, `supplied.rs`)
+        #[cfg(feature = "supplied-codes")]
+        {
+            self.supplied_run::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
+        #[cfg(not(feature = "supplied-codes"))]
+        {
+            let (stats, mark, bits) =
+                self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+            self.walk(n, stats.retained, mark, bits, out);
+            Some(stats)
+        }
     }
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
@@ -1054,6 +1063,9 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod outq;
+// (research only: the emitter on supplied output-order word codes, bench-supplied-codes)
+#[cfg(feature = "supplied-codes")]
+mod supplied;
 
 #[cfg(test)]
 mod checks;
