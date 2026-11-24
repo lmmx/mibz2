@@ -121,6 +121,11 @@ pub mod runs;
 #[cfg(feature = "supplied-codes")]
 #[doc(hidden)]
 pub mod supplied_codes;
+// (research only, `scan-oracle`: the parallel decoder's scanner recorded or replayed, the
+// bench-four-arm diagnostic's scanner side)
+#[cfg(feature = "scan-oracle")]
+#[doc(hidden)]
+pub mod scan_oracle;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;

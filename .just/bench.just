@@ -2036,3 +2036,103 @@ bench-supplied-codes:
     date -u +%FT%TZ > "$O/finished.txt"
     rm -f "$W/wikidata-x$COPIES.bz2"
     bash bench/bundle.sh "$O"
+
+# The four-arm whole-decoder oracle, scanner x emission (registration
+# docs/journal/2026-11-24-four-arm-registration.md, frozen before the data; the brief
+# docs/journal/2026-11-24-algorithm-level/FOUR-ARM-BRIEF.md at 4934a495). DIAGNOSTIC: it decides no
+# production default, only whether removing the scanner's work and Open's code-ordering together
+# frees whole-decoder time that removing either alone does not. Built on bench-supplied-codes
+# (ready/bench-supplied-codes, 5e5495c5): the same pin, corpus, build check, workers' decoder,
+# settle and rounds. One build, this checkout at the ready tag: master PIN (f438f38d) plus the
+# `supplied-codes` feature and the `scan-oracle` feature (src/scan_oracle.rs, the scanner's hooks
+# in src/parallel.rs), and the harness examples/four_arm.rs; the src it adds to PIN is checked to
+# be those files alone. The arms, switched between decodes in one process: A as shipped; B Open's
+# codes supplied in output order (bench-supplied-codes' arm B); C each block's scanner output
+# (its symbols) recorded outside every clock and delivered through the production job queue; D
+# both. First an oracle pass outside every clock records both; then each round decodes 4 copies
+# of corpora/wikidata.bz2 once in each cell of {1, 6, 10} workers x {A, B, C, D}, the counts
+# rotated every four rounds and the arms in a Williams square's rows; and a check decode a round
+# (the replay with the emission compared block by block, the output's size and CRC-32 against the
+# oracle pass's). Each decode's peak resident memory recorded. Unpinned, ROUNDS rounds, SETTLE s
+# before each decode. Judged by bench/four_arm.py at 10 workers on D/A's paired wall ratio and
+# D against the better single arm: INTERACTION, ADDITIVE, NO POTENTIAL or MARGINAL; B/A must
+# reproduce bench-supplied-codes' 0.988 [0.957, 1.020]. VOID on any mismatch, missing decode or
+# wrong output. About 17 minutes with the build. DRY (the first positional argument, untimed, two
+# rounds, no settle; not evidence) checks the wiring.
+#   just submit bench-four-arm
+bench-four-arm DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=f438f38dbc2d25d3aa964633abf48ee9c453b35f
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,6,10 JUDGED=10
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
+    W=$PWD/target/four-arm
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-four-arm (docs/journal/2026-11-24-four-arm-registration.md; diagnostic) at $(git rev-parse HEAD): the four arms, scanner x emission, master $PIN with the supplied-codes and scan-oracle features, production's lazy workers at $WORKERS, unpinned, $ROUNDS rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-four-arm: DRY RUN: two rounds, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-four-arm: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-four-arm: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the build, checked: master's decoder at PIN, plus the research feature's files alone
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/open/supplied\.rs$|^src/open/outq\.rs$|^src/open/endpoint\.rs$|^src/lib\.rs$|^src/supplied_codes\.rs$|^src/parallel\.rs$|^src/scan_oracle\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-four-arm: the build differs from $PIN beyond the supplied-codes and scan-oracle features: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-four-arm: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features scan-oracle --example four_arm --example ab --example windows
+    SC=$PWD/target/release/examples/four_arm
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$SC" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-four-arm: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the run: the oracle pass, then the rounds (the counts rotated, the arms in a Williams
+    # square's rows) and each round's check; the process's peak memory too, when /usr/bin/time
+    # is there (each decode's own is in the records)
+    run=("$SC" "$W/wikidata-x$COPIES.bz2" "$WORKERS" "$ROUNDS" "$SETTLE" "$O/runs.tsv")
+    if [ -x /usr/bin/time ]; then run=(/usr/bin/time -v -o "$O/time-v.txt" "${run[@]}"); fi
+    "${run[@]}" || echo "bench-four-arm: the harness failed (console.log says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/four_arm.py "$O/runs.tsv" --lscpu "$O/lscpu.txt" --workers "$WORKERS" \
+      --judged $JUDGED --rounds $ROUNDS | tee "$O/report.txt" \
+      || echo "bench-four-arm: VOID, no verdict (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
