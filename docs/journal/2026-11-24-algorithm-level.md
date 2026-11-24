@@ -1492,3 +1492,19 @@ ChatGPT Pro's answer to "tell me all about the content of these" is recorded ver
 - **Fluid models,** with dq/dt = incoming rate − processing rate, which the Coordinator also recommended (§53).
 
 **Addition to `briefs/character.md` §7b:** report the second moment, or C², of per-block service time per activity, beside the means and demands.
+
+## 55. A design review before stage 2 is frozen
+
+Louis asked whether to review the experimental plan with the agents before the model is built from its results. Decided: **yes, one round**. `briefs/character-design-review.md` goes to three reviewers, independently:
+- MONODROMY (channel #38);
+- Neon (by paste, committing to its branch);
+- ChatGPT Pro (by paste, answering in chat; the Coordinator records it verbatim).
+
+Its questions:
+1. which competing mechanisms must be told apart (identifiability);
+2. the most informative design for about 2–3 workstation hours (grid, anchors, dose, factorial or sequential);
+3. measurement validity on the i9 (Mytkowicz-style biases);
+4. whether every input each model needs is logged;
+5. what to cut.
+
+Stage 1, the 1–20 baseline, proceeds meanwhile and sizes stage 2. The Coordinator merges the three answers into `briefs/character.md` before the Pathfinder freezes stage 2.

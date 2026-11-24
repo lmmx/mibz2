@@ -88,3 +88,7 @@
 ## 24 Nov, 23:50 — ChatGPT Pro's course answer recorded verbatim
 - Recorded as `external/chatgpt-performance-courses.md`, with its additions in journal §54: the 2025 course skipped chapters 19 and 22; the LRU hit-ratio recitation as an analogue of the masked bottleneck; the M/G/1 second-moment formula.
 - The character brief now asks for per-activity C²_S.
+
+## 24 Nov, 23:55 — the design review set up
+- `briefs/character-design-review.md` goes to MONODROMY (channel #38), Neon and ChatGPT Pro (paste prompts given to Louis). One round.
+- The Pathfinder builds stage 1 now and holds the stage 2 freeze until the review is merged.
