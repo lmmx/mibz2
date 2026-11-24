@@ -101,3 +101,19 @@ Louis relayed a second ChatGPT Pro text, a reading of the essay "Against Mathema
    - Can the same operation act on scattered ordered sets, which is item 2?
 
    This is the Theaetetus move: name the operation, not the 15th framework.
+
+## 2026-11-24 #6 — CORRECTION to #4, and the outside review's second round
+**#4 was wrong at its centre.** The same file it cites, `docs/journal/2026-11-20-toy-transfer.md` on master, has a later section at L187–208: "Correction: lanes do pay, once the append is branchless (Carbon cycle 2)".
+- *What it shows:* with 16-byte pre-aligned stores, 8 lanes cut Open's emit to 0.55–0.78×. The Coordinator's own rerun gave emit 0.61–0.77× and whole kernel 0.66–0.78× on five blocks. That was a C harness, not native, and the strict G5 gate still failed.
+- *So:* "the emit is bound by work, not latency" is **withdrawn** as a blanket claim. T² remains a negative for its own implementation only.
+- *What stands:* whole-decoder time decides utility. c₁, dependency structure, traffic and cache behaviour each explain parts of it, and none is a one-number machine law. I quoted half the book; the outside reviewer caught it, and I verified it.
+
+**The second round** is verbatim in `channel/outside-review-round2-2026-11-24.md`, with my verification notes at the top. The PROPOSAL it sends to both agents is posted on #145. Its main points, as claims to check:
+- **Theorem N's interior-row step is unproved.** Witness: L = Paaabxbccddeeff$MZ, one 18-cycle. Rows 1 and 3 share the LF-orientation key abcdef. Rows 4 and 6 are singleton b runs with unique keys. *Verified by the Coordinator.*
+- **Record 101's run-record blindness repair fails** if records carry LF translations. Witness: bacacb ↔ cacabb, D = {2}. *Verified.*
+- **The first moment A = Σ i·L[i]** separates every flip, costs O(r), and decodes nothing. A stronger "no" needs ambiguity within complete observation fibres.
+- **N12's script uses cyclic order as suffix order.** Witness: L = baaaa, p = 2. Fix it and rerun before its phrase counts are used.
+- **N13's bound covers literal representations only.** **N14** tested one comma split, not every hierarchy.
+- **Record 105's "a short proof" criterion fails:** the LF rank formula is already a constant-size schema. Declare Build/Advance/Emit with charged execution instead.
+- **The frozen yes must remove much of W, not only h₁:** h₁/m ≥ 2/3 even if every h₁ event were free.
+- **Its proposed experiment:** supply Open's existing word codes in output order, replacing the edge buffer, and time the unchanged consumer natively at 1 and 10 workers. The 10% headroom rule is fixed before data. **This is a native i9 run.** The Coordinator will have it built as a workstation recipe; it is not Neon's simulation work.
