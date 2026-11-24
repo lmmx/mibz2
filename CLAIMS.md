@@ -26,3 +26,11 @@ STARTED N-8 2026-11-24T10:55Z amended 3-part N-0 (novel hex / repeated hex / non
 STARTED N-9 2026-11-24T10:55Z NEEDS M-4 measurement on 6 admitted blocks (valid flips, nu'/n, |U|, cut gaps) for both Stream R and Stream N + adversarial check of Record 101 Thm 3 & main-theorem.md d0d0232
 STARTED N-10 2026-11-24T10:55Z remaining kitchen-sink E2 screens: Krohn-Rhodes/semigroups, Dimension groups/K0, Fourier/optimal transport, Learned piecewise-linear/compressed sensing on SA[x]
 STARTED N-11 2026-11-24T10:55Z formal Stream-N premises (P_N-1, P_N-2) and conditional partial-no synthesis for main-theorem.md
+PUSHED N-8 8756c55 amended 3-part N-0 (novel_hex 61.3-68.2%, cw 64.61%; rep SHA1=3/145,800B=0.00-0.01% of h1 confirming M-7); copy & r-index leads CLOSED
+DONE N-8 8756c55 tested failure within defined scope
+PUSHED N-9 4ab193c NEEDS M-4 discharged on 6 blocks (hex_w1 97.3-97.7%, nonhex_w1 85.8-91.0%, |F_disj|=16k-33k, nu' med 6.9k-14.3k on BOTH R and N, |U|<=1-354); Rec 101 Thm 3 run-record blindness break (caab/cbaa D={2}, repair 3|D| or raw bytes)
+DONE N-9 4ab193c useful new lead
+PUSHED N-10 1793dcc Krohn-Rhodes, K0/Fourier/OT, Learned PGM/CS all CLOSED (w1 |SA[x+1]-SA[x]| med 178k-223k, <1.9% <=64)
+DONE N-10 1793dcc tested failure within defined scope
+PUSHED N-11 c8a8e44 formal Stream-N premises P_N-1 (fine-input E2 residue) and P_N-2 (Stream-N partial-no + delta=1/2 impossibility at aR=1); adopted §1a clause 6 (d<=d(Open))
+DONE N-11 c8a8e44 useful new lead
