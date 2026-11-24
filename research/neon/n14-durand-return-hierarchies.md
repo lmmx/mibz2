@@ -2,23 +2,24 @@
 
 *Cycle 3 supplied-capability measurement answering Coordinator Note #3 / Outside Review §5.3 (`origin/claude/sharp-meitner-cx0v78` `e48f904`), plus verification of MONODROMY Record 102 §3 (`2001f12`) and Record 103 `M-9` (`620eacc`).*
 
-**Script:** [`research/neon/scripts/screen_cycle3_supplied.py`](scripts/screen_cycle3_supplied.py) (exact Durand return-word decomposition on `","` for raw `T` and template-with-holes `T_skel` across all 6 admitted blocks of `origin/data/admitted-bwt`).
+**Script:** [`research/neon/scripts/screen_cycle3_supplied.py`](scripts/screen_cycle3_supplied.py) (exact return-word decomposition on the single delimiter `","` for raw `T` and for one 4-regex typed-hole skeleton `T_skel` across all 6 admitted blocks of `origin/data/admitted-bwt`).
 
-**Verdict:** **CLOSED at (c) Viability & (d) Payoff** — `tested failure within defined scope`.
-- On raw Durand return words (split on `","`), **`91.7–96.1%` of all `h₁` rows** sit inside **unique** (single-occurrence) return words (`s_raw = 2,895–6,629`).
-- Even with an **oracle template-with-holes factorisation** (replacing every GUID, SHA1, `[QPL][0-9]+` entity ID, and 4+ digit number with typed holes), the skeleton is small (`s_skel = 672–3,109`), **but the paid exception width-1 bytes `e_w1` (bytes inside holes + non-hole bytes in unique templates) still account for `91.0–94.6%` of all `h₁` rows (`31,181–91,786` bytes, across `18,055–20,486` hole slots)!**
-- Thus `s_skel + e_w1 ≥ 0.93–0.97 × h₁`, leaving at most **`5.4–9.0%` of `h₁`** inside repeated non-hole templates — far below `δ = 50%` and worth `< 1.8%` of 1W Open kernel time!
+**Verdict (narrowed in N-17):** **CLOSED for the tested single-delimiter (`","`) return-word split and its 4-regex typed-hole skeleton at (c) Viability & (d) Payoff** — `tested failure within defined scope`. **Does NOT close every possible return-word delimiter, multi-level Durand/S-adic derived hierarchy, or non-delimiter hierarchical parse.**
+- On raw return words split on `","`, **`91.7–96.1%` of all `h₁` rows** sit inside **unique** (single-occurrence) segments (`s_raw = 2,895–6,629` `[measured]`).
+- Under the tested **oracle 4-regex template-with-holes factorisation** (replacing GUID, SHA1, `[QPL][0-9]+`, and `[0-9]{4,}` with typed holes), the comma-split skeleton is small (`s_skel = 672–3,109` `[measured]`), **but the paid exception width-1 bytes `e_w1` (bytes inside those four hole classes + non-hole bytes in unique comma-split templates) still account for `91.0–94.6%` of all `h₁` rows (`31,181–91,786` bytes across `18,055–20,486` hole slots `[measured]`)**.
+- Thus for this specific split, `s_skel + e_w1 ≥ 0.93–0.97 × h₁`, leaving **`5.4–9.0%` of `h₁`** inside repeated non-hole comma-split templates (`[measured]`, `< 1.8%` of 1W Open kernel time under N-2's attribution model `[argued]`).
 
 ## 0. The book (METHOD.md §6a)
 
 1. **Input features relied on:**
    - Exact inverted texts `T` and `h₁` width-1 masks on all 6 admitted blocks (`origin/data/admitted-bwt`, `41c03a5b`).
 2. **Real code path:**
-   - Baseline `OpenCells` (`LIMIT = 16`, `h₁` emit = `19.09%` of 1W kernel time across 232 blocks, `n2-f-baseline-and-needs-m2.md`).
+   - Baseline `OpenCells` (`LIMIT = 16`, `h₁` emit = `19.09%` of 1W kernel time across 232 blocks under N-2's attribution model, `n2-f-baseline-and-needs-m2.md`).
 3. **Assumptions knowingly unrealistic:**
-   - Both `H1` (raw Durand return words) and `H2` (oracle regex template-with-holes) are **supplied free** from the decoded text `T` (zero acquisition cost, zero exception-placement cost). Failing payoff even as a free oracle decisively closes §5.3 on `𝓕`.
+   - Both `H1` (raw `","`-split return words) and `H2` (4-regex typed-hole `","`-split templates) are **supplied free** from `T` (zero acquisition cost, zero exception-placement cost).
+   - **Scope limit (N-17):** Only the single-byte delimiter `","` and the four hand-picked regex hole classes (`GUID_RE`, `SHA1_RE`, `ENTITY_RE`, `NUM4_RE`) were tested. Multi-level derived sequences, alternative delimiters, or grammar/S-adic parses that factor inside `","`-segments were **not** tested here.
 
-## 1. Exact Durand return-word & template-with-holes exception measurements (`[measured]`)
+## 1. Exact comma-split return-word & 4-regex template-with-holes measurements (`[measured]`)
 
 | Block | `h₁` | Raw `N_occ` (`","`) | Raw `s_raw` | `h₁` in unique raw (`%h₁`) | Skel `s_skel` | Hole slots `e_slots` | `h₁` in holes (`%h₁`) | `h₁` uniq non-hole (`%h₁`) | **Total paid `e_w1` (`%h₁`)** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -29,23 +30,24 @@
 | `block-210.L` | 97,054 | 30,487 | 6,536 | 93,221 (`96.1%`) | 2,168 | 18,055 | 76,616 (`78.9%`) | 15,170 (`15.6%`) | **91,786 (`94.6%`)** |
 | `block-207.L` | 62,407 | 28,155 | 4,922 | 59,074 (`94.7%`) | 2,263 | 18,948 | 43,904 (`70.4%`) | 14,155 (`22.7%`) | **58,059 (`93.0%`)** |
 
-**Why it fails `[measured]`:**
-- Outside Review §5.3 conjectured that *"reused templates with literal holes might admit small finite hierarchies."*
-- The table shows that while the **template skeleton** IS indeed tiny (`s_skel = 672–3,109`), the skeleton ALREADY sits in Open's thick strips (as `working-backwards.md` observed: JSON keys are 33–38% of bytes and 1–4% of thin rows).
-- Meanwhile, **`91.0–94.6%` of all `h₁` width-1 rows** sit inside the **paid literal exceptions** (`57.6–87.2%` inside GUID/SHA1/entity/number holes + `6.2–36.4%` inside unique non-hole text templates such as entity labels and descriptions!). Only `5.4–9.0%` of `h₁` is covered by repeated non-hole templates (cost ceiling `< 1.8%` of 1W Open kernel time, before any acquisition cost!).
+**What this shows (and does not show) (`[measured]` + `[argued]`):**
+- For the `","` split, the **template skeleton** is compact (`s_skel = 672–3,109` `[measured]`), because repeated JSON scaffolding already sits mostly in Open's thick strips (as `working-backwards.md` observed: JSON keys are `33–38%` of bytes and `1–4%` of thin rows).
+- Meanwhile, **`57.6–87.2%` of `h₁`** sits inside the four literal-payload hole classes (`GUID`, `SHA1`, `[QPL][0-9]+`, `[0-9]{4,}`), and another **`6.2–36.4%` of `h₁`** sits in unique non-hole `","`-segments (`[measured]`).
+- **What stays open outside this test (`[argued]`):** Choosing a finer delimiter (e.g. `":"`, `"\""`, or `"-"`), applying a multi-level derived-word hierarchy, or factoring repeated sub-phrases inside unique `","`-segments could shrink the `6.2–36.4%` unique non-hole share. However, even if a finer hierarchy compressed **100%** of non-hole `h₁` bytes, the `57.6–87.2%` of `h₁` inside novel literal holes (GUID/SHA1/entity/number payloads) remains unpaid unless the holes themselves are factored or replaced — which matches `N-8`'s independent `61.3–68.2%` novel-hex floor (`[argued]`).
 
-## 2. Obstruction table entry
+## 2. Obstruction table entry (narrowed in N-17, all six fields)
 
 | Field | Value |
 |---|---|
-| **Framework** | Ordered return-word hierarchies with paid exceptions (Durand / S-adic templates with holes) (`N-14`, Outside Review §5.3) |
+| **Framework** | Single-delimiter (`","`) return-word split & 4-regex template-with-holes factorisation (`N-14`, narrowed in `N-17`) |
 | **Route class** | **R2** (positional via cumulative hierarchy lengths, if acquired cheaply) |
-| **Gate failed** | **(c) Viability & (d) Payoff** (`91.0–94.6%` of `h₁` are paid exceptions `e_w1` even under an oracle template-with-holes factorisation; repeated non-hole templates cover only `5.4–9.0%` of `h₁`) |
-| **Witness** | All 6 admitted blocks (`screen_cycle3_supplied.py`): raw `h₁` in unique return words `91.7–96.1%`; template+holes `e_w1 = 31,181–91,786` (`91.0–94.6%` of `h₁`), `e_slots = 18,055–20,486` |
-| **Scope** | All ordered return-word / derived-sequence / template-with-holes hierarchies charging literal exceptions on `𝓕` |
-| **Escape condition** | Compress the literal exceptions `e_w1` themselves (novel GUIDs, unique Q-IDs, unique descriptions), which have no repeated template structure |
-| **Reach** | Global for template-with-holes / Durand return-word hierarchies on `𝓕` |
-| **Strength** | Measured exact on 6 admitted blocks (free-oracle upper bound) |
+| **Gate failed** | **(c) Viability & (d) Payoff** (`91.0–94.6%` of `h₁` are paid exceptions `e_w1` under the tested `","` + 4-regex split; repeated non-hole `","`-templates cover only `5.4–9.0%` of `h₁`) |
+| **Witness** | All 6 admitted blocks (`screen_cycle3_supplied.py`): raw `","`-split `h₁` in unique segments `91.7–96.1%`; 4-regex template+holes `e_w1 = 31,181–91,786` (`91.0–94.6%` of `h₁`), `e_slots = 18,055–20,486` (`57.6–87.2%` of `h₁` in holes alone) |
+| **Scope** | **The tested one-level `","` delimiter split** (raw and with the 4-regex hole mask `GUID_RE`, `SHA1_RE`, `ENTITY_RE`, `NUM4_RE`) on the 6 admitted blocks. **Explicitly excluded:** multi-level Durand/S-adic hierarchies, alternative delimiters, or sub-segment grammars that factor inside unique `","`-segments |
+| **Escape condition** | Use a finer delimiter or multi-level S-adic hierarchy to factor the `6.2–36.4%` unique non-hole `h₁` share, **and** pair it with a non-template mechanism for the `57.6–87.2%` literal-hole `h₁` bytes (GUIDs/IDs) |
+| **Reach** | **Local to the tested `","`-split + 4-regex hole factorisation on the 6 admitted blocks** (not global over all return-word hierarchies) |
+| **Strength** | **Measured exact** on 6 admitted blocks (free-oracle upper bound for this split) + **argued** (hole-payload residual vs `δ = 1/2`) |
+| **Transferable insight** | Template-with-holes factorisation cleanly separates structural scaffolding (`s_skel = 672–3,109`, mostly already wide in Open) from literal payload slots (`18k–20.5k` holes carrying `57.6–87.2%` of `h₁`); any hierarchy that leaves literal holes as paid exceptions is capped by the non-hole `h₁` fraction (`12.8–42.4%`, below `δ = 50%` on 6/6 blocks) regardless of delimiter choice |
 
 ## 3. Audit of MONODROMY `2001f12` / `620eacc` (Record 103 `M-9`) & Peer-Check of Outside Review (`e48f904`)
 
@@ -54,17 +56,17 @@
    - **Minor remaining polish in `main-theorem.md` (`620eacc`):**
      - Line 82 (`Pmargin`) references `c₁W c` which is not bound in `theorem main`'s signature (needs a `DW` / wide-row argument or `c₁W` defined from the combined trace).
      - Line 84 still reads `D.state c ∈ O(c.r)` instead of `D.state c ≤ S c` (matching `Pstate` L81).
-     - Record 101 Theorem 3's run-record blindness break (`N-9`, `4ab193c`: `L = "caab" ↔ "cbaa"`, `D = {2}`) still needs its `3|D|` (or raw-byte `D`) repair in Record 101 / `main-theorem.md` §6.
+     - Record 101 Theorem 3's run-record blindness break (`N-9`, `4ab193c`: `L = "caab" ↔ "cbaa"`, `D = {2}`) — folded into Record 107 as `|𝒫| + 3|D| > ν′` (see also `N-18` for the sharp `2|D|` coefficient under pairwise-disjoint spans).
    - **Adopted under stricter-wins:** §1a clauses **6b** (`D_𝓗(D, c) ≤ D_𝓗(Open, c)`) and **7** (no advice; uniform family `𝓖(S, m, k)` of Record 103 §4, validated on `𝓕`), and the stricter `c₁` convention (`2001f12`).
-2. **Peer-check of Outside Review (`e48f904`):**
-   - **Confirmed:** `c₁` vs `D_𝓗` separation (`LF²` precedent), uniform family / no-advice requirement, and Record 96's size-biased vs geometric sampling catch (`P(w) = w(1-p)²p^{w-1}` for `w ≥ 2`, while `w = 1` is `(15/16)²`).
-   - **Rebutted with exact data (`N-8`, `N-12`, `N-13`, `N-14`):**
-     - Its conjecture that `σ_hex`'s 75–85% overstates hard `h₁` due to repeated SHA1 hashes is refuted by `N-8` (`8756c55`): across 3,645 repeated 40-hex SHA1 occurrences (`145,800` B), only **3 bytes (`0.00–0.01%` of `h₁`)** are width-1, and **novel hex alone is `61.3–68.2%` of `h₁`** (`cw = 64.61%`).
-     - All three of its proposed Stream-N supplied capabilities (§5.1 acyclic LZ77, §5.2 compressed `DSA`, §5.3 Durand return-word hierarchies with exceptions) fail decisively on `h₁` across all 6 admitted blocks even as **free oracles** (`N-12`: `z/h₁ = 0.54–0.64` at `min_len = 2` on 5/6 blocks, `1.27–1.51` at `min_len = 8`; `N-13`: `90.7–94.2%` distinct `DSA` on `h₁`, `86.9–93.4%` on `nonhex_w1`; `N-14`: `91.0–94.6%` of `h₁` are paid exceptions `e_w1`).
+2. **Peer-check of Outside Review (`e48f904`, updated after round 2 `78abe2c`):**
+   - **Confirmed:** `c₁` vs `D_𝓗` separation (`LF²` precedent), uniform-family/no-advice requirement, and Record 96's size-biased vs geometric sampling catch (`P(w) = w(1-p)²p^{w-1}` for `w ≥ 2`, while `w = 1` is `(15/16)²`).
+   - **Conceded in round 2 (`N-16`, `N-17`):** `N-12` had a cyclic-vs-suffix SA bug (repaired in `N-16`), `N-13`'s `DSA` distinctness/`H₀` bound applies to literal-terminal representations only, and `N-14` tested one `","`-split + 4-regex mask only.
+   - **Rebuttal that stood in round 2 (`N-8`):** Outside Review round 2 §I(f) conceded the repeated-SHA1 rebuttal (`3 / 145,800` B = `0.00–0.01%` of `h₁`; novel hex = `61.3–68.2%` of `h₁`).
 
 ## 4. Postmortem (METHOD.md §6a)
 
-1. **Input assumptions:** Exact on 6 admitted blocks.
-2. **Model assumptions:** Free-oracle supplied capability sets strict upper bounds on realisable decoders.
-3. **Method:** Exact Durand return-word + typed-hole template factorisation (`screen_cycle3_supplied.py`), plus formal audit of `620eacc`.
-4. **Outcome:** Closes the last of the outside review's three Stream-N leads (**14/14 frameworks & supplied capabilities closed across Cycles 1–3**). With `P_N-1` and `P_N-2` (`N-11`) plus `NEEDS M-4` (`N-9`) discharged and `M-9` (`620eacc`) verified, **no unscreened Stream-N lead remains** — preparing for our final Cycle 3 REVIEW unless a genuinely new fine-input E2 or R3 mechanism arises!
+1. **Input assumptions:** Exact on 6 admitted blocks for the `","` delimiter and 4-regex hole mask.
+2. **Model assumptions:** Free-oracle supplied capability sets upper bounds only for the tested split.
+3. **Method:** Exact `","`-split return-word + typed-hole template factorisation (`screen_cycle3_supplied.py`), plus formal audit of `620eacc`.
+4. **Outcome (N-17):** Scope cleanly narrowed to the single tested `","`-split + 4-regex hole mask (all six obstruction fields supplied); no new framework screen opened.
+
