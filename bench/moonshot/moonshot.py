@@ -1312,9 +1312,7 @@ def sweep(a: argparse.Namespace) -> int:
     out.mkdir(parents=True, exist_ok=True)
     arms = a.arms.split(",")
     if arms[0] != "lazy":
-        raise SystemExit(
-            "sweep: lazy (the baseline, the shipped kernel) must be the first arm, the reference"
-        )
+        raise SystemExit("sweep: lazy (the baseline, the shipped kernel) must be the first arm, the reference")
     summary = s.timing(Path(a.corpus), out, arms=arms, perf=a.perf)
     (out / "sweep.json").write_text(json.dumps(summary, indent=1) + "\n")
     for w, c in summary.items():

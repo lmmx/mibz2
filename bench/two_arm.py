@@ -45,7 +45,6 @@ registration on #145).
     malformed (its `cpu`, `overlap`, `decoder_cpus` and `owner`), its `decoder_cpus` not the
     record's own, or its CPU on a core of the decode's; past it, a spinner recorded.
 """
-
 import argparse
 import json
 import math
@@ -56,38 +55,9 @@ import sys
 
 ALPHA, RSS_GATE = 0.05, 1.10
 # Student's t, two-sided 95%, by degrees of freedom (1..30); 1.96 beyond
-T95 = [
-    12.706,
-    4.303,
-    3.182,
-    2.776,
-    2.571,
-    2.447,
-    2.365,
-    2.306,
-    2.262,
-    2.228,
-    2.201,
-    2.179,
-    2.160,
-    2.145,
-    2.131,
-    2.120,
-    2.110,
-    2.101,
-    2.093,
-    2.086,
-    2.080,
-    2.074,
-    2.069,
-    2.064,
-    2.060,
-    2.056,
-    2.052,
-    2.048,
-    2.045,
-    2.042,
-]
+T95 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179,
+       2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060,
+       2.056, 2.052, 2.048, 2.045, 2.042]
 
 
 def canonical(arm):
@@ -107,18 +77,14 @@ def betainc(a, b, x):
         return 1.0
     if x > (a + 1) / (a + b + 2):
         return 1.0 - betainc(b, a, 1.0 - x)
-    lfront = (
-        math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
-    )
+    lfront = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
     tiny = 1e-300
     c, d = 1.0, 1.0 - (a + b) * x / (a + 1)
     d = 1.0 / (d if abs(d) > tiny else tiny)
     f = d
     for m in range(1, 400):
-        for num in (
-            m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m)),
-            -(a + m) * (a + b + m) * x / ((a + 2 * m) * (a + 2 * m + 1)),
-        ):
+        for num in (m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m)),
+                    -(a + m) * (a + b + m) * x / ((a + 2 * m) * (a + 2 * m + 1))):
             d = 1.0 + num * d
             d = 1.0 / (d if abs(d) > tiny else tiny)
             c = 1.0 + num / c
@@ -219,36 +185,23 @@ def check_metadata(where, key, r, core_of, cores, hold_max, errors):
     t, s = key[2], r.get("cpus")
     if t > cores:
         if s != "all":
-            errors.append(
-                f"{where}: {key} pinned {s!r} past the {cores} cores, not unpinned ('all')"
-            )
+            errors.append(f"{where}: {key} pinned {s!r} past the {cores} cores, not unpinned ('all')")
     else:
         lst = cpu_list(s)
         if lst is None:
             errors.append(f"{where}: {key} its CPUs {s!r} missing or malformed")
-        elif (
-            len(lst) != t
-            or len(set(lst)) != t
-            or any(c not in core_of for c in lst)
-            or len({core_of[c] for c in lst}) != t
-        ):
+        elif len(lst) != t or len(set(lst)) != t or any(c not in core_of for c in lst) \
+                or len({core_of[c] for c in lst}) != t:
             errors.append(f"{where}: {key} its CPUs {s!r} are not one on each of {t} cores")
     hs = r.get("held_spinner")
     if t > hold_max:
         if hs is not None:
-            errors.append(
-                f"{where}: {key} a spinner recorded past the hold limit ({hold_max} threads)"
-            )
+            errors.append(f"{where}: {key} a spinner recorded past the hold limit ({hold_max} threads)")
         return
     if not isinstance(hs, dict):
         errors.append(f"{where}: {key} no spinner recorded ({hs!r})")
         return
-    cpu, overlap, dec, owner = (
-        hs.get("cpu"),
-        hs.get("overlap"),
-        hs.get("decoder_cpus"),
-        hs.get("owner"),
-    )
+    cpu, overlap, dec, owner = hs.get("cpu"), hs.get("overlap"), hs.get("decoder_cpus"), hs.get("owner")
     if isinstance(cpu, bool) or not isinstance(cpu, int) or cpu not in core_of:
         errors.append(f"{where}: {key} the spinner's CPU {cpu!r} malformed")
         return
@@ -295,26 +248,13 @@ def load(path, roster, errors, meta=None):
             if key not in roster:
                 errors.append(f"{where}: {key} not in the roster")
             if r.get("err") or r.get("termination") != "success":
-                errors.append(
-                    f"{where}: {key} did not succeed ({r.get('termination')!r}, {r.get('err')!r})"
-                )
+                errors.append(f"{where}: {key} did not succeed ({r.get('termination')!r}, {r.get('err')!r})")
             for field in ("wall", "cpu", "rss_kb"):
                 v = r.get(field)
-                if (
-                    isinstance(v, bool)
-                    or not isinstance(v, (int, float))
-                    or not math.isfinite(v)
-                    or v <= 0
-                ):
+                if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
                     errors.append(f"{where}: {key} {field} {v!r} is not a finite positive number")
             out, digest = r.get("out"), r.get("sha256") or r.get("hash")
-            if (
-                isinstance(out, bool)
-                or not isinstance(out, int)
-                or out <= 0
-                or not isinstance(digest, str)
-                or not digest
-            ):
+            if isinstance(out, bool) or not isinstance(out, int) or out <= 0 or not isinstance(digest, str) or not digest:
                 errors.append(f"{where}: {key} output size {out!r} or hash {digest!r} missing")
             else:
                 outputs.setdefault(key[0], set()).add((out, digest))
@@ -326,9 +266,7 @@ def load(path, roster, errors, meta=None):
             rows[key] = r
     missing = sorted(roster - set(rows))
     if missing:
-        errors.append(
-            f"{name}: {len(missing)} of {len(roster)} roster keys missing, e.g. {missing[:3]}"
-        )
+        errors.append(f"{name}: {len(missing)} of {len(roster)} roster keys missing, e.g. {missing[:3]}")
     for corpus, outs in sorted(outputs.items()):
         if len(outs) != 1:
             errors.append(f"{corpus}: the runs' outputs differ: {sorted(outs)[:3]}")
@@ -348,12 +286,8 @@ def main(argv):
     ap.add_argument("--env", required=True, help="the machine as `ab env` recorded it")
     ap.add_argument("--cores", type=int, default=10)
     ap.add_argument("--cpus", type=int, default=20)
-    ap.add_argument(
-        "--hold-max-threads",
-        type=int,
-        default=9,
-        help="the spinner's limit as the run had it; 0 for a run without one",
-    )
+    ap.add_argument("--hold-max-threads", type=int, default=9,
+                    help="the spinner's limit as the run had it; 0 for a run without one")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -364,27 +298,14 @@ def main(argv):
     if set(judged) & set(controls) or ref == cand:
         errors.append("the judged and control counts overlap, or the two arms are one")
     corpora = [a.main, a.guard]
-    roster = {
-        (c, arm, t, i)
-        for c in corpora
-        for arm in (ref, cand)
-        for t in judged + controls
-        for i in range(R)
-    }
+    roster = {(c, arm, t, i) for c in corpora for arm in (ref, cand) for t in judged + controls for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
-    rows = load(
-        a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads)
-    )
-    print(
-        f"records {len(rows)}; roster {len(roster)} ({ref} and {cand}; {a.main} and {a.guard}; "
-        f"judged {judged}, controls {controls}; {R} rounds)"
-    )
+    rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
+    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {cand}; {a.main} and {a.guard}; "
+          f"judged {judged}, controls {controls}; {R} rounds)")
 
     def cell(corpus, t):
-        return [
-            math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"])
-            for i in range(R)
-        ]
+        return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"]) for i in range(R)]
 
     def peak(corpus, arm, t):
         return statistics.median(rows[(corpus, arm, t, i)]["rss_kb"] for i in range(R))
@@ -394,27 +315,21 @@ def main(argv):
         for corpus in corpora:
             for t in controls:
                 g, lo, hi, _ = step(cell(corpus, t))
-                print(
-                    f"  control {corpus} {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}"
-                )
+                print(f"  control {corpus} {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}")
                 if label(lo, hi) != "INCONCLUSIVE":
                     moved.append((corpus, t))
         if moved:
             errors.append(f"control cells moved {moved}: the two arms build the same decoder there")
     if errors:
-        print(
-            f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict"
-        )
+        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict")
         for e in errors[:25]:
             print(f"  {e}")
         if len(errors) > 25:
             print(f"  ... and {len(errors) - 25} more")
         return 1
 
-    print(
-        f"\nThe judged cells: {cand} over {ref}, the paired rounds' wall ratios: geometric mean "
-        f"[95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over {ref}'s"
-    )
+    print(f"\nThe judged cells: {cand} over {ref}, the paired rounds' wall ratios: geometric mean "
+          f"[95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over {ref}'s")
     steps, ps, mem = {}, {}, {}
     for corpus in corpora:
         print(f"\n{corpus}{' (gain family)' if corpus == a.main else ' (loss and memory guard)'}")
@@ -424,43 +339,27 @@ def main(argv):
             mem[(corpus, t)] = peak(corpus, cand, t) / peak(corpus, ref, t)
             if corpus == a.main:
                 ps[t] = p
-            print(
-                f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(corpus, t)]}"
-                + (f"; p {p:.2e}" if corpus == a.main else "")
-                + f"; memory {mem[(corpus, t)]:.3f}"
-            )
+            print(f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(corpus, t)]}"
+                  + (f"; p {p:.2e}" if corpus == a.main else "") + f"; memory {mem[(corpus, t)]:.3f}")
     rejected = holm(ps, ALPHA)
-    print(
-        f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
-        + ", ".join(
-            f"{t} p {ps[t]:.2e} {'rejects' if t in rejected else 'does not'}"
-            for t in sorted(ps, key=ps.get)
-        )
-    )
+    print(f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
+          + ", ".join(f"{t} p {ps[t]:.2e} {'rejects' if t in rejected else 'does not'}"
+                      for t in sorted(ps, key=ps.get)))
     gain = bool(rejected)
     slower = sorted(k for k, v in steps.items() if v == "SLOWER")
     over = sorted(k for k, v in mem.items() if v > RSS_GATE)
     print()
     if gain and not slower and not over:
-        print(
-            f"VERDICT: ADOPTS. A gain at {sorted(rejected)} threads (Holm), no judged cell SLOWER, and peak memory "
-            f"within {RSS_GATE:.2f} of the reference's at every judged cell"
-        )
+        print(f"VERDICT: ADOPTS. A gain at {sorted(rejected)} threads (Holm), no judged cell SLOWER, and peak memory "
+              f"within {RSS_GATE:.2f} of the reference's at every judged cell")
     elif gain and not slower:
-        print(
-            f"VERDICT: HELD ON MEMORY. A gain at {sorted(rejected)} threads (Holm) and no judged cell SLOWER, but peak "
-            f"memory is above {RSS_GATE:.2f} of the reference's at {over}: PERFORMANCE-POLICY rule 4, the Coordinator's to weigh"
-        )
+        print(f"VERDICT: HELD ON MEMORY. A gain at {sorted(rejected)} threads (Holm) and no judged cell SLOWER, but peak "
+              f"memory is above {RSS_GATE:.2f} of the reference's at {over}: PERFORMANCE-POLICY rule 4, the Coordinator's to weigh")
     elif gain:
-        print(
-            f"VERDICT: A FINDING, NOT ADOPTED. A gain at {sorted(rejected)} threads (Holm), but SLOWER at {slower}"
-        )
+        print(f"VERDICT: A FINDING, NOT ADOPTED. A gain at {sorted(rejected)} threads (Holm), but SLOWER at {slower}")
     else:
-        print(
-            "VERDICT: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell)"
-            + (f"; SLOWER at {slower}" if slower else "")
-            + (f"; memory above the gate at {over}" if over else "")
-        )
+        print("VERDICT: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell)"
+              + (f"; SLOWER at {slower}" if slower else "") + (f"; memory above the gate at {over}" if over else ""))
     return 0
 
 

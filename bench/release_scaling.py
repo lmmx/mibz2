@@ -50,11 +50,7 @@ def machine(lscpu: Path | None) -> dict:
             text = ""
     f = lscpu_fields(text)
     num = lambda k: int(f[k]) if f.get(k, "").isdigit() else None  # noqa: E731
-    sockets, per_socket, per_core = (
-        num("Socket(s)"),
-        num("Core(s) per socket"),
-        num("Thread(s) per core"),
-    )
+    sockets, per_socket, per_core = num("Socket(s)"), num("Core(s) per socket"), num("Thread(s) per core")
     return {
         "cpu": f.get("Model name"),
         "cpus": num("CPU(s)"),

@@ -54,25 +54,23 @@ for _k, _t in ((3, 10), (4, 12)):
 COMPARISONS = []
 for _l, _tag in (("park", "A"), ("spin2k", "S"), ("small", "B"), ("both", "AB")):
     for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1):
-        COMPARISONS.append((f"{_tag}{_i}", _l, f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-pipe{_k}@{_t}"))
+        COMPARISONS.append(
+            (f"{_tag}{_i}", _l, f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-pipe{_k}@{_t}")
+        )
 # reported, never judged: the registered prototype's comparisons replicated, and each lever
 # against the non-pipelined team (how much of the pipeline's gain it keeps or adds)
-REPLICATIONS = (
-    [
-        ("R1", "mibz2-pipe3@10", "mibz2-team3@10"),
-        ("R2", "mibz2-pipe4@12", "mibz2-team4@12"),
-    ]
-    + [
-        (f"T-{_l}{_i}", f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-team{_k}@{_t}")
-        for _l in LEVERS
-        for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
-    ]
-    + [
-        # park against the short-spin yield: both changes at once (the prototype's first park)
-        (f"PS{_i}", f"mibz2-pipe{_k}-park@{_t}", f"mibz2-pipe{_k}-spin2k@{_t}")
-        for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
-    ]
-)
+REPLICATIONS = [
+    ("R1", "mibz2-pipe3@10", "mibz2-team3@10"),
+    ("R2", "mibz2-pipe4@12", "mibz2-team4@12"),
+] + [
+    (f"T-{_l}{_i}", f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-team{_k}@{_t}")
+    for _l in LEVERS
+    for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
+] + [
+    # park against the short-spin yield: both changes at once (the prototype's first park)
+    (f"PS{_i}", f"mibz2-pipe{_k}-park@{_t}", f"mibz2-pipe{_k}-spin2k@{_t}")
+    for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
+]
 # the noise control: the same plan twice, the default against its forced twin
 CONTROL = ("N1", "mibz2-team3@10", "mibz2@10")
 # the registered thresholds, on a ratio's 95% interval [lo, hi]
@@ -212,10 +210,7 @@ def report(a):
         )
     unexpected = sorted(set(by) - set(CELLS))
     checks.append(
-        (
-            f"no cell beyond the registered ones (seen: {', '.join(unexpected) or 'none'})",
-            not unexpected,
-        )
+        (f"no cell beyond the registered ones (seen: {', '.join(unexpected) or 'none'})", not unexpected)
     )
     valid = all(ok for _, ok in checks)
 
@@ -235,12 +230,7 @@ def report(a):
     )
     lines.append("")
     verdict = "VALID" if valid and control_ok else "INVALID"
-    lines += [
-        f"Run: **{verdict}**",
-        "",
-        "## The registered comparisons (each lever against the pipe)",
-        "",
-    ]
+    lines += [f"Run: **{verdict}**", "", "## The registered comparisons (each lever against the pipe)", ""]
     lines.append(
         "| | lever | arm | against | speed [95% CI] | speed outcome | CPU [95% CI] | CPU outcome | lever A's question |"
     )
@@ -309,9 +299,7 @@ def report(a):
             f"| {name} | `{arm}` | `{ref}` | {speed[0]:.3f} [{speed[1]:.3f}, {speed[2]:.3f}] | "
             f"{cpu[0]:.3f} [{cpu[1]:.3f}, {cpu[2]:.3f}] |"
         )
-        out["unjudged"].append(
-            {"name": name, "arm": arm, "ref": ref, "speed": list(speed), "cpu": list(cpu)}
-        )
+        out["unjudged"].append({"name": name, "arm": arm, "ref": ref, "speed": list(speed), "cpu": list(cpu)})
     lines += [
         "",
         "## Every cell (medians)",
@@ -345,14 +333,10 @@ def report(a):
                 f"{g('pipe.ms.join_delay')} | {g('pipe.n.join_late')} / {g('pipe.n.join_missed')} / {g('pipe.n.join_runs')} |"
             )
         lines += [f"| {u} | | | | | | | | | | | |" for u in unreadable]
-        lines += [
-            "",
-            "**Lever B's mechanism** (registered: its cross-thread overlap above the pipe's by at least "
-            f"{B_MECHANISM:.0%} of the blocks), and its counterexample (a later join: the leader's summed join "
-            f"delay at least {LATE_JOIN_RATIO}x the pipe's and {LATE_JOIN_MS:g} ms more). "
-            "`pipeline_counts` (jobs taken in a run) is context only, never evidence:",
-            "",
-        ]
+        lines += ["", "**Lever B's mechanism** (registered: its cross-thread overlap above the pipe's by at least "
+                  f"{B_MECHANISM:.0%} of the blocks), and its counterexample (a later join: the leader's summed join "
+                  f"delay at least {LATE_JOIN_RATIO}x the pipe's and {LATE_JOIN_MS:g} ms more). "
+                  "`pipeline_counts` (jobs taken in a run) is context only, never evidence:", ""]
         for k, t in ((3, 10), (4, 12)):
             base = tls.get(f"occupancy-t{t}-pipe{k}", {})
             for lever in ("small", "both"):
