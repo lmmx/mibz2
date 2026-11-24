@@ -32,7 +32,7 @@ models and asked each what it meant for mibz2's research. Within an afternoon ea
 a breakthrough for our decoder. Neither survived our own records:
 
 - **The first** proposed measuring the decoder's hard core in a new currency, cache misses. Our
-  journal had already refuted that on this machine, three days earlier.
+  journal already held three experiments that told against it.
 - **The second** proposed moving many scattered rows of the block through the decoder together.
   Its lemma is true, and already known; as a decoder, it costs exactly as many steps as the walk
   it would replace.
@@ -129,43 +129,56 @@ each one. A decoder that took the same steps far more cheaply would sit outside 
 The essay's warning is about exactly this: an answer that arrives without its reason, confidently
 stated. We held both eurekas to our records.
 
-**The cache-miss currency was already refuted.** Two entries said so:
+**The cache-miss currency had already been tested.** Three records bear on it:
 
 - **Lanes, 20 November.** Our [toy-transfer experiment](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md) ran up to eight independent walks
   side by side over Open's cycle. If waiting on memory were the cost, independent lanes would hide
-  it. They bought 5–14%. The entry's conclusion: "the dependent load is not the main cost: about ten
-  bytes are appended per retained step".
+  it. At first they bought only 5–14%. The same entry later records a correction: once each step's
+  append was a single branchless 16-byte store, eight lanes cut the emit to 0.55–0.78 of its time,
+  in a C harness, though either change alone barely moved it. Hiding the wait pays only once the
+  work per step is small.
+- **Lanes in the decoder itself.** mibz2 already has that branchless store
+  ([Sixteen at a stroke](2026-11-21-sixteen-at-a-stroke.md)). There, eight lanes made the loop 13%
+  faster on one thread and 5% slower once eight workers shared the processor
+  ([Fast alone, slow in a crowd](2026-11-21-fast-alone-slow-in-a-crowd.md)).
 - **The squared map, 23 November.** A design that halved the number of dependent steps was built
   and measured. On ten workers its emit was 1.22 times as slow per step, and the whole decode about
-  1.3 times as slow. Our
-  [retrospective](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md) put it in one line: it was "built on the opposite assumption and failed
-  for exactly that reason".
+  1.3 times as slow. Our [retrospective](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md) put it down to the wrong assumption about where
+  the cost lies. It also changed the footprint and the preprocessing, and no miss counts were
+  recorded, so it can't say what the saved waits alone were worth.
 
-On these two experiments, cutting misses or waiting didn't buy time; the cost was the work done at
-each step. (Neither count is a reliable proxy for time on its own: the same number of steps ran
-5–14% faster in lanes, and fewer misses ran slower.) The correction went to the swarm within the
-hour.
+None of these makes misses a currency. Waiting and the work done at each step interact, and only
+the whole decoder's time decides. That was enough to stop treating a miss count as the target, and
+the correction went to the swarm within the hour.
 
 **The ordered frontier is the walk, scheduled differently.** Our mathematician agent took
 ChatGPT's construction apart in an [afternoon's record](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md):
 
 - **The lemma is standard.** It is the step of batched backward search, a known technique.
-- **The count doesn't move.** Each step of a frontier record composes one row with the next, and
-  those steps match the walk's steps one for one. For G fields of d letters there are G·d steps
-  either way. G1 says there must be, since every width-1 row is still visited.
-- **The price doesn't fall.** Against independent lanes, which already bought only 5–14%, the
-  frontier adds a partition pass moving at least 16 bytes for every step. This is a prediction, not
-  a measurement, and the record names what would falsify it.
-- **Finding the starting rows is easy.** It takes one scan of a contiguous range, so that was never
-  the obstacle.
+- **The count doesn't move.** Built record by record, each step of the frontier composes one row
+  with the next, and those steps match the walk's steps one for one. For G fields of d letters
+  there are G·d steps either way. G1 says there must be, since every width-1 row is still visited.
+  That classifies this implementation; a packed version of the partition would have to be priced
+  on its own.
+- **The price is predicted not to fall.** The partition moves at least 16 bytes for every step.
+  This is a prediction, not a measurement, and the record names what would falsify it. Only a
+  matched implementation would settle it.
+- **Finding the starting rows takes one scan** of a contiguous range. Placing what they produce in
+  the output is a separate job, not yet priced.
 
 The record's most useful line is what the frontier *is*. Within one letter, the gap between two
-rows' destinations is the number of that letter between them. So moving a scattered set of rows
-amounts to counting letters in the gaps between them: an aggregate count, which an earlier result
-showed can't place a width-1 row without as many separate counts as there are rows.
+rows' destinations is the number of that letter between them. So one step for a scattered set of rows
+is a matter of counting letters in the gaps between them. That ties the frontier to an earlier
+result about such counts, though not as an identity: gap counts give one step's destinations,
+while the earlier result concerns positions in the output.
 
 Neither eureka was worthless. Both were results without their reasons, and the reasons were already
 in our journal.
+
+The checking ran the other way too. A later ChatGPT audit of the mathematician agent's records
+narrowed several of their claims: the frontier verdict covers only the record-by-record
+implementation, the lanes negative had been corrected in its own entry, and a rule's short proof
+says nothing about its cost. It is in the [source record](https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md), §6, and this post follows it.
 
 ## 4. The question that survived: what lies between the routes
 
@@ -208,8 +221,10 @@ gap is where the next decoder would have to live.
 
 Claude's analysis raised the standard escape from lower bounds of this kind: naming a composite
 once and reusing it, as extension variables shorten proofs in propositional logic. Checked, G1
-already charges shared work only once, and [survives](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md). What would break it is a
-schematic lemma, one proof with a parameter that ranges over a scattered set. That is the same open
+already charges shared work only once, and [survives](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md). What could break it is a
+rule for a whole scattered set that is cheap to *execute*, not merely short to state: LF's own
+formula is already a one-line rule for every row, and applying it row by row is the walk. That is
+the same open
 question in another form.
 
 ## 5. Where things stand
@@ -221,8 +236,9 @@ survived was a question about reasons: what lies between our decoders, and what 
 between them can remove.
 
 The split between count and price stays open as its own question. G1 bounds the number of width-1
-steps, not what each one costs on a real processor, and our records already hold examples of
-the two pulling apart in each direction. One shortcut is ruled out: checking a guessed decoding
+steps, not what each one costs on a real processor, and our records already show that the
+count doesn't fix the time: the same steps ran faster or slower depending on lanes and on the
+work in each step. One shortcut is ruled out: checking a guessed decoding
 against bzip2's 32-bit block checksum would accept a wrong guess about once in four billion, and
 mibz2 must be exact on every block.
 
@@ -242,4 +258,5 @@ eurekas apart in an afternoon.
   descriptions of ChatGPT's figures.
 - [The ordered frontier and the transformation between decoders](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md) and
   [abbreviation, batching and the block checksum](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md), the mathematician agent's records.
+- ChatGPT's [audit of those records](https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md) (§6 of the source record).
 - [Toy-transfer](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md), the lanes experiment, and [the retrospective](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md) on the squared map.
