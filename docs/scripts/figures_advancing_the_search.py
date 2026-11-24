@@ -320,6 +320,88 @@ def fig3():
     write("fig3.svg", '<div class="fx-panels">' + "".join(a) + "".join(b) + "</div>")
 
 
+# ---------------------------------------------------------------- figures 4 and 9, drawn downwards for a phone
+def fig4_narrow(walk, cells, opn, w1, N):
+    W = 340
+    Y0, RH = 52, 22
+    H = Y0 + N * RH + 56
+    cols = [("The walk", walk, 58), ("Cells", cells, 152), ("Open", opn, 246)]
+    CWD = 84
+    o = [svg_open(W, H, "Three tilings of the same stretch of a block's cycle, read downwards: the walk takes one step "
+                        "per row, Cells merges every wide stretch into one step, Open merges only the thick stretches; "
+                        "the width-1 rows stay single steps in all three.", solo=True),
+         text(14, 18, "one stretch of a block's cycle, in output order ↓", "bf-tm", "start")]
+    for i in sorted(w1):
+        o.append(f'<rect class="fx-w1-band" x="44" y="{Y0 + i * RH}" width="{W - 48}" height="{RH}"/>')
+    for i in range(N + 1):
+        o.append(f'<path class="fx-grid" d="M44,{Y0 + i * RH} L{W - 4},{Y0 + i * RH}"/>')
+    for i in range(N):
+        o.append(text(36, Y0 + i * RH + 15, str(i), "fx-row", "end"))
+    for name, tiling, x in cols:
+        o.append(text(x + CWD / 2, Y0 - 10, name, "bf-ts"))
+        for a, b, lab in tiling:
+            y = Y0 + a * RH + 2
+            h = (b - a + 1) * RH - 4
+            cls = "fx-tile-w1" if lab == "w1" else ("fx-tile-big" if b > a else "fx-tile")
+            o.append(f'<rect class="{cls}" x="{x}" y="{y}" width="{CWD}" height="{h}" rx="3"/>')
+            if b > a:
+                for i in range(a + 1, b + 1):
+                    yy = Y0 + i * RH
+                    o.append(f'<path class="fx-seam" d="M{x + 8},{yy} L{x + CWD - 8},{yy}"/>')
+                parts = lab.split(", ")
+                for j, part in enumerate(parts):
+                    o.append(text(x + CWD / 2, y + h / 2 + 4 + (j - (len(parts) - 1) / 2) * 14, part, "fx-tile-t"))
+            elif lab == "w1":
+                o.append(text(x + CWD / 2, y + h / 2 + 4, "w1", "fx-w1-t"))
+    o.append(text(14, H - 26, "w1: a width-1 row, a single tile under every", "bf-tm", "start"))
+    o.append(text(14, H - 10, "contraction; a longer tile is many rows in one step", "bf-tm", "start"))
+    o.append("</svg>")
+    return "".join(o)
+
+
+def fig9_narrow(L, p1, p3):
+    n = len(L)
+    W, RH, Y0 = 340, 24, 58
+    H = Y0 + n * RH + 112
+    cx, cw = 170, 34
+    o = [svg_open(W, H, "The 18-row column Paaabxbccddeeff$MZ read downwards, one LF cycle. Paths from rows 1 and 3 "
+                        "both spell abcdef; their second rows, 4 and 6, are single b's.", solo=True),
+         marker("fx9n-head"),
+         text(cx, 20, "row 1 spells a b c d e f", "fx-path-a-t"),
+         text(cx, 37, "along 1 → 4 → 7 → 9 → 11 → 13", "fx-path-a-t"),
+         text(cx, Y0 + n * RH + 24, "row 3 spells a b c d e f", "fx-path-b-t"),
+         text(cx, Y0 + n * RH + 41, "along 3 → 6 → 8 → 10 → 12 → 14", "fx-path-b-t")]
+    for i, ch in enumerate(L):
+        y = Y0 + i * RH
+        cls = "fx-cell9"
+        if i in (1, 3):
+            cls += " fx-start"
+        if i in (4, 6):
+            cls += " fx-w1cell"
+        o.append(f'<rect class="{cls}" x="{cx - cw / 2}" y="{y + 1}" width="{cw}" height="{RH - 2}" rx="3"/>')
+        o.append(text(cx, y + 17, ch, "fx-letter"))
+        o.append(text(cx + cw / 2 + 64, y + 16, str(i), "fx-row", "end"))
+    for a, b in runs_of(L):
+        if b > a:
+            o.append(f'<path class="fx-runline" d="M{cx + cw / 2 + 6},{Y0 + a * RH + 3} L{cx + cw / 2 + 6},{Y0 + b * RH + RH - 3}"/>')
+    cy = lambda i: Y0 + i * RH + RH / 2
+    for pth, left, cls in ((p1, True, "fx-path-a"), (p3, False, "fx-path-b")):
+        for u, v in zip(pth, pth[1:]):
+            y0, y1 = cy(u), cy(v)
+            reach = 14 + 7 * (v - u)
+            if left:
+                x0 = cx - cw / 2 - 3
+                d = f"M{f(x0)},{f(y0)} C{f(x0 - reach)},{f(y0)} {f(x0 - reach)},{f(y1)} {f(x0 - 5)},{f(y1)}"
+            else:
+                x0 = cx + cw / 2 + 14
+                d = f"M{f(x0)},{f(y0)} C{f(x0 + reach)},{f(y0)} {f(x0 + reach)},{f(y1)} {f(x0 + 5)},{f(y1)}"
+            o.append(f'<path class="{cls}" d="{d}" marker-end="url(#fx9n-head)"/>')
+    o += [text(cx, H - 42, "rows 4 and 6 are width-1 runs of b;", "bf-tm"),
+          text(cx, H - 26, "their own six-letter contexts,", "bf-tm"),
+          text(cx, H - 10, "bcdef$ and bcdefM, are unique", "bf-tm"), "</svg>"]
+    return "".join(o)
+
+
 # ---------------------------------------------------------------- figure 4
 def fig4():
     w1 = {3, 8, 9, 13}
@@ -363,7 +445,8 @@ def fig4():
     o.append(text(X0, 220, "w1: a width-1 row, a single tile under every contraction; "
                            "a longer tile is many rows taken in one step", "bf-tm", "start"))
     o.append("</svg>")
-    write("fig4.svg", '<div class="fx-wide">' + "".join(o) + "</div>")
+    write("fig4.svg", '<div class="fx-switch"><div class="fx-wide">' + "".join(o) + '</div><div class="fx-narrow">'
+          + fig4_narrow(walk, cells, opn, w1, N) + "</div></div>")
 
 
 # ---------------------------------------------------------------- figure 5 (stepper)
@@ -600,7 +683,8 @@ def fig9():
           text(X0 + 9 * CW, 230, "row 3 spells a b c d e f along 3 → 6 → 8 → 10 → 12 → 14", "fx-path-b-t"),
           text(X0 + 9 * CW, 262, "rows 4 and 6 are width-1 runs of b; their own six-letter contexts,", "bf-tm"),
           text(X0 + 9 * CW, 278, "bcdef$ and bcdefM, are unique", "bf-tm"), "</svg>"]
-    write("fig9.svg", '<div class="fx-wide">' + "".join(o) + "</div>")
+    write("fig9.svg", '<div class="fx-switch"><div class="fx-wide">' + "".join(o) + '</div><div class="fx-narrow">'
+          + fig9_narrow(L, p1, p3) + "</div></div>")
 
 
 # ---------------------------------------------------------------- figure 10
@@ -653,7 +737,8 @@ def apply():
         a = starts[idx - 1]
         b = s.index("</figure>", a)
         fig = s[a:b]
-        m = re.search(r'<div class="fx-(?:panels|wide)">.*?</svg></div>|<svg\b.*?</svg>', fig, re.S)
+        m = re.search(r'<div class="fx-switch">.*?</svg></div></div>|<div class="fx-(?:panels|wide)">.*?</svg></div>'
+                      r'|<svg\b.*?</svg>', fig, re.S)
         fig = fig[: m.start()] + DRAWN[f"fig{idx}.svg"] + fig[m.end():]
         frames = DRAWN.get(f"fig{idx}-frames.html")
         if frames:

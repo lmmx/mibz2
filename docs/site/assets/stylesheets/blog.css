@@ -945,8 +945,13 @@
 /* layout: two panels side by side, stacked on a phone; a wide strip scrolls inside its frame */
 .bf-fig .fx-panels { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1rem; }
 .bf-fig .fx-panels > svg { flex: 1 1 300px; max-width: 360px; width: 100%; height: auto; }
-.bf-fig .fx-wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.bf-fig .fx-wide > svg { min-width: 560px; width: 100%; height: auto; }
+.bf-fig .fx-wide > svg { width: 100%; height: auto; }
+/* a long strip is drawn across on a wide screen and downwards on a phone */
+.bf-fig .fx-switch > .fx-narrow { display: none; }
+@media screen and (max-width: 44.9375em) {
+  .bf-fig .fx-switch > .fx-wide { display: none; }
+  .bf-fig .fx-switch > .fx-narrow { display: block; }
+}
 
 /* type */
 .bf-fig .fx-letter { fill: var(--bf-ink); font: 600 15px var(--md-code-font-family, monospace); }
