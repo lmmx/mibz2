@@ -1206,3 +1206,40 @@ The review: `neon-movement-cycle2-critique.md`. No breakthrough on Q is claimed,
 - **E3.2:** parts (1)–(2) are correct and near folklore. "Only cross-stage escapes" is asserted, not proved.
 - **R1, renormalisation:** the descent invariant is Gessel–Reutenauer. The "fixed point" holds only on the synthetic template; on Wikidata, q_min rises 8–21×.
 - **Cycle-1 corrections:** acknowledged in the README, but the old claims are still in the files.
+
+## 42. ChatGPT Pro: two overstatements corrected, and the closure problem
+
+ChatGPT Pro's answer is recorded verbatim in `chatgpt-closure.md`.
+
+**Two corrections, both accepted. Both are the Coordinator's overstatements in summaries to Louis and in agent briefs:**
+1. **G1 is not a machine lower bound.** It bounds charged operations in the rigid-interval calculus. The bridge to unpredictable machine reads is unproved, as the council said (§33, COMPARISON). Summaries that called it "the proved floor on reads" were wrong. The target stays "fewer than one unpredictable read per lone row, acquisition included". The claim that this is impossible is unproved.
+2. **The 16% figure is not a ceiling.** It holds for the supplied-codes intervention only (§30): codes supplied in output order, with construction, word handling and later stages kept. It says nothing about an algorithm that also removes construction or changes emission or scheduling. CROSS-STAGE.md and ESSENCE.md are corrected.
+
+**Prior art it surfaced for the cross-stage track** (added to CROSS-STAGE.md):
+- `src/runs.rs` already builds the run records straight from inverse MTF/RLE2;
+- Huffman with composed run and MTF actions lost on 22 November;
+- RLE1 and CRC were composed through the word grammar on 10 November.
+
+**Its structural result (block 0, its own reproducer, not in this repository).**
+- It uses Open's factorisation R = P ∘ LF_v, where P is a piecewise translation.
+- On the original retained map, each byte's successor targets advance in steps of 1. For that, 2,148 address segments are enough, 0.061 per lone row: an orderly access schedule, including for lone rows.
+- After one in-place M-17 composition sweep, the same grouping needs 44,814–52,319 segments (1.28–1.49 per lone row). That is 21–24× more fragmented. The uncapped sweep's flat word storage grows from 0.90M to 2.51M bytes. All three variants were byte-exact.
+- **The obvious recursion therefore fails on the first real block.**
+
+**The closure problem it poses.** Starting from R = P ∘ LF_v, find a representation of composed retained-row transitions that does three things:
+- it keeps successor acquisition, word payloads and the access schedule cheap;
+- its compactness survives composition on the admitted blocks;
+- it is built without following the transitions it replaces.
+
+A second successful composition, with an explicitly and cheaply built representation, would be a meaningful new result. ChatGPT Pro's own verdict on the cursor idea: solid but incremental at one composition.
+
+**A combined whole-decoder oracle (2×2), not yet run:**
+
+| | Normal Open emission | Supplied codes |
+|---|---|---|
+| **Normal scanner** | A | B (already run, §30) |
+| **Precomputed symbols** | C | D |
+
+Delivery stays timed through the production bounded queue. It tests whether the two interfaces have *combined* potential that neither shows alone. It differs from the parscan attempts of 22 November (C-37 at 0.883 with regressions; the streaming version at 1.54×), because it measures potential before any implementation. Commissioning it needs a frozen recipe and a workstation run; this is put to Louis.
+
+**Its qualification of the "answer in disguise" rule, accepted.** Free text positions are invalid. A cheap algorithm that *computes* text positions is a legitimate route. The issue is unpaid acquisition, not what the information is called.

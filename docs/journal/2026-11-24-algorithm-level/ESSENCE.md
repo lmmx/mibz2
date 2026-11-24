@@ -13,7 +13,7 @@ Rauzy–Veech induction was not found by counting machine cost. It came from see
 1. **A notion of "these move together".** For Rauzy–Veech, that is adjacent rows holding the same byte.
 2. **A rule for composing what moves together,** then recursing on what is left.
 
-The proved floor says that lone rows have nothing to move together with *in that sense*. So the way forward is not to contract harder in the same sense. **Change what "moving together" means.** Louis: "a kind of a looseness of language, a generalization, work smarter, not harder … Find a different sense for something that can occur. It requires a kind of ability to think flexibly, laterally."
+The proved floor says that lone rows have nothing to move together with *in that sense*. *(Scope, corrected 24 November, journal §42: G1 is a floor on charged operations in the rigid-interval calculus. It is **not** a proved lower bound on unpredictable machine reads; the bridge between the two is unproved. An implementation may keep the same interval facts and acquire, arrange or consume them more cheaply.)* So the way forward is not to contract harder in the same sense. **Change what "moving together" means.** Louis: "a kind of a looseness of language, a generalization, work smarter, not harder … Find a different sense for something that can occur. It requires a kind of ability to think flexibly, laterally."
 
 **All directions at once, and more.** The term is deliberately overloaded. Louis (24 November): "I don't want to frame it as one way only … the Hilbert's 24th problem movement. And however you call it, we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving together, the contracting along the text. Like, we want to look at all possible ones. In fact, we might want to look at even more." Pursue every sense in parallel. None is the lead, and each is a reading of the same movement. Finding further senses is part of the task.
 
@@ -34,6 +34,12 @@ From Louis's page-dewarp history (journal §§36–37). Louis: "we had a gradien
 Pursue both. For enrichment, ask what extra quantity could ride along an existing step (an LF step, a run step, the Huffman, MTF or construction stages) under a richer algebra, at little cost. Then ask whether it makes a later stage cheap or unnecessary. Starting points, not answers: algebraic lifting, AD as a construction, discrete derivatives, semirings, auxiliary invariants.
 
 The test that separates it from a restatement: the rider must be **cheaply acquired** and must **not just restate the inversion**. A fingerprint of the input that "separates every flip and decodes nothing" (N-18) fails. So does "the text position p(i)", which is the answer itself, with p(LF(i)) = p(i) − 1.
+
+## A third question, sharper than "find a richer algebra"
+
+From the page-dewarp lesson as ChatGPT Pro restated it (journal §42): "Obtain information that makes a more capable algorithm possible; then retain enough of that information that the algorithm can avoid expensive work." So ask: **which later operation is necessary only because an earlier stage failed to retain, or cannot cheaply exploit, information it already encountered?**
+
+And the property any representation must have: **closure**. After composition, the result must still be cheap to use. The access description, the successor lookup and the word payload must all survive. Otherwise the work has only been deferred.
 
 ## The cost rules are the referee, not the generator
 
