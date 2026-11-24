@@ -33,8 +33,7 @@ measurements say where whole-decoder time can be won at all: up to 26% at ten wo
 until now behind the serial scanner
 ([Masked bottlenecks in a two-stage decoder](2026-11-24-the-scanner-hides-the-emitter.md)). And
 the mathematics has a map of what has been ruled out, a conservation law that bounds one whole
-class of routes, and a short list of open threads. This post gathers them, drawing every figure
-from the [evening's report](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-evening.md) and the records it cites.
+class of routes, and a short list of open threads. This post gathers them, drawing every figure from [the day's report](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md) and the records it cites.
 
 ## 1. The formulation, and two corrections
 
@@ -77,17 +76,23 @@ move-to-front and run-length decoding (T3), the Huffman scan (T4), riders across
 the final run-length expansion and checksum (T6). Only T1, T4 and T5 have ceilings so far; an
 oracle that splits the workers' time is the next measurement ([the targets](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/math-targets/targets.tsv)).
 
-Beyond the four arms, the decoder is being decomposed stage by stage and resource by resource
-across every worker count from one to twenty, in the manner of
+Beyond the four arms, the decoder is being decomposed stage by stage and resource by resource,
+in the manner of
 [metabolic control analysis](https://en.wikipedia.org/wiki/Metabolic_control_analysis){ .il-ref },
-which asks how much each step of a pathway controls its overall rate
-([the brief](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/briefs/decomposition.md)). Two independent answers to that brief agreed on how the measurement must be
-made ([record 125](https://github.com/lmmx/mibz2/blob/df9ffaf863351277b39ae667cad8115924be5bde/docs/journal/monodromy/2026-11-24-decomposition.md); [journal §48](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level.md)). It needs a serial tail for retiring and
-reordering blocks, and memory split into cache share, bandwidth and address translation. Threads
-must be pinned, with SMT siblings kept apart, because the decoder runs k + 3 threads and so
-oversubscribes the machine from eight or nine workers. Slowdowns must be imposed at 20 to 25%,
-since the noise at ten workers is 4 to 9%. The model must be fitted on some worker counts and
-validated on the rest. A profile of the scanner across all twenty counts is queued as
+which asks how much each step of a pathway controls its overall rate ([the brief](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/briefs/decomposition.md)). Three
+independent answers to that brief were compared and merged into one measurement plan
+([journal §51](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level.md); [the plan](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/briefs/character.md)). They agree that one scanner and its workers is a coarse
+picture rather than a decomposition: the plan adds a serial tail for retiring and reordering
+blocks, treats move-to-front decoding and run formation as one fused activity, and treats the
+variation between blocks as a covariate. Two corrections from [one of the answers](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/external/chatgpt-decomposition.md) shape the
+design. Requested threads are not actual workers, since a request for ten or more runs seven
+workers, so the mechanism study names its worker counts directly. And the summation theorem of
+control analysis is no test of completeness: for a stage whose rate is the minimum of two others,
+the coefficients sum to two under slowdowns and to zero under speedups, so completeness has to come
+from accounting identities instead. Each stage will be slowed by 20%, with 10% follow-ups to check
+linearity, at 1, 6, 8, 10, 12 and 20 workers, and a discrete-event simulation of the decoder,
+driven by each block's measured service times, is the primary model, with per-stage rooflines as
+constraints. A profile of the scanner across all twenty worker counts comes first, queued as
 [#838](https://github.com/lmmx/mibz2/pull/838), and a parallel scanner gated by worker count
 follows it.
 
@@ -172,7 +177,7 @@ candidate, a price for each stage, and a record of the routes already closed.
 
 **Sources:**
 
-- [The evening's report](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-evening.md) and [the journal](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level.md), §§33–49.
+- [The report](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md) and [the journal](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level.md), §§33–49.
 - The reviews: [the six senses](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reviews/neon-movement-critique.md), [the fourth cycle](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reviews/neon-movement-cycle4-critique.md), [the four objects](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reviews/carbon-cycle1-critique.md) and [records 118–125](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/reviews/monodromy-118-125.md).
 - Records [118](https://github.com/lmmx/mibz2/blob/ad169f87d657edca999d503b3637da1b6ca0a597/docs/journal/monodromy/2026-11-24-interleaved-orders.md), [119](https://github.com/lmmx/mibz2/blob/8cf099eb24d9943417cfccdf3763b54fbcd9c26b/docs/journal/monodromy/2026-11-24-closure-problem.md), [120](https://github.com/lmmx/mibz2/blob/5d0795c81f073c44cf1b2f9d62f0ac190ca07dd3/docs/journal/monodromy/2026-11-24-thin-strip-acquisition.md), [121](https://github.com/lmmx/mibz2/blob/a3facefcb7d927e8284381a299c6a80f0b58409f/docs/journal/monodromy/2026-11-24-scanner-summary.md), [122](https://github.com/lmmx/mibz2/blob/c348f8f5135959cf6d3dbf318001797673ec7201/docs/journal/monodromy/2026-11-24-scanner-corrected.md), [124](https://github.com/lmmx/mibz2/blob/cf527324b20d183b68f6f3ab57e3d244096e3985/docs/journal/monodromy/2026-11-24-what-to-measure.md) and [125](https://github.com/lmmx/mibz2/blob/df9ffaf863351277b39ae667cad8115924be5bde/docs/journal/monodromy/2026-11-24-decomposition.md).
-- [The mathematical targets](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/math-targets/targets.tsv) and [the decomposition brief](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/briefs/decomposition.md).
+- [The mathematical targets](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/math-targets/targets.tsv) and [the decomposition brief](https://github.com/lmmx/mibz2/blob/0430e0f714688f8edee1ebc4c1d2bd2498cb1fcd/docs/journal/2026-11-24-algorithm-level/briefs/decomposition.md), with [the merged measurement plan](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/briefs/character.md) and [the outside answer](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/external/chatgpt-decomposition.md) (journal §51).
