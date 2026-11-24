@@ -123,11 +123,16 @@ also shows why the referee reports more than one figure. It starts a chain at ev
 chosen common byte, rows that sit together in one known block and cost nothing to find, advances
 all the chains at once to the next landmark, and repeats on what remains. It leaves the number of
 unpredictable reads where it was, but makes those reads independent of one another, so the chain
-of reads that must each wait for the last falls from about one per byte to a few hundred on
-hex-dense content. It separates the two figures cleanly, and the ruling follows that line: a breakthrough means a cut
+of reads that must each wait for the last was estimated to fall from about one per byte to a few
+hundred on hex-dense content. It separates the two figures cleanly, and the ruling follows that line: a breakthrough means a cut
 in the unpredictable reads, the currency of the proved floor, while a large cut in the waiting chain
-is a real find that gets measured ([the ruling](https://github.com/lmmx/mibz2/blob/3c19c9a2fb4e7831d1bf7a1d0e554c1bc6f8c6f2/channel/coordinator-to-neon.md)). That measurement, on our six real blocks,
-is being run.
+is a real find that gets measured ([the ruling](https://github.com/lmmx/mibz2/blob/3c19c9a2fb4e7831d1bf7a1d0e554c1bc6f8c6f2/channel/coordinator-to-neon.md)). Measured on our six real blocks, the waiting chain fell to 1.3–1.9% of the block's length, some
+10,000 to 17,000 dependent steps: a cut of roughly 50 to 75 times, but far short of the estimate.
+On JSON the most frequent landmark strings stay frequent as they lengthen (`"`, then `,"`, then
+`","`), so the final walk dominates. The unpredictable reads rose by 5 to 20%, and width-1 rows
+turned out to be under-represented among the landmark rows. Under the ruling that is a real but
+modest find, not a breakthrough, and a reminder that estimates which assume random text can be
+badly wrong on real data ([the measurement](https://github.com/lmmx/mibz2/blob/1799a29e7fcc2a63e06f8849bf939b318624fef4/docs/journal/2026-11-24-algorithm-level/m21/m21-results.md)).
 
 ## 3. The snag: a convention decided the answer
 
@@ -161,7 +166,7 @@ they must not be allowed to blur into one:
 | | Bookkeeping (version 1) | Real machine cost (version 2) |
 |---|---|---|
 | **What it counts** | events: charges per row in the calculus of rigid facts | unpredictable memory reads, the longest chain of them, passes, and peak memory |
-| **What is proved in it** | G1: at least h₁ for the current family | nothing yet: the bridge would carry G1 across |
+| **What is proved in it** | G1: at least h₁ for the current family | the bridge, for most of the family: see §5 |
 | **The target** | at most h₁/2 events, as frozen | fewer unpredictable reads and scans than one per width-1 row, within a fixed budget |
 
 The original target stays exactly as frozen, as version 1. The machine-cost target is a new
@@ -193,7 +198,7 @@ pointed out that trap, and the adopted yardstick counts accesses instead.</aside
 
 ## 5. The bridge: why the floor has to be carried across
 
-In the machine yardstick, no floor of h₁ is yet proved for anything. G1 bounds a sum of charges
+G1 alone proves no floor of h₁ in the machine yardstick. It bounds a sum of charges
 in the calculus, so it says nothing directly about Q. To claim that a candidate goes below the
 old family's floor in machine cost, we first need a second theorem: that every decoder in the old
 family, executed on the declared machine, pays at least a fixed multiple of its bookkeeping charge
@@ -204,6 +209,14 @@ The yardstick also has to be fixed before any candidate is judged; otherwise a c
 be chosen after the fact. If the bridge
 fails for some way of implementing the old family, that implementation is not a counterexample
 to G1. It is a candidate escape, and it gets named.
+
+The bridge has since been attempted, and it found exactly such a case
+([record 112](https://github.com/lmmx/mibz2/blob/ed6a3e9668587b993ab6a7f4732b043da03937e5/docs/journal/monodromy/2026-11-24-spec-pi-and-bridge.md)). It holds with a constant of 1 for the walk, for Open and for lanes, and with
+one half for a single doubling sweep. It fails as a universal constant for one family, in-place
+sweep composition, where the floor becomes an input-defined count rather than a fixed multiple of
+the bookkeeping charge. That family is the first named candidate escape, although it is built
+entirely from old objects, so it would escape by how its work is laid out rather than by a new
+sense of moving together.
 
 Two more terms needed the same treatment:
 
