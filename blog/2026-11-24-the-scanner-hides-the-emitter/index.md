@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# A masked bottleneck: emission's gain reappears once the serial scanner is cleared
+# Masked bottlenecks in a two-stage decoder
 
 Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
 
