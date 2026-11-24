@@ -2,8 +2,8 @@
 
 *24 November 2026. Written by the Coordinator at Louis's request, as a proposal for him to decide on
 before anything is commissioned. Status: **COMMISSIONED** (24 November), with the roles of §4a,
-which replace §4's recommendation. §§3.1–3.6 are frozen once MONODROMY's protocol review (§4a,
-phase 1) is answered, before any case is classified.*
+which replace §4's recommendation. **The protocol is frozen** as §§3.1–3.6 amended by §3.7
+(MONODROMY's six corrections, accepted in full), before any case was classified.*
 
 > Louis: "do you think that if we reanalysed all the ways we had failed in the past by coming up
 > with a bright idea, then it failing in the real world, in Huiberts et al's approach, would we make
@@ -264,6 +264,62 @@ These are what the retrospective tests. Each is adopted only if the data support
 5. **A journal entry** with the by-the-book postmortem of the retrospective itself (METHOD.md §6a).
 6. **A proposed METHOD.md amendment** with only the checks that pass (4), for Louis's decision (a
    rule change, RULES D).
+
+### 3.7 Corrections from the protocol review (frozen; they take precedence over §§3.1–3.6)
+
+MONODROMY reviewed the protocol in the Researcher's place (#145 REVIEW 7127184296, record 97 at
+b63005d2): PROCEED with six corrections. The Coordinator accepted all six.
+
+- **C1. "Would it have fired" is coded blind to the outcome.**
+  - *Extractor:* records the idea's own premises, quoted from documents dated before the build, and
+    every dated earlier document that measured a quantity a premise names, found by searching on
+    the premise, not the outcome. It names no "deciding fact", and the verdict is sealed in a
+    separate file.
+  - *Coders:* code without the verdict. (a) Does a listed earlier fact contradict a premise,
+    quoting both? (b) For each check, would it have fired?
+  - *Phase 5:* computes the rest. Caught = fired and the outcome was negative or null; falsely
+    blocked = fired and adopted.
+- **C2. No counterfactual checks.** "Cheaply obtainable" counts only for a §3.4 check whose result
+  is in the record, run at some date within 10 i9 minutes or one agent-hour. Otherwise the check is
+  coded unknown, not caught.
+- **C3. Gaps apart from causes; B and the outcomes defined.**
+  - *I, M, P:* coded outcome-blind as gaps present (evidence against the deciding inputs, machine or
+    code path). P includes "the base moved".
+  - *Established cause:* coded only where a later dated measurement identifies it, otherwise
+    "unestablished".
+  - *A:* needs an ablation or split-out measurement as its witness.
+  - *B, defined positively:* every gap named, and checked or bet on, before the build. Otherwise the
+    case is an "unexamined gap".
+  - *X:* reported apart from the base rates.
+  - *Outcomes, coded first:* negative / null / positive but not adopted (rule power or a gate, not
+    an idea failure) / adopted.
+  - *The case set:* ideas built and measured on the deciding machine, with a verdict.
+- **C4. Operational triggers, and a seventh check.**
+  1. a gap present and neither checked nor bet;
+  2. C1(a) holds;
+  3. a real-block measurement of at most 10 i9 minutes through the shipped path exists in the record
+     and showed the failure (otherwise unknown);
+  4. a split-out with no earlier ablation;
+  5. record 95's tests, computable from data then in hand, put the gain outside its interval;
+  6. a proved bound dated before the build covers the idea's class;
+  7. **routed through review**: did the idea pass the Researcher's prior-art check or the
+     Optimiser's pricing before the build? Coded as a variable, to test §2.4's question.
+- **C5. A decision rule robust to coders and overlap** (replaces §3.6 (4)'s counting).
+  - *Counting:* catches as the smaller of the two coders' counts (or the agreed count); false blocks
+    as the larger.
+  - *Reliability:* a check needs κ ≥ 0.6 and at least 5 cases on which it fires, or it is
+    "unreliable".
+  - *The 20%-of-cost branch* also needs at least 2 failures caught.
+  - *Overlap:* propose greedily by marginal catches.
+  - *Blocked adoptions:* report each one's value beside the count.
+  - *Units:* agent-hours and i9 minutes, with tokens where recorded.
+- **C6. κ per binary label**, with that label's prevalence. A label with fewer than 5 positives is
+  "insufficient".
+
+**Recusal** (§4a): MONODROMY codes nothing it authored, modelled, predicted, scored *or verified*.
+Its review lists these; the Coordinator accepted its recommendation to exclude the verified-only
+cases too, since its verdicts were facts the team built on. The extractor tags MONODROMY's
+involvement by citation against its records, and the Coordinator's likewise.
 
 ## 4. Who should do it
 
