@@ -92,3 +92,12 @@
 ## 24 Nov, 23:55 — the design review set up
 - `briefs/character-design-review.md` goes to MONODROMY (channel #38), Neon and ChatGPT Pro (paste prompts given to Louis). One round.
 - The Pathfinder builds stage 1 now and holds the stage 2 freeze until the review is merged.
+
+
+## 25 Nov, 00:10 — correction, and Louis's queueing-discipline question
+- Correction: Louis objected once, to a time-of-day word in a file *title*. It is not a standing rule for prose. The writer is told.
+- Louis asked whether the decoder's conventional queueing could be replaced by another form for far better performance. The answer is `leads/queueing-discipline.md`:
+  - the discipline cannot raise the ceiling set by the demands;
+  - it can close the gap to the ceiling: head-of-line blocking at the in-order resequencer, the straggler drain, and service-time variability;
+  - candidates: size-aware dispatch using the scan's free counters; head-of-line helpers; work-based admission; a parallel scanner (the only one that raises the ceiling).
+  - The deciding measurement is efficiency against the bound at each k, from stage 1's timestamps. It is added to the design review as question 6.

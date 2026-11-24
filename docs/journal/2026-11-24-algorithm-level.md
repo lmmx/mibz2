@@ -1508,3 +1508,21 @@ Its questions:
 5. what to cut.
 
 Stage 1, the 1–20 baseline, proceeds meanwhile and sizes stage 2. The Coordinator merges the three answers into `briefs/character.md` before the Pathfinder freezes stage 2.
+
+## 56. Could a different queueing discipline do far better?
+
+Louis asked whether the decoder's conventional queueing could be replaced by another form for far better performance. The answer is `leads/queueing-discipline.md`:
+- **What the decoder is today:** a closed network (W = 4k in flight) with FCFS dispatch from one serial scanner and an in-order resequencing reader; admission is issued − taken, plus the 12 MiB ready cap.
+- **What can't change (proved, operational laws):** the throughput ceiling, min(N/(D + Z), 1/D_max, k/b), is set by the demands. No discipline raises it; only lower demands or more capacity at the bottleneck do.
+- **What can change (argued):** how close the decoder gets to that ceiling. The losses are head-of-line blocking at the resequencer, the straggler drain of a finite stream, and service-time variability.
+- **Candidates:**
+  - size-aware (LPT) dispatch, possible because record 122's scan counters give block sizes nearly free;
+  - helpers for the head-of-line block, through the existing team machinery;
+  - work-based admission;
+  - relaxed resequencing;
+  - a parallel scanner, the only one that raises the ceiling.
+- **The deciding measurement:** efficiency against the bound at each k, from stage 1's per-block timestamps. If the gap is large, replay each discipline in the simulation with the measured demands before writing any code. That is modification analysis applied to the discipline.
+
+The question is added to the design review as question 6.
+
+**Correction:** the time-of-day point was one file title, not a standing rule for prose.

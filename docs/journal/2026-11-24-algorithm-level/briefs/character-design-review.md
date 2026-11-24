@@ -44,4 +44,9 @@ The plan is `briefs/character.md`, with amendments §7a and §7b, at this commit
    Is every input logged? The inputs are device demands, visit counts, C² of per-block service times, class (route) membership, and admission and ready-byte occupancy. What is missing?
 5. **What should be cut?** Which planned measurements will not change any decision, and so are not worth the workstation time?
 
+6. **Queueing discipline and topology** (Louis's question, `leads/queueing-discipline.md`). The decoder is a closed FCFS network with an in-order resequencer.
+   - Does the design measure **efficiency against the bound** at each k, and does it record the losses from head-of-line blocking, resequencing and drain?
+   - Which alternative disciplines are worth replaying in the simulation with measured per-block demands: size-aware dispatch using record 122's free counters; helpers for the head-of-line block; work-based admission?
+   - What would each need logged?
+
 **The answer format:** short, concrete, and marked proved, argued or conjectured. Name the exact changes to `briefs/character.md`. Don't restate the plan.
