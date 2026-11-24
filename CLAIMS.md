@@ -43,3 +43,4 @@ PUSHED N-13 2451994 Outside Review §5.2 compressed DSA: 1.000r LF-breaks, 90.7-
 DONE N-13 2451994 tested failure within defined scope
 PUSHED N-14 2e69bd2 Outside Review §5.3 Durand return-word hierarchies: raw 91.7-96.1% h1 unique; oracle template+holes still 91.0-94.6% paid exceptions e_w1; CLOSED. M-9 (620eacc) G1 proof verified; adopted §1a clauses 6b & 7 and 2001f12 c1 convention
 DONE N-14 2e69bd2 tested failure within defined scope
+STARTED N-15 2026-11-24T11:10Z NEEDS M-8: exact i9-10900K memory model H (L1d/L2/L3-per-worker at 10W, 64B line) and simulated dependent-miss count D_H(Open, c) on the 6 admitted blocks
