@@ -100,6 +100,151 @@ def build_sa_isa_t(L: bytes, p: int) -> tuple[bytes, list[int], list[int], list[
     return bytes(T), sa, isa, lf
 
 
+def _sais(s: list[int], alphabet_size: int) -> list[int]:
+    """Exact O(n) SA-IS suffix array for integer sequence s with unique sentinel s[-1] = 0."""
+    n = len(s)
+    if n <= 1:
+        return list(range(n))
+    if n == 2:
+        return [1, 0] if s[1] < s[0] else [0, 1]
+
+    # Classify suffixes: True = S-type, False = L-type
+    is_s = bytearray(n)
+    is_s[n - 1] = 1
+    for i in range(n - 2, -1, -1):
+        if s[i] < s[i + 1]:
+            is_s[i] = 1
+        elif s[i] == s[i + 1]:
+            is_s[i] = is_s[i + 1]
+
+    # Bucket sizes
+    counts = [0] * alphabet_size
+    for c in s:
+        counts[c] += 1
+
+    def bucket_heads() -> list[int]:
+        heads = [0] * alphabet_size
+        acc = 0
+        for c in range(alphabet_size):
+            heads[c] = acc
+            acc += counts[c]
+        return heads
+
+    def bucket_tails() -> list[int]:
+        tails = [0] * alphabet_size
+        acc = 0
+        for c in range(alphabet_size):
+            acc += counts[c]
+            tails[c] = acc - 1
+        return tails
+
+    def induce(sa: list[int]) -> None:
+        # Induce L-type from left to right
+        heads = bucket_heads()
+        for i in range(n):
+            j = sa[i] - 1
+            if j >= 0 and not is_s[j]:
+                c = s[j]
+                sa[heads[c]] = j
+                heads[c] += 1
+        # Induce S-type from right to left
+        tails = bucket_tails()
+        for i in range(n - 1, -1, -1):
+            j = sa[i] - 1
+            if j >= 0 and is_s[j]:
+                c = s[j]
+                sa[tails[c]] = j
+                tails[c] -= 1
+
+    # Place LMS suffixes at bucket tails
+    sa = [-1] * n
+    tails = bucket_tails()
+    lms_pos: list[int] = []
+    for i in range(1, n):
+        if is_s[i] and not is_s[i - 1]:
+            lms_pos.append(i)
+            c = s[i]
+            sa[tails[c]] = i
+            tails[c] -= 1
+
+    induce(sa)
+
+    # Name LMS substrings
+    is_lms = bytearray(n)
+    for i in lms_pos:
+        is_lms[i] = 1
+
+    lms_names = [-1] * n
+    cur_name = 0
+    prev = -1
+    for i in sa:
+        if i > 0 and is_lms[i]:
+            if prev != -1:
+                # Compare LMS substrings starting at prev and i
+                diff = False
+                k = 0
+                while True:
+                    if s[prev + k] != s[i + k] or is_s[prev + k] != is_s[i + k]:
+                        diff = True
+                        break
+                    if k > 0 and (is_lms[prev + k] or is_lms[i + k]):
+                        if is_lms[prev + k] != is_lms[i + k]:
+                            diff = True
+                        break
+                    k += 1
+                if diff:
+                    cur_name += 1
+            lms_names[i] = cur_name
+            prev = i
+
+    num_lms = len(lms_pos)
+    if cur_name + 1 < num_lms:
+        reduced = [lms_names[i] for i in lms_pos]
+        sa_lms = _sais(reduced, cur_name + 1)
+        ordered_lms = [lms_pos[i] for i in sa_lms]
+    else:
+        ordered_lms = [0] * num_lms
+        for i in lms_pos:
+            ordered_lms[lms_names[i]] = i
+
+    # Final induced sort from sorted LMS suffixes
+    sa = [-1] * n
+    tails = bucket_tails()
+    for i in range(num_lms - 1, -1, -1):
+        p = ordered_lms[i]
+        c = s[p]
+        sa[tails[c]] = p
+        tails[c] -= 1
+    induce(sa)
+    return sa
+
+
+def build_noncyclic_sa(T: bytes) -> tuple[list[int], list[int]]:
+    """Build exact non-cyclic (SA, ISA) of T with end-of-string sentinel < all bytes."""
+    n = len(T)
+    s = [b + 1 for b in T]
+    s.append(0)
+    sa_full = _sais(s, 257)
+    assert sa_full[0] == n
+    sa_nc = sa_full[1:]
+    isa_nc = [0] * n
+    for rank, pos in enumerate(sa_nc):
+        isa_nc[pos] = rank
+    # O(n) exactness certificate: (T[a], isa_nc[a+1]) < (T[b], isa_nc[b+1]) for all adjacent ranks
+    for i in range(1, n):
+        a = sa_nc[i - 1]
+        b = sa_nc[i]
+        ta = T[a]
+        tb = T[b]
+        if ta != tb:
+            assert ta < tb, f"Non-cyclic SA order violation at rank {i}"
+        else:
+            ra = isa_nc[a + 1] if a + 1 < n else -1
+            rb = isa_nc[b + 1] if b + 1 < n else -1
+            assert ra < rb, f"Non-cyclic SA tie-break violation at rank {i}"
+    return sa_nc, isa_nc
+
+
 def compute_lcp_kasai(T: bytes, sa: list[int], isa: list[int]) -> list[int]:
     """Non-cyclic LCP[i] = lcp(T[SA[i-1]:], T[SA[i]:]) for i = 1..n-1 (LCP[0] = 0)."""
     n = len(T)
@@ -123,13 +268,12 @@ def compute_lcp_kasai(T: bytes, sa: list[int], isa: list[int]) -> list[int]:
 
 
 def compute_lpf(sa: list[int], lcp: list[int]) -> tuple[list[int], list[int]]:
-    """Compute (lpf_len, lpf_src) via exact PSV/NSV monotone stacks over (SA, LCP)."""
+    """Compute (lpf_len, lpf_src) via exact PSV/NSV monotone stacks over non-cyclic (SA, LCP)."""
     n = len(sa)
     lpf_len = [0] * n
     lpf_src = [-1] * n
 
     # Pass 1: PSV (nearest i' < i with SA[i'] < SA[i])
-    # Stack holds (sa_val, min_lcp_from_that_entry_to_top)
     stack_sa: list[int] = []
     stack_lcp: list[int] = []
     for i in range(n):
@@ -168,23 +312,75 @@ def compute_lpf(sa: list[int], lcp: list[int]) -> tuple[list[int], list[int]]:
     return lpf_len, lpf_src
 
 
+def test_n12_witness() -> None:
+    """Automated regression test for the N-16 cyclic-vs-suffix LPF witness (L=baaaa, p=2)."""
+    L = b"baaaa"
+    p = 2
+    T, sa_cyc, isa_cyc, lf = build_sa_isa_t(L, p)
+    assert lf == [4, 0, 1, 2, 3]
+    assert T == b"aabaa"
+    assert sa_cyc == [3, 4, 0, 1, 2]
+
+    # Confirm the old bug on cyclic order:
+    lcp_buggy = compute_lcp_kasai(T, sa_cyc, isa_cyc)
+    lpf_buggy, _ = compute_lpf(sa_cyc, lcp_buggy)
+    assert lpf_buggy == [0, 1, 0, 1, 1]
+
+    # Confirm the repaired non-cyclic SA/LCP/LPF:
+    sa_nc, isa_nc = build_noncyclic_sa(T)
+    assert sa_nc == [4, 3, 0, 1, 2]
+    lcp_true = compute_lcp_kasai(T, sa_nc, isa_nc)
+    lpf_true, src_true = compute_lpf(sa_nc, lcp_true)
+    assert lpf_true == [0, 1, 0, 2, 1], f"Expected [0,1,0,2,1], got {lpf_true}"
+    assert src_true[3] == 0
+
+    # Also cross-check against brute-force LPF on edge cases and pseudo-random strings
+    import random
+
+    rng = random.Random(20261124)
+    cases = [b"a", b"aa", b"aaaa", b"aabaa", b"ababab", b"banana", b"mississippi"]
+    for _ in range(40):
+        ln = rng.randint(2, 40)
+        alph = rng.choice([b"ab", b"abc", b"abcd"])
+        cases.append(bytes(rng.choice(alph) for _ in range(ln)))
+    for text in cases:
+        n = len(text)
+        sa_nc, isa_nc = build_noncyclic_sa(text)
+        expected_sa = sorted(range(n), key=lambda idx: text[idx:])
+        assert sa_nc == expected_sa, f"SA mismatch on {text!r}"
+        lcp = compute_lcp_kasai(text, sa_nc, isa_nc)
+        lpf_len, lpf_src = compute_lpf(sa_nc, lcp)
+        for j in range(n):
+            best = 0
+            for sr in range(j):
+                k = 0
+                while j + k < n and text[sr + k] == text[j + k]:
+                    k += 1
+                if k > best:
+                    best = k
+            assert lpf_len[j] == best, f"LPF mismatch on {text!r} at j={j}: {lpf_len[j]} != {best}"
+            if best > 0:
+                sr = lpf_src[j]
+                assert 0 <= sr < j and text[sr : sr + best] == text[j : j + best]
+
+
 def run_n12_lz77(
     fname: str,
     T: bytes,
-    sa: list[int],
-    isa: list[int],
+    isa_cyc: list[int],
     is_w1: bytearray,
     is_thin: bytearray,
 ) -> None:
     n = len(T)
-    lcp = compute_lcp_kasai(T, sa, isa)
-    lpf_len, lpf_src = compute_lpf(sa, lcp)
+    sa_nc, isa_nc = build_noncyclic_sa(T)
+    lcp = compute_lcp_kasai(T, sa_nc, isa_nc)
+    lpf_len, lpf_src = compute_lpf(sa_nc, lcp)
 
-    # Emit row for T[j] is isa[(j + 1) % n]
+    # Emit row for T[j] is isa_cyc[(j + 1) % n] (BWT row order)
     w1_at_pos = bytearray(n)
     thin_at_pos = bytearray(n)
     for j in range(n):
-        row = isa[(j + 1) % n]
+        row = isa_cyc[(j + 1) % n]
         if is_w1[row]:
             w1_at_pos[j] = 1
         if is_thin[row]:
@@ -386,7 +582,38 @@ def run_n14_durand(
     )
 
 
+def test_n13_counterexample() -> None:
+    """Verify the round-2 N-13 arithmetic-DSA counterexample: T = [0,2,4,6,8,7,5,3,1]."""
+    T = bytes([0, 2, 4, 6, 8, 7, 5, 3, 1])
+    n = len(T)
+    # Build exact cyclic BWT of T
+    rots = sorted(range(n), key=lambda j: T[j:] + T[:j])
+    L = bytes(T[(j - 1) % n] for j in rots)
+    p = rots.index(0)
+    assert L == bytes([1, 3, 0, 5, 2, 7, 4, 8, 6])
+    assert p == 0
+    T2, sa_cyc, _, lf = build_sa_isa_t(L, p)
+    assert T2 == T
+    assert sa_cyc == [0, 8, 1, 7, 2, 6, 3, 5, 4]
+    # Check O(1) closed-form arithmetic formula: SA[2j] = j, SA[2j+1] = 8 - j
+    for idx, val in enumerate(sa_cyc):
+        expected = idx // 2 if idx % 2 == 0 else (n - 1) - (idx // 2)
+        assert val == expected
+    dsa = [sa_cyc[0] - sa_cyc[-1]] + [sa_cyc[i] - sa_cyc[i - 1] for i in range(1, n)]
+    assert dsa == [-4, 8, -7, 6, -5, 4, -3, 2, -1]
+    assert len(set(dsa)) == n
+
+
 def main() -> None:
+    import sys
+
+    args = set(sys.argv[1:])
+    test_n12_witness()
+    test_n13_counterexample()
+    print("=== SELF-TESTS PASSED: N-12 witness (L=baaaa, p=2 -> LPF=[0,1,0,2,1]) & N-13 arithmetic counterexample ===")
+    if "--tests-only" in args:
+        return
+
     blocks = load_admitted_blocks()
     prepped = []
     for fname, p, L in blocks:
@@ -413,9 +640,12 @@ def main() -> None:
             i = j
         prepped.append((fname, L, T, sa, isa, lf, r, is_w1, is_thin))
 
-    print("=== N-12 (§5.1): EXACT ACYCLIC LZ77 POSITIONAL COPY PLANS (BYTE-VERIFIED) ===")
+    print("\n=== N-12 / N-16 (§5.1 REPAIRED): EXACT NON-CYCLIC ACYCLIC LZ77 COPY PLANS (BYTE-VERIFIED) ===")
     for fname, L, T, sa, isa, lf, r, is_w1, is_thin in prepped:
-        run_n12_lz77(fname, T, sa, isa, is_w1, is_thin)
+        run_n12_lz77(fname, T, isa, is_w1, is_thin)
+
+    if "--only-n12" in args:
+        return
 
     print("\n=== N-13 (§5.2): COMPRESSED DSA (SA[i]-SA[i-1]) & KEMPA THM 5.1 AUDIT ===")
     for fname, L, T, sa, isa, lf, r, is_w1, is_thin in prepped:
@@ -428,3 +658,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
