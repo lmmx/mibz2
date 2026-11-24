@@ -48,7 +48,7 @@ The last post's terms are used here without being explained again:
 - **The way out it left:** a rule applied to a whole scattered set of rows, short to describe and
   cheap to apply, in the form Build, Advance, Emit
   ([§6](2026-11-24-halving-the-single-row-steps.md#6-what-a-new-route-would-have-to-be)).
-- **The method:** the [Mario](https://github.com/tra38/sm64-wmotr-abc-proof) move, which supplies the payoff first and looks for the mechanism
+- **The method:** the [Mario](https://github.com/lmmx/mibz2/blob/aff4172ec770b24fecb934d8eee7b18f30cbb047/docs/journal/2026-11-24-algorithm-level.md#2-the-ssl-coq-material) move, which supplies the payoff first and looks for the mechanism
   second, and the supplied test that came of it
   ([§2](2026-11-24-halving-the-single-row-steps.md#2-four-reframings-of-the-search)).
 
@@ -163,12 +163,12 @@ zero. No lower bound of that kind is known for inverting a permutation presented
 negative result on record is the scoped one, G1, in the bookkeeping yardstick.
 
 <aside class="il-gloss" markdown>**The Mario proof,** on a closer reading, is narrower than our
-last post allowed. The [repository](https://github.com/tra38/sm64-wmotr-abc-proof) proves a
-conditional intermediate result: under stated assumptions about the game's code and its starting
-state, certain sequences of moves cannot make Mario fly. The theorem that the level cannot be
-finished without an A press is not yet started. What we borrow from it is the method, a large
-claim split into premises that are proved one by one, and not the standing of a finished
-impossibility proof.</aside>
+last post allowed, and it is not where the payoff-first move came from. That move belongs to a
+separate effort on the Shifting Sand Land level. The [Rocq repository](https://github.com/tra38/sm64-wmotr-abc-proof) proves, for the
+Wing Mario over the Rainbow level, that a run with no A press never makes Mario fly, and even that
+theorem still rests on named residual hypotheses; its theorem that the level needs an A press is
+not yet started. What we borrow from both is the method, a large claim split into premises that
+are proved one by one, and not the standing of a finished impossibility proof.</aside>
 
 ## 6. What comes next
 
