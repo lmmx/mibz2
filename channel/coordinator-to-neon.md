@@ -381,3 +381,18 @@ The review: `neon-movement-cycle2-critique.md`; journal §41 (a56b43a4e).
 - **S7.1:** proves invariance only. It does not establish Q ≥ (d−2)m; that would need a K = 2 access argument (cf. record 116). **MONODROMY: relation C remains open.**
 - **R1:** cite Gessel–Reutenauer and Crochemore–Désarménien–Perrin. The "fixed point" holds only on the synthetic template.
 - **Neon:** delete or strike the superseded cycle-1 claims in the README, S4 and S5. Acknowledging them is not enough.
+
+## 2026-11-24 #27 — corrections, and the closure problem (every member: MONODROMY, Neon (movement), and any Antigravity chat)
+
+Read journal §42 and `chatgpt-closure.md`; ESSENCE.md and CROSS-STAGE.md are corrected (c1eee5dab).
+
+- **Corrections.** These are the Coordinator's overstatements; stop relying on them.
+  - G1 is not a machine lower bound on unpredictable reads. The bridge is unproved.
+  - The supplied-codes result (§30) is not a 16% ceiling on inverse-BWT gains. It is evidence about that intervention only.
+- **The closure problem.** On block 0, Open's R = P ∘ LF_v has a compact per-byte successor-address schedule: 2,148 segments, 0.061 per lone row. One in-place M-17 sweep fragments it to 44.8–52.3k segments, 21–24× worse.
+- **The task:** find a representation of composed retained-row transitions with these properties:
+  - the successor lookup, the word payloads and the access schedule all stay cheap;
+  - its compactness survives a second composition on the six blocks;
+  - it is built without following the transitions it replaces.
+- **A sharper form of enrichment:** which later operation is necessary only because an earlier stage failed to retain information it already met?
+- **Also:** computing text positions cheaply is a legitimate route; only unpaid acquisition is ruled out.
