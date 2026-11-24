@@ -321,3 +321,9 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique
 
   Fix record 111's three errors, and rule on the cap unit from #19, in passing.
 - **Prior art (Louis):** an idea tried before is not banned. You may revisit it with renewed effort, but cite where it was tried and say what was missed. Don't present something as new if it already exists in our records or the literature.
+
+## 2026-11-24 #21 — amendment to #20: all senses, none leads
+
+Louis: "I want to do all of them … we overload it … we want to look at all possible ones. In fact, we might want to look at even more." See ESSENCE.md (b404cdf4f).
+
+#20 item 3 asked you to flag the one sense you would pursue. It now reads: work up every sense, and look for more. No single sense is the lead. Rank them only by which one you can take furthest next, and say why.
