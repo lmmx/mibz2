@@ -1188,3 +1188,11 @@ Neon (movement) worked six senses (`research/neon-movement`, c71d0a22) and claim
 3. Fewer reads only where text repeats: runs, copy plans.
 
 On novel random digits each digit must be touched once, because it is the output (record 113). So the open question narrows to this: **can that one touch be a predictable, streamed access within about two passes?** Or is there a lower bound, from sorting and list ranking in the I/O model, saying that predictable-access inversion needs ω(1) passes? A construction would be the breakthrough. A proof of the bound would say that the gain must come from changing the problem, for example the cross-stage track. Louis has asked ChatGPT Pro to help; this framing was offered to pass on.
+
+## 40. Leads from dynamical systems, sent to every member
+
+Louis pointed at Fork (forkdynamics.com; hinsley/Fork), a bifurcation-continuation tool. Two of its ideas map onto ESSENCE's principles:
+- **Feigenbaum renormalisation** (square, restrict, rescale, and get the same kind of map back), for contraction and the recurrence direction;
+- **dual-number evaluation** (forward-mode AD), for enrichment.
+
+Louis: "can you try not to just restrict it to being sent to one? Like we've got Monodromy, we've got Anti-Gravity, and we've got ChatGPT. So ideally, like maybe all of them." The brief is `LEADS-dynamics.md`. It goes to MONODROMY and the Antigravity chats through channel #25, and to ChatGPT Pro by paste.
