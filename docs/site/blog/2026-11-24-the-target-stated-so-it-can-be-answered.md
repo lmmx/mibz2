@@ -1,7 +1,7 @@
 ---
 title: "Halving the single-row steps, stated so it can be answered"
 image: assets/social/blog-2026-11-24-the-target-stated-so-it-can-be-answered.png
-description: "Before we attempt a construction, we fix how cost is counted and what counts as a pass or as new so that either answer settles something."
+description: "The breakthrough we seek comes from changing what moving together means, and the cost rules we fix here referee a candidate once it exists."
 ---
 
 <div class="post-hero" markdown>
@@ -13,10 +13,10 @@ description: "Before we attempt a construction, we fix how cost is counted and w
 
 # Halving the single-row steps, stated so it can be answered
 
-Before we attempt a construction, we fix how cost is counted and what counts as a pass or as new so that either answer settles something.
+The breakthrough we seek comes from changing what moving together means, and the cost rules we fix here referee a candidate once it exists.
 {: .post-dek }
 
-24 November 2026 · 9 min read · [Meta](#6-what-comes-next)
+24 November 2026 · 10 min read · [Meta](#7-what-comes-next)
 {: .post-meta }
 
 </div>
@@ -27,13 +27,16 @@ Before we attempt a construction, we fix how cost is counted and what counts as 
 
 [Our last post](2026-11-24-halving-the-single-row-steps.md) set a binary target: decode every
 block with at most half an event per width-1 row, which no decoder in our current family can do,
-so that only a new algorithm could meet it. Before building one, we had to settle what meeting it
-would mean, because the target as written turned out to be decided by a bookkeeping convention
-rather than by anything in the data. This post restates the problem in terms a machine can be held
-to. The yardstick is now real machine cost on a declared model of the machine. The old family's
-floor has to be carried into that yardstick by a proof we have not yet written, the *bridge*. And
-"new" is judged against the specific method being escaped, with a measurable gap in cost. The
-bridge comes first; only then is any construction judged.
+so that only a new algorithm could meet it. This post is about how such an algorithm is to be
+found and how it will be judged once it is, two questions that must not be confused. The finding
+comes from the step that took us from the walk to Rauzy–Veech induction, contraction along
+composition: rows that move together have their steps composed once and shared. Our proved floor
+says only that width-1 rows have nothing to move together with *in that sense*, so the way forward,
+in Louis's words, is to "find a different sense for something that can occur": to change what
+moving together means. The judging is the other half. The target as first written turned out to
+be decided by a bookkeeping convention, so we have restated it in real machine cost on a declared
+model, with the old floor to be carried across by a proof, the *bridge*. Those rules are the
+referee. They decide whether a find is real once a candidate exists; they do not produce one.
 
 ## 1. Where the last post left us
 
@@ -52,7 +55,44 @@ The last post's terms are used here without being explained again:
   second, and the supplied test that came of it
   ([§2](2026-11-24-halving-the-single-row-steps.md#2-four-reframings-of-the-search)).
 
-## 2. The snag: a convention decided the answer
+## 2. Where the breakthrough comes from
+
+Rauzy–Veech induction was not found by counting machine cost. It came from seeing that a whole
+stretch of rows takes the same step, so that their steps can be composed once and shared.
+Comparing the two algorithms, the walk and the induction, and asking what carries over between
+them, which is the question the last post took from [Hilbert's 24th problem](https://en.wikipedia.org/wiki/Hilbert%27s_twenty-fourth_problem){ .il-ref }, gives an answer in two
+parts:
+
+1. **a notion of "these move together",** which for Rauzy–Veech is adjacent rows holding the same
+   byte;
+2. **a rule for composing what moves together,** and then recursing on what is left.
+
+G1 says that width-1 rows have nothing to move together with in that first sense. It does not say
+that they have nothing to move together with in any sense. Contracting harder in the same sense is
+the failure to avoid, and our most recent rounds of candidates show what it looks like. The best of
+them, "arches" cut at the low points of the map and swept twice, reached 0.366 of an event per
+width-1 row, but only on synthetic random hex and only with a third pass; on our six real blocks
+the same construction cost 3.18 to 9.03 per width-1 row, and a single sweep we already had gave
+0.412 on the same hex. Other builds that looked free walked the map row by row inside them, and one
+read the true decoded text. The arches themselves turned out to be a known suffix-array technique,
+SA-IS ([the review](https://github.com/lmmx/mibz2/blob/aff4172ec770b24fecb934d8eee7b18f30cbb047/docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique.md)). Each candidate squeezed the same notion of moving together further,
+and paid for it with an extra pass or a hidden walk. Nor does contracting the left-over cycle again
+escape: placing rows along that cycle is list ranking, a known technique for linked lists with
+known costs ([our synthesis](https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-18-synthesis.md)). The way forward is to change what moving together means. In Louis's words: "what I see is a kind of a looseness of language, a
+generalization, work smarter, not harder, rather. Find a different sense for something that can
+occur. It requires a kind of ability to think flexibly, laterally."
+
+Some directions follow, offered as examples rather than a closed list
+([the record of this principle](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)):
+
+- **Contract along the text, not along the rows.** A repeated stretch of text is a run in the
+  other direction, and copy plans are the start of it.
+- **Move together up to a consistent relabelling,** rather than by exact equality.
+- **Find a recurrence among the induction's own steps,** as the Pell rule in the last post
+  ([§2](2026-11-24-halving-the-single-row-steps.md#2-four-reframings-of-the-search)) generates new
+  triangles where an oracle could only hand them over.
+
+## 3. The snag: a convention decided the answer
 
 The decisive gaps in the target were in its accounting. Every known route that beats the floor does
 so with a *build pass*: a sweep over all the block's [run records](2026-11-10-rauzy-veech-reconstruction.md) that composes facts in bulk, as
@@ -73,7 +113,7 @@ budget, and not by any fact about the column. A target that a choice of conventi
 defeat cannot tell a new algorithm from a relabelled old one, which was the whole reason for
 setting it.
 
-## 3. Two yardsticks, kept apart
+## 4. Two yardsticks, kept apart
 
 An [outside review](https://github.com/lmmx/mibz2/blob/a12492459dc8e9fb26a8ca4fc0dd36a3392b4769/docs/journal/2026-11-24-algorithm-level/council/chatgpt.md)
 of the problem, one of three [compared side by side](https://github.com/lmmx/mibz2/blob/18c74a670b70304c501078b0cef6ed9be706c4f6/docs/journal/2026-11-24-algorithm-level/council/COMPARISON.md),
@@ -114,7 +154,7 @@ wrong one. A decoder must write every byte of its output, so a target stated in 
 impossible for a trivial reason: the output alone costs n, and n is never less than h₁. The review
 pointed out that trap, and the adopted yardstick counts accesses instead.</aside>
 
-## 4. The bridge: why the floor has to be carried across
+## 5. The bridge: why the floor has to be carried across
 
 In the machine yardstick, no floor of h₁ is yet proved for anything. G1 bounds a sum of charges
 in the calculus, so it says nothing directly about Q. To claim that a candidate goes below the
@@ -123,8 +163,8 @@ family, executed on the declared machine, pays at least a fixed multiple of its 
 in Q. Without it, "below the floor" would compare a machine count with a calculus bound, which is
 not a theorem at all.
 
-The bridge also has to come first for a plainer reason. The yardstick must be fixed before any
-candidate is judged; otherwise a convenient one can be chosen after the fact. If the bridge
+The yardstick also has to be fixed before any candidate is judged; otherwise a convenient one can
+be chosen after the fact. If the bridge
 fails for some way of implementing the old family, that implementation is not a counterexample
 to G1. It is a candidate escape, and it gets named.
 
@@ -140,7 +180,7 @@ Two more terms needed the same treatment:
   pass. Against today's floor it is no escape at all, because G1's family already contains it.
   A definition that asked our own historical step to beat h₁ would be testing the wrong floor.
 
-## 5. The question, stated so it can be answered
+## 6. The question, stated so it can be answered
 
 With the rules fixed first (the machine model, the yardstick, the inputs and the budget), the
 question becomes one of existence. Is there a decoder with a new kind of object, a way to build
@@ -170,7 +210,7 @@ theorem still rests on named residual hypotheses; its theorem that the level nee
 not yet started. What we borrow from both is the method, a large claim split into premises that
 are proved one by one, and not the standing of a finished impossibility proof.</aside>
 
-## 6. What comes next
+## 7. What comes next
 
 The same review found errors in our own records. It listed 21 places where records contradict
 one another, have been superseded, or differ in scope. Among them, the draft negative theorem's list of excluded mechanisms omitted one that
@@ -178,17 +218,25 @@ its own text calls open. One measurement note compared about forty edges against
 width-1 rows in an example with two runs, which cannot be right, since a block never has more
 width-1 rows than runs.
 
-The work now goes in a fixed order. First comes the specification: the instruction set, the rule
-that turns a program's trace into passes, the cursor discipline, and the read-only, write-once and
-working memories. Then the bridge, for the current family, with an explicit constant. Every cost
-from then on is reported as (Q, D, P, S) under that specification, with building the object
-included. Only after that is a construction attempted, and the supplied test, in the Mario manner,
-measures what any candidate's object would buy before anyone pays to build it.
+The order of work follows from the two halves of this post. The search is for a new sense of
+moving together, and a candidate is first an idea of that kind, an object with its own rule of
+composition, before it is a cost. Once one exists, the referee applies: the specification of the
+machine, the bridge for the current family, and the four figures (Q, D, P, S) with building the
+object included. In the Mario manner, the supplied test then measures what the candidate's object
+would buy before anyone pays to build it.
+
+Nor is anything ruled out for having been tried before. Louis again: "it's not necessarily the
+case that an idea we tried has to be disallowed because it's already been tried, but rather that we
+can perhaps have, think again and redouble our efforts if we think there might be something in it.
+But yeah, we shouldn't, feign surprise at novelty if the thing turns out to already exist." Every
+proposal therefore starts by searching our records, and says either that it is new or which earlier
+attempt it revisits, and what that attempt missed.
 
 ---
 
 **Sources:**
 
+- [The essence of the search](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level/ESSENCE.md), and [Louis's words on it](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level.md#34-the-essence-restated-change-what-moving-together-means) (journal §34), verbatim.
 - [The charge convention](https://github.com/lmmx/mibz2/blob/8e9b962c5fc94da61e1d47a0868897b7e96ccf0c/docs/journal/monodromy/2026-11-24-charge-convention.md): why the frozen target's answer is set by the charge on a pass and the pass budget.
 - [The problem, stated formally](https://github.com/lmmx/mibz2/blob/303b48c8ff010ba3fd6576d89d6fec2987409f09/docs/journal/monodromy/2026-11-24-council-formulation.md): the machine model, the cost vector (Q, D, P, S) and the conditions for a new basis.
 - [The outside review](https://github.com/lmmx/mibz2/blob/a12492459dc8e9fb26a8ca4fc0dd36a3392b4769/docs/journal/2026-11-24-algorithm-level/council/chatgpt.md), recorded verbatim, including its table of contradictions (§5.2) and its reading of the Mario repository.
