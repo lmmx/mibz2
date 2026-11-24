@@ -51,3 +51,15 @@
 - Hand-vectorised stream compaction: a compare-to-mask, compress, store and popcount advance. The workstation's i9 has no AVX-512, so the AVX2 form (a movemask-indexed shuffle table plus vpermd) is the one that applies.
 - It fits three filter steps in the workers: run-record extraction from the bitmaps `runs.rs` already builds; the thin/thick partition in Open's construction; and lanes' appends.
 - An engineering lead that lowers the price of each filter step, not mathematics. It is held until the decomposition measurement shows which worker stage controls throughput. Recorded as `leads/vectorised-compaction.md`.
+
+## 24 Nov, 22:30 — the decomposition answers arriving
+- **MONODROMY:** records 123–125 (the pipeline model, what to measure, the decomposition), plus 118–122. Under independent review.
+- **Neon:** cycle 4 (T1/T2 acquisition, T5 enrichment) is under independent review. `DECOMPOSITION.md` (00c08750) answers channel #34:
+  - it splits S3, S5, S7 and R1;
+  - it adds a missing serial S8 (reader retirement and copy), S9 (ramp, tail, cold start), R4 (turbo frequency drop) and R5 (CFS placement);
+  - it shows SMT oversubscription starts at k = 8–9, because the decoder runs k+3 threads;
+  - it finds 5–10% slowdowns infeasible unpinned (σ_pair 4–9% at k = 10), and proposes δ = +0.25 with pinning;
+  - it proposes a four-tier design of about 90 conditions in about 40 minutes;
+  - it warns that the summation theorem over-sums near a min-crossover and checks time, not resources.
+- **ChatGPT Pro:** pending, by paste from Louis.
+- Once all three are in, the Coordinator writes the recipe brief for the Pathfinder.
