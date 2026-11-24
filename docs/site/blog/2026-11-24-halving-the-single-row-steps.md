@@ -134,7 +134,7 @@ features explain 96% of the variation on blocks held out of the fit. For writing
 don't, which is one reason the price of an event (§5) stays an open question.</aside>
 
 **Fix a binary target.** A [Super Mario 64 project](https://github.com/tra38/sm64-wmotr-abc-proof) asked whether a level's challenge
-could be done with <span class="il-black">fewer than one</span> press of the A button. That recasts a minimisation as a
+could be done with <span class="il-black il-bl-abtn">fewer than <span class="il-bl-half">one</span></span> press of the A button. That recasts a minimisation as a
 decision problem, settled either by a route or by a proof that none exists. Its decisive move was to work backwards: it set the impossible-looking condition by hand in a
 modified copy of the game, confirmed the payoff, and only then sought how the real game could
 produce it, one supplied condition at a time. Payoff first and mechanism second is also the logic
@@ -214,7 +214,7 @@ The next retelling turns the rule into a proof. Lay the side of a square along i
 fits once, with a sliver left over, and that sliver is the side of a smaller square in the corner,
 on which the measuring begins again as on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
-and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
+and the diagonal. The Greeks called this alternate subtraction <span class="il-black il-bl-redfig">anthyphairesis</span>. It is the Euclidean
 algorithm on two lengths ([*Elements* X.2](https://mathcs.clarku.edu/~djoyce/elements/bookX/propX2.html)).
 
 <figure class="bf-fig">
@@ -231,7 +231,7 @@ anthyphairesis on many intervals at once.
 
 The essay ends the story with a name. Plato records it in the [*Theaetetus*](https://en.wikipedia.org/wiki/Theaetetus_(dialogue)){ .il-ref } ([147d](https://www.perseus.tufts.edu/hopper/text?doc=Plat.%20Theaet.%20147d)): [Theodorus](https://en.wikipedia.org/wiki/Theodorus_of_Cyrene){ .il-ref .il-c3 } showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
-have no common measure with a foot. Theaetetus ceased to take the cases one at a time and named them all together as <span class="il-rubric">powers</span>. It is the move from checking cases to naming an operation, the move our search must make with its
+have no common measure with a foot. Theaetetus ceased to take the cases one at a time and named them all together as <span class="il-black il-bl-leaf">powers</span>. It is the move from checking cases to naming an operation, the move our search must make with its
 frameworks. Contraction
 along compose, in §4, is our attempt at it: one name for what turns each of our decoders into the
 next.
@@ -429,7 +429,7 @@ $$A(L) = \sum_i i \cdot \mathrm{code}(L[i])$$
 
 changes by $(i-j)(\mathrm{code}(L[j]) - \mathrm{code}(L[i])) \ne 0$ under any swap of unequal letters
 at $i$ and $j$, and a run of code $a$ over $[s, e)$ contributes $a\,(s+e-1)(e-s)/2$, so A takes one
-pass over the runs. Yet it decodes <span class="il-black">nothing</span>: `bca` and `cab` have the same letters and the same
+pass over the runs. Yet it decodes <span class="il-black il-bl-hollow">nothing</span>: `bca` and `cab` have the same letters and the same
 moment, A = 2, while their LF maps are [1, 2, 0] and [2, 0, 1]. Separating swaps is not the same as decoding, so a stronger lower bound must find two valid columns that every permitted observation,
 taken together, fails to tell apart.
 
@@ -506,7 +506,7 @@ The target is also harder than its headline suggests. Counted strictly, Open pay
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 $h_1/m \ge 2/3$. Across the 232 distinct blocks of our benchmark, $h_1/m$ is 0.41 overall and
-0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of <span class="il-black">every</span>
+0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of <span class="il-black il-bl-every"><span>e</span><span>v</span><span>e</span><span>r</span><span>y</span></span>
 retained step more cheaply, not merely those of the random IDs.
 
 The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
