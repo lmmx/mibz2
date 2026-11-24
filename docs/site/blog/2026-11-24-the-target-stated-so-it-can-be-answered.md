@@ -77,8 +77,9 @@ the same construction cost 3.18 to 9.03 per width-1 row, and a single sweep we a
 read the true decoded text. The arches themselves turned out to be a known suffix-array technique,
 SA-IS ([the review](https://github.com/lmmx/mibz2/blob/aff4172ec770b24fecb934d8eee7b18f30cbb047/docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique.md)). Each candidate squeezed the same notion of moving together further,
 and paid for it with an extra pass or a hidden walk. Nor does contracting the left-over cycle again
-escape: placing rows along that cycle is list ranking, a known technique for linked lists with
-known costs ([our synthesis](https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-18-synthesis.md)). The way forward is to change what moving together means. In Louis's words: "what I see is a kind of a looseness of language, a
+escape: that recursion is list ranking by contraction, a known technique for linked lists, and
+each row it removes still costs that row's own event, so the depth falls but the count does not
+([the record](https://github.com/lmmx/mibz2/blob/299a0624baadacfa079d1bf4d64939b326293b1a/docs/journal/monodromy/2026-11-24-supported-rows.md); see also [our synthesis](https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-18-synthesis.md)). The way forward is to change what moving together means. In Louis's words: "what I see is a kind of a looseness of language, a
 generalization, work smarter, not harder, rather. Find a different sense for something that can
 occur. It requires a kind of ability to think flexibly, laterally."
 
