@@ -1,0 +1,262 @@
+block	h1	thin_k	m	route	cursor_model	Q_acq_search	open_iet_steps	Q_build	Q_emit_links	Q_emit_payload_extra	Q_links_total_over_h1	Q_with_iet_over_h1	Q_with_payload_over_h1	passes_P	cursors_s	S_table_kb	S_payload_kb	active_pairs	R2_pair_segs	notes
+synth-hex-iid-65536	57458	0	57458	walk_R_flat	strict_Pi_256	0	4822	0	57458	57458	1.0000	1.0839	2.0000	1	256	224.4	2.5	256	24619	Open-like flat dict (912 words, 100.0%<=15B)
+synth-hex-iid-65536	57458	0	57458	M17_1sweep_flat	strict_Pi_256	0	4822	10094	20920	20920	0.5398	0.6237	0.9039	2	256	224.4	175.2	256	24619	1-sweep GS; flat build 175KB (surv 36KB)
+synth-hex-iid-65536	57458	0	57458	CL1_2sweep_DAG	strict_Pi_256	0	4822	10094	18695	96221	0.5010	0.5850	2.1757	3	256	673.3	2.5	256	24619	DAG emit visits 38763 internal + 57458 leaf loads (defers work!)
+synth-hex-iid-65536	57458	0	57458	CL1_2sweep_flat	strict_Pi_256	0	4822	10094	18695	18695	0.5010	0.5850	0.8264	3	256	224.4	208.1	256	24619	Flat build 208KB (surv 41KB)
+synth-hex-iid-65536	57458	0	57458	R2_byte_paired_codes	strict_Pi_256	0	4822	10094	28729	57458	0.6757	0.7596	1.6757	2	256	673.3	2.5	256	24619	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+synth-hex-iid-65536	57458	0	57458	R2_byte_flat	strict_Pi_256	0	4822	10094	28729	28729	0.6757	0.7596	1.1757	2	256	448.9	128.0	256	24619	R^2 flattened (7682 dist, 100.0%<=31B)
+synth-hex-iid-65536	57458	0	57458	R4_pair_4codes	L1_cursor_table	0	4822	34713	14366	57458	0.8542	0.9381	1.8542	3	256	1123.2	2.5	256	24619	256 pair cursors (1.0KB); 4 dict reads/link = m total
+synth-hex-iid-65536	57458	0	57458	R4_pair_flat	L1_cursor_table	0	4822	34713	14366	14366	0.8542	0.9381	1.1042	3	256	449.9	256.0	256	24619	256 cursors (1.0KB); flat 4n=256KB (100.0%<=63B)
+synth-hex-iid-65536	57458	0	57458	R4_pair_strictPi_flat	strict_Pi_256	0	4822	67552	14366	14366	1.4257	1.5096	1.6757	3	256	448.9	256.0	256	24619	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+synth-tmpl-hex-1000x40	39909	0	47001	walk_R_flat	strict_Pi_256	0	68	0	47001	47001	1.1777	1.1794	2.3554	1	256	183.6	0.1	284	343	Open-like flat dict (20 words, 97.9%<=15B)
+synth-tmpl-hex-1000x40	39909	0	47001	M17_1sweep_flat	strict_Pi_256	0	68	33	16379	16379	0.4112	0.4129	0.8216	2	256	183.6	243.4	284	343	1-sweep GS; flat build 243KB (surv 41KB)
+synth-tmpl-hex-1000x40	39909	0	47001	CL1_2sweep_DAG	strict_Pi_256	0	68	33	14547	79455	0.3653	0.3670	2.3562	3	256	550.8	0.1	284	343	DAG emit visits 32454 internal + 47001 leaf loads (defers work!)
+synth-tmpl-hex-1000x40	39909	0	47001	CL1_2sweep_flat	strict_Pi_256	0	68	33	14547	14547	0.3653	0.3670	0.7298	3	256	183.6	316.4	284	343	Flat build 316KB (surv 43KB)
+synth-tmpl-hex-1000x40	39909	0	47001	R2_byte_paired_codes	strict_Pi_256	0	68	33	23501	47001	0.5897	0.5914	1.7674	2	256	550.8	0.1	284	343	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+synth-tmpl-hex-1000x40	39909	0	47001	R2_byte_flat	strict_Pi_256	0	68	33	23501	23501	0.5897	0.5914	1.1786	2	256	367.2	158.2	284	343	R^2 flattened (302 dist, 100.0%<=31B)
+synth-tmpl-hex-1000x40	39909	0	47001	R4_pair_4codes	L1_cursor_table	0	68	376	11751	47001	0.3039	0.3056	1.4816	3	284	919.1	0.1	284	343	284 pair cursors (1.1KB); 4 dict reads/link = m total
+synth-tmpl-hex-1000x40	39909	0	47001	R4_pair_flat	L1_cursor_table	0	68	376	11751	11751	0.3039	0.3056	0.5983	3	284	368.3	316.4	284	343	284 cursors (1.1KB); flat 4n=316KB (100.0%<=63B)
+synth-tmpl-hex-1000x40	39909	0	47001	R4_pair_strictPi_flat	strict_Pi_256	0	68	47034	11751	11751	1.4730	1.4747	1.7674	3	256	367.2	316.4	284	343	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+synth-tmpl-hex-1000x40	39909	1	41415	walk_R_flat	strict_Pi_256	0	68	0	41415	41415	1.0377	1.0394	2.0755	3	256	161.8	1.2	284	16686	Open-like flat dict (313 words, 97.6%<=15B)
+synth-tmpl-hex-1000x40	39909	1	41415	M17_1sweep_flat	strict_Pi_256	0	68	6726	14776	14776	0.5388	0.5405	0.9090	4	256	161.8	216.5	284	16686	1-sweep GS; flat build 217KB (surv 53KB)
+synth-tmpl-hex-1000x40	39909	1	41415	CL1_2sweep_DAG	strict_Pi_256	0	68	6726	13225	69605	0.4999	0.5016	2.2440	5	256	485.3	1.2	284	16686	DAG emit visits 28190 internal + 41415 leaf loads (defers work!)
+synth-tmpl-hex-1000x40	39909	1	41415	CL1_2sweep_flat	strict_Pi_256	0	68	6726	13225	13225	0.4999	0.5016	0.8313	5	256	161.8	286.2	284	16686	Flat build 286KB (surv 52KB)
+synth-tmpl-hex-1000x40	39909	1	41415	R2_byte_paired_codes	strict_Pi_256	0	68	6726	20708	41415	0.6874	0.6891	1.7251	4	256	485.3	1.2	284	16686	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+synth-tmpl-hex-1000x40	39909	1	41415	R2_byte_flat	strict_Pi_256	0	68	6726	20708	20708	0.6874	0.6891	1.2063	4	256	323.6	158.2	284	16686	R^2 flattened (5286 dist, 100.0%<=31B)
+synth-tmpl-hex-1000x40	39909	1	41415	R4_pair_4codes	L1_cursor_table	0	68	23412	10356	41415	0.8461	0.8478	1.8839	5	284	810.0	1.2	284	16686	284 pair cursors (1.1KB); 4 dict reads/link = m total
+synth-tmpl-hex-1000x40	39909	1	41415	R4_pair_flat	L1_cursor_table	0	68	23412	10356	10356	0.8461	0.8478	1.1056	5	284	324.7	316.4	284	16686	284 cursors (1.1KB); flat 4n=316KB (100.0%<=63B)
+synth-tmpl-hex-1000x40	39909	1	41415	R4_pair_strictPi_flat	strict_Pi_256	0	68	48141	10356	10356	1.4658	1.4675	1.7252	5	256	323.6	316.4	284	16686	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+synth-tmpl-hex-1000x40	39909	2	40152	walk_R_flat	strict_Pi_256	0	68	0	40152	40152	1.0061	1.0078	2.0122	4	256	156.8	2.9	284	17397	Open-like flat dict (683 words, 97.5%<=15B)
+synth-tmpl-hex-1000x40	39909	2	40152	M17_1sweep_flat	strict_Pi_256	0	68	7225	14582	14582	0.5464	0.5481	0.9118	5	256	156.8	210.3	284	17397	1-sweep GS; flat build 210KB (surv 51KB)
+synth-tmpl-hex-1000x40	39909	2	40152	CL1_2sweep_DAG	strict_Pi_256	0	68	7225	13059	67245	0.5083	0.5100	2.1932	6	256	470.5	2.9	284	17397	DAG emit visits 27093 internal + 40152 leaf loads (defers work!)
+synth-tmpl-hex-1000x40	39909	2	40152	CL1_2sweep_flat	strict_Pi_256	0	68	7225	13059	13059	0.5083	0.5100	0.8355	6	256	156.8	266.1	284	17397	Flat build 266KB (surv 53KB)
+synth-tmpl-hex-1000x40	39909	2	40152	R2_byte_paired_codes	strict_Pi_256	0	68	7225	20076	40152	0.6841	0.6858	1.6902	5	256	470.5	2.9	284	17397	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+synth-tmpl-hex-1000x40	39909	2	40152	R2_byte_flat	strict_Pi_256	0	68	7225	20076	20076	0.6841	0.6858	1.1871	5	256	313.7	158.2	284	17397	R^2 flattened (5844 dist, 100.0%<=31B)
+synth-tmpl-hex-1000x40	39909	2	40152	R4_pair_4codes	L1_cursor_table	0	68	24622	10038	40152	0.8685	0.8702	1.8746	6	284	785.3	2.9	284	17397	284 pair cursors (1.1KB); 4 dict reads/link = m total
+synth-tmpl-hex-1000x40	39909	2	40152	R4_pair_flat	L1_cursor_table	0	68	24622	10038	10038	0.8685	0.8702	1.1200	6	284	314.8	316.4	284	17397	284 cursors (1.1KB); flat 4n=316KB (100.0%<=63B)
+synth-tmpl-hex-1000x40	39909	2	40152	R4_pair_strictPi_flat	strict_Pi_256	0	68	47377	10038	10038	1.4386	1.4404	1.6902	6	256	313.7	316.4	284	17397	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+synth-tmpl-hex-1000x40	39909	inf	39910	walk_R_flat	strict_Pi_256	0	68	0	39910	39910	1.0000	1.0017	2.0001	7	256	155.9	4.0	284	17470	Open-like flat dict (733 words, 97.5%<=15B)
+synth-tmpl-hex-1000x40	39909	inf	39910	M17_1sweep_flat	strict_Pi_256	0	68	7251	14499	14499	0.5450	0.5467	0.9083	8	256	155.9	209.6	284	17470	1-sweep GS; flat build 210KB (surv 52KB)
+synth-tmpl-hex-1000x40	39909	inf	39910	CL1_2sweep_DAG	strict_Pi_256	0	68	7251	12985	66835	0.5071	0.5088	2.1817	9	256	467.7	4.0	284	17470	DAG emit visits 26925 internal + 39910 leaf loads (defers work!)
+synth-tmpl-hex-1000x40	39909	inf	39910	CL1_2sweep_flat	strict_Pi_256	0	68	7251	12985	12985	0.5071	0.5088	0.8324	9	256	155.9	262.6	284	17470	Flat build 263KB (surv 54KB)
+synth-tmpl-hex-1000x40	39909	inf	39910	R2_byte_paired_codes	strict_Pi_256	0	68	7251	19955	39910	0.6817	0.6834	1.6817	8	256	467.7	4.0	284	17470	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+synth-tmpl-hex-1000x40	39909	inf	39910	R2_byte_flat	strict_Pi_256	0	68	7251	19955	19955	0.6817	0.6834	1.1817	8	256	311.8	158.2	284	17470	R^2 flattened (5998 dist, 100.0%<=31B)
+synth-tmpl-hex-1000x40	39909	inf	39910	R4_pair_4codes	L1_cursor_table	0	68	24721	9979	39910	0.8695	0.8712	1.8695	9	284	780.6	4.0	284	17470	284 pair cursors (1.1KB); 4 dict reads/link = m total
+synth-tmpl-hex-1000x40	39909	inf	39910	R4_pair_flat	L1_cursor_table	0	68	24721	9979	9979	0.8695	0.8712	1.1195	9	284	312.9	316.4	284	17470	284 cursors (1.1KB); flat 4n=316KB (100.0%<=63B)
+synth-tmpl-hex-1000x40	39909	inf	39910	R4_pair_strictPi_flat	strict_Pi_256	0	68	47161	9979	9979	1.4318	1.4335	1.6818	9	256	311.8	316.4	284	17470	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-0.L	35116	0	89874	walk_R_flat	strict_Pi_256	0	9763	0	89874	89874	2.5593	2.8374	5.1187	1	256	351.1	32.5	1908	6339	Open-like flat dict (817 words, 92.3%<=15B)
+block-0.L	35116	0	89874	M17_1sweep_flat	strict_Pi_256	0	9763	2148	32833	32833	0.9962	1.2742	1.9311	2	256	351.1	2448.4	1908	6339	1-sweep GS; flat build 2448KB (surv 378KB)
+block-0.L	35116	0	89874	CL1_2sweep_DAG	strict_Pi_256	0	9763	2148	29295	150453	0.8954	1.1734	5.1799	3	256	1053.2	32.5	1908	6339	DAG emit visits 60579 internal + 89874 leaf loads (defers work!)
+block-0.L	35116	0	89874	CL1_2sweep_flat	strict_Pi_256	0	9763	2148	29295	29295	0.8954	1.1734	1.7296	3	256	351.1	2917.0	1908	6339	Flat build 2917KB (surv 346KB)
+block-0.L	35116	0	89874	R2_byte_paired_codes	strict_Pi_256	0	9763	2148	44937	89874	1.3408	1.6189	3.9002	2	256	1053.2	32.5	1908	6339	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-0.L	35116	0	89874	R2_byte_flat	strict_Pi_256	0	9763	2148	44937	44937	1.3408	1.6189	2.6205	2	256	702.1	1757.7	1908	6339	R^2 flattened (4075 dist, 88.9%<=31B)
+block-0.L	35116	0	89874	R4_pair_4codes	L1_cursor_table	0	9763	8487	22470	89874	0.8816	1.1596	3.4409	3	1908	1762.8	32.5	1908	6339	1908 pair cursors (7.5KB); 4 dict reads/link = m total
+block-0.L	35116	0	89874	R4_pair_flat	L1_cursor_table	0	9763	8487	22470	22470	0.8816	1.1596	1.5214	3	1908	709.6	3515.4	1908	6339	1908 cursors (7.5KB); flat 4n=3515KB (86.8%<=63B)
+block-0.L	35116	0	89874	R4_pair_strictPi_flat	strict_Pi_256	0	9763	92022	22470	22470	3.2604	3.5384	3.9003	3	256	702.1	3515.4	1908	6339	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-0.L	35116	1	81682	walk_R_flat	strict_Pi_256	0	9763	0	81682	81682	2.3261	2.6041	4.6521	3	256	319.1	84.3	2067	23963	Open-like flat dict (1650 words, 92.5%<=15B)
+block-0.L	35116	1	81682	M17_1sweep_flat	strict_Pi_256	0	9763	11551	29893	29893	1.1802	1.4582	2.0315	4	256	319.1	2526.0	2067	23963	1-sweep GS; flat build 2526KB (surv 492KB)
+block-0.L	35116	1	81682	CL1_2sweep_DAG	strict_Pi_256	0	9763	11551	26745	136619	1.0906	1.3686	4.9811	5	256	957.2	84.3	2067	23963	DAG emit visits 54937 internal + 81682 leaf loads (defers work!)
+block-0.L	35116	1	81682	CL1_2sweep_flat	strict_Pi_256	0	9763	11551	26745	26745	1.0906	1.3686	1.8522	5	256	319.1	2844.5	2067	23963	Flat build 2844KB (surv 494KB)
+block-0.L	35116	1	81682	R2_byte_paired_codes	strict_Pi_256	0	9763	11551	40841	81682	1.4920	1.7700	3.8180	4	256	957.2	84.3	2067	23963	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-0.L	35116	1	81682	R2_byte_flat	strict_Pi_256	0	9763	11551	40841	40841	1.4920	1.7700	2.6550	4	256	638.1	1757.7	2067	23963	R^2 flattened (10140 dist, 88.7%<=31B)
+block-0.L	35116	1	81682	R4_pair_4codes	L1_cursor_table	0	9763	35514	20422	81682	1.5929	1.8709	3.9190	5	2067	1603.4	84.3	2067	23963	2067 pair cursors (8.1KB); 4 dict reads/link = m total
+block-0.L	35116	1	81682	R4_pair_flat	L1_cursor_table	0	9763	35514	20422	20422	1.5929	1.8709	2.1745	5	2067	646.2	3515.4	2067	23963	2067 cursors (8.1KB); flat 4n=3515KB (85.6%<=63B)
+block-0.L	35116	1	81682	R4_pair_strictPi_flat	strict_Pi_256	0	9763	93233	20422	20422	3.2366	3.5146	3.8181	5	256	638.1	3515.4	2067	23963	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-0.L	35116	2	77657	walk_R_flat	strict_Pi_256	0	9763	0	77657	77657	2.2114	2.4895	4.4229	4	256	303.3	124.8	2056	24528	Open-like flat dict (2452 words, 92.6%<=15B)
+block-0.L	35116	2	77657	M17_1sweep_flat	strict_Pi_256	0	9763	12015	28422	28422	1.1515	1.4295	1.9609	5	256	303.3	2493.0	2056	24528	1-sweep GS; flat build 2493KB (surv 567KB)
+block-0.L	35116	2	77657	CL1_2sweep_DAG	strict_Pi_256	0	9763	12015	25431	129883	1.0664	1.3444	4.7650	6	256	910.0	124.8	2056	24528	DAG emit visits 52226 internal + 77657 leaf loads (defers work!)
+block-0.L	35116	2	77657	CL1_2sweep_flat	strict_Pi_256	0	9763	12015	25431	25431	1.0664	1.3444	1.7906	6	256	303.3	2951.4	2056	24528	Flat build 2951KB (surv 549KB)
+block-0.L	35116	2	77657	R2_byte_paired_codes	strict_Pi_256	0	9763	12015	38829	77657	1.4479	1.7259	3.6593	5	256	910.0	124.8	2056	24528	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-0.L	35116	2	77657	R2_byte_flat	strict_Pi_256	0	9763	12015	38829	38829	1.4479	1.7259	2.5536	5	256	606.7	1757.7	2056	24528	R^2 flattened (11821 dist, 88.6%<=31B)
+block-0.L	35116	2	77657	R4_pair_4codes	L1_cursor_table	0	9763	36543	19415	77657	1.5935	1.8715	3.8050	6	2056	1524.8	124.8	2056	24528	2056 pair cursors (8.0KB); 4 dict reads/link = m total
+block-0.L	35116	2	77657	R4_pair_flat	L1_cursor_table	0	9763	36543	19415	19415	1.5935	1.8715	2.1464	6	2056	614.7	3515.4	2056	24528	2056 cursors (8.0KB); flat 4n=3515KB (85.1%<=63B)
+block-0.L	35116	2	77657	R4_pair_strictPi_flat	strict_Pi_256	0	9763	89672	19415	19415	3.1065	3.3845	3.6594	6	256	606.7	3515.4	2056	24528	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-0.L	35116	inf	35116	walk_R_flat	strict_Pi_256	0	9763	0	35116	35116	1.0000	1.2780	2.0000	241	256	137.2	331.3	1694	20411	Open-like flat dict (2998 words, 90.6%<=15B)
+block-0.L	35116	inf	35116	M17_1sweep_flat	strict_Pi_256	0	9763	10422	12668	12668	0.6575	0.9356	1.0183	242	256	137.2	2412.5	1694	20411	1-sweep GS; flat build 2412KB (surv 853KB)
+block-0.L	35116	inf	35116	CL1_2sweep_DAG	strict_Pi_256	0	9763	10422	11417	58815	0.6219	0.8999	2.2968	243	256	411.5	331.3	1694	20411	DAG emit visits 23699 internal + 35116 leaf loads (defers work!)
+block-0.L	35116	inf	35116	CL1_2sweep_flat	strict_Pi_256	0	9763	10422	11417	11417	0.6219	0.8999	0.9470	243	256	137.2	2944.6	1694	20411	Flat build 2945KB (surv 843KB)
+block-0.L	35116	inf	35116	R2_byte_paired_codes	strict_Pi_256	0	9763	10422	17558	35116	0.7968	1.0748	1.7968	242	256	411.5	331.3	1694	20411	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-0.L	35116	inf	35116	R2_byte_flat	strict_Pi_256	0	9763	10422	17558	17558	0.7968	1.0748	1.2968	242	256	274.3	1757.7	1694	20411	R^2 flattened (11015 dist, 86.1%<=31B)
+block-0.L	35116	inf	35116	R4_pair_4codes	L1_cursor_table	0	9763	30833	8779	35116	1.1280	1.4061	2.1280	243	1694	692.5	331.3	1694	20411	1694 pair cursors (6.6KB); 4 dict reads/link = m total
+block-0.L	35116	inf	35116	R4_pair_flat	L1_cursor_table	0	9763	30833	8779	8779	1.1280	1.4061	1.3780	243	1694	281.0	3515.4	1694	20411	1694 cursors (6.6KB); flat 4n=3515KB (78.8%<=63B)
+block-0.L	35116	inf	35116	R4_pair_strictPi_flat	strict_Pi_256	0	9763	45538	8779	8779	1.5468	1.8248	1.7968	243	256	274.3	3515.4	1694	20411	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-2.L	34262	0	112070	walk_R_flat	strict_Pi_256	0	11613	0	112070	112070	3.2710	3.6099	6.5419	1	256	437.8	32.3	2147	9028	Open-like flat dict (1106 words, 92.8%<=15B)
+block-2.L	34262	0	112070	M17_1sweep_flat	strict_Pi_256	0	11613	3136	41022	41022	1.2888	1.6278	2.4861	2	256	437.8	2442.9	2147	9028	1-sweep GS; flat build 2443KB (surv 267KB)
+block-2.L	34262	0	112070	CL1_2sweep_DAG	strict_Pi_256	0	11613	3136	37020	187120	1.1720	1.5110	6.6335	3	256	1313.3	32.3	2147	9028	DAG emit visits 75050 internal + 112070 leaf loads (defers work!)
+block-2.L	34262	0	112070	CL1_2sweep_flat	strict_Pi_256	0	11613	3136	37020	37020	1.1720	1.5110	2.2525	3	256	437.8	2805.3	2147	9028	Flat build 2805KB (surv 263KB)
+block-2.L	34262	0	112070	R2_byte_paired_codes	strict_Pi_256	0	11613	3136	56035	112070	1.7270	2.0660	4.9980	2	256	1313.3	32.3	2147	9028	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-2.L	34262	0	112070	R2_byte_flat	strict_Pi_256	0	11613	3136	56035	56035	1.7270	2.0660	3.3625	2	256	875.5	1757.8	2147	9028	R^2 flattened (5529 dist, 90.1%<=31B)
+block-2.L	34262	0	112070	R4_pair_4codes	L1_cursor_table	0	11613	12164	28019	112070	1.1728	1.5118	4.4438	3	2147	2197.3	32.3	2147	9028	2147 pair cursors (8.4KB); 4 dict reads/link = m total
+block-2.L	34262	0	112070	R4_pair_flat	L1_cursor_table	0	11613	12164	28019	28019	1.1728	1.5118	1.9906	3	2147	883.9	3515.6	2147	9028	2147 cursors (8.4KB); flat 4n=3516KB (88.5%<=63B)
+block-2.L	34262	0	112070	R4_pair_strictPi_flat	strict_Pi_256	0	11613	115206	28019	28019	4.1803	4.5192	4.9981	3	256	875.5	3515.6	2147	9028	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-2.L	34262	1	103644	walk_R_flat	strict_Pi_256	0	11613	0	103644	103644	3.0250	3.3640	6.0501	3	256	404.9	81.4	2307	26881	Open-like flat dict (2107 words, 92.7%<=15B)
+block-2.L	34262	1	103644	M17_1sweep_flat	strict_Pi_256	0	11613	12880	37836	37836	1.4802	1.8192	2.5846	4	256	404.9	2450.5	2307	26881	1-sweep GS; flat build 2451KB (surv 439KB)
+block-2.L	34262	1	103644	CL1_2sweep_DAG	strict_Pi_256	0	11613	12880	34214	173074	1.3745	1.7135	6.4260	5	256	1214.6	81.4	2307	26881	DAG emit visits 69430 internal + 103644 leaf loads (defers work!)
+block-2.L	34262	1	103644	CL1_2sweep_flat	strict_Pi_256	0	11613	12880	34214	34214	1.3745	1.7135	2.3731	5	256	404.9	2824.1	2307	26881	Flat build 2824KB (surv 431KB)
+block-2.L	34262	1	103644	R2_byte_paired_codes	strict_Pi_256	0	11613	12880	51822	103644	1.8884	2.2274	4.9135	4	256	1214.6	81.4	2307	26881	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-2.L	34262	1	103644	R2_byte_flat	strict_Pi_256	0	11613	12880	51822	51822	1.8884	2.2274	3.4010	4	256	809.7	1757.8	2307	26881	R^2 flattened (11981 dist, 89.8%<=31B)
+block-2.L	34262	1	103644	R4_pair_4codes	L1_cursor_table	0	11613	39761	25911	103644	1.9168	2.2557	4.9418	5	2307	2033.3	81.4	2307	26881	2307 pair cursors (9.0KB); 4 dict reads/link = m total
+block-2.L	34262	1	103644	R4_pair_flat	L1_cursor_table	0	11613	39761	25911	25911	1.9168	2.2557	2.6730	5	2307	818.7	3515.6	2307	26881	2307 cursors (9.0KB); flat 4n=3516KB (87.7%<=63B)
+block-2.L	34262	1	103644	R4_pair_strictPi_flat	strict_Pi_256	0	11613	116524	25911	25911	4.1572	4.4962	4.9135	5	256	809.7	3515.6	2307	26881	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-2.L	34262	2	99446	walk_R_flat	strict_Pi_256	0	11613	0	99446	99446	2.9025	3.2415	5.8050	4	256	388.5	121.4	2323	27372	Open-like flat dict (3021 words, 92.8%<=15B)
+block-2.L	34262	2	99446	M17_1sweep_flat	strict_Pi_256	0	11613	13335	36292	36292	1.4485	1.7874	2.5077	5	256	388.5	2448.9	2323	27372	1-sweep GS; flat build 2449KB (surv 489KB)
+block-2.L	34262	2	99446	CL1_2sweep_DAG	strict_Pi_256	0	11613	13335	32809	166083	1.3468	1.6857	6.1942	6	256	1165.4	121.4	2323	27372	DAG emit visits 66637 internal + 99446 leaf loads (defers work!)
+block-2.L	34262	2	99446	CL1_2sweep_flat	strict_Pi_256	0	11613	13335	32809	32809	1.3468	1.6857	2.3044	6	256	388.5	2837.4	2323	27372	Flat build 2837KB (surv 484KB)
+block-2.L	34262	2	99446	R2_byte_paired_codes	strict_Pi_256	0	11613	13335	49723	99446	1.8405	2.1794	4.7430	5	256	1165.4	121.4	2323	27372	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-2.L	34262	2	99446	R2_byte_flat	strict_Pi_256	0	11613	13335	49723	49723	1.8405	2.1794	3.2917	5	256	776.9	1757.8	2323	27372	R^2 flattened (13812 dist, 89.7%<=31B)
+block-2.L	34262	2	99446	R4_pair_4codes	L1_cursor_table	0	11613	40707	24863	99446	1.9138	2.2527	4.8163	6	2323	1951.4	121.4	2323	27372	2323 pair cursors (9.1KB); 4 dict reads/link = m total
+block-2.L	34262	2	99446	R4_pair_flat	L1_cursor_table	0	11613	40707	24863	24863	1.9138	2.2527	2.6395	6	2323	786.0	3515.6	2323	27372	2323 cursors (9.1KB); flat 4n=3516KB (87.5%<=63B)
+block-2.L	34262	2	99446	R4_pair_strictPi_flat	strict_Pi_256	0	11613	112781	24863	24863	4.0174	4.3563	4.7431	6	256	776.9	3515.6	2323	27372	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-2.L	34262	inf	34262	walk_R_flat	strict_Pi_256	0	11613	0	34262	34262	1.0000	1.3389	2.0000	3954	256	133.8	413.5	1862	20468	Open-like flat dict (3412 words, 88.5%<=15B)
+block-2.L	34262	inf	34262	M17_1sweep_flat	strict_Pi_256	0	11613	10663	12415	12415	0.6736	1.0125	1.0359	3955	256	133.8	2457.4	1862	20468	1-sweep GS; flat build 2457KB (surv 847KB)
+block-2.L	34262	inf	34262	CL1_2sweep_DAG	strict_Pi_256	0	11613	10663	11128	57396	0.6360	0.9750	2.3112	3956	256	401.5	413.5	1862	20468	DAG emit visits 23134 internal + 34262 leaf loads (defers work!)
+block-2.L	34262	inf	34262	CL1_2sweep_flat	strict_Pi_256	0	11613	10663	11128	11128	0.6360	0.9750	0.9608	3956	256	133.8	2906.9	1862	20468	Flat build 2907KB (surv 850KB)
+block-2.L	34262	inf	34262	R2_byte_paired_codes	strict_Pi_256	0	11613	10663	17131	34262	0.8112	1.1502	1.8112	3955	256	401.5	413.5	1862	20468	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-2.L	34262	inf	34262	R2_byte_flat	strict_Pi_256	0	11613	10663	17131	17131	0.8112	1.1502	1.3112	3955	256	267.7	1757.8	1862	20468	R^2 flattened (11691 dist, 84.6%<=31B)
+block-2.L	34262	inf	34262	R4_pair_4codes	L1_cursor_table	0	11613	31131	8567	34262	1.1587	1.4976	2.1587	3956	1862	676.5	413.5	1862	20468	1862 pair cursors (7.3KB); 4 dict reads/link = m total
+block-2.L	34262	inf	34262	R4_pair_flat	L1_cursor_table	0	11613	31131	8567	8567	1.1587	1.4976	1.4087	3956	1862	274.9	3515.6	1862	20468	1862 cursors (7.3KB); flat 4n=3516KB (77.9%<=63B)
+block-2.L	34262	inf	34262	R4_pair_strictPi_flat	strict_Pi_256	0	11613	44925	8567	8567	1.5613	1.9002	1.8113	3956	256	267.7	3515.6	1862	20468	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-85.L	55504	0	156404	walk_R_flat	strict_Pi_256	0	5722	0	156404	156404	2.8179	2.9210	5.6358	1	256	611.0	15.7	2508	7767	Open-like flat dict (647 words, 95.2%<=15B)
+block-85.L	55504	0	156404	M17_1sweep_flat	strict_Pi_256	0	5722	2018	56212	56212	1.0491	1.1522	2.0619	2	256	611.0	2584.8	2508	7767	1-sweep GS; flat build 2585KB (surv 280KB)
+block-85.L	55504	0	156404	CL1_2sweep_DAG	strict_Pi_256	0	5722	2018	50096	262712	0.9389	1.0420	5.6721	3	256	1832.9	15.7	2508	7767	DAG emit visits 106308 internal + 156404 leaf loads (defers work!)
+block-85.L	55504	0	156404	CL1_2sweep_flat	strict_Pi_256	0	5722	2018	50096	50096	0.9389	1.0420	1.8415	3	256	611.0	3006.2	2508	7767	Flat build 3006KB (surv 240KB)
+block-85.L	55504	0	156404	R2_byte_paired_codes	strict_Pi_256	0	5722	2018	78202	156404	1.4453	1.5484	4.2632	2	256	1832.9	15.7	2508	7767	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-85.L	55504	0	156404	R2_byte_flat	strict_Pi_256	0	5722	2018	78202	78202	1.4453	1.5484	2.8542	2	256	1221.9	1757.7	2508	7767	R^2 flattened (4763 dist, 93.4%<=31B)
+block-85.L	55504	0	156404	R4_pair_4codes	L1_cursor_table	0	5722	9785	39101	156404	0.8808	0.9839	3.6987	3	2508	3064.6	15.7	2508	7767	2508 pair cursors (9.8KB); 4 dict reads/link = m total
+block-85.L	55504	0	156404	R4_pair_flat	L1_cursor_table	0	5722	9785	39101	39101	0.8808	0.9839	1.5852	3	2508	1231.7	3515.4	2508	7767	2508 cursors (9.8KB); flat 4n=3515KB (92.3%<=63B)
+block-85.L	55504	0	156404	R4_pair_strictPi_flat	strict_Pi_256	0	5722	158422	39101	39101	3.5587	3.6618	4.2632	3	256	1221.9	3515.4	2508	7767	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-85.L	55504	1	143421	walk_R_flat	strict_Pi_256	0	5722	0	143421	143421	2.5840	2.6871	5.1680	3	256	560.2	44.0	2713	36941	Open-like flat dict (1730 words, 95.2%<=15B)
+block-85.L	55504	1	143421	M17_1sweep_flat	strict_Pi_256	0	5722	17580	51113	51113	1.2376	1.3407	2.1585	4	256	560.2	2680.2	2713	36941	1-sweep GS; flat build 2680KB (surv 405KB)
+block-85.L	55504	1	143421	CL1_2sweep_DAG	strict_Pi_256	0	5722	17580	45608	241234	1.1384	1.2415	5.4847	5	256	1680.7	44.0	2713	36941	DAG emit visits 97813 internal + 143421 leaf loads (defers work!)
+block-85.L	55504	1	143421	CL1_2sweep_flat	strict_Pi_256	0	5722	17580	45608	45608	1.1384	1.2415	1.9601	5	256	560.2	3138.2	2713	36941	Flat build 3138KB (surv 386KB)
+block-85.L	55504	1	143421	R2_byte_paired_codes	strict_Pi_256	0	5722	17580	71711	143421	1.6087	1.7118	4.1927	4	256	1680.7	44.0	2713	36941	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-85.L	55504	1	143421	R2_byte_flat	strict_Pi_256	0	5722	17580	71711	71711	1.6087	1.7118	2.9007	4	256	1120.5	1757.7	2713	36941	R^2 flattened (13333 dist, 92.9%<=31B)
+block-85.L	55504	1	143421	R4_pair_4codes	L1_cursor_table	0	5722	54521	35856	143421	1.6283	1.7314	4.2123	5	2713	2811.8	44.0	2713	36941	2713 pair cursors (10.6KB); 4 dict reads/link = m total
+block-85.L	55504	1	143421	R4_pair_flat	L1_cursor_table	0	5722	54521	35856	35856	1.6283	1.7314	2.2743	5	2713	1131.1	3515.4	2713	36941	2713 cursors (10.6KB); flat 4n=3515KB (91.5%<=63B)
+block-85.L	55504	1	143421	R4_pair_strictPi_flat	strict_Pi_256	0	5722	161001	35856	35856	3.5467	3.6498	4.1927	5	256	1120.5	3515.4	2713	36941	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-85.L	55504	2	136942	walk_R_flat	strict_Pi_256	0	5722	0	136942	136942	2.4672	2.5703	4.9345	4	256	534.9	70.3	2713	37863	Open-like flat dict (2780 words, 95.1%<=15B)
+block-85.L	55504	2	136942	M17_1sweep_flat	strict_Pi_256	0	5722	18268	48950	48950	1.2110	1.3141	2.0930	5	256	534.9	2668.8	2713	37863	1-sweep GS; flat build 2669KB (surv 439KB)
+block-85.L	55504	2	136942	CL1_2sweep_DAG	strict_Pi_256	0	5722	18268	43684	230200	1.1162	1.2193	5.2636	6	256	1604.8	70.3	2713	37863	DAG emit visits 93258 internal + 136942 leaf loads (defers work!)
+block-85.L	55504	2	136942	CL1_2sweep_flat	strict_Pi_256	0	5722	18268	43684	43684	1.1162	1.2193	1.9032	6	256	534.9	3191.3	2713	37863	Flat build 3191KB (surv 443KB)
+block-85.L	55504	2	136942	R2_byte_paired_codes	strict_Pi_256	0	5722	18268	68471	136942	1.5628	1.6658	4.0300	5	256	1604.8	70.3	2713	37863	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-85.L	55504	2	136942	R2_byte_flat	strict_Pi_256	0	5722	18268	68471	68471	1.5628	1.6658	2.7964	5	256	1069.9	1757.7	2713	37863	R^2 flattened (15828 dist, 92.3%<=31B)
+block-85.L	55504	2	136942	R4_pair_4codes	L1_cursor_table	0	5722	56131	34237	136942	1.6281	1.7312	4.0954	6	2713	2685.2	70.3	2713	37863	2713 pair cursors (10.6KB); 4 dict reads/link = m total
+block-85.L	55504	2	136942	R4_pair_flat	L1_cursor_table	0	5722	56131	34237	34237	1.6281	1.7312	2.2450	6	2713	1080.5	3515.4	2713	37863	2713 cursors (10.6KB); flat 4n=3515KB (91.0%<=63B)
+block-85.L	55504	2	136942	R4_pair_strictPi_flat	strict_Pi_256	0	5722	155210	34237	34237	3.4132	3.5163	4.0301	6	256	1069.9	3515.4	2713	37863	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-85.L	55504	inf	55504	walk_R_flat	strict_Pi_256	0	5722	0	55504	55504	1.0000	1.1031	2.0000	266	256	216.8	321.4	2376	32381	Open-like flat dict (4358 words, 88.9%<=15B)
+block-85.L	55504	inf	55504	M17_1sweep_flat	strict_Pi_256	0	5722	16303	20130	20130	0.6564	0.7595	1.0191	267	256	216.8	2530.7	2376	32381	1-sweep GS; flat build 2531KB (surv 832KB)
+block-85.L	55504	inf	55504	CL1_2sweep_DAG	strict_Pi_256	0	5722	16303	18212	92796	0.6218	0.7249	2.2937	268	256	650.4	321.4	2376	32381	DAG emit visits 37292 internal + 55504 leaf loads (defers work!)
+block-85.L	55504	inf	55504	CL1_2sweep_flat	strict_Pi_256	0	5722	16303	18212	18212	0.6218	0.7249	0.9500	268	256	216.8	2751.3	2376	32381	Flat build 2751KB (surv 838KB)
+block-85.L	55504	inf	55504	R2_byte_paired_codes	strict_Pi_256	0	5722	16303	27752	55504	0.7937	0.8968	1.7937	267	256	650.4	321.4	2376	32381	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-85.L	55504	inf	55504	R2_byte_flat	strict_Pi_256	0	5722	16303	27752	27752	0.7937	0.8968	1.2937	267	256	433.6	1757.7	2376	32381	R^2 flattened (17062 dist, 85.0%<=31B)
+block-85.L	55504	inf	55504	R4_pair_4codes	L1_cursor_table	0	5722	48684	13876	55504	1.1271	1.2302	2.1271	268	2376	1093.3	321.4	2376	32381	2376 pair cursors (9.3KB); 4 dict reads/link = m total
+block-85.L	55504	inf	55504	R4_pair_flat	L1_cursor_table	0	5722	48684	13876	13876	1.1271	1.2302	1.3771	268	2376	442.9	3515.4	2376	32381	2376 cursors (9.3KB); flat 4n=3515KB (79.6%<=63B)
+block-85.L	55504	inf	55504	R4_pair_strictPi_flat	strict_Pi_256	0	5722	71807	13876	13876	1.5437	1.6468	1.7937	268	256	433.6	3515.4	2376	32381	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-143.L	72578	0	196841	walk_R_flat	strict_Pi_256	0	17895	0	196841	196841	2.7121	2.9587	5.4243	1	256	768.9	33.6	2928	16785	Open-like flat dict (1550 words, 93.7%<=15B)
+block-143.L	72578	0	196841	M17_1sweep_flat	strict_Pi_256	0	17895	5436	71720	71720	1.0631	1.3096	2.0513	2	256	768.9	2508.4	2928	16785	1-sweep GS; flat build 2508KB (surv 258KB)
+block-143.L	72578	0	196841	CL1_2sweep_DAG	strict_Pi_256	0	17895	5436	63997	329685	0.9567	1.2032	5.4992	3	256	2306.7	33.6	2928	16785	DAG emit visits 132844 internal + 196841 leaf loads (defers work!)
+block-143.L	72578	0	196841	CL1_2sweep_flat	strict_Pi_256	0	17895	5436	63997	63997	0.9567	1.2032	1.8384	3	256	768.9	2767.0	2928	16785	Flat build 2767KB (surv 294KB)
+block-143.L	72578	0	196841	R2_byte_paired_codes	strict_Pi_256	0	17895	5436	98421	196841	1.4310	1.6775	4.1431	2	256	2306.7	33.6	2928	16785	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-143.L	72578	0	196841	R2_byte_flat	strict_Pi_256	0	17895	5436	98421	98421	1.4310	1.6775	2.7870	2	256	1537.8	1757.6	2928	16785	R^2 flattened (9001 dist, 92.9%<=31B)
+block-143.L	72578	0	196841	R4_pair_4codes	L1_cursor_table	0	17895	22221	49211	196841	0.9842	1.2308	3.6963	3	2928	3856.0	33.6	2928	16785	2928 pair cursors (11.4KB); 4 dict reads/link = m total
+block-143.L	72578	0	196841	R4_pair_flat	L1_cursor_table	0	17895	22221	49211	49211	0.9842	1.2308	1.6623	3	2928	1549.3	3515.1	2928	16785	2928 cursors (11.4KB); flat 4n=3515KB (93.6%<=63B)
+block-143.L	72578	0	196841	R4_pair_strictPi_flat	strict_Pi_256	0	17895	202277	49211	49211	3.4651	3.7116	4.1431	3	256	1537.8	3515.1	2928	16785	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-143.L	72578	1	179869	walk_R_flat	strict_Pi_256	0	17895	0	179869	179869	2.4783	2.7248	4.9566	3	256	702.6	67.3	3240	54555	Open-like flat dict (3139 words, 93.5%<=15B)
+block-143.L	72578	1	179869	M17_1sweep_flat	strict_Pi_256	0	17895	26603	65545	65545	1.2696	1.5162	2.1727	4	256	702.6	2505.1	3240	54555	1-sweep GS; flat build 2505KB (surv 367KB)
+block-143.L	72578	1	179869	CL1_2sweep_DAG	strict_Pi_256	0	17895	26603	58541	301197	1.1731	1.4197	5.3231	5	256	2107.8	67.3	3240	54555	DAG emit visits 121328 internal + 179869 leaf loads (defers work!)
+block-143.L	72578	1	179869	CL1_2sweep_flat	strict_Pi_256	0	17895	26603	58541	58541	1.1731	1.4197	1.9797	5	256	702.6	2857.4	3240	54555	Flat build 2857KB (surv 391KB)
+block-143.L	72578	1	179869	R2_byte_paired_codes	strict_Pi_256	0	17895	26603	89935	179869	1.6057	1.8523	4.0840	4	256	2107.8	67.3	3240	54555	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-143.L	72578	1	179869	R2_byte_flat	strict_Pi_256	0	17895	26603	89935	89935	1.6057	1.8523	2.8448	4	256	1405.2	1757.6	3240	54555	R^2 flattened (21238 dist, 92.1%<=31B)
+block-143.L	72578	1	179869	R4_pair_4codes	L1_cursor_table	0	17895	81158	44968	179869	1.7378	1.9844	4.2161	5	3240	3525.7	67.3	3240	54555	3240 pair cursors (12.7KB); 4 dict reads/link = m total
+block-143.L	72578	1	179869	R4_pair_flat	L1_cursor_table	0	17895	81158	44968	44968	1.7378	1.9844	2.3574	5	3240	1417.9	3515.1	3240	54555	3240 cursors (12.7KB); flat 4n=3515KB (92.6%<=63B)
+block-143.L	72578	1	179869	R4_pair_strictPi_flat	strict_Pi_256	0	17895	206472	44968	44968	3.4644	3.7110	4.0840	5	256	1405.2	3515.1	3240	54555	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-143.L	72578	2	171401	walk_R_flat	strict_Pi_256	0	17895	0	171401	171401	2.3616	2.6082	4.7232	4	256	669.5	96.4	3244	55143	Open-like flat dict (4735 words, 93.4%<=15B)
+block-143.L	72578	2	171401	M17_1sweep_flat	strict_Pi_256	0	17895	27523	62419	62419	1.2392	1.4858	2.0993	5	256	669.5	2457.8	3244	55143	1-sweep GS; flat build 2458KB (surv 443KB)
+block-143.L	72578	2	171401	CL1_2sweep_DAG	strict_Pi_256	0	17895	27523	55850	286952	1.1487	1.3953	5.1024	6	256	2008.6	96.4	3244	55143	DAG emit visits 115551 internal + 171401 leaf loads (defers work!)
+block-143.L	72578	2	171401	CL1_2sweep_flat	strict_Pi_256	0	17895	27523	55850	55850	1.1487	1.3953	1.9183	6	256	669.5	2907.7	3244	55143	Flat build 2908KB (surv 432KB)
+block-143.L	72578	2	171401	R2_byte_paired_codes	strict_Pi_256	0	17895	27523	85701	171401	1.5600	1.8066	3.9216	5	256	2008.6	96.4	3244	55143	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-143.L	72578	2	171401	R2_byte_flat	strict_Pi_256	0	17895	27523	85701	85701	1.5600	1.8066	2.7408	5	256	1339.1	1757.6	3244	55143	R^2 flattened (24471 dist, 91.5%<=31B)
+block-143.L	72578	2	171401	R4_pair_4codes	L1_cursor_table	0	17895	82666	42851	171401	1.7294	1.9760	4.0910	6	3244	3360.3	96.4	3244	55143	3244 pair cursors (12.7KB); 4 dict reads/link = m total
+block-143.L	72578	2	171401	R4_pair_flat	L1_cursor_table	0	17895	82666	42851	42851	1.7294	1.9760	2.3198	6	3244	1351.7	3515.1	3244	55143	3244 cursors (12.7KB); flat 4n=3515KB (91.8%<=63B)
+block-143.L	72578	2	171401	R4_pair_strictPi_flat	strict_Pi_256	0	17895	198924	42851	42851	3.3312	3.5778	3.9217	6	256	1339.1	3515.1	3244	55143	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-143.L	72578	inf	72578	walk_R_flat	strict_Pi_256	0	17895	0	72578	72578	1.0000	1.2466	2.0000	5349	256	283.5	483.7	2936	43045	Open-like flat dict (6363 words, 90.6%<=15B)
+block-143.L	72578	inf	72578	M17_1sweep_flat	strict_Pi_256	0	17895	22714	26449	26449	0.6774	0.9239	1.0418	5350	256	283.5	2459.7	2936	43045	1-sweep GS; flat build 2460KB (surv 830KB)
+block-143.L	72578	inf	72578	CL1_2sweep_DAG	strict_Pi_256	0	17895	22714	23694	121462	0.6394	0.8860	2.3130	5351	256	850.5	483.7	2936	43045	DAG emit visits 48884 internal + 72578 leaf loads (defers work!)
+block-143.L	72578	inf	72578	CL1_2sweep_flat	strict_Pi_256	0	17895	22714	23694	23694	0.6394	0.8860	0.9659	5351	256	283.5	2789.6	2936	43045	Flat build 2790KB (surv 842KB)
+block-143.L	72578	inf	72578	R2_byte_paired_codes	strict_Pi_256	0	17895	22714	36289	72578	0.8130	1.0595	1.8130	5350	256	850.5	483.7	2936	43045	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-143.L	72578	inf	72578	R2_byte_flat	strict_Pi_256	0	17895	22714	36289	36289	0.8130	1.0595	1.3130	5350	256	567.0	1757.6	2936	43045	R^2 flattened (23456 dist, 87.2%<=31B)
+block-143.L	72578	inf	72578	R4_pair_4codes	L1_cursor_table	0	17895	65759	18146	72578	1.1561	1.4026	2.1561	5351	2936	1429.0	483.7	2936	43045	2936 pair cursors (11.5KB); 4 dict reads/link = m total
+block-143.L	72578	inf	72578	R4_pair_flat	L1_cursor_table	0	17895	65759	18146	18146	1.1561	1.4026	1.4061	5351	2936	578.5	3515.1	2936	43045	2936 cursors (11.5KB); flat 4n=3515KB (83.3%<=63B)
+block-143.L	72578	inf	72578	R4_pair_strictPi_flat	strict_Pi_256	0	17895	95292	18146	18146	1.5630	1.8095	1.8130	5351	256	567.0	3515.1	2936	43045	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-210.L	97054	0	204281	walk_R_flat	strict_Pi_256	0	9757	0	204281	204281	2.1048	2.2053	4.2096	1	256	798.0	20.3	2821	12295	Open-like flat dict (1057 words, 94.2%<=15B)
+block-210.L	97054	0	204281	M17_1sweep_flat	strict_Pi_256	0	9757	3564	73953	73953	0.7987	0.8992	1.5607	2	256	798.0	2593.7	2821	12295	1-sweep GS; flat build 2594KB (surv 254KB)
+block-210.L	97054	0	204281	CL1_2sweep_DAG	strict_Pi_256	0	9757	3564	65263	343299	0.7092	0.8097	4.2464	3	256	2393.9	20.3	2821	12295	DAG emit visits 139018 internal + 204281 leaf loads (defers work!)
+block-210.L	97054	0	204281	CL1_2sweep_flat	strict_Pi_256	0	9757	3564	65263	65263	0.7092	0.8097	1.3816	3	256	798.0	2929.0	2821	12295	Flat build 2929KB (surv 270KB)
+block-210.L	97054	0	204281	R2_byte_paired_codes	strict_Pi_256	0	9757	3564	102141	204281	1.0891	1.1897	3.1940	2	256	2393.9	20.3	2821	12295	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-210.L	97054	0	204281	R2_byte_flat	strict_Pi_256	0	9757	3564	102141	102141	1.0891	1.1897	2.1416	2	256	1595.9	1757.7	2821	12295	R^2 flattened (6949 dist, 93.4%<=31B)
+block-210.L	97054	0	204281	R4_pair_4codes	L1_cursor_table	0	9757	15859	51071	204281	0.6896	0.7901	2.7944	3	2821	4000.9	20.3	2821	12295	2821 pair cursors (11.0KB); 4 dict reads/link = m total
+block-210.L	97054	0	204281	R4_pair_flat	L1_cursor_table	0	9757	15859	51071	51071	0.6896	0.7901	1.2158	3	2821	1607.0	3515.5	2821	12295	2821 cursors (11.0KB); flat 4n=3515KB (92.6%<=63B)
+block-210.L	97054	0	204281	R4_pair_strictPi_flat	strict_Pi_256	0	9757	207845	51071	51071	2.6678	2.7683	3.1940	3	256	1595.9	3515.5	2821	12295	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-210.L	97054	1	183549	walk_R_flat	strict_Pi_256	0	9757	0	183549	183549	1.8912	1.9917	3.7824	3	256	717.0	50.3	3038	60892	Open-like flat dict (2403 words, 94.1%<=15B)
+block-210.L	97054	1	183549	M17_1sweep_flat	strict_Pi_256	0	9757	28083	66573	66573	0.9753	1.0758	1.6612	4	256	717.0	2504.9	3038	60892	1-sweep GS; flat build 2505KB (surv 410KB)
+block-210.L	97054	1	183549	CL1_2sweep_DAG	strict_Pi_256	0	9757	28083	58995	308103	0.8972	0.9977	4.0718	5	256	2151.0	50.3	3038	60892	DAG emit visits 124554 internal + 183549 leaf loads (defers work!)
+block-210.L	97054	1	183549	CL1_2sweep_flat	strict_Pi_256	0	9757	28083	58995	58995	0.8972	0.9977	1.5051	5	256	717.0	2893.9	3038	60892	Flat build 2894KB (surv 419KB)
+block-210.L	97054	1	183549	R2_byte_paired_codes	strict_Pi_256	0	9757	28083	91775	183549	1.2350	1.3355	3.1262	4	256	2151.0	50.3	3038	60892	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-210.L	97054	1	183549	R2_byte_flat	strict_Pi_256	0	9757	28083	91775	91775	1.2350	1.3355	2.1806	4	256	1434.0	1757.7	3038	60892	R^2 flattened (19564 dist, 92.2%<=31B)
+block-210.L	97054	1	183549	R4_pair_4codes	L1_cursor_table	0	9757	88975	45888	183549	1.3896	1.4901	3.2808	5	3038	3596.8	50.3	3038	60892	3038 pair cursors (11.9KB); 4 dict reads/link = m total
+block-210.L	97054	1	183549	R4_pair_flat	L1_cursor_table	0	9757	88975	45888	45888	1.3896	1.4901	1.8624	5	3038	1445.8	3515.5	3038	60892	3038 cursors (11.9KB); flat 4n=3515KB (91.2%<=63B)
+block-210.L	97054	1	183549	R4_pair_strictPi_flat	strict_Pi_256	0	9757	211632	45888	45888	2.6534	2.7539	3.1262	5	256	1434.0	3515.5	3038	60892	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-210.L	97054	2	174217	walk_R_flat	strict_Pi_256	0	9757	0	174217	174217	1.7951	1.8956	3.5901	4	256	680.5	75.0	3026	62674	Open-like flat dict (3928 words, 94.1%<=15B)
+block-210.L	97054	2	174217	M17_1sweep_flat	strict_Pi_256	0	9757	29624	62928	62928	0.9536	1.0541	1.6020	5	256	680.5	2517.0	3026	62674	1-sweep GS; flat build 2517KB (surv 482KB)
+block-210.L	97054	2	174217	CL1_2sweep_DAG	strict_Pi_256	0	9757	29624	56053	292381	0.8828	0.9833	3.8953	6	256	2041.6	75.0	3026	62674	DAG emit visits 118164 internal + 174217 leaf loads (defers work!)
+block-210.L	97054	2	174217	CL1_2sweep_flat	strict_Pi_256	0	9757	29624	56053	56053	0.8828	0.9833	1.4603	6	256	680.5	2966.0	3026	62674	Flat build 2966KB (surv 503KB)
+block-210.L	97054	2	174217	R2_byte_paired_codes	strict_Pi_256	0	9757	29624	87109	174217	1.2028	1.3033	2.9978	5	256	2041.6	75.0	3026	62674	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-210.L	97054	2	174217	R2_byte_flat	strict_Pi_256	0	9757	29624	87109	87109	1.2028	1.3033	2.1003	5	256	1361.1	1757.7	3026	62674	R^2 flattened (23451 dist, 91.8%<=31B)
+block-210.L	97054	2	174217	R4_pair_4codes	L1_cursor_table	0	9757	92298	43555	174217	1.3998	1.5003	3.1948	6	3026	3414.5	75.0	3026	62674	3026 pair cursors (11.8KB); 4 dict reads/link = m total
+block-210.L	97054	2	174217	R4_pair_flat	L1_cursor_table	0	9757	92298	43555	43555	1.3998	1.5003	1.8485	6	3026	1372.9	3515.5	3026	62674	3026 cursors (11.8KB); flat 4n=3515KB (90.6%<=63B)
+block-210.L	97054	2	174217	R4_pair_strictPi_flat	strict_Pi_256	0	9757	203841	43555	43555	2.5491	2.6496	2.9978	6	256	1361.1	3515.5	3026	62674	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-210.L	97054	inf	97054	walk_R_flat	strict_Pi_256	0	9757	0	97054	97054	1.0000	1.1005	2.0000	2499	256	379.1	318.8	2623	54320	Open-like flat dict (5758 words, 91.4%<=15B)
+block-210.L	97054	inf	97054	M17_1sweep_flat	strict_Pi_256	0	9757	26671	35251	35251	0.6380	0.7385	1.0012	2500	256	379.1	2398.1	2623	54320	1-sweep GS; flat build 2398KB (surv 789KB)
+block-210.L	97054	inf	97054	CL1_2sweep_DAG	strict_Pi_256	0	9757	26671	31659	162449	0.6010	0.7015	2.2748	2501	256	1137.4	318.8	2623	54320	DAG emit visits 65395 internal + 97054 leaf loads (defers work!)
+block-210.L	97054	inf	97054	CL1_2sweep_flat	strict_Pi_256	0	9757	26671	31659	31659	0.6010	0.7015	0.9272	2501	256	379.1	2794.3	2623	54320	Flat build 2794KB (surv 814KB)
+block-210.L	97054	inf	97054	R2_byte_paired_codes	strict_Pi_256	0	9757	26671	48527	97054	0.7748	0.8753	1.7748	2500	256	1137.4	318.8	2623	54320	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-210.L	97054	inf	97054	R2_byte_flat	strict_Pi_256	0	9757	26671	48527	48527	0.7748	0.8753	1.2748	2500	256	758.2	1757.7	2623	54320	R^2 flattened (24716 dist, 88.0%<=31B)
+block-210.L	97054	inf	97054	R4_pair_4codes	L1_cursor_table	0	9757	80991	24265	97054	1.0845	1.1850	2.0845	2501	2623	1905.8	318.8	2623	54320	2623 pair cursors (10.2KB); 4 dict reads/link = m total
+block-210.L	97054	inf	97054	R4_pair_flat	L1_cursor_table	0	9757	80991	24265	24265	1.0845	1.1850	1.3345	2501	2623	768.5	3515.5	2623	54320	2623 cursors (10.2KB); flat 4n=3515KB (84.0%<=63B)
+block-210.L	97054	inf	97054	R4_pair_strictPi_flat	strict_Pi_256	0	9757	123725	24265	24265	1.5248	1.6254	1.7748	2501	256	758.2	3515.5	2623	54320	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-207.L	62407	0	135921	walk_R_flat	strict_Pi_256	0	11403	0	135921	135921	2.1780	2.3607	4.3560	1	256	530.9	32.2	2861	12046	Open-like flat dict (1042 words, 93.9%<=15B)
+block-207.L	62407	0	135921	M17_1sweep_flat	strict_Pi_256	0	11403	3547	49729	49729	0.8537	1.0364	1.6505	2	256	530.9	2394.7	2861	12046	1-sweep GS; flat build 2395KB (surv 309KB)
+block-207.L	62407	0	135921	CL1_2sweep_DAG	strict_Pi_256	0	11403	3547	44400	227442	0.7683	0.9510	4.4128	3	256	1592.8	32.2	2861	12046	DAG emit visits 91521 internal + 135921 leaf loads (defers work!)
+block-207.L	62407	0	135921	CL1_2sweep_flat	strict_Pi_256	0	11403	3547	44400	44400	0.7683	0.9510	1.4798	3	256	530.9	2835.3	2861	12046	Flat build 2835KB (surv 297KB)
+block-207.L	62407	0	135921	R2_byte_paired_codes	strict_Pi_256	0	11403	3547	67961	135921	1.1458	1.3286	3.3238	2	256	1592.8	32.2	2861	12046	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-207.L	62407	0	135921	R2_byte_flat	strict_Pi_256	0	11403	3547	67961	67961	1.1458	1.3286	2.2348	2	256	1061.9	1757.8	2861	12046	R^2 flattened (6926 dist, 92.6%<=31B)
+block-207.L	62407	0	135921	R4_pair_4codes	L1_cursor_table	0	11403	15593	33981	135921	0.7944	0.9771	2.9723	3	2861	2665.9	32.2	2861	12046	2861 pair cursors (11.2KB); 4 dict reads/link = m total
+block-207.L	62407	0	135921	R4_pair_flat	L1_cursor_table	0	11403	15593	33981	33981	0.7944	0.9771	1.3389	3	2861	1073.1	3515.6	2861	12046	2861 cursors (11.2KB); flat 4n=3516KB (90.9%<=63B)
+block-207.L	62407	0	135921	R4_pair_strictPi_flat	strict_Pi_256	0	11403	139468	33981	33981	2.7793	2.9620	3.3238	3	256	1061.9	3515.6	2861	12046	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-207.L	62407	1	121118	walk_R_flat	strict_Pi_256	0	11403	0	121118	121118	1.9408	2.1235	3.8816	3	256	473.1	64.5	3084	42335	Open-like flat dict (2330 words, 93.7%<=15B)
+block-207.L	62407	1	121118	M17_1sweep_flat	strict_Pi_256	0	11403	20073	43711	43711	1.0221	1.2048	1.7225	4	256	473.1	2440.2	3084	42335	1-sweep GS; flat build 2440KB (surv 422KB)
+block-207.L	62407	1	121118	CL1_2sweep_DAG	strict_Pi_256	0	11403	20073	39183	203053	0.9495	1.1322	4.2032	5	256	1419.4	64.5	3084	42335	DAG emit visits 81935 internal + 121118 leaf loads (defers work!)
+block-207.L	62407	1	121118	CL1_2sweep_flat	strict_Pi_256	0	11403	20073	39183	39183	0.9495	1.1322	1.5774	5	256	473.1	2870.5	3084	42335	Flat build 2870KB (surv 428KB)
+block-207.L	62407	1	121118	R2_byte_paired_codes	strict_Pi_256	0	11403	20073	60559	121118	1.2920	1.4748	3.2328	4	256	1419.4	64.5	3084	42335	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-207.L	62407	1	121118	R2_byte_flat	strict_Pi_256	0	11403	20073	60559	60559	1.2920	1.4748	2.2624	4	256	946.2	1757.8	3084	42335	R^2 flattened (16816 dist, 91.8%<=31B)
+block-207.L	62407	1	121118	R4_pair_4codes	L1_cursor_table	0	11403	62408	30281	121118	1.4852	1.6680	3.4260	5	3084	2377.6	64.5	3084	42335	3084 pair cursors (12.0KB); 4 dict reads/link = m total
+block-207.L	62407	1	121118	R4_pair_flat	L1_cursor_table	0	11403	62408	30281	30281	1.4852	1.6680	1.9705	5	3084	958.3	3515.6	3084	42335	3084 cursors (12.0KB); flat 4n=3516KB (89.5%<=63B)
+block-207.L	62407	1	121118	R4_pair_strictPi_flat	strict_Pi_256	0	11403	141191	30281	30281	2.7476	2.9304	3.2329	5	256	946.2	3515.6	3084	42335	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-207.L	62407	2	114066	walk_R_flat	strict_Pi_256	0	11403	0	114066	114066	1.8278	2.0105	3.6556	4	256	445.6	96.0	3085	43036	Open-like flat dict (3601 words, 93.5%<=15B)
+block-207.L	62407	2	114066	M17_1sweep_flat	strict_Pi_256	0	11403	20897	41276	41276	0.9963	1.1790	1.6577	5	256	445.6	2440.3	3085	43036	1-sweep GS; flat build 2440KB (surv 464KB)
+block-207.L	62407	2	114066	CL1_2sweep_DAG	strict_Pi_256	0	11403	20897	36929	191203	0.9266	1.1093	3.9904	6	256	1336.7	96.0	3085	43036	DAG emit visits 77137 internal + 114066 leaf loads (defers work!)
+block-207.L	62407	2	114066	CL1_2sweep_flat	strict_Pi_256	0	11403	20897	36929	36929	0.9266	1.1093	1.5183	6	256	445.6	2867.2	3085	43036	Flat build 2867KB (surv 481KB)
+block-207.L	62407	2	114066	R2_byte_paired_codes	strict_Pi_256	0	11403	20897	57033	114066	1.2487	1.4315	3.0765	5	256	1336.7	96.0	3085	43036	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-207.L	62407	2	114066	R2_byte_flat	strict_Pi_256	0	11403	20897	57033	57033	1.2487	1.4315	2.1626	5	256	891.1	1757.8	3085	43036	R^2 flattened (19466 dist, 90.9%<=31B)
+block-207.L	62407	2	114066	R4_pair_4codes	L1_cursor_table	0	11403	63933	28518	114066	1.4814	1.6641	3.3092	6	3085	2239.9	96.0	3085	43036	3085 pair cursors (12.1KB); 4 dict reads/link = m total
+block-207.L	62407	2	114066	R4_pair_flat	L1_cursor_table	0	11403	63933	28518	28518	1.4814	1.6641	1.9384	6	3085	903.2	3515.6	3085	43036	3085 cursors (12.1KB); flat 4n=3516KB (88.7%<=63B)
+block-207.L	62407	2	114066	R4_pair_strictPi_flat	strict_Pi_256	0	11403	134963	28518	28518	2.6196	2.8023	3.0766	6	256	891.1	3515.6	3085	43036	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build
+block-207.L	62407	inf	62407	walk_R_flat	strict_Pi_256	0	11403	0	62407	62407	1.0000	1.1827	2.0000	549	256	243.8	392.6	2663	36156	Open-like flat dict (5096 words, 89.8%<=15B)
+block-207.L	62407	inf	62407	M17_1sweep_flat	strict_Pi_256	0	11403	18420	22627	22627	0.6577	0.8405	1.0203	550	256	243.8	2387.2	2663	36156	1-sweep GS; flat build 2387KB (surv 810KB)
+block-207.L	62407	inf	62407	CL1_2sweep_DAG	strict_Pi_256	0	11403	18420	20394	104420	0.6219	0.8047	2.2952	551	256	731.3	392.6	2663	36156	DAG emit visits 42013 internal + 62407 leaf loads (defers work!)
+block-207.L	62407	inf	62407	CL1_2sweep_flat	strict_Pi_256	0	11403	18420	20394	20394	0.6219	0.8047	0.9487	551	256	243.8	2786.0	2663	36156	Flat build 2786KB (surv 843KB)
+block-207.L	62407	inf	62407	R2_byte_paired_codes	strict_Pi_256	0	11403	18420	31204	62407	0.7952	0.9779	1.7952	550	256	731.3	392.6	2663	36156	R^2 stores (c1,c2); emit does 2 dict reads/link = m total dict reads
+block-207.L	62407	inf	62407	R2_byte_flat	strict_Pi_256	0	11403	18420	31204	31204	0.7952	0.9779	1.2952	550	256	487.6	1757.8	2663	36156	R^2 flattened (19433 dist, 87.7%<=31B)
+block-207.L	62407	inf	62407	R4_pair_4codes	L1_cursor_table	0	11403	54576	15604	62407	1.1246	1.3073	2.1246	551	2663	1229.3	392.6	2663	36156	2663 pair cursors (10.4KB); 4 dict reads/link = m total
+block-207.L	62407	inf	62407	R4_pair_flat	L1_cursor_table	0	11403	54576	15604	15604	1.1246	1.3073	1.3746	551	2663	498.0	3515.6	2663	36156	2663 cursors (10.4KB); flat 4n=3516KB (83.6%<=63B)
+block-207.L	62407	inf	62407	R4_pair_strictPi_flat	strict_Pi_256	0	11403	80827	15604	15604	1.5452	1.7279	1.7952	551	256	487.6	3515.6	2663	36156	Strict Pi (s=256): >256 active pairs forces m addressed gathers in R^4 build

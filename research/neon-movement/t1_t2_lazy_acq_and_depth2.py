@@ -700,22 +700,25 @@ def build_lazy_thin_system(
             fi = 0
             nf = len(frontier)
             for ds, w, tgt, wid in live_by_t:
+                while fi < nf and frontier[fi][0] + frontier[fi][1] <= tgt:
+                    fi += 1
+                j_f = fi
                 off = 0
                 while off < w:
                     cur = tgt + off
                     rem = w - off
-                    while fi < nf and frontier[fi][0] + frontier[fi][1] <= cur:
-                        fi += 1
-                    if fi >= nf or frontier[fi][0] >= cur + rem:
+                    while j_f < nf and frontier[j_f][0] + frontier[j_f][1] <= cur:
+                        j_f += 1
+                    if j_f >= nf or frontier[j_f][0] >= cur + rem:
                         # Does not hit frontier -> stays live
                         next_live.append((ds + off, rem, cur, wid))
                         off = w
-                    elif cur < frontier[fi][0]:
-                        gap = frontier[fi][0] - cur
+                    elif cur < frontier[j_f][0]:
+                        gap = frontier[j_f][0] - cur
                         next_live.append((ds + off, gap, cur, wid))
                         off += gap
                     else:
-                        fds, fw, fexit, fwid = frontier[fi]
+                        fds, fw, fexit, fwid = frontier[j_f]
                         take = min(rem, fds + fw - cur)
                         cwid = intern(id_to_word[wid] + id_to_word[fwid])
                         new_frontier.append((ds + off, take, fexit + (cur - fds), cwid))
@@ -744,21 +747,24 @@ def build_lazy_thin_system(
         ei = 0
         ne = len(eliminated_thin)
         for _, (ds, w, ex, wid) in wf_by_exit:
+            while ei < ne and eliminated_thin[ei][0] + eliminated_thin[ei][1] <= ex:
+                ei += 1
+            j_e = ei
             off = 0
             while off < w:
                 cur = ex + off
                 rem = w - off
-                while ei < ne and eliminated_thin[ei][0] + eliminated_thin[ei][1] <= cur:
-                    ei += 1
-                if ei >= ne or eliminated_thin[ei][0] >= cur + rem:
+                while j_e < ne and eliminated_thin[j_e][0] + eliminated_thin[j_e][1] <= cur:
+                    j_e += 1
+                if j_e >= ne or eliminated_thin[j_e][0] >= cur + rem:
                     wide_updated.append((ds + off, rem, cur, wid))
                     off = w
-                elif cur < eliminated_thin[ei][0]:
-                    gap = eliminated_thin[ei][0] - cur
+                elif cur < eliminated_thin[j_e][0]:
+                    gap = eliminated_thin[j_e][0] - cur
                     wide_updated.append((ds + off, gap, cur, wid))
                     off += gap
                 else:
-                    eds, ew, eexit, ewid = eliminated_thin[ei]
+                    eds, ew, eexit, ewid = eliminated_thin[j_e]
                     take = min(rem, eds + ew - cur)
                     cwid = intern(id_to_word[wid] + id_to_word[ewid])
                     wide_updated.append((ds + off, take, eexit + (cur - eds), cwid))
