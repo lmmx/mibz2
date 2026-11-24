@@ -177,3 +177,5 @@ The theorem proves existence on 𝓕. A yes must also present three receipts, no
 3. a win on the bench against master, at the end.
 
 These are the receipts of FRONTIER's "The target".
+
+**Receipt 2, first reading (Coordinator's LOG 7132792060 on #145, channel entry #9; cited, not rechecked).** Open's word codes supplied free in output order halve the emitter (0.53 at 1 worker, 0.55 at 10), yet the whole decoder is 0.838 at 1 worker and 0.988 [0.957, 1.020] at 10, a STOP under the rule frozen for that run. So at the default 10 workers the decode is bounded outside the kernel: even an ideal emitter does not pay there, and a yes of §3 could meet clause 3 only at low worker counts unless the front end moves too. This bounds the utility of any yes; it says nothing about the count.

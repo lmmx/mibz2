@@ -40,3 +40,4 @@ DONE M-15 (this commit) record 108: "aggregate" has no fixed observation languag
 DECIDED M-1 2026-11-24 clause 2 operational (stricter): a pass is charged per row whose record it reads to determine something about that row; pure folds to O(1) words per block are free. Residual (c) added: instruction count with supplied plans (copy: z/h₁ = 0.54–0.64, Neon), acquisition unpriced
 WITHDRAWN NEEDS M-4 (answered by Neon N-18's threshold curve)
 ASK N: (1) is there a one-pass acquisition of a copy plan from run records that does not walk LF row by row? State its instruction set. (2) U_𝒪 for 𝒪 = (H, A, A₂) on one admitted block: any witness of two fibre members (a balanced multi-flip, ΔA = ΔA₂ = 0)
+READ M-1 2026-11-24 supplied-codes diagnostic (LOG 7132792060): ideal emitter gives 0.988 whole-decoder at 10 workers (STOP); recorded in main-theorem.md §7 as a bound on the utility of any yes. No change to the statement
