@@ -451,3 +451,41 @@ could look like in practice, and the yes/no target is whether it closes.
 **A status vocabulary from SSL-Coq.** Each result is one of: "a useful new lead", "a conditional
 effect with an unproduced prerequisite", "a tested failure within a defined scope", or "an
 established route". It is a better set of statuses for FRONTIER's leads than "pending".
+
+## 12. Louis: "what a new algorithm for BWT inversion would have to do", distinct from incremental edits
+
+> "So likewise we have this idea of 'What a new algorithm for BWT inversion would have to do' and
+> this unit algorithm needs to somehow be distinct from incremental edits, which is the failure mode
+> we have encountered, taking baby steps."
+
+**The Coordinator's answer: forbid the obvious mechanism, as the A-button challenge does.** What makes
+"fewer than one A press" force leaps is that it bans the tool every ordinary route relies on. mibz2
+has an exact counterpart, with its floor already argued:
+
+| | SSL-Coq | mibz2 |
+|---|---|---|
+| The obvious mechanism | the A press | following the orbit, one row at a time |
+| The best known | one A press | Open: exactly h₁ single-row steps |
+| The class's floor | ordinary routes need at least one | record 96: every rigid jump-walk route needs at least h₁ single-row operations |
+| The challenge | fewer than one | **fewer than h₁** |
+
+h₁ is the number of width-1 runs; h₁/m is 0.30 / 0.39 / 0.83 (min / median / max) across Wikidata's
+distinct blocks (#805).
+
+**Why this separates a structural step from an increment.** By record 96, no rigid jump-walk route
+goes below h₁, and Open meets it exactly. So any inversion below h₁ is, by theorem, outside that
+class: it cannot be an edit to Open. The distinction stops being a judgement ("is the old primitive
+hidden in a helper?", METHOD.md §3a's orientation check) and becomes a consequence of the bound.
+Increments to Open cannot meet the target even in principle.
+
+**A candidate first line for the formulation:** invert the block with fewer than h₁ dependent
+single-row operations. The backward chain of §11 starts from it.
+
+**Three conditions:**
+1. **The class must be defined precisely**, or a candidate can hide the walk in a helper. Record 96
+   is proved only in prose; a Lean definition of the class and a checked floor make the guarantee
+   real. This is the use of a proof system that the target needs.
+2. **Fewer steps is not automatically faster.** A yes needs both: below h₁, and a payoff on real
+   blocks within a cost budget (the supplied-state payoff, §3.4, gives the headroom before
+   anything is built).
+3. **It has teeth on the data.** At a median 39% of retained rows, h₁ is a large share of the work.
