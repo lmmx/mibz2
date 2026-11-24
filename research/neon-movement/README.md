@@ -48,9 +48,44 @@ No single sense leads; ranked strictly by how far each can be pushed next:
 
 ---
 
+## Cycle 2 — Enrichment Along Composition, Cross-Stage Lifting, Further Contraction Senses & Dynamical-Systems Leads (`E1–E3`, `S7–S9`, `R1`)
+
+Following [`ESSENCE.md`](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level/ESSENCE.md) (Principle 2: Enrichment along composition), [`CROSS-STAGE.md`](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level/CROSS-STAGE.md), MONODROMY records 114 §6 & 115, and channel entries `#22–#25` (`LEADS-dynamics.md`, `neon-movement-critique.md`):
+
+**Headline verdict (Cycle 2):** **Still no breakthrough on `Q < h_1` within `Π`'s frozen `K = 2` sweep budget.** Cycle 2 establishes:
+- **Positive Principle 2 / Cross-Stage & Lead 2 result (`E1`):** Lifting MTF into the associative semidirect monoid $\mathcal{M}_{\mathrm{MTF}} = (\mathbb{N}^\Sigma \times \mathbb{Z}_{\min}^\Sigma \times \mathbb{Z}_{\max}^\Sigma \times \mathbb{N}) \rtimes S_\Sigma$ (exact Leibniz/cocycle dual-number form) eliminates the entire `n`-byte `L` column, collapses build depth **`865×`** (`D_acq = 1,038–1,040`), reveals narrow active MTF support (`K_50` median `23–26` on `0.10–0.21·n` tokens), and delivers **`NEEDS M-22`**: full-`L` gap-encoded $\Psi$ takes **`1.47–1.49 B/row` (`0.367–0.371× 4n`, `0.77–1.27%` escapes; `1.22–1.24 B/row` without directory)** and retained $M_{16}$ takes **`1.62–1.76 B/m` (`0.406–0.440× 4m`)**, verified 8/8 byte-exact with zero `L`.
+- **Positive Principle 1 `D` find (`S8` — `NEEDS M-21b` STANDS `6/6`):** MONODROMY 114 §6's count-targeted landmark rule crushes the frequency-rank `1.3–1.9%` figure by `10–20×`, achieving **`D = 608–1,974` (`0.068–0.219%` of `n`)** on all 6/6 admitted blocks (`Q = 1.03–1.17 n`). Composing with Open `M_16` + bi-directional `Y_k` (`ORTH-BIDIR`) yields **`D = 627–1,776` (`0.070–0.197%` of `n`, `507–1,435×` collapse)** at `2–3×` lower `Q` (`0.34–0.60 n`).
+- **Four sharp negative/obstruction theorems closing open routes to `Q < h_1` at `K = 2`:**
+  1. **`E3` (Thm E3.1 & E3.2):** Dynamic monotone rank-envelope forces **`33.31%`** of novel-hex lone rows (`29.9–32.2%` Wikidata) information-theoretically (yet dynamic lookup pays `Q >= 1`); explicit 8/8 contiguous 3-rotation witnesses (`dLF = 3`, `M_2` & all commutative aggregates invariant) prove no commutative monoid rider cuts `Q`.
+  2. **`S7` (Thm S7.1 — Pairing-Oracle Obstruction):** Settles MONODROMY 113–115's #1 open candidate — even a zero-cost oracle for Relation C's pairing `pi` leaves **`34/40` hex digits (`136` bits/rec)** invariant (`pi' == pi` witnessed), leaving `Q >= (d - 2)m` unchanged. Meanwhile, S7's **Bi-Directional `LF x Psi` Sorted-Merge Wave** halves S5's wave depth (`D_wave = 24–43`, `98.5–99.8%` done by round `21`) and cuts `P_bytes` to `14.8–54.8` (+ `3.2–7.2` word-sort), with total `D = 14.9–44.0k` reported honestly.
+  3. **`S9` (Thm S9.1 — Unitig Pass-Wall):** Closes Carbon C-4's open test from `carbon-cycle1-critique.md` — at `K = 2` (`k = 2`), `V_1 = 0.00%` on novel hex (`<= 0.39%` Wikidata); even at `k = 8` (`P = 7 > K = 2`) on `L_min = 16`, non-unique thin runs keep `Q_run = 1.07–2.24 h_1 > h_1` on 6/6 Wikidata blocks.
+  4. **`R1` (Channel #25 Lead 1 — Renormalisation):** Using the exact BWT rising-sequence invariant $q_{\min}(\sigma) = 1 + \mathrm{desc}(\sigma^{-1})$, Rauzy–Veech `R(M_16)` *already is* the unique BWT-class-preserving renormalisation operator (`q_min: 24 -> 19` on templated 40-hex; `748–1,919` on Wikidata); past that scaffold fixed point, both `LF^2` (`q_min: 16 -> 256`) and `R(I_'0')` (`q_min: 16 -> 1,839 = 0.445|Y|`) immediately shatter out of the small-alphabet BWT class.
+
+### Side-by-Side Cycle 2 Summary (All 8/8 Byte-Exact)
+
+| Item | Principle | Core Object / Theorem | Novel Random Hex (`65k` / `tmpl 40-hex`) | Six Admitted Wikidata Blocks (`900k`) | Referee `(Q, D, P, S)` under `Π` | Report |
+|---|---|---|---|---|---|---|
+| **E1** | P2 (Cross-Stage) | $\mathcal{M}_{\mathrm{MTF}} = (\mathbb{N}^\Sigma \times \mathbb{Z}_{\min}^\Sigma \times \mathbb{Z}_{\max}^\Sigma \times \mathbb{N}) \rtimes S_\Sigma$ + `NEEDS M-22` | `K_50=16/17`; `M-22` full `1.44–1.45 B/r` (`0.0–0.2%` esc) | `tok/n=0.10–0.21`, `K_50=23–26`, `D_acq=1,038–1,040` (`865×`), `M-22` full **`1.47–1.49 B/r`** (`0.37× 4n`), $M_{16}$ `1.62–1.76 B/m` | `Q_acq=0, Q_run=n` (unchanged); **`0 B` `L`**, `P_acq=2` over `0.1–0.2n` tokens, `S=1.33 MB` (`2.7×` below `4n`) | [`E1`](E1-CROSS-STAGE-MTF-MONOID.md) |
+| **E2** | P2 (In-Stage $\mathbb{N}^\Sigma$) | Free `P=1, Q=0` 2-gram matrix $M_2[a,b]$ mono-run bypass + 2-gram IFS | `M_16` save `0.00%`; IFS med `16->4` / `349->8` (`-2.1/-4.1 b`) | Raw `Q/n=0.903–0.934`, genuine $M_{16}$ save `1.32–3.24% h_1`; IFS med `9–13×` lower (`-2.7/-2.9 b`) | `Q_acq=0, P=2, S_{M_2}<=37 KB`; `0%` on novel hex | [`E2`](E2-PREFIX-HISTOGRAM-M2.md) |
+| **E3** | P2 (Theory) | Dynamic 1-Lipschitz rank-envelope (`1/3` pin) & **Thm E3.2** 3-rot dichotomy | `33.31%` / `31.93%` `h_1` forced; `dLF=3` witness `x=0` | `29.86–32.16%` `h_1` forced (`89–96%` all `n`); 6/6 `dLF=3` single-cycle witnesses (`dT=10–79% n`) | Envelope check still pays `Q>=1`; proves no commutative rider cuts `Q` at `K=2` | [`E3`](E3-MONOTONE-ENVELOPE-DICHOTOMY.md) |
+| **S7** | P1 (Contraction) | **Thm S7.1** Pairing-Oracle Obstruction + Bi-Dir `LF x Psi` Sorted-Merge Wave | `34/40` hex digits `pi`-invariant (`pi'==pi`); `D_wave`: `78->39`, `41->20` | **`D_wave=24–43`** (`2.0×` vs S5), **`98.5–99.8%` done by `r=21`**, `P_bytes=14.8–54.8` (+ `3.2–7.2` sort) | Total `D=14.9–44.0k` (incl. `K_exc` glue); `Q_scatter=m` charged or `+4` radix passes; `P=26–45 > K=2` | [`S7`](S7-PAIRING-OBSTRUCTION-BIDIR-WAVE.md) |
+| **S8** | P1 (Contraction) | Exact **`NEEDS M-21b`** count-targeted landmarks + `ORTH-BIDIR` | Raw `D=288` (`0.44%`), `185` (`0.23%`); `ORTH` `249`, `78` | **STANDS `6/6` `< 0.5%`**: raw `D=608–1,974` (`0.068–0.219% n`); `ORTH-BIDIR` **`D=627–1,776`** (`507–1,435×`) | Raw `Q=1.03–1.17 n`; `ORTH` `Q=0.34–0.60 n` (`5.0–10.2 h_1`), `P=4–6`; major `D` find, not `Q` | [`S8`](S8-COUNT-TARGETED-LANDMARKS.md) |
+| **S9** | P1 (Contraction) | Variable-order / $k$-mer de Bruijn unitig endpoint merge on $L_{\min}=16$ | `k=2`: `V_1=0.00%`; `k=8`: `u_8=3` (`0.000 h_1`) / `2,001` (`0.206`) | `k=2`: `V_1<=0.39%`; `k=8` (`P=7`): `u_8=2.3–5.4k`, yet `Q_run=1.07–2.24 h_1 > h_1` on `6/6` | Proves `k >= log_16 n` pass-wall (`P>=5 > K=2`) + `m_branch > h_1` at `L_min=16`; closes Carbon C-4 | [`S9`](S9-UNITIG-ENDPOINT-MERGE.md) |
+| **R1** | Ch. `#25` Leads | Feigenbaum renormalisation $q_{\min}(\sigma) = 1+\mathrm{desc}(\sigma^{-1})$ + Lead 2 | `LF^2`: `16->256`; `R(I_'0')`: `0.445|Y|`; `R(M_16)` tmpl: **`24->19`** | `LF^2`: `1.4–2.0k`; `R(I_'0')`: `2.0–4.1k` (`0.08–0.20|Y|`); `R(M_16)`: `748–1,919` (`0.5–1.0% m`) | `R(M_16)` already *is* the BWT-preserving renorm fixed point; Lead 1 fails on novel hex; Lead 2 succeeds in `E1` | [`R1`](R1-RENORMALISATION-LEADS.md) |
+
+### Cycle 1 Corrections Acknowledged (from Channel `#24` / `neon-movement-critique.md`)
+
+1. **S5 total `D`:** `48–86` is thin-wave depth `D_wave` only; total `D` including the `K_exc` excursion-glue chain is **`14.9k–44.1k`** (same distinction enforced explicitly in S7 above).
+2. **S5 thin-byte scatter:** `exc_words[eid].append(b)` is `m` addressed stores unless replaced by pointer-free radix sort of `(eid, t, b)` triples (`+4` passes), and the `is_thin` bitmap adds `0.125 n` bytes/round; both are charged explicitly in S7.
+3. **S4 `2.94–2.97 m` density:** Reflects random-label local-minima density (`1/3 -> 3.00 m`) on these permutations, not a worst-case Cole–Vishkin guarantee (`1/(4 log m)` in 1 round).
+4. **S1B terminology & accounting:** S1B is Open's thick-strip contraction followed by sparse ruling-set list ranking on `R` (`m_16 = 2.5–5.8 h_1`, not `m ≈ h_1`); raw-LF and `m_16` acquisition costs should always be compared on the same basis.
+
+---
+
 ## Reproducing All Checks
 
 ```bash
+# Cycle 1 (S1-S6)
 python3 research/neon-movement/common.py
 python3 research/neon-movement/s1_text_axis.py
 python3 research/neon-movement/s2_relabelling.py
@@ -58,6 +93,16 @@ python3 research/neon-movement/s3_pell_recurrence.py
 python3 research/neon-movement/s4_independent_set.py
 python3 research/neon-movement/s5_frontier_wave.py
 python3 research/neon-movement/s6_ifs_discrepancy.py
+
+# Cycle 2 (E1-E3, S7-S9, R1)
+python3 research/neon-movement/e1_cross_stage_mtf_monoid.py
+python3 research/neon-movement/e2_prefix_histogram_m2.py
+python3 research/neon-movement/e3_monotone_envelope_dichotomy.py
+python3 research/neon-movement/s7_pairing_obstruction_bidir_wave.py
+python3 research/neon-movement/s8_count_targeted_landmarks.py
+python3 research/neon-movement/s9_unitig_endpoint_merge.py
+python3 research/neon-movement/r1_renormalisation_leads.py
 ```
 
 Every script reads the six admitted blocks directly from `origin/data/admitted-bwt` (verifying SHA-256 against `manifest.json`) and asserts `decoded == T_ref` byte-for-byte against the independent textbook `LF` oracle on every block.
+
