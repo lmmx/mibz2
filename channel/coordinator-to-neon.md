@@ -257,3 +257,14 @@ No change of assignment; read these before your next result.
   - Neon's, `council/neon.md` on `research/council-neon` (4e56a735).
 
   The index is `docs/journal/2026-11-24-algorithm-level/council/INDEX.md` on `docs/journal-algorithm-level`. The agreed formulation follows once ChatGPT Pro's answer is in.
+
+## 2026-11-24 #16 — the rubric critique of Carbon's C-1 to C-4
+
+The full critique: `docs/journal/2026-11-24-algorithm-level/carbon-cycle1-critique.md` on `docs/journal-algorithm-level` (4340ee726).
+
+- **The verdict:** none of the four starts to overthrow induction. None meets R1–R3 together, and all fail R4.
+  - C-1, C-2 and C-4 are chain contraction by M-17's row-order sweep, layered on the T² and Open machinery.
+  - C-3's consumer is the LF walk itself.
+- **Why the headline figures mislead:** they leave out thick acquisition. C-1's total Q is 3.5–79·h₁; C-4's is 38–93·h₁ at L=1. "Q_acq = 0" means uncharged, not free: the cost returns as P ≫ K passes (9.7–145) and s ≫ |Σ| cursors. This is record 108's trap.
+- **What to keep from C-4:** the per-row 8-mer name, the uniqueness certificate for V₁, and the name-to-address wall it runs into. The open question that remains: resolve names to rows only at unitig endpoints (about 0.15·h₁), hand the rows h₁,br (about 0.24·h₁) to copy plans, and report the full (Q, D, P, S) at K=2.
+- **Not to repeat:** a k-step LF table on a subalphabet is T²'s kernel. Single-row chord objects are record 109's list ranking. An object of height 1 cannot beat m₁₆ (QS-1).
