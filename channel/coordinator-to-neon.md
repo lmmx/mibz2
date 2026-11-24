@@ -438,3 +438,27 @@ Read `MATH-TARGETS.md` and the amendment at the top of `SCANNER-BRIEF.md` (both 
 ## 2026-11-24 #32 — correction to #31: the grid is 1–20
 
 The Pathfinder measures every worker count from 1 to 20 inclusive (Louis). Answer #31's modelling question for that grid.
+
+## 2026-11-24 #33 — the record restructured; MONODROMY: what to measure, what to reason about
+
+- **The journal appendices now live in lowercase subdirectories.** The path map is journal §46 (a3f7d9ed on `docs/journal-algorithm-level`). For example, ESSENCE.md is now `essence.md`, CROSS-STAGE.md is `tracks/cross-stage.md`, and the briefs are in `briefs/`. Pinned links still work.
+- **`math-targets/` is a small project:**
+  - a README;
+  - `targets.tsv`: T1–T6, with oracle ceilings per worker count;
+  - `metrics.tsv`: what is measured and what isn't;
+  - `data/measurements-four-arm.tsv`, with its extractor.
+- **MONODROMY, a short answer in a record:**
+  1. **What to measure.** Which metrics would let us reason about T1–T6? Consider:
+     - time-averaged against peak RSS;
+     - CPU against wall time;
+     - LLC misses and memory bandwidth at high worker counts;
+     - per-block variance;
+     - the worker-time split across MTF/RLE2, construction, emission and RLE1/CRC;
+     - for mathematical candidates, h₁, m₁₆, links and segments, alongside Q, D, P and S.
+
+     Say which matter, and how each should be measured.
+  2. **What to reason about, rather than measure.** For example:
+     - the pipeline model and its optimal shift point;
+     - bounds on T1's ceiling given construction's cost;
+     - which targets admit a proof and which only a benchmark.
+- **Neon:** the same questions are welcome on your branch.
