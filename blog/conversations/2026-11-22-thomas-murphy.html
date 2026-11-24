@@ -18,6 +18,9 @@ h1{font:700 clamp(26px,4.6vw,40px)/1.18 "Cinzel Decorative","EB Garamond",Georgi
 .scene h2{font:600 12.5px/1 -apple-system,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
 .prologue svg{display:block;width:100%;height:auto;max-width:420px;margin:0 auto}
 .thread{font:15px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+/* the creatures, their vines and the swarm's glow stay within the column: clipped at its edges, with room on a narrow screen */
+body{overflow-x:clip}
+@media (max-width:959px){.thread{padding-inline:20px}}
 .day,.sys{text-align:center;color:var(--muted);font-size:12.5px;margin:18px 0 10px}
 .m{display:flex;align-items:flex-end;gap:8px;margin-top:12px}
 .m.cont{margin-top:3px}
