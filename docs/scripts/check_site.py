@@ -219,20 +219,11 @@ def check_posts(config, problems):
                 problems.append(f"blog/index.md: the card dek for {post.name} differs from its dek")
 
 
-# A post's label and its kind; blog.js colours each kind (keep in step with KINDS there).
-KINDS = {
-    "Research result": "result",
-    "Research synthesis": "synthesis",
-    "Research in progress": "progress",
-    "Work in progress": "progress",
-    "Investigation in progress": "progress",
-    "Open question": "question",
-    "Meta": "meta",
-}
-
-
 def check_kinds(config, problems):
-    """Every post's label, on the post and on its index card, is one of KINDS, and they agree."""
+    """Every post's label is a linked kind from social_cards.KINDS, its index card agrees, and
+    blog.js and blog.css colour exactly those kinds, in the colours the social cards use."""
+    sc = social_cards()
+    kinds = sc.KINDS
     blog = ROOT / config["project"]["docs_dir"] / "blog"
     cards = dict(
         re.findall(
@@ -244,20 +235,43 @@ def check_kinds(config, problems):
     for post in sorted(blog.glob("*.md")):
         if post.name == "index.md":
             continue
-        m = re.search(r"·\s*\[([^\]]+)\]\([^)]*\)\s*\n\{: \.post-meta \}", post.read_text())
-        if not m:
+        found = sc.post_label(post.read_text())
+        if not found:
             continue  # no labelled meta line, as on an appendix
-        label = m.group(1).strip()
-        if label not in KINDS:
+        label, linked = found
+        if label not in kinds:
             problems.append(
                 f"blog/{post.name}: the label {label!r} is not a known kind "
-                f"(check_site.py KINDS: {', '.join(KINDS)})"
+                f"(social_cards.py KINDS: {', '.join(kinds)})"
+            )
+        elif not linked:
+            problems.append(
+                f"blog/{post.name}: the label {label!r} must be a link, [{label}](#section), "
+                "or its hero and social card lose their kind's colour"
             )
         card = cards.get(post.name)
         if card is not None and card.strip() != label:
             problems.append(
                 f"blog/index.md: the card label for {post.name} ({card.strip()!r}) "
                 f"differs from the post's ({label!r})"
+            )
+    # blog.js's own copy of the table
+    js = (ROOT / config["project"]["docs_dir"] / "assets/javascripts/blog.js").read_text()
+    m = re.search(r"const KINDS = \{(.*?)\};", js, re.S)
+    js_kinds = dict(re.findall(r'"([^"]+)":\s*"([^"]+)"', m.group(1))) if m else {}
+    if js_kinds != kinds:
+        problems.append("assets/javascripts/blog.js: KINDS differs from social_cards.py KINDS")
+    # blog.css's light colours, which the social cards' bars copy
+    css = (ROOT / config["project"]["docs_dir"] / "assets/stylesheets/blog.css").read_text()
+    lines = dict(
+        re.findall(r'^\.md-typeset \.post-card\[data-kind="(\w+)"\] \{ --kind-line: (#[0-9a-fA-F]{6}); \}', css, re.M)
+    )
+    for kind in sorted(set(kinds.values())):
+        if kind not in lines:
+            problems.append(f"assets/stylesheets/blog.css: no .post-card colour for the kind {kind!r}")
+        elif sc.BARS.get(kind, "").lower() != lines[kind].lower():
+            problems.append(
+                f"social_cards.py BARS[{kind!r}] ({sc.BARS.get(kind)}) differs from blog.css ({lines[kind]})"
             )
 
 

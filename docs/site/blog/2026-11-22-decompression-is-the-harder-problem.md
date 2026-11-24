@@ -16,7 +16,7 @@ description: "A discussion of the mibz2 swarm, and why the Hutter Prize has it b
 A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
 {: .post-dek }
 
-22 November 2026 · 15 min read · Meta
+22 November 2026 · 15 min read · [Meta](#compendium)
 {: .post-meta }
 
 </div>

@@ -110,8 +110,24 @@ def find_chrome(arg):
     sys.exit("no Chromium found: pass --chrome PATH or set CHROME")
 
 
-# a post's kind (its label: docs/scripts/check_site.py KINDS) sets the colour of the card's
-# bottom bar, the light scheme's colours in docs/site/assets/stylesheets/blog.css
+# A post's label (the last item of its meta line) and its kind. This is the one table:
+# check_site.py reads it, and fails if blog.js's KINDS or blog.css's kind colours drift from it.
+KINDS = {
+    "Research result": "result",
+    "Research synthesis": "synthesis",
+    "Research in progress": "progress",
+    "Work in progress": "progress",
+    "Investigation in progress": "progress",
+    "Open question": "question",
+    "Meta": "meta",
+}
+
+# The meta line's label: `· [Label](#section)` before `{: .post-meta }`. A label must be a link
+# to its post's closing section; check_site.py fails an unlinked one, which nothing would colour.
+META_LABEL = re.compile(r"·\s*(\[([^\]]+)\]\([^)]*\)|([^·\n\[]+?))\s*\n\{: \.post-meta \}")
+
+# a post's kind sets the colour of the card's bottom bar: the light scheme's colours in
+# docs/site/assets/stylesheets/blog.css (its .post-card --kind-line), which check_site.py compares
 BARS = {
     "result": "#1b7339",
     "synthesis": "#0b6e70",
@@ -164,23 +180,18 @@ DEFAULT_DESCRIPTION = (
 )
 
 
-def post_kind(post):
-    """The post's kind, from the label on its meta line (check_site.py keeps labels to KINDS)."""
-    m = re.search(r"·\s*\[([^\]]+)\]\([^)]*\)\s*\n\{: \.post-meta \}", post.read_text())
+def post_label(text):
+    """The label on a post's meta line, and whether it is a link: (label, linked), or None."""
+    m = META_LABEL.search(text)
     if not m:
         return None
-    label = m.group(1).strip()
-    if label == "Research synthesis":
-        return "synthesis"
-    if label == "Open question":
-        return "question"
-    if label == "Meta":
-        return "meta"
-    if label.endswith("in progress"):
-        return "progress"
-    if label == "Research result":
-        return "result"
-    return None
+    return (m.group(2).strip(), True) if m.group(2) else (m.group(3).strip(), False)
+
+
+def post_kind(post):
+    """The post's kind, from the label on its meta line (KINDS)."""
+    found = post_label(post.read_text())
+    return KINDS.get(found[0]) if found else None
 
 
 def cards(root=Path(".")):

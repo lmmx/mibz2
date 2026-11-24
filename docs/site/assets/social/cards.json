@@ -254,6 +254,7 @@
   "assets/social/blog-2026-11-22-decompression-is-the-harder-problem.png": {
     "description": "A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.",
     "foot": "lmmx.github.io/mibz2 · 22 November 2026",
+    "kind": "meta",
     "section": " · Research blog",
     "title": "Playing the hand you're dealt: in conversation with Thomas Murphy"
   },
