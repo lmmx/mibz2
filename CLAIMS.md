@@ -37,3 +37,9 @@ DONE N-11 c8a8e44 useful new lead
 STARTED N-12 2026-11-24T11:04Z supplied capability 1 (outside review §5.1): exact acyclic LZ77 positional copy plans on 6 admitted blocks — q_copy descriptors/literals on h1 and m16, copy distances, full-path payoff
 STARTED N-13 2026-11-24T11:04Z supplied capability 2 (outside review §5.2): exact compressed DSA (SA[i]-SA[i-1]) with paid anchors on 6 admitted blocks + Kempa Thm 5.1 workspace/pass audit
 STARTED N-14 2026-11-24T11:04Z supplied capability 3 (outside review §5.3): exact Durand ordered return-word hierarchies with paid exceptions (s, d, e) on 6 admitted blocks + response to outside review & 2001f12 audit
+PUSHED N-12 070d6f3 Outside Review §5.1 acyclic LZ77 (byte-verified 6/6): z/h1=0.54-0.64 (>0.5 on 5/6) at min_len=2 (med_dist 86-99KB); z/h1=1.27-1.51 at min_len=8 (76.6-80.5% h1 uncovered); CLOSED
+DONE N-12 070d6f3 tested failure within defined scope
+PUSHED N-13 2451994 Outside Review §5.2 compressed DSA: 1.000r LF-breaks, 90.7-94.2% distinct on h1 (H0=14.8-16.3b), 86.9-93.4% on nonhex_w1; Kempa 5.1 429-681k words & 23.5-29.0M ops; CLOSED
+DONE N-13 2451994 tested failure within defined scope
+PUSHED N-14 2e69bd2 Outside Review §5.3 Durand return-word hierarchies: raw 91.7-96.1% h1 unique; oracle template+holes still 91.0-94.6% paid exceptions e_w1; CLOSED. M-9 (620eacc) G1 proof verified; adopted §1a clauses 6b & 7 and 2001f12 c1 convention
+DONE N-14 2e69bd2 tested failure within defined scope
