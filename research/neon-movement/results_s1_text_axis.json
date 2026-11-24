@@ -1,0 +1,1757 @@
+{
+  "synth-hex-iid-65536": {
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x33 (3)",
+          "Y_size": 4254,
+          "Y_over_h1": 0.074,
+          "gap_mean": 15.41,
+          "gap_p99": 67,
+          "gap_max": 149,
+          "probe_mode": {
+            "Q": 69790,
+            "Q_over_h1": 1.2146,
+            "Q_acq": 65536,
+            "Q_run": 4254,
+            "D": 4403,
+            "D_over_n": 0.067184,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 1.519,
+            "S": 99568,
+            "S_over_n": 1.519,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 4254,
+            "Q_over_h1": 0.074,
+            "Q_acq": 0,
+            "Q_run": 4254,
+            "D": 4254,
+            "D_over_n": 0.064911,
+            "P": 150,
+            "P_acq": 149,
+            "P_run": 1,
+            "P_bytes": 837.979,
+            "S": 99568,
+            "S_over_n": 1.519,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x64 (d)",
+          "Y_size": 298,
+          "Y_over_h1": 0.0052,
+          "step_gap_mean": 14.28,
+          "step_gap_p99": 64,
+          "step_gap_max": 81,
+          "byte_gap_mean": 219.92,
+          "byte_gap_p99": 950,
+          "byte_gap_max": 1223,
+          "probe_mode": {
+            "Q": 70088,
+            "Q_over_h1": 1.2198,
+            "Q_acq": 69790,
+            "Q_run": 298,
+            "D": 528,
+            "D_over_n": 0.008057,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.26,
+            "S": 67920,
+            "S_over_n": 1.036,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x31 (1)",
+          "Y_size": 28,
+          "Y_over_h1": 0.0005,
+          "step_gap_mean": 10.64,
+          "step_gap_p99": 32,
+          "step_gap_max": 33,
+          "byte_gap_mean": 2340.57,
+          "byte_gap_p99": 7415,
+          "byte_gap_max": 8340,
+          "probe_mode": {
+            "Q": 70116,
+            "Q_over_h1": 1.2203,
+            "Q_acq": 70088,
+            "Q_run": 28,
+            "D": 291,
+            "D_over_n": 0.00444,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.278,
+            "S": 65760,
+            "S_over_n": 1.003,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(64, 34)",
+        "pair_ascii": "d4",
+        "Y_size": 299,
+        "Y_over_h1": 0.0052,
+        "gap_mean": 219.18,
+        "gap_p99": 1033,
+        "gap_max": 1213,
+        "probe_Q": 65835,
+        "probe_D": 1512
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 65536,
+      "Q_acq_thick": 65536,
+      "D_acq_thick": 0,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 4254,
+          "Y_over_h1": 0.074,
+          "step_gap_mean": 15.41,
+          "step_gap_max": 149,
+          "cost": {
+            "Q": 135326,
+            "Q_over_h1": 2.3552,
+            "Q_acq": 131072,
+            "Q_run": 4254,
+            "D": 4403,
+            "D_over_n": 0.067184,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 13.617,
+            "S": 1346800,
+            "S_over_n": 20.551,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 65536 to 4403"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 298,
+          "Y_over_h1": 0.0052,
+          "step_gap_mean": 14.28,
+          "step_gap_max": 81,
+          "cost": {
+            "Q": 135624,
+            "Q_over_h1": 2.3604,
+            "Q_acq": 135326,
+            "Q_run": 298,
+            "D": 528,
+            "D_over_n": 0.008057,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 14.137,
+            "S": 1315152,
+            "S_over_n": 20.068,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 65536 to 528"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 256,
+          "shared_w1_rows": 57458,
+          "shared_w1_frac": 1.0,
+          "shared_intervals_with_w1": 256
+        },
+        "k=4": {
+          "n_intervals": 41375,
+          "shared_w1_rows": 36319,
+          "shared_w1_frac": 0.6321,
+          "shared_intervals_with_w1": 16404
+        },
+        "k=6": {
+          "n_intervals": 65404,
+          "shared_w1_rows": 228,
+          "shared_w1_frac": 0.004,
+          "shared_intervals_with_w1": 119
+        },
+        "k=8": {
+          "n_intervals": 65535,
+          "shared_w1_rows": 2,
+          "shared_w1_frac": 0.0,
+          "shared_intervals_with_w1": 1
+        }
+      }
+    }
+  },
+  "synth-tmpl-hex-1000x40": {
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 12000,
+          "Y_over_h1": 0.3007,
+          "gap_mean": 6.75,
+          "gap_p99": 41,
+          "gap_max": 41,
+          "probe_mode": {
+            "Q": 93000,
+            "Q_over_h1": 2.3303,
+            "Q_acq": 81000,
+            "Q_run": 12000,
+            "D": 12041,
+            "D_over_n": 0.148654,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.185,
+            "S": 177000,
+            "S_over_n": 2.185,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 12000,
+            "Q_over_h1": 0.3007,
+            "Q_acq": 0,
+            "Q_run": 12000,
+            "D": 12000,
+            "D_over_n": 0.148148,
+            "P": 42,
+            "P_acq": 41,
+            "P_run": 1,
+            "P_bytes": 131.186,
+            "S": 177000,
+            "S_over_n": 2.185,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x3a (:)",
+          "Y_size": 3000,
+          "Y_over_h1": 0.0752,
+          "step_gap_mean": 4.0,
+          "step_gap_p99": 4,
+          "step_gap_max": 4,
+          "byte_gap_mean": 27.0,
+          "byte_gap_p99": 50,
+          "byte_gap_max": 50,
+          "probe_mode": {
+            "Q": 96000,
+            "Q_over_h1": 2.4055,
+            "Q_acq": 93000,
+            "Q_run": 3000,
+            "D": 3045,
+            "D_over_n": 0.037593,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.593,
+            "S": 105000,
+            "S_over_n": 1.296,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(3a, 22)",
+        "pair_ascii": ":\"",
+        "Y_size": 3000,
+        "Y_over_h1": 0.0752,
+        "gap_mean": 27.0,
+        "gap_p99": 50,
+        "gap_max": 50,
+        "probe_Q": 84000,
+        "probe_D": 3050
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 47001,
+      "Q_acq_thick": 47313,
+      "D_acq_thick": 5,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 4921,
+          "Y_over_h1": 0.1233,
+          "step_gap_mean": 9.55,
+          "step_gap_max": 47,
+          "cost": {
+            "Q": 99235,
+            "Q_over_h1": 2.4865,
+            "Q_acq": 94314,
+            "Q_run": 4921,
+            "D": 4973,
+            "D_over_n": 0.061395,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 7.817,
+            "S": 999484,
+            "S_over_n": 12.339,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 47001 to 4973"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 2384,
+          "Y_over_h1": 0.0597,
+          "step_gap_mean": 2.06,
+          "step_gap_max": 10,
+          "cost": {
+            "Q": 101619,
+            "Q_over_h1": 2.5463,
+            "Q_acq": 99235,
+            "Q_run": 2384,
+            "D": 2446,
+            "D_over_n": 0.030198,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 8.303,
+            "S": 979188,
+            "S_over_n": 12.089,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 47001 to 2446"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 2212,
+          "Y_over_h1": 0.0554,
+          "step_gap_mean": 1.08,
+          "step_gap_max": 3,
+          "cost": {
+            "Q": 103831,
+            "Q_over_h1": 2.6017,
+            "Q_acq": 101619,
+            "Q_run": 2212,
+            "D": 2277,
+            "D_over_n": 0.028111,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 8.539,
+            "S": 977812,
+            "S_over_n": 12.072,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 47001 to 2277"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 311,
+          "shared_w1_rows": 39909,
+          "shared_w1_frac": 1.0,
+          "shared_intervals_with_w1": 273
+        },
+        "k=4": {
+          "n_intervals": 32007,
+          "shared_w1_rows": 20442,
+          "shared_w1_frac": 0.5122,
+          "shared_intervals_with_w1": 7712
+        },
+        "k=6": {
+          "n_intervals": 45279,
+          "shared_w1_rows": 5960,
+          "shared_w1_frac": 0.1493,
+          "shared_intervals_with_w1": 699
+        },
+        "k=8": {
+          "n_intervals": 49547,
+          "shared_w1_rows": 5514,
+          "shared_w1_frac": 0.1382,
+          "shared_intervals_with_w1": 464
+        }
+      }
+    }
+  },
+  "block-0.L": {
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 135716,
+          "Y_over_h1": 3.8648,
+          "gap_mean": 6.63,
+          "gap_p99": 47,
+          "gap_max": 272,
+          "probe_mode": {
+            "Q": 1035647,
+            "Q_over_h1": 29.4922,
+            "Q_acq": 899931,
+            "Q_run": 135716,
+            "D": 135988,
+            "D_over_n": 0.151109,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.206,
+            "S": 1985659,
+            "S_over_n": 2.206,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 135716,
+            "Q_over_h1": 3.8648,
+            "Q_acq": 0,
+            "Q_run": 135716,
+            "D": 135716,
+            "D_over_n": 0.150807,
+            "P": 273,
+            "P_acq": 272,
+            "P_run": 1,
+            "P_bytes": 93.821,
+            "S": 1985659,
+            "S_over_n": 2.206,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 30581,
+          "Y_over_h1": 0.8709,
+          "step_gap_mean": 4.44,
+          "step_gap_p99": 8,
+          "step_gap_max": 10,
+          "byte_gap_mean": 29.43,
+          "byte_gap_p99": 145,
+          "byte_gap_max": 284,
+          "probe_mode": {
+            "Q": 1066228,
+            "Q_over_h1": 30.363,
+            "Q_acq": 1035647,
+            "Q_run": 30581,
+            "D": 30863,
+            "D_over_n": 0.034295,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.603,
+            "S": 1144579,
+            "S_over_n": 1.272,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 15844,
+          "Y_over_h1": 0.4512,
+          "step_gap_mean": 1.93,
+          "step_gap_p99": 8,
+          "step_gap_max": 9,
+          "byte_gap_mean": 56.8,
+          "byte_gap_p99": 175,
+          "byte_gap_max": 347,
+          "probe_mode": {
+            "Q": 1082072,
+            "Q_over_h1": 30.8142,
+            "Q_acq": 1066228,
+            "Q_run": 15844,
+            "D": 16135,
+            "D_over_n": 0.017929,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.739,
+            "S": 1026683,
+            "S_over_n": 1.141,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 41219,
+        "Y_over_h1": 1.1738,
+        "gap_mean": 21.83,
+        "gap_p99": 129,
+        "gap_max": 286,
+        "probe_Q": 941150,
+        "probe_D": 41505
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 88290,
+      "Q_acq_thick": 210406,
+      "D_acq_thick": 10,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 5414,
+          "Y_over_h1": 0.1542,
+          "step_gap_mean": 16.31,
+          "step_gap_max": 399,
+          "cost": {
+            "Q": 304110,
+            "Q_over_h1": 8.6602,
+            "Q_acq": 298696,
+            "Q_run": 5414,
+            "D": 5823,
+            "D_over_n": 0.00647,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 1.126,
+            "S": 2976728,
+            "S_over_n": 3.308,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 88290 to 5823"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 866,
+          "Y_over_h1": 0.0247,
+          "step_gap_mean": 6.25,
+          "step_gap_max": 77,
+          "cost": {
+            "Q": 304976,
+            "Q_over_h1": 8.6848,
+            "Q_acq": 304110,
+            "Q_run": 866,
+            "D": 1352,
+            "D_over_n": 0.001502,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 1.174,
+            "S": 2940344,
+            "S_over_n": 3.267,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 88290 to 1352"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 572,
+          "Y_over_h1": 0.0163,
+          "step_gap_mean": 1.51,
+          "step_gap_max": 35,
+          "cost": {
+            "Q": 305548,
+            "Q_over_h1": 8.7011,
+            "Q_acq": 304976,
+            "Q_run": 572,
+            "D": 1093,
+            "D_over_n": 0.001215,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 1.182,
+            "S": 2937992,
+            "S_over_n": 3.265,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 88290 to 1093"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 1628,
+          "shared_w1_rows": 35028,
+          "shared_w1_frac": 0.9975,
+          "shared_intervals_with_w1": 927
+        },
+        "k=4": {
+          "n_intervals": 37490,
+          "shared_w1_rows": 18598,
+          "shared_w1_frac": 0.5296,
+          "shared_intervals_with_w1": 6000
+        },
+        "k=6": {
+          "n_intervals": 53483,
+          "shared_w1_rows": 9056,
+          "shared_w1_frac": 0.2579,
+          "shared_intervals_with_w1": 1828
+        },
+        "k=8": {
+          "n_intervals": 61507,
+          "shared_w1_rows": 8604,
+          "shared_w1_frac": 0.245,
+          "shared_intervals_with_w1": 1638
+        }
+      }
+    }
+  },
+  "block-2.L": {
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 135062,
+          "Y_over_h1": 3.942,
+          "gap_mean": 6.66,
+          "gap_p99": 47,
+          "gap_max": 272,
+          "probe_mode": {
+            "Q": 1035062,
+            "Q_over_h1": 30.2102,
+            "Q_acq": 900000,
+            "Q_run": 135062,
+            "D": 135334,
+            "D_over_n": 0.150371,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.201,
+            "S": 1980496,
+            "S_over_n": 2.201,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 135062,
+            "Q_over_h1": 3.942,
+            "Q_acq": 0,
+            "Q_run": 135062,
+            "D": 135062,
+            "D_over_n": 0.150069,
+            "P": 273,
+            "P_acq": 272,
+            "P_run": 1,
+            "P_bytes": 99.885,
+            "S": 1980496,
+            "S_over_n": 2.201,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 30167,
+          "Y_over_h1": 0.8805,
+          "step_gap_mean": 4.48,
+          "step_gap_p99": 8,
+          "step_gap_max": 10,
+          "byte_gap_mean": 29.83,
+          "byte_gap_p99": 133,
+          "byte_gap_max": 283,
+          "probe_mode": {
+            "Q": 1065229,
+            "Q_over_h1": 31.0907,
+            "Q_acq": 1035062,
+            "Q_run": 30167,
+            "D": 30449,
+            "D_over_n": 0.033832,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.6,
+            "S": 1141336,
+            "S_over_n": 1.268,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 15720,
+          "Y_over_h1": 0.4588,
+          "step_gap_mean": 1.92,
+          "step_gap_p99": 8,
+          "step_gap_max": 9,
+          "byte_gap_mean": 57.25,
+          "byte_gap_p99": 175,
+          "byte_gap_max": 346,
+          "probe_mode": {
+            "Q": 1080949,
+            "Q_over_h1": 31.5495,
+            "Q_acq": 1065229,
+            "Q_run": 15720,
+            "D": 16011,
+            "D_over_n": 0.01779,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.734,
+            "S": 1025760,
+            "S_over_n": 1.14,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 40939,
+        "Y_over_h1": 1.1949,
+        "gap_mean": 21.98,
+        "gap_p99": 106,
+        "gap_max": 285,
+        "probe_Q": 940939,
+        "probe_D": 41224
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 109542,
+      "Q_acq_thick": 233151,
+      "D_acq_thick": 10,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 6858,
+          "Y_over_h1": 0.2002,
+          "step_gap_mean": 15.97,
+          "step_gap_max": 615,
+          "cost": {
+            "Q": 349551,
+            "Q_over_h1": 10.2023,
+            "Q_acq": 342693,
+            "Q_run": 6858,
+            "D": 7483,
+            "D_over_n": 0.008314,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 1.337,
+            "S": 3436136,
+            "S_over_n": 3.818,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 109542 to 7483"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 1665,
+          "Y_over_h1": 0.0486,
+          "step_gap_mean": 4.12,
+          "step_gap_max": 62,
+          "cost": {
+            "Q": 351216,
+            "Q_over_h1": 10.2509,
+            "Q_acq": 349551,
+            "Q_run": 1665,
+            "D": 2352,
+            "D_over_n": 0.002613,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 1.398,
+            "S": 3394592,
+            "S_over_n": 3.772,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 109542 to 2352"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 1375,
+          "Y_over_h1": 0.0401,
+          "step_gap_mean": 1.21,
+          "step_gap_max": 13,
+          "cost": {
+            "Q": 352591,
+            "Q_over_h1": 10.291,
+            "Q_acq": 351216,
+            "Q_run": 1375,
+            "D": 2075,
+            "D_over_n": 0.002306,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 1.413,
+            "S": 3392272,
+            "S_over_n": 3.769,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 109542 to 2075"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 1783,
+          "shared_w1_rows": 34160,
+          "shared_w1_frac": 0.997,
+          "shared_intervals_with_w1": 978
+        },
+        "k=4": {
+          "n_intervals": 39470,
+          "shared_w1_rows": 17752,
+          "shared_w1_frac": 0.5181,
+          "shared_intervals_with_w1": 5542
+        },
+        "k=6": {
+          "n_intervals": 56325,
+          "shared_w1_rows": 9104,
+          "shared_w1_frac": 0.2657,
+          "shared_intervals_with_w1": 1788
+        },
+        "k=8": {
+          "n_intervals": 65526,
+          "shared_w1_rows": 8615,
+          "shared_w1_frac": 0.2514,
+          "shared_intervals_with_w1": 1641
+        }
+      }
+    }
+  },
+  "block-85.L": {
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 138920,
+          "Y_over_h1": 2.5029,
+          "gap_mean": 6.48,
+          "gap_p99": 48,
+          "gap_max": 239,
+          "probe_mode": {
+            "Q": 1038855,
+            "Q_over_h1": 18.7168,
+            "Q_acq": 899935,
+            "Q_run": 138920,
+            "D": 139159,
+            "D_over_n": 0.154632,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.235,
+            "S": 2011295,
+            "S_over_n": 2.235,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 138920,
+            "Q_over_h1": 2.5029,
+            "Q_acq": 0,
+            "Q_run": 138920,
+            "D": 138920,
+            "D_over_n": 0.154367,
+            "P": 240,
+            "P_acq": 239,
+            "P_run": 1,
+            "P_bytes": 127.48,
+            "S": 2011295,
+            "S_over_n": 2.235,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 30044,
+          "Y_over_h1": 0.5413,
+          "step_gap_mean": 4.62,
+          "step_gap_p99": 8,
+          "step_gap_max": 12,
+          "byte_gap_mean": 29.95,
+          "byte_gap_p99": 89,
+          "byte_gap_max": 250,
+          "probe_mode": {
+            "Q": 1068899,
+            "Q_over_h1": 19.2581,
+            "Q_acq": 1038855,
+            "Q_run": 30044,
+            "D": 30295,
+            "D_over_n": 0.033664,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.617,
+            "S": 1140287,
+            "S_over_n": 1.267,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 16773,
+          "Y_over_h1": 0.3022,
+          "step_gap_mean": 1.79,
+          "step_gap_p99": 6,
+          "step_gap_max": 9,
+          "byte_gap_mean": 53.65,
+          "byte_gap_p99": 180,
+          "byte_gap_max": 272,
+          "probe_mode": {
+            "Q": 1085672,
+            "Q_over_h1": 19.5602,
+            "Q_acq": 1068899,
+            "Q_run": 16773,
+            "D": 17033,
+            "D_over_n": 0.018927,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.751,
+            "S": 1034119,
+            "S_over_n": 1.149,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 42025,
+        "Y_over_h1": 0.7572,
+        "gap_mean": 21.41,
+        "gap_p99": 73,
+        "gap_max": 247,
+        "probe_Q": 941960,
+        "probe_D": 42272
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 155124,
+      "Q_acq_thick": 202918,
+      "D_acq_thick": 9,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 9895,
+          "Y_over_h1": 0.1783,
+          "step_gap_mean": 15.68,
+          "step_gap_max": 310,
+          "cost": {
+            "Q": 367937,
+            "Q_over_h1": 6.629,
+            "Q_acq": 358042,
+            "Q_run": 9895,
+            "D": 10214,
+            "D_over_n": 0.01135,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 1.908,
+            "S": 3812160,
+            "S_over_n": 4.236,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 155124 to 10214"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 2120,
+          "Y_over_h1": 0.0382,
+          "step_gap_mean": 4.67,
+          "step_gap_max": 129,
+          "cost": {
+            "Q": 370057,
+            "Q_over_h1": 6.6672,
+            "Q_acq": 367937,
+            "Q_run": 2120,
+            "D": 2568,
+            "D_over_n": 0.002854,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 1.996,
+            "S": 3749960,
+            "S_over_n": 4.167,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 155124 to 2568"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 1555,
+          "Y_over_h1": 0.028,
+          "step_gap_mean": 1.36,
+          "step_gap_max": 29,
+          "cost": {
+            "Q": 371612,
+            "Q_over_h1": 6.6952,
+            "Q_acq": 370057,
+            "Q_run": 1555,
+            "D": 2032,
+            "D_over_n": 0.002258,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 2.015,
+            "S": 3745440,
+            "S_over_n": 4.162,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 155124 to 2032"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 1999,
+          "shared_w1_rows": 55313,
+          "shared_w1_frac": 0.9966,
+          "shared_intervals_with_w1": 1143
+        },
+        "k=4": {
+          "n_intervals": 54213,
+          "shared_w1_rows": 31660,
+          "shared_w1_frac": 0.5704,
+          "shared_intervals_with_w1": 9438
+        },
+        "k=6": {
+          "n_intervals": 79350,
+          "shared_w1_rows": 14781,
+          "shared_w1_frac": 0.2663,
+          "shared_intervals_with_w1": 2359
+        },
+        "k=8": {
+          "n_intervals": 90037,
+          "shared_w1_rows": 13694,
+          "shared_w1_frac": 0.2467,
+          "shared_intervals_with_w1": 1911
+        }
+      }
+    }
+  },
+  "block-143.L": {
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 128934,
+          "Y_over_h1": 1.7765,
+          "gap_mean": 6.98,
+          "gap_p99": 49,
+          "gap_max": 419,
+          "probe_mode": {
+            "Q": 1028803,
+            "Q_over_h1": 14.1751,
+            "Q_acq": 899869,
+            "Q_run": 128934,
+            "D": 129353,
+            "D_over_n": 0.143746,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.146,
+            "S": 1931341,
+            "S_over_n": 2.146,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 128934,
+            "Q_over_h1": 1.7765,
+            "Q_acq": 0,
+            "Q_run": 128934,
+            "D": 128934,
+            "D_over_n": 0.143281,
+            "P": 420,
+            "P_acq": 419,
+            "P_run": 1,
+            "P_bytes": 303.66,
+            "S": 1931341,
+            "S_over_n": 2.146,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 27655,
+          "Y_over_h1": 0.381,
+          "step_gap_mean": 4.66,
+          "step_gap_p99": 10,
+          "step_gap_max": 10,
+          "byte_gap_mean": 32.54,
+          "byte_gap_p99": 149,
+          "byte_gap_max": 430,
+          "probe_mode": {
+            "Q": 1056458,
+            "Q_over_h1": 14.5562,
+            "Q_acq": 1028803,
+            "Q_run": 27655,
+            "D": 28084,
+            "D_over_n": 0.031209,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.573,
+            "S": 1121109,
+            "S_over_n": 1.246,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 14279,
+          "Y_over_h1": 0.1967,
+          "step_gap_mean": 1.94,
+          "step_gap_p99": 8,
+          "step_gap_max": 12,
+          "byte_gap_mean": 63.02,
+          "byte_gap_p99": 231,
+          "byte_gap_max": 452,
+          "probe_mode": {
+            "Q": 1070737,
+            "Q_over_h1": 14.7529,
+            "Q_acq": 1056458,
+            "Q_run": 14279,
+            "D": 14720,
+            "D_over_n": 0.016358,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.696,
+            "S": 1014101,
+            "S_over_n": 1.127,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 39402,
+        "Y_over_h1": 0.5429,
+        "gap_mean": 22.84,
+        "gap_p99": 131,
+        "gap_max": 427,
+        "probe_Q": 939271,
+        "probe_D": 39829
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 193449,
+      "Q_acq_thick": 329825,
+      "D_acq_thick": 11,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 11885,
+          "Y_over_h1": 0.1638,
+          "step_gap_mean": 16.28,
+          "step_gap_max": 355,
+          "cost": {
+            "Q": 535159,
+            "Q_over_h1": 7.3736,
+            "Q_acq": 523274,
+            "Q_run": 11885,
+            "D": 12251,
+            "D_over_n": 0.013614,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 2.442,
+            "S": 5483428,
+            "S_over_n": 6.094,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 193449 to 12251"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 2976,
+          "Y_over_h1": 0.041,
+          "step_gap_mean": 3.99,
+          "step_gap_max": 79,
+          "cost": {
+            "Q": 538135,
+            "Q_over_h1": 7.4146,
+            "Q_acq": 535159,
+            "Q_run": 2976,
+            "D": 3421,
+            "D_over_n": 0.003802,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 2.548,
+            "S": 5412156,
+            "S_over_n": 6.014,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 193449 to 3421"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 2599,
+          "Y_over_h1": 0.0358,
+          "step_gap_mean": 1.15,
+          "step_gap_max": 14,
+          "cost": {
+            "Q": 540734,
+            "Q_over_h1": 7.4504,
+            "Q_acq": 538135,
+            "Q_run": 2599,
+            "D": 3058,
+            "D_over_n": 0.003398,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 2.574,
+            "S": 5409140,
+            "S_over_n": 6.011,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 193449 to 3058"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 2354,
+          "shared_w1_rows": 72296,
+          "shared_w1_frac": 0.9961,
+          "shared_intervals_with_w1": 1394
+        },
+        "k=4": {
+          "n_intervals": 68616,
+          "shared_w1_rows": 41485,
+          "shared_w1_frac": 0.5716,
+          "shared_intervals_with_w1": 13209
+        },
+        "k=6": {
+          "n_intervals": 107210,
+          "shared_w1_rows": 19686,
+          "shared_w1_frac": 0.2712,
+          "shared_intervals_with_w1": 4112
+        },
+        "k=8": {
+          "n_intervals": 128378,
+          "shared_w1_rows": 17600,
+          "shared_w1_frac": 0.2425,
+          "shared_intervals_with_w1": 3369
+        }
+      }
+    }
+  },
+  "block-210.L": {
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 136448,
+          "Y_over_h1": 1.4059,
+          "gap_mean": 6.6,
+          "gap_p99": 48,
+          "gap_max": 484,
+          "probe_mode": {
+            "Q": 1036407,
+            "Q_over_h1": 10.6787,
+            "Q_acq": 899959,
+            "Q_run": 136448,
+            "D": 136932,
+            "D_over_n": 0.152154,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.213,
+            "S": 1991543,
+            "S_over_n": 2.213,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 136448,
+            "Q_over_h1": 1.4059,
+            "Q_acq": 0,
+            "Q_run": 136448,
+            "D": 136448,
+            "D_over_n": 0.151616,
+            "P": 485,
+            "P_acq": 484,
+            "P_run": 1,
+            "P_bytes": 416.394,
+            "S": 1991543,
+            "S_over_n": 2.213,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 29978,
+          "Y_over_h1": 0.3089,
+          "step_gap_mean": 4.55,
+          "step_gap_p99": 8,
+          "step_gap_max": 16,
+          "byte_gap_mean": 30.02,
+          "byte_gap_p99": 115,
+          "byte_gap_max": 496,
+          "probe_mode": {
+            "Q": 1066385,
+            "Q_over_h1": 10.9875,
+            "Q_acq": 1036407,
+            "Q_run": 29978,
+            "D": 30478,
+            "D_over_n": 0.033866,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.606,
+            "S": 1139783,
+            "S_over_n": 1.266,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 15587,
+          "Y_over_h1": 0.1606,
+          "step_gap_mean": 1.92,
+          "step_gap_p99": 8,
+          "step_gap_max": 9,
+          "byte_gap_mean": 57.74,
+          "byte_gap_p99": 179,
+          "byte_gap_max": 530,
+          "probe_mode": {
+            "Q": 1081972,
+            "Q_over_h1": 11.1481,
+            "Q_acq": 1066385,
+            "Q_run": 15587,
+            "D": 16096,
+            "D_over_n": 0.017885,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.74,
+            "S": 1024655,
+            "S_over_n": 1.139,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 41681,
+        "Y_over_h1": 0.4295,
+        "gap_mean": 21.59,
+        "gap_p99": 87,
+        "gap_max": 498,
+        "probe_Q": 941640,
+        "probe_D": 42179
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 202025,
+      "Q_acq_thick": 272108,
+      "D_acq_thick": 10,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 12400,
+          "Y_over_h1": 0.1278,
+          "step_gap_mean": 16.29,
+          "step_gap_max": 525,
+          "cost": {
+            "Q": 486533,
+            "Q_over_h1": 5.013,
+            "Q_acq": 474133,
+            "Q_run": 12400,
+            "D": 12935,
+            "D_over_n": 0.014373,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 2.654,
+            "S": 5086780,
+            "S_over_n": 5.652,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 202025 to 12935"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 2396,
+          "Y_over_h1": 0.0247,
+          "step_gap_mean": 5.18,
+          "step_gap_max": 127,
+          "cost": {
+            "Q": 488929,
+            "Q_over_h1": 5.0377,
+            "Q_acq": 486533,
+            "Q_run": 2396,
+            "D": 3058,
+            "D_over_n": 0.003398,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 2.764,
+            "S": 5006748,
+            "S_over_n": 5.563,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 202025 to 3058"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 2219,
+          "shared_w1_rows": 96874,
+          "shared_w1_frac": 0.9981,
+          "shared_intervals_with_w1": 1300
+        },
+        "k=4": {
+          "n_intervals": 78358,
+          "shared_w1_rows": 62621,
+          "shared_w1_frac": 0.6452,
+          "shared_intervals_with_w1": 19540
+        },
+        "k=6": {
+          "n_intervals": 130273,
+          "shared_w1_rows": 22315,
+          "shared_w1_frac": 0.2299,
+          "shared_intervals_with_w1": 4082
+        },
+        "k=8": {
+          "n_intervals": 149518,
+          "shared_w1_rows": 19767,
+          "shared_w1_frac": 0.2037,
+          "shared_intervals_with_w1": 2965
+        }
+      }
+    }
+  },
+  "block-207.L": {
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "s1a_raw_landmark": {
+      "levels": [
+        {
+          "k": 1,
+          "landmark_desc": "byte 0x22 (\")",
+          "Y_size": 129704,
+          "Y_over_h1": 2.0784,
+          "gap_mean": 6.94,
+          "gap_p99": 50,
+          "gap_max": 902,
+          "probe_mode": {
+            "Q": 1029702,
+            "Q_over_h1": 16.4998,
+            "Q_acq": 899998,
+            "Q_run": 129704,
+            "D": 130606,
+            "D_over_n": 0.145118,
+            "P": 2,
+            "P_acq": 1,
+            "P_run": 1,
+            "P_bytes": 2.153,
+            "S": 1937630,
+            "S_over_n": 2.153,
+            "s_cursors": 256,
+            "notes": "NEEDS M-21 probe mode: Q>=n, D=max_gap+|Y_1|"
+          },
+          "stream_mode": {
+            "Q": 129704,
+            "Q_over_h1": 2.0784,
+            "Q_acq": 0,
+            "Q_run": 129704,
+            "D": 129704,
+            "D_over_n": 0.144116,
+            "P": 903,
+            "P_acq": 902,
+            "P_run": 1,
+            "P_bytes": 524.829,
+            "S": 1937630,
+            "S_over_n": 2.153,
+            "s_cursors": 256,
+            "notes": "Streamed wave against IN: Q_acq=0, P=max_gap+1"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "landmark_desc": "subkey 0x2c (,)",
+          "Y_size": 27598,
+          "Y_over_h1": 0.4422,
+          "step_gap_mean": 4.7,
+          "step_gap_p99": 8,
+          "step_gap_max": 10,
+          "byte_gap_mean": 32.61,
+          "byte_gap_p99": 147,
+          "byte_gap_max": 933,
+          "probe_mode": {
+            "Q": 1057300,
+            "Q_over_h1": 16.942,
+            "Q_acq": 1029702,
+            "Q_run": 27598,
+            "D": 28510,
+            "D_over_n": 0.031678,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 5.576,
+            "S": 1120782,
+            "S_over_n": 1.245,
+            "s_cursors": 256,
+            "notes": "k=2 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "landmark_desc": "subkey 0x22 (\")",
+          "Y_size": 14374,
+          "Y_over_h1": 0.2303,
+          "step_gap_mean": 1.92,
+          "step_gap_p99": 8,
+          "step_gap_max": 9,
+          "byte_gap_mean": 62.61,
+          "byte_gap_p99": 230,
+          "byte_gap_max": 952,
+          "probe_mode": {
+            "Q": 1071674,
+            "Q_over_h1": 17.1723,
+            "Q_acq": 1057300,
+            "Q_run": 14374,
+            "D": 15295,
+            "D_over_n": 0.016994,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 5.699,
+            "S": 1014990,
+            "S_over_n": 1.128,
+            "s_cursors": 256,
+            "notes": "k=3 probe mode: Q_acq grows by |Y_{k-1}|, D collapses!"
+          },
+          "byte_exact": true
+        }
+      ],
+      "most_freq_pair": {
+        "pair_hex": "(22, 3a)",
+        "pair_ascii": "\":",
+        "Y_size": 39244,
+        "Y_over_h1": 0.6288,
+        "gap_mean": 22.93,
+        "gap_p99": 129,
+        "gap_max": 921,
+        "probe_Q": 939242,
+        "probe_D": 40165
+      }
+    },
+    "s1b_orthogonal_2axis": {
+      "L_min": 16,
+      "m_retained": 134609,
+      "Q_acq_thick": 240191,
+      "D_acq_thick": 11,
+      "levels": [
+        {
+          "k": 1,
+          "Y_size": 8349,
+          "Y_over_h1": 0.1338,
+          "step_gap_mean": 16.12,
+          "step_gap_max": 3993,
+          "cost": {
+            "Q": 383149,
+            "Q_over_h1": 6.1395,
+            "Q_acq": 374800,
+            "Q_run": 8349,
+            "D": 12353,
+            "D_over_n": 0.013726,
+            "P": 3,
+            "P_acq": 2,
+            "P_run": 1,
+            "P_bytes": 1.777,
+            "S": 3802476,
+            "S_over_n": 4.225,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=1: D collapses from 134609 to 12353"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 2,
+          "Y_size": 2292,
+          "Y_over_h1": 0.0367,
+          "step_gap_mean": 3.64,
+          "step_gap_max": 64,
+          "cost": {
+            "Q": 385441,
+            "Q_over_h1": 6.1762,
+            "Q_acq": 383149,
+            "Q_run": 2292,
+            "D": 6360,
+            "D_over_n": 0.007067,
+            "P": 4,
+            "P_acq": 3,
+            "P_run": 1,
+            "P_bytes": 1.851,
+            "S": 3754020,
+            "S_over_n": 4.171,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=2: D collapses from 134609 to 6360"
+          },
+          "byte_exact": true
+        },
+        {
+          "k": 3,
+          "Y_size": 1937,
+          "Y_over_h1": 0.031,
+          "step_gap_mean": 1.18,
+          "step_gap_max": 8,
+          "cost": {
+            "Q": 387378,
+            "Q_over_h1": 6.2073,
+            "Q_acq": 385441,
+            "Q_run": 1937,
+            "D": 6013,
+            "D_over_n": 0.006681,
+            "P": 5,
+            "P_acq": 4,
+            "P_run": 1,
+            "P_bytes": 1.872,
+            "S": 3751180,
+            "S_over_n": 4.168,
+            "s_cursors": 256,
+            "notes": "Orthogonal L_min=16 + text landmark k=3: D collapses from 134609 to 6013"
+          },
+          "byte_exact": true
+        }
+      ]
+    },
+    "s1c_forward_f_intervals": {
+      "byte_exact_psi": true,
+      "f_intervals": {
+        "k=2": {
+          "n_intervals": 2249,
+          "shared_w1_rows": 62290,
+          "shared_w1_frac": 0.9981,
+          "shared_intervals_with_w1": 1262
+        },
+        "k=4": {
+          "n_intervals": 58848,
+          "shared_w1_rows": 35022,
+          "shared_w1_frac": 0.5612,
+          "shared_intervals_with_w1": 10581
+        },
+        "k=6": {
+          "n_intervals": 89246,
+          "shared_w1_rows": 16545,
+          "shared_w1_frac": 0.2651,
+          "shared_intervals_with_w1": 3160
+        },
+        "k=8": {
+          "n_intervals": 104746,
+          "shared_w1_rows": 15081,
+          "shared_w1_frac": 0.2417,
+          "shared_intervals_with_w1": 2536
+        }
+      }
+    }
+  }
+}
