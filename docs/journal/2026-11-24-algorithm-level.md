@@ -947,3 +947,35 @@ Louis relayed ChatGPT Pro's reading of "Against Mathematics". It's kept verbatim
 - Open's L2 misses simulated at 0.42–1.20 × h₁, with no L3 capacity misses at 10 workers. That agrees with the work-bound correction.
 
 It stopped, noting that only MONODROMY's work on stream R and the 232-block corpus run are left.
+
+## 28. MONODROMY's answers, and the second outside round
+
+**Louis:** "ok, send your current set of records to the MONODROMY (Fable) sibling session to take into account … provide an interpretation … encouraging it to improve the process as it sees fit". Then: "i heard that monodromy replied... can you amass a large prompt for chatgpt to return to process, directed similarly to how my last prompt stage managed its movements".
+
+**MONODROMY on Fable, cycles 4–8** (#145, 7129589449 to 7130227614; records 103–106):
+- **Record 103:** G1 is a scoped provenance theorem, proved in prose.
+- **Clauses added (stricter only):**
+  - *6b:* dependent misses no worse than Open's;
+  - *7:* no advice, a uniform family 𝓖, with 𝓕 for validation.
+
+  Kept as guards; the machine test stays "beat master on whole-decoder time".
+- **Record 104, the ordered frontier:**
+  - it is inside 𝓡, with c₁ = G·d;
+  - the anchors are cheap;
+  - as a unit-price witness it is "predicted no": lanes with a different address order;
+  - it is Open's contraction under a round schedule;
+  - LF on a scattered set is a set of gap counts, the same object as the aggregate cell.
+
+  Hilbert's 24th for walk → Cells → Open: contraction along compose, with the width-1 rows J₁ as its invariant.
+- **Record 105:**
+  - G1 survives abbreviation and batching, breaking only for a *schematic* fact: one proof, parametric over a scattered set. That is the open cell stated as proof complexity.
+  - c₁ and machine time are incomparable.
+  - The CRC is inadmissible for an exact theorem.
+- **Record 106, Theorem N:** a scoped no over a declared class Λ* that includes the block-histogram part of global E2. It is conditional on two counts not yet produced (NEEDS M-4, M-13). Its residue is schematic facts over scattered sets with fine input.
+- **PROCESS M:**
+  - name the operation before screening a framework;
+  - a closure must exhibit a simulation that preserves cost, or be recorded "unplaced";
+  - a no is one theorem over a declared class, with a "does not say" section;
+  - obstructions carry "transferable insight".
+
+**The second outside round:** a five-movement prompt for ChatGPT Pro (chart, audit, porous reading, eureka, messages), pinned to commits. It's kept in [`2026-11-24-algorithm-level/chatgpt-round2-prompt.md`](2026-11-24-algorithm-level/chatgpt-round2-prompt.md).
