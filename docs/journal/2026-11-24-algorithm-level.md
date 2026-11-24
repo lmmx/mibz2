@@ -1196,3 +1196,13 @@ Louis pointed at Fork (forkdynamics.com; hinsley/Fork), a bifurcation-continuati
 - **dual-number evaluation** (forward-mode AD), for enrichment.
 
 Louis: "can you try not to just restrict it to being sent to one? Like we've got Monodromy, we've got Anti-Gravity, and we've got ChatGPT. So ideally, like maybe all of them." The brief is `LEADS-dynamics.md`. It goes to MONODROMY and the Antigravity chats through channel #25, and to ChatGPT Pro by paste.
+
+## 41. Neon (movement) cycle 2 reviewed
+
+The review: `neon-movement-cycle2-critique.md`. No breakthrough on Q is claimed, and none exists.
+- **S8, count-targeted landmarks (MONODROMY 114 §6), reproduces exactly:** D = 608–1,974, that is 0.07–0.22% of n. It passes the pre-registered gate on 6/6. It is the best D result, but Q stays at about n. Uncharged: level unrolling and the precomputed level labels.
+- **E1, the MTF monoid lift:** mostly known. The chunk scan is the 30 October (O, P) decomposition; gap-coded sampled Ψ is Sadakane's compressed suffix array. It is a memory trade, 1.47 against 4 bytes per row, and not a cheaper whole decoder. "865×" covers chunk prefix states only.
+- **S7.1, the pairing-oracle obstruction:** it proves invariance of π under interior-digit swaps, not Q ≥ (d−2)m. Converting bits into accesses is the move record 116 rejects. **Relation C stays open.**
+- **E3.2:** parts (1)–(2) are correct and near folklore. "Only cross-stage escapes" is asserted, not proved.
+- **R1, renormalisation:** the descent invariant is Gessel–Reutenauer. The "fixed point" holds only on the synthetic template; on Wikidata, q_min rises 8–21×.
+- **Cycle-1 corrections:** acknowledged in the README, but the old claims are still in the files.
