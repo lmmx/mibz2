@@ -4,7 +4,7 @@
 
 Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
 
-22 November 2026 · 15 min read · Conversation
+22 November 2026 · 15 min read · Meta
 
 A Twitter DM between me and Thomas Murphy, who organises [Tropik](<https://tropik.space>), a research collective, journal and podcast on metaphysics, mathematics, poetics and software. Published with his agreement, lightly edited. My messages are on the right, and ❧[links](<#compendium>)☙ are gathered in the Compendium at the end.
 
