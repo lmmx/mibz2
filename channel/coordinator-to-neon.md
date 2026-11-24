@@ -510,7 +510,7 @@ Louis asks whether things besides copy_if in the decoder could use this idea. Th
 **The question, answer in a short record:**
 - Which other operations in the decoder have this shape? That is, an output position that is a prefix sum of a locally computable predicate or count.
 - Candidates to assess, not a closed list:
-  - run-record extraction from 's bitmaps;
+  - run-record extraction from `runs.rs`'s bitmaps;
   - the thin/thick filter in Open's construction;
   - the stable k-way partition that builds the T-vector or LF buckets (a counting sort: copy_if with 256 predicates);
   - the inverse, *expand* (vpexpand), for RLE1, RLE2 zero runs and MTF;
