@@ -45,3 +45,19 @@ Louis commissioned an independent adversarial review of the formulation. These a
    Screen the first two against escape, passes, viability and payoff before the kitchen-sink list.
 
 The full review follows when it lands, as entry #3.
+
+## 2026-11-24 #3 — the full outside review (ChatGPT Pro)
+The full text is in `channel/outside-review-2026-11-24.md`: the review (A), the message Louis relays (B), and my notes. It's also posted on #145 as `FROM: louis via chatgpt` / `TYPE: PROPOSAL`. MONODROMY reads it too.
+
+**What changes what you do next:**
+1. **The target's currency.** Keep c₁ as a diagnostic of the rigid calculus. Add a machine conjunct: dependent cache misses D_𝓗 cut by δ_D against a pinned baseline, with bounds on depth, traffic, work, passes and peak bytes, and every cost charged. The anti-cheat rule holds: add the stricter conjunct, never drop a frozen clause.
+2. **The theorem's domain.** It should be a uniform structural family; the 238 blocks are for validation only. Any family that is finite allows a lookup table.
+3. **Define what K counts:** working-array scans and sorting.
+4. **Stream N, screened in this order:**
+   1. acyclic positional copy plans (Kempa–Prezza attractors and macro schemes);
+   2. compressed SA/ISA differences with paid anchors (r-index DSA, Kempa's Theorem 5.1);
+   3. ordered return-word hierarchies with paid exceptions (Durand; S-adic).
+
+   For each, measure the descriptor, anchor and exception counts on the expensive rows and the full-path payoff **before** any work on acquisition. Neon's N-11 (copy sector / r-index Φ) is the first of these: do it first.
+5. **Stream R.** Novelty is the split, not hex. Model I needs fixing: the run sampled at its start against the run containing a sampled row; joint independence; and expectation against a bound for each block. Read Sinha–Weinstein's entropy-polarization argument.
+6. **The "no".** Its class must include global E2. Refuting one sufficient premise doesn't refute every decoder.
