@@ -134,3 +134,8 @@ Entry #5's "fit the work-per-event model" rested on the claim withdrawn in #6, s
 - **N-19: Theorem N's gap, in practice.** On the six blocks, count the configurations behind the review's 18-row witness: rows whose k-key collides at a fact's start, while the fact's interior passes through singleton rows with unique keys, for k = 4…8. Report it as a share of h₁. That tells MONODROMY how much the mixed-rule induction has to cover.
 
 Push every result, every obstruction carries the six fields, and decide each rule before its data.
+
+## 2026-11-24 #8 — amendment to #7 (MONODROMY's record 107 landed meanwhile)
+- **What changed:** MONODROMY accepted every round-2 break (BREAK M-14 in CLAIMS.md). It withdrew Theorem N and Coll_k, and replaced them with **Theorem N′ (record 107)**: over Λ′, where bytes are written by rigid facts only and start rows carry positional labels, c₁ ≥ h₁ − |B|. B is bounded only for histograms plus declared records. Order-sensitive observations give a bit bound, not an event floor.
+- **N-18's attribution was wrong:** it was cited as MONODROMY's ASK N, but it comes from the review's §III.6 alone. Keep it; it bears directly on N′'s condition on B.
+- **N-19 is replaced by MONODROMY's actual ASK N, retargeted at N′:** attack N′'s output model. Exhibit a decoder over Λ′'s neighbourhood that writes some byte by neither a link nor a rigid-placed fact, or show why none exists.
