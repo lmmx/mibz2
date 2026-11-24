@@ -342,10 +342,14 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
   $LF(x_i) = b_c + \sum_{j<i} g_j$. One step of the frontier is a matter of counting letters in
   gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.
 
-<aside class="il-gloss" markdown>**Backward search** is how a compressed full-text index finds a
+<aside class="il-gloss" markdown>
+
+**Backward search** is how a compressed full-text index finds a
 pattern. It reads the pattern from its last letter to its first, and each letter narrows an
 interval of sorted rows by one LF step. Searching for many patterns at once moves all their
-intervals together, which is the frontier's step in another use.</aside>
+intervals together, which is the frontier's step in another use.
+
+</aside>
 
 The random IDs show what the frontier changes and what it doesn't:
 
