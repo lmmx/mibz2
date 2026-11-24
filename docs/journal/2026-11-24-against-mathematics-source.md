@@ -946,3 +946,149 @@ All of this is recorded in the journal as §26 (#808, 05396598).
 3. **Have Neon measure the emit's α and β** from the toy-transfer and T² evidence, so (b)'s payoff ceiling is a number before anyone builds anything.
 4. **The Lean design note** (derivations in `Type`, not `Prop`), for when you decide on `mibz2-lean`.
 ````
+
+## 5. The first response's figures, described
+
+The first response came with thirteen images, interleaved in its text, which the verbatim
+copy in §3 doesn't carry. Louis pasted them as screenshots on 24 November 2026 (IMG_7386 to
+IMG_7398). Following `docs/team/EXTERNAL-DIAGRAMS.md`, they are described here, not committed:
+these are what ChatGPT drew, to be redrawn and improved, not reproduced. The size and SHA-256
+prefix after each name identify the screenshot as pasted.
+
+**1. The nine movements (IMG_7386: 696,777 bytes, acad0724a03bbff9).** This is §3's "The nine
+movements", set as a list. Each movement has a square photographic thumbnail on the left and
+its heading and one-paragraph summary, as in the text, on the right, with thin rules between
+entries. The thumbnails are:
+- I, Rooster: a black-and-white photograph of a headless chicken (Mike);
+- II, Tombstone: a stone grave marker among foliage (Hilbert's grave in Göttingen);
+- III, Sponge: the tetractys, ten red balls in a triangle joined by lines;
+- IV, Curtain: a lone Doric column on a headland by the sea (Capo Colonna, near Crotone);
+- V, Turducken: a page of typeset code or a proof script, cream-coloured;
+- VI, Signature: an old manuscript page in columns, brown (a palimpsest, presumably Archimedes');
+- VII, Trench: a red-figure painting of a seated figure, on black (the Pythia at Delphi);
+- VIII, Bag/Boat: a red-figure cup tondo with a ship;
+- IX, Epilogue: a carved stone relief, only partly visible.
+
+The identifications are inferred from the images, not captioned.
+
+**2. Three heads (IMG_7387: 154,499 bytes, f93a63cd9973dfc1).** This sits after "gives us an
+unexpectedly useful model for agentic research." in §II.1. It is a rounded card in three
+columns, each with a line icon:
+- a light bulb over "Proud head / Discovery / Hypothesis generation";
+- a shield with a tick over "Blind head / Verification / Proof checking";
+- a brain over "Slow head / Understanding / Generative synthesis".
+
+A bracket joins the three columns and points down to a box reading "Living mathematical
+research / Discovery, verification and understanding feeding one another". It is greyscale
+throughout.
+
+**3. The space between (IMG_7388: 184,861 bytes, 9fd0a56cf3128992).** This sits after "Do not look
+for a third route. Investigate the space between the first two." in §II.2.
+- A grey box "BWT + primary" sits at the top, and a grey box "Decoded text" at the bottom.
+- Two curved routes bound a pale teal lens between them: "LF walk" on the left and "Rauzy–Veech"
+  on the right, both with arrowheads at the bottom.
+- A dashed teal path runs down the middle of the lens, and four dashed horizontal lines cross it.
+- At the centre: "The space between / Invariants · transformations / Information · cost".
+- Caption: "Hilbert's proposed investigation, applied to the two inversion algorithms."
+
+Defect: the "Rauzy–Veech" label overlaps the lens's edge.
+
+**4. Time and space (IMG_7389: 151,721 bytes, cd7806d78e8c35b8).** This sits after "This maps
+surprisingly closely onto our foundational question." in §II.5. It has two side-by-side cards:
+- "Time: the itinerary": five circles, 0 → 1 → 2 → 3 → 4, joined by arrows, with "One act after
+  another" and "LF traversal constructs the text through succession."
+- "Space: the configuration": a 4×4 grid of rounded tiles in grey, amber and teal, with
+  "Simultaneous relations" and "Positional inversion would recover the configuration through
+  global relations."
+
+**5. From isolated answers to a generative law (IMG_7390: 207,731 bytes, e6031141a3b1e4d1).**
+This is interactive, and sits after "It therefore generates further solutions without
+independently solving the original problem again." in §III.1. Subtitle: "Iterate the
+transformation and watch the integer ratios approach √2 while the defect remains −1."
+- A line chart, "Absolute error (log scale)", with the y axis from 10^0 to 10^−10 and the x axis
+  "Transformation iterations" from 0 to 6. Reached points are joined by a teal line, the
+  current one is enlarged, and unreached ones are pale grey dots.
+- A slider from Initial to 6.
+- Read-outs: "Integer pair (s, c)", "Ratio s/c", "Distance from √2" and "Invariant defect" (−1,
+  in green).
+- "Reverse" and "Transform" buttons.
+
+The state shown is iteration 2: (41, 29), 1.413793103448, 4.205e-4. The pairs consistent with
+the shown state are (1, 1) → (7, 5) → (41, 29) → (239, 169) → … under the response's matrix
+[[3, 4], [2, 3]], each with s² − 2c² = −1. This agrees with the response's table, whose
+"sum of short sides" column holds the same s values (7, 41, 239, 1,393).
+
+**6. Two different kinds of structure (IMG_7391: 177,916 bytes, 3e4ea17270869381).** This sits
+after "The entropy of the values does not destroy this structure." in §III.3. Subtitle:
+"Illustrative identifiers with independent-looking payloads but synchronised format."
+- Five rows, "Field 1" to "Field 5", each a teal anchor cell, eight grey cells of hex digits
+  and a teal anchor cell. Row 1 reads a7f92b01, then 3bc94e72, fe7204a9, 6d90c5f1 and 2917abe3.
+- Column heads: "Anchor", "Random payload", "Anchor". A teal rule under the payload columns is
+  labelled "Shared positional structure".
+
+**7–9. Lift LF from points to an ordered frontier (IMG_7392–7394: 221,639 bytes, 9581b88efe8346f4;
+189,393 bytes, d7d5535c1484ca46; 233,770 bytes, bbb82891349c3e42).** This is one interactive
+figure, captured in its three states, after "used as the primitive of a collective decoder." in
+§III.4. Subtitle: "Illustrative last column L = annb$na with a selected, scattered set of rows.
+Rows are zero-indexed."
+- Tabs Input, Map and Partition, and buttons Reset and Apply LF (Stable partition in the
+  later states).
+- The top row is "Last column in row order", seven tiles 0–6. The a's are teal and the n's
+  purple; b and $ are pale and unselected. The selected rows are 0, 1, 3, 5 and 6.
+- Input: the bottom row repeats the selected rows, "Scattered rows, ordered by source / The
+  selected rows need not form intervals."
+- Map: each is replaced by its LF destination, "Successor rows, not yet ordered / LF is
+  increasing inside each colour class." It shows a→1, n→5, b→4, n→6, a→3.
+- Partition: the destinations are reordered with curved crossing connectors, "Successor rows,
+  ordered by stable character partition / The result is ready for another collective LF step."
+  It shows 1, 3, 4, 5, 6.
+
+**Error, to fix in any redraw.** Throughout, the figure treats selected row 3 as a b, drawn in
+orange and mapped to 4, but L[3] is a, and the top row colours it teal. With C($) = 0,
+C(a) = 1, C(b) = 4 and C(n) = 5, the selected rows 0, 1, 3, 5 and 6 map to 1, 5, 2, 6 and 3.
+After the stable partition they are a: 1, 2, 3 (from 0, 3 and 6) and n: 5, 6 (from 1 and 5),
+so the frontier is 1, 2, 3, 5, 6. The response's lemma holds; its illustration doesn't.
+
+**10. Two orientations of the same inversion problem (IMG_7395: 230,498 bytes, 3612c05f1afcc815).**
+This sits after "rather than by following each field's orbit separately." in §III.5.
+- "Field-by-field traversal": three rows, #1 9a31d7, #2 4c8f20 and #3 e652b1, each a chain
+  of grey cells joined by arrows.
+- A teal down-arrow.
+- "Collective phase-by-phase transport": six teal columns (9/4/e, a/c/6, 3/8/5, 1/f/2, d/2/b,
+  7/0/1) joined by short teal links, captioned "Each phase is processed as an ordered frontier."
+- Footnote: "The columns represent logical phases. Within each phase, the actual records are
+  reordered into BWT-row order by stable partition."
+
+**11. A possible two-level inversion architecture (IMG_7396: 167,424 bytes, fce429a7c10d05c6).**
+This sits after "This gives a possible two-level inversion architecture:" in §III.6. It is a
+vertical stack of five boxes joined by down-arrows, with the third outlined in teal:
+1. "BWT run records";
+2. "Acquire field anchors / Native recognition is an open obligation";
+3. "Ordered-frontier transport / Construct all field payloads and macro-edges collectively";
+4. "Residual exchange / Contracted field paths plus remaining non-field content";
+5. "Full text assembly / Field-sized jumps rather than digit-sized traversal".
+
+**12. Change in the unit of traversal (IMG_7397: 118,133 bytes, fee47daf56ff2c84).** This sits
+after "That is at least suggestive of a different working-set scale." in §III.7. Subtitle:
+"Illustration using 1,000 GUIDs, each with 30 random nibbles." It has three horizontal bars on
+a linear scale:
+- "Individual random-nibble rows", 30,000, a full slate bar;
+- "Active field-frontier records", 1,000, a short teal bar;
+- "Synchronous random-nibble phases", 30, a hairline.
+
+Footnote: "These are different structural quantities, not equivalent work counts. All 30,000
+nibble values still need to be recovered." Putting the three counts on one axis invites the
+comparison the footnote disclaims. A redraw should separate them.
+
+**13. Two research processes (IMG_7398: 310,912 bytes, 89cf327bc098feb1).** This sits after "We have
+been conducting research approximately like this:" in §IV, and continues through "Hilbert's
+twenty-fourth problem suggests another research process:". It has two stacked cards:
+- **The first:** "Inversion problem" fans out to four boxes, Topology, Algebra, Geometry and
+  Combinatorics. Each leads to a "Candidate" box with a verdict beneath: Blocked, Blocked,
+  Survives (in teal) and Blocked (in brown). Caption: "Generate approaches from different
+  mathematical worlds, then judge their results."
+- **The second:** "LF proof", "RV proof" and "Open proof" are joined in a row by teal bars.
+  All three feed down into a teal box, "Mathematical transformations / between computational
+  witnesses". That leads to "Preserved invariant + changed cost", then to an outlined box
+  "Generate new algorithms". Caption: "Derive a generative theory from the relationships
+  between already established algorithms."

@@ -711,7 +711,9 @@ technique, and point to the section where it is worked by hand.
 - **Figures are inline SVG** in the blog's figure style, never images of diagrams or
   text art [E: 145582ae "each a framed figure (blog.css) that follows the site's light and
   dark schemes, in place of the Markdown tables and text diagrams"; 518eab5b, 87e60c48;
-  26 figure commits in all]. The form is:
+  26 figure commits in all]. A figure that an outside model (ChatGPT, say) drew in a response
+  is a draft: it is described, not committed, and redrawn here, improved where it can be
+  (`docs/team/EXTERNAL-DIAGRAMS.md`). The form is:
 
   ```html
   <figure class="bf-fig">
