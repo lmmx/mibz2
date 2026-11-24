@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3146,6 +3146,8 @@
 </figure>
 
 <p>The Cells–forest Pearson correlation is 0.906. Part of it could be run density, <span class="arithmatex">\(r/n\)</span>, which differs from block to block. Removing <span class="arithmatex">\(r/n\)</span> by regression leaves 0.859, so most of the agreement is about something else in the block. The agreement is weaker for adjacent-rank induction: 0.74 with the forest and 0.68 with Cells.</p>
+<p class="il-rubric-head">Of a tempting reading, undone by thirteen bytes</p>
+
 <p><strong>Not the same events.</strong> A tempting reading is that the constructions perform the same operations in different clothes. An independent verification refuted that on a 13-byte column, <code>1111000011100</code>. The forest has a free choice when two arcs have equal width. Reversing only those ties leaves the input, the starting network and the first level's output the same, yet the forest's total goes from 12 arcs to 15. Cells has no such choice, and its count is unchanged. So the shared count is not an event-by-event match but a shared dependence on something in the block, which the next section names.</p>
 <h2 id="3-what-the-profile-measures">3. What the profile measures<a class="headerlink" href="#3-what-the-profile-measures" title="Permanent link">&para;</a></h2>
 <p>The worked example is the seven rotations of <code>banana$</code>, sorted, with their last bytes. Its last column <code>annb$aa</code> has five runs: <code>a</code>, <code>nn</code>, <code>b</code>, <code>$</code> and <code>aa</code>.</p>
@@ -3206,7 +3208,7 @@
 <p>So, <strong>measured:</strong> the persistence of boundary-orbit chains explains much of the variation in the structural work done by Cells and the forest. <strong>Our interpretation</strong>, not a proof: both pay roughly once for each point on a boundary chain until the chains collide. Cells meets those points in order, and the forest by levels. The profile is fixed by the column <span class="arithmatex">\(L\)</span> before any construction runs. It is not an exact accounting of either count, and it gives no lower bound on the work of other constructions.</p>
 <h2 id="4-why-not-do-less-of-it">4. Why not do less of it?<a class="headerlink" href="#4-why-not-do-less-of-it" title="Permanent link">&para;</a></h2>
 <p>If the work follows the boundary chains, there are three obvious ways to try to reduce it. None lowered it where we tried it, on evidence of three kinds: a count on the test block, a measurement on Wikidata, and a model.</p>
-<p><strong>Refining the presentation.</strong> The forest pays for its excess, so the first route describes the block with smaller pieces that have less excess. At depth <span class="arithmatex">\(k\)</span>, a piece is a stretch of neighbouring rows that pass through the same runs in their first <span class="arithmatex">\(k\)</span> steps of LF; at depth 1 the pieces are the runs themselves. The excess does fall, from <span class="arithmatex">\(0.21\,r\)</span> to <span class="arithmatex">\(0.07\,r\)</span>, yet the total work rises:</p>
+<p><strong>Refining the presentation.</strong> The forest pays for its excess, so the first route describes the block with smaller pieces that have less excess. At depth <span class="arithmatex">\(k\)</span>, a piece is a stretch of neighbouring rows that pass through the same runs in their first <span class="arithmatex">\(k\)</span> steps of LF; at depth 1 the pieces are the runs themselves. The excess does fall, from <span class="arithmatex">\(0.21\,r\)</span> to <span class="arithmatex">\(0.07\,r\)</span>, yet the total work <span class="il-black">rises</span>:</p>
 <figure class="bf-fig" id="refinement">
 <p class="bf-title">Smaller pieces lower the excess, and raise the work</p>
 <svg viewBox="0 0 720 360" role="img" aria-label="On the test block, refining the sites by k steps of run labels raises the arcs summed over all levels from 90,945 (1.78 r) at depth 1 to 208,766 (4.08 r) at depth 32, while the first-level excess falls from 0.21 r to 0.07 r."><line x1="70.0" y1="300.0" x2="690.0" y2="300.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="62.0" y="304.0" class="bf-tm" text-anchor="end" style="font-size:17px">0 r</text><line x1="70.0" y1="240.0" x2="690.0" y2="240.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="62.0" y="244.0" class="bf-tm" text-anchor="end" style="font-size:17px">1 r</text><line x1="70.0" y1="180.0" x2="690.0" y2="180.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="62.0" y="184.0" class="bf-tm" text-anchor="end" style="font-size:17px">2 r</text><line x1="70.0" y1="120.0" x2="690.0" y2="120.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="62.0" y="124.0" class="bf-tm" text-anchor="end" style="font-size:17px">3 r</text><line x1="70.0" y1="60.0" x2="690.0" y2="60.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="62.0" y="64.0" class="bf-tm" text-anchor="end" style="font-size:17px">4 r</text><text x="70.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">1</text><text x="194.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">2</text><text x="318.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">4</text><text x="442.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">8</text><text x="566.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">16</text><text x="690.0" y="320.0" class="bf-tm" text-anchor="middle" style="font-size:17px">32</text><text x="380.0" y="342.0" class="bf-tm" text-anchor="middle" style="font-size:17px">depth k: how many steps of run labels each site shares</text><path d="M70.0 193.4 L194.0 191.6 L266.5 189.2 L318.0 184.4 L357.9 178.4 L418.1 167.7 L481.9 153.2 L566.0 125.1 L690.0 55.3" fill="none" style="stroke:var(--bf-amber);stroke-width:2.5"/><path d="M70.0 287.2 L194.0 291.3 L266.5 292.2 L318.0 292.6 L357.9 293.0 L418.1 293.7 L481.9 294.5 L566.0 295.1 L690.0 295.7" fill="none" style="stroke:var(--bf-steel);stroke-width:2.5;stroke-dasharray:6 4"/><circle cx="70.0" cy="193.4" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="70.0" cy="287.2" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="194.0" cy="191.6" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="194.0" cy="291.3" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="266.5" cy="189.2" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="266.5" cy="292.2" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="318.0" cy="184.4" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="318.0" cy="292.6" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="357.9" cy="178.4" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="357.9" cy="293.0" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="418.1" cy="167.7" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="418.1" cy="293.7" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="481.9" cy="153.2" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="481.9" cy="294.5" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="566.0" cy="125.1" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="566.0" cy="295.1" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><circle cx="690.0" cy="55.3" r="4" style="fill:var(--bf-amber);fill-opacity:1"/><circle cx="690.0" cy="295.7" r="3.5" style="fill:var(--bf-steel);fill-opacity:1"/><text x="78.0" y="181.4" class="bf-t-strong" text-anchor="start" style="font-size:17px">90,945 arcs = 1.78 r</text><text x="684.0" y="43.3" class="bf-t-strong" text-anchor="end" style="font-size:17px">208,766 = 4.08 r</text><text x="357.9" y="144.0" class="bf-t" text-anchor="start" style="font-size:17px">work: arcs over all levels</text><text x="357.9" y="273.0" class="bf-t" text-anchor="start" style="font-size:17px">first-level excess E₀ − V₀: 0.21 r → 0.07 r</text></svg>
@@ -3216,6 +3218,9 @@
 <p>The arcs summed over levels go from 90,945 at depth 1 to 208,766 at depth 32. Part of the reason is <strong>proved</strong>. Refining by one more step turns every arc of the old network into a site of the new one, <span class="arithmatex">\(V_0(k+1) = E_0(k)\)</span>. So the sites grow by the old excess, and the first level's arcs by the new one. That the later levels shrink by less is <strong>counted</strong> at the nine depths tried, not proved (<a href="https://github.com/lmmx/mibz2/blob/049464756c76addb72cbfaed42d421d006126eab/docs/journal/monodromy/2026-11-18-o3-o5.md#1-o3-a-smaller-excess-presentation-decisive-and-negative">record of the refinement test</a>). Coarser pieces fail the other way, with an excess of about <span class="arithmatex">\(r\)</span>. So among the presentations tried, runs are best. That is a finding about this block, not a theorem: on the three-byte column <code>100</code>, refining lowers the total from 5 arcs to 3.</p>
 <p><strong>Accelerating repeated steps.</strong> When a stretch of the map repeats, one division can stand in for many identical steps, and adjacent-rank induction does exactly this. On an artificial text, <span class="arithmatex">\(abcd\)</span> repeated with an end marker, whose column has five runs, it decodes 875,001 bytes about 9.5 times faster than mibz2's shipped route: 0.161 ms against 1.526 ms, over five runs. That route sends so sparse a column to its Segmented decoder, not to Cells. Wikidata, however, has almost nothing to accelerate. Division compresses only repeated passes through one atom, and Cells' census on the test block finds no repeated steps. On the full benchmark adjacent-rank induction is the slower of the two (section 1).</p>
 <p><strong>Splitting a block across cores.</strong> Cells is one sequential chain of 92,570 steps on the test block: each step reads the state the previous one left. Adjacent-rank induction is more parallel, in a model. A row-by-row model reproduces its 12 rounds exactly, and their combined longest path is 87 row steps: the classical parallel route of contracting a list at an independent set of its points. But the model executes 1,337,701 row steps, <span class="arithmatex">\(1.49\,n\)</span>, against Cells' 92,570 steps, about <span class="arithmatex">\(0.1\,n\)</span>. The real decoder routes atoms, not rows; how long that routing runs in sequence was not measured, and no threaded version was built. Meanwhile, one block per thread already fills a ten-core Intel desktop (an i9-10900K), which is limited by memory contention and power at seven to ten busy cores. So the model trades much more work for a shorter path, with no speed-up shown on the test machine. Our reading is that giving another core another block remains the better use of it.</p>
+<aside class="il-gloss">
+<p><strong>Contracting a list</strong> at an independent set is the classical parallel way to shorten a chain. Herein adjacent-rank induction cuts the loop at the rows smaller than both their neighbours, joins the paths between them, and repeats: in the model, a longest path of 87 row steps, bought with 1,337,701 row steps in all, against Cells' 92,570.</p>
+</aside>
 <h2 id="5-why-not-copy-earlier-text">5. Why not copy earlier text?<a class="headerlink" href="#5-why-not-copy-earlier-text" title="Permanent link">&para;</a></h2>
 <p>The fourth route leaves the run network behind. Much of a block repeats earlier text, so the text can be described as literal bytes plus <em>copies</em>, each a pointer back to an earlier stretch of output and a length. This is the idea behind LZ77-style compressors, and decoding a copy is a plain memory copy.</p>
 <p><strong>It is compact.</strong> Seeded with the 51,184 run-head bytes in text order, a greedy parse covers the rest of the test block with 11,145 copies and 33 single literal bytes. Replaying them is estimated, not timed, at 0.1–0.3 ms a block. The inverse BWT it is set against, the control in that assessment, took about 2.4 ms on the same block in the original investigation; it was not timed again.</p>
@@ -3395,19 +3400,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>

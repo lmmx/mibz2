@@ -58,6 +58,8 @@ Measured, on 233 large Wikidata blocks. Top: Cells' steps per run against the fo
 
 The Cells–forest Pearson correlation is 0.906. Part of it could be run density, \\(r/n\\), which differs from block to block. Removing \\(r/n\\) by regression leaves 0.859, so most of the agreement is about something else in the block. The agreement is weaker for adjacent-rank induction: 0.74 with the forest and 0.68 with Cells.
 
+Of a tempting reading, undone by thirteen bytes
+
 **Not the same events.** A tempting reading is that the constructions perform the same operations in different clothes. An independent verification refuted that on a 13-byte column, `1111000011100`. The forest has a free choice when two arcs have equal width. Reversing only those ties leaves the input, the starting network and the first level's output the same, yet the forest's total goes from 12 arcs to 15. Cells has no such choice, and its count is unchanged. So the shared count is not an event-by-event match but a shared dependence on something in the block, which the next section names.
 
 ## 3\. What the profile measures
@@ -119,6 +121,8 @@ The arcs summed over levels go from 90,945 at depth 1 to 208,766 at depth 32. Pa
 **Accelerating repeated steps.** When a stretch of the map repeats, one division can stand in for many identical steps, and adjacent-rank induction does exactly this. On an artificial text, \\(abcd\\) repeated with an end marker, whose column has five runs, it decodes 875,001 bytes about 9.5 times faster than mibz2's shipped route: 0.161 ms against 1.526 ms, over five runs. That route sends so sparse a column to its Segmented decoder, not to Cells. Wikidata, however, has almost nothing to accelerate. Division compresses only repeated passes through one atom, and Cells' census on the test block finds no repeated steps. On the full benchmark adjacent-rank induction is the slower of the two (section 1).
 
 **Splitting a block across cores.** Cells is one sequential chain of 92,570 steps on the test block: each step reads the state the previous one left. Adjacent-rank induction is more parallel, in a model. A row-by-row model reproduces its 12 rounds exactly, and their combined longest path is 87 row steps: the classical parallel route of contracting a list at an independent set of its points. But the model executes 1,337,701 row steps, \\(1.49\\,n\\), against Cells' 92,570 steps, about \\(0.1\\,n\\). The real decoder routes atoms, not rows; how long that routing runs in sequence was not measured, and no threaded version was built. Meanwhile, one block per thread already fills a ten-core Intel desktop (an i9-10900K), which is limited by memory contention and power at seven to ten busy cores. So the model trades much more work for a shorter path, with no speed-up shown on the test machine. Our reading is that giving another core another block remains the better use of it.
+
+**Contracting a list** at an independent set is the classical parallel way to shorten a chain. Herein adjacent-rank induction cuts the loop at the rows smaller than both their neighbours, joins the paths between them, and repeats: in the model, a longest path of 87 row steps, bought with 1,337,701 row steps in all, against Cells' 92,570.
 
 ## 5\. Why not copy earlier text?
 

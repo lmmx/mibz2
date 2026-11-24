@@ -18,6 +18,8 @@ The gain depends on using Open only where it pays. Open has fixed setup costs, a
 
 The result comes from one machine (an i9-10900K) and one workload (a pinned Wikidata sample), and it did not come at the first attempt. The first registered test of Open failed on a badly designed guard rule, and that verdict stands; a second test, with its rule fixed in advance, passed.
 
+**The guard rule** of the first test compared single estimates with a 2% bound across 39 noisy cells, wherein a change with no effect at all would fail about 97% of the time. Its verdict stands; the second test, registered separately, is the one that adopted Open.
+
 Measured on the i9-10900K: 0.5.7 against 0.5.6 on the Wikidata sample, the median of 10 paired rounds at each thread count (release-scaling/run-20261119T203443Z). The two releases are level up to 4 threads, where Open is not on the route. From 8 threads up, the shaded gap is Open: 2,557 MB/s against 2,356 at 10 threads.
 
 [Section 1](<#1-how-can-a-decoder-skip-nine-rows-in-ten>) works a small example by hand. [Section 2](<#2-why-do-long-runs-travel-together>) explains the convoys and what they look like in real blocks, and [section 3](<#3-how-are-the-returns-found-without-walking>) how the returns are computed without walking. [Section 4](<#4-why-not-use-open-everywhere>) covers the gate, and [section 5](<#5-what-did-it-buy>) the road from a research idea to the release.

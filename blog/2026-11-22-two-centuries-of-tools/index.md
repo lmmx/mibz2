@@ -12,7 +12,7 @@ mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for f
 
 **Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>)[^/mibz2/blog/2026-11-22-two-centuries-of-tools/#lean], which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)[^/mibz2/blog/2026-11-22-two-centuries-of-tools/#tao]). The figures below come from readings of the proof, not verifications of it, and our own change of method has no results yet.
 
-**Mathlib** is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.
+**Mathlib** is the library of mathematics written in Lean by its community, wherein a new proof finds the definitions and proved theorems it builds on: each checked by Lean's kernel.
 
 **The takeaways:**
 
@@ -50,6 +50,8 @@ For a search, this says how to judge a chain of results: by the step it settles,
 ## 3\. Why would a search drift toward the recent?
 
 A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.
+
+Against a quota that counted subjects and forgot the centuries
 
 Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. Yet a quota over subject areas says nothing about era: a team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.
 

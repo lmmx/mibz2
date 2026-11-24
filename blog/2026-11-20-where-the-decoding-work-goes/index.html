@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3098,7 +3098,7 @@
 <h2 id="3-why-random-strings-stand-alone">3. Why random strings stand alone<a class="headerlink" href="#3-why-random-strings-stand-alone" title="Permanent link">&para;</a></h2>
 <p>The table's rows are sorted by the text that follows each byte. Two rows therefore sit next to each other when their following text agrees for a long stretch. A run of width 6 therefore means six places in the block where the same byte is followed by the same text; a run of width 1 means that combination happens once.</p>
 <p>Repeated structure gives wide runs: a key that appears 3,000 times, followed by the same punctuation and the same next key, puts 3,000 rows in one run. That is why the skeleton is cheap, and also why bzip2 compresses this kind of text well: a few wide runs describe many bytes.</p>
-<p>A random string does the opposite. A statement ID is 32 random hexadecimal digits. The row of a byte inside it is sorted by the text that follows that byte, which is the rest of the ID. Even four random hex digits allow 65,536 continuations, and the block holds only about 760 IDs, so that following text is almost always unique and the row stands alone. The same is true of a hash the first time it is used. But a hash used six times has six rows for each digit, all followed by identical text, so it forms runs of six. Its cost is in the thin runs, not the one-row runs, which is exactly where the chart puts it: in block 0, 841 hash fields hold only 137 distinct hashes.</p>
+<p>A random string does the <span class="il-black">opposite</span>. A statement ID is 32 random hexadecimal digits. The row of a byte inside it is sorted by the text that follows that byte, which is the rest of the ID. Even four random hex digits allow 65,536 continuations, and the block holds only about 760 IDs, so that following text is almost always unique and the row stands alone. The same is true of a hash the first time it is used. But a hash used six times has six rows for each digit, all followed by identical text, so it forms runs of six. Its cost is in the thin runs, not the one-row runs, which is exactly where the chart puts it: in block 0, 841 hash fields hold only 137 distinct hashes.</p>
 <figure class="bf-fig">
 <p class="bf-title">Three kinds of text, three kinds of cost</p>
 <svg viewBox="0 0 720 210" role="img" aria-label="Three cards. Repeated structure: wide runs, already collapsed by the current decoder. Repeated random strings: thin runs, one row per copy, which could be copied once decoded. Unique random strings: one-row runs, walked one step per byte."><rect class="bf-cell" x="10" y="14" width="224" height="182" rx="8"/><rect class="bf-slot" x="248" y="14" width="224" height="182" rx="8"/><rect class="bf-card-hi" x="486" y="14" width="224" height="182" rx="8"/><text class="bf-ts" x="24" y="42">Repeated structure</text><text class="bf-tm" x="24" y="62">JSON keys, punctuation</text><text class="bf-t" x="24" y="96">Wide runs: thousands</text><text class="bf-t" x="24" y="116">of rows move as one.</text><text class="bf-t" x="24" y="150">Already collapsed</text><text class="bf-t" x="24" y="170">by today's decoder.</text><text class="bf-ts" x="262" y="42">Repeated random strings</text><text class="bf-tm" x="262" y="62">reference hashes</text><text class="bf-t" x="262" y="96">Thin runs: one row</text><text class="bf-t" x="262" y="116">for each copy.</text><text class="bf-t" x="262" y="150">Could be copied once</text><text class="bf-t" x="262" y="170">one copy is decoded.</text><text class="bf-ts" x="500" y="42">Unique random strings</text><text class="bf-tm" x="500" y="62">statement IDs</text><text class="bf-t" x="500" y="96">One-row runs: each</text><text class="bf-t" x="500" y="116">byte is its own step.</text><text class="bf-t" x="500" y="150">Nothing in the block</text><text class="bf-t" x="500" y="170">repeats it.</text></svg>
@@ -3108,6 +3108,9 @@
 <p>None of this is special to Wikidata. JSON from logs, APIs and database dumps has the same shape: a repetitive skeleton with random identifiers and hashes threaded through it. The measurement uses Wikidata's text, but the conclusion is about that shape.</p>
 <h2 id="4-why-look-at-the-text-at-all">4. Why look at the text at all?<a class="headerlink" href="#4-why-look-at-the-text-at-all" title="Permanent link">&para;</a></h2>
 <p>The question came from a contrast with the <a href="http://prize.hutter1.net/">Hutter Prize</a>, which rewards the smallest self-extracting description of a gigabyte of English Wikipedia. Its rules allow decompression to take tens of hours on one core. mibz2 is the opposite case: the description is fixed by bzip2, and the goal is the least computation to recover the text. A short description is not the same as a cheap one to use. Our own research has met that gap directly: an earlier experiment shrank the decoder's lookup table to a compact form and found the decode 1.7 to 2.8 times slower, because each step took several dependent lookups instead of one.</p>
+<aside class="il-gloss">
+<p><strong>A short description</strong>, a compact table even, buys naught at decode time: shrunk to a compact form, the decoder's lookup table made each step several dependent lookups instead of one, and the decode ran 1.7 to 2.8 times slower. A fact about one table, not a verdict on every compact form.</p>
+</aside>
 <p>One Hutter winner in particular suggested the question. STARLIT (<a href="https://github.com/amargaritov/starlit">Margaritov, 2021</a>) did not improve the compressor at all. It reordered Wikipedia's articles so that similar articles sat together, and the unchanged compressor then did better. bzip2's encoder has already done a reordering of its own, sorting every byte by the text that follows it. We asked what that reordering exposes about the text, working backwards from the structure we know the text has to what it costs to decode. The first answer is the one above: the structure we expected to exploit is already exploited, and the cost sits in the parts of the text that have no structure.</p>
 <h2 id="5-what-comes-next">5. What comes next<a class="headerlink" href="#5-what-comes-next" title="Permanent link">&para;</a></h2>
 <p>The measurement turns a vague idea, a "zoo" of decoding methods each suited to a different kind of text, into three concrete questions for the research line:</p>
@@ -3285,19 +3288,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>

@@ -12,7 +12,7 @@ mibz2 is a Rust decoder for bzip2, and for months we have searched for faster wa
 
 On 20 November 2026, Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that pose the same question for primes in arithmetic progressions. It does not, however, cover the wider Selberg class.
 
-**Three kernels** are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.
+**Three kernels** are three programs written apart, each re-checking the exported proof from scratch, whereby a bug in any one checker can't pass the proof alone.
 
 The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a proof possible, and what can those of us working on smaller hard problems take from it?
 

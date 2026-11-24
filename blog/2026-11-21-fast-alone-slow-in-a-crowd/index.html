@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3242,6 +3242,8 @@
 </tr>
 </tbody>
 </table>
+<p class="il-rubric-head">Of eight lanes that ran swift alone and fell behind in company</p>
+
 <p>Ten threads was not faster and eight was slower, so the verdict was not adopted. A diagnostic run with the worker count fixed agreed: 0.946 at 6 workers and 1.044 at 8. Read by worker count, the results make one sequence, 0.950 with 6, 1.012 with 7 and 1.049 with 8, and each worker added took away more of the gain.</p>
 <p><strong>What plausibly happened.</strong> On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is therefore already in use. The candidate also widened each worker's working set, because its wider cut-off keeps more rows. On the six Wikidata blocks examined most closely, its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.</p>
 <figure class="bf-fig" id="crowd">
@@ -3308,12 +3310,15 @@
 </tr>
 </tbody>
 </table>
-<p>The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one neither earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. By contrast, the one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.</p>
+<p>The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one <span class="il-black">neither</span> earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. By contrast, the one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.</p>
 <h2 id="6-what-comes-next">6. What comes next<a class="headerlink" href="#6-what-comes-next" title="Permanent link">&para;</a></h2>
 <p>The next candidate keeps the half of #675 that the account above doesn't implicate. It is R4 alone, with the serial walk and the 16-row cut-off (<a href="https://github.com/lmmx/mibz2/pull/679">#679</a>). It keeps R4's smaller tables and drops both parts that widen the working set, the lanes and the wider cut-off. Natively it is indicative only so far: Open at about 0.95 of 0.5.8's time on one thread, faster in five of six rounds on a shared container. Its i9 test (<a href="https://github.com/lmmx/mibz2/pull/680">#680</a>) used the same rule as the eight lanes, registered before its data, and came back as this post was being finished. R4 alone was faster at 6 threads, 0.956 (0.946, 0.966), and at 8, 0.982 (0.967, 0.997), with less CPU at every count. But at 10 threads, the count the rule judges, it read 0.985 (0.970, 1.001): an interval that misses excluding 1 by a thousandth. Under the rule that is not adopted, and the rule isn't relaxed after the data. It is the closest call so far, and the first candidate whose gain shrank with more workers without reversing, which fits the account above.</p>
 <p>mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.</p>
 <p>The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result shows that a kernel's gain depends on how many workers run it.</p>
 <p>The general lesson is about where a speed-up comes from. A change that removes instructions or wrong guesses spends nothing the other cores need, so it tends to survive crowding. A change that gains by using more of the shared cache or memory system spends exactly what the other cores need, so its one-thread gain says little about many. The same test applies beyond Open. Prefetching, larger lookup tables and wider buffers all draw on that shared budget, and each would need its i9 run before its one-thread result could be trusted.</p>
+<aside class="il-gloss">
+<p><strong>A borrowed speed-up</strong>, a loan even, from the shared cache falls due when the crowd arrives: the eight lanes gained 13% alone and lost 5% with eight workers. An account of one candidate on one machine, not a law of kernels.</p>
+</aside>
 <hr />
 <p><strong>Research records:</strong>
 <a href="https://github.com/lmmx/mibz2/tree/672fa192b35ae6f088d1909a0bc5d2ac754a4cc8/release-scaling">0.5.8's release-scaling run</a> and <a href="https://github.com/lmmx/mibz2/tree/bb98c9958c5d5158e3d23d1da1939b747eef6391/bench/release-scaling/2026-11-21-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.8">its record on master</a>;
@@ -3485,19 +3490,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>

@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3211,7 +3211,7 @@
 <figcaption>"A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as <i>e</i><sub>1</sub> ↦ <i>e</i><sub>1</sub><i>e</i><sub>2</sub><i>e</i><sub>3</sub><i>e</i><sub>1</sub><i>e</i><sub>3</sub>.</figcaption>
 </figure>
 <aside class="il-gloss">
-<p><strong>A pseudo-Anosov map</strong> stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere except at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.</p>
+<p><strong>A pseudo-Anosov map</strong>, as the reader may meet it in Thurston's classification, stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere save at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.</p>
 </aside>
 <p>Such a map holds two kinds of information. Counting how often each edge appears in each image gives a matrix of non-negative integers, and its largest eigenvalue says how fast paths grow when the map is applied again and again. The words themselves give the order. For a decoder only the second kind is enough: knowing that a stretch of text holds three <code>a</code>s and two <code>n</code>s does not say which comes first.</p>
 <p>mibz2 already builds such words. Each step of the Rauzy–Veech induction in Cells records which piece followed which, and the result is a grammar whose rules spell the block. In the language of this section, that grammar is the sequence of edge-to-path maps the splits produce.</p>
@@ -3263,7 +3263,7 @@
 </tr>
 </tbody>
 </table>
-<p>The open rows are where something new could come from. Bestvina and Handel simplify a map of graphs by <em>folding</em> (gluing together two edges that leave a vertex in the same direction) and by tracking which pairs of directions are eventually glued, the <strong>illegal turns</strong>. Folding is cheap and works on edges, not on the paths they carry. If the run network can be turned into such a map without walking the rows, its illegal turns might single out the few branchings where the order of the text is really decided. That is a question, not a result. Two easy uses of the network have already failed: its branching core has no small cuts to split it at, and walking the rows of the core costs more than Open does (<a href="https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md">the census</a>).</p>
+<p>The open rows are where something new could come from. Bestvina and Handel simplify a map of graphs by <em>folding</em> (gluing together two edges that leave a vertex in the same direction) and by tracking which pairs of directions are eventually glued, the <strong>illegal turns</strong>. Folding is cheap and works on edges, not on the paths they carry. If the run network can be turned into such a map without walking the rows, its illegal turns might single out the few branchings where the order of the text is really decided. That is a <span class="il-black">question</span>, not a result. Two easy uses of the network have already failed: its branching core has no small cuts to split it at, and walking the rows of the core costs more than Open does (<a href="https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md">the census</a>).</p>
 <p>These leads now sit in the project's list of open mathematical directions, for the research agent working on new decoders to take up. The general point holds whatever comes of them: a decoder gets faster when it stops following paths one at a time and starts editing a small object that carries many of them. Rauzy–Veech induction was the first such operation we found, and train tracks are the theory it belongs to.</p>
 <hr />
 <p><strong>Research records:</strong> <a href="https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md">the run network and its census</a>; <a href="https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-origami-lift.md">the origami lift</a>.</p>
@@ -3460,19 +3460,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>

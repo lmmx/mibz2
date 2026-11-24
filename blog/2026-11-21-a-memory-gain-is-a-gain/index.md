@@ -50,6 +50,8 @@ On Wikidata no block fails the certificate, so the contracted loop never runs: i
 
 Admitting the dense blocks must not bring back the memory it saves. The research line's second idea, *EdgesMux*, places working buffers inside the `edges` array, which the kernel does not write until a late phase. Its lifetime argument (Theorem 19.1 of the [cycle 19 journal](<https://github.com/lmmx/mibz2/blob/7d86bb8601800414b2e02a1bd37a493d5cde52c3/docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md>)) is that each buffer's last read comes before `edges` is first written. Its verifier poisons each buffer after its last read, over 1,000 runs, and the output stays exact.
 
+**To poison** a buffer is to spoil its contents on purpose once its last read is done, whereby any later read would show in the output. The output stayed exact over 1,000 runs; poisoned earlier, as a control, it breaks.
+
 Most of this was already in 0.5.10, which put the elimination's nodes in `edges` ([\#692](<https://github.com/lmmx/mibz2/pull/692>)). The port moves the remaining buffer, the strips' image order, into the first words of `edges`, worth 27–28 KiB a worker. Its tests poison each region of `edges` after its last read, and the output stays exact; poisoned earlier, as a control, the output breaks.
 
 ## 4\. What is the measured effect?
@@ -91,6 +93,8 @@ The research line's claims against the native measurements
 Ratios, new over old; below 1 is better. Claims are the line's own (cycle 19 journal), against 0.5.8 and from its contention model. Container figures are \#703's, against 0.5.10. i9 figures are 0.5.11 against 0.5.10 from the release-scaling run's records, paired by round. Bars are 95% intervals where they exist.
 
 **The memory claim held,** against a newer baseline. The line measured the ten-worker maximum heap falling from 9,979 KiB to 1,346 KiB against 0.5.8. By 0.5.10, however, the admitted blocks were already at about 1.3 MiB. The gain that remains is the dense blocks' fallback, which no longer allocates its table.
+
+Of a contention model that promised half, and a kernel that came in slower
 
 **The speed predictions did not.** The contention model predicted the dense blocks would take under half the cycles, with a cache share of about 2 MiB per worker. Natively, on one thread, Open is slower than the fallback on these blocks, because with the cache to itself the fallback's full table is fast. With four workers in the container, Open takes 7.5% less time on them. On the i9 the whole decoder is faster from 8 threads up. That gain comes through the smaller working set, so it is spread over all blocks rather than concentrated in the five. The line's other claims shrank too. EdgesMux was worth 432 KiB against 0.5.8, yet most of it had already shipped in 0.5.10. The spiral contraction, for its part, never runs on Wikidata.
 

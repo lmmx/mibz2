@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3250,7 +3250,7 @@
 <p>mibz2 is a Rust decoder for bzip2, and for months we have searched for faster ways to undo the reordering at its core. This post describes how we are rebuilding that search, and why. A proof of the Riemann Hypothesis, built at a scale no person could write and accepted by three independent checkers, has shown what a search can attempt once checking is cheap. Our checks of correctness are already cheap, but our checks of speed are not, so that is where we start.</p>
 <p>On 20 November 2026, Levent Alpöge <a href="https://alpo.ge/remark.pdf">announced</a> a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that pose the same question for primes in arithmetic progressions. It does not, however, cover the wider Selberg class.</p>
 <aside class="il-gloss">
-<p><strong>Three kernels</strong> are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.</p>
+<p><strong>Three kernels</strong> are three programs written apart, each re-checking the exported proof from scratch, whereby a bug in any one checker can't pass the proof alone.</p>
 </aside>
 <p>The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a proof possible, and what can those of us working on smaller hard problems take from it?</p>
 <p><strong>We have not checked the proof.</strong> We are not number theorists, and nothing below depends on the argument being right. What we use is its reported shape, chiefly the overview that Chris Birkbeck posted on the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis". Nor is a formal check the same as human understanding. Birkbeck himself wrote: "I have not yet understood how these combine to exclude zeros." Where this post reads a mechanism into the proof, it says so.</p>
@@ -3380,7 +3380,7 @@
 <h3 id="the-latest-negative-result-points-at-global-structure">The latest negative result points at global structure<a class="headerlink" href="#the-latest-negative-result-points-at-global-structure" title="Permanent link">&para;</a></h3>
 <p>The shape of the proof suggested one concrete lead, which we tested the same day. The local Langlands correspondence classifies the local pieces of the problem completely, so the global argument only has to glue them. Our analogue would be a catalogue: for each local arrangement of runs around a row of the table, a precomputed fragment of output, so that decoding steps from fragment to fragment.</p>
 <p>Before the data, <a href="https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md#c-localglobal-a-catalogue-of-local-factors">the note registered a rule</a>: drop the lead unless at least 50% of the rows the decoder walks fall in arrangements that determine their output, with a catalogue small enough for a core's own cache. On six real blocks of Wikidata, <a href="https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/journal/2026-11-21-local-factor-census.md">the census</a> (#687) found at best 10.5%. Arrangements of at least two rows that determine their output covered at most 3.3%, so the lead was dropped.</p>
-<p>The reason is more useful than the number. The bytes a row emits next are its own sorted prefix, fixed by its position in the global order of the block, not by the shape of the runs around it. Local classification fails because the information the decoder needs is global, which is why attention moves to constructions that recover the global order directly. One is <span class="arithmatex">\(\Phi\)</span>, the map at the core of the r-index, a compressed text index that steps through text order from <span class="arithmatex">\(r\)</span> stored samples. The cost of building those samples, and of reading them under contention, decides whether it can compete.</p>
+<p>The reason is more useful than the number. The bytes a row emits next are its own sorted prefix, fixed by its position in the global order of the block, not by the shape of the runs around it. Local classification fails because the information the decoder needs is <span class="il-black">global</span>, which is why attention moves to constructions that recover the global order directly. One is <span class="arithmatex">\(\Phi\)</span>, the map at the core of the r-index, a compressed text index that steps through text order from <span class="arithmatex">\(r\)</span> stored samples. The cost of building those samples, and of reading them under contention, decides whether it can compete.</p>
 <h3 id="lf-may-be-the-wrong-primitive">LF may be the wrong primitive<a class="headerlink" href="#lf-may-be-the-wrong-primitive" title="Permanent link">&para;</a></h3>
 <p>The walk along LF was the best route under the cost model of its time: one core, and memory access that was cheap relative to computing. Under six to ten workers sharing 20 MiB of cache, the best route may be a different one altogether. Every kernel we have tuned so far descends from that walk. The next large gain may not come from a faster LF kernel; it may come from finding that LF traversal is the wrong primitive to optimise.</p>
 <p>That sharpens the research question to one sentence. <strong>Can we preprocess the run structure of a BWT block into a compact representation that provably reduces the serial dependency depth of decoding, without paying more in preprocessing, memory traffic or contention than it saves?</strong></p>
@@ -3557,19 +3557,19 @@ the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis" (20 No
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>

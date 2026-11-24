@@ -2404,6 +2404,8 @@ Three refusals from the research lines show where the work is.
 - **The GUID wall.** No predicate on local structure picks the GUID rows out for a shortcut, because random identifiers have none. The escape would be to store them other than as BWT rows, which bzip2's format does not allow.
 - **The copy sector.** Three independent mechanisms found the repeated `sha1` and text rows and cut the hops spent on them by 16–58%, byte-exact. All three lose 1.14–2.64× end to end, because finding a copy costs more than emitting it saves. A saved hop costs 10.1–10.5 ns, against 5.79 ns to emit a row. The structure is real and common; recognising it is the obstruction, on the research host.
 
+**Sturmian blocks** are the two-letter kind, after the Sturmian sequences of Morse and Hedlund (1940), wherein Rauzy induction is the Euclidean algorithm itself; whence a solver of O(log n) steps. Wikidata never rouses it: `gcd(w) = 1` on every block.
+
 Each refusal has three possible answers, and each has an example:
 
 - **Weaken the hypothesis.** Open's correctness never needed the density line r/n \< 0.15. A cap checked by the first pass replaced it, which admitted the dense band up to 0.28 (\#703).
@@ -2413,6 +2415,8 @@ Each refusal has three possible answers, and each has an example:
 The first two add or move a branch of the dispatch. Only the third removes branches, and it is what keeps the decoder from becoming a tree that grows with every regime found.
 
 We propose to keep a map of these moves, in which each entry records the hypothesis moved from, the move and the result, along with the witness, the status and the measured effect. The obstructions go in it too, each with its scope, because a failed implementation is not an impossible construction: the copy sector lost on one machine against one base; only an exact obstruction with a witness rules a construction out, and only within its scope.
+
+**A loss**, a heavy loss even, is no proof of impossibility: the copy sector lost 1.14–2.64× on one host against one base. A judgement of three implementations, not of the construction.
 
 ## 5\. The stutter
 
@@ -2460,7 +2464,7 @@ mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for f
 
 **Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>)[^/mibz2/blog/2026-11-22-two-centuries-of-tools/#lean], which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)[^/mibz2/blog/2026-11-22-two-centuries-of-tools/#tao]). The figures below come from readings of the proof, not verifications of it, and our own change of method has no results yet.
 
-**Mathlib** is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.
+**Mathlib** is the library of mathematics written in Lean by its community, wherein a new proof finds the definitions and proved theorems it builds on: each checked by Lean's kernel.
 
 **The takeaways:**
 
@@ -2498,6 +2502,8 @@ For a search, this says how to judge a chain of results: by the step it settles,
 ## 3\. Why would a search drift toward the recent?
 
 A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.
+
+Against a quota that counted subjects and forgot the centuries
 
 Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. Yet a quota over subject areas says nothing about era: a team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.
 
@@ -2639,6 +2645,8 @@ On Wikidata no block fails the certificate, so the contracted loop never runs: i
 
 Admitting the dense blocks must not bring back the memory it saves. The research line's second idea, *EdgesMux*, places working buffers inside the `edges` array, which the kernel does not write until a late phase. Its lifetime argument (Theorem 19.1 of the [cycle 19 journal](<https://github.com/lmmx/mibz2/blob/7d86bb8601800414b2e02a1bd37a493d5cde52c3/docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md>)) is that each buffer's last read comes before `edges` is first written. Its verifier poisons each buffer after its last read, over 1,000 runs, and the output stays exact.
 
+**To poison** a buffer is to spoil its contents on purpose once its last read is done, whereby any later read would show in the output. The output stayed exact over 1,000 runs; poisoned earlier, as a control, it breaks.
+
 Most of this was already in 0.5.10, which put the elimination's nodes in `edges` ([\#692](<https://github.com/lmmx/mibz2/pull/692>)). The port moves the remaining buffer, the strips' image order, into the first words of `edges`, worth 27–28 KiB a worker. Its tests poison each region of `edges` after its last read, and the output stays exact; poisoned earlier, as a control, the output breaks.
 
 ## 4\. What is the measured effect?
@@ -2681,6 +2689,8 @@ Ratios, new over old; below 1 is better. Claims are the line's own (cycle 19 jou
 
 **The memory claim held,** against a newer baseline. The line measured the ten-worker maximum heap falling from 9,979 KiB to 1,346 KiB against 0.5.8. By 0.5.10, however, the admitted blocks were already at about 1.3 MiB. The gain that remains is the dense blocks' fallback, which no longer allocates its table.
 
+Of a contention model that promised half, and a kernel that came in slower
+
 **The speed predictions did not.** The contention model predicted the dense blocks would take under half the cycles, with a cache share of about 2 MiB per worker. Natively, on one thread, Open is slower than the fallback on these blocks, because with the cache to itself the fallback's full table is fast. With four workers in the container, Open takes 7.5% less time on them. On the i9 the whole decoder is faster from 8 threads up. That gain comes through the smaller working set, so it is spread over all blocks rather than concentrated in the five. The line's other claims shrank too. EdgesMux was worth 432 KiB against 0.5.8, yet most of it had already shipped in 0.5.10. The spiral contraction, for its part, never runs on Wikidata.
 
 **Correctness.** Every block of the corpus, and six authenticated reference blocks, decode byte for byte as the plain inverse does. The `bzcat` example at 4, 8 and 10 threads gives the same SHA-256 as `bzip2 -dc`. The correctness gate passes its 338 cases, and eight hand-made mutations of the new code were each caught by the tests. CI's paired bench at 1 to 4 threads found no change in Wikidata's wall time beyond noise.
@@ -2705,7 +2715,7 @@ mibz2 is a Rust decoder for bzip2, and for months we have searched for faster wa
 
 On 20 November 2026, Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that pose the same question for primes in arithmetic progressions. It does not, however, cover the wider Selberg class.
 
-**Three kernels** are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.
+**Three kernels** are three programs written apart, each re-checking the exported proof from scratch, whereby a bug in any one checker can't pass the proof alone.
 
 The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a proof possible, and what can those of us working on smaller hard problems take from it?
 
@@ -2976,6 +2986,8 @@ The results, as the candidate's time over 0.5.8's, with 95% intervals over the 1
 | 8 | 8 | 1.049 (1.023, 1.075) | 1.009 | 1.036 | slower |
 | 10 | 7 | 1.012 (0.991, 1.033) | 0.980 | 1.010 | no change detected |
 
+Of eight lanes that ran swift alone and fell behind in company
+
 Ten threads was not faster and eight was slower, so the verdict was not adopted. A diagnostic run with the worker count fixed agreed: 0.946 at 6 workers and 1.044 at 8. Read by worker count, the results make one sequence, 0.950 with 6, 1.012 with 7 and 1.049 with 8, and each worker added took away more of the gain.
 
 **What plausibly happened.** On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is therefore already in use. The candidate also widened each worker's working set, because its wider cut-off keeps more rows. On the six Wikidata blocks examined most closely, its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.
@@ -3010,6 +3022,8 @@ mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.
 The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result shows that a kernel's gain depends on how many workers run it.
 
 The general lesson is about where a speed-up comes from. A change that removes instructions or wrong guesses spends nothing the other cores need, so it tends to survive crowding. A change that gains by using more of the shared cache or memory system spends exactly what the other cores need, so its one-thread gain says little about many. The same test applies beyond Open. Prefetching, larger lookup tables and wider buffers all draw on that shared budget, and each would need its i9 run before its one-thread result could be trusted.
+
+**A borrowed speed-up**, a loan even, from the shared cache falls due when the crowd arrives: the eight lanes gained 13% alone and lost 5% with eight workers. An account of one candidate on one machine, not a law of kernels.
 
 ---
 
@@ -3118,6 +3132,8 @@ The road from there to the release had a dead end in the middle:
 From research idea to release, 20–21 November 2026
 
 The chain of evidence. Amber marks the step that showed nothing; it was explained two steps later, not overruled. Each figure is from the step's own record: the research journal, CI's paired bench on \#664, the calibration and stage-attribution journals, \#666's stage table and the i9 evidence bundle.
+
+Wherein the first port showed nothing, and the harness was wrongly suspected
 
 **The first port showed nothing.** The safe Rust port ([\#664](<https://github.com/lmmx/mibz2/pull/664>)) passed every test, including 200,000 random walks checked byte for byte against the old emit. CI's paired benchmark then found no change: −0.1% (−0.4%, +0.1%) at one thread, and nothing beyond noise at two or four. The first reading was that the C harness had flattered the idea.
 
@@ -3261,6 +3277,8 @@ Toy, damaged toy, real block
 
 Conceptual. The middle panel's measurements are in the table below.
 
+How a surrogate was tried the same evening, and answered the wrong question
+
 The first version of our transfer went wrong in an instructive way. We named the missing ingredient as run width, since the toy has two enormous runs and the random IDs have none, and tested an obvious surrogate the same evening: walking many independent stretches of the path at once, as mibz2's plain decoder already does. It gave no gain on Open's walk, and more to the point, it was the wrong test. Running walks side by side still follows the same edges; it is a speed-up of the old operation, not a new one.
 
 The correction, which came out of the discussion, is that the toy's real power is not width but **cheap global coordinates**: a compact number (\\(k\\alpha\\) modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse.
@@ -3285,7 +3303,7 @@ There is a limit, which the research line also proved. Every text coded from a r
 
 That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way \\(k\\alpha\\) does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of \\(\\alpha\\), say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
 
-**Ostrowski numeration** writes a whole number as a sum of the denominators of \\(\\alpha\\)'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.
+**Ostrowski numeration** sets forth a whole number as a sum of the denominators of \\(\\alpha\\)'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.
 
 ## 7\. Where this leaves us
 
@@ -3364,6 +3382,8 @@ None of this is special to Wikidata. JSON from logs, APIs and database dumps has
 ## 4\. Why look at the text at all?
 
 The question came from a contrast with the [Hutter Prize](<http://prize.hutter1.net/>), which rewards the smallest self-extracting description of a gigabyte of English Wikipedia. Its rules allow decompression to take tens of hours on one core. mibz2 is the opposite case: the description is fixed by bzip2, and the goal is the least computation to recover the text. A short description is not the same as a cheap one to use. Our own research has met that gap directly: an earlier experiment shrank the decoder's lookup table to a compact form and found the decode 1.7 to 2.8 times slower, because each step took several dependent lookups instead of one.
+
+**A short description**, a compact table even, buys naught at decode time: shrunk to a compact form, the decoder's lookup table made each step several dependent lookups instead of one, and the decode ran 1.7 to 2.8 times slower. A fact about one table, not a verdict on every compact form.
 
 One Hutter winner in particular suggested the question. STARLIT ([Margaritov, 2021](<https://github.com/amargaritov/starlit>)) did not improve the compressor at all. It reordered Wikipedia's articles so that similar articles sat together, and the unchanged compressor then did better. bzip2's encoder has already done a reordering of its own, sorting every byte by the text that follows it. We asked what that reordering exposes about the text, working backwards from the structure we know the text has to what it costs to decode. The first answer is the one above: the structure we expected to exploit is already exploited, and the cost sits in the parts of the text that have no structure.
 
@@ -3479,7 +3499,7 @@ A track on a genus-2 surface, mapped into itself
 
 "A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as *e*<sub>1</sub> ↦ *e*<sub>1</sub>*e*<sub>2</sub>*e*<sub>3</sub>*e*<sub>1</sub>*e*<sub>3</sub>.
 
-**A pseudo-Anosov map** stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere except at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.
+**A pseudo-Anosov map**, as the reader may meet it in Thurston's classification, stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere save at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.
 
 Such a map holds two kinds of information. Counting how often each edge appears in each image gives a matrix of non-negative integers, and its largest eigenvalue says how fast paths grow when the map is applied again and again. The words themselves give the order. For a decoder only the second kind is enough: knowing that a stretch of text holds three `a`s and two `n`s does not say which comes first.
 
@@ -3556,6 +3576,8 @@ Shipped in mibz2 [0.5.7](<https://lmmx.github.io/mibz2/benchmarks/history/#relea
 The gain depends on using Open only where it pays. Open has fixed setup costs, and on text, where runs are short, it is up to 5× slower. Each block is therefore checked first: Open runs only if its run records are between 1/64 and 15% of its rows, the range the existing LazyCells kernel already used. The check is two integer comparisons and adds no new tuned constant.
 
 The result comes from one machine (an i9-10900K) and one workload (a pinned Wikidata sample), and it did not come at the first attempt. The first registered test of Open failed on a badly designed guard rule, and that verdict stands; a second test, with its rule fixed in advance, passed.
+
+**The guard rule** of the first test compared single estimates with a 2% bound across 39 noisy cells, wherein a change with no effect at all would fail about 97% of the time. Its verdict stands; the second test, registered separately, is the one that adopted Open.
 
 Measured on the i9-10900K: 0.5.7 against 0.5.6 on the Wikidata sample, the median of 10 paired rounds at each thread count (release-scaling/run-20261119T203443Z). The two releases are level up to 4 threads, where Open is not on the route. From 8 threads up, the shaded gap is Open: 2,557 MB/s against 2,356 at 10 threads.
 
@@ -3695,6 +3717,8 @@ Measured, on 233 large Wikidata blocks. Top: Cells' steps per run against the fo
 
 The Cells–forest Pearson correlation is 0.906. Part of it could be run density, \\(r/n\\), which differs from block to block. Removing \\(r/n\\) by regression leaves 0.859, so most of the agreement is about something else in the block. The agreement is weaker for adjacent-rank induction: 0.74 with the forest and 0.68 with Cells.
 
+Of a tempting reading, undone by thirteen bytes
+
 **Not the same events.** A tempting reading is that the constructions perform the same operations in different clothes. An independent verification refuted that on a 13-byte column, `1111000011100`. The forest has a free choice when two arcs have equal width. Reversing only those ties leaves the input, the starting network and the first level's output the same, yet the forest's total goes from 12 arcs to 15. Cells has no such choice, and its count is unchanged. So the shared count is not an event-by-event match but a shared dependence on something in the block, which the next section names.
 
 ## 3\. What the profile measures
@@ -3756,6 +3780,8 @@ The arcs summed over levels go from 90,945 at depth 1 to 208,766 at depth 32. Pa
 **Accelerating repeated steps.** When a stretch of the map repeats, one division can stand in for many identical steps, and adjacent-rank induction does exactly this. On an artificial text, \\(abcd\\) repeated with an end marker, whose column has five runs, it decodes 875,001 bytes about 9.5 times faster than mibz2's shipped route: 0.161 ms against 1.526 ms, over five runs. That route sends so sparse a column to its Segmented decoder, not to Cells. Wikidata, however, has almost nothing to accelerate. Division compresses only repeated passes through one atom, and Cells' census on the test block finds no repeated steps. On the full benchmark adjacent-rank induction is the slower of the two (section 1).
 
 **Splitting a block across cores.** Cells is one sequential chain of 92,570 steps on the test block: each step reads the state the previous one left. Adjacent-rank induction is more parallel, in a model. A row-by-row model reproduces its 12 rounds exactly, and their combined longest path is 87 row steps: the classical parallel route of contracting a list at an independent set of its points. But the model executes 1,337,701 row steps, \\(1.49\\,n\\), against Cells' 92,570 steps, about \\(0.1\\,n\\). The real decoder routes atoms, not rows; how long that routing runs in sequence was not measured, and no threaded version was built. Meanwhile, one block per thread already fills a ten-core Intel desktop (an i9-10900K), which is limited by memory contention and power at seven to ten busy cores. So the model trades much more work for a shorter path, with no speed-up shown on the test machine. Our reading is that giving another core another block remains the better use of it.
+
+**Contracting a list** at an independent set is the classical parallel way to shorten a chain. Herein adjacent-rank induction cuts the loop at the rows smaller than both their neighbours, joins the paths between them, and repeats: in the model, a longest path of 87 row steps, bought with 1,337,701 row steps in all, against Cells' 92,570.
 
 ## 5\. Why not copy earlier text?
 
@@ -4025,6 +4051,8 @@ Slower than eager Cells, faster than lazy, lighter on memory: three measurements
 Measured on one four-CPU cloud virtual machine. Top: the paired wall-time ratios of the table above. Middle: the peak additional heap requested during one fresh decode of the frozen block. Bottom: the inverse transform alone, repeated on the frozen block, split into building the kept rows' table and writing the output; the switch cut is the harder cut described below. The three panels are not comparable with each other.
 
 A cache simulation of the frozen block's decode counted 11% fewer instructions and 27% fewer first-level data-cache misses than eager Cells; those are simulated counts, not times. How much of the wall-time gap comes from building and walking the kept rows' table is not yet measured over the whole decode. Our reading, an **interpretation**, is that this table is the main cost eager Cells does not pay. The phase measurement shows its size on one block.
+
+Of the switch cut, that kept fewer rows and paid more to find them
 
 **A smaller kept system is not always cheaper to build.** A harder cut, the *switch cut*, keeps only the rows where a path switches between narrow and wide runs. On the frozen block its output phase took half as long as the decoder's above. But its build took 3.6 times as long, because finding the narrow side's words meant tracing 58,581 more letters. The smaller system was real, and this way of reaching it was slower.
 

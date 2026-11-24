@@ -103,6 +103,8 @@ The results, as the candidate's time over 0.5.8's, with 95% intervals over the 1
 | 8 | 8 | 1.049 (1.023, 1.075) | 1.009 | 1.036 | slower |
 | 10 | 7 | 1.012 (0.991, 1.033) | 0.980 | 1.010 | no change detected |
 
+Of eight lanes that ran swift alone and fell behind in company
+
 Ten threads was not faster and eight was slower, so the verdict was not adopted. A diagnostic run with the worker count fixed agreed: 0.946 at 6 workers and 1.044 at 8. Read by worker count, the results make one sequence, 0.950 with 6, 1.012 with 7 and 1.049 with 8, and each worker added took away more of the gain.
 
 **What plausibly happened.** On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is therefore already in use. The candidate also widened each worker's working set, because its wider cut-off keeps more rows. On the six Wikidata blocks examined most closely, its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.
@@ -137,6 +139,8 @@ mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.
 The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result shows that a kernel's gain depends on how many workers run it.
 
 The general lesson is about where a speed-up comes from. A change that removes instructions or wrong guesses spends nothing the other cores need, so it tends to survive crowding. A change that gains by using more of the shared cache or memory system spends exactly what the other cores need, so its one-thread gain says little about many. The same test applies beyond Open. Prefetching, larger lookup tables and wider buffers all draw on that shared budget, and each would need its i9 run before its one-thread result could be trusted.
+
+**A borrowed speed-up**, a loan even, from the shared cache falls due when the crowd arrives: the eight lanes gained 13% alone and lost 5% with eight workers. An account of one candidate on one machine, not a law of kernels.
 
 ---
 

@@ -237,6 +237,8 @@ Measured on one four-CPU cloud virtual machine. Top: the paired wall-time ratios
 
 A cache simulation of the frozen block's decode counted 11% fewer instructions and 27% fewer first-level data-cache misses than eager Cells; those are simulated counts, not times. How much of the wall-time gap comes from building and walking the kept rows' table is not yet measured over the whole decode. Our reading, an **interpretation**, is that this table is the main cost eager Cells does not pay. The phase measurement shows its size on one block.
 
+Of the switch cut, that kept fewer rows and paid more to find them
+
 **A smaller kept system is not always cheaper to build.** A harder cut, the *switch cut*, keeps only the rows where a path switches between narrow and wide runs. On the frozen block its output phase took half as long as the decoder's above. But its build took 3.6 times as long, because finding the narrow side's words meant tracing 58,581 more letters. The smaller system was real, and this way of reaching it was slower.
 
 **What comes next.** The open decoder holds less per block, and on many cores mibz2's speed has been limited by blocks competing for the shared cache ([Modelling the cache](<https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/index.md>)). The test that matters is therefore on a ten-core Intel desktop (an i9-10900K), at the worker counts where that competition starts, against the release that ships. A run that settles how the test machine's clock behaves under sustained load comes first. Whether the kept system could itself be cut open again is an open question.

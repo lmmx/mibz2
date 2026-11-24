@@ -102,6 +102,8 @@ From research idea to release, 20–21 November 2026
 
 The chain of evidence. Amber marks the step that showed nothing; it was explained two steps later, not overruled. Each figure is from the step's own record: the research journal, CI's paired bench on \#664, the calibration and stage-attribution journals, \#666's stage table and the i9 evidence bundle.
 
+Wherein the first port showed nothing, and the harness was wrongly suspected
+
 **The first port showed nothing.** The safe Rust port ([\#664](<https://github.com/lmmx/mibz2/pull/664>)) passed every test, including 200,000 random walks checked byte for byte against the old emit. CI's paired benchmark then found no change: −0.1% (−0.4%, +0.1%) at one thread, and nothing beyond noise at two or four. The first reading was that the C harness had flattered the idea.
 
 **The harness was fair.** A calibration timed the C harness's copy of Open against the real Rust kernel on the same six blocks. They agreed within a few percent on five blocks. The ported kernel ran at 0.86–0.91 of the old Rust kernel's time, a 9–14% gain ([the calibration](<https://github.com/lmmx/mibz2/blob/70b18ca4411fa10c9f29b80821c835358dde2f9e/docs/journal/2026-11-20-open-u16q.md>)). So the gain was real in the kernel, and the question became why it didn't reach the benchmark.

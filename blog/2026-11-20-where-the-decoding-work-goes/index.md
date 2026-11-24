@@ -56,6 +56,8 @@ None of this is special to Wikidata. JSON from logs, APIs and database dumps has
 
 The question came from a contrast with the [Hutter Prize](<http://prize.hutter1.net/>), which rewards the smallest self-extracting description of a gigabyte of English Wikipedia. Its rules allow decompression to take tens of hours on one core. mibz2 is the opposite case: the description is fixed by bzip2, and the goal is the least computation to recover the text. A short description is not the same as a cheap one to use. Our own research has met that gap directly: an earlier experiment shrank the decoder's lookup table to a compact form and found the decode 1.7 to 2.8 times slower, because each step took several dependent lookups instead of one.
 
+**A short description**, a compact table even, buys naught at decode time: shrunk to a compact form, the decoder's lookup table made each step several dependent lookups instead of one, and the decode ran 1.7 to 2.8 times slower. A fact about one table, not a verdict on every compact form.
+
 One Hutter winner in particular suggested the question. STARLIT ([Margaritov, 2021](<https://github.com/amargaritov/starlit>)) did not improve the compressor at all. It reordered Wikipedia's articles so that similar articles sat together, and the unchanged compressor then did better. bzip2's encoder has already done a reordering of its own, sorting every byte by the text that follows it. We asked what that reordering exposes about the text, working backwards from the structure we know the text has to what it costs to decode. The first answer is the one above: the structure we expected to exploit is already exploited, and the cost sits in the parts of the text that have no structure.
 
 ## 5\. What comes next

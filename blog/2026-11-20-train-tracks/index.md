@@ -91,7 +91,7 @@ A track on a genus-2 surface, mapped into itself
 
 "A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as *e*<sub>1</sub> ↦ *e*<sub>1</sub>*e*<sub>2</sub>*e*<sub>3</sub>*e*<sub>1</sub>*e*<sub>3</sub>.
 
-**A pseudo-Anosov map** stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere except at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.
+**A pseudo-Anosov map**, as the reader may meet it in Thurston's classification, stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere save at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.
 
 Such a map holds two kinds of information. Counting how often each edge appears in each image gives a matrix of non-negative integers, and its largest eigenvalue says how fast paths grow when the map is applied again and again. The words themselves give the order. For a decoder only the second kind is enough: knowing that a stretch of text holds three `a`s and two `n`s does not say which comes first.
 

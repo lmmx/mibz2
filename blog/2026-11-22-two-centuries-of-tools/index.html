@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6ca14cc6f520">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6ca14cc6f520">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3116,7 +3116,7 @@
 <p>mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against <em>recency bias</em>, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.</p>
 <p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a><sup id="fnref:lean"><a class="footnote-ref" href="#fn:lean">2</a></sup>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a><sup id="fnref:tao"><a class="footnote-ref" href="#fn:tao">3</a></sup>). The figures below come from readings of the proof, not verifications of it, and our own change of method has no results yet.</p>
 <aside class="il-gloss">
-<p><strong>Mathlib</strong> is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.</p>
+<p><strong>Mathlib</strong> is the library of mathematics written in Lean by its community, wherein a new proof finds the definitions and proved theorems it builds on: each checked by Lean's kernel.</p>
 </aside>
 <p><strong>The takeaways:</strong></p>
 <ul>
@@ -3148,6 +3148,8 @@
 <p>For a search, this says how to judge a chain of results: by the step it settles, not by how much scaffolding it needs. A classical theorem that settles one step in a page can matter more than a modern framework that needs thousands of lines to set up.</p>
 <h2 id="3-why-would-a-search-drift-toward-the-recent">3. Why would a search drift toward the recent?<a class="headerlink" href="#3-why-would-a-search-drift-toward-the-recent" title="Permanent link">&para;</a></h2>
 <p>A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.</p>
+<p class="il-rubric-head">Against a quota that counted subjects and forgot the centuries</p>
+
 <p>Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. Yet a quota over subject areas says nothing about era: a team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.</p>
 <p>The proof's toolkit suggests a different guard. Our team instructions now ask each research chain to:</p>
 <ul>
@@ -3170,7 +3172,7 @@
 <li><strong>Combinatorics on words.</strong> Christoffel words (1875) and Sturmian sequences (Morse and Hedlund, 1940) give the two-letter blocks whose inversion is pure arithmetic. The Chen–Fox–Lyndon factorisation (1958) underlies the bijective BWT.</li>
 <li><strong>Continued fractions and the Euclidean algorithm.</strong> On a two-letter Sturmian block, Rauzy induction <em>is</em> the Euclidean algorithm, and the block has a grammar of size O(log n).</li>
 <li><strong>Interval exchanges and rotations.</strong> LF is an interval exchange, and Keane's work (1975), Rauzy's induction (1979) and Veech's (1982) gave our <a href="../2026-11-10-rauzy-veech-reconstruction/">Rauzy–Veech reconstruction</a>.</li>
-<li><strong>Nineteenth-century permutation theory.</strong> LF is one permutation of a block's rows, and its cycle structure is the classical object, yet this is the area our teams have used least.</li>
+<li><strong>Nineteenth-century permutation theory.</strong> LF is one permutation of a block's rows, and its cycle structure is the classical object, yet this is the area our teams have used <span class="il-black">least</span>.</li>
 </ul>
 <p>The later tools in the figure, recompression (Jeż, 2015) and string attractors (Kempa and Prezza, 2018), are useful, but a search that reaches only for them is the bias in action.</p>
 <h2 id="5-how-does-a-broad-toolkit-get-used-well">5. How does a broad toolkit get used well?<a class="headerlink" href="#5-how-does-a-broad-toolkit-get-used-well" title="Permanent link">&para;</a></h2>
@@ -3398,19 +3400,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/bench.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/blog.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6ca14cc6f520"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6ca14cc6f520"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
+        <script src="../../assets/javascripts/katex.js?v=6ca14cc6f520"></script>
       
     
   </body>
