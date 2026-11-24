@@ -856,6 +856,21 @@ The devices, and when each is used:
   list the reader can browse afterwards.
 - **Blackletter** adds emphasis the original didn't have. Use it on a word or a short
   phrase, never on a title or a whole sentence.
+- **Blackletter acts out its word.** Each blackletter word gets a treatment made for it,
+  taken from what the word means or names, the way the Murphy conversation's "no going
+  back" is ice and "@geogristle" is the lime of his dragon. A stock colour on every word
+  (one dull red, one plain ink) is the low-effort version, and Louis rejected it (24
+  November). The halving post's set shows the range:
+  - "fewer than one" A press is in the N64 A button's blue, and its "one" is half filled;
+  - *anthyphairesis* is red-figure ware, terracotta out of black slip;
+  - Theaetetus's *powers* is gold leaf with a slow sheen;
+  - a measure that decodes "nothing" has hollow letters;
+  - "every" takes the figures' letter inks, one per letter.
+
+  Write a new treatment as an `il-bl-…` class in `illuminated.css`, beside these, with a
+  slate version and no motion under reduced motion. Plain `il-black` is for a hinge word
+  whose meaning gives nothing to draw on. A rubric (`il-rubric-head`) is vermilion under a
+  lapis initial edged in gold, the scribe's pairing.
 - **Colour and glow** vary from one accent to the next by choice: a glow here, a deep red
   there. Keep a glow tight, a few pixels with a dark edge, because a diffuse glow blurs the
   letters.
@@ -880,7 +895,7 @@ page that uses them.
 | Fleuron link | `[MODE.md](url){ .il-ref }`; neighbours take `.il-c1` to `.il-c5` |
 | Neighbouring plain links | `[#160](url){ .il-ink .il-c1 }`, `[#161](url){ .il-ink .il-c2 }` |
 | Gloss | `<aside class="il-gloss" markdown>**The BEAM** is …</aside>`; a term may link to its source, `**[Cocycle](url)**`, and keeps the gloss's colour. After a list or inline maths, put the opening tag, the text and `</aside>` on lines of their own, with blank lines between, or the gloss is read as a paragraph |
-| Blackletter | `<span class="il-black">…</span>`; red with an edge `il-rubric`; warm halo `il-gild` |
+| Blackletter | `<span class="il-black">…</span>`; made for its word `il-black il-bl-…` (`il-bl-abtn` + `il-bl-half`, `il-bl-redfig`, `il-bl-leaf`, `il-bl-hollow`, `il-bl-every`); red with an edge `il-rubric`; warm halo `il-gild` |
 | Tight glow | `<span class="il-glow">…</span>`, `il-glow-ember` |
 | Creature | `<img class="il-beast il-beast-r" src="…/bestiary/….svg" alt="">` (`-l`, `-c`) |
 | Fleuron rule | `<p class="il-rule" aria-hidden="true">❦</p>` |

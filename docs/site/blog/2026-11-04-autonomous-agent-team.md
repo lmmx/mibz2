@@ -126,7 +126,7 @@ Optimiser, [#161](https://github.com/lmmx/mibz2/pull/161){ .il-ink .il-c2 } for 
 [#162](https://github.com/lmmx/mibz2/pull/162){ .il-ink .il-c3 } for the Researcher. Each experiment has a PR of its
 own too.
 
-<img class="il-beast il-beast-r" src="../assets/images/bestiary/aberdeen-amphisbaena.svg" alt="">
+<img class="il-beast il-beast-r" src="../assets/images/bestiary/striped-amphisbaena-gilded.svg" alt="">
 
 Here is what that looks like on GitHub. Every comment comes from my account, `lmmx`, and the small
 badge on the avatar shows which app posted it: Claude's mark for the Coordinator, ChatGPT's for the

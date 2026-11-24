@@ -183,16 +183,76 @@
 }
 
 /* A mock-heroic rubric over a small skirmish, as a polemical tract titles its chapters
-   ("Against the Beclauded Subagent"): <p class="il-rubric-head">Of …</p>. Deep claret
-   blackletter, no glow; never over a result. */
-.md-typeset { --il-claret: #7a0d12; }
-[data-md-color-scheme="slate"] .md-typeset { --il-claret: #e27a86; }
+   ("Against the Beclauded Subagent"): <p class="il-rubric-head">Of …</p>. The scribe's
+   pairing: vermilion blackletter under a lapis Lombard initial edged in gold. Never over a
+   result. */
+.md-typeset { --il-vermilion: #c8260f; --il-gold: #c99a2e; --il-gold-hi: #ffe08a; }
+[data-md-color-scheme="slate"] .md-typeset { --il-vermilion: #ff6a4d; --il-gold: #e0b44a; }
 .md-typeset p.il-rubric-head {
   margin: 1.6em 0 0.5em;
   font: 400 1.65em/1.15 var(--il-black);
   letter-spacing: 0.01em;
-  color: var(--il-claret);
+  color: var(--il-vermilion);
   text-wrap: balance;
+}
+.md-typeset p.il-rubric-head::first-letter {
+  font-size: 1.3em;
+  line-height: 0.9;
+  padding-right: 0.03em;
+  color: var(--il-lapis);
+  text-shadow: 0.05em 0.05em 0 var(--il-gold);
+}
+
+/* Blackletter that acts out its word, the way the Murphy conversation's "no going back" is
+   ice and "@geogristle" is the lime of his dragon. One treatment per word, made for it; never
+   a stock colour. Each is a span inside the sentence: <span class="il-black il-bl-…">. */
+
+/* fewer than one A press: the phrase in the N64's A-button blue, and its "one" half filled,
+   half an outline: <span class="il-black il-bl-abtn">fewer than <span class="il-bl-half">one</span></span> */
+.md-typeset { --il-abtn: #2a4fd8; }
+[data-md-color-scheme="slate"] .md-typeset { --il-abtn: #7d97ff; }
+.md-typeset .il-bl-abtn { color: var(--il-abtn); }
+.md-typeset .il-bl-half {
+  color: transparent;
+  -webkit-text-stroke: 0.7px var(--il-abtn);
+  background: linear-gradient(90deg, var(--il-abtn) 50%, transparent 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* red-figure ware: terracotta letters reserved out of a black slip, for a Greek word */
+.md-typeset .il-bl-redfig {
+  color: #e07a3c;
+  background: #1b1310;
+  padding: 0.04em 0.22em 0.1em;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px #3a2418;
+}
+/* gold leaf, for the name that gathers every case: a sheen passes over it once in a while */
+.md-typeset .il-bl-leaf {
+  color: transparent;
+  background: linear-gradient(100deg, #7d5304 0%, var(--il-gold) 30%, var(--il-gold-hi) 46%,
+    var(--il-gold) 58%, #8a5e06 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(60, 30, 0, 0.45));
+  animation: il-leaf 6s ease-in-out infinite;
+}
+@keyframes il-leaf { 0%, 55% { background-position: 100% 0; } 85%, 100% { background-position: 0 0; } }
+/* hollow letters, for a measure that decodes nothing */
+.md-typeset .il-bl-hollow {
+  color: transparent;
+  -webkit-text-stroke: 0.8px var(--md-default-fg-color);
+}
+/* every letter its own figure ink: a green, n steel, b amber, c violet, then plain ink;
+   written <span class="il-black il-bl-every"><span>e</span><span>v</span>…</span> */
+.md-typeset .il-bl-every { --e1: #1f9a72; --e2: #4687a8; --e3: #b26b00; --e4: #7b4fd6; }
+[data-md-color-scheme="slate"] .md-typeset .il-bl-every { --e1: #22a87c; --e2: #5199bd; --e3: #f2b544; --e4: #b195f2; }
+.md-typeset .il-bl-every > span:nth-child(5n+1) { color: var(--e1); }
+.md-typeset .il-bl-every > span:nth-child(5n+2) { color: var(--e2); }
+.md-typeset .il-bl-every > span:nth-child(5n+3) { color: var(--e3); }
+.md-typeset .il-bl-every > span:nth-child(5n+4) { color: var(--e4); }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .il-bl-leaf { animation: none; background-position: 40% 0; }
 }
 
 /* A tight glow on ordinary type: a few pixels with a dark edge, never a haze. */
