@@ -1,4 +1,4 @@
-"""The "three corners" figure for the evening report (journal §39 and §49 at 0430e0f7).
+"""The "three corners" figure for the report on formulating the inversion problem (journal §39 and §49 at 0430e0f7).
 
     python3 docs/scripts/figure_three_corners.py
 

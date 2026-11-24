@@ -25,7 +25,7 @@ The search for a breakthrough became a measurable problem with a cost referee, m
 
 </div>
 
-This day began as a search for a new mathematical basis for undoing bzip2's block sort and ended
+The work began as a search for a new mathematical basis for undoing bzip2's block sort and ended
 with a problem that can be stated, measured and refereed. Three things now hold it in place. A
 cost referee says what would count as beating the floor, and the method for finding candidates is
 set apart from it ([What else moves together](2026-11-24-what-else-moves-together.md)). Oracle
@@ -33,7 +33,7 @@ measurements say where whole-decoder time can be won at all: up to 26% at ten wo
 until now behind the serial scanner
 ([Masked bottlenecks in a two-stage decoder](2026-11-24-the-scanner-hides-the-emitter.md)). And
 the mathematics has a map of what has been ruled out, a conservation law that bounds one whole
-class of routes, and a short list of open threads. This post gathers them, drawing every figure from [the day's report](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md) and the records it cites.
+class of routes, and a short list of open threads. This post gathers them, drawing every figure from [the formulation report](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md) and the records it cites.
 
 ## 1. The formulation, and two corrections
 
@@ -86,7 +86,10 @@ picture rather than a decomposition: the plan adds a serial tail for retiring an
 blocks, treats move-to-front decoding and run formation as one fused activity, and treats the
 variation between blocks as a covariate. Two corrections from [one of the answers](https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/external/chatgpt-decomposition.md) shape the
 design. Requested threads are not actual workers, since a request for ten or more runs seven
-workers, so the mechanism study names its worker counts directly. And the summation theorem of
+workers, so the mechanism study names its worker counts directly. And the
+scanner's waiting is not proof of too few workers: admission is limited by the blocks issued but
+not yet taken in order, and by a 12 MiB threshold on finished output, so a slow early block can
+stall the scanner while later blocks wait to be written. And the summation theorem of
 control analysis is no test of completeness: for a stage whose rate is the minimum of two others,
 the coefficients sum to two under slowdowns and to zero under speedups, so completeness has to come
 from accounting identities instead. Each stage will be slowed by 20%, with 10% follow-ups to check
@@ -169,7 +172,7 @@ problem then has three parts.
    together they are worth up to 26% at ten.
 
 The ceilings came from oracles run before any candidate was built, and the routes' figures from
-reviews made independently of the work they judged; most of the day's headlines shrank under that
+reviews made independently of the work they judged; most of the headlines shrank under that
 review. What remains is smaller than the morning hoped and much better defined: a referee for any
 candidate, a price for each stage, and a record of the routes already closed.
 
