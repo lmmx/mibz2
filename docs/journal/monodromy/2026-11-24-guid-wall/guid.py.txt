@@ -1,0 +1,45 @@
+"""GUID wall census. For each block: invert the BWT (stable LF from the primary), map each row x to
+the text position of the byte it emits (T[SA[x]-1]), mark positions inside RFC 4122 v4 UUIDs, and count:
+width-1 runs, retained (width <= 16) rows, GUID rows among them, the random-nibble rows, and the
+independent-digit model's prediction for those (a row is a width-1 run iff its emitted byte differs
+from both neighbours' bytes; for independent uniform hex digits that is (15/16)^2)."""
+import json, os, re, sys
+B = sys.argv[1]
+man = json.load(open(os.path.join(B, 'manifest.json')))
+pat = re.compile(rb'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}')
+FIXED = {8, 13, 14, 18, 19, 23}          # hyphens, the version nibble, the variant nibble
+HEX = set(b'0123456789abcdefABCDEF')
+for blk in man['blocks']:
+    L = open(os.path.join(B, blk['file']), 'rb').read(); n = len(L); p = blk['primary_index']
+    cnt = [0]*256
+    for b in L: cnt[b] += 1
+    C = [0]*256; s = 0
+    for c in range(256): C[c] = s; s += cnt[c]
+    occ = C[:]; LF = [0]*n
+    for x in range(n):
+        c = L[x]; LF[x] = occ[c]; occ[c] += 1
+    # walk from p: step t emits L[x_t] = T[n-1-t] (text read backwards); emitted-position of row x
+    pos = [0]*n; x = p
+    for t in range(n):
+        pos[x] = n - 1 - t; x = LF[x]
+    T = bytearray(n)
+    for y in range(n): T[pos[y]] = L[y]
+    kind = bytearray(n)                  # 0 other, 1 GUID fixed char, 2 GUID random nibble
+    for mt in pat.finditer(bytes(T)):
+        for k in range(36):
+            kind[mt.start() + k] = 1 if k in FIXED else 2
+    heads = [0] + [y for y in range(1, n) if L[y] != L[y-1]]; ends = heads[1:] + [n]
+    w = [0]*n
+    for d, e in zip(heads, ends):
+        for y in range(d, e): w[y] = e - d
+    m16 = sum(1 for y in range(n) if w[y] <= 16)
+    w1 = [y for y in range(n) if w[y] == 1]
+    g1 = sum(1 for y in w1 if kind[pos[y]]); g1r = sum(1 for y in w1 if kind[pos[y]] == 2)
+    rnd = [y for y in range(n) if kind[pos[y]] == 2]
+    rnd_w1 = sum(1 for y in rnd if w[y] == 1); rnd_thin = sum(1 for y in rnd if w[y] <= 16)
+    # neighbours of random-nibble rows whose emitted byte is hex (the model's domain)
+    inner = [y for y in rnd if 0 < y < n-1 and L[y-1] in HEX and L[y+1] in HEX]
+    inner_w1 = sum(1 for y in inner if w[y] == 1)
+    eq = sum(1 for y in inner if L[y] == L[y+1])
+    guids = len(pat.findall(bytes(T)))
+    print(f"{blk['file']}: n {n} r {len(heads)} m16 {m16} | width-1 runs {len(w1)} ({len(w1)/m16:.3f} of m16) | GUID rows among them {g1} ({g1/len(w1):.3f}), random-nibble {g1r} ({g1r/len(w1):.3f}) | GUIDs {guids}, random-nibble rows {len(rnd)}: width-1 {rnd_w1/len(rnd):.3f}, thin {rnd_thin/len(rnd):.3f}; with hex neighbours {len(inner)}: width-1 {inner_w1/len(inner):.3f} (model 0.879), P(L equal next) {eq/len(inner):.4f} (model 0.0625)", flush=True)

@@ -1,0 +1,14 @@
+block-0.L: n 899931 r 51184 m16 89874 | width-1 runs 35116 (0.391 of m16) | GUID rows among them 23377 (0.666), random-nibble 20322 (0.579) | GUIDs 758, random-nibble rows 22740: width-1 0.894, thin 0.999; with hex neighbours 18570: width-1 0.880 (model 0.879), P(L equal next) 0.0617 (model 0.0625)
+block-2.L: n 900000 r 54532 m16 112070 | width-1 runs 34262 (0.306 of m16) | GUID rows among them 21088 (0.615), random-nibble 18356 (0.536) | GUIDs 688, random-nibble rows 20640: width-1 0.889, thin 0.999; with hex neighbours 16826: width-1 0.876 (model 0.879), P(L equal next) 0.0637 (model 0.0625)
+block-85.L: n 899935 r 79375 m16 156404 | width-1 runs 55504 (0.355 of m16) | GUID rows among them 31878 (0.574), random-nibble 27823 (0.501) | GUIDs 1037, random-nibble rows 31110: width-1 0.894, thin 1.000; with hex neighbours 25395: width-1 0.882 (model 0.879), P(L equal next) 0.0610 (model 0.0625)
+block-143.L: n 899869 r 108335 m16 196841 | width-1 runs 72578 (0.369 of m16) | GUID rows among them 19539 (0.269), random-nibble 16974 (0.234) | GUIDs 627, random-nibble rows 18810: width-1 0.902, thin 0.999; with hex neighbours 15436: width-1 0.893 (model 0.879), P(L equal next) 0.0558 (model 0.0625)
+block-210.L: n 899959 r 128732 m16 204281 | width-1 runs 97054 (0.475 of m16) | GUID rows among them 57908 (0.597), random-nibble 51030 (0.526) | GUIDs 1903, random-nibble rows 57090: width-1 0.894, thin 1.000; with hex neighbours 46635: width-1 0.882 (model 0.879), P(L equal next) 0.0611 (model 0.0625)
+block-207.L: n 899998 r 87111 m16 135921 | width-1 runs 62407 (0.459 of m16) | GUID rows among them 30378 (0.487), random-nibble 26532 (0.425) | GUIDs 989, random-nibble rows 29670: width-1 0.894, thin 1.000; with hex neighbours 24060: width-1 0.882 (model 0.879), P(L equal next) 0.0605 (model 0.0625)
+
+# The observable proxy (width-1 runs whose symbol is a hex digit, read from the run records alone):
+  proxy block-0.L: hex width-1 runs 29638 (0.330 of m16); GUID among them 0.728, random-nibble 0.686; recall of GUID width-1 rows 0.923
+  proxy block-2.L: hex width-1 runs 28254 (0.252 of m16); GUID among them 0.689, random-nibble 0.650; recall of GUID width-1 rows 0.923
+  proxy block-85.L: hex width-1 runs 45874 (0.293 of m16); GUID among them 0.643, random-nibble 0.607; recall of GUID width-1 rows 0.925
+  proxy block-143.L: hex width-1 runs 58922 (0.299 of m16); GUID among them 0.306, random-nibble 0.288; recall of GUID width-1 rows 0.923
+  proxy block-210.L: hex width-1 runs 82630 (0.404 of m16); GUID among them 0.651, random-nibble 0.618; recall of GUID width-1 rows 0.929
+  proxy block-207.L: hex width-1 runs 49791 (0.366 of m16); GUID among them 0.565, random-nibble 0.533; recall of GUID width-1 rows 0.926
