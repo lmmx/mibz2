@@ -11,13 +11,20 @@
 //! and once off, the counts in WORKERS' order rotated by `r mod len(WORKERS)`, the timed decode
 //! first in even rounds. SETTLE_S seconds of sleep precede each decode.
 //!
-//! OUT.jsonl, one line a decode: its round, count, whether timed, order, wall and bytes; timed,
-//! also every block's scanner record (`scan_profile::BlockRec`, as an array in `BLOCK_FIELDS`'
-//! order) and every worker's (`WorkerRec`: jobs, idle, life).
+//! OUT.jsonl, one line a decode: its round, count, whether timed, order, wall and bytes. Timed,
+//! also:
+//! - `n` its blocks, and `indices_ok` whether they are one each of 0..n-1 (checked here);
+//! - `sums`, each of `BLOCK_FIELDS` summed over its blocks (`scan_profile::BlockRec`);
+//! - every worker's record (`WorkerRec`: jobs, idle, life);
+//! - in the first `PER_BLOCK_ROUNDS` rounds only, every block's record as an array in
+//!   `BLOCK_FIELDS`' order (the file stays small enough for the bundle at every count).
 use mibz2::scan_profile as sp;
 use std::fmt::Write as _;
 use std::io::Read;
 use std::time::{Duration, Instant};
+
+/// The rounds whose timed decodes keep every block's record
+const PER_BLOCK_ROUNDS: usize = 2;
 
 /// A block record's fields, in the arrays' order
 const BLOCK_FIELDS: [&str; 16] = [
@@ -105,32 +112,61 @@ fn main() {
                 "{{\"kind\":\"decode\",\"round\":{round},\"workers\":{w},\"timed\":{timed},\"order\":{o},\"wall_s\":{wall:.6},\"bytes\":{bytes}"
             );
             if timed {
-                line += ",\"blocks\":[";
-                for (i, b) in blocks.iter().enumerate() {
-                    let v = [
-                        b.index,
-                        b.bits,
-                        b.syms,
-                        b.selectors,
-                        b.switches,
-                        b.tables,
-                        b.slot_wait_ns,
-                        b.read_ns,
-                        b.input_wait_ns,
-                        b.phase_ns[0],
-                        b.phase_ns[1],
-                        b.phase_ns[2],
-                        b.phase_ns[3],
-                        b.phase_ns[4],
-                        b.phase_ns[5],
-                        b.send_ns,
-                    ];
-                    if i > 0 {
-                        line.push(',');
+                let n = blocks.len();
+                let mut seen = vec![false; n];
+                let mut indices_ok = true;
+                for b in &blocks {
+                    match seen.get_mut(b.index as usize) {
+                        Some(s) if !*s => *s = true,
+                        _ => indices_ok = false,
                     }
-                    write!(line, "[{}]", v.map(|x| x.to_string()).join(",")).unwrap();
                 }
-                line += "],\"workers_rec\":[";
+                let rows: Vec<[u64; 16]> = blocks
+                    .iter()
+                    .map(|b| {
+                        [
+                            b.index,
+                            b.bits,
+                            b.syms,
+                            b.selectors,
+                            b.switches,
+                            b.tables,
+                            b.slot_wait_ns,
+                            b.read_ns,
+                            b.input_wait_ns,
+                            b.phase_ns[0],
+                            b.phase_ns[1],
+                            b.phase_ns[2],
+                            b.phase_ns[3],
+                            b.phase_ns[4],
+                            b.phase_ns[5],
+                            b.send_ns,
+                        ]
+                    })
+                    .collect();
+                let mut sums = [0u64; 16];
+                for v in &rows {
+                    for (s, x) in sums.iter_mut().zip(v) {
+                        *s += x;
+                    }
+                }
+                write!(
+                    line,
+                    ",\"n\":{n},\"indices_ok\":{indices_ok},\"sums\":[{}]",
+                    sums.map(|x| x.to_string()).join(",")
+                )
+                .unwrap();
+                if round < PER_BLOCK_ROUNDS {
+                    line += ",\"blocks\":[";
+                    for (i, v) in rows.iter().enumerate() {
+                        if i > 0 {
+                            line.push(',');
+                        }
+                        write!(line, "[{}]", v.map(|x| x.to_string()).join(",")).unwrap();
+                    }
+                    line.push(']');
+                }
+                line += ",\"workers_rec\":[";
                 for (i, x) in ws.iter().enumerate() {
                     if i > 0 {
                         line.push(',');

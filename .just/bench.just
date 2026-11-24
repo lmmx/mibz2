@@ -1941,10 +1941,11 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
 
-# The parallel decoder's serial scanner profiled: work against waiting, by component, at 1, 6
-# and 10 workers (registration docs/journal/2026-11-24-scan-profile-registration.md, its
-# classification frozen before the data; the brief
-# docs/journal/2026-11-24-algorithm-level/SCANNER-BRIEF.md at edc32f1b, part 1). DIAGNOSTIC: it
+# The parallel decoder's serial scanner profiled: work against waiting, by component, at every
+# worker count from 1 to 12, then 14, 16 and 20 (registration
+# docs/journal/2026-11-24-scan-profile-registration.md, its classification frozen before the
+# data; the brief docs/journal/2026-11-24-algorithm-level/SCANNER-BRIEF.md at c74884ce, part 1,
+# with Louis's amendment of the grid). DIAGNOSTIC: it
 # decides nothing; it tells a cheaper or parallel scanner what it must beat. One build, this
 # checkout at the ready tag: master PIN plus the `scan-profile` research feature
 # (src/scan_profile.rs, its hooks in src/block.rs and src/parallel.rs) and its harness
@@ -1952,17 +1953,20 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # of corpora/wikidata.bz2, production's lazy workers, unpinned. ROUNDS rounds; each decodes the
 # corpus twice at each count, the timers on and off (their overhead measured), the counts rotated
 # and the timed decode first in alternate rounds; SETTLE s before each decode. Reported by
-# bench/scan_profile.py: the scanner's work, slot and input waits, the work's components (header,
-# bitmap, selectors, tables, buffer preparation, Huffman decode, the read's remainder, the
-# hand-off), bits and symbols a second, table switches, and the workers' idle time; classified at
-# 10 workers SCANNER-, QUEUE- or INPUT-BOUND or MIXED. About 6 minutes with the build. DRY (the
+# bench/scan_profile.py: at each count the scanner's busy and idle time (its work; its slot and
+# input waits), the work's components (header, bitmap, selectors, tables, buffer preparation,
+# Huffman decode, the read's remainder, the hand-off), bits and symbols a second, table switches,
+# the workers' busy and idle time and rho (the scanner's rate over the workers' combined rate);
+# the measured crossover (rho falling through 1) and a pipeline model's fit (a serial stage
+# feeding k workers) with its shift point and residuals; classified at every count, judged at 10
+# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED. About 28 minutes with the build. DRY (the
 # first positional argument: two rounds, no settle; not evidence) checks the wiring.
 #   just submit bench-scan-profile
 bench-scan-profile DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     PIN=d2705dadd09f70b6af4a0c5ab02156f60d57cba5
-    COPIES=4 ROUNDS=12 SETTLE=2 WORKERS=1,6,10 JUDGED=10
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,2,3,4,5,6,7,8,9,10,11,12,14,16,20 JUDGED=10
     dry="{{DRY}}"
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
     W=$PWD/target/scan-profile

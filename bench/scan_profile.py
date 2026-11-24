@@ -19,7 +19,8 @@ Standard library only; the paired-ratio interval is bench/two_arm.py's.
   and their busy time a worker (life less idle, over the count): the decode time the workers
   alone would need;
 - *table switching:* switches a block, and an ordinary least-squares fit across blocks of the
-  decode phase's time on the block's symbols and switches (ns a symbol, ns a switch).
+  decode phase's time on the block's symbols and switches (ns a symbol, ns a switch), from the
+  decodes that keep every block's record (the first two rounds).
 
 Each figure is the median over the timed decodes at a count. **The overhead:** each round's
 paired wall ratio, timed over untimed, at each count (geometric mean, 95% interval).
@@ -117,22 +118,34 @@ def load(path, workers, rounds, out_bytes, errors):
                     errors.append(f"{where}: {x.get('bytes')} bytes, not {out_bytes}")
                 if not timed:
                     continue
-                blocks = x.get("blocks") or []
-                if not blocks or any(len(b) != len(fields) for b in blocks):
-                    errors.append(f"{where}: no block records, or malformed ones")
+                n, sums = x.get("n"), x.get("sums")
+                if (
+                    type(n) is not int
+                    or n <= 0
+                    or not isinstance(sums, list)
+                    or len(sums) != len(fields)
+                ):
+                    errors.append(f"{where}: no block sums, or malformed ones")
                     continue
-                idx = sorted(b[0] for b in blocks)
-                if idx != list(range(len(idx))):
-                    errors.append(f"{where}: the blocks are not one each of 0..{len(idx) - 1}")
+                if x.get("indices_ok") is not True:
+                    errors.append(f"{where}: the blocks are not one each of 0..{n - 1}")
                 if n_blocks is None:
-                    n_blocks = len(idx)
-                elif len(idx) != n_blocks:
-                    errors.append(f"{where}: {len(idx)} blocks, not {n_blocks}")
+                    n_blocks = n
+                elif n != n_blocks:
+                    errors.append(f"{where}: {n} blocks, not {n_blocks}")
                 if len(x.get("workers_rec") or []) != w:
                     errors.append(
                         f"{where}: {len(x.get('workers_rec') or [])} worker records, not {w}"
                     )
-                x["b"] = [dict(zip(fields, b)) for b in blocks]
+                x["sum"] = dict(zip(fields, sums))
+                blocks = x.get("blocks")
+                if blocks is not None:
+                    if len(blocks) != n or any(len(b) != len(fields) for b in blocks):
+                        errors.append(f"{where}: its block records not {n} of {len(fields)} fields")
+                        continue
+                    if sorted(b[0] for b in blocks) != list(range(n)):
+                        errors.append(f"{where}: its block records not one each of 0..{n - 1}")
+                    x["b"] = [dict(zip(fields, b)) for b in blocks]
     return got, fields
 
 
@@ -163,8 +176,8 @@ def ols(rows):
 
 
 def summarise(x, w):
-    b = x["b"]
-    s = lambda k: sum(r[k] for r in b)  # noqa: E731
+    b = x.get("b")
+    s = lambda k: x["sum"][k]  # noqa: E731
     wall = x["wall_s"] * 1e9
     read, inw, slot, send = s("read_ns"), s("input_wait_ns"), s("slot_wait_ns"), s("send_ns")
     work = read - inw + send
@@ -174,7 +187,7 @@ def summarise(x, w):
     wr = x["workers_rec"]
     idle = sum(r[1] for r in wr)
     busy_per_worker = sum(r[2] - r[1] for r in wr) / w
-    fit = ols([(r["decode_ns"], r["syms"], r["switches"]) for r in b])
+    fit = ols([(r["decode_ns"], r["syms"], r["switches"]) for r in b]) if b else None
     return {
         "wall": wall,
         "work": work,
@@ -184,12 +197,14 @@ def summarise(x, w):
         "bits_per_s": s("bits") / (work / 1e9),
         "syms_per_s": s("syms") / (work / 1e9),
         "idle_workers": idle / wall,
+        "idle_per_worker": idle / w,
         "busy_per_worker": busy_per_worker,
-        "switches_per_block": s("switches") / len(b),
-        "selectors_per_block": s("selectors") / len(b),
+        "n_blocks": x["n"],
+        "switches_per_block": s("switches") / x["n"],
+        "selectors_per_block": s("selectors") / x["n"],
         "decode_ns_per_sym": phases["decode"] / s("syms"),
         "fit": fit,
-        "read_ns": sorted(r["read_ns"] - r["input_wait_ns"] for r in b),
+        "read_ns": sorted(r["read_ns"] - r["input_wait_ns"] for r in b) if b else None,
     }
 
 
@@ -212,44 +227,96 @@ def med(ms, key):
     return statistics.median(m[key] for m in ms)
 
 
+def half(xs):
+    """The 95% t-interval's half-width of the mean of `xs`, relative to the mean"""
+    n = len(xs)
+    if n < 2:
+        return math.nan
+    t95 = ta.T95[n - 2] if n - 1 <= len(ta.T95) else 1.96
+    return t95 * statistics.stdev(xs) / math.sqrt(n) / statistics.mean(xs)
+
+
+def fit_pipeline(points):
+    """The pipeline model wall(k) = c + max(b, a / k), a serial stage (b, the whole decode's
+    serial work) feeding k workers (a, their whole work; a / k each), fitted by least squares
+    to (k, wall) points: for each shift point k* on a grid of hundredths from the smallest k to
+    the largest, b = a / k*, the model linear in (c, a), solved in closed form; the k* of least
+    squared error. (k*, a, b, c, residuals), or None"""
+    ks = [k for k, _ in points]
+    best = None
+    lo, hi = min(ks), max(ks)
+    steps = int(round((hi - lo) * 100))
+    for i in range(steps + 1):
+        kstar = lo + i / 100
+        g = [1 / k if k <= kstar else 1 / kstar for k, _ in points]
+        y = [v for _, v in points]
+        n = len(points)
+        mg, my = sum(g) / n, sum(y) / n
+        sgg = sum((x - mg) ** 2 for x in g)
+        if sgg <= 0:
+            continue
+        a = sum((x - mg) * (v - my) for x, v in zip(g, y)) / sgg
+        c = my - a * mg
+        sse = sum((c + a * x - v) ** 2 for x, v in zip(g, y))
+        if best is None or sse < best[0]:
+            best = (sse, kstar, a, c)
+    if best is None:
+        return None
+    _, kstar, a, c = best
+    res = [(k, v - (c + a * (1 / k if k <= kstar else 1 / kstar))) for k, v in points]
+    return kstar, a, a / kstar, c, res
+
+
+def crossover(rows):
+    """The measured crossover: the count where rho (the scanner's rate over the workers'
+    combined rate) first falls from at least 1 to below it, interpolated linearly in k between
+    the two counts; None if it never does in the grid"""
+    for (k0, r0), (k1, r1) in zip(rows, rows[1:]):
+        if r0 >= 1 > r1:
+            return k0 + (r0 - 1) / (r0 - r1) * (k1 - k0)
+    return None
+
+
 def report(got, workers, rounds, judged):
     print("# bench-scan-profile (diagnostic: decides nothing)\n")
-    verdict = None
+    print(
+        "Unpinned throughout: production's lazy workers at exactly k (`BzReader::parallel_workers`), "
+        "the scanner on its own thread beside them.\n"
+    )
+    verdict, grid = None, []
     for w in workers:
         ms = [summarise(got[(r, w, True)], w) for r in range(rounds)]
+        untimed = [got[(r, w, False)]["wall_s"] for r in range(rounds)]
         over = ta.step(
             [
                 math.log(got[(r, w, True)]["wall_s"] / got[(r, w, False)]["wall_s"])
                 for r in range(rounds)
             ]
         )
-        m = {
-            k: med(ms, k)
-            for k in (
-                "wall",
-                "work",
-                "slot",
-                "input",
-                "bits_per_s",
-                "syms_per_s",
-                "idle_workers",
-                "busy_per_worker",
-                "switches_per_block",
-                "selectors_per_block",
-                "decode_ns_per_sym",
-            )
-        }
+        m = {k: med(ms, k) for k in ("wall", "work", "slot", "input", "bits_per_s", "syms_per_s",
+                                       "idle_workers", "idle_per_worker", "busy_per_worker",
+                                       "switches_per_block", "selectors_per_block",
+                                       "decode_ns_per_sym", "n_blocks")}  # fmt: skip
         m["phases"] = {p: statistics.median(x["phases"][p] for x in ms) for p in ms[0]["phases"]}
+        # rho: the scanner's rate (blocks a second of its work) over the workers' combined rate
+        # (k blocks a worker's busy second): the workers' busy time a worker over the scanner's work
+        rho = m["busy_per_worker"] / m["work"]
+        c, comp, dom = classify(m)
+        label = f"{c}; the work's largest component: {comp}" + ("; DECODE-DOMINATED" if dom else "")
+        grid.append({"k": w, "m": m, "rho": rho, "label": c, "untimed": statistics.median(untimed),
+                     "over": over, "hw_work": half([x["work"] for x in ms]),
+                     "hw_busy": half([x["busy_per_worker"] for x in ms])})  # fmt: skip
         tag = " (judged)" if w == judged else ""
         print(f"## {w} workers ({rounds} timed decodes, medians){tag}")
         print(
-            f"wall {m['wall'] / 1e9:.4f} s (timed over untimed: {over[0]:.4f} [{over[1]:.4f}, "
-            f"{over[2]:.4f}], the timers' overhead)"
+            f"wall {m['wall'] / 1e9:.4f} s timed, {statistics.median(untimed):.4f} s untimed (timed "
+            f"over untimed: {over[0]:.4f} [{over[1]:.4f}, {over[2]:.4f}], the timers' overhead)"
         )
         print(
-            f"the scanner: work {m['work'] / 1e9:.4f} s ({m['work'] / m['wall']:.3f} of the wall); "
-            f"waits: slot (the window full) {m['slot'] / 1e9:.4f} s ({m['slot'] / m['wall']:.3f}), "
-            f"input {m['input'] / 1e9:.4f} s ({m['input'] / m['wall']:.3f})"
+            f"the scanner: busy (work) {m['work'] / 1e9:.4f} s ({m['work'] / m['wall']:.3f} of the "
+            f"wall, the mean's 95% half-width {grid[-1]['hw_work'] * 100:.1f}%); idle: slot waits "
+            f"(the window full) {m['slot'] / 1e9:.4f} s ({m['slot'] / m['wall']:.3f}), input waits "
+            f"{m['input'] / 1e9:.4f} s ({m['input'] / m['wall']:.3f})"
         )
         tot = sum(m["phases"].values())
         print(
@@ -260,39 +327,81 @@ def report(got, workers, rounds, judged):
             f"rates: {m['bits_per_s'] / 1e6:.1f} Mbit and {m['syms_per_s'] / 1e6:.1f} M symbols a "
             f"second of work; decode {m['decode_ns_per_sym']:.2f} ns a symbol"
         )
+        fits = [x["fit"] for x in ms if x["fit"] is not None]
         print(
             f"table switching: {m['switches_per_block']:.0f} switches in {m['selectors_per_block']:.0f} "
             "selectors a block"
             + (
                 ""
-                if any(x["fit"] is None for x in ms)
-                else "; the decode phase fit across blocks: "
-                f"{statistics.median(x['fit'][1] for x in ms):.2f} ns a symbol, "
-                f"{statistics.median(x['fit'][2] for x in ms):.1f} ns a switch, "
-                f"{statistics.median(x['fit'][0] for x in ms) / 1e3:.1f} us a block"
+                if not fits
+                else f"; the decode phase fit across blocks ({len(fits)} decodes with every block's record): "
+                f"{statistics.median(f[1] for f in fits):.2f} ns a symbol, "
+                f"{statistics.median(f[2] for f in fits):.1f} ns a switch, "
+                f"{statistics.median(f[0] for f in fits) / 1e3:.1f} us a block"
             )
         )
-        rd = ms[len(ms) // 2]["read_ns"]
-        q = lambda p: rd[min(len(rd) - 1, int(p * len(rd)))] / 1e3  # noqa: E731
+        rds = [x["read_ns"] for x in ms if x["read_ns"]]
+        if rds:
+            rd = rds[0]
+            q = lambda p: rd[min(len(rd) - 1, int(p * len(rd)))] / 1e3  # noqa: E731
+            print(
+                f"a block's read, less its input waits (the first decode with every block's record): "
+                f"p10 {q(0.1):.0f} us, median {q(0.5):.0f} us, p90 {q(0.9):.0f} us, max {rd[-1] / 1e3:.0f} us"
+            )
         print(
-            f"a block's read, less its input waits: p10 {q(0.1):.0f} us, median {q(0.5):.0f} us, p90 {q(0.9):.0f} us, max {rd[-1] / 1e3:.0f} us"
+            f"the workers: busy {m['busy_per_worker'] / 1e9:.4f} s a worker (the mean's 95% "
+            f"half-width {grid[-1]['hw_busy'] * 100:.1f}%), idle {m['idle_per_worker'] / 1e9:.4f} s a "
+            f"worker; mean idle workers {m['idle_workers']:.2f} of {w}"
         )
         print(
-            f"the workers: mean idle {m['idle_workers']:.2f} of {w}; busy {m['busy_per_worker'] / 1e9:.4f} s "
-            f"a worker (the workers alone; the scanner's work is {m['work'] / max(m['busy_per_worker'], 1):.2f} of it)"
+            f"rho, the scanner's rate over the workers' combined rate: {rho:.3f} "
+            f"({'the workers bind' if rho >= 1 else 'the scanner binds'})"
         )
-        c, comp, dom = classify(m)
-        label = f"{c}; the work's largest component: {comp}" + ("; DECODE-DOMINATED" if dom else "")
         if w == judged:
-            perturbed = over[1] > PERTURB
-            verdict = (label, perturbed, m)
+            verdict = (label, over[1] > PERTURB, m)
             print(f"by the classification: {label}")
         else:
             print(f"by the classification: {label} (decides nothing at this count)")
         print()
+    print("## The grid")
+    print(
+        "k  wall(untimed) s  scanner busy/idle (of wall)  worker busy/idle s a worker  rho    class"
+    )
+    for g in grid:
+        m = g["m"]
+        print(
+            f"{g['k']:<3}{g['untimed']:>10.4f}       {m['work'] / m['wall']:.3f} / {(m['slot'] + m['input']) / m['wall']:.3f}"
+            f"                {m['busy_per_worker'] / 1e9:.4f} / {m['idle_per_worker'] / 1e9:.4f}            "
+            f"{g['rho']:.3f}  {g['label']}"
+        )
+    cross = crossover([(g["k"], g["rho"]) for g in grid])
+    print(
+        "\nthe measured crossover (rho falls through 1, interpolated in k): "
+        + (f"k = {cross:.2f}" if cross is not None else "none in the grid")
+    )
+    fit = fit_pipeline([(g["k"], g["untimed"]) for g in grid])
+    lows = [g for g in grid if g["k"] <= 4]
+    if lows:
+        s_blk = statistics.median(g["m"]["work"] / g["m"]["n_blocks"] for g in lows)
+        w_blk = statistics.median(
+            g["m"]["busy_per_worker"] * g["k"] / g["m"]["n_blocks"] for g in lows
+        )
+        print(
+            f"the model's service times, from the counts up to 4 (uncontended): the serial stage "
+            f"{s_blk / 1e3:.1f} us a block, a worker {w_blk / 1e3:.1f} us a block; its predicted "
+            f"shift point k = w / s = {w_blk / s_blk:.2f}"
+        )
+    if fit is not None:
+        kstar, a, b, c, res = fit
+        print(
+            f"the pipeline model fitted to the untimed walls, wall(k) = c + max(b, a / k): "
+            f"k* = {kstar:.2f}, a = {a:.4f} s, b = {b:.4f} s, c = {c:.4f} s; residuals (s): "
+            + ", ".join(f"{k} {r:+.4f}" for k, r in res)
+            + f"; RMS {math.sqrt(sum(r * r for _, r in res) / len(res)):.4f} s"
+        )
     label, perturbed, m = verdict
     print(
-        f"CLASSIFICATION at {judged} workers: {label}"
+        f"\nCLASSIFICATION at {judged} workers: {label}"
         + (" (PERTURBED: the timers' overhead interval lies above 1.03)" if perturbed else "")
         + f". What a cheaper or parallel scanner must beat: the serial scanner's work, "
         f"{m['work'] / 1e9:.4f} s a decode of the wall's {m['wall'] / 1e9:.4f} s, against the "
@@ -305,9 +414,9 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("--lscpu", required=True)
-    ap.add_argument("--workers", default="1,6,10")
+    ap.add_argument("--workers", default="1,2,3,4,5,6,7,8,9,10,11,12,14,16,20")
     ap.add_argument("--judged", type=int, default=10)
-    ap.add_argument("--rounds", type=int, default=12)
+    ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
     a = ap.parse_args(argv[1:])
     workers = counts(a.workers)
