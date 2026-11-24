@@ -25,7 +25,7 @@ An essay says AI gives mathematics results without reasons. Two models read it a
 
 </div>
 
-In October the essayist doomslide published "Against Mathematics", a long polemic about what
+In October the essayist doomslide published ["Against Mathematics"](https://doomslide.substack.com/p/against-mathematics), a long polemic about what
 machines are doing to the subject. Its charge is that mathematics is splitting into results and
 reasons, and that the machines now produce the first without the second. I gave the essay to two
 models and asked each what it meant for mibz2's research. Within an afternoon each came back with
@@ -236,7 +236,7 @@ eurekas apart in an afternoon.
 
 **Sources:**
 
-- doomslide, "Against Mathematics: A religion of the dead, by the dead, for the dead", Substack,
+- doomslide, ["Against Mathematics: A religion of the dead, by the dead, for the dead"](https://doomslide.substack.com/p/against-mathematics), Substack,
   24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
 - [The source record](https://github.com/lmmx/mibz2/blob/b643d28ed5f3e631260fbd4f086e64cbbc4df0bc/docs/journal/2026-11-24-against-mathematics-source.md): the prompt, ChatGPT's and Claude's analyses verbatim, and
   descriptions of ChatGPT's figures.
