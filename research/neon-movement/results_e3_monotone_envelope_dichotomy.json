@@ -1,0 +1,490 @@
+[
+  {
+    "name": "synth-hex-iid-65536",
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 23337,
+      "pins_total_frac_of_n": 0.3561,
+      "pins_pigeonhole_all": 21815,
+      "pins_lipschitz_run": 1504,
+      "pins_lone_total": 19157,
+      "pins_lone_pigeonhole": 19142,
+      "pins_lone_boundary": 15,
+      "pins_lone_frac_of_h1": 0.3334,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3331,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 0,
+      "F_bucket_byte": 48,
+      "orig_bytes": [
+        101,
+        56,
+        97
+      ],
+      "rot_bytes": [
+        56,
+        97,
+        101
+      ],
+      "rot_kind": "left_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        17514,
+        34963,
+        13059
+      ],
+      "decoded_text_hamming_diff": 49280,
+      "decoded_text_diff_frac": 0.752,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 65536,
+      "Q_over_h1": 1.1406,
+      "Q_acq": 0,
+      "Q_run": 65536,
+      "D": 65536,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 327680,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "synth-tmpl-hex-1000x40",
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 50896,
+      "pins_total_frac_of_n": 0.6283,
+      "pins_pigeonhole_all": 17519,
+      "pins_lipschitz_run": 33350,
+      "pins_lone_total": 12762,
+      "pins_lone_pigeonhole": 12744,
+      "pins_lone_boundary": 18,
+      "pins_lone_frac_of_h1": 0.3198,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3193,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 0,
+      "F_bucket_byte": 34,
+      "orig_bytes": [
+        56,
+        55,
+        50
+      ],
+      "rot_bytes": [
+        50,
+        56,
+        55
+      ],
+      "rot_kind": "right_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        6885,
+        25839,
+        48276
+      ],
+      "decoded_text_hamming_diff": 16265,
+      "decoded_text_diff_frac": 0.2008,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 81000,
+      "Q_over_h1": 2.0296,
+      "Q_acq": 0,
+      "Q_run": 81000,
+      "D": 81000,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 405000,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-0.L",
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 860051,
+      "pins_total_frac_of_n": 0.9557,
+      "pins_pigeonhole_all": 275082,
+      "pins_lipschitz_run": 584894,
+      "pins_lone_total": 11304,
+      "pins_lone_pigeonhole": 11262,
+      "pins_lone_boundary": 42,
+      "pins_lone_frac_of_h1": 0.3219,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3207,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 11,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        48,
+        57,
+        67
+      ],
+      "rot_bytes": [
+        57,
+        67,
+        48
+      ],
+      "rot_kind": "left_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        69940,
+        481482,
+        348509
+      ],
+      "decoded_text_hamming_diff": 525148,
+      "decoded_text_diff_frac": 0.5835,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 899931,
+      "Q_over_h1": 25.6274,
+      "Q_acq": 0,
+      "Q_run": 899931,
+      "D": 899931,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4499655,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-2.L",
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 856480,
+      "pins_total_frac_of_n": 0.9516,
+      "pins_pigeonhole_all": 268248,
+      "pins_lipschitz_run": 588161,
+      "pins_lone_total": 11012,
+      "pins_lone_pigeonhole": 10971,
+      "pins_lone_boundary": 41,
+      "pins_lone_frac_of_h1": 0.3214,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3202,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 3,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        57,
+        48,
+        52
+      ],
+      "rot_bytes": [
+        52,
+        57,
+        48
+      ],
+      "rot_kind": "right_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        65657,
+        204739,
+        629604
+      ],
+      "decoded_text_hamming_diff": 257896,
+      "decoded_text_diff_frac": 0.2866,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 900000,
+      "Q_over_h1": 26.2682,
+      "Q_acq": 0,
+      "Q_run": 900000,
+      "D": 900000,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4500000,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-85.L",
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 837177,
+      "pins_total_frac_of_n": 0.9303,
+      "pins_pigeonhole_all": 192608,
+      "pins_lipschitz_run": 644506,
+      "pins_lone_total": 16617,
+      "pins_lone_pigeonhole": 16574,
+      "pins_lone_boundary": 43,
+      "pins_lone_frac_of_h1": 0.2994,
+      "pins_lone_pigeonhole_frac_of_h1": 0.2986,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 0,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        50,
+        65,
+        53
+      ],
+      "rot_bytes": [
+        65,
+        53,
+        50
+      ],
+      "rot_kind": "left_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        16635,
+        82174,
+        801126
+      ],
+      "decoded_text_hamming_diff": 93991,
+      "decoded_text_diff_frac": 0.1044,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 899935,
+      "Q_over_h1": 16.2139,
+      "Q_acq": 0,
+      "Q_run": 899935,
+      "D": 899935,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4499675,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-143.L",
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 814615,
+      "pins_total_frac_of_n": 0.9053,
+      "pins_pigeonhole_all": 249724,
+      "pins_lipschitz_run": 564811,
+      "pins_lone_total": 23081,
+      "pins_lone_pigeonhole": 23040,
+      "pins_lone_boundary": 41,
+      "pins_lone_frac_of_h1": 0.318,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3175,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 0,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        50,
+        48,
+        54
+      ],
+      "rot_bytes": [
+        54,
+        50,
+        48
+      ],
+      "rot_kind": "right_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        145714,
+        217243,
+        536912
+      ],
+      "decoded_text_hamming_diff": 346662,
+      "decoded_text_diff_frac": 0.3852,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 899869,
+      "Q_over_h1": 12.3986,
+      "Q_acq": 0,
+      "Q_run": 899869,
+      "D": 899869,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4499345,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-210.L",
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 801656,
+      "pins_total_frac_of_n": 0.8908,
+      "pins_pigeonhole_all": 202603,
+      "pins_lipschitz_run": 598942,
+      "pins_lone_total": 30429,
+      "pins_lone_pigeonhole": 30373,
+      "pins_lone_boundary": 56,
+      "pins_lone_frac_of_h1": 0.3135,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3129,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 0,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        57,
+        51,
+        48
+      ],
+      "rot_bytes": [
+        48,
+        57,
+        51
+      ],
+      "rot_kind": "right_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        557213,
+        186513,
+        156233
+      ],
+      "decoded_text_hamming_diff": 709649,
+      "decoded_text_diff_frac": 0.7885,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 899959,
+      "Q_over_h1": 9.2728,
+      "Q_acq": 0,
+      "Q_run": 899959,
+      "D": 899959,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4499795,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  },
+  {
+    "name": "block-207.L",
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "byte_exact": true,
+    "monotone_envelope": {
+      "pins_total": 833002,
+      "pins_total_frac_of_n": 0.9256,
+      "pins_pigeonhole_all": 223807,
+      "pins_lipschitz_run": 609106,
+      "pins_lone_total": 20115,
+      "pins_lone_pigeonhole": 20069,
+      "pins_lone_boundary": 46,
+      "pins_lone_frac_of_h1": 0.3223,
+      "pins_lone_pigeonhole_frac_of_h1": 0.3216,
+      "theoretical_random_pigeonhole": 0.3333
+    },
+    "dichotomy_3rot_witness": {
+      "x": 10,
+      "F_bucket_byte": 0,
+      "orig_bytes": [
+        53,
+        50,
+        46
+      ],
+      "rot_bytes": [
+        46,
+        53,
+        50
+      ],
+      "rot_kind": "right_3cycle",
+      "lf_rows_changed": 3,
+      "single_cycle_verified": true,
+      "m2_and_histogram_identical": true,
+      "permuted_text_segment_lengths": [
+        294575,
+        286043,
+        319380
+      ],
+      "decoded_text_hamming_diff": 553955,
+      "decoded_text_diff_frac": 0.6155,
+      "triples_scanned_to_find": 1
+    },
+    "pi_cost": {
+      "Q": 899998,
+      "Q_over_h1": 14.4214,
+      "Q_acq": 0,
+      "Q_run": 899998,
+      "D": 899998,
+      "D_over_n": 1.0,
+      "P": 1,
+      "P_acq": 1,
+      "P_run": 0,
+      "P_bytes": 1.0,
+      "S": 4499990,
+      "S_over_n": 5.0,
+      "s_cursors": 256,
+      "notes": "Envelope pins 1/3 of lone rows info-theoretically, but dynamic lookup still pays Q>=1"
+    }
+  }
+]
