@@ -787,3 +787,33 @@ Louis relayed MONODROMY's session summary of record 98. It adds, in plain terms:
   of FRONTIER's draft target (PR #816).
 - **Remaining for the formulation:** K and the family 𝓕 (Louis's), and writing the two-stream split
   into the target section, offered as a draft for Louis to edit.
+
+## 23. Louis: "Do you think that then we should have a main theorem like the Mario thing did?"
+
+**The Coordinator's answer: yes, and now we can.** Record 98's calculus makes the challenge precise
+enough to state as one.
+
+- **What SSL-Coq's `MainTheorem` is:** not "a route exists" (unknown), but a conditional — if premises
+  H₁…Hₙ hold, then no-A spawning displacement is reachable. The premises are the agenda; each session
+  discharges one or proves an obstruction; an audit checks that results are wired in and nothing is
+  assumed silently (no axioms, no `Admitted`).
+- **Ours, in the same shape.** *Main theorem (the challenge):* for the block family 𝓕 and pass budget
+  K, if premises P₁…Pₖ hold, then there is a decoder outside 𝓡 that inverts every block in 𝓕 exactly,
+  within K passes, with fewer than h₁ width-1 events.
+  - *Premises = the two streams (§22):* stream N, a global positional procedure for non-random rows
+    whose cost scales with a parameter small on real data (the open cell); stream R, the random rows
+    handled at no more than their share of h₁ (the existing walk does that); and a composition lemma,
+    c₁ = c₁(N) + c₁(R).
+  - *Closed branches = the obstructions:* G1 (anything in 𝓡 costs ≥ h₁: the walk and Rauzy–Veech);
+    record 84; Gamma's G1; the random-content conjecture, once proved.
+  - *A "no":* proving the open cell's premise false gives the main theorem's negation for that budget.
+- **What stays outside it:** utility (wall time on the i9) cannot be proved, as SSL-Coq's original-ROM
+  playback was a separate receipt, not a theorem. The full yes is: main theorem discharged +
+  cost-weighted applicability on the census + beats master on the bench — the first formal, the other
+  two measured, never confused.
+- **How to start:** (1) now, on paper — MONODROMY writes the main theorem, its premises and the
+  composition lemma as a new PROOF-PROGRAMME.md section in its pseudo-Lean, and FRONTIER's target
+  points at it, so every agent attaches results to one statement; (2) later, in Lean — a `mibz2-lean`
+  repository with the specification, the calculus 𝓡, G1 (about 600–1,000 lines), the main theorem with
+  premises as explicit hypotheses, and a CI audit that none is assumed silently (new infrastructure,
+  Louis's approval). Recommended: step 1 now, step 2 once the statement settles.
