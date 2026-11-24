@@ -236,3 +236,55 @@ plain summary. Ask Louis nothing.
 ```
 
 When it reports back, its work gets the same independent review as the other two chats'.
+
+---
+
+# Part 4: the Coordinator's builder's account (24 November 2026, evening)
+
+Recorded verbatim as Louis pasted it ("more input from claude if it helps you refine the blog
+fyi"). The records it cites are MONODROMY 113 (806aa0123) and 114 (bfdbc245f) on
+`claude/sharp-meitner-cx0v78`. Its closing question to Louis ("count both, but only (a) is the
+breakthrough") was open when recorded.
+
+You're right. I gave you a detective's report: who's doing what, as an observer tracking the parts. You need the builder's account: what we're building, why, and where each piece fits. Here it is.
+
+## What we're building
+
+**The finished thing:** a new way to undo the bzip2 scramble that doesn't follow the pointer chain one row at a time. It should be as much a change of kind as the run-based method was over the walk, and it should beat the old method's proved limit on random-looking content: hashes, IDs, hex.
+
+**Why:** the run-based method already sits at that proved limit. Tuning won't move it, and today's rounds showed that again. The only way past a proved limit is a method the proof doesn't cover.
+
+**How we expect to find it:** take the step that got us from the walk to the runs, "notice what moves together, compose it once, recurse on the rest". Then change what "moves together" means. Every sense is pursued, none leads, and finding more senses is part of the job. Each candidate is then checked against the cost rules, which act as referee.
+
+## The pieces, and what each is for
+
+**1. MONODROMY: the mathematician.** Its job is to state that recipe exactly and work out each sense of "moving together" on paper: does it decode correctly, what does it collapse on random content, and where does the cost go. It has already delivered two notes (records 113 and 114):
+- **The recipe, stated precisely,** with walk → runs as one case of it. It shows plainly why lone rows are stuck: under the run sense, a lone row moves only with itself.
+- **A sharp way to compare senses.** Each sense of "together" amounts to putting the rows in some order. A sense helps exactly as much as that order agrees with the order of the text. So the hunt is for a cheap ordering of rows that correlates with text position.
+- **Twelve senses so far,** including: rows sharing the next few bytes; rows at the same offset in repeated records (in JSON, the same field in every record); a rule among the induction's own steps; bit-planes; fingerprints. Each one has prior art cited, and says honestly where it stops.
+- **One candidate worked up fully: "landmark induction".** Pick a common byte as a landmark. Start a chain at every row that begins with that byte; these rows are free to find, because they're all in one known block. Advance all the chains together until each reaches the next landmark, then repeat on the shortened system. The point is that it **doesn't reduce how many memory reads there are. It makes them independent of each other instead of each waiting on the last.** The walk is slow mainly because every step waits for the previous read to come back. With independent reads, the processor can overlap hundreds at once. The chain of waiting shrinks from one read per byte to a few hundred.
+
+**2. The fresh Neon chat (the prompt I gave you).** It's a second, independent mind doing the same generative job: inventing senses of "moving together". It works separately so it doesn't just echo MONODROMY. If you haven't started it yet, there's no harm. Its value is diversity of ideas, and it can start any time.
+
+**3. Me: referee and record-keeper.** I check every claimed find against the cost rules, catching uncounted passes, hidden walks and things that only work on synthetic data. I also check claims against earlier work, so nothing old is presented as new. And I keep the journal and your words on record.
+
+**4. The writer.** It explains each stage on the blog. It's caught up now.
+
+**5. The two older Antigravity chats.** Finished. Their work was reviewed today: neither changed what "moves together" means, so nothing from them carries forward except lessons.
+
+## The decision this now turns on, which is yours
+
+When you chose "real machine cost", it covered two different things, and landmark induction separates them:
+- **(a) How many memory reads land somewhere unpredictable.** Landmark induction does not reduce this, so it fails.
+- **(b) How long the chain of reads that must wait for each other is.** Landmark induction cuts this from about one per byte to a few hundred, so it succeeds.
+
+On real hardware, (b) is what makes the walk slow. But "independent reads are cheaper" is about the cost per read, not a change in what has to be done. Our team has one data point here: an earlier "lanes" experiment gave a modest 0.55–0.78× of the emit time with only 8 chains. And an earlier test caps any emitter-only gain at about 16% of the whole decoder on one thread, and almost nothing at ten threads.
+
+My recommendation is to count **both**, reported separately, and to treat a big cut in (b) as a real find to measure. But a breakthrough still means beating the limit on (a), because only (a) is the proved floor.
+
+**If you agree,** the next steps are:
+1. Measure landmark induction on your six real blocks: how long the waiting chain gets, and whether it holds up.
+2. MONODROMY keeps hunting for a sense that cuts (a). Its best lead is the "same offset in repeated records" sense.
+3. Neon works independently on the same hunt.
+
+Does "count both, but only (a) is the breakthrough" match what you meant?

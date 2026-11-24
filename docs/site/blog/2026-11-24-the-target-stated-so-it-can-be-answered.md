@@ -99,6 +99,18 @@ further ones is part of the work ([the record of this principle](https://github.
   ([§2](2026-11-24-halving-the-single-row-steps.md#2-four-reframings-of-the-search)) generates new
   triangles where an oracle could only hand them over.
 
+The first worked notes already sharpen the hunt ([record 113](https://github.com/lmmx/mibz2/blob/806aa0123c9a24ad7a1e9ef15da015e1408022f0/docs/journal/monodromy/2026-11-24-moving-together.md), [record 114](https://github.com/lmmx/mibz2/blob/bfdbc245fce475fbb7d017501a1e7423dd20eaf5/docs/journal/monodromy/2026-11-24-more-senses.md)).
+Every sense of moving together puts the rows in some order, and it helps exactly as far as that
+order agrees with the order of the text, so the search becomes one for a cheap ordering of rows
+that correlates with text position. The first candidate worked up in full, *landmark induction*,
+also shows why the referee reports more than one figure. It starts a chain at every row holding a
+chosen common byte, rows that sit together in one known block and cost nothing to find, advances
+all the chains at once to the next landmark, and repeats on what remains. It leaves the number of
+unpredictable reads where it was, but makes those reads independent of one another, so the chain
+of reads that must each wait for the last falls from about one per byte to a few hundred on
+hex-dense content. Which of those two figures the floor is to be beaten in is the decision this
+candidate turns on, and its measurement on our six real blocks comes first.
+
 ## 3. The snag: a convention decided the answer
 
 The decisive gaps in the target were in its accounting. Every known route that beats the floor does
