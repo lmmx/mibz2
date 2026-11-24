@@ -24,8 +24,13 @@ def verify(census, corpus):
             count += 1
             total += len(data)
         assert not reader.read(1), "unconsumed oracle bytes"
-    return {"oracle": "Python/libbzip2", "blocks": count, "bytes": total,
-            "decoded_sha256": digest.hexdigest(), "parity": True}
+    return {
+        "oracle": "Python/libbzip2",
+        "blocks": count,
+        "bytes": total,
+        "decoded_sha256": digest.hexdigest(),
+        "parity": True,
+    }
 
 
 if __name__ == "__main__":

@@ -23,8 +23,11 @@ DRIVER_SHA256 = "6167171b7889706226340adc0beba89bfbf5e933af944d7f68e49d97bc7bfa0
 
 def recipe(name):
     lines = (ROOT / ".just" / "bench.just").read_text().splitlines()
-    start = next(i for i, line in enumerate(lines)
-                 if line.startswith(name + ":") or line.startswith(name + " "))
+    start = next(
+        i
+        for i, line in enumerate(lines)
+        if line.startswith(name + ":") or line.startswith(name + " ")
+    )
     end = start + 1
     while end < len(lines) and (lines[end].startswith("    ") or not lines[end]):
         end += 1
@@ -39,16 +42,30 @@ class OnecoreRecipe(unittest.TestCase):
                 self.fail("just is required for the CI recipe dry run")
             self.skipTest("just unavailable locally; required in CI")
         result = subprocess.run(
-            [just, "--justfile", str(ROOT / ".just" / "bench.just"),
-             "--dry-run", "bench-onecore-inline-i9"],
-            cwd=ROOT, capture_output=True, text=True, check=True,
+            [
+                just,
+                "--justfile",
+                str(ROOT / ".just" / "bench.just"),
+                "--dry-run",
+                "bench-onecore-inline-i9",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
         )
-        commands = [shlex.split(line) for line in
-                    (result.stdout + result.stderr).splitlines() if line.strip()]
-        self.assertEqual(commands, [
-            ["git", "fetch", "-q", "origin", "perf/onecore-walk-inline"],
-            ["just", "bench-release-scaling", CANDIDATE, BASELINE, "10", "1"],
-        ])
+        commands = [
+            shlex.split(line)
+            for line in (result.stdout + result.stderr).splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(
+            commands,
+            [
+                ["git", "fetch", "-q", "origin", "perf/onecore-walk-inline"],
+                ["just", "bench-release-scaling", CANDIDATE, BASELINE, "10", "1"],
+            ],
+        )
 
     def test_driver_is_frozen(self):
         driver = recipe("bench-release-scaling")
@@ -56,8 +73,14 @@ class OnecoreRecipe(unittest.TestCase):
         self.assertIn('summary "$W/runs.jsonl" --ref mibz2', driver)
 
     def drive(self, fetch_exit=0):
-        body = "\n".join(line[4:] for line in recipe("bench-onecore-inline-i9").splitlines()
-                         if line.startswith("    ")) + "\n"
+        body = (
+            "\n".join(
+                line[4:]
+                for line in recipe("bench-onecore-inline-i9").splitlines()
+                if line.startswith("    ")
+            )
+            + "\n"
+        )
         with tempfile.TemporaryDirectory(prefix="onecore-wrapper-") as temp:
             tmp = Path(temp)
             script = tmp / "recipe.sh"
@@ -72,8 +95,12 @@ class OnecoreRecipe(unittest.TestCase):
             for name in ("git", "just"):
                 (tmp / name).write_text(stub)
                 (tmp / name).chmod(0o755)
-            env = dict(os.environ, PATH=str(tmp) + os.pathsep + os.environ["PATH"],
-                       CAPTURE=str(tmp / "calls"), FETCH_EXIT=str(fetch_exit))
+            env = dict(
+                os.environ,
+                PATH=str(tmp) + os.pathsep + os.environ["PATH"],
+                CAPTURE=str(tmp / "calls"),
+                FETCH_EXIT=str(fetch_exit),
+            )
             subprocess.run(["bash", "-n", str(script)], check=True)
             result = subprocess.run(["bash", str(script)], env=env, check=False)
             calls = [json.loads(line) for line in (tmp / "calls").read_text().splitlines()]
@@ -82,10 +109,13 @@ class OnecoreRecipe(unittest.TestCase):
     def test_exact_contrast_and_grid(self):
         code, calls = self.drive()
         self.assertEqual(code, 0)
-        self.assertEqual(calls, [
-            ["git", "fetch", "-q", "origin", "perf/onecore-walk-inline"],
-            ["just", "bench-release-scaling", CANDIDATE, BASELINE, "10", "1"],
-        ])
+        self.assertEqual(
+            calls,
+            [
+                ["git", "fetch", "-q", "origin", "perf/onecore-walk-inline"],
+                ["just", "bench-release-scaling", CANDIDATE, BASELINE, "10", "1"],
+            ],
+        )
 
     def test_failed_fetch_never_starts_measurement(self):
         code, calls = self.drive(fetch_exit=17)
@@ -95,4 +125,3 @@ class OnecoreRecipe(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -396,7 +396,7 @@ def report(got, workers, rounds, judged):
         "\n## Memory and scheduling (the untimed decodes' medians; every decode's own figures are "
         "in the bundle's runs.tsv)\n"
         "The resident memory is the decode's own: the process's, less its base at the decode's "
-        "start (the free heap given back first: the input and the harness's records)."
+        "start (the input and the runtime; each decode runs in a fresh process)."
     )
     print(
         "k  rss mean MB  rss peak MB  user s  sys s  cpu/wall  minor faults  major  vol. ctxsw  invol. ctxsw"

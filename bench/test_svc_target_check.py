@@ -29,10 +29,17 @@ class Check(unittest.TestCase):
         r, _ = record(True)
         unknown = edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "unknown"}))
         # as the binary must report it: not ok, the predicate false, no service core
-        honest = edit(unknown, lambda r: (
-            r.__setitem__("ok", False), r["why"].append("quota unknown"),
-            r["at"][1].__setitem__("predicate", False),
-            r["at"][1]["built"].update(service=False, pipelined=True, threads=9, window=12, counts=None)))
+        honest = edit(
+            unknown,
+            lambda r: (
+                r.__setitem__("ok", False),
+                r["why"].append("quota unknown"),
+                r["at"][1].__setitem__("predicate", False),
+                r["at"][1]["built"].update(
+                    service=False, pipelined=True, threads=9, window=12, counts=None
+                ),
+            ),
+        )
         self.assertEqual(check(honest, 3)[0], "NOT TARGET")
         # ok=true beside it (the R2 witness): refused
         self.assertEqual(check(unknown, 0)[0], "INVALID RECORD")
@@ -42,15 +49,27 @@ class Check(unittest.TestCase):
         # report them: not ok, the predicate false, the pipelined default built at 10)
         r, _ = record(True)
         for what, f in (
-            ("i9-10900", lambda r: r["machine"]["target"]["cpu"].__setitem__(
-                "name", "Intel(R) Core(TM) i9-10900 CPU @ 2.80GHz")),
+            (
+                "i9-10900",
+                lambda r: r["machine"]["target"]["cpu"].__setitem__(
+                    "name", "Intel(R) Core(TM) i9-10900 CPU @ 2.80GHz"
+                ),
+            ),
             ("quota 20", lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 20})),
         ):
             with self.subTest(what):
-                honest = edit(r, lambda r: (
-                    f(r), r.__setitem__("ok", False), r["why"].append("10 threads: the predicate is false"),
-                    r["at"][1].__setitem__("predicate", False),
-                    r["at"][1]["built"].update(service=False, pipelined=True, threads=9, window=12, counts=None)))
+                honest = edit(
+                    r,
+                    lambda r: (
+                        f(r),
+                        r.__setitem__("ok", False),
+                        r["why"].append("10 threads: the predicate is false"),
+                        r["at"][1].__setitem__("predicate", False),
+                        r["at"][1]["built"].update(
+                            service=False, pipelined=True, threads=9, window=12, counts=None
+                        ),
+                    ),
+                )
                 self.assertEqual(check(honest, 3), ("NOT TARGET", []))
 
     def test_fail_open_witnesses(self):
@@ -59,13 +78,25 @@ class Check(unittest.TestCase):
             "target absent, ok": edit(r, lambda r: r["machine"].__setitem__("target", None)),
             "only ok": {"ok": True},
             "no observations": edit(r, lambda r: r.__setitem__("at", [])),
-            "a quota below 10, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 8})),
-            "another model, ok": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__("model", 166)),
+            "a quota below 10, ok": edit(
+                r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 8})
+            ),
+            "another model, ok": edit(
+                r, lambda r: r["machine"]["target"]["cpu"].__setitem__("model", 166)
+            ),
             # (the narrowed predicate, schema 2: the measured SKU's name, and unlimited alone)
-            "another 10-core Comet Lake-S, ok": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__(
-                "name", "Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz")),
-            "a quota of 20, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 20})),
-            "a quota of 10, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 10})),
+            "another 10-core Comet Lake-S, ok": edit(
+                r,
+                lambda r: r["machine"]["target"]["cpu"].__setitem__(
+                    "name", "Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz"
+                ),
+            ),
+            "a quota of 20, ok": edit(
+                r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 20})
+            ),
+            "a quota of 10, ok": edit(
+                r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 10})
+            ),
             "scalar kernels, ok": edit(r, lambda r: r["kernels"].__setitem__("avx2", False)),
         }
         for what, bad in cases.items():
@@ -76,12 +107,18 @@ class Check(unittest.TestCase):
         r, x = record(True)
         cases = {
             "schema": edit(r, lambda r: r.__setitem__("schema", "mibz2.svc_target/0")),
-            "schema 1 (the earlier predicate's)": edit(r, lambda r: r.__setitem__("schema", "mibz2.svc_target/1")),
+            "schema 1 (the earlier predicate's)": edit(
+                r, lambda r: r.__setitem__("schema", "mibz2.svc_target/1")
+            ),
             "no name": edit(r, lambda r: r["machine"]["target"]["cpu"].pop("name")),
-            "a name not a string": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__("name", 10900)),
+            "a name not a string": edit(
+                r, lambda r: r["machine"]["target"]["cpu"].__setitem__("name", 10900)
+            ),
             "ok as 1": edit(r, lambda r: r.__setitem__("ok", 1)),
             "predicate as 0": edit(r, lambda r: r["at"][0].__setitem__("predicate", 0)),
-            "threads as a string": edit(r, lambda r: r["at"][1]["built"].__setitem__("threads", "8")),
+            "threads as a string": edit(
+                r, lambda r: r["at"][1]["built"].__setitem__("threads", "8")
+            ),
             "a budget missing": edit(r, lambda r: r["at"].pop()),
             "budgets reordered": edit(r, lambda r: r["at"].reverse()),
             "quota kind": edit(r, lambda r: r["machine"]["quota"].__setitem__("kind", "maybe")),
@@ -99,12 +136,21 @@ class Check(unittest.TestCase):
             "exit 3 with ok": (r, 3),
             "exit 101": (r, 101),
             "predicate at 9": (edit(r, lambda r: r["at"][0].__setitem__("predicate", True)), 0),
-            "service at 11": (edit(r, lambda r: r["at"][2]["built"].__setitem__("service", True)), 0),
+            "service at 11": (
+                edit(r, lambda r: r["at"][2]["built"].__setitem__("service", True)),
+                0,
+            ),
             "ok with reasons": (edit(r, lambda r: r["why"].append("x")), 0),
         }
         n, nx = record(False)
-        cases["service core off the target"] = (edit(n, lambda r: r["at"][1]["built"].__setitem__("service", True)), nx)
-        cases["predicate true off the target"] = (edit(n, lambda r: r["at"][1].__setitem__("predicate", True)), nx)
+        cases["service core off the target"] = (
+            edit(n, lambda r: r["at"][1]["built"].__setitem__("service", True)),
+            nx,
+        )
+        cases["predicate true off the target"] = (
+            edit(n, lambda r: r["at"][1].__setitem__("predicate", True)),
+            nx,
+        )
         cases["not ok, no reason"] = (edit(n, lambda r: r.__setitem__("why", [])), nx)
         for what, (bad, ex) in cases.items():
             with self.subTest(what):
@@ -120,15 +166,25 @@ class Check(unittest.TestCase):
             "an incomplete plan": edit(r, lambda r: r["at"][0].update(plan={"kind": "teams"})),
             "a float budget": edit(r, lambda r: r["at"][0].update(threads=9.0)),
             "a float service-plan teams": edit(r, lambda r: r["service_plan"].update(teams=2.0)),
-            "a negative pooled count": edit(r, lambda r: r["at"][1]["built"]["counts"].update(pooled=-1)),
-            "a NaN quota": edit(r, lambda r: r["machine"].update(quota={"kind": "cpus", "cpus": float("nan")})),
+            "a negative pooled count": edit(
+                r, lambda r: r["at"][1]["built"]["counts"].update(pooled=-1)
+            ),
+            "a NaN quota": edit(
+                r, lambda r: r["machine"].update(quota={"kind": "cpus", "cpus": float("nan")})
+            ),
             "a float window": edit(r, lambda r: r["at"][1]["built"].update(window=8.0)),
             "a zero thread count": edit(r, lambda r: r["at"][0]["built"].update(threads=0)),
-            "a workers plan with no count": edit(r, lambda r: r["at"][0].update(plan={"kind": "workers"})),
-            "a plan of another kind": edit(r, lambda r: r["at"][0].update(plan={"kind": "service", "teams": 2, "k": 3})),
+            "a workers plan with no count": edit(
+                r, lambda r: r["at"][0].update(plan={"kind": "workers"})
+            ),
+            "a plan of another kind": edit(
+                r, lambda r: r["at"][0].update(plan={"kind": "service", "teams": 2, "k": 3})
+            ),
             "a plan with an extra field": edit(r, lambda r: r["at"][0]["plan"].update(extra=1)),
             "a float k": edit(r, lambda r: r["at"][0]["plan"].update(k=2.0)),
-            "an unknown quota with a count": edit(r, lambda r: r["machine"].update(quota={"kind": "unknown", "cpus": 20})),
+            "an unknown quota with a count": edit(
+                r, lambda r: r["machine"].update(quota={"kind": "unknown", "cpus": 20})
+            ),
             "a bool builds": edit(r, lambda r: r["at"][0].update(builds=True)),
         }
         for what, bad in cases.items():
@@ -137,7 +193,10 @@ class Check(unittest.TestCase):
         # the retained controls
         self.assertEqual(check(r, x), ("TARGET", []))
         self.assertEqual(check(edit(r, lambda r: r["at"][0].pop("plan")), x)[0], "INVALID RECORD")
-        self.assertEqual(check(edit(r, lambda r: r["machine"].update(quota={"kind": "unknown"})), x)[0], "INVALID RECORD")
+        self.assertEqual(
+            check(edit(r, lambda r: r["machine"].update(quota={"kind": "unknown"})), x)[0],
+            "INVALID RECORD",
+        )
         n, nx = record(False)
         self.assertEqual(check(n, nx)[0], "NOT TARGET")
 
@@ -145,7 +204,9 @@ class Check(unittest.TestCase):
         # REVIEW 6743780326: off the target, a decode failure is FAILED (its own outcome), not
         # NOT TARGET with the defect in its problems
         n, nx = record(False)
-        bad = edit(n, lambda r: (r["at"][0].update(decoded=False), r["why"].append("decode mismatch")))
+        bad = edit(
+            n, lambda r: (r["at"][0].update(decoded=False), r["why"].append("decode mismatch"))
+        )
         verdict, problems = check(bad, nx)
         self.assertEqual(verdict, "FAILED")
         self.assertTrue(any("did not give back" in p for p in problems))

@@ -73,7 +73,11 @@ def layout():
 
 def freqs():
     return {
-        c: (int(v) if (v := read(f"/sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq")) else None)
+        c: (
+            int(v)
+            if (v := read(f"/sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq"))
+            else None
+        )
         for c in online_cpus()
     }
 
@@ -146,7 +150,11 @@ def run(ab, spin, corpus, corpus_x4, out, each):
                 "span_s": (reap - launch) / 1e9,
                 "exit": rc,
                 "child": child,
-                "rusage": {"utime_s": ru.ru_utime, "stime_s": ru.ru_stime, "maxrss_kb": ru.ru_maxrss},
+                "rusage": {
+                    "utime_s": ru.ru_utime,
+                    "stime_s": ru.ru_stime,
+                    "maxrss_kb": ru.ru_maxrss,
+                },
                 "freq_khz_at_exit": fq,
                 "threads_last_cpu": seen["threads"],
                 "rchar": seen["rchar"] if arm == "L" else None,
@@ -244,7 +252,10 @@ def judge(d):
     if dry:
         decision = f"DRY (not evidence, {each} runs an arm): {decision}"
     tally = " ".join(f"{a} {arms[a]['fast']}/{arms[a]['timed']}" for a in ARMS if a != "L")
-    lines = [decision, f"fast (wall < {THRESHOLD_S} s) / timed: {tally} (judged: P W B; L is x4 input, not classed)"]
+    lines = [
+        decision,
+        f"fast (wall < {THRESHOLD_S} s) / timed: {tally} (judged: P W B; L is x4 input, not classed)",
+    ]
     for a in ARMS:
         x = arms[a]
         lines.append(
@@ -252,7 +263,9 @@ def judge(d):
             f"clock at exit {x['freq_mhz_median_at_exit']} MHz, decoder last CPUs {x['decoder_last_cpus']}"
         )
     if arms["L"].get("input_bytes_per_100ms_median"):
-        lines.append(f"L input bytes per 100 ms (median over runs): {arms['L']['input_bytes_per_100ms_median']}")
+        lines.append(
+            f"L input bytes per 100 ms (median over runs): {arms['L']['input_bytes_per_100ms_median']}"
+        )
     with open(os.path.join(d, "judgement.json"), "w") as f:
         json.dump({"decision": decision, "dry": dry, "arms": arms}, f, indent=1)
     with open(os.path.join(d, "outcome.txt"), "w") as f:

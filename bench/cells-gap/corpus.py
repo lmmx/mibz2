@@ -52,5 +52,12 @@ if __name__ == "__main__":
     spec = json.loads(spec_path.read_text())
     data = rebuild(spec, root)
     out.write_bytes(data)
-    print(json.dumps({"corpus_sha256": hashlib.sha256(data).hexdigest(),
-                      "compressed_bytes": len(data), "libbzip2_parity": True}))
+    print(
+        json.dumps(
+            {
+                "corpus_sha256": hashlib.sha256(data).hexdigest(),
+                "compressed_bytes": len(data),
+                "libbzip2_parity": True,
+            }
+        )
+    )

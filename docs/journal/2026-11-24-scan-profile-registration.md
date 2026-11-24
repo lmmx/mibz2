@@ -209,7 +209,24 @@ Beside it:
   nothing for the i9): every count was recorded and classified. The measured crossover was
   k = 5.89 and the predicted shift point 6.11. The wall fit is poor there (RMS 0.052 s), because
   4 CPUs cannot run more than 4 workers at once.
-- **The DRY preflight of the recipe as frozen** (`just bench-scan-profile 1`, two rounds, no
+- **The DRY preflight with memory and scheduling** (`just bench-scan-profile 1`, two rounds, no
+  settle, at d2d2164d, counts 1 to 20, each decode in its own process) ran the whole recipe
+  here, and is archived as `2026-11-24-scan-profile-registration/run-20261124T220453Z.tar.gz`
+  (sha256 e7fd46e0…ed4):
+  - all 20 counts were decoded at 838,800,784 bytes each, and every block and worker check
+    passed;
+  - `runs.tsv` held 80 rows, one a (workers, round, timers on or off), every figure present;
+  - every decode's base was 47.4 to 47.6 MB (the input, 4 copies, and the runtime). 1 worker's
+    peak was 80.5 and 81.3 MB in round 0, where it ran first, and 81.1 and 80.7 MB in round 1,
+    where it ran last, after 20 workers. The decode's own memory rose with the count, from 28 MB
+    mean (32 MB peak) at 1 worker to 80 MB (94 MB) at 20;
+  - the report voided the run on the machine alone.
+
+  On these 4 CPUs (meaning nothing for the i9), the measured crossover was k = 5.67.
+  The preflight before it, at 0292269d (one process for every decode), found the carry-over that
+  the fresh process removes: 1 worker's peak was 80 MB first in its round and 236 MB after 20
+  workers (not archived: its memory figures are void).
+- **The DRY preflight before memory and scheduling** (`just bench-scan-profile 1`, two rounds, no
   settle, at 95de8d09, counts 1 to 20) ran the whole recipe here, and is archived as
   `2026-11-24-scan-profile-registration/run-20261124T215052Z.tar.gz`:
   - all 20 counts were decoded at 838,800,784 bytes each;

@@ -125,7 +125,11 @@ def registered(root=None):
             frozen[f[0]] = f[1]
         if len(f) == 2 and f[0] == "base_fetched" and FETCHED.fullmatch(f[1]):
             frozen[f[0]] = f[1]
-    return {"corpus_sha256": w["corpus_sha256"], "decoded_bytes": w["decoded_bytes"], "frozen": frozen}
+    return {
+        "corpus_sha256": w["corpus_sha256"],
+        "decoded_bytes": w["decoded_bytes"],
+        "frozen": frozen,
+    }
 
 
 def is_int(x):
@@ -212,12 +216,19 @@ def bundle_problems(files, reg):
     p = []
     if "DRY-RUN.txt" in files:
         p.append(("identity", "a DRY run: never evidence"))
-    commits = dict(l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2)
+    commits = dict(
+        l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2
+    )
     for k in ("candidate", "base", "base_fetched"):
         if not reg["frozen"].get(k):
             p.append(("identity", f"bench/service-guarded.frozen names no {k}"))
         elif commits.get(k) != reg["frozen"][k]:
-            p.append(("identity", f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}"))
+            p.append(
+                (
+                    "identity",
+                    f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}",
+                )
+            )
     arms = [a for a in files.get("arms.txt", "").splitlines() if a.strip()]
     if not (
         len(arms) == 3
@@ -234,14 +245,21 @@ def bundle_problems(files, reg):
         if len(f) == 2 and re.fullmatch(r"[0-9a-f]{64}", f[0]):
             digests[f[1].strip()] = f[0]
     if arms:
-        base, twin = arms[1][len("mibz2@"):], arms[2][len("mibz2@"):]
+        base, twin = arms[1][len("mibz2@") :], arms[2][len("mibz2@") :]
         if base not in digests or twin not in digests:
-            p.append(("identity", "inputs.txt gives no digest for the base and twin executables run"))
+            p.append(
+                ("identity", "inputs.txt gives no digest for the base and twin executables run")
+            )
         elif digests[base] != digests[twin]:
             p.append(("identity", "the twin is not the base's bytes"))
     seen = files.get("corpus.sha256", "").split()
     if not seen or seen[0] != reg["corpus_sha256"]:
-        p.append(("workload", f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's"))
+        p.append(
+            (
+                "workload",
+                f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's",
+            )
+        )
     return p, arms
 
 
@@ -276,7 +294,9 @@ def row_problems(rows, arms, reg):
             q.append(f"out {r.get('out')!r} not the registered {reg['decoded_bytes']} bytes")
         if r.get("corpus") != CORPUS:
             q.append(f"corpus {r.get('corpus')!r}")
-        if not (isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)):
+        if not (
+            isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)
+        ):
             q.append("a thread record missing")
         if q:
             p.append(f"row {i}: " + ", ".join(q))
@@ -288,8 +308,16 @@ def judge(files, rows, unreadable=(), reg=None):
     arms.txt, inputs.txt, corpus.sha256, preflight.json, preflight.exit, DRY-RUN.txt if
     present); `rows`: runs.jsonl's parsed lines; `unreadable`: its lines that weren't JSON"""
     reg = reg or registered()
-    v = {"valid": False, "failure": None, "problems": [], "cells": {}, "n1": None, "p1": None,
-         "no_harm": None, "preflight": None}
+    v = {
+        "valid": False,
+        "failure": None,
+        "problems": [],
+        "cells": {},
+        "n1": None,
+        "p1": None,
+        "no_harm": None,
+        "preflight": None,
+    }
 
     def fail(kind, problems):
         v["failure"] = v["failure"] or kind
@@ -334,11 +362,14 @@ def judge(files, rows, unreadable=(), reg=None):
         if not complete:
             fail("structural", [f"{t} threads: rounds incomplete or repeated"])
         if not plans_ok:
-            fail("structural", [
-                f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}, "
-                f"twin {label(seen['twin'])}; expected base {label([EXPECT[t]['base']])}, "
-                f"head {label([EXPECT[t]['head']])}"
-            ])
+            fail(
+                "structural",
+                [
+                    f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}, "
+                    f"twin {label(seen['twin'])}; expected base {label([EXPECT[t]['base']])}, "
+                    f"head {label([EXPECT[t]['head']])}"
+                ],
+            )
         if complete:
             base = {r["round"]: r for r in runs["base"]}
             head = {r["round"]: r for r in runs["head"]}
@@ -360,13 +391,20 @@ def judge(files, rows, unreadable=(), reg=None):
         v["cells"][t] = c
     for t in CONTROLS:
         s = v["cells"][t].get("speed")
-        v["cells"][t]["flag"] = s is not None and (s["lo"] > CONTROL_BAND[1] or s["hi"] < CONTROL_BAND[0])
+        v["cells"][t]["flag"] = s is not None and (
+            s["lo"] > CONTROL_BAND[1] or s["hi"] < CONTROL_BAND[0]
+        )
     if v["failure"]:
         return v
     n1 = v["cells"][PRIMARY]["twin_speed"]
     v["n1"] = n1
     if not (N1_BAND[0] <= n1["lo"] and n1["hi"] <= N1_BAND[1]):
-        fail("n1", [f"N1 at 10 threads: {n1['ratio']:.3f} [{n1['lo']:.3f}, {n1['hi']:.3f}] not within [0.97, 1.03]"])
+        fail(
+            "n1",
+            [
+                f"N1 at 10 threads: {n1['ratio']:.3f} [{n1['lo']:.3f}, {n1['hi']:.3f}] not within [0.97, 1.03]"
+            ],
+        )
         return v
     c = v["cells"][PRIMARY]
     so, co = outcome(c["speed"]), outcome(c["cpu"], cpu=True)
@@ -398,7 +436,9 @@ def markdown(v):
         role = (
             "P1 (judged); N1 (validity)"
             if t == PRIMARY
-            else "identity (reported)" if t in CONTROLS else "no harm (judged)"
+            else "identity (reported)"
+            if t in CONTROLS
+            else "no harm (judged)"
         )
         seen = c.get("seen", {})
         plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
@@ -410,7 +450,10 @@ def markdown(v):
         )
     pf = v.get("preflight") or {}
     out += ["", f"**The preflight:** {pf.get('verdict', '–')}."]
-    out += ["", f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}"]
+    out += [
+        "",
+        f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}",
+    ]
     out += [f"- {p}" for p in v["problems"]]
     if v["p1"]:
         s, c = v["p1"]["speed"], v["p1"]["cpu"]
@@ -424,8 +467,12 @@ def markdown(v):
         out.append(
             "**No harm at 11, 12, 16 and 20** (each head/base wall upper bound at most 1.02, "
             "Bonferroni over the four): "
-            + ("**shown at every one**." if not failed else f"**not shown at {', '.join(failed)}** "
-               "(an interval too wide to show it counts as not shown).")
+            + (
+                "**shown at every one**."
+                if not failed
+                else f"**not shown at {', '.join(failed)}** "
+                "(an interval too wide to show it counts as not shown)."
+            )
         )
         if s in QUALIFY:
             out.append(f"- Speed {s}: {QUALIFY[s]}.")
@@ -446,7 +493,15 @@ def markdown(v):
     return "\n".join(out) + "\n"
 
 
-FILES = ("commits.txt", "arms.txt", "inputs.txt", "corpus.sha256", "preflight.json", "preflight.exit", "DRY-RUN.txt")
+FILES = (
+    "commits.txt",
+    "arms.txt",
+    "inputs.txt",
+    "corpus.sha256",
+    "preflight.json",
+    "preflight.exit",
+    "DRY-RUN.txt",
+)
 
 
 def load(attempt):
@@ -514,8 +569,15 @@ def discovery(root="/"):
         v2 = r[0] == "cgroup2"
         if not (v2 or (r[0] == "cgroup" and "cpu" in opts)):
             continue
-        h = {"mountinfo": line, "fstype": r[0], "root": unescape(f[3]), "mount_point": unescape(f[4]),
-             "membership": None, "levels": [], "notes": []}
+        h = {
+            "mountinfo": line,
+            "fstype": r[0],
+            "root": unescape(f[3]),
+            "mount_point": unescape(f[4]),
+            "membership": None,
+            "levels": [],
+            "notes": [],
+        }
         hierarchies.append(h)
         mine = [x for x in lines if (x[0] == "0" and not x[1] if v2 else "cpu" in x[1])]
         if len(mine) != 1:
@@ -526,7 +588,7 @@ def discovery(root="/"):
         if mroot == "/":
             rel = path
         elif path == mroot or path.startswith(mroot.rstrip("/") + "/"):
-            rel = path[len(mroot.rstrip("/")):]
+            rel = path[len(mroot.rstrip("/")) :]
         else:
             h["notes"].append("the membership path is not under the mount's root")
             continue
@@ -536,8 +598,13 @@ def discovery(root="/"):
         files = ("cpu.max",) if v2 else ("cpu.cfs_quota_us", "cpu.cfs_period_us")
         for i in range(len(parts) + 1):
             d = os.path.join(h["mount_point"], *parts[:i])
-            h["levels"].append({"dir": d, "exists": os.path.isdir(at(d)),
-                                "files": [raw_read(at(os.path.join(d, n))) for n in files]})
+            h["levels"].append(
+                {
+                    "dir": d,
+                    "exists": os.path.isdir(at(d)),
+                    "files": [raw_read(at(os.path.join(d, n))) for n in files],
+                }
+            )
     return {
         "schema": "mibz2.service_guarded.discovery/1",
         "note": "raw facts, diagnostics only: no quota verdict, never judged; the target evidence "

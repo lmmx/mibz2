@@ -118,7 +118,12 @@ def shape_problems(r):
     if not (isinstance(r.get("why"), list) and all(isinstance(w, str) for w in r["why"])):
         p.append("why not a list of strings")
     k = r.get("kernels")
-    if not (isinstance(k, dict) and set(k) == {"avx2", "clmul"} and is_bool(k["avx2"]) and is_bool(k["clmul"])):
+    if not (
+        isinstance(k, dict)
+        and set(k) == {"avx2", "clmul"}
+        and is_bool(k["avx2"])
+        and is_bool(k["clmul"])
+    ):
         p.append("kernels missing or malformed")
     m = r.get("machine")
     if not isinstance(m, dict):
@@ -152,7 +157,11 @@ def shape_problems(r):
     elif set(q) != {"kind"}:
         p.append("machine.quota has fields its kind doesn't")
     sp = r.get("service_plan")
-    if not (isinstance(sp, dict) and set(sp) == set(SVC2) and all(is_int(sp[f]) and sp[f] == v for f, v in SVC2.items())):
+    if not (
+        isinstance(sp, dict)
+        and set(sp) == set(SVC2)
+        and all(is_int(sp[f]) and sp[f] == v for f, v in SVC2.items())
+    ):
         p.append(f"service_plan {sp!r}, not svc2's integers")
     if not pos_int(r.get("input_bytes")):
         p.append("input_bytes missing or malformed")
@@ -160,7 +169,10 @@ def shape_problems(r):
     if not (
         isinstance(at, list)
         and len(at) == len(BUDGETS)
-        and all(isinstance(a, dict) and is_int(a.get("threads")) and a["threads"] == t for a, t in zip(at, BUDGETS))
+        and all(
+            isinstance(a, dict) and is_int(a.get("threads")) and a["threads"] == t
+            for a, t in zip(at, BUDGETS)
+        )
     ):
         return p + ["at: not the integer budgets 9, 10, 11 in order"]
     for a in at:
@@ -210,7 +222,9 @@ def check(r, exit_status):
         p.append("not ok, with no reason")
     for t in BUDGETS:
         if at[t]["predicate"] != (target and t == 10):
-            p.append(f"at {t}: the predicate's answer {at[t]['predicate']} disagrees with the facts")
+            p.append(
+                f"at {t}: the predicate's answer {at[t]['predicate']} disagrees with the facts"
+            )
         b = at[t]["built"]
         if b is not None and b["service"] and not (target and t == 10):
             p.append(f"at {t}: the service core built where the predicate is false")

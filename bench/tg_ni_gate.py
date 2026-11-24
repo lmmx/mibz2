@@ -31,7 +31,11 @@ import math
 import sys
 
 # the registered programme (§2.11), restated here so that the bound is computed twice, apart
-CELLS = [f"{c}/{t}" for c in ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata") for t in (1, 2, 4)]
+CELLS = [
+    f"{c}/{t}"
+    for c in ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata")
+    for t in (1, 2, 4)
+]
 METRICS = ("wall", "cpu")
 K = 12
 T95 = 1.7958848187  # t(0.95, K - 1)
@@ -43,8 +47,12 @@ def recompute(verdict):
     dispatch estimates"""
     problems, failing = [], []
     runs = verdict.get("runs")
-    if not (isinstance(runs, list) and len(runs) == K and all(isinstance(r, int) and not isinstance(r, bool) for r in runs)
-            and len(set(runs)) == K):
+    if not (
+        isinstance(runs, list)
+        and len(runs) == K
+        and all(isinstance(r, int) and not isinstance(r, bool) for r in runs)
+        and len(set(runs)) == K
+    ):
         problems.append(f"not {K} distinct run ids: {runs!r}")
     cells = verdict.get("cells") if isinstance(verdict.get("cells"), dict) else {}
     for key in CELLS:
@@ -52,8 +60,14 @@ def recompute(verdict):
             cell = cells.get(key)
             st = cell.get(metric) if isinstance(cell, dict) else None
             ds = st.get("d") if isinstance(st, dict) else None
-            if not (isinstance(ds, list) and len(ds) == K and all(
-                    isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in ds)):
+            if not (
+                isinstance(ds, list)
+                and len(ds) == K
+                and all(
+                    isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+                    for x in ds
+                )
+            ):
                 problems.append(f"{key} {metric}: not {K} finite dispatch estimates")
                 continue
             m = sum(ds) / K
@@ -67,13 +81,19 @@ def gate(label, verdict, judge_exit, structure=None):
     """(exit status, one-line summary)"""
     if label in ("smoke", "pilot"):
         if not isinstance(verdict, dict):
-            return 1, f"{label}: not evidence; FAILED: the judge wrote no verdict (the plumbing is broken)"
+            return (
+                1,
+                f"{label}: not evidence; FAILED: the judge wrote no verdict (the plumbing is broken)",
+            )
         if verdict.get("valid"):
             return 1, f"{label}: not evidence; FAILED: the judge admitted a {label} run"
         if not any(f"labelled '{label}'" in str(p) for p in verdict.get("problems", [])):
             return 1, f"{label}: not evidence; FAILED: the judge did not refuse it as {label}"
         if judge_exit != 2:
-            return 1, f"{label}: not evidence; FAILED: the judge exited {judge_exit}, not 2 (refused)"
+            return (
+                1,
+                f"{label}: not evidence; FAILED: the judge exited {judge_exit}, not 2 (refused)",
+            )
         # (the refusal alone shows only that the label is refused: the plumbing is shown by the
         # structural admission, every shard present, listed, downloaded, reconciled and whole)
         if not isinstance(structure, dict) or structure.get("label") != label:
@@ -81,20 +101,32 @@ def gate(label, verdict, judge_exit, structure=None):
         if not structure.get("valid"):
             why = "; ".join(map(str, structure.get("problems", [])[:3])) or "not admitted"
             return 1, f"{label}: not evidence; FAILED: the structural admission failed: {why}"
-        return 0, (f"{label}: not evidence (the judge refused it as a {label} run, as it must); "
-                   f"structurally admitted: all {len(structure.get('shards', []))} shards, R {structure.get('rounds')}")
+        return 0, (
+            f"{label}: not evidence (the judge refused it as a {label} run, as it must); "
+            f"structurally admitted: all {len(structure.get('shards', []))} shards, R {structure.get('rounds')}"
+        )
     if label == "qualification":
         if not isinstance(verdict, dict):
             return 1, "qualification dispatch: FAILED: no readable verdict (INVALID)"
         valid = bool(verdict.get("valid"))
         if verdict.get("schema") != "mibz2.tg_ni_dispatch/1":
-            return 1, f"qualification dispatch: FAILED: not a dispatch verdict ({verdict.get('schema')!r})"
+            return (
+                1,
+                f"qualification dispatch: FAILED: not a dispatch verdict ({verdict.get('schema')!r})",
+            )
         if judge_exit == 0 and valid:
-            return 0, (f"qualification dispatch admitted (run {verdict.get('run')}): one of {K}, not a verdict; "
-                       "condition 2 is judged only from all of them (service_tg.py replicated)")
+            return 0, (
+                f"qualification dispatch admitted (run {verdict.get('run')}): one of {K}, not a verdict; "
+                "condition 2 is judged only from all of them (service_tg.py replicated)"
+            )
         if judge_exit == 2 and not valid:
-            return 1, "qualification dispatch: INVALID (the programme fails): " + "; ".join(map(str, verdict.get("problems", [])[:5]))
-        return 1, f"qualification dispatch: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid {valid})"
+            return 1, "qualification dispatch: INVALID (the programme fails): " + "; ".join(
+                map(str, verdict.get("problems", [])[:5])
+            )
+        return (
+            1,
+            f"qualification dispatch: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid {valid})",
+        )
     if label == "replicated":
         if not isinstance(verdict, dict):
             return 1, "replicated: FAILED: no readable verdict (INVALID)"
@@ -102,20 +134,32 @@ def gate(label, verdict, judge_exit, structure=None):
         if judge_exit == 2 and not valid:
             return 1, "replicated: INVALID: " + "; ".join(map(str, verdict.get("problems", [])[:5]))
         if not valid:
-            return 1, f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid False)"
+            return (
+                1,
+                f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid False)",
+            )
         failing, problems = recompute(verdict)
         if problems:
-            return 1, "replicated: INVALID: the verdict lacks what the bound needs: " + "; ".join(problems[:3])
+            return 1, "replicated: INVALID: the verdict lacks what the bound needs: " + "; ".join(
+                problems[:3]
+            )
         claimed = sorted(" ".join(str(x).split()[:2]) for x in verdict.get("failing") or [])
         if sorted(failing) != claimed:
-            return 1, (f"replicated: FAILED: the gate's bound (failing {', '.join(failing) or 'none'}) disagrees "
-                       f"with the judge's ({', '.join(claimed) or 'none'})")
+            return 1, (
+                f"replicated: FAILED: the gate's bound (failing {', '.join(failing) or 'none'}) disagrees "
+                f"with the judge's ({', '.join(claimed) or 'none'})"
+            )
         if judge_exit == 0 and passes and not failing:
             return 0, f"replicated: condition 2 met at every cell over {K} dispatches (PASS)"
         if judge_exit == 1 and not passes:
-            why = "; ".join(verdict.get("failing", []) + [f"RSS {c}" for c in verdict.get("rss_regression", [])])
+            why = "; ".join(
+                verdict.get("failing", []) + [f"RSS {c}" for c in verdict.get("rss_regression", [])]
+            )
             return 1, f"replicated: condition 2 NOT SHOWN: {why}"
-        return 1, f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (passes {passes})"
+        return (
+            1,
+            f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (passes {passes})",
+        )
     return 1, f"FAILED: unknown label {label!r}"
 
 

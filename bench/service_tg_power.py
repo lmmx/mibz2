@@ -57,7 +57,12 @@ def history(path):
         if not line:
             continue
         l = json.loads(line)
-        if str(l.get("bench", "")).startswith("3.") and l.get("rounds") == 10 and l.get("cores") == 4 and l.get("change"):
+        if (
+            str(l.get("bench", "")).startswith("3.")
+            and l.get("rounds") == 10
+            and l.get("cores") == 4
+            and l.get("change")
+        ):
             runs.append(l)
     sds = {}
     for l in runs:
@@ -86,14 +91,18 @@ def power(R, B, sigma, ratio):
     from scipy import integrate, stats
 
     if R % B or (R // B) % 2:
-        raise ValueError(f"R {R} / B {B}: batches must be of an even length, to keep the arms' two-round order balance")
+        raise ValueError(
+            f"R {R} / B {B}: batches must be of an even length, to keep the arms' two-round order balance"
+        )
     df = B - 1
     tq = stats.t.ppf(0.95, df)
     lam = (DELTA - math.log(ratio)) * math.sqrt(R) / sigma
     f = lambda v: stats.norm.cdf(lam - tq * math.sqrt(v / df)) * stats.chi2.pdf(v, df)  # noqa: E731
     val, _ = integrate.quad(f, 0, math.inf, limit=200)
     if not (math.isfinite(val) and -1e-9 <= val <= 1 + 1e-9):
-        raise ArithmeticError(f"power not finite or out of range at R {R}, B {B}, sigma {sigma}, ratio {ratio}: {val}")
+        raise ArithmeticError(
+            f"power not finite or out of range at R {R}, B {B}, sigma {sigma}, ratio {ratio}: {val}"
+        )
     return min(1.0, max(0.0, val))
 
 
@@ -104,13 +113,21 @@ def main(argv=None):
     p.add_argument("--batches", type=int, default=20)
     a = p.parse_args(argv)
     runs, sds = history(a.links)
-    print(f"history: {len(runs)} runs, {runs[0]['date']} to {runs[-1]['date']}, PRs {runs[0]['pr']}..{runs[-1]['pr']}")
+    print(
+        f"history: {len(runs)} runs, {runs[0]['date']} to {runs[-1]['date']}, PRs {runs[0]['pr']}..{runs[-1]['pr']}"
+    )
     print("\nper-cell planning sds (log ratio, within run): median / p90 over the runs")
     for k in sorted(sds):
-        print(f"  {k[0]:9s} {k[1]}t {k[2]:4s} n={len(sds[k]):2d}  {statistics.median(sds[k]):.4f} / {quantile(sds[k], 0.9):.4f}")
-    print(f"\nsize at a true ratio of 1.02, B = {a.batches}: per cell "
-          f"{power(600, a.batches, 0.05, 1.02):.4f} (under the model's iid batch means; not a calibration: §2.3)")
-    print("\n| R | B | sd | true ratio | min cell power | sum of misses | all-42 lower bound | all-42 if independent |")
+        print(
+            f"  {k[0]:9s} {k[1]}t {k[2]:4s} n={len(sds[k]):2d}  {statistics.median(sds[k]):.4f} / {quantile(sds[k], 0.9):.4f}"
+        )
+    print(
+        f"\nsize at a true ratio of 1.02, B = {a.batches}: per cell "
+        f"{power(600, a.batches, 0.05, 1.02):.4f} (under the model's iid batch means; not a calibration: §2.3)"
+    )
+    print(
+        "\n| R | B | sd | true ratio | min cell power | sum of misses | all-42 lower bound | all-42 if independent |"
+    )
     print("|--:|--:|---|--:|--:|--:|--:|--:|")
     for R in a.rounds:
         for which, f in (("median", statistics.median), ("p90", lambda x: quantile(x, 0.9))):
@@ -118,7 +135,9 @@ def main(argv=None):
                 pw = [power(R, a.batches, f(sds[k]), ratio) for k in sds]
                 miss = sum(1 - x for x in pw)
                 prod = math.prod(pw)
-                print(f"| {R} | {a.batches} | {which} | {ratio:.3f} | {min(pw):.4f} | {miss:.4f} | {max(0.0, 1 - miss):.4f} | {prod:.4f} |")
+                print(
+                    f"| {R} | {a.batches} | {which} | {ratio:.3f} | {min(pw):.4f} | {miss:.4f} | {max(0.0, 1 - miss):.4f} | {prod:.4f} |"
+                )
 
 
 if __name__ == "__main__":
