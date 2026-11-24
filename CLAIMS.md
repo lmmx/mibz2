@@ -14,3 +14,11 @@ STARTED N-7 2026-11-24T10:44Z E2 screen 5: Agol-Hass-Thurston interval-pairing r
 DONE N-0 656d5e7 useful new lead (delivered via N-2: h1R/h1=0.798-0.851 on 6 admitted blocks, cost-weighted 0.8256; remaining 226 census blocks lack raw .L in repo; delta=1/2 unreachable without aR<1; adopted frozen K=2, delta=1/2, S<=openPeakScratch per 4d7d83b stricter-wins)
 PUSHED N-3 30d2b36 CLOSED at (a) Escape (R1 inside R: BV acquisition = RV induction, c1 >= h1)
 DONE N-3 30d2b36 tested failure within defined scope
+PUSHED N-4 8a0efdc PASSES (a) Escape on Tribonacci toy, CLOSED at (b) Passes and (c) Viability (Stream N p(16)=42,600-155,526 vs O(k))
+DONE N-4 8a0efdc tested failure within defined scope
+PUSHED N-5 58a7886 CLOSED: V1 at (a) Escape (Thm V1, (r,h1) invariant across (1,0),(1,1),(1,-1)); V2 at (b)/(c) (Aut=id proved, (1,1)!=(1,-1) on 6/6)
+DONE N-5 58a7886 tested failure within defined scope
+PUSHED N-6 f59f26b CLOSED at (a) Escape (R1 inside R; Z[t,t^-1] pivots charged by Rec 100, Krylov gap 7e-6; 56-61% w1 in interior chains)
+DONE N-6 f59f26b tested failure within defined scope
+PUSHED N-7 9d24ba4 CLOSED at (a) Escape (Thm AHT-1: R1 inside R) and (c) Viability (k=r>=h1, 63-75% w1 pairings, 2/509,269 self-overlaps)
+DONE N-7 9d24ba4 tested failure within defined scope
