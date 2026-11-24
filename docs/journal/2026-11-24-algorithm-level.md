@@ -1614,3 +1614,21 @@ Recorded verbatim as `external/chatgpt-course-mining.md`. It answered independen
 - **Variability and Little's law:** the mixture's C² is about 0.98, not 0.07. Worker service per block is unmeasured, and the window sizing confused service with residence.
 
 **Louis's caution, recorded:** the 7-worker cap was a temporary measure, because workers beyond about 7 bought nothing. It is a symptom of the scanner limit, not a reason to abandon ideas. Nothing that raises the ceiling is withdrawn: a cheaper or parallel scanner, worker mathematics, joint improvements. Raising the ceiling is what lets the cap lift. What falls is one claimed cheap win and the over-precise sizes.
+
+## 62. Neon's course mining: two scanner plumbing costs, verified
+
+Neon's answer is copied verbatim to `reviews/neon-course-mining.md` (from `research/neon-movement` at dd6cc26d; #145 comment 7147835505). It was written independently before comparing. Like ChatGPT Pro, it caught the default-count error (§61).
+
+Its main find is concrete engineering that the Coordinator's lead missed, both verified in master's code:
+1. **`ChannelSource::view`** (`src/parallel.rs`): the scanner wants a 2 MiB look-ahead and the feeder sends 4 MiB chunks. At each boundary, with part of the window still held, the scanner drains the held part and copies the new chunk in, on its own thread. Eleven blocks account for about 10 ms at 8 workers (5.4% of the scanner's demand, 96% of its unattributed "remainder"), and more at higher counts.
+2. **The symbol buffer's re-zeroing** (`src/block.rs`): each block's `syms` is truncated to its n before going back to the pool. The next block to take it calls `syms.resize(max_out, 0)`, zero-filling it again. The 792 tiny blocks make this about 5 ms (2.7–3.0%). Output buffers already avoid this; symbol buffers don't.
+
+Together that is about 15 ms (8% of the scanner's demand), with no algorithmic risk. **Bottleneck migration (§61):** at 8 workers, the workers rebind after about 4%, so the wall gain there is about 6%. Where the scanner binds (9–10 workers), it is 8–9%. A cheaper scanner also argues for 8 or 9 workers rather than 7.
+
+**Decision:** routed for implementation as an ordinary performance change under PERFORMANCE-POLICY.md. It changes internal buffering, not a default. It is measured by CI's bench and, at 8–10 workers, on the workstation.
+
+Neon's other points are added to the lead's corrections:
+- the 10-core pooled figure is 0.163 s, or 0.125–0.142 s with realistic SMT gain, all conditional;
+- the scanner's high-count slowdown is a bimodal mixture across runs from 10 workers on;
+- favoured-core pinning likely gives 0–2% at 8 workers;
+- the head-of-line waits sit exactly 4k blocks behind dense blocks, and block sizes are autocorrelated along the stream.

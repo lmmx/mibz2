@@ -18,6 +18,17 @@ ChatGPT Pro answered the same question independently, then compared (`../externa
 6. **Little's law:** 8–9 blocks used service demand, not residence time, and its boundary doesn't match issued − taken. W = 4k throughout the sweep, so memory growth can't be attributed to workers rather than slots. The window question needs a fixed-k window experiment (8 workers, windows 16 against 32).
 7. **Smaller corrections:** the decoder is a finite pipeline with feedback-controlled admission, not a closed system in which blocks circulate (a credit-token surrogate would be). Phase-type methods also cover low variability, so they are deferred, not ruled out. JSQ-d is not replication. The fit's 32 ms constant is not a fixed overhead, but its cause is unidentified.
 
+8. **From Neon's independent reading** (`../reviews/neon-course-mining.md`, dd6cc26d), checked against the code:
+   - **Two scanner plumbing costs this file missed, about 8% of the scanner's demand, verified in the code:**
+     - `ChannelSource::view` (`src/parallel.rs`) drains and re-copies the input window whenever a 2 MiB look-ahead straddles a 4 MiB chunk: 11 blocks, about 10 ms at 8 workers, 96% of the scanner's "remainder";
+     - `block.rs` truncates each block's symbol buffer to n, so the next block that takes it from the pool zero-fills it back to max_out: about 5 ms, mostly after the 792 tiny blocks (output buffers already avoid this with `POOLED_FROM`; symbol buffers don't).
+     
+     Removing both cuts about 15 ms. With bottleneck migration, that is about 6% at 8 workers, and 8–9% where the scanner binds (9–10 workers). Routed for implementation (journal §62).
+   - **The machine figure:** at 20 workers only about 9.25 threads are busy on average, so the 0.745 sharing factor is not a 20-thread figure. The physical 10-core pooled figure is 1.628 / 10 = 0.163 s (a 15% gap). With realistic SMT gain for memory-bound work (1.15–1.30×), 0.125–0.142 s. All conditional, as correction 2 says.
+   - **The scanner's slowdown is bimodal, not a step:** from 10 workers, each run's scanner lands in a fast mode (0.189–0.193 s) or a slow one (0.223–0.242 s). The slow share rises with k and passes half between 15 and 16. Stage 1's per-thread CPU log stratifies it.
+   - **Favoured-core pinning at 8 workers likely recovers 0–2%, not 7%:** Comet Lake sets its all-core turbo package-wide. The step at 16+ is the real target. Stage 2's placement × turbo contrast decides it.
+   - **The head-of-line waits:** the small slot waits at 8–12 workers sit exactly 4k blocks behind dense blocks, and the real blocks' sizes are autocorrelated along the stream (lag-1 r = 0.74).
+
 **What this does not abandon.** The 7-worker cap is a symptom of the scanner limit, not a reason to stop: the cap exists because workers past about 7 bought nothing, and raising the scanner's ceiling is exactly what would let it lift. Every ceiling-raising lead stands: a cheaper or parallel scanner, worker mathematics (which lowers the knee and buys the same speed with fewer cores), and joint improvements. What falls is one claimed cheap win (20 → 8) and the over-precise sizes.
 
 
