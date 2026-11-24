@@ -156,7 +156,7 @@ Neon's E2 screen, on its branch. Its premises go here with citations when they l
 
 ## 6. What a "no" is, and the margin
 
-**Scope (after the outside review's 3b and record 101):** a no must name the part of global E2 it covers. With record 101 it covers Λ_agg(𝒫, D) with |𝒫| + 2|D| ≤ ν′ (coarse aggregates). It leaves open exactly: global positional rules whose input separates Θ(ν′) flip pairs (fine input, read once, many rows placed). That residue is stream N's cell; a no that does not reach it is a partial no and must be reported as one.
+**Scope (after the outside review's 3b and record 101):** a no must name the part of global E2 it covers. With records 101 and 107 it covers only: rigid facts plus positional labels derived from interval histograms and declared raw records, |𝒫| + 3|D| ≤ ν′ (Theorem N′, record 107; record 106's Theorem N is withdrawn). Class facts and order-sensitive global observations are outside it. Clause 2's observation language is not yet fixed (record 107 §4). It leaves open exactly: global positional rules whose input separates Θ(ν′) flip pairs (fine input, read once, many rows placed). That residue is stream N's cell; a no that does not reach it is a partial no and must be reported as one.
 
 **Logic (record 103):** PN ∧ PR ∧ Pglue ⟹ goal is one sufficient construction. Refuting a premise does not refute the goal. A no quantifies over a declared decoder class, never over the premises.
 
