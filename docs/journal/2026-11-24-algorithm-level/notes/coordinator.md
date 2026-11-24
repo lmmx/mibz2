@@ -84,3 +84,7 @@
 - ChatGPT Pro's resources answer is recorded verbatim, with Louis's question.
 - The Coordinator's own answer, from direct reading, is `methodology/performance-courses.md`, with the sources in `methodology/sources/`.
 - `briefs/character.md` §7b adds device demands and bounds, modification analysis, job classes, log models, a fluid check on k\*, and sample-path laws. The Pathfinder is told.
+
+## 24 Nov, 23:50 — ChatGPT Pro's course answer recorded verbatim
+- Recorded as `external/chatgpt-performance-courses.md`, with its additions in journal §54: the 2025 course skipped chapters 19 and 22; the LRU hit-ratio recitation as an analogue of the masked bottleneck; the M/G/1 second-moment formula.
+- The character brief now asks for per-activity C²_S.

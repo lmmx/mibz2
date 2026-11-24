@@ -1482,3 +1482,13 @@ Louis asked ChatGPT Pro what three courses contain: Jain's IUCEE course, Harchol
 - a fluid approximation as a closed-form check on k\*;
 - sample-path analysis, rather than stochastic assumptions, for the fixed block trace;
 - job classes for the Open and fallback routes (classed networks).
+
+## 54. ChatGPT Pro on the three courses, recorded; where it adds to the Coordinator's reading
+
+ChatGPT Pro's answer to "tell me all about the content of these" is recorded verbatim in `external/chatgpt-performance-courses.md`. It agrees with the Coordinator's own reading (`methodology/performance-courses.md`, §53) on scope and structure. Both found that the 2003 notes link is broken. It adds four things the Coordinator did not have:
+- **The 2025 handouts skipped textbook chapters 19 and 22,** the closed-network, product-form, MVA and BCMP treatment. Operational analysis of closed systems was still taught. The Coordinator's mapping of "MVA through the Arrival Theorem (ch. 19)" refers to the book, not to the 2025 course.
+- **A 2025 recitation on modification analysis:** raising an LRU cache's hit ratio can *reduce* throughput, by intensifying contention on the hit path. Measurement, simulation and a bound together show a rise, a plateau and then a decline. This is the closest classroom analogue to the decoder's masked bottleneck (§44), and to ChatGPT Pro's warning that slowing one activity can raise throughput (§51).
+- **The M/G/1 waiting-time formula** E[W_q] = λE[S²]/(2(1 − ρ)) puts the second moment of service time into the delay. In ChatGPT Pro's illustration, at 80% utilisation and a 10 ms mean, waiting is 20, 40 and 200 ms as C²_S goes 0, 1, 9. Per-block service-time variability (long-tail blocks) therefore matters on its own account. Stage 1's per-block service vectors should report C²_S per activity.
+- **Fluid models,** with dq/dt = incoming rate − processing rate, which the Coordinator also recommended (§53).
+
+**Addition to `briefs/character.md` §7b:** report the second moment, or C², of per-block service time per activity, beside the means and demands.

@@ -175,6 +175,8 @@ Each is run at a few anchors only:
 - Treat blocks on the Open route and on the column or fallback route as **job classes** (classed networks, ch. 18).
 - **Analysis:** use multiplicative (log) models and report allocation of variation for every factorial (Jain ch. 18–19). Give a **fluid approximation** of scanner rate against worker demand as a closed-form check on k\*. Use **sample-path** statements (Little's law on the realised trace), not distributional assumptions, for the fixed block sequence.
 
+- Report the **second moment of per-block service time** (or C²_S) per activity beside the mean demands (journal §54). Delay depends on E[S²], not only on E[S] (M/G/1). Long-tail blocks are the mechanism behind the admission stalls.
+
 ## 8. Process
 
 - The Pathfinder splits this into recipes: stage 1 with the public-API sweep, then stage 2 with the targeted checks. Each is a C1a diagnostic with its rule posted on #145 before the data.
