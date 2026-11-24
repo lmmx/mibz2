@@ -1088,3 +1088,25 @@ Louis then: "I just don't want to lose this essence, because it's really powerfu
 **Recorded as `2026-11-24-algorithm-level/ESSENCE.md`.** It is the starting page for every brief, prompt and review. It supersedes the order of work in §33; the currency decision of §33 stands, as the referee. Channel #20 carries it to the agents.
 
 **All directions, overloaded (Louis, the same evening).** Asked which direction should lead, Louis chose none: "No, I want to do all of them. I don't want to frame it as one way only … the term being like generalization, perhaps you might say, is the term, the Hilbert's 24th problem movement. And however you call it, we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving together, the contracting along the text. Like, we want to look at all possible ones. In fact, we might want to look at even more." ESSENCE.md now says so; channel #21 carries it.
+
+## 35. Louis's JAX idea, an outside verdict, and the cross-check
+
+**The idea.** Louis had rewritten page-dewarp in JAX and got it many times faster. He asked whether that holds an actual, reusable change of approach for mibz2. He put the idea to another model, then gave it the Coordinator's vetting prompt. Both exchanges are recorded verbatim in `2026-11-24-algorithm-level/jax-idea-verdict.md`.
+
+**The outside verdict.**
+- Associative scan, list ranking and the permutation scan for MTF: solid but incremental, and already in the literature.
+- Composing k-letter words through monotone occurrence cursors (a k-step LF built from the column): "needs one missing piece", namely cheap *selective* macro-symbolisation that leaves runs in their contracted form.
+- What it would keep: "look for transformations that are secretly the same computation, expressed in different coordinates."
+
+**The cross-check against the records** (the Coordinator):
+- **The JAX instinct is the essence itself.** Composing transformations instead of stepping states is contraction along composition. The phrasing is added to ESSENCE.md.
+- **Associative scan and list ranking for inversion** are Edwards–Vishkin, cited in the expert review of 29 October and in the Rauzy–Veech record of 10 November. Record 109 shows why they don't move the floor: list ranking lowers the depth, not the count of reads. Landmark induction (record 114) is the same trade.
+- **MTF as composition of chunk permutations** was studied on 30 October, in external reports 5–7 ("the algebra of inverse MTF", the (O, P) chunk decomposition, the bzip2gpu source).
+- **The strongest candidate, k-letter words through monotone cursors, has been tried three times:**
+  - T², killed on 23 November;
+  - MONODROMY's senses A and B (record 113): classes multiply as 16^k, and depth k costs 16^k cursors or k sweeps;
+  - **Carbon's C-2 earlier today**, "subalphabet radix-fibre k-cones". It is exactly the selective, hex-only variant, built through cursors. Measured on the six blocks, the wide-run side plus the macro side cost at least 1.50·h₁ on every block, with 64–137 passes and 61 MB of state (`carbon-cycle1-critique.md`).
+
+  The outside model's "missing piece" is therefore the experiment already run, and it came out negative.
+- **The analytic 0.379 reads per lone row** at k = 3 assumes free acquisition and no wide-run side. The measured version is the 1.50 above.
+- **What stays genuinely open from this exchange:** a single algebraic representation shared *across* stages (Huffman, MTF, BWT, emit). It is the only route around the whole-decoder cap: the inversion is about 16% of time at one worker and almost nothing at ten. Ordinary loop fusion of Huffman, MTF and construction was tried and failed; a common representation was not.

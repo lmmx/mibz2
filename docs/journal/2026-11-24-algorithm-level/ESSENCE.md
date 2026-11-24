@@ -17,6 +17,8 @@ The proved floor says that lone rows have nothing to move together with *in that
 
 **All directions at once, and more.** The term is deliberately overloaded. Louis (24 November): "I don't want to frame it as one way only … the Hilbert's 24th problem movement. And however you call it, we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving together, the contracting along the text. Like, we want to look at all possible ones. In fact, we might want to look at even more." Pursue every sense in parallel. None is the lead, and each is a reading of the same movement. Finding further senses is part of the task.
 
+Another phrasing of the same movement, from the outside verdict on Louis's JAX idea (`jax-idea-verdict.md`): "Don't just look for rows that move together. Look for transformations that are secretly the same computation, expressed in different coordinates." It says the same thing as Louis's "replace the state of a computation with a representation of what the computation does": compose the transformations, not the states.
+
 The senses named so far:
 - **Contract along the text, not along the rows.** A repeated stretch of text is a run in the other direction. Copy plans are the start of this.
 - **Moving together up to a consistent relabelling,** not exact equality.
