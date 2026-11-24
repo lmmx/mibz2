@@ -1,0 +1,554 @@
+[
+  {
+    "name": "synth-hex-iid-65536",
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "alphabet_active": 16,
+    "byte_exact": true,
+    "m2_table_bytes": 1024,
+    "bigrams": {
+      "nonempty": 256,
+      "hapax": 0,
+      "mono_run": 0,
+      "mono_thick": 0
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 0,
+      "hapax_frac": 0.0,
+      "mono_rows": 0,
+      "mono_frac": 0.0,
+      "mono_thick_rows": 0,
+      "mono_thick_frac": 0.0
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 0,
+      "h1_hapax_frac": 0.0,
+      "h1_mono": 0,
+      "h1_mono_frac": 0.0,
+      "h1_mono_thick": 0,
+      "h1_mono_thick_frac": 0.0
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 65536,
+      "Q_run_over_n": 1.0,
+      "Q_run_over_h1": 1.1406,
+      "bypass_hits": 0,
+      "steps_saved_frac_of_n": 0.0
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 65536,
+      "ret_mono_total": 0,
+      "ret_mono_to_thick_redundant": 0,
+      "ret_mono_to_retained_genuine": 0,
+      "genuine_saved_frac_of_m": 0.0,
+      "genuine_saved_frac_of_h1": 0.0
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 16,
+      "res2_median_abs": 4,
+      "res1_entropy_bits": 6.772,
+      "res2_entropy_bits": 4.713,
+      "entropy_saved_bits": 2.059
+    },
+    "pi_cost_raw": {
+      "Q": 65536,
+      "Q_over_h1": 1.1406,
+      "Q_acq": 0,
+      "Q_run": 65536,
+      "D": 65536,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 394240,
+      "S_over_n": 6.016,
+      "s_cursors": 18,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "synth-tmpl-hex-1000x40",
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "alphabet_active": 29,
+    "byte_exact": true,
+    "m2_table_bytes": 3364,
+    "bigrams": {
+      "nonempty": 311,
+      "hapax": 0,
+      "mono_run": 36,
+      "mono_thick": 36
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 0,
+      "hapax_frac": 0.0,
+      "mono_rows": 24000,
+      "mono_frac": 0.2963,
+      "mono_thick_rows": 24000,
+      "mono_thick_frac": 0.2963
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 0,
+      "h1_hapax_frac": 0.0,
+      "h1_mono": 956,
+      "h1_mono_frac": 0.024,
+      "h1_mono_thick": 956,
+      "h1_mono_thick_frac": 0.024
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 67000,
+      "Q_run_over_n": 0.8272,
+      "Q_run_over_h1": 1.6788,
+      "bypass_hits": 14000,
+      "steps_saved_frac_of_n": 0.1728
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 47001,
+      "ret_mono_total": 1001,
+      "ret_mono_to_thick_redundant": 1001,
+      "ret_mono_to_retained_genuine": 0,
+      "genuine_saved_frac_of_m": 0.0,
+      "genuine_saved_frac_of_h1": 0.0
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 349,
+      "res2_median_abs": 8,
+      "res1_entropy_bits": 11.484,
+      "res2_entropy_bits": 7.412,
+      "entropy_saved_bits": 4.071
+    },
+    "pi_cost_raw": {
+      "Q": 67000,
+      "Q_over_h1": 1.6788,
+      "Q_acq": 0,
+      "Q_run": 67000,
+      "D": 67000,
+      "D_over_n": 0.82716,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 489364,
+      "S_over_n": 6.042,
+      "s_cursors": 31,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-0.L",
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "alphabet_active": 89,
+    "byte_exact": true,
+    "m2_table_bytes": 31684,
+    "bigrams": {
+      "nonempty": 1628,
+      "hapax": 162,
+      "mono_run": 537,
+      "mono_thick": 253
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 162,
+      "hapax_frac": 0.00018,
+      "mono_rows": 100345,
+      "mono_frac": 0.1115,
+      "mono_thick_rows": 99495,
+      "mono_thick_frac": 0.1106
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 157,
+      "h1_hapax_frac": 0.004471,
+      "h1_mono": 1034,
+      "h1_mono_frac": 0.0294,
+      "h1_mono_thick": 829,
+      "h1_mono_thick_frac": 0.0236
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 812404,
+      "Q_run_over_n": 0.9027,
+      "Q_run_over_h1": 23.1349,
+      "bypass_hits": 87527,
+      "steps_saved_frac_of_n": 0.0973
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 88290,
+      "ret_mono_total": 3891,
+      "ret_mono_to_thick_redundant": 3041,
+      "ret_mono_to_retained_genuine": 850,
+      "genuine_saved_frac_of_m": 0.0096,
+      "genuine_saved_frac_of_h1": 0.0242
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 3678,
+      "res2_median_abs": 414,
+      "res1_entropy_bits": 14.869,
+      "res2_entropy_bits": 12.176,
+      "entropy_saved_bits": 2.694
+    },
+    "pi_cost_raw": {
+      "Q": 812404,
+      "Q_over_h1": 23.1349,
+      "Q_acq": 0,
+      "Q_run": 812404,
+      "D": 812404,
+      "D_over_n": 0.90274,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5431270,
+      "S_over_n": 6.035,
+      "s_cursors": 91,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-2.L",
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "alphabet_active": 86,
+    "byte_exact": true,
+    "m2_table_bytes": 29584,
+    "bigrams": {
+      "nonempty": 1783,
+      "hapax": 138,
+      "mono_run": 589,
+      "mono_thick": 237
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 138,
+      "hapax_frac": 0.000153,
+      "mono_rows": 84251,
+      "mono_frac": 0.0936,
+      "mono_thick_rows": 83142,
+      "mono_thick_frac": 0.0924
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 138,
+      "h1_hapax_frac": 0.004028,
+      "h1_mono": 918,
+      "h1_mono_frac": 0.0268,
+      "h1_mono_thick": 697,
+      "h1_mono_thick_frac": 0.0203
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 827073,
+      "Q_run_over_n": 0.919,
+      "Q_run_over_h1": 24.1397,
+      "bypass_hits": 72927,
+      "steps_saved_frac_of_n": 0.081
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 109542,
+      "ret_mono_total": 5465,
+      "ret_mono_to_thick_redundant": 4356,
+      "ret_mono_to_retained_genuine": 1109,
+      "genuine_saved_frac_of_m": 0.0101,
+      "genuine_saved_frac_of_h1": 0.0324
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 3725,
+      "res2_median_abs": 383,
+      "res1_entropy_bits": 14.838,
+      "res2_entropy_bits": 12.118,
+      "entropy_saved_bits": 2.72
+    },
+    "pi_cost_raw": {
+      "Q": 827073,
+      "Q_over_h1": 24.1397,
+      "Q_acq": 0,
+      "Q_run": 827073,
+      "D": 827073,
+      "D_over_n": 0.91897,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5429584,
+      "S_over_n": 6.033,
+      "s_cursors": 88,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-85.L",
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "alphabet_active": 94,
+    "byte_exact": true,
+    "m2_table_bytes": 35344,
+    "bigrams": {
+      "nonempty": 1999,
+      "hapax": 274,
+      "mono_run": 705,
+      "mono_thick": 176
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 274,
+      "hapax_frac": 0.000304,
+      "mono_rows": 82912,
+      "mono_frac": 0.0921,
+      "mono_thick_rows": 81483,
+      "mono_thick_frac": 0.0905
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 274,
+      "h1_hapax_frac": 0.004937,
+      "h1_mono": 1091,
+      "h1_mono_frac": 0.0197,
+      "h1_mono_thick": 690,
+      "h1_mono_thick_frac": 0.0124
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 832829,
+      "Q_run_over_n": 0.9254,
+      "Q_run_over_h1": 15.0048,
+      "bypass_hits": 67106,
+      "steps_saved_frac_of_n": 0.0746
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 155124,
+      "ret_mono_total": 6479,
+      "ret_mono_to_thick_redundant": 5050,
+      "ret_mono_to_retained_genuine": 1429,
+      "genuine_saved_frac_of_m": 0.0092,
+      "genuine_saved_frac_of_h1": 0.0257
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 3892,
+      "res2_median_abs": 436,
+      "res1_entropy_bits": 14.893,
+      "res2_entropy_bits": 12.151,
+      "entropy_saved_bits": 2.742
+    },
+    "pi_cost_raw": {
+      "Q": 832829,
+      "Q_over_h1": 15.0048,
+      "Q_acq": 0,
+      "Q_run": 832829,
+      "D": 832829,
+      "D_over_n": 0.925432,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5434954,
+      "S_over_n": 6.039,
+      "s_cursors": 96,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-143.L",
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "alphabet_active": 96,
+    "byte_exact": true,
+    "m2_table_bytes": 36864,
+    "bigrams": {
+      "nonempty": 2354,
+      "hapax": 359,
+      "mono_run": 819,
+      "mono_thick": 195
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 359,
+      "hapax_frac": 0.000399,
+      "mono_rows": 73475,
+      "mono_frac": 0.0817,
+      "mono_thick_rows": 72018,
+      "mono_thick_frac": 0.08
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 358,
+      "h1_hapax_frac": 0.004933,
+      "h1_mono": 1726,
+      "h1_mono_frac": 0.0238,
+      "h1_mono_thick": 1245,
+      "h1_mono_thick_frac": 0.0172
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 833623,
+      "Q_run_over_n": 0.9264,
+      "Q_run_over_h1": 11.4859,
+      "bypass_hits": 66246,
+      "steps_saved_frac_of_n": 0.0736
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 193449,
+      "ret_mono_total": 10599,
+      "ret_mono_to_thick_redundant": 9142,
+      "ret_mono_to_retained_genuine": 1457,
+      "genuine_saved_frac_of_m": 0.0075,
+      "genuine_saved_frac_of_h1": 0.0201
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 3977,
+      "res2_median_abs": 303,
+      "res1_entropy_bits": 14.866,
+      "res2_entropy_bits": 11.943,
+      "entropy_saved_bits": 2.923
+    },
+    "pi_cost_raw": {
+      "Q": 833623,
+      "Q_over_h1": 11.4859,
+      "Q_acq": 0,
+      "Q_run": 833623,
+      "D": 833623,
+      "D_over_n": 0.926383,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5436078,
+      "S_over_n": 6.041,
+      "s_cursors": 98,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-210.L",
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "alphabet_active": 96,
+    "byte_exact": true,
+    "m2_table_bytes": 36864,
+    "bigrams": {
+      "nonempty": 2219,
+      "hapax": 245,
+      "mono_run": 734,
+      "mono_thick": 189
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 245,
+      "hapax_frac": 0.000272,
+      "mono_rows": 69727,
+      "mono_frac": 0.0775,
+      "mono_thick_rows": 68445,
+      "mono_thick_frac": 0.0761
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 243,
+      "h1_hapax_frac": 0.002504,
+      "h1_mono": 1429,
+      "h1_mono_frac": 0.0147,
+      "h1_mono_thick": 1057,
+      "h1_mono_thick_frac": 0.0109
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 841025,
+      "Q_run_over_n": 0.9345,
+      "Q_run_over_h1": 8.6655,
+      "bypass_hits": 58934,
+      "steps_saved_frac_of_n": 0.0655
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 202025,
+      "ret_mono_total": 7592,
+      "ret_mono_to_thick_redundant": 6310,
+      "ret_mono_to_retained_genuine": 1282,
+      "genuine_saved_frac_of_m": 0.0063,
+      "genuine_saved_frac_of_h1": 0.0132
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 3872,
+      "res2_median_abs": 325,
+      "res1_entropy_bits": 14.883,
+      "res2_entropy_bits": 11.966,
+      "entropy_saved_bits": 2.917
+    },
+    "pi_cost_raw": {
+      "Q": 841025,
+      "Q_over_h1": 8.6655,
+      "Q_acq": 0,
+      "Q_run": 841025,
+      "D": 841025,
+      "D_over_n": 0.934515,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5436618,
+      "S_over_n": 6.041,
+      "s_cursors": 98,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  },
+  {
+    "name": "block-207.L",
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "alphabet_active": 94,
+    "byte_exact": true,
+    "m2_table_bytes": 35344,
+    "bigrams": {
+      "nonempty": 2249,
+      "hapax": 171,
+      "mono_run": 738,
+      "mono_thick": 199
+    },
+    "coverage_all_rows": {
+      "hapax_rows": 171,
+      "hapax_frac": 0.00019,
+      "mono_rows": 88502,
+      "mono_frac": 0.0983,
+      "mono_thick_rows": 87243,
+      "mono_thick_frac": 0.0969
+    },
+    "coverage_lone_rows_h1": {
+      "h1_hapax": 169,
+      "h1_hapax_frac": 0.002708,
+      "h1_mono": 1809,
+      "h1_mono_frac": 0.029,
+      "h1_mono_thick": 1462,
+      "h1_mono_thick_frac": 0.0234
+    },
+    "raw_lf_m2_bypass": {
+      "Q_run": 820867,
+      "Q_run_over_n": 0.9121,
+      "Q_run_over_h1": 13.1534,
+      "bypass_hits": 79131,
+      "steps_saved_frac_of_n": 0.0879
+    },
+    "retained_M16_m2_bypass": {
+      "m_retained": 134609,
+      "ret_mono_total": 6954,
+      "ret_mono_to_thick_redundant": 5695,
+      "ret_mono_to_retained_genuine": 1259,
+      "genuine_saved_frac_of_m": 0.0094,
+      "genuine_saved_frac_of_h1": 0.0202
+    },
+    "ifs_1gram_vs_2gram": {
+      "res1_median_abs": 4076,
+      "res2_median_abs": 306,
+      "res1_entropy_bits": 14.916,
+      "res2_entropy_bits": 12.031,
+      "entropy_saved_bits": 2.885
+    },
+    "pi_cost_raw": {
+      "Q": 820867,
+      "Q_over_h1": 13.1534,
+      "Q_acq": 0,
+      "Q_run": 820867,
+      "D": 820867,
+      "D_over_n": 0.912076,
+      "P": 2,
+      "P_acq": 2,
+      "P_run": 0,
+      "P_bytes": 8.0,
+      "S": 5435332,
+      "S_over_n": 6.039,
+      "s_cursors": 96,
+      "notes": "P=2 Q_acq=0 M2-enriched 2-step monochromatic-image bypass on raw LF"
+    }
+  }
+]
