@@ -187,6 +187,12 @@
 .md-typeset img.il-beast-r { float: right; margin: 0 0 0.6em 1em; }
 .md-typeset img.il-beast-l { float: left; margin: 0 1em 0.6em 0; }
 .md-typeset img.il-beast-c { display: block; margin: 0.6em auto; }
+/* On a page with a creature, a figure, table, code block, admonition or heading starts below
+   it, so the creature never hangs over a frame. */
+.md-typeset:has(img.il-beast-r, img.il-beast-l)
+  :is(figure, table, pre, details, .admonition, .highlight, h2, h3, hr, .il-gloss) {
+  clear: both;
+}
 
 /* A fleuron rule between movements: <p class="il-rule" aria-hidden="true">❦</p> */
 .md-typeset .il-rule {
