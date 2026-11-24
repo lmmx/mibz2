@@ -343,10 +343,10 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
 
 <aside class="il-gloss" markdown>
 
-**Backward search** is how a compressed full-text index finds a
-pattern. It reads the pattern from its last letter to its first, and each letter narrows an
-interval of sorted rows by one LF step. Searching for many patterns at once moves all their
-intervals together, which is the frontier's step put to another use.
+**Backward search** is this same step in an older trade. Herein a compressed full-text index
+seeks a pattern from its last letter to its first, each letter narrowing an interval of sorted
+rows by one LF step; and many patterns sought at once move all their intervals together: the
+frontier's step, put to another use.
 
 </aside>
 
@@ -424,6 +424,12 @@ pass over the runs. Yet it decodes <span class="il-black">nothing</span>: `bca` 
 moment, A = 2, while their LF maps are [1, 2, 0] and [2, 0, 1]. Separating swaps is not the same as decoding, so a stronger lower bound must find two valid columns that every permitted observation,
 taken together, fails to tell apart.
 
+<aside class="il-gloss" markdown>
+
+**A witness** that tells every swapped pair apart, a perfect witness even, may still know naught of the order: `bca` and `cab` share A = 2 and decode differently. A fact about one summary, not a verdict on all.
+
+</aside>
+
 <figure class="bf-fig">
 <p class="bf-title">Same letters, same moment, different permutations</p>
 <div class="fx-panels"><svg viewBox="0 0 340 290" role="img" aria-label="L = bca: first moment A = 2; LF = [1, 2, 0], a single cycle 0 → 1 → 2 → 0."><defs><marker id="fx8-bca" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="fx-head" d="M0,1 L9,5 L0,9 Z"/></marker></defs><text class="fx-rule" x="170" y="20" text-anchor="middle">L = bca</text><path class="fx-ribbon fx-b" d="M74,44 C112,44 112,76 150,76 L150,108 C112,108 112,76 74,76 Z"/><path class="fx-ribbon fx-c" d="M74,76 C112,76 112,108 150,108 L150,140 C112,140 112,108 74,108 Z"/><path class="fx-ribbon fx-a" d="M74,108 C112,108 112,44 150,44 L150,76 C112,76 112,140 74,140 Z"/><rect class="fx-cell fx-b" x="44" y="44" width="30" height="32"/><text class="fx-letter" x="59" y="65" text-anchor="middle">b</text><rect class="fx-cell fx-a" x="150" y="44" width="30" height="32"/><text class="fx-letter" x="165" y="65" text-anchor="middle">a</text><rect class="fx-cell fx-c" x="44" y="76" width="30" height="32"/><text class="fx-letter" x="59" y="97" text-anchor="middle">c</text><rect class="fx-cell fx-b" x="150" y="76" width="30" height="32"/><text class="fx-letter" x="165" y="97" text-anchor="middle">b</text><rect class="fx-cell fx-a" x="44" y="108" width="30" height="32"/><text class="fx-letter" x="59" y="129" text-anchor="middle">a</text><rect class="fx-cell fx-c" x="150" y="108" width="30" height="32"/><text class="fx-letter" x="165" y="129" text-anchor="middle">c</text><rect class="fx-run" x="44" y="44" width="30" height="32"/><rect class="fx-run" x="44" y="76" width="30" height="32"/><rect class="fx-run" x="44" y="108" width="30" height="32"/><text class="fx-row" x="18" y="64" text-anchor="middle">0·1</text><text class="fx-row" x="18" y="96" text-anchor="middle">1·2</text><text class="fx-row" x="18" y="128" text-anchor="middle">2·0</text><path class="fx-loop" d="M277.8,48.8 A46,46 0 0 1 307.6,97.9" marker-end="url(#fx8-bca)"/><path class="fx-loop" d="M291.5,127.3 A46,46 0 0 1 234.1,128.6" marker-end="url(#fx8-bca)"/><path class="fx-loop" d="M216.7,99.9 A46,46 0 0 1 244.3,49.6" marker-end="url(#fx8-bca)"/><circle class="fx-node fx-b" cx="262" cy="46" r="14"/><text class="fx-letter" x="262" y="51" text-anchor="middle">b</text><text class="fx-row" x="262" y="79" text-anchor="middle">0</text><circle class="fx-node fx-c" cx="301.8" cy="115" r="14"/><text class="fx-letter" x="301.8" y="120" text-anchor="middle">c</text><text class="fx-row" x="276.7" y="104.5" text-anchor="middle">1</text><circle class="fx-node fx-a" cx="222.2" cy="115" r="14"/><text class="fx-letter" x="222.2" y="120" text-anchor="middle">a</text><text class="fx-row" x="247.3" y="104.5" text-anchor="middle">2</text><text class="fx-pair" x="170" y="186" text-anchor="middle">A = 0·1 + 1·2 + 2·0 = 2</text><text class="fx-pair" x="170" y="210" text-anchor="middle">LF = [1, 2, 0]</text><text class="bf-tm" x="170" y="234" text-anchor="middle">the ring turns forwards</text></svg><svg viewBox="0 0 340 290" role="img" aria-label="L = cab: first moment A = 2; LF = [2, 0, 1], a single cycle 0 → 2 → 1 → 0."><defs><marker id="fx8-cab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="fx-head" d="M0,1 L9,5 L0,9 Z"/></marker></defs><text class="fx-rule" x="170" y="20" text-anchor="middle">L = cab</text><path class="fx-ribbon fx-c" d="M74,44 C112,44 112,108 150,108 L150,140 C112,140 112,76 74,76 Z"/><path class="fx-ribbon fx-a" d="M74,76 C112,76 112,44 150,44 L150,76 C112,76 112,108 74,108 Z"/><path class="fx-ribbon fx-b" d="M74,108 C112,108 112,76 150,76 L150,108 C112,108 112,140 74,140 Z"/><rect class="fx-cell fx-c" x="44" y="44" width="30" height="32"/><text class="fx-letter" x="59" y="65" text-anchor="middle">c</text><rect class="fx-cell fx-a" x="150" y="44" width="30" height="32"/><text class="fx-letter" x="165" y="65" text-anchor="middle">a</text><rect class="fx-cell fx-a" x="44" y="76" width="30" height="32"/><text class="fx-letter" x="59" y="97" text-anchor="middle">a</text><rect class="fx-cell fx-b" x="150" y="76" width="30" height="32"/><text class="fx-letter" x="165" y="97" text-anchor="middle">b</text><rect class="fx-cell fx-b" x="44" y="108" width="30" height="32"/><text class="fx-letter" x="59" y="129" text-anchor="middle">b</text><rect class="fx-cell fx-c" x="150" y="108" width="30" height="32"/><text class="fx-letter" x="165" y="129" text-anchor="middle">c</text><rect class="fx-run" x="44" y="44" width="30" height="32"/><rect class="fx-run" x="44" y="76" width="30" height="32"/><rect class="fx-run" x="44" y="108" width="30" height="32"/><text class="fx-row" x="18" y="64" text-anchor="middle">0·2</text><text class="fx-row" x="18" y="96" text-anchor="middle">1·0</text><text class="fx-row" x="18" y="128" text-anchor="middle">2·1</text><path class="fx-loop" d="M277.8,48.8 A46,46 0 0 1 307.6,97.9" marker-end="url(#fx8-cab)"/><path class="fx-loop" d="M291.5,127.3 A46,46 0 0 1 234.1,128.6" marker-end="url(#fx8-cab)"/><path class="fx-loop" d="M216.7,99.9 A46,46 0 0 1 244.3,49.6" marker-end="url(#fx8-cab)"/><circle class="fx-node fx-c" cx="262" cy="46" r="14"/><text class="fx-letter" x="262" y="51" text-anchor="middle">c</text><text class="fx-row" x="262" y="79" text-anchor="middle">0</text><circle class="fx-node fx-b" cx="301.8" cy="115" r="14"/><text class="fx-letter" x="301.8" y="120" text-anchor="middle">b</text><text class="fx-row" x="276.7" y="104.5" text-anchor="middle">2</text><circle class="fx-node fx-a" cx="222.2" cy="115" r="14"/><text class="fx-letter" x="222.2" y="120" text-anchor="middle">a</text><text class="fx-row" x="247.3" y="104.5" text-anchor="middle">1</text><text class="fx-pair" x="170" y="186" text-anchor="middle">A = 0·2 + 1·0 + 2·1 = 2</text><text class="fx-pair" x="170" y="210" text-anchor="middle">LF = [2, 0, 1]</text><text class="bf-tm" x="170" y="234" text-anchor="middle">the ring turns backwards</text></svg></div>
@@ -464,6 +470,8 @@ and pins down only 22% of the width-1 rows. On our six measured blocks, observat
 interval histograms and declared run records place half the width-1 rows only after 6,903 to 14,120
 separate observations. That is reading the block row by row under another name.
 
+<p class="il-rubric-head">Of three decoders that broke the bound, and came nowhere near half</p>
+
 Just outside the class, the bound does break, and the way it breaks is informative. Three exact
 decoders beat it on small witnesses. One fills the last unwritten slots from the histogram, one
 copies a stretch of output already written, and one moves a shared context, as in the 18-row
@@ -489,7 +497,7 @@ The target is also harder than its headline suggests. Counted strictly, Open pay
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 $h_1/m \ge 2/3$. Across the 232 distinct blocks of our benchmark, $h_1/m$ is 0.41 overall and
-0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of every
+0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of <span class="il-black">every</span>
 retained step more cheaply, not merely those of the random IDs.
 
 The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
