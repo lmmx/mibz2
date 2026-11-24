@@ -54,6 +54,14 @@ blocks, #805).
        that cost more time is not a yes.
      The thresholds for the first two are set before the data (RULES C1a) and are Louis's to fix
      with the formulation.
+- *The viability check, in hindsight from Rauzy–Veech* (Louis: "in hindsight we could see that
+  Rauzy–Veech induction would always be cost viable as opposed to the traversal"). The traversal pays
+  about n dependent loads a block. Induction made the cost scale with the block's structure instead,
+  its runs and then a walk over the retained rows, and that structure is small on real blocks (#805:
+  mean maximal run about 16 rows; median m/n 0.114, so about n/9 dependent steps). A structural step
+  is cost-viable when its cost scales with a *different* parameter that is *measured small on real
+  inputs*. So every candidate states what its cost scales with, and the census says whether that is
+  much smaller than h₁ on Wikidata's blocks, before anything is built.
 - *What a no would be:* a proof that no route in a stated, wider class goes below h₁ on blocks of
   Wikidata's structure. That ends the major shot cleanly, and is worth as much as a yes.
 
