@@ -842,7 +842,7 @@ page that uses them.
 | --- | --- |
 | Fleuron link | `[MODE.md](url){ .il-ref }`; neighbours take `.il-c1` to `.il-c5` |
 | Neighbouring plain links | `[#160](url){ .il-ink .il-c1 }`, `[#161](url){ .il-ink .il-c2 }` |
-| Gloss | `<aside class="il-gloss" markdown>**The BEAM** is …</aside>` |
+| Gloss | `<aside class="il-gloss" markdown>**The BEAM** is …</aside>`; a term may link to its source, `**[Cocycle](url)**`, and keeps the gloss's colour |
 | Blackletter | `<span class="il-black">…</span>`; red with an edge `il-rubric`; warm halo `il-gild` |
 | Tight glow | `<span class="il-glow">…</span>`, `il-glow-ember` |
 | Creature | `<img class="il-beast il-beast-r" src="…/bestiary/….svg" alt="">` (`-l`, `-c`) |
