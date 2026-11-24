@@ -4,13 +4,30 @@
 by the Coordinator; it builds on §1.2's `Column` and T1's `decode`. Labels: proved / argued /
 conjectured / measured. Parameters are provisional until Louis fixes them.*
 
-## 1. The parameters, fixed before any construction
+## 1. The parameters, fixed before any construction (MONODROMY, under RULES C6, 24 November, before N-0's data)
 
 ```lean
-def 𝓕 : Finset Column      -- Wikidata's 232 distinct blocks (#805) ∪ the 6 admitted blocks
-def K : ℕ := 3             -- streaming passes over n
-def δ : ℚ := 1/2           -- margin: proposed, see §6
+def 𝓕 : Finset Column      -- every one of Wikidata's 232 distinct blocks (#805) and the 6 admitted blocks
+def K : ℕ := 2             -- passes over n: the output, plus one working pass of O(1) work a byte
+def δ : ℚ := 1/2           -- per block: c₁ ≤ h₁/2 on every block of 𝓕
+def S (c) : ℕ := openPeakScratch c   -- state beyond the output: at most shipped Open's own peak scratch on c
 ```
+
+**The reasons, one line each:**
+- **𝓕: every block, none dropped.** Excluding GUID-heavy or high-h₁ blocks would dodge random content, the hard case. The target is per block, with no corpus average.
+- **Correctness on every valid column,** not just 𝓕. A decoder exact only on 𝓕 is a lookup, not an algorithm.
+- **δ = 1/2 per block,** chosen against what is reachable, not toward it. On six blocks, 75–85% of h₁ is hex (record 96; I saw this before fixing δ, and disclose it). With random rows at aR = 1, δ = 1/2 is unreachable. Meeting it therefore requires beating the floor on random content itself. It also cannot be met by a constant (`origPtr`) or a handful of special rows.
+- **K = 2.** Open uses one pass over n, its output. One extra working pass is the most a step change can spend and still plausibly pay. A K that admits several passes would invite wasteful global procedures. Sort-based routes are excluded in any case, by the count (record 99).
+- **S at most Open's own peak scratch on the same block.** Costs can't move into memory. At 10 workers, extra bytes pay an L3 tax (record 95).
+- **The split σ is not part of the target.** The target is on total c₁. σ is only a proof device (P1): it must be decidable from the records in O(r), and its own cost counts.
+
+### 1a. The anti-cheat clauses (part of the target)
+
+1. **c₁ charges every fact type** (record 100 §1). A single-row determination of a successor or a position is one event, whatever its type.
+2. **No bundling.** A rule application with s rows in its subject is charged the number of those rows whose own run records it takes as distinguished inputs, not 1. Packing single-row determinations into one "multi-row" step doesn't reduce c₁. Only rows determined from aggregate information go uncharged.
+3. **No cost moved off the ledger.** Every rule must be declared with a sound derivation from the records and the facts already held. A yes must also carry the utility receipts of §7. Fewer events that cost more time is not a yes.
+4. **Depth is not the count** (record 98). Parallelism, chains and SIMD count per row.
+5. **Fixed before the data.** These values are fixed before Neon's N-0 measurement (h₁R/h₁ on 𝓕). Under C2 they are never relaxed after any data is seen. Where MONODROMY and Neon disagree, the stricter reading holds, logged in CLAIMS.md.
 
 ## 2. The calculus 𝓡 and its cost (record 98 §1)
 
