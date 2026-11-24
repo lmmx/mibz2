@@ -1,0 +1,37 @@
+# bench-four-arm (diagnostic: decides no production default)
+
+the stores, outside every clock: 1724 blocks indexed (431 distinct), 50086174 bytes of symbols; 233 code keys, 26567581 codes, 106270324 bytes; the reference output 838800784 bytes, CRC-32 d7626c17
+
+## 1 workers (20 rounds)
+A: wall median 1.3137 s
+B/A: 0.830 [0.825, 0.834] FASTER; wall median 1.0916 s
+C/A: 0.996 [0.991, 1.001] INCONCLUSIVE; wall median 1.3106 s
+D/A: 0.825 [0.820, 0.831] FASTER; wall median 1.0854 s
+the better single arm X = B; D/X: 0.994 [0.990, 0.999] FASTER
+super-additivity (D x A) / (B x C): 0.998 [0.993, 1.003] (decides nothing)
+peak resident memory, the median of each arm's decodes (kB; the process's, both stores included): A 402198 (1.000 of A), B 402238 (1.000 of A), C 390912 (0.972 of A), D 390954 (0.972 of A)
+by the rule: ADDITIVE (decides nothing at this count)
+
+## 6 workers (20 rounds)
+A: wall median 0.2481 s
+B/A: 0.850 [0.844, 0.855] FASTER; wall median 0.2107 s
+C/A: 0.982 [0.979, 0.986] FASTER; wall median 0.2426 s
+D/A: 0.830 [0.827, 0.834] FASTER; wall median 0.2059 s
+the better single arm X = B; D/X: 0.977 [0.973, 0.981] FASTER
+super-additivity (D x A) / (B x C): 0.995 [0.988, 1.001] (decides nothing)
+peak resident memory, the median of each arm's decodes (kB; the process's, both stores included): A 411834 (1.000 of A), B 405260 (0.984 of A), C 391774 (0.951 of A), D 389816 (0.947 of A)
+by the rule: ADDITIVE (decides nothing at this count)
+
+## 10 workers (20 rounds) (judged)
+A: wall median 0.2260 s
+B/A: 0.976 [0.936, 1.017] INCONCLUSIVE; wall median 0.2196 s
+C/A: 0.806 [0.782, 0.831] FASTER; wall median 0.1790 s
+D/A: 0.741 [0.717, 0.766] FASTER; wall median 0.1675 s
+the better single arm X = C; D/X: 0.920 [0.901, 0.939] FASTER
+super-additivity (D x A) / (B x C): 0.943 [0.903, 0.985] (decides nothing)
+peak resident memory, the median of each arm's decodes (kB; the process's, both stores included): A 401942 (1.000 of A), B 402198 (1.001 of A), C 389272 (0.968 of A), D 390744 (0.972 of A)
+by the rule: INTERACTION
+
+the harness check: B/A at 10 workers 0.976 [0.936, 1.017] against bench-supplied-codes' 0.988 [0.957, 1.020] (journal §30): reproduced (the intervals overlap)
+
+DECISION: INTERACTION (D/A at 10 workers 0.741 [0.717, 0.766]; X = C 0.806 [0.782, 0.831]; D/X 0.920 [0.901, 0.939]; INTERACTION iff D/A's upper bound <= 0.9, D/A below X/A by more than 0.03 and D/X's interval below 1; ADDITIVE iff the upper bound <= 0.9 otherwise; NO POTENTIAL iff the lower bound > 0.95; else MARGINAL)

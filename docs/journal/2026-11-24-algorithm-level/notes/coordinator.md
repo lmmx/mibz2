@@ -29,3 +29,10 @@
 ## 24 Nov, 21:52 — #838 (a7e251ef) returned once more for the 1–20 grid
 - The Pathfinder's update added the per-count report, rho, the measured crossover, the fit wall(k) = c + max(b, a/k), k* and a prediction from counts 1–4.
 - It still used 15 counts, because it crossed with Louis's 1–20 correction. It is returned for all 20 counts within about 40 minutes.
+
+## 24 Nov, 22:05 — the record restructured: lowercase names, subdirectories, TSV
+- Louis: "i dont want this all caps md file approach … if you want a math_targets subproject with a readme that is better … tsv more appropriate than md … ask monodromy what would be worth metricising … measure things like avg rss peak rss etc".
+- Restructured into subdirectories with lowercase names; the path map is in journal §46.
+- `math-targets/` is now a small project: a README, `targets.tsv`, `metrics.tsv`, the four-arm data and an extraction script.
+- MONODROMY is asked what to measure and what to reason about (channel #33).
+- The Pathfinder is asked to add memory and scheduling metrics to the scanner profile before it is tagged.

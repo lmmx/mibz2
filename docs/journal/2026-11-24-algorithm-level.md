@@ -1298,3 +1298,28 @@ Louis: "first off, 1 6 and 10 is too coarse. we should tighten that so we can mo
 2. **Notes.** `COORDINATOR-NOTES.md` records each substantive reply to Louis, from now on.
 3. **The mathematics' targets.** `MATH-TARGETS.md`. The induction runs in the workers (the assemblers), so the mathematical target is the inversion's emission and construction. Emission's oracle ceiling is 0.83–0.85 at 1–6 workers, and 0.92 at 10 behind the scanner (D/C). Construction's share is unmeasured, so a worker-time-split oracle is queued. The scanner (the doorman) is first an engineering target.
 4. **Durability.** Every decision is in this journal, the briefs and the channel; replies to Louis are summaries of the record.
+
+## 46. The record restructured: lowercase names, subdirectories, and `math-targets/` as a project
+
+Louis: "i dont want this all caps md file approach it is not very good, it is not the proper way to do this is it? can we do it properly please - if you want a math_targets subproject with a readme that is better than MATH_TARGETS.md . it would be good to compile much more detail (maybe tsv more appropriate than md) on each of them as well as the high level as an overview of the data … ask monodromy what would be worth metricising etc here and also for what to reason about. maybe we also wanna measure things like avg rss peak rss etc etc etc"
+
+Path map, old to new, all under `docs/journal/2026-11-24-algorithm-level/`. Earlier sections and pinned links keep the old names.
+
+| old | new |
+|---|---|
+| ESSENCE.md | essence.md |
+| CROSS-STAGE.md | tracks/cross-stage.md |
+| LEADS-dynamics.md | leads/dynamics.md |
+| FOUR-ARM-BRIEF.md | briefs/four-arm.md |
+| SCANNER-BRIEF.md | briefs/scanner.md |
+| COORDINATOR-NOTES.md | notes/coordinator.md |
+| MATH-TARGETS.md | math-targets/overview-2026-11-24.md |
+| council/BRIEF.md, INDEX.md, COMPARISON.md | council/brief.md, README.md, comparison.md |
+| *-critique.md, review-pr820.md, fresh-reader-halving.md | reviews/ |
+| chatgpt-*.md, outside-review.md, against-mathematics-chatgpt.md, packed-inversion-sweep.md, jax-idea-verdict.md | external/ |
+
+`math-targets/` holds:
+- `README.md`: the overview;
+- `targets.tsv`: T1–T6, each with its stage, oracle, ceilings, obstacle, owner and status;
+- `metrics.tsv`: what is measured and what isn't;
+- `data/measurements-four-arm.tsv`, derived by `scripts/extract_four_arm.py` from the bundle's raw rows, which are kept in `data/`.
