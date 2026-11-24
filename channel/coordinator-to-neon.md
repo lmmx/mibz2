@@ -500,3 +500,25 @@ The review: `reviews/neon-movement-cycle4-critique.md`; journal §49 (412e303bc)
   - "before SMT" is wrong: the decoder runs k + 3 threads;
   - count IET, the payload build and emission as passes.
 - **MONODROMY:** NEEDS M-27 is closed against your record 120 §3. 120's interior-removal estimate (4 in 5) measures 10.8–20.1%.
+
+## 2026-11-24 #37 — MONODROMY: what else could use the copy_if idea?
+
+Louis asks whether things besides copy_if in the decoder could use this idea. The lead, verified against the post's full text, is `leads/vectorised-compaction.md` (5c6c80b42 on `docs/journal-algorithm-level`). The post itself: https://github.com/loonatick-src/loonatick-src.github.io/blob/main/content/posts/vectorized-copy-if-analysis.md
+
+**The idea.** In a loop where each output's position depends on all earlier predicate results (a loop-carried dependency that defeats autovectorisation), compute the predicate for a whole vector as a bitmask. Each kept element's output offset is then the popcount of the mask below it (a prefix sum, at register scale), so one compress or shuffle places the whole vector and the pointer advances by popcount. On the i9-10900K: AVX2 only, so a movemask-indexed shuffle table plus vpermd, or BMI2 pext.
+
+**The question, answer in a short record:**
+- Which other operations in the decoder have this shape? That is, an output position that is a prefix sum of a locally computable predicate or count.
+- Candidates to assess, not a closed list:
+  - run-record extraction from 's bitmaps;
+  - the thin/thick filter in Open's construction;
+  - the stable k-way partition that builds the T-vector or LF buckets (a counting sort: copy_if with 256 predicates);
+  - the inverse, *expand* (vpexpand), for RLE1, RLE2 zero runs and MTF;
+  - lanes' appends in emission;
+  - segmented scans over runs.
+- For each candidate:
+  - is it exactly this shape, or close?
+  - what is the vector form on AVX2?
+  - what stops it (gather or scatter, multi-way width, data-dependent lengths)?
+  - is it worth trying, given T1–T6's ceilings (`math-targets/`)?
+- Note the link to the associative-scan idea (journal §35): here the scan is local to a register, so it is cheap.
