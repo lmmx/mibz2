@@ -69,7 +69,8 @@ theorem G1 (D : Decoder 𝓡) (c : Column) (hc : c.singleCycle) : c₁ (D.trace 
 
 /-- P1, additivity (proved here, §4.1) -/
 theorem c₁_split (σ : Split) (τ : Trace Λ c) :
-    c₁ τ = c₁ (τ.on (σ.rows .N)) + c₁ (τ.on (σ.rows .R))
+    c₁ τ = c₁ (τ.on (σ.rows .N)) + c₁ (τ.on (σ.rows .R)) + c₁ (τ.on (σ.rows .W))
+-- σ partitions all n rows: R, N are the width-1 runs, W the rows of runs of width ≥ 2 (N-1 break 3.2)
 
 /-- The main theorem: conditional existence. -/
 theorem main (σ : Split) (DN : StreamDecoder .N) (DR : StreamDecoder .R)
@@ -79,7 +80,7 @@ theorem main (σ : Split) (DN : StreamDecoder .N) (DR : StreamDecoder .R)
     (Pglue : Glue DN DR)                                 -- the two streams' outputs interleave exactly
     (Pbudget : ∀ c ∈ 𝓕, passes DN c + passes DR c + passes Pglue c ≤ K)
     (Pstate : ∀ c ∈ 𝓕, state DN c + state DR c + state Pglue c ≤ S c)   -- N-1 break 2
-    (Pmargin : ∀ c ∈ 𝓕, aN c * c.h₁N + aR c * c.h₁R + c₁ (Pglue c) ≤ (1 - δ) * c.h₁) :   -- glue charged (N-1 break 2; review 3a)
+    (Pmargin : ∀ c ∈ 𝓕, aN c * c.h₁N + aR c * c.h₁R + c₁W c + c₁ (Pglue c) ≤ (1 - δ) * c.h₁) :   -- glue charged (N-1 break 2; review 3a)
     ∃ D : Decoder (𝓡 ∪ ΛN ∪ ΛR), ∀ c ∈ 𝓕,
       D.passes c ≤ K ∧ D.state c ∈ O(c.r) ∧ c₁ (D.trace c) ≤ (1 - δ) * c.h₁
 ```
@@ -95,6 +96,8 @@ Here h₁N + h₁R = h₁ is the split of the width-1 runs by σ.
 - A width-1 link has a single start.
 
 So c₁ is a sum over rows, and any partition of the rows splits it.
+
+**The convention, fixed (N-1 break 3.3; the stricter reading, record 102 §3):** c₁ counts **every** event whose subject is one row, whatever the width of the run that row lies in. A chain link's subject is its start row, so every link counts. Hence c₁(LF walk) = n and c₁(Open) ≥ m, the retained rows; h₁ is the floor (G1), not Open's value. c₁W is the count on rows of wide runs: a yes needs a width-preserving emit there.
 
 **Attribution (repair after N-1 break 3):** a `prim R` or `mirror R` event is attributed to the run R it is built from, not to its subject interval (a mirror's subject is LF(R), which can lie in the other stream).
 

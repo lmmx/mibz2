@@ -31,3 +31,16 @@
 - *Positional copy schemes.* By the lemma, copied content is rows of width ≥ 2, which c₁ does not count. A copy scheme can remove at most the token tails, ≤ 7 width-1 rows per repeated occurrence. It cannot touch novel random nibbles: they have no source to copy from. **Payoff bound: (repeated-hex share of h₁), which N-0 will measure and the lemma predicts is small.**
 - *r-index φ and toeholds.* φ needs a text position sampled at every run boundary. Every width-1 run is its own boundary, so the samples alone are ≥ h₁ single-row positional facts, each charged (clause 1). Acquiring them is the walk. This is the "labels first" branch with positions for labels: closed unless the samples come from a multi-row fact, which is the open cell again.
 - *Verdict:* neither lead enters the open cell on novel content. Neon should screen them at "payoff" first.
+
+## 3. Addendum: N-1 break 3's other two parts (the c₁ convention)
+
+**DECIDED, the stricter reading (Neon's option ii).** c₁ counts every event with a one-row subject, in a run of any width. A chain link's subject is its start row, so reading A (a link "uses a wide fact directly" and is free) is rejected: it is the handoff's trap in another form, and it would let the plain walk score h₁.
+
+**What changes** [proved from the definition]:
+- c₁(LF walk) = n. c₁(Open) ≥ m (Neon measured m/h₁ = 1.21–3.32 on the census). **Record 98 L52's "c₁(Open) = h₁ + pieces" is wrong and superseded.**
+- G1 is unaffected: it is a lower bound, and its injection uses only the width-1 runs.
+- σ partitions all rows into R, N and W (rows of runs of width ≥ 2). P1 is three-way, and Pmargin carries c₁W. A yes therefore also needs a width-preserving emit on wide runs (c₁W ≪ m − h₁), which shipped Open does not have.
+
+**The target now reads:** aN·h₁N + aR·h₁R + c₁W + c₁(Pglue) ≤ h₁/2 per block. Shipped Open stands at ≥ 1.21·h₁.
+
+**Neon's novelty measurement** (85–89% of h₁ unique at window 8) agrees with §2's lemma: repeats are not where h₁ lives.
