@@ -67,8 +67,9 @@ estimate, not a measurement.
 - **The build:** master at d2705dad plus the feature and the harness (`examples/scan_profile.rs`).
   The recipe checks that `src` differs from the pin only in those files: `src/scan_profile.rs`,
   `src/block.rs`, `src/parallel.rs`, `src/lib.rs`. rustc 1.99.1.
-- **The corpus and decoder:** 4 copies of `corpora/wikidata.bz2` (checked by its SHA-256), read
-  into memory once; production's lazy workers (`BzReader::parallel_workers`, lazy: `OpenCells`, 4
+- **The corpus and decoder:** 4 copies of `corpora/wikidata.bz2` (checked by its SHA-256);
+  each decode in a fresh process of its own (the harness runs itself, `--one`, once a decode),
+  the input read into its memory before the clock starts; production's lazy workers (`BzReader::parallel_workers`, lazy: `OpenCells`, 4
   blocks a worker), unpinned, as in bench-four-arm.
 - **The grid:** every worker count from 1 to 20 (20 counts). All unpinned:
   production's lazy workers at exactly k, with the scanner on its own thread beside them, as
@@ -79,6 +80,16 @@ estimate, not a measurement.
   - the timed decode runs first in even rounds;
   - 2 s of settle precede each decode.
 - **Memory and scheduling, every decode (timers on or off):**
+  - **why a process each:** in one long-lived process, the preflight found a decode's resident
+    memory set by the decodes before it. glibc's per-thread arenas keep their freed heap, which
+    `malloc_trim` does not give back: 1 worker read 80 MB first in its round and 236 MB after
+    20 workers. With one arena (`MALLOC_ARENA_MAX=1`) the residue went, so it is the allocator's,
+    not mibz2's; but capping the arenas changes the allocator production runs on. A fresh
+    process a decode keeps the allocator as it is and the memory the decode's own, as when the
+    decoder is run (one decode a process). In the check, the base was 13.8 MB at every decode
+    and 1 worker's peak 33.5 MB before and after 20 workers'. Starting a process costs about
+    20 ms a decode, outside the clock: about 16 s in all;
+  - the resident memory at the decode's start, its base (the input and the runtime);
   - the peak resident memory: the high-water mark reset before the decode
     (`/proc/self/clear_refs`) and read after (`VmHWM`);
   - the time-averaged resident memory: `/proc/self/statm` read every 5 ms by a sampler thread of
@@ -135,7 +146,7 @@ Each figure is the median over a count's 20 timed decodes, at **every count of t
 - **The grid table:** at each count, the untimed wall, the scanner's busy and idle shares, a
   worker's busy and idle time, rho and the classification.
 - **Memory and scheduling:** at each count, the untimed decodes' medians of the mean and peak
-  resident memory, user and system CPU and their sum over the wall, minor and major faults, and
+  resident memory, each less its base (the decode's own), user and system CPU and their sum over the wall, minor and major faults, and
   voluntary and involuntary context switches.
 - **The timers' overhead:** each round's paired wall ratio, timed over untimed (geometric mean,
   95% interval).

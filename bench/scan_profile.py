@@ -63,7 +63,7 @@ WIKIDATA_X4_OUT = 4 * 209_700_196
 WORK_BOUND, SLOT_SMALL, WAIT_BIG, DECODE_DOMINANT, PERTURB = 0.85, 0.05, 0.10, 0.60, 1.03
 PHASES = ["header", "bitmap", "selectors", "tables", "prep", "decode"]
 # every decode's memory and scheduling figures (the harness's)
-SCHED = ["peak_kb", "mean_kb", "user_s", "sys_s", "minflt", "majflt", "nvcsw", "nivcsw"]
+SCHED = ["base_kb", "peak_kb", "mean_kb", "user_s", "sys_s", "minflt", "majflt", "nvcsw", "nivcsw"]
 
 
 def counts(s):
@@ -394,7 +394,9 @@ def report(got, workers, rounds, judged):
         )
     print(
         "\n## Memory and scheduling (the untimed decodes' medians; every decode's own figures are "
-        "in the bundle's runs.tsv)"
+        "in the bundle's runs.tsv)\n"
+        "The resident memory is the decode's own: the process's, less its base at the decode's "
+        "start (the free heap given back first: the input and the harness's records)."
     )
     print(
         "k  rss mean MB  rss peak MB  user s  sys s  cpu/wall  minor faults  major  vol. ctxsw  invol. ctxsw"
@@ -402,12 +404,18 @@ def report(got, workers, rounds, judged):
     for w in workers:
         xs = [got[(r, w, False)] for r in range(rounds)]
         md = lambda f: statistics.median(x[f] for x in xs)  # noqa: E731
+        own = lambda f: statistics.median(x[f] - x["base_kb"] for x in xs) / 1024  # noqa: E731
         cpu = statistics.median((x["user_s"] + x["sys_s"]) / x["wall_s"] for x in xs)
         print(
-            f"{w:<3}{md('mean_kb') / 1024:>10.1f}{md('peak_kb') / 1024:>13.1f}{md('user_s'):>8.3f}"
+            f"{w:<3}{own('mean_kb'):>10.1f}{own('peak_kb'):>13.1f}{md('user_s'):>8.3f}"
             f"{md('sys_s'):>7.3f}{cpu:>10.2f}{md('minflt'):>14.0f}{md('majflt'):>7.0f}"
             f"{md('nvcsw'):>12.0f}{md('nivcsw'):>14.0f}"
         )
+    bases = [x["base_kb"] / 1024 for x in got.values()]
+    print(
+        f"the base, every decode: {min(bases):.1f} to {max(bases):.1f} MB "
+        f"(median {statistics.median(bases):.1f})"
+    )
     cross = crossover([(g["k"], g["rho"]) for g in grid])
     print(
         "\nthe measured crossover (rho falls through 1, interpolated in k): "

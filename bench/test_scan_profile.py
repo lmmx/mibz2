@@ -50,7 +50,7 @@ def records(work=0.9, slot=0.02, inp=0.01, decode_share=0.8, overhead=1.0, edit=
             for timed in (True, False):
                 wall = base * (1 + rng.gauss(0, 0.002)) * (overhead if timed else 1.0)
                 x = {"kind": "decode", "round": r, "workers": w, "timed": timed, "order": 0,
-                     "wall_s": wall, "bytes": OUT, "peak_kb": 300_000, "mean_kb": 250_000.0,
+                     "wall_s": wall, "bytes": OUT, "base_kb": 60_000, "peak_kb": 300_000, "mean_kb": 250_000.0,
                      "user_s": wall * w, "sys_s": 0.05, "minflt": 9000, "majflt": 0,
                      "nvcsw": 1000, "nivcsw": 300}  # fmt: skip
                 if timed:

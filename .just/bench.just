@@ -1961,7 +1961,8 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # feeding k workers) with its shift point and residuals; classified at every count, judged at 10
 # workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED; and every decode's memory (peak and
 # time-averaged RSS) and scheduling (user and system CPU, page faults, context switches), each
-# decode a row of the bundle's runs.tsv. About 35 minutes with the build. DRY (the
+# decode a row of the bundle's runs.tsv (each decode in a fresh process: its memory its own).
+# About 35 minutes with the build. DRY (the
 # first positional argument: two rounds, no settle; not evidence) checks the wiring.
 #   just submit bench-scan-profile
 bench-scan-profile DRY="":
