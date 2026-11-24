@@ -489,3 +489,46 @@ single-row operations. The backward chain of §11 starts from it.
    blocks within a cost budget (the supplied-state payoff, §3.4, gives the headroom before
    anything is built).
 3. **It has teeth on the data.** At a median 39% of retained rows, h₁ is a large share of the work.
+
+## 13. Louis: classify the routes, to fork abruptly rather than salami-slice
+
+> "so as well as classifying every result we might perhaps want to sort of classify the routes so
+> as to avoid forking down plausible subgoals which salami slice the gains until all we are left
+> with is incremental edit to algorithms (the evolutionary approach), we want to fork more abruptly
+> and full bouleversement"
+
+**The mechanism of the trap, as the Coordinator reads it.** When the selection signal on each
+intermediate step is "is it faster yet?", only subgoals that improve the current algorithm survive.
+A route that leaves the class usually starts out slower, being new and unoptimised, and is pruned.
+That is how the evolutionary efforts (Kitchen Sink, Wormhole) work: mutate an implementation and keep
+what wins, which can only produce slices. SSL-Coq avoided it because its intermediate milestones were
+judged by whether they discharged a prerequisite of the target, never by a score.
+
+**A route classification.** Each fork states the class of its *best possible outcome*:
+
+| Class | What it changes | Best outcome | Track |
+|---|---|---|---|
+| **R0, tuning** | the implementation; same algorithm | smaller constants | pot shots (the bench) |
+| **R1, reshaping inside the class** | the representation or layout of the same objects; still a rigid jump-walk route | still ≥ h₁ steps (record 96) | pot shots. The salami trap: it looks mathematical but cannot escape (T², the lanes experiment) |
+| **R2, escaping the class** | a different proof of inversion, hence a different algorithm (Curry–Howard) | below h₁; a new cost signature | the major shot |
+| **R3, changing the problem** | what is computed at all (FRONTIER foundational question 4: using what the compressed stream already contains) | escapes the frame | the major shot |
+
+**Rules proposed for the major-shot track:**
+1. **Only R2 and R3 forks are admitted.** R0 and R1 ideas go to the pot-shot queue, however
+   promising. Each subgoal is classified on entry, so the effort cannot drift from R2 into R1 one
+   plausible step at a time.
+2. **Every subgoal sits on the backward chain from the target** (§11, §12): a necessary condition for
+   getting below h₁, not an improvement of the current route.
+3. **Intermediate milestones are judged yes or no** (a premise discharged or not), never "faster
+   yet". Speed is measured only on the supplied-state payoff at the start (is there headroom?) and on
+   the finished candidate at the end (does it pay?).
+4. **The class is decided by theorem, not taste:** "is the best outcome still ≥ h₁?" is answerable
+   from record 96 once the class is formally defined.
+
+**A second test, from the cost theorems (PROOF-PROGRAMME §5.9).** An increment changes the constants
+of a route's cost formula; an escape changes its form, meaning the block statistics it depends on.
+A finished candidate can be checked on the census: if its per-block cost still tracks h₁ as Open's
+does, it has not escaped.
+
+This is offered as the "what the agents may do" part of the formulation: admit R2 and R3 only;
+every subgoal on the backward chain; progress as premises discharged.
