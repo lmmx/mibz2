@@ -418,3 +418,9 @@ Journal §44 (30d15e106); bundle `four-arm/run-20261124T204154Z` on `evidence`.
 - **At 1 and 6 workers:** B is 0.83–0.85, C about 1.
 - **Reading:** at 10 workers the serial scanner masks emission; together the two are worth about 26%.
 - **For the generative work:** the cross-stage question now has a measured payoff. What representation lets the scanner's serial work (Huffman bit decode, MTF/RLE2) run cheaper or in parallel, *and* hands emission something like its output-order codes? Apply enrichment along composition here first: what does the scanner already encounter that emission or construction later recomputes?
+
+## 2026-11-24 #30 — correction to #29: the scanner's scope
+
+#29 described the scanner as doing "Huffman bit decode, MTF/RLE2". In fact the scanner reads the bits and decodes the Huffman codes only. **MTF/RLE2, the inversion and emission run in the workers** (the four-arm registration at 5731db19; why-mibz2-stops-scaling).
+
+So arm C replays the Huffman-decoded symbols. At 10 workers the 19% is the serial Huffman scan. The cross-stage question becomes: what does the Huffman scan already see that the workers' MTF, RLE2, construction or emission later recompute? Journal §44 is corrected (74e68840d).
