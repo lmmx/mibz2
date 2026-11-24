@@ -581,3 +581,47 @@ answer until it has committed its own), so that the two reads can be compared. I
 - **Deliverable:** a journal entry in METHOD.md §6a's form, claims tagged proved, verified, measured
   or conjecture, programs alongside; push the branch, report the SHA, stop after one cycle. Never
   touch `src/`, open PRs, merge, run long benchmarks or touch releases; no AI attribution lines.
+
+## 16. Louis: unfreeze the methodology; is this sure to give a bouleversement, and not just RV again?
+
+> "yes unfreeze the methodology and draft the frontier PR. can you get that so that neon has the
+> latest to work from. also are you sure that this will now push it to give a bouleversement of a
+> kind that we have not achieved? like how we went from traversal to RV induction? and RV induction
+> will not just be the answer"
+
+**Done:** PR #816 adds FRONTIER.md's "The target (the major shot)" (the candidate target, open
+premises, route classes R0–R3), lifts the methodology freeze in the steering log, adds strength
+and reach labels to obstruction rows, and puts working backwards, payoff first and result statuses
+into METHOD.md §3a. It merges when green so that Neon reads it from master.
+
+**The Coordinator's answer to the doubt: not guaranteed; here is what it secures.**
+- **It should exclude Rauzy–Veech too.** FRONTIER's induction floor (records 79–80: no monotone
+  induction schedule beats about r steps; Cells at 1.01–1.02r) and h₁ ≤ r put induction routes
+  above the target. So "RV induction will just be the answer" fails the target by construction —
+  *if* induction steps and single-row operations are counted in one currency. That condition was
+  added to MONODROMY's assignment (#346 CORRECTION 7128643478) and belongs in Neon's work too.
+- **It cannot guarantee a yes.** The answer may be no: Gamma's G1 already rules out constant-depth
+  global formulas for the general BWT. A proved no ends the major shot cleanly, as an impossibility
+  proof would end "fewer than one A press".
+- **What it does guarantee:** no more salami-slicing. Any yes is new by theorem, and any no is
+  definitive.
+
+## 17. Louis: "Can we guarantee that we won't get big ideas that don't have any utility in the real world?"
+
+> "Can we guarantee that we won't get big ideas that don't have any utility in the real world?
+> Because that is another condition."
+
+**The answer: ideas without utility can still be proposed, but none can count as a yes.** Utility was
+written into the target (PR #816) as the third condition, beside correct and escaped, checked at
+three points:
+1. **Before formal work: cost-weighted applicability** on the census (#805) — the share of
+   Wikidata's kernel time in the blocks where the idea's conditions hold, not the share of blocks.
+   The two-letter Sturmian solver (exact on 5,627 Sturmian BWTs, firing on 0% of Wikidata) is the
+   cautionary case: correct, new, and useless here.
+2. **Before construction: the supplied-capability payoff** on real blocks through the shipped path.
+3. **At the end: beating master on the bench** under PERFORMANCE-POLICY.md (faster beyond noise on a
+   primary corpus, no primary loss). Fewer operations that cost more time is not a yes.
+
+The thresholds for the first two are set before the data and are Louis's to fix with the
+formulation. The same condition was sent to MONODROMY (CORRECTION 7128643478), asking it to mark
+which backward chains could clear utility on Wikidata's measured structure.
