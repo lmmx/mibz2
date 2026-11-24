@@ -251,8 +251,37 @@
 .md-typeset .il-bl-every > span:nth-child(5n+2) { color: var(--e2); }
 .md-typeset .il-bl-every > span:nth-child(5n+3) { color: var(--e3); }
 .md-typeset .il-bl-every > span:nth-child(5n+4) { color: var(--e4); }
+/* the referee in a referee's shirt: solid letters on a patch of black-and-white stripes, the
+   stripes softened enough to keep the word legible; <span class="il-black il-bl-referee">referee</span> */
+.md-typeset .il-bl-referee {
+  color: #111111;
+  padding: 0.02em 0.24em 0.08em;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #cfcfcf 0 0.2em, #ffffff 0.2em 0.4em);
+  box-shadow: inset 0 0 0 1px #111111;
+}
+[data-md-color-scheme="slate"] .md-typeset .il-bl-referee {
+  color: #ffffff;
+  background: repeating-linear-gradient(90deg, #4a4a4a 0 0.2em, #141414 0.2em 0.4em);
+  box-shadow: inset 0 0 0 1px #e6e6e6;
+}
+/* squeezed: the word pressed to three-fifths of its width, as the candidates pressed one notion */
+.md-typeset .il-bl-squeeze {
+  display: inline-block;
+  transform: scaleX(0.6);
+  margin: 0 -0.56em;
+  color: var(--il-vermilion);
+}
+/* together: every letter bobs in lockstep, written <span class="il-black il-bl-together"><span>t</span>…</span> */
+.md-typeset .il-bl-together { color: var(--il-lapis); }
+.md-typeset .il-bl-together > span {
+  display: inline-block;
+  animation: il-together 2.4s ease-in-out infinite;
+}
+@keyframes il-together { 0%, 60%, 100% { transform: translateY(0); } 75% { transform: translateY(-0.14em); } }
 @media (prefers-reduced-motion: reduce) {
   .md-typeset .il-bl-leaf { animation: none; background-position: 40% 0; }
+  .md-typeset .il-bl-together > span { animation: none; }
 }
 
 /* A tight glow on ordinary type: a few pixels with a dark edge, never a haze. */

@@ -866,6 +866,10 @@ The devices, and when each is used:
   - Theaetetus's *powers* is gold leaf with a slow sheen;
   - a measure that decodes "nothing" has hollow letters;
   - "every" takes the figures' letter inks, one per letter.
+  - in "What else moves together", the rules that judge candidates "referee" in a referee's
+    striped shirt (solid letters on a softened stripe patch, since outlined blackletter is
+    illegible at body size); the failed candidates "squeezed" one notion, so the word is
+    squeezed to three-fifths of its width; "together" bobs, every letter in lockstep.
 
   Write a new treatment as an `il-bl-…` class in `illuminated.css`, beside these, with a
   slate version and no motion under reduced motion. Plain `il-black` is for a hinge word
