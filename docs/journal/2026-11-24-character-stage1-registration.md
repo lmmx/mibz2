@@ -270,7 +270,14 @@ The report gives the limits' moves across k.
 
 ## The preflight
 
-**The DRY preflight of the recipe as frozen** (`just bench-character 1`: two rounds, one decode an observation, no settle, one counter and API round; at c8ec4b93). It ran the whole recipe on a 4-CPU Xeon container (meaning nothing for the i9). It is archived as `2026-11-24-character-stage1-registration/run-20261124T231517Z.tar.gz` (sha256 1d6ab7b4…84d4, 2.5 MB):
+**The DRY preflight of the recipe as amended** (`just bench-character 1`: two full rounds and one band round, one decode an observation, no settle, a 2 s pre-warm, one counter and API round; at 89b0cf7c). It ran on a 4-CPU Xeon container (meaning nothing for the i9), and is archived as `2026-11-24-character-stage1-registration/run-20261124T233912Z.tar.gz` (sha256 5cca7838…647d, 3.5 MB):
+- the band round held the counts 7–16 alone, as registered;
+- every decode gave 4 × 209,700,196 bytes, with no major fault, and no ledger past its preallocation;
+- every identity held in all 50 grid decodes, among them the linear order and the two new buffers' Little's law and conservation;
+- ASLR recorded on (2); RAPL's energy counter not readable here; the frequency policy unreadable in the container;
+- the report voided the run on the machine alone.
+
+**The DRY preflight before the review decisions** (`just bench-character 1`: two rounds, one decode an observation, no settle, one counter and API round; at c8ec4b93). It ran the whole recipe on a 4-CPU Xeon container (meaning nothing for the i9). It is archived as `2026-11-24-character-stage1-registration/run-20261124T231517Z.tar.gz` (sha256 1d6ab7b4…84d4, 2.5 MB):
 - **the build:** the check against the pin passed (src differs only in the feature's files), and the corpus was checked by its SHA-256;
 - **the decodes:** all 40 grid decodes and every cost-check and public-API decode gave 4 × 209,700,196 bytes;
 - **the identities:** every one held in every grid decode: threads, timelines, flow, forced flow, conservation, admission, Little's law (exact), utilisation;
