@@ -31,15 +31,15 @@ Shipped in mibz2 [0.5.9](../benchmarks/history.md#release-0-5-9) ([changelog](ht
 
 [Sixteen at a stroke](2026-11-21-sixteen-at-a-stroke.md) described the one change in mibz2 0.5.8. Inside Open, the decoder's newest way of undoing the Burrows–Wheeler transform (BWT), short copies of varying length became fixed sixteen-wide writes, so the processor no longer has to guess where each copy ends. Open got about a fifth faster on one thread, and the whole decoder 5% faster at ten threads on the i9-10900K, the ten-core desktop processor we test releases on. This post follows that change, and the candidate meant to succeed it, from one thread to the whole machine.
 
-**The setting, briefly.** bzip2 cuts a file into blocks of up to 900 kB, and mibz2 decodes several blocks at once, one per *worker* thread. Undoing each block's BWT is most of the work, and mibz2 has two ways to do it. Cells, the older, is the faster for a lone worker. Open keeps only the rows of a block's narrow runs, about a tenth of a Wikidata block, and lets the rest travel in groups ([Open Returns](2026-11-19-open-returns.md)). It does more arithmetic than Cells but holds less in memory at once, and that pays when many workers share the processor's caches ([Lazy letters](2026-11-16-lazy-letters.md) measured why). So mibz2 runs Open only with many workers: from 8 on most machines, and on the i9 at 6 threads and from 8 up.
+bzip2 cuts a file into blocks of up to 900 kB, and mibz2 decodes several blocks at once, one per *worker* thread. Undoing each block's BWT is most of the work, and mibz2 has two ways to do it. Cells, the older, is the faster for a lone worker. Open keeps only the rows of a block's narrow runs, about a tenth of a Wikidata block, and lets the rest travel in groups ([Open Returns](2026-11-19-open-returns.md)). It does more arithmetic than Cells but holds less in memory at once, and that pays when many workers share the processor's caches ([Lazy letters](2026-11-16-lazy-letters.md) measured why). So mibz2 runs Open only with many workers: from 8 on most machines, and on the i9 at 6 threads and from 8 up.
 
-**Why the question matters.** A speed-up is cheap to measure on one thread. Production runs Open only when the cores are crowded, sharing one cache and one path to memory, and a gain that holds for a lone worker can shrink or reverse once every core competes for those.
+The question matters because a speed-up is cheap to measure on one thread, but production runs Open only when the cores are crowded. Crowded cores share one cache and one path to memory. A gain that holds for a lone worker can therefore shrink or reverse once every core competes for them.
 
 **What we found.** Four runs on the i9 answer the question for 0.5.8 and its successor:
 
 - **0.5.8 keeps its gain on the whole machine.** It is 7% faster than 0.5.7 at 8 threads and 3–5% faster from 10 to 20, with less processor time. At 1, 2 and 4 threads nothing changed, because Open doesn't run there.
 - **Splitting one block across a team of threads still never pays.** Teams of two or three were slower at every thread count from 4 to 20.
-- **0.5.8 moved one of the decoder's choices.** At exactly 4 threads, Open with four workers now beats Cells by 5.5%. Our cost model had called that cell a near-tie.
+- **0.5.8 moved one of the decoder's choices.** At exactly 4 threads, Open with four workers now beats Cells by 5.5%, although our cost model had called that cell a near-tie.
 - **The successor won alone and lost in a crowd.** It walks each block in eight interleaved lanes, and it made Open 13% faster on one thread, as large a gain as 0.5.8's own when the two are timed side by side. On the i9 it was 5% faster with 6 workers, level with 7 and 5% slower with 8, so it was not adopted.
 
 <figure class="bf-fig" id="result-early">
@@ -48,7 +48,7 @@ Shipped in mibz2 [0.5.9](../benchmarks/history.md#release-0-5-9) ([changelog](ht
 <figcaption>Measured. The first column is Open's kernel time alone, on one thread in a cloud container, over the whole Wikidata sample: 0.5.8's change is the inverse of the build before it at 1.128 (1.074, 1.184), and the eight-lane candidate 0.872 (0.820, 0.928) of 0.5.8. The other columns are the whole decoder's wall time on the i9, 16 paired rounds each, at 6, 10 and 8 threads, where production runs 6, 7 and 8 Open workers. The two kinds of measurement differ, so read each line's slope, not the step across the dashed divider.</figcaption>
 </figure>
 
-**Why the larger one-thread gain lost.** Open's last step is a walk through a table, and each entry it reads names the next one. A single walk therefore can't start a lookup until the previous one has come back from memory, and while it waits, most of the memory system's capacity sits idle. The eight lanes cut the walk into pieces and step through each in turn, so up to eight lookups are in flight at once. On one thread that capacity was free. With eight workers on the i9 it is shared, and the lanes plausibly compete for it, along with the wider tables the candidate also brought. That is our account, not a measurement ([section 4](#4-why-did-a-13-one-thread-win-lose-on-eight-cores) says what would test it). 0.5.8's change instead removed instructions and wrong guesses, work each core does on its own. Its gain also shrank as workers were added, but it never reversed.
+**Why the larger one-thread gain lost.** Open's last step is a walk through a table, and each entry it reads names the next one. A single walk therefore can't start a lookup until the previous one has come back from memory, and while it waits, most of the memory system's capacity sits idle. The eight lanes cut the walk into pieces and step through each in turn, so up to eight lookups are in flight at once. On one thread that capacity was free, whereas with eight workers on the i9 it is shared. The lanes then plausibly compete for it, along with the wider tables the candidate also brought. That is our account, not a measurement ([section 4](#4-why-did-a-13-one-thread-win-lose-on-eight-cores) says what would test it). 0.5.8's change instead removed instructions and wrong guesses, work each core does on its own. Its gain also shrank as workers were added, but it never reversed.
 
 [Section 1](#1-how-did-058-do-on-the-whole-machine) gives 0.5.8 against 0.5.7 across the machine, and [section 2](#2-do-teams-of-threads-win-anywhere-yet) the check on teams. [Section 3](#3-did-058-change-how-many-workers-the-decoder-runs) shows the one choice that moved, beside its prediction. [Section 4](#4-why-did-a-13-one-thread-win-lose-on-eight-cores) takes the eight lanes from one thread to eight, and [section 5](#5-which-one-thread-wins-have-survived) sets each recent candidate's result alone beside its result in a crowd. [Section 6](#6-what-comes-next) says what comes next.
 
@@ -86,7 +86,7 @@ A *team* is several threads that cooperate on one block, instead of one worker p
 | 16 | 2.674 | 1.981 | 1.135 |
 | 20 | 3.149 | 2.242 | 1.160 |
 
-The counts not shown, 5, 7 and 9, follow the same pattern. The closest any team came was teams of two at 7 threads, at 1.213 (1.190, 1.235). The shipped choice also beat one worker per thread without the trim, or matched it within noise, at every count. Teams stay unused.
+The counts not shown, 5, 7 and 9, follow the same pattern. The closest any team came was teams of two at 7 threads, at 1.213 (1.190, 1.235). The shipped choice also beat one worker per thread without the trim, or matched it within noise, at every count. Teams therefore stay unused.
 
 ## 3. Did 0.5.8 change how many workers the decoder runs?
 
@@ -106,7 +106,7 @@ Before the run, our cost model froze its predictions. It is a contention model, 
 
 ## 4. Why did a 13% one-thread win lose on eight cores?
 
-The candidate came from our research line's C harness, which tests ideas on Open's kernel in isolation before they are ported to the decoder ([#675](https://github.com/lmmx/mibz2/pull/675)). It changes two things.
+The candidate came from our research line's C harness, which tests ideas on Open's kernel in isolation before they are ported to the decoder ([#675](https://github.com/lmmx/mibz2/pull/675)). It makes two changes.
 
 **The first is the walk in eight lanes.** Open's last step follows its table from one kept row to the next, writing each row's word of text as it goes. Every step needs the entry the previous step pointed to, so the walk is a chain of dependent lookups. When an entry isn't already in cache, the core waits for it, and nothing else in the walk can proceed. The candidate cuts the chain into dozens of pieces, marking each cut so that a lane can tell where its piece ends, and walks eight pieces at once, one step of each in turn. While one lane waits for memory, the other seven do their steps.
 
@@ -134,7 +134,7 @@ The results, as the candidate's time over 0.5.8's, with 95% intervals over the 1
 
 Ten threads was not faster and eight was slower, so the verdict was not adopted. A diagnostic run with the worker count fixed agreed: 0.946 at 6 workers and 1.044 at 8. Read by worker count, the results make one sequence, 0.950 with 6, 1.012 with 7 and 1.049 with 8, and each worker added took away more of the gain.
 
-**What plausibly happened.** On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is already in use. The candidate also widened each worker's working set. Its wider cut-off keeps more rows, and on the six Wikidata blocks examined most closely its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.
+**What plausibly happened.** On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is therefore already in use. The candidate also widened each worker's working set, because its wider cut-off keeps more rows. On the six Wikidata blocks examined most closely, its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.
 
 <figure class="bf-fig" id="crowd">
 <p class="bf-title">Fast alone, slow in a crowd: one doorway, shared by every worker</p>
@@ -146,7 +146,7 @@ This account fits the order of the results, and the registration foresaw its dir
 
 ## 5. Which one-thread wins have survived?
 
-Each candidate passes three tests in turn. The C harness times the idea on Open's kernel alone. The native test times it in the Rust decoder on one thread. The i9 test times the whole decoder with the many workers production runs. The research line keeps a record of every candidate that reached the native test ([the fidelity ledger](https://github.com/lmmx/mibz2/blob/bb98c9958c5d5158e3d23d1da1939b747eef6391/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger)). These are its five most recent, each figure a time ratio against the Open of its day:
+Each candidate passes three tests in turn. The C harness times the idea on Open's kernel alone, and the native test then times it in the Rust decoder on one thread. Only the i9 test times the whole decoder with the many workers production runs. The research line keeps a record of every candidate that reached the native test ([the fidelity ledger](https://github.com/lmmx/mibz2/blob/bb98c9958c5d5158e3d23d1da1939b747eef6391/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger)). These are its five most recent, each figure a time ratio against the Open of its day:
 
 | candidate | C harness, one thread | native, one thread | i9, many workers | outcome |
 |---|---|---|---|---|
@@ -157,7 +157,7 @@ Each candidate passes three tests in turn. The C harness times the idea on Open'
 | eight lanes, R4 and the 24-row cut-off | 0.43–0.57 | 0.872 (0.820, 0.928) | 0.950, 1.049, 1.012 at 6, 8, 10 threads | lost on the i9 |
 | R4 alone, 16-row cut-off | (part of the row above) | about 0.95 | 0.956, 0.982, 0.985 at 6, 8, 10 threads | not adopted: 10 threads just inconclusive |
 
-The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one neither earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. The one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.
+The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one neither earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. By contrast, the one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.
 
 ## 6. What comes next
 
@@ -165,7 +165,7 @@ The next candidate keeps the half of #675 that the account above doesn't implica
 
 mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.
 
-The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result says that a kernel's gain depends on how many workers run it.
+The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result shows that a kernel's gain depends on how many workers run it.
 
 The general lesson is about where a speed-up comes from. A change that removes instructions or wrong guesses spends nothing the other cores need, so it tends to survive crowding. A change that gains by using more of the shared cache or memory system spends exactly what the other cores need, so its one-thread gain says little about many. The same test applies beyond Open. Prefetching, larger lookup tables and wider buffers all draw on that shared budget, and each would need its i9 run before its one-thread result could be trusted.
 
