@@ -536,6 +536,11 @@ Fix every "assumed" and every "late" before publishing.
 
 ## Plain statement, not mannered prose
 
+Its counterpart is the `register` skill (`.claude/skills/register/SKILL.md`): plain must not
+mean blunt. Use the exact term ("a binary target", not "a yes-or-no target"), join sentences so
+the reader sees how facts relate, and narrate an opening rather than listing it (Louis, 24
+November 2026).
+
 Every draft gets a de-slop pass with this instruction, from Anthropic's prompting guide
 ([Prompting Claude Fable 5.1, "Writing density"](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1)),
 quoted verbatim:
