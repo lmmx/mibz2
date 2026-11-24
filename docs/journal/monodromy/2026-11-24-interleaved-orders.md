@@ -70,3 +70,6 @@ It buys no more than record 116 §4 already offered. A sequential order on (k+1)
 ## NEEDS
 
 `NEEDS M-25` Rows per link after one in-place sweep in min-key order (j = 1) against row order, on the six admitted blocks. Rule, fixed before data: under 10% more rows per link on at least four blocks closes it.
+
+---
+*Corrected by record 126 (`2026-11-24-corrections-118-125.md`) after independent review.*

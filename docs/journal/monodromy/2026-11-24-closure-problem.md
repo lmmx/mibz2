@@ -68,3 +68,6 @@ If 1 fails, Lemma W does not carry over to Open's R and §2 is wrong for it. If 
 ## NEEDS
 
 `NEEDS M-26` On the six admitted blocks, after one and two ascending in-place sweeps of Open's retained map: |T|; distinct composed words; segments by composed word in compact coordinates; segments by first byte in raw addresses. Rules in §5.
+
+---
+*Corrected by record 126 (`2026-11-24-corrections-118-125.md`) after independent review.*

@@ -47,3 +47,6 @@ Bottleneck analysis of a tandem line is operational analysis (Denning and Buzen 
 ## 7. Rule, fixed before data
 
 If the measured X(k) departs from min(S(k), W(k)) by more than 5% at three or more counts away from the crossing, the two-stage model is wrong and item 7 or item 4 is the first suspect.
+
+---
+*Corrected by record 126 (`2026-11-24-corrections-118-125.md`) after independent review.*

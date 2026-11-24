@@ -68,3 +68,6 @@ R⁸ needs four-label classes, which record 119's law puts in the sparse regime.
 ## NEEDS
 
 `NEEDS M-27` On the six admitted blocks, at Open's width rule: thin runs and their interior rows; the share of those rows landing on retained rows, in wide strips, in thin strips; m after removing S*; emit links after one in-place sweep on the reduced map. Rule, fixed before data: m after S* above 0.85 of m on at least four blocks closes §3.
+
+---
+*Corrected by record 126 (`2026-11-24-corrections-118-125.md`) after independent review.*
