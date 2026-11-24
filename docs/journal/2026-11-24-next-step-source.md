@@ -288,3 +288,37 @@ My recommendation is to count **both**, reported separately, and to treat a big 
 3. Neon works independently on the same hunt.
 
 Does "count both, but only (a) is the breakthrough" match what you meant?
+
+---
+
+# Part 5: enrichment along composition, and the ruling (24 November 2026, evening)
+
+Recorded verbatim as Louis pasted it ("not sure if you know where to look but lots of thinking in
+flight::"). The Coordinator's report; records cited: ESSENCE.md and journal §§36–37 at efac4a340
+on `docs/journal-algorithm-level`, and channel #22 (3c19c9a2) on `claude/sharp-meitner-cx0v78`.
+
+I've acted on your go-ahead. Here's what's now in place.
+
+**1. A second principle beside the first.** Your page-dewarp observation now sits next to "contraction along composition" on the essence page, as **"enrichment along composition"**:
+- **Contraction:** do less work by recognising that computations are the same. Rauzy–Veech is the example.
+- **Enrichment:** make work you already do yield more information, so later work becomes unnecessary. Automatic differentiation is the example. Calculating with pairs (value, derivative) made the gradient come along almost free, and that made L-BFGS possible.
+
+**Both are pursued.** I've added a test for enrichment, so it can't turn into a trick: whatever "rides along" must be cheap to get, and must not just be the answer in disguise. "Each row's position in the text" is exactly the answer, so it doesn't count. Neither does a checksum of the input, which we already know decodes nothing.
+
+**2. MONODROMY has three new questions,** added to its current work rather than replacing it:
+1. What does one step of the walk, or one step over a run, reveal for free beyond where it goes? That's the gradient analogy.
+2. Could the general recipe run over a richer algebra, so that a useful extra quantity flows through the composition?
+3. Could something lifted into an early stage (bit decoding, move-to-front) give the later stages what they need?
+
+**3. The cross-stage track is open** (`CROSS-STAGE.md` on the journal branch, efac4a34). It records:
+- why the track exists: the 16% cap;
+- what's already known, so it isn't rediscovered: move-to-front as composed chunk permutations (30 October), Edwards–Vishkin, and the failed loop-fusion attempt;
+- what a result must show to count.
+
+**4. I ruled on MONODROMY's question,** since you'd left it to me ("do whatever you think best"). The breakthrough is cutting the number of unpredictable memory reads, which is the proved floor. Cutting the length of the chain of reads that wait on each other, as landmark induction does, is a real find, but we measure it rather than call it a breakthrough.
+
+**5. MONODROMY's requested measurement is running now.** It checks landmark induction on your six real blocks: how many landmark rows there are, how far apart landmarks sit in the text, and how far the waiting chain actually shrinks. I'm running it rather than MONODROMY, so its expensive time stays on mathematics. I'll tell you plainly what it shows.
+
+Everything is recorded in journal §37 and instructions entry #22 (3c19c9a2), and I've sent MONODROMY a short pointer.
+
+The fresh Neon chat in Antigravity is still optional. If you start it, I'll add both principles to its prompt first.

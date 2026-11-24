@@ -33,7 +33,8 @@ comes from the step that took us from the walk to Rauzy–Veech induction, contr
 composition: rows that move together have their steps composed once and shared. Our proved floor
 says only that width-1 rows have nothing to move together with *in that sense*, so the way forward,
 in Louis's words, is to "find a different sense for something that can occur": to change what
-moving together means, in every sense we can find at once. The judging is the other half. The target as first written turned out to
+moving together means, in every sense we can find at once, and beside it to make the work already
+done yield more. The judging is the other half. The target as first written turned out to
 be decided by a bookkeeping convention, so we have restated it in real machine cost on a declared
 model, with the old floor to be carried across by a proof, the *bridge*. Those rules are the
 referee. They decide whether a find is real once a candidate exists; they do not produce one.
@@ -90,7 +91,7 @@ perhaps you might say, is the term, the Hilbert's 24th problem movement. And how
 we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving
 together, the contracting along the text. Like, we want to look at all possible ones. In fact, we
 might want to look at even more." The senses named so far are pursued side by side, and finding
-further ones is part of the work ([the record of this principle](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)):
+further ones is part of the work ([the record of this principle](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)):
 
 - **Contract along the text, not along the rows.** A repeated stretch of text is a run in the
   other direction, and copy plans are the start of it.
@@ -98,6 +99,21 @@ further ones is part of the work ([the record of this principle](https://github.
 - **Find a recurrence among the induction's own steps,** as the Pell rule in the last post
   ([§2](2026-11-24-halving-the-single-row-steps.md#2-four-reframings-of-the-search)) generates new
   triangles where an oracle could only hand them over.
+
+Beside contraction there is now a second principle, *enrichment along composition*. It comes from
+another of Louis's projects, [page-dewarp](https://github.com/lmmx/page-dewarp), whose large speedups
+came not from accelerating its optimiser but from rewriting its projection so that automatic
+differentiation could supply gradients, which let it switch to a better algorithm. Forward-mode
+differentiation lifts a computation into a richer algebra of pairs, with
+(a, a′)(b, b′) = (ab, a′b + ab′), so that extra information rides along with the ordinary result
+([the account](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level.md#37-enrichment-along-composition-the-second-principle)). Contraction does less work by recognising that computations are the same;
+enrichment makes work already done yield more, so that later work becomes unnecessary. Here it
+asks what one LF step, or one step over a run, reveals for free beyond where its own row goes,
+and whether something carried through an earlier stage, the Huffman or move-to-front decoding,
+could give the later ones what they need. One test keeps it honest: the rider must be cheap to
+acquire and must not restate the inversion. Each row's position in the text is the answer itself,
+and a fingerprint of the column can separate every pair of inputs and still decode nothing
+([the principle](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)).
 
 The first worked notes already sharpen the hunt ([record 113](https://github.com/lmmx/mibz2/blob/806aa0123c9a24ad7a1e9ef15da015e1408022f0/docs/journal/monodromy/2026-11-24-moving-together.md), [record 114](https://github.com/lmmx/mibz2/blob/bfdbc245fce475fbb7d017501a1e7423dd20eaf5/docs/journal/monodromy/2026-11-24-more-senses.md)).
 Every sense of moving together puts the rows in some order, and it helps exactly as far as that
@@ -108,8 +124,10 @@ chosen common byte, rows that sit together in one known block and cost nothing t
 all the chains at once to the next landmark, and repeats on what remains. It leaves the number of
 unpredictable reads where it was, but makes those reads independent of one another, so the chain
 of reads that must each wait for the last falls from about one per byte to a few hundred on
-hex-dense content. Which of those two figures the floor is to be beaten in is the decision this
-candidate turns on, and its measurement on our six real blocks comes first.
+hex-dense content. It separates the two figures cleanly, and the ruling follows that line: a breakthrough means a cut
+in the unpredictable reads, the currency of the proved floor, while a large cut in the waiting chain
+is a real find that gets measured ([the ruling](https://github.com/lmmx/mibz2/blob/3c19c9a2fb4e7831d1bf7a1d0e554c1bc6f8c6f2/channel/coordinator-to-neon.md)). That measurement, on our six real blocks,
+is being run.
 
 ## 3. The snag: a convention decided the answer
 
@@ -255,7 +273,10 @@ attempt it revisits, and what that attempt missed.
 
 **Sources:**
 
-- [The essence of the search](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level/ESSENCE.md), and [Louis's words on it](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level.md#34-the-essence-restated-change-what-moving-together-means) (journal §34), verbatim.
+- [Enrichment along composition](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level.md#37-enrichment-along-composition-the-second-principle) (journal §§36–37) and [the ruling on the two machine figures](https://github.com/lmmx/mibz2/blob/3c19c9a2fb4e7831d1bf7a1d0e554c1bc6f8c6f2/channel/coordinator-to-neon.md).
+
+
+- [The essence of the search](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level/ESSENCE.md), and [Louis's words on it](https://github.com/lmmx/mibz2/blob/efac4a340723e2b26ba66a91105ab6b4c14e1e22/docs/journal/2026-11-24-algorithm-level.md#34-the-essence-restated-change-what-moving-together-means) (journal §34), verbatim.
 - [The charge convention](https://github.com/lmmx/mibz2/blob/8e9b962c5fc94da61e1d47a0868897b7e96ccf0c/docs/journal/monodromy/2026-11-24-charge-convention.md): why the frozen target's answer is set by the charge on a pass and the pass budget.
 - [The problem, stated formally](https://github.com/lmmx/mibz2/blob/303b48c8ff010ba3fd6576d89d6fec2987409f09/docs/journal/monodromy/2026-11-24-council-formulation.md): the machine model, the cost vector (Q, D, P, S) and the conditions for a new basis.
 - [The outside review](https://github.com/lmmx/mibz2/blob/a12492459dc8e9fb26a8ca4fc0dd36a3392b4769/docs/journal/2026-11-24-algorithm-level/council/chatgpt.md), recorded verbatim, including its table of contradictions (§5.2) and its reading of the Mario repository.
