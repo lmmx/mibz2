@@ -4,5 +4,6 @@ STARTED M-1 2026-11-24T10:33Z the main theorem: statement, premises, closed bran
 STARTED M-2 2026-11-24T10:33Z stream R: best and worst case; the random-content conjecture
 PUSHED M-1 (this commit) draft: docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md; open premises PR, PN, Pglue
 PUSHED M-2 (this commit) worst case aR ≥ 1 in 𝓡 (proved, given G1); E1 and E3 closed (argued); only E2's global cell open
-TODO M-3 a lower bound on positional procedures for model-I rows from 3-byte global sensitivity
-TODO (Coordinator or agent) h₁R/h₁ under σ_hex on 𝓕, a census column; needed for Pmargin
+STARTED M-3 2026-11-24T10:40Z a lower bound on positional procedures for model-I rows
+DONE M-3 (this commit) record 100: c₁ must charge single-row facts of every type (argued); locally keyed multi-row facts closed on model-I rows (proved under model I); global keys open; the full conjecture is model-relative (a conditional effect with an unproduced prerequisite: a declared Λ)
+NEEDS M-2 h₁R/h₁ on each block of 𝓕 (#805's 232 distinct blocks + data/admitted-bwt's 6), where R = maximal runs of width 1 whose byte is in [0-9a-fA-F]: report per block h₁, h₁R, and the census's cost weight
