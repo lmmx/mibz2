@@ -22,3 +22,7 @@ PUSHED N-6 f59f26b CLOSED at (a) Escape (R1 inside R; Z[t,t^-1] pivots charged b
 DONE N-6 f59f26b tested failure within defined scope
 PUSHED N-7 9d24ba4 CLOSED at (a) Escape (Thm AHT-1: R1 inside R) and (c) Viability (k=r>=h1, 63-75% w1 pairings, 2/509,269 self-overlaps)
 DONE N-7 9d24ba4 tested failure within defined scope
+STARTED N-8 2026-11-24T10:55Z amended 3-part N-0 (novel hex / repeated hex / non-hex), empirical test of M-7, and E2 screens of positional copy schemes & compressed suffix coordinates (r-index/sampled SA)
+STARTED N-9 2026-11-24T10:55Z NEEDS M-4 measurement on 6 admitted blocks (valid flips, nu'/n, |U|, cut gaps) for both Stream R and Stream N + adversarial check of Record 101 Thm 3 & main-theorem.md d0d0232
+STARTED N-10 2026-11-24T10:55Z remaining kitchen-sink E2 screens: Krohn-Rhodes/semigroups, Dimension groups/K0, Fourier/optimal transport, Learned piecewise-linear/compressed sensing on SA[x]
+STARTED N-11 2026-11-24T10:55Z formal Stream-N premises (P_N-1, P_N-2) and conditional partial-no synthesis for main-theorem.md
