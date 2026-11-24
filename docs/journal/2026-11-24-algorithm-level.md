@@ -411,3 +411,43 @@ which is the lookup failure §3.2 diagnoses, made again. What it holds:
 **To clear first:** FRONTIER's steering log has "Methodology frozen until evidence arrives"
 (decision 6d9acc87). Changing §3a and FRONTIER's format unfreezes it, which is Louis's call. The
 Coordinator offered to draft the changes as one PR for his approval.
+
+## 11. Louis: "the main idea I see is that it's like working backwards"
+
+> "The main idea I see is that it's like working backwards, and we've been trying to do working
+> backwards as well. Like you say, we already have that. This is the Mario move stated in one lead.
+> And you see this in the document with phrases like 'What Mario Would Have To Do'."
+
+**The transcript's phrasing.** A section headed "What Mario would have to do"; "the missing step is
+a no-A way to get an already-high crawler a fresh low floor reading and move him into position
+before that reading is replaced"; "work backward from the 923-unit vertical setup"; "Keep working
+backward in Coq"; "The useful backward constraint is now checked: at the crawl stop, the remembered
+floor height equals the fresh primary query's return."
+
+**The Coordinator's distinction: backward from the input, or backward from the goal.**
+- FRONTIER's "Working backwards" lead starts from the *text*: which classes of content own the
+  expensive rows (the JSON skeleton cheap; GUIDs own 54–67% of width-1 rows). It is backward
+  *diagnosis*: where cost comes from.
+- SSL-Coq starts from the *success state* and asks what must have been true one step earlier, and
+  repeats. It is backward *construction*: goal regression (Dijkstra's weakest precondition). Each
+  step ends in one of three places: something produced natively (the chain closes); a named
+  **missing step** (the next research question); or a proved obstruction (the branch dies). Its Coq
+  proofs certify each backward link.
+
+**The same move for mibz2, as an illustration, not a finding.** Start from "every output byte written
+without walking" and ask what the decoder would have to know:
+1. to write byte k directly, which row's symbol lands at k: each run's starting text position;
+2. record 84 constrains this: text-order run labels determine the text, so the positions must come
+   more cheaply than the labels they imply;
+3. so it would have to obtain positions another way, for instance by summing return times along
+   the induction's tree (FRONTIER's sharpened toy lesson: "cheap composition of long orbit
+   segments");
+4. either that closes on quantities computable from the run records within a cost budget — a yes,
+   a new algorithm — or it stops at a named missing step, the next precise question.
+
+That chain is what "a specification which we try to supply new mathematical approaches to fit"
+could look like in practice, and the yes/no target is whether it closes.
+
+**A status vocabulary from SSL-Coq.** Each result is one of: "a useful new lead", "a conditional
+effect with an unproduced prerequisite", "a tested failure within a defined scope", or "an
+established route". It is a better set of statuses for FRONTIER's leads than "pending".
