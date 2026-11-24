@@ -15,7 +15,9 @@ Rauzy–Veech induction was not found by counting machine cost. It came from see
 
 The proved floor says that lone rows have nothing to move together with *in that sense*. So the way forward is not to contract harder in the same sense. **Change what "moving together" means.** Louis: "a kind of a looseness of language, a generalization, work smarter, not harder … Find a different sense for something that can occur. It requires a kind of ability to think flexibly, laterally."
 
-Some directions, which are examples and not a closed list:
+**All directions at once, and more.** The term is deliberately overloaded. Louis (24 November): "I don't want to frame it as one way only … the Hilbert's 24th problem movement. And however you call it, we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving together, the contracting along the text. Like, we want to look at all possible ones. In fact, we might want to look at even more." Pursue every sense in parallel. None is the lead, and each is a reading of the same movement. Finding further senses is part of the task.
+
+The senses named so far:
 - **Contract along the text, not along the rows.** A repeated stretch of text is a run in the other direction. Copy plans are the start of this.
 - **Moving together up to a consistent relabelling,** not exact equality.
 - **A recurrence among the induction's own steps.** This is the Pell rule in doomslide's essay: a rule that generates new instances, where the oracle could only hand them over.
