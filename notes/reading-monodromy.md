@@ -127,3 +127,27 @@ Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `66a05387` (commits `d
    - **Record 107 (`BREAK M-14`, `DONE M-14`):** accepted all five round-2 breaks (withdrew Theorem N and `Coll_k`; `NEEDS M-13` withdrawn; `NEEDS M-4` held until `𝒪` is fixed; Record 101 blindness updated to `D ∩ {i, m, j} = ∅`, `|𝒫| + 3|D| > ν′`; 104 price prediction and 105 proof-size criterion withdrawn). Replaced Theorem N with **Theorem N′** over `Λ′` (bytes written only by rigid facts of `𝓡`, plus positional labels `P₁` charged / `P_𝒪` uncharged on start rows; class facts E1 outside `Λ′`): `c₁ ≥ h₁ − |B|`. Notes `B` is unbounded by swap-invariance for order-sensitive `𝒪` such as `A = Σ i·code(L[i])`.
    - **Active MONODROMY claim (DO NOT TOUCH):** `STARTED M-15` — fix clause 2's observation language `𝒪`, then the admission form's lowering for a packed frontier.
 
+## Cycle 5 read — 2026-11-24T16:42Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `f86a4d3b` (commits `8e9b962`, `79591f0`, `cdeef65`, `18b674d`, `299a062`, `56d2c3a`, `c4847b8`, `7e10769`, `8cc654c`, `f86a4d3`).
+
+### Commits and files read
+
+1. **MONODROMY Record 108 (`8e9b962`, `M-15` DONE — `docs/journal/monodromy/2026-11-24-charge-convention.md`):**
+   - Accepts Neon's Lemmas 18.1 (exact fibre floor `c₁ ≥ h₁ − |J₁ ∩ U_𝒪|` for every `𝒪`, correcting Record 107 §3), 18.2 (`1|D|` / `2|D|` sharp disjoint-span coefficients), Proposition 19.1, the 6-block `q₅₀ = 6,903–14,120` curve, and the three `Λ′`-neighbourhood decoders (`fill_remaining`, `copy`, `E1`).
+   - Breaks own Record 102 §2.4 ("copy cannot touch novel random nibbles"): short copies (`min_len = 2`) save pointers (`z/h₁ = 0.54–0.64`), not entropy.
+   - Proves "aggregate" has no fixed observation language; a charge exists only relative to a **declared instruction set**.
+   - Establishes the pass-charging dichotomy: strict charging (`1` per row whose record a build pass reads for row routing) makes the frozen target "no" by definition; lenient charging (free streaming pass) makes `K` decide (`K ≥ 3` doubling gives a count-yes; `K = 2` gives `T²` at `m/2 ≥ 0.60·h₁`).
+   - Operationalises §1a clause 2 under the strict reading (pure folds to `O(1)` words free; per-row record reads charged) and opens **Residual (c)** (*instruction count with supplied plans; charged cost of one-pass acquisition*) alongside `ASK N (1)` (one-pass non-walking copy-plan acquisition) and `ASK N (2)` (`U_𝒪` and a balanced multi-flip witness `ΔA = ΔA₂ = 0` for `𝒪 = (H, A, A₂)` on one admitted block).
+
+2. **Coordinator Notes #9–#11 & MONODROMY Record 109 (`79591f0`, `cdeef65`, `18b674d`, `299a062`, `56d2c3a`):**
+   - **#9 (`bench-supplied-codes` diagnostic, `main-theorem.md` §7):** supplying Open's word codes free in output order halves the emitter (`0.530` at 1W, `0.552` at 10W), giving `0.838` whole-decoder at 1W, **but `0.988 [0.957, 1.020]` at 10W (STOP)** — at 10 workers whole-decoder wall time is bounded outside the kernel (serial front end or shared memory bandwidth).
+   - **#10 & Record 109 (`M-16` DONE — `docs/journal/monodromy/2026-11-24-supported-rows.md`):** answers the MST "supported edge" question: inversion's output is a bijection (`m = n` vs `m ≫ n`), so no width-1 row can be filtered out in `𝓡` (`G1`); existing certificates are wide-row adjacency (Open's own contraction, helping only `c₁W`), histogram forcing (`≤ 6.8%` of `h₁`), and observation labels (`≥ 10⁴` cells).
+   - **#11 (`channel/packed-inversion-sweep-2026-11-24.md`):** no `o(n)` packed word-RAM BWT inversion algorithm or lower bound is known in the literature; KKP 2012 `Mtl-sa` and `libsais` 2.12 use `k = 2` bigram `LF²`.
+
+3. **Coordinator Notes #12, #13, #14 & MONODROMY Record 110 (`c4847b8`, `7e10769`, `8cc654c`, `f86a4d3`):**
+   - **#12:** assigns Cycle 5 items **N-20** (one-pass non-walking copy-plan acquisition, instruction set stated), **N-21** (`𝒪 = (H, A, A₂)` balanced multi-flip witness + `U_𝒪` on one admitted block), and **N-22** (self-contained `research/neon/scripts/census_extension.py` reproducing all published 6-block numbers for `N-0`, `M-4`, `M-8`, not run on corpus).
+   - **#13 & #14 (re-prioritisation & Louis's 3-axiom basis framing):** directs executing **N-20 first** as a genuine *construction* attempt (deferring N-21 and N-22 until N-20 has a pushed result!), building concrete run-record procedures on the 6 admitted blocks and counting instructions against `h₁` and `T²` (`m/2`), **plus** proposing and testing at least one new post-interval basis object satisfying: (1) acts on a new object (neither rows nor row intervals), (2) cost law small on novel random content where runs fail, (3) tested for non-walking acquisition from run records.
+   - **Record 110 (`M-17` DONE — `docs/journal/monodromy/2026-11-24-sweep-composition.md`):** constructs in-place ("Gauss–Seidel") row-order sweep composition yielding macro-edges of theoretical mean length `e ≈ 2.718` in 1 sweep (`e²` in 2 sweeps) under exchangeable ranks (`2.63–2.76` on synthetic texts), and posts **`NEEDS M-17`** on the 6 admitted blocks: run sweep composition `(i)` on `LF` over all rows and `(ii)` on Open's retained map (`1` ascending sweep then `1` descending sweep, word caps `8` and `16` bytes), with MONODROMY's pre-fixed withdrawal threshold `< 2.3` retained rows/link after 1 sweep on `≥ 4` blocks.
+   - **MONODROMY active `STARTED` check:** none (`M-15`, `M-16`, `M-17` all `DONE`).
+
