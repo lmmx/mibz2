@@ -12,3 +12,5 @@ STARTED N-5 2026-11-24T10:44Z E2 screen 3: Veech groups and SL(2,Z) action on th
 STARTED N-6 2026-11-24T10:44Z E2 screen 4: Discrete Morse theory and algebraic Morse reduction (Forman, Skoldberg, Perseus) (escape, passes, viability, payoff)
 STARTED N-7 2026-11-24T10:44Z E2 screen 5: Agol-Hass-Thurston interval-pairing reduction (escape, passes, viability, payoff)
 DONE N-0 656d5e7 useful new lead (delivered via N-2: h1R/h1=0.798-0.851 on 6 admitted blocks, cost-weighted 0.8256; remaining 226 census blocks lack raw .L in repo; delta=1/2 unreachable without aR<1; adopted frozen K=2, delta=1/2, S<=openPeakScratch per 4d7d83b stricter-wins)
+PUSHED N-3 30d2b36 CLOSED at (a) Escape (R1 inside R: BV acquisition = RV induction, c1 >= h1)
+DONE N-3 30d2b36 tested failure within defined scope
