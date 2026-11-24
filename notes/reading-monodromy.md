@@ -38,3 +38,20 @@ Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `6737734cf49aec217f5c0
   2. `theorem main` (`a7c2e4c`, `main-theorem.md` L56–65) is not provable from its stated hypotheses: `Pmargin` omits `c₁(Pglue)` (contradicting §4.5 L109), and no premise bounds `state` to prove `D.state c ∈ O(c.r)`.
   3. `c₁_split` (P1) and `c₁(Open)` (`eae9ca9` L52; `a7c2e4c` L52–53, L71–85): under `c₁` counting all width-1 events (including width-1 facts on rows of width `≥ 2` runs), `σ_hex` only partitions width-1 runs, leaving width-1 events on non-width-1 runs unattributed; and shipped Open expands every retained row `s ∈ S` (width `2..16`), so either `c₁(Open) ≥ m ≈ 2.56 h₁` or else (if chain links may cite width-`≥ 2` facts without restriction) the plain LF walk achieves `c₁(LF) = h₁ ≤ c₁(Open)`.
   4. Record 100 (`6737734` L40): `aR ≥ 0.996` is an expectation under model I for `k ≥ 6`, not a deterministic per-block bound on `𝓕`, and needs explicit handling of `k ≤ 5` chain links.
+
+## Cycle 1 second read — 2026-11-24T10:45Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` commits `4d7d83b`, `a96e969`, `dd1d6ea`:
+
+1. **`a96e969` — `channel/coordinator-to-neon.md`:**
+   - Requests `N-0`: measure `h₁R / h₁` under `σ_hex` across `𝓕` (per block + cost-weighted aggregate) and state whether `δ = 1/2` is reachable without stream R beating `aR = 1`.
+   - Note: we already computed this in `N-2` (`656d5e7`): exact on the 6 admitted blocks (`0.7978–0.8514`, cost-weighted `0.8256`), with `#805` 232-block census weights computed and `corpora/wikidata.bz2` noted absent locally for per-byte `h₁R` on the remaining 226 blocks. Verdict: **`δ = 1/2` is unreachable without `aR < 1`** (even under an oracle GUID/non-GUID split, since `block-0.L` has 66.6% GUID width-1 runs).
+   - Directs Neon & MONODROMY to fix `δ, K, 𝓕, S` under the stricter-wins rule; `Pglue` is fair game for Neon.
+
+2. **`4d7d83b` — Frozen parameters in `main-theorem.md` §1 & §1a:**
+   - `K = 2` (stricter than provisional `K = 3`), `δ = 1/2`, `S(c) ≤ openPeakScratch c`, plus anti-cheat clauses 1–5 (`c₁` charges every fact type; no bundling; no off-ledger cost; depth ≠ count; never relax under C2).
+   - **Adopted under stricter-wins:** all Neon E2 screens (`N-3`..`N-7` and subsequent cycles) now screen against **`K = 2`** (while also recording `K = 3` where relevant so no result is ambiguous), **`δ = 1/2`**, **`S ≤ openPeakScratch`**, and anti-cheat clauses 1–5.
+
+3. **`dd1d6ea` — `docs/journal/monodromy/HANDOFF-2026-11-24.md`:**
+   - Notes MONODROMY's next item `M-4` (swap-invariance lemma for aggregate-only global rules on stream R) and confirms our `N-2` finding on `Pglue` (MONODROMY estimates ~10 switches per GUID ≈ 1/3 of `h₁R`; our `N-2` measured exact `all_sw / h₁ = 0.513–0.543` and `w1_switches / h₁N = 1.19–1.63` on all six admitted blocks!).
+   - Also notes that anti-cheat clause 2 ("distinguished input") is informal and collapses for general global rules — consistent with our `N-1` audit.
