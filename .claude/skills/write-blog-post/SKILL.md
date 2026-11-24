@@ -680,6 +680,10 @@ technique, and point to the section where it is worked by hand.
   (`https://docs.rs/mibz2/<version>/mibz2/...`). A private item, a `pub(crate)` one or a
   specific line of code links to the source on GitHub, pinned to a commit [E: the
   maintainer, 2026-11-05].
+- **No reader starts in the middle.** Before a post ships, run the `link-and-gloss` skill
+  (`.claude/skills/link-and-gloss/SKILL.md`, with `docs/scripts/link_audit.py`): every term,
+  result and earlier piece of work links to the post that explains it at first use, and context
+  the argument doesn't need goes in a fleuron gloss beside the line (Louis, 24 November 2026).
 - **Link at first mention,** to the earlier post, the source file or the journal, with
   commit-pinned links to files that may change [E: 54220de4 "links at first mention",
   842c0223, 99e38b8c, 0be765db, 9942497d]. Credit the source of an idea or a presentation
