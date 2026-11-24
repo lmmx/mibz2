@@ -25,3 +25,7 @@
 ## 24 Nov, 21:55 — the grid is 1–20
 - Louis: "don't do 1-12 then 14,16,20 do 1-20". The brief, these notes and §45 now say every count from 1 to 20.
 - The Pathfinder is told: rounds set to fit about 40 minutes, with the expected per-count precision stated.
+
+## 24 Nov, 21:52 — #838 (a7e251ef) returned once more for the 1–20 grid
+- The Pathfinder's update added the per-count report, rho, the measured crossover, the fit wall(k) = c + max(b, a/k), k* and a prediction from counts 1–4.
+- It still used 15 counts, because it crossed with Louis's 1–20 correction. It is returned for all 20 counts within about 40 minutes.
