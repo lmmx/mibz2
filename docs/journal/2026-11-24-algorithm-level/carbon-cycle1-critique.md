@@ -50,3 +50,13 @@ Paths are relative to `research/carbon/`. "json" means `results/cN_results.json`
 - **C-2.** No path as a basis. It is LF^k, so a stride that grows on novel content needs more passes or cursors, which is exactly the K/s trade of record 108. At most, keep it as a T² variant and compare it against `k1_base_2sw`, not T².
 - **C-3.** Abandon as a basis, as QS-1 itself concedes. It may be worth keeping as a compressed rank engineering note.
 - **C-4.** The live one. Resolve names to addresses only at unitig endpoints (u₈ ≈ 0.14–0.16 h₁ at L=1), for example by a sorted merge, since u_k is globally sorted. Hand h₁,br (≈0.24 h₁) to copy plans. Keep L=16 so the thick side stays cheap. Report the full (Q, D, P, S) at K=2, and prove the per-token bound on 𝓖. Only then is R4 testable.
+
+
+## Addendum: prior art inside the project (R6), found after Louis flagged it
+
+Louis recalled trying unitigs, and maybe the slabs, before. The records confirm it, on `research/carbon-kitchen-sink`:
+- **Unitigs (C-4).** `docs/journal/2026-11-20-carbon-kitchen-sink-cycle7.md` (c9262be5, 20 November), Theorem 7.1, the "Burnside–BEST Branching-Unitig Identity". It condenses the de Bruijn graph of the (k+1)-mer spectrum, read off L against F, and finds the scale k*(T) at which the condensation is unique, on all six blocks. C-4 repeats that object with a row map attached.
+- **Quotient slabs, radix fibres (C-3, and C-2's subalphabet).** The same file, line 106, proposed a coarse syntactic base (`[0-9a-f] → HEX`) plus a 4-bit nibble fibre stream, comparing "post-BWT column quotienting π(L)" with factoring before the BWT. C-3's hex quotient with nibble-packed slabs is that proposal, built. (Cycle 12's `Slab256` and `MN-Quotient16` are a memory arena and a memo cache, a different thing.)
+- **Not checked:** whether `reading-log.md` read the kitchen-sink branch. Carbon's reading was scoped to MONODROMY and Neon, so this repeat is a gap in the brief, not a concealment.
+
+R6 is therefore "not" for C-3 and C-4 on two counts. Future briefs must name `research/carbon-kitchen-sink` (cycles 1–12) and `research/carbon-*` as required reading.
