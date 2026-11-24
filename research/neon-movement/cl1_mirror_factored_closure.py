@@ -165,6 +165,75 @@ def replay_p_schedule_verify(sched: list[list[tuple[int, int]]], v: list[int], R
 # 2. Sweep 1 (ChatGPT Pro Baseline) + Sweep 2 (CL1 Mirror-Factored Closure)
 # ---------------------------------------------------------------------------
 
+def run_m17_gs_baseline(
+    ret: common.RetainedSystem,
+    v: list[int],
+    blk: common.BlockData,
+    byte_cap: int | None = None,
+) -> dict[str, Any]:
+    """Exact M-17 Gauss-Seidel ascending sweep (record 110 & chatgpt-closure.md):
+    For j = 0..m-1: y = nxt[j]; if y != mark and len[j] + len[y] <= cap: compose!
+    Reproduces chatgpt-closure.md on block-0.L to the exact integer:
+      cap=8:   44,814 segs, 42,325 links
+      cap=16:  46,671 segs, 40,009 links
+      uncap:   52,319 segs, 32,833 links, 2,507,122 flat bytes!
+    """
+    m = ret.m
+    R = ret.R
+    mark = ret.mark_rank
+    dag_left = ret.dag_left[:]
+    dag_right = ret.dag_right[:]
+    dag_len = ret.dag_len[:]
+    base_wid = ret.R_word_id[:]
+
+    nxt = R[:]
+    wid = base_wid[:]
+    wlen = [dag_len[w] for w in base_wid]
+    n_comp = 0
+
+    for j in range(m):
+        y = nxt[j]
+        if y == j or y == mark:
+            continue
+        new_len = wlen[j] + wlen[y]
+        if byte_cap is not None and new_len > byte_cap:
+            continue
+        nxt[j] = nxt[y]
+        nw = len(dag_left)
+        dag_left.append(wid[j])
+        dag_right.append(wid[y])
+        dag_len.append(new_len)
+        wid[j] = nw
+        wlen[j] = new_len
+        n_comp += 1
+
+    out_sched = measure_schedule_metrics(nxt, v, mask=None, reverse=False)
+    flat_bytes = sum(wlen)
+
+    # Byte-exact verify & count emit links
+    out_rev = bytearray()
+    cur = mark
+    links = 0
+    while True:
+        common.expand_dag_word(dag_left, dag_right, wid[cur], out_rev)
+        cur = nxt[cur]
+        links += 1
+        if cur == mark:
+            break
+    assert bytes(reversed(out_rev)) == blk.T_ref, f"M-17 GS baseline decode failed on {blk.name}"
+
+    return {
+        "compositions": n_comp,
+        "emit_links": links,
+        "emit_links_over_h1": round(links / blk.h1, 4) if blk.h1 else 0.0,
+        "out_seg_exact1": out_sched["seg_exact1"],
+        "out_seg_exact1_over_h1": round(out_sched["seg_exact1"] / blk.h1, 4) if blk.h1 else 0.0,
+        "out_seg_cache16": out_sched["seg_cache16"],
+        "out_seg_monotone": out_sched["seg_monotone"],
+        "flat_word_bytes": flat_bytes,
+    }
+
+
 def run_sweep1_and_cl1(
     ret: common.RetainedSystem,
     v: list[int],
@@ -172,12 +241,13 @@ def run_sweep1_and_cl1(
     byte_cap: int | None = None,
 ) -> dict[str, Any]:
     """Run:
-      1) Standard M-17 Sweep 1 (ascending j = 0..m-1, in-place) — reproducing
-         chatgpt-closure.md's exact baseline (segments, links, flat word bytes).
-      2) CL1 Mirror-Factored Sweep 2 (descending j = m-1..0, ONLY j in A_1,
-         reading strictly through P o LF_v's B_P schedule in reverse!) with
-         zero-copy binary word DAG.
+      0) Exact M-17 while-loop baseline (reproducing chatgpt-closure.md exact figures).
+      1) CL1 Sweep 1 (1-hop ascending j = 0..m-1, ONLY j in D_1, reading strictly y = R[j] = P(LF_v(j))).
+      2) CL1 Sweep 2 (1-hop descending j = m-1..0, ONLY j in A_1, reading strictly y = R[j] = P(LF_v(j))
+         in reverse — ZERO while-loop reads, ZERO fragmented reads!).
     """
+    m17_base = run_m17_gs_baseline(ret, v, blk, byte_cap=byte_cap)
+
     m = ret.m
     R = ret.R
     mark = ret.mark_rank
@@ -190,16 +260,32 @@ def run_sweep1_and_cl1(
     base_wid = ret.R_word_id[:]
     base_flat_bytes = sum(dag_len[w] for w in base_wid)
 
-    # ---- SWEEP 1 (Ascending: j = 0..m-1, compose descent rows R[j] < j) ----
-    # Note: guard y != mark so mark is NEVER bypassed (works on single-cycle,
-    # periodic, AND multi-cycle corrupt columns!).
+    # Tag every row j with its P o LF_v segment ID (0..B_P-1) so we can count exact
+    # P-pieces touched by Sweep 1 and Sweep 2!
+    seg_id_of_j = [0] * m
+    last_t = [-2] * 256
+    last_sid = [-1] * 256
+    next_sid = 0
+    for j in range(m):
+        c = v[j]
+        t = R[j]
+        if t == last_t[c] + 1:
+            seg_id_of_j[j] = last_sid[c]
+        else:
+            seg_id_of_j[j] = next_sid
+            last_sid[c] = next_sid
+            next_sid += 1
+        last_t[c] = t
+
+    # ---- CL1 SWEEP 1 (1-hop Ascending: j = 0..m-1, compose descent rows R[j] < j) ----
+    # Note: NO while-loop! Every single read is strictly at y = R[j] = P(LF_v(j))!
     next1 = R[:]
     wid1 = base_wid[:]
     len1 = [dag_len[w] for w in base_wid]
     composed1 = [False] * m
-    # Track flat-word bloat metric (exact sum of word lengths across all m rows)
     n_comp1 = 0
     read_mask1 = [False] * m
+    s1_pieces_touched: set[int] = set()
 
     for j in range(m):
         y = R[j]
@@ -207,6 +293,7 @@ def run_sweep1_and_cl1(
             new_len = len1[j] + len1[y]
             if byte_cap is None or new_len <= byte_cap:
                 read_mask1[j] = True
+                s1_pieces_touched.add(seg_id_of_j[j])
                 next1[j] = next1[y]
                 new_wid = len(dag_left)
                 dag_left.append(wid1[j])
@@ -217,13 +304,12 @@ def run_sweep1_and_cl1(
                 composed1[j] = True
                 n_comp1 += 1
 
-    # Measure Sweep 1 output schedule (ChatGPT Pro's exact metric!)
     s1_out_sched = measure_schedule_metrics(next1, v, mask=None, reverse=False)
-    # Measure Sweep 1 ACTUAL read schedule (reads only at j where read_mask1[j] is True!)
     s1_read_sched = measure_schedule_metrics(R, v, mask=read_mask1, reverse=False)
+    s1_read_sched["p_pieces_touched"] = len(s1_pieces_touched)
     flat_bytes_s1 = sum(len1)
 
-    # Verify Sweep 1 byte-exact decode & count emit links
+    # Verify CL1 Sweep 1 byte-exact decode & count emit links
     out_rev = bytearray()
     cur = mark
     links_s1 = 0
@@ -233,28 +319,25 @@ def run_sweep1_and_cl1(
         links_s1 += 1
         if cur == mark:
             break
-    assert bytes(reversed(out_rev)) == blk.T_ref, f"Sweep 1 decode failed on {blk.name}"
+    assert bytes(reversed(out_rev)) == blk.T_ref, f"CL1 Sweep 1 decode failed on {blk.name}"
 
-    # ---- SWEEP 2 (CL1 Mirror-Factored: descending j = m-1..0, compose ONLY A_1: R[j] > j) ----
-    # Every read address is y = R[j] = P(LF_v(j)) (replayed in reverse from the B_P schedule)!
-    # Notice: for j in D_1 (R[j] < j), T_2[j] = T_1[j] (untouched in Sweep 2!).
-    # For j in A_1 (R[j] > j, y != mark), y > j is ALREADY finalized in T_2[y]!
-    #   - If y in A_1, T_2[y] holds the full ascent+descent arch starting at y!
-    #   - If y in D_1, T_2[y] == T_1[y] holds the full descent chain starting at y!
+    # ---- CL1 SWEEP 2 (1-hop Mirror-Factored Descending: j = m-1..0, compose ONLY A_1: R[j] > j) ----
+    # Every read address is y = R[j] = P(LF_v(j)) replayed in reverse from the B_P schedule!
     next2 = next1[:]
     wid2 = wid1[:]
     len2 = len1[:]
     n_comp2 = 0
     read_mask2 = [False] * m
+    s2_pieces_touched: set[int] = set()
 
     for j in range(m - 1, -1, -1):
         y = R[j]
         if y > j and y != mark:
-            # Note: j was NOT composed in Sweep 1 (since y > j), so wid2[j] == base_wid[j]!
             assert not composed1[j]
             new_len = len2[j] + len2[y]
             if byte_cap is None or new_len <= byte_cap:
                 read_mask2[j] = True
+                s2_pieces_touched.add(seg_id_of_j[j])
                 next2[j] = next2[y]
                 new_wid = len(dag_left)
                 dag_left.append(wid2[j])
@@ -264,9 +347,8 @@ def run_sweep1_and_cl1(
                 len2[j] = new_len
                 n_comp2 += 1
 
-    # Measure Sweep 2 ACTUAL read schedule (strictly through P o LF_v in reverse!)
     s2_read_sched = measure_schedule_metrics(R, v, mask=read_mask2, reverse=True)
-    # Also measure Sweep 2 output schedule (for diagnostic comparison with Sweep 1)
+    s2_read_sched["p_pieces_touched"] = len(s2_pieces_touched)
     s2_out_sched = measure_schedule_metrics(next2, v, mask=None, reverse=False)
     flat_bytes_s2 = sum(len2)
     dag_nodes_added = len(dag_left) - base_dag_nodes
@@ -277,7 +359,6 @@ def run_sweep1_and_cl1(
     links_s2 = 0
     dag_internal_visits = 0
     while True:
-        # Count internal DAG pops during expand
         stack = [wid2[cur]]
         while stack:
             nid = stack.pop()
@@ -296,13 +377,13 @@ def run_sweep1_and_cl1(
 
     return {
         "byte_cap": byte_cap if byte_cap is not None else "uncapped",
-        "sweep1": {
+        "m17_while_baseline": m17_base,
+        "cl1_sweep1": {
             "compositions": n_comp1,
             "emit_links": links_s1,
             "emit_links_over_h1": round(links_s1 / blk.h1, 4) if blk.h1 else 0.0,
             "emit_links_over_m": round(links_s1 / m, 4),
             "out_seg_exact1": s1_out_sched["seg_exact1"],
-            "out_seg_exact1_over_h1": round(s1_out_sched["seg_exact1"] / blk.h1, 4) if blk.h1 else 0.0,
             "out_seg_monotone": s1_out_sched["seg_monotone"],
             "read_schedule": s1_read_sched,
             "flat_word_bytes": flat_bytes_s1,
@@ -471,32 +552,29 @@ def main() -> None:
             arms[key] = run_sweep1_and_cl1(ret, v, blk, byte_cap=cap)
 
         unc = arms["uncapped"]
-        s1 = unc["sweep1"]
+        m17 = unc["m17_while_baseline"]
+        s1 = unc["cl1_sweep1"]
         s2 = unc["cl1_sweep2"]
         s1_rm = s1["read_schedule"]
         s2_rm = s2["read_schedule"]
 
-        # Honest Pi cost for CL1 (uncapped with binary word-DAG):
-        #   Q_acq_strips = Open endpoint strip contraction
-        #   Sweep 1 reads: s1_rm["n_active_reads"] (monotone in B_P pieces!)
-        #   Sweep 2 reads: s2_rm["n_active_reads"] (monotone in EXACT SAME B_P pieces!)
-        #   Emit reads:    s2["emit_links"] (plus DAG expansion of n bytes)
-        #   Notice: under strict Pi, reading T[y] via B_P-piece monotone cursors has
-        #   Q_seeks = s1_rm["seg_monotone"] + s2_rm["seg_monotone"] <= 2 * B_P (only ~4,000 seeks
-        #   total on block-0!), while total element reads in T_1/T_2 are n_active1 + n_active2 = m!
         pi_cl1 = {
             "B_P_pieces": B_P,
             "B_P_over_h1": round(B_P / blk.h1, 4) if blk.h1 else 0.0,
             "B_P_schedule_bytes_8B": B_P * 8,
-            "sweep1_monotone_seeks": s1_rm["seg_monotone"],
-            "sweep1_cache16_segs": s1_rm["seg_cache16"],
-            "sweep2_monotone_seeks": s2_rm["seg_monotone"],
-            "sweep2_cache16_segs": s2_rm["seg_cache16"],
-            "total_sweep1_plus_sweep2_monotone_seeks": s1_rm["seg_monotone"] + s2_rm["seg_monotone"],
+            "m17_gs_out_seg_exact1": m17["out_seg_exact1"],
+            "m17_gs_emit_links": m17["emit_links"],
+            "m17_gs_flat_bytes": m17["flat_word_bytes"],
+            "cl1_s1_p_pieces_touched": s1_rm["p_pieces_touched"],
+            "cl1_s1_monotone_seeks": s1_rm["seg_monotone"],
+            "cl1_s1_cache16_segs": s1_rm["seg_cache16"],
+            "cl1_s2_p_pieces_touched": s2_rm["p_pieces_touched"],
+            "cl1_s2_monotone_seeks": s2_rm["seg_monotone"],
+            "cl1_s2_cache16_segs": s2_rm["seg_cache16"],
             "Q_acq_strips": ret.Q_acq_strips,
             "Q_emit_links": s2["emit_links"],
             "Q_emit_links_over_h1": s2["emit_links_over_h1"],
-            "P_sweeps": 2,  # Sweep 1 (up) + Sweep 2 (down)
+            "P_sweeps": 2,
             "S_dag_added_KB": round(s2["dag_added_bytes_8B"] / 1024.0, 1),
             "S_flat_s2_KB": round(s2["flat_word_bytes"] / 1024.0, 1),
         }
@@ -515,11 +593,19 @@ def main() -> None:
         }
         results.append(rec)
         print(
-            f"{blk.name:24s} | m={ret.m:6d} B_P={B_P:5d} ({B_P/blk.h1:.3f}h1) | "
-            f"S1(unc): out_seg={s1['out_seg_exact1']:5d} ({s1['out_seg_exact1']/B_P:4.1f}x) links={s1['emit_links']:5d} ({s1['emit_links_over_h1']:.3f}h1) | "
-            f"CL1 S2(unc): mono_seeks={s2_rm['seg_monotone']:5d} (<=B_P!) cache16={s2_rm['seg_cache16']:5d} "
-            f"links={s2['emit_links']:5d} ({s2['emit_links_over_h1']:.3f}h1) DAG={s2['dag_added_bytes_8B']/1024:5.0f}KB vs flat={s2['flat_word_bytes']/1024:6.0f}KB | EXACT"
+            f"{blk.name:24s} | m={ret.m:6d} B_P={B_P:5d} | "
+            f"M17-GS: seg={m17['out_seg_exact1']:5d} ({m17['out_seg_exact1']/B_P:4.1f}x) links={m17['emit_links']:5d} ({m17['emit_links_over_h1']:.3f}h1) | "
+            f"CL1(2sw,m-reads): S1_p={s1_rm['p_pieces_touched']:4d}/c16={s1_rm['seg_cache16']:4d} S2_p={s2_rm['p_pieces_touched']:4d}/c16={s2_rm['seg_cache16']:4d} "
+            f"links={s2['emit_links']:5d} ({s2['emit_links_over_h1']:.3f}h1) DAG={s2['dag_added_bytes_8B']/1024:4.0f}KB | EXACT"
         )
+        if blk.name == "block-0.L":
+            for ck in ("cap_8", "cap_16", "uncapped"):
+                a = arms[ck]["m17_while_baseline"]
+                c2 = arms[ck]["cl1_sweep2"]
+                print(
+                    f"   block-0 [{ck:8s}] M17-GS: seg={a['out_seg_exact1']:5d} ({a['out_seg_exact1']/blk.h1:.3f}h1) links={a['emit_links']:5d} flat={a['flat_word_bytes']:7d} | "
+                    f"CL1: links={c2['emit_links']:5d} ({c2['emit_links_over_h1']:.3f}h1) DAG={c2['dag_added_bytes_8B']//1024}KB"
+                )
 
     out_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
