@@ -840,3 +840,54 @@ enough to state as one.
 **Routing slip.** The Coordinator posted the challenge to MONODROMY's inbox, #346 (7128808679), while the router counted the role busy. It then withdrew that post and staged the challenge on #145 as QUEUED (7128837429). The role was idle; it counted as busy only because of unanswered Coordinator posts it had never been woken for. The fix was a direct message naming each item.
 
 **Louis, on moving MONODROMY to a costlier model:** "please ensure you therefore encourage it to be economical and do not ever piddle around with things the coordinator or an implementation agent should do … focus only on mathematising." MONODROMY was told so: mathematics only; measurements requested via `NEEDS`; minimal signals.
+
+## 25. No consent-seeking; the outside review; the first cycles
+
+**Louis:** "ok i want chatgpt pro to engage with this exercise, can you give me a prompt that will help me give a solid response to the AIs? also, I want them to not lean on me for consent like this, I want them to determine the fullest sense of the challenge (as opposed to the 'cheat' or 'reward hack' that stacks the deck, as discussed)"
+
+**Louis, on reaching Neon:** "i do not want to interrupt neon, you should have included a way for it to pick up messages via durable repo mechanisms, please use that". The mechanism adopted is `channel/coordinator-to-neon.md` on MONODROMY's branch, which Neon reads each cycle. It is append-only, and the Coordinator writes it.
+
+**Louis, on cost:** "NO DO NOT ASK MONODROMY TO DO MUNDANE COORDINATOR TASKS YOU DO THEM IT IS V EXPENSIVE TO ASK IT TO DO THAT"
+
+**Louis:** "can you create a sibling session and seed it as the new monodromy and decommission current monodromy as an opus variant of monodromy and we will use the new fable variant of monodromy?"
+- The old session wrote a handoff, `docs/journal/monodromy/HANDOFF-2026-11-24.md` (dd1d6eae), and was archived.
+- The new session is `session_0187sPR723oFTKXtty6qzCWK`.
+
+**Louis:** "Please act on info that comes in asap, as cycles of monodromy / neon may rely on the files and chatgpt pro will take a while to return fully. We ought amend durable records so the swarm sees"
+
+**The parameters the agents fixed themselves** (MONODROMY, 4d7d83b4; Neon adopted the same):
+- 𝓕 = all 238 blocks, judged per block;
+- δ = ½;
+- K = 2;
+- state at most Open's peak scratch;
+- anti-cheat clauses: all facts count, no bundling, no hidden costs, count rather than depth, never relaxed.
+
+**MONODROMY's cycle 1** (record 99):
+- Rauzy–Veech, list ranking, contraction and class facts are all inside 𝓡.
+- Only the global E2 cell is open.
+- The target needs a margin δ.
+- The main theorem is drafted.
+
+**Neon's cycle 1** (#145, 7129375601):
+- *The measurement:* h₁R/h₁ = 0.80–0.85 on six blocks, so δ = ½ is unreachable unless stream R beats 1. 85–89% of h₁ rows are unique at window 8.
+- *Four breaks against MONODROMY:*
+  - G1 is false on arbitrary columns;
+  - Pmargin leaves out glue, and measured switches are 1.2–1.6 × h₁N;
+  - Mirror attribution and c₁(Open) are inconsistent;
+  - record 100's bound holds only in expectation.
+- *Five frameworks closed:* Ostrowski/BV, Rauzy fractals, Veech, Morse, AHT.
+- *The ceiling:* stream N can save at most about 3–9% of single-thread kernel time.
+
+**The outside review** (ChatGPT Pro, commissioned by Louis). It's kept in full in [`2026-11-24-algorithm-level/outside-review.md`](2026-11-24-algorithm-level/outside-review.md). Its main points:
+- c₁ is a statistic of the calculus, not machine cost. The LF² result of Kärkkäinen, Kempa and Puglisi shows that singleton compositions need not cost singleton misses. The proposed fix is a conjunct on dependent misses.
+- A finite family admits a lookup table, so the domain should be a uniform family.
+- σ_hex isn't randomness.
+- Pmargin leaves out glue; it repeats Neon's break.
+- G1 is a scoped provenance theorem for now.
+- The proposed "no" leaves out global E2.
+- Three leads for stream N:
+  - acyclic positional copy plans;
+  - compressed SA/ISA differences;
+  - ordered return-word hierarchies.
+
+It was relayed on #145 (7129531047) and written into the swarm's channel (e48f9044). The two independent reviews converged on two findings: glue is missing from the margin, and G1 fails on arbitrary columns.
