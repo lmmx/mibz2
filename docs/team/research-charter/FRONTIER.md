@@ -65,6 +65,32 @@ blocks, #805).
 - *What a no would be:* a proof that no route in a stated, wider class goes below h₁ on blocks of
   Wikidata's structure. That ends the major shot cleanly, and is worth as much as a yes.
 
+**MONODROMY record 98's repairs** (#145 REVIEW 7128634595, record 98 at eae9ca91; inputs to the
+formulation, labels as the record gives them):
+- **The class, as a calculus 𝓡 of rigid facts:** a fact says LF^h(x) = x + t on an interval, with one
+  emitted word; facts come one per run from its record and are restricted, composed and joined.
+  The LF walk, Cells, Open, lanes and T² are all in 𝓡. Its cost c₁ counts width-1 events anywhere,
+  construction and helpers included, so induction steps and walk steps are in one currency.
+  G1 (argued): c₁ ≥ h₁ for every decoder in 𝓡.
+- **The target, repaired:** exact inversion of every column in a stated family 𝓕 with
+  **c₁ < h₁(column)**, in at most **K streaming passes** (fixed in advance, e.g. 3) and O(r) words
+  beyond the output. A *count*, not a depth (two-ended Open already halves the depth); a *budget*,
+  because sort-based list ranking has c₁ = 0 in Θ(log n) passes and is a known, slower algorithm.
+  K and 𝓕 are Louis's to fix.
+- **The escapes** (drop "every fact is a translation on an interval"): E1 class facts (blocked on
+  random content: keys shatter by k ≈ 5, record 96 G3); **E2 positional facts** (blocked when labels
+  come first, record 84; at O(1) depth, Gamma's G1; and as rigid segment composition — **open** for
+  a global, non-rigid, non-O(1)-depth procedure in K passes, with no construction and no
+  obstruction); E3 sort-based (native, fails K); E4 another input or problem (narrow within standard
+  bzip2 streams, which carry only L and `origPtr`).
+- **Conjectured:** on random-digit content, no O(1)-pass decoder meets the target. A yes, if one
+  exists, lives in E2's open cell on non-random content; the copy sector is a candidate.
+- **R1 / R2 by the calculus:** R1 is in 𝓡 (best outcome ≥ h₁ by G1); R2 uses a fact type outside 𝓡
+  and must respect K. Decidable syntactically for a candidate written in the calculus; for Rust,
+  by an audit mapping operations to rules.
+- **Lean:** about 600–1,000 lines for the calculus, Lemma 3 and G1, second after the shared
+  specification.
+
 **Open premises** (to be filled by the backward chain): each is a step a new algorithm would have to
 achieve, marked **native** (computable from the run records within budget), **missing** (a named
 research question) or **blocked** (by an obstruction below, named). MONODROMY (#346,
