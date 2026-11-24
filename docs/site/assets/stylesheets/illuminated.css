@@ -77,6 +77,14 @@
 [data-md-color-scheme="slate"] .md-typeset .il-c4 { --il-c: #ff8a5c; }
 [data-md-color-scheme="slate"] .md-typeset .il-c5 { --il-c: #5cc4ff; }
 
+/* An ordinary link in one of the five inks, for links that sit side by side:
+   [#160](url){ .il-ink .il-c1 }, [#161](url){ .il-ink .il-c2 } */
+.md-typeset a.il-ink {
+  color: var(--il-c);
+  text-decoration-color: color-mix(in srgb, var(--il-c) 45%, transparent);
+}
+.md-typeset a.il-ink:hover { color: var(--md-accent-fg-color); }
+
 /* A fleuron link: [MODE.md](url){ .il-ref } or { .il-ref .il-c2 }. The fleurons are not
    underlined, and the link never breaks from them. */
 .md-typeset a.il-ref {

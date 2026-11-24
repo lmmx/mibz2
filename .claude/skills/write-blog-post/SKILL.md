@@ -841,6 +841,7 @@ page that uses them.
 | Device | Markdown |
 | --- | --- |
 | Fleuron link | `[MODE.md](url){ .il-ref }`; neighbours take `.il-c1` to `.il-c5` |
+| Neighbouring plain links | `[#160](url){ .il-ink .il-c1 }`, `[#161](url){ .il-ink .il-c2 }` |
 | Gloss | `<aside class="il-gloss" markdown>**The BEAM** is …</aside>` |
 | Blackletter | `<span class="il-black">…</span>`; red with an edge `il-rubric`; warm halo `il-gild` |
 | Tight glow | `<span class="il-glow">…</span>`, `il-glow-ember` |
