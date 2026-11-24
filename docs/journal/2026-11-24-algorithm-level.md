@@ -555,3 +555,29 @@ formulation, not the formulation itself:
 **On recording.** Every exchange of this discussion is kept here, in order, with Louis's words
 quoted (§§1–14). The record stays open on its branch (#808) while the formulation discussion
 continues, and merges to master when it ends.
+
+## 15. Louis: a prompt for Antigravity on the same question
+
+> "can you give me a prompt for antigravity to explore the same question we just put to monodromy"
+
+The Coordinator wrote it in MASTER-PROMPT.md's form, recommending **Gemini Neon, High**, on branch
+`research/neon-fewer-than-h1`, working **independently of MONODROMY** (told not to read MONODROMY's
+answer until it has committed its own), so that the two reads can be compared. Its content:
+
+- **The goal behind the question:** a structural step to a new inversion algorithm, judged yes/no;
+  the A-button challenge's lesson (forbid the obvious mechanism); record 96's floor (every rigid
+  jump-walk route spends at least h₁ single-row operations; Open meets it); the candidate target,
+  fewer than h₁.
+- **Reading:** this record (§§1, 9, 11–13), record 96 (`docs/journal/monodromy/2026-11-24-guid-wall.md`
+  on `claude/sharp-meitner-cx0v78`), FRONTIER.md's foundational questions and obstruction table,
+  PROOF-PROGRAMME §§1, 2, 5, METHOD.md §3a and §6a, the toy-transfer note, the block census, and
+  the Open kernel.
+- **Questions:** (1) define the class precisely, with its escape condition; (2) is "fewer than h₁"
+  well-posed, and is there a walk in disguise that meets it; (3) work backwards from the goal, at
+  least two chains, each step marked NATIVE, MISSING or BLOCKED (by a named FRONTIER obstruction),
+  one chain starting from the Sturmian toy and climbing its ladder; (4) are the route classes R0–R3
+  the right cut, and is "best outcome ≥ h₁?" decidable from record 96; (5) a Lean 4 sketch of the
+  class and the floor, with a size estimate. Small-instance exhaustive search welcome.
+- **Deliverable:** a journal entry in METHOD.md §6a's form, claims tagged proved, verified, measured
+  or conjecture, programs alongside; push the branch, report the SHA, stop after one cycle. Never
+  touch `src/`, open PRs, merge, run long benchmarks or touch releases; no AI attribution lines.
