@@ -3,7 +3,8 @@
 **Reader's note.** This is source material, recorded before any work on it, so that later work can
 tell whose idea is whose.
 - **The essay:** "Against Mathematics: A religion of the dead, by the dead, for the dead", by
-  doomslide, published on Substack on 24 October 2026. It is the sequel to the same author's
+  doomslide, published on Substack on 24 October 2026
+  (https://doomslide.substack.com/p/against-mathematics). It is the sequel to the same author's
   "Mathematics is effectively dead" (17 September 2026).
 - **The prompt and the response:** Louis pasted the prompt below, the essay and a response into the
   writer's session on 24 November 2026. The paste doesn't name who answered; it reads as another
