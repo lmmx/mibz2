@@ -979,3 +979,26 @@ It stopped, noting that only MONODROMY's work on stream R and the 232-block corp
   - obstructions carry "transferable insight".
 
 **The second outside round:** a five-movement prompt for ChatGPT Pro (chart, audit, porous reading, eureka, messages), pinned to commits. It's kept in [`2026-11-24-algorithm-level/chatgpt-round2-prompt.md`](2026-11-24-algorithm-level/chatgpt-round2-prompt.md).
+
+## 29. The second outside round, and the Coordinator caught reading half the book
+
+Louis relayed ChatGPT Pro's second-round answer ("woo a lot going on in this chatgpt response..."). It's kept verbatim in [`2026-11-24-algorithm-level/chatgpt-round2-response.md`](2026-11-24-algorithm-level/chatgpt-round2-response.md), with verification notes.
+
+**The finding that matters most is about the Coordinator.**
+- *What happened:* §26's "eureka" corrected the swarm's currency by citing toy-transfer's early negative: lanes bought only 5–14%. It concluded that the emit is bound by work, not latency.
+- *What the file actually says:* the same file, at L187–208, corrects that negative. Once appends are branchless, 8 lanes cut the emit to 0.55–0.78×.
+- *Where the error went:* it travelled into channel entry #4, into MONODROMY's records 104–105, and into draft post #820.
+
+It is the same failure as the retrospective's §2.4, and the essay's Hearer error. It was committed while accusing an oracle of the same thing, and caught by that oracle on its next turn.
+
+**What was done:**
+- #820 is held.
+- Channel entry #6 withdraws the claim.
+- The round's witnesses were verified before relay: the Theorem N counterexample, the flip repair failure, and the N12 bug.
+
+**Other results of the round:**
+- Theorem N is downgraded to a proposed scoped theorem, with a missing mixed-rule induction.
+- The first moment Σ i·L[i] separates every flip but decodes nothing.
+- A schematic fact needs an executable Build/Advance/Emit interface; a short proof is not enough.
+- The frozen yes must remove most of W, not only h₁.
+- The next test is a supplied-state experiment: Open's word codes in output order, timed natively.
