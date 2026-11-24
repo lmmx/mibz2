@@ -272,6 +272,13 @@
     "section": " · Research blog",
     "title": "Halving the single-row steps: a target only a new algorithm can meet"
   },
+  "assets/social/blog-2026-11-24-the-scanner-hides-the-emitter.png": {
+    "description": "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.",
+    "foot": "lmmx.github.io/mibz2 · 24 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "At ten workers the serial scanner hides the emitter's gain: both stages supplied save 26%"
+  },
   "assets/social/blog-2026-11-24-what-else-moves-together.png": {
     "description": "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information.",
     "foot": "lmmx.github.io/mibz2 · 24 November 2026",
