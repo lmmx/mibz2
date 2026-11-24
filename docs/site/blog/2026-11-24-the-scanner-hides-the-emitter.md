@@ -1,5 +1,5 @@
 ---
-title: "A masked bottleneck: emission's gain reappears once the serial scanner is cleared"
+title: "Masked bottlenecks in a two-stage decoder"
 image: assets/social/blog-2026-11-24-the-scanner-hides-the-emitter.png
 description: "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone."
 ---
@@ -11,7 +11,7 @@ description: "Supplying both the serial scanner's output and the emission codes 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# A masked bottleneck: emission's gain reappears once the serial scanner is cleared
+# Masked bottlenecks in a two-stage decoder
 
 Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
 {: .post-dek }

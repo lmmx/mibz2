@@ -57,7 +57,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "A masked bottleneck" = "blog/2026-11-24-the-scanner-hides-the-emitter.md" },
+    { "Masked bottlenecks" = "blog/2026-11-24-the-scanner-hides-the-emitter.md" },
     { "What else moves together" = "blog/2026-11-24-what-else-moves-together.md" },
     { "Halving the single-row steps" = "blog/2026-11-24-halving-the-single-row-steps.md" },
     { "Playing the hand you're dealt" = "blog/2026-11-22-decompression-is-the-harder-problem.md" },
