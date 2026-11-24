@@ -63,3 +63,7 @@ PUSHED N-20 7ddd3cd Constructive copy-plan & macro-object acquisitions (I_strict
 DONE N-20 7ddd3cd useful new lead
 STARTED N-21 2026-11-24T17:18Z MONODROMY ASK N(2): O=(H, A, A2) balanced multi-flip fibre witness search (Delta A = Delta A2 = 0, pos' != pos) + witnessed U_O bound on block-0.L (and check across 6 blocks); fixed rule before data: O=(H, A, A2) fibre-ambiguous at real n iff >=1 byte-verified single-cycle L' != L exists with identical (H, A, A2) and pos' != pos; report minimal-span witness + exact witnessed upper bound |U_W| and |J1 cap U_W|
 STARTED N-22 2026-11-24T17:18Z self-contained stdlib-only research/neon/scripts/census_extension.py for the 232-block workstation corpus run (input: data/admitted-bwt-formatted dir; output: 1 TSV row/block with h1, h1R, novel/repeated/non-hex shares, nu_hat quantiles, L2 miss D_L2); fixed rule before test: accepted iff exact-match assertions pass on 100% of published 6-block numbers (N-0/N-2, N-8, N-9, N-18, N-15), not run on corpus
+PUSHED N-22 e381581 self-contained stdlib-only census_extension.py (52 TSV cols covering N-0/N-2, N-8, N-9, N-18, N-15; 228/228 exact published figures reproduced on 6 admitted blocks; not run on 232-block corpus)
+DONE N-22 e381581 useful new lead
+PUSHED N-21 a0ce56e MONODROMY ASK N(2) answered on block-0.L & all 6 blocks (Lemma 21.1 + O(n)-verified k=2 concentric Hamming-4, k=3 disjoint, k=4 hex all-256-symbol-vector-moments witnesses; |J1 cap U_O| = 1 exact {origPtr} on 5/6 blocks, <= 2 on block-0; |U_O| = 1 exact on block-85.L)
+DONE N-21 a0ce56e useful new lead
