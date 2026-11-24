@@ -54,5 +54,10 @@ PUSHED N-16 464408e N-12 repaired with O(n) SA-IS non-cyclic SA + O(n) order cer
 DONE N-16 464408e tested failure within defined scope
 PUSHED N-17 68f6863 N-13 narrowed to literal-terminal DSA + Kempa 5.1 (arithmetic counterexample T=[0,2,4,6,8,7,5,3,1] verified in test_n13_counterexample); N-14 narrowed to tested comma split + 4-regex mask only; both rewritten with all 6 obstruction fields; no new framework screen opened
 DONE N-17 68f6863 tested failure within defined scope
+PUSHED N-18 6edadf8 Complete-observation fibres (small n, verified M(n,sigma)): all 3 models (raw D, H+A, run+LF on D) fibre-ambiguous & growing with n (H+A: 96.4% ambig at n=10 sigma=3, E[|J1nU|/|J1|]=0.219); proved Lemma 18.1 exact fibre event floor c1>=h1-|J1nU_O| and Lemma 18.2 sharp 1|D|/2|D| blindness (tightening Rec 107 3|D|); 6-block #{J1: nu_hat<=q} threshold grid delivered (q_50%=6,903-14,120)
+DONE N-18 6edadf8 useful new lead
+PUSHED N-19 bf8bab3 ASK N on Theorem N' (Rec 107): proved airtight inside Lambda' (Prop 19.1); exhibited 3 exact T1 decoders in Lambda' neighbourhood breaking c1>=h1-|B| at |B|=0: (1) fill_remaining (L=cab p=0 -> c1=2<3; k=1..6 family c1=h1-k; 6-block ceiling 6.36-6.83% at '4'), (2) copy (n=33 all-w1, c1=31<33; 6-block ceiling N-16), (3) E1 class fact (n=17 all-w1, c1=14<17; completed 18-row witness c1|_J1=5<7)
+DONE N-19 bf8bab3 useful new lead
+
 
 
