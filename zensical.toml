@@ -57,6 +57,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Posing the inversion problem" = "blog/2026-11-24-posing-the-inversion-problem.md" },
     { "Masked bottlenecks" = "blog/2026-11-24-the-scanner-hides-the-emitter.md" },
     { "What else moves together" = "blog/2026-11-24-what-else-moves-together.md" },
     { "Halving the single-row steps" = "blog/2026-11-24-halving-the-single-row-steps.md" },
@@ -281,6 +282,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-24-posing-the-inversion-problem.md" = "The search for a breakthrough became a measurable problem with a cost referee, measured ceilings and a law that bounds one class of routes." },
   { "blog/2026-11-24-the-scanner-hides-the-emitter.md" = "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone." },
   { "blog/2026-11-24-what-else-moves-together.md" = "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information." },
   { "blog/2026-11-24-halving-the-single-row-steps.md" = "We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it." },

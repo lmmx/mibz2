@@ -272,6 +272,13 @@
     "section": " · Research blog",
     "title": "Halving the single-row steps: a target only a new algorithm can meet"
   },
+  "assets/social/blog-2026-11-24-posing-the-inversion-problem.png": {
+    "description": "The search for a breakthrough became a measurable problem with a cost referee, measured ceilings and a law that bounds one class of routes.",
+    "foot": "lmmx.github.io/mibz2 · 24 November 2026",
+    "kind": "synthesis",
+    "section": " · Research blog",
+    "title": "Posing the inversion problem"
+  },
   "assets/social/blog-2026-11-24-the-scanner-hides-the-emitter.png": {
     "description": "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.",
     "foot": "lmmx.github.io/mibz2 · 24 November 2026",
