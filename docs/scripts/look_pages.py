@@ -57,7 +57,7 @@ CHECKS = r"""
     if (!e || e === article) return false;
     if (!clipped.has(e)) {
       const o = getComputedStyle(e).overflowX;
-      clipped.set(e, o === 'auto' || o === 'scroll' || o === 'hidden' || scrolls(e));
+      clipped.set(e, o === 'auto' || o === 'scroll' || o === 'hidden' || o === 'clip' || scrolls(e));
     }
     return clipped.get(e);
   };
