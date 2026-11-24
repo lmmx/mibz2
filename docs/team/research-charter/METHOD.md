@@ -118,7 +118,7 @@ mathematical structure (§2). Each cycle declares one of two modes.
 |---|---|---|
 | **What varies** | the factorisation: intermediate objects, primitives, even where inversion starts in the bzip2 pipeline | the implementation or architecture of a known mechanism |
 | **Aim** | make an obligation unnecessary | make a known mechanism cheaper end to end |
-| **First evidence** | a correct construction, and a cheap falsifier aimed at hidden acquisition | a measured bottleneck, a causal hypothesis, a discriminating experiment |
+| **First evidence** | the payoff of the capability, supplied: on real blocks through the shipped path, with the intermediate object the new mathematics would compute handed over (never the output itself); then a correct construction, and a cheap falsifier aimed at hidden acquisition | a measured bottleneck, a causal hypothesis, a discriminating experiment |
 | **Failure signal** | hidden acquisition cost, incorrectness, or the displaced work reappearing | regression, or no end-to-end gain |
 | **What a negative result is worth** | an obstruction or a new opportunity, recorded on the obligation | the next dominant cost, which feeds reorientation |
 
@@ -133,6 +133,25 @@ sharpen the reasoning.
 - **Replacement principle:** what is done instead, and the mathematical fact that permits it.
 - **New paid obligations:** what must now be acquired, built and consumed.
 - **Nearest prior art:** what is genuinely different. Ancestry is context, not disqualification.
+
+**Working backwards from the goal** (24 November 2026; FRONTIER.md, "The target"; the reasoning in
+`docs/journal/2026-11-24-algorithm-level.md`). Reorientation works backwards from the target, as
+the SSL-Coq project worked backwards from a successful game state:
+1. **Supply the capability and measure the payoff first.** Name the intermediate object a new
+   algorithm would compute (rows' output positions, the cycle's structure, coordinates on the
+   interval exchange), hand it to the shipped kernel on real blocks, and measure what it buys. This
+   bounds what any reframing that produces it can win, before any construction.
+2. **Regress from the goal.** Ask what the decoder would have to know or compute one step earlier,
+   and repeat. Each step ends **native** (computable from the run records within a stated budget),
+   **missing** (a named research question) or **blocked** (by a named obstruction in FRONTIER.md).
+3. **Discharge supplied conditions one at a time,** cheapest first, re-measuring after each. Stop at
+   the first rung where the effect disappears, and record what distinguishes it from the rung below.
+4. **Classify every fork** R0–R3 (FRONTIER.md); only R2 and R3 belong to the major shot, and their
+   milestones are judged by premises discharged, not by speed.
+
+**Result statuses** (adopted from SSL-Coq): every result is one of **a useful new lead**; **a
+conditional effect with an unproduced prerequisite**; **a tested failure within a defined scope**;
+or **an established route**. A supplied-state success is never quoted as a native one.
 
 **At every cycle boundary,** first read what is new since the last one: published audits, and FRONTIER.md's pending mathematical leads. Audits correct the current work; leads open new directions. Then choose the next cycle. Then answer one question in FRONTIER.md's obligation register: *what did
 this cycle teach about the underlying obligation?* Killing a candidate does not close its

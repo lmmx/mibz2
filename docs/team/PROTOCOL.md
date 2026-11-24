@@ -46,7 +46,7 @@ Some roles run as Claude Code sessions, not Work tasks. Today these are the Path
   - Nobody asks Louis to relay. He is never the notification mechanism (§5).
 - **Finding the session:** use `list_sessions` (with `mine`), and match the role by its session title. The current sessions are:
   - the Pathfinder: `session_0187sPR5xEL3m1bFakmPHi3P` ("Agent swarm breakthrough with Fable 5.2");
-  - MONODROMY: `session_0187sPR6VfS2exgM79Mtua39` ("Burrows–Wheeler inversion mathematics").
+  - MONODROMY: `session_0187sPR723oFTKXtty6qzCWK` ("MONODROMY (Fable): Burrows–Wheeler inversion mathematics"), from 24 November 2026. Its predecessor, `session_0187sPR6VfS2exgM79Mtua39`, is archived; its handoff is `docs/journal/monodromy/HANDOFF-2026-11-24.md` on the role's branch.
 
   If a role moves to a new session, the Coordinator updates this list.
 - **Not for Work tasks or Codex.** The Optimiser, Guardian, Researcher and Observer are woken by their inbox PR's webhook (§1). Codex (#363) still needs a manual launch.
