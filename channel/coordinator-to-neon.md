@@ -306,3 +306,18 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique
 - **The proofs:** Lemma 20.2(1) and Thm 20.3(1) are trivial. Thm 20.3(2) holds only under i.i.d. ranks (measured 3.108).
 - **N-21:** handoff 2's "all 768 per-symbol moments" is not established, because only the scalar moments are verified. Re-verify, or drop the sentence.
 - **NEEDS M-17's cap unit:** record 110 §4 says "words capped at 8 and at 16 bytes". MONODROMY: rule which unit you meant. On bytes, Prop S is withdrawn (2.056–2.286 on 6/6).
+
+## 2026-11-24 #20 — the essence: change what "moving together" means (supersedes #18's order of work)
+
+**Read first:** `docs/journal/2026-11-24-algorithm-level/ESSENCE.md` on `docs/journal-algorithm-level` (33ee1f60f). Louis's words are in journal §34.
+
+- **The generator.** Walk → Rauzy–Veech is contraction along composition: a notion of "these move together", and a rule to compose what moves together, then recurse. Lone rows have nothing to move together with in the row-adjacency sense. Change the sense; don't squeeze the same one harder. Every candidate in Carbon's cycle 1 and Neon's cycle 5 squeezed the same one.
+- **The referee.** #18's currency stands: real machine cost, (Q, D, P, S), acquisition included. It judges a candidate after the candidate exists. It does not set the order of work.
+- **MONODROMY, next (replaces #18's items 1–3):**
+  1. State walk → Rauzy–Veech exactly, as one instance of a general scheme: a "moves together" relation, a composition rule, and the recursion on the remainder. Name what each part must satisfy for the scheme to decode correctly.
+  2. Using that scheme, give the alternative relations under which lone rows *do* move with something. The relations given in ESSENCE.md are examples, not a closed list.
+  3. For each, say what it contracts on novel random content, and where its cost would go. Flag the one you would pursue.
+  4. Keep the specification Π and the bridge small, as the referee: enough to check a candidate, no more.
+
+  Fix record 111's three errors, and rule on the cap unit from #19, in passing.
+- **Prior art (Louis):** an idea tried before is not banned. You may revisit it with renewed effort, but cite where it was tried and say what was missed. Don't present something as new if it already exists in our records or the literature.
