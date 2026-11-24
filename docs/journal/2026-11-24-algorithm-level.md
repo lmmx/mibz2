@@ -1110,3 +1110,36 @@ Louis then: "I just don't want to lose this essence, because it's really powerfu
   The outside model's "missing piece" is therefore the experiment already run, and it came out negative.
 - **The analytic 0.379 reads per lone row** at k = 3 assumes free acquisition and no wide-run side. The measured version is the 1.50 above.
 - **What stays genuinely open from this exchange:** a single algebraic representation shared *across* stages (Huffman, MTF, BWT, emit). It is the only route around the whole-decoder cap: the inversion is about 16% of time at one worker and almost nothing at ten. Ordinary loop fusion of Huffman, MTF and construction was tried and failed; a common representation was not.
+
+## 36. What page-dewarp actually did: expose hidden information, then switch algorithm
+
+Louis asked the other model to read lmmx/page-dewarp's history and find where JAX came in and how it helped. The Coordinator checked the dates and PR numbers against the git history:
+- #130, autodiff solver: 8dac8bd, 9 December 2025;
+- #135, `maxcor` from 10 to 100: bc279a0, 10 December;
+- #139, vmap batch: 7f52aa3, 11 December.
+
+**What the history shows** (the other model's reading, condensed):
+1. **#130** rewrote the projection in elementary JAX operations, replacing OpenCV's opaque `projectPoints` and `Rodrigues`. `value_and_grad` then supplied gradients, so SciPy could swap Powell (derivative-free) for L-BFGS-B. That gave 3.7–9.6× per image.
+2. **#135** kept 100 past gradient pairs instead of 10: a richer summary of past work, so fewer future steps. Up to 16.7× cumulative, with 357–722× fewer objective evaluations.
+3. **#139** vmapped the whole optimisation over a padded, masked batch: 4.1× more on 40 images. The GPU was slower until batching.
+4. **The negative results:**
+   - Levenberg–Marquardt needed far fewer evaluations but was slower overall.
+   - The GPU was slower at first.
+
+   Both are the same trap as here: a better abstract count that is not a better computation.
+
+**Its closing line:** "You didn't accelerate the original algorithm. You exposed hidden mathematical information that made a better algorithm possible, and then accelerated that algorithm."
+
+**The mapping onto this programme** (the Coordinator):
+
+| page-dewarp | mibz2 |
+|---|---|
+| Powell observes one point per evaluation | the walk: one row per step |
+| A derivative tells you about the neighbourhood of the point at the same cost | Rauzy–Veech: one step tells you where a whole interval goes. That is the "derivative" already taken |
+| Richer history (`maxcor`) | reuse of past work: copy plans; Kärkkäinen–Puglisi cache-friendly inversion |
+| vmap | the interleaved chains and lanes already in the decoder |
+| LM: fewer evaluations, slower | T², and record 108's trap |
+
+**The question it leaves, in the essence's terms.** What *other* information does one LF step carry, at no extra cost, beyond where its own row goes, and beyond where its run goes? It would have to be the discrete counterpart of a gradient taken along a different coordinate, one that enables a different algorithm.
+
+**Caution from the records.** Order-free aggregates of the column, such as the first moment A = Σ i·code(L[i]), carry information that "separates every flip and decodes nothing" (N-18). The analogue sought is information about *the map's behaviour*, not a fingerprint of the input.
