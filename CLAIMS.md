@@ -81,3 +81,5 @@ BREAK M-27 (review) record 120 §4 "1/3 at the best order on record" is a model 
 DONE M-33 record 126: corrections to 118-125, all accepted; records carry pointers, none rewritten.
 BREAK M-27 (measured, channel #36) record 120 §3-§4: lazy rule removes 10.8-20.1% of thin interior rows, not 4 in 5, and fragments B_P by 4.1-8.7x. Thread closed by its own rule. Proposition A and exactness stand. Cause: thin strips map into thin strips; the independence assumed in §4 is false.
 DROPPED M-27 lazy thin-strip removal as a route to lower m.
+DONE M-34 record 127 (channel #37). The compaction shape needs a register-sized scan and a placement instruction. Exact: bitmap-to-list, thin/thick filter, renumbering. Close but blocked: 256-way partition (no scatter), expand (unbounded lengths). Not the shape: MTF, lanes, Huffman positions. Best fit is the CRC by carry-less folding. METHOD 6a: argued; no source read; no timing.
+NEEDS M-34 after the worker split: time in bitmap-to-list extraction, RLE1 and CRC per block; under 3% of worker time is not worth a vector form.
