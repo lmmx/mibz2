@@ -1160,3 +1160,13 @@ The other model's reply (condensed; Louis pasted it in the Coordinator's session
 - ESSENCE.md now holds both principles.
 - Channel #22 gives MONODROMY enrichment as a parallel line beside the senses of moving together. It starts with what one LF or run step reveals at no extra cost.
 - The cross-stage track opens under the enrichment framing (`2026-11-24-algorithm-level/CROSS-STAGE.md`).
+
+## 38. NEEDS M-21: landmark induction measured on the six blocks
+
+Run by the Coordinator's agent at MONODROMY's request (record 114 §5). Script, raw numbers and readings: `2026-11-24-algorithm-level/m21/`. Checks: each L's SHA-256 and run count match the manifest, and LF is a single n-cycle.
+
+- **Q rises, it does not fall:** 1.05–1.20 × n, every level adding to the first level's n steps.
+- **D falls to 1.3–1.9% of n at k = 3, about 10–17 thousand dependent steps.** That is one to two orders of magnitude short of record 114's "a few hundred". On JSON the most frequent landmark strings stay frequent (`"` → `,"` → `","`; `":` → `e":` → `pe":`), so the final walk on the last induced map dominates. The rounds per level stay at about 900 or fewer.
+- **Lone rows are under-represented among landmark rows:** byte landmarks 7.7–9.9% at k = 1, against Y's 14–15% of rows.
+
+Verdict under the referee (#22): no cut in Q. The cut in D is real but modest, roughly 50–75×, and only a unit-price gain at that (residual b). It is reported to MONODROMY in channel #23.
