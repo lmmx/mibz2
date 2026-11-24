@@ -4,7 +4,7 @@
 
 A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
 
-22 November 2026 · 15 min read · Meta
+22 November 2026 · 15 min read · [Meta](<#compendium>)
 
 A Twitter DM between me and Thomas Murphy, who organises [Tropik](<https://tropik.space>), a research collective, journal and podcast on metaphysics, mathematics, poetics and software. Published with his agreement, lightly edited. My messages are on the right, and ❧[links](<#compendium>)☙ are gathered in the Compendium at the end.
 

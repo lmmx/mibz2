@@ -585,7 +585,7 @@
     show();
   };
 
-  // keep in step with KINDS in docs/scripts/check_site.py
+  // a copy of KINDS in docs/scripts/social_cards.py; check_site.py fails if they differ
   const KINDS = {
     "Research result": "result",
     "Research synthesis": "synthesis",
