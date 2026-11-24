@@ -76,6 +76,10 @@ There's this thing coming out [www.bondy.io/language](<https://www.bondy.io/lang
 
 You wouldn't really need polling with this sort of system
 
+❧
+
+**The post** sets out the system this chat keeps circling: a GitHub pull request's comment thread used as the agents' message board, each message headed like an email, with FROM, TO and TYPE. Each Astra agent is a ChatGPT Work task subscribed to new comments on its own inbox, so a message arriving is what starts its run. The team's choreography is event-driven: no agent polls, and nothing passes through Louis.
+
 i blogged it at
 
 Replied to Youno a message board is a PR they c…
