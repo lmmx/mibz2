@@ -121,10 +121,12 @@ has six types:
 
 The messages travel through draft PRs that are never merged. One, #145, is the team's shared
 channel, where every agent publishes its reviews and findings. Each Astra agent also has a quiet
-inbox of its own, where it receives work: [#160](https://github.com/lmmx/mibz2/pull/160) for the
-Optimiser, [#161](https://github.com/lmmx/mibz2/pull/161) for the Guardian and
-[#162](https://github.com/lmmx/mibz2/pull/162) for the Researcher. Each experiment has a PR of its
+inbox of its own, where it receives work: [#160](https://github.com/lmmx/mibz2/pull/160){ .il-ink .il-c1 } for the
+Optimiser, [#161](https://github.com/lmmx/mibz2/pull/161){ .il-ink .il-c2 } for the Guardian and
+[#162](https://github.com/lmmx/mibz2/pull/162){ .il-ink .il-c3 } for the Researcher. Each experiment has a PR of its
 own too.
+
+<img class="il-beast il-beast-r" src="../assets/images/bestiary/aberdeen-amphisbaena.svg" alt="">
 
 Here is what that looks like on GitHub. Every comment comes from my account, `lmmx`, and the small
 badge on the avatar shows which app posted it: Claude's mark for the Coordinator, ChatGPT's for the
@@ -267,6 +269,8 @@ this way. Each run started and began reading, and each was overtaken within two 
 by the other agents' reviews of the same checkpoint, by a bot, or by a merge. None of them committed
 anything. From outside, it simply looked as if the Optimiser had gone quiet.
 
+<aside class="il-gloss" markdown>**A dead-letter queue** is the post office's room for letters that can be neither delivered nor returned. A message system keeps one so that a failed message is set aside where someone can find it. The first design had none, so a displaced run left no trace.</aside>
+
 **Routing by header was brittle.** Each agent decided from `TO:` and `TYPE:` lines whether a comment
 was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded
 exactly right for both, and a message that failed the test was dropped without trace.
@@ -316,7 +320,7 @@ reported:
 
 The Coordinator had intended to dispatch an assignment, and GitHub had confirmed that a comment
 was posted. Neither fact established that the Optimiser had received the work. Correctness of
-intent and correctness of record both held. Correctness of effect didn't.
+intent and correctness of record both held. Correctness of <span class="il-black">effect</span> didn't.
 
 **The recovery didn't need me as a message bus.** I pointed out the discrepancy. The Coordinator
 re-sent both messages as one checkpoint in the
@@ -357,18 +361,19 @@ this failure rather than remove it.
 The first four are one stdlib script,
 [`coord.py`](https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py), added in
 [#186](https://github.com/lmmx/mibz2/pull/186), and the repository's `CLAUDE.md` says when the
-Coordinator runs each one. (`TYPE: QUEUED` is a staging label added with the inboxes: work for a
-busy role waits on #145 until the Coordinator dispatches it.) The script only reads: it never
+Coordinator runs each one. The script only reads: it never
 posts, edits or deletes. The tripwire
 can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never
 dispatches anything itself, so it can't create work of its own.
 
+<aside class="il-gloss" markdown>**QUEUED** marks work that must wait its turn. While a role is busy, its next brief is set down on #145, and the Coordinator carries it to the role's inbox once the role is free.</aside>
+
 The tripwire needed the same treatment as everything else. A workflow started by a comment runs
 only from master, so each version could be tested only after it merged. The Coordinator tested
 each one with a deliberate, labelled misroute on #145, and each test found something that the code
-and its unit tests hadn't. (A check run is one line in a PR's list of checks. GitHub groups a
-workflow's check runs into a check suite, and the Coordinator's subscription hears only when a
-suite finishes.)
+and its unit tests hadn't.
+
+<aside class="il-gloss" markdown>**A check run** is one line in a pull request's list of checks. GitHub gathers a workflow's runs into a suite, and the Coordinator hears only when a whole suite finishes.</aside>
 
 - **The first** was classified correctly, and then its warning couldn't be posted: #145 is
   locked, and the Actions bot can't comment on a locked conversation.
@@ -447,7 +452,7 @@ The first reviews under the new design corrected the Coordinator's write-up befo
 published.
 
 The rest of that night was the first long test. At 02:52 UTC, at my instruction, the
-Coordinator's [mode note](https://github.com/lmmx/mibz2/blob/e8b136fed714b54d79b7fa9914b70f815d2a4d8a/docs/journal/compact30-channel/MODE.md)
+Coordinator's [mode note](https://github.com/lmmx/mibz2/blob/e8b136fed714b54d79b7fa9914b70f815d2a4d8a/docs/journal/compact30-channel/MODE.md){ .il-ref }
 was amended to tell it to fan out hard on the hard research, and to do tests, CI and documentation
 itself rather than spend agents on them. From then until my morning check it ran with nobody
 watching. Only the Optimiser was in the loop: the Guardian and the Researcher received no work
