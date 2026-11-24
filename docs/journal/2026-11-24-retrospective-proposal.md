@@ -1,7 +1,9 @@
 # Request for work: a by-the-book retrospective of the team's failed bright ideas
 
 *24 November 2026. Written by the Coordinator at Louis's request, as a proposal for him to decide on
-before anything is commissioned. Status: **PROPOSED**. Nothing here has been started.*
+before anything is commissioned. Status: **COMMISSIONED** (24 November), with the roles of §4a,
+which replace §4's recommendation. §§3.1–3.6 are frozen once MONODROMY's protocol review (§4a,
+phase 1) is answered, before any case is classified.*
 
 > Louis: "do you think that if we reanalysed all the ways we had failed in the past by coming up
 > with a bright idea, then it failing in the real world, in Huiberts et al's approach, would we make
@@ -291,6 +293,30 @@ The candidates, and the Coordinator's assessment:
   questions, and decides nothing about its own cases. It owns the scheduling and the final
   recommendation to Louis.
 - **Louis** decides whether to commission it, and later whether any proposed check becomes a rule.
+
+
+## 4a. The decision: who does it
+
+Louis, 24 November: "we don't have the researcher, the observer and all that, so can you just do it
+with monodromy and split the work properly, please?"
+
+The Researcher and the Observer are unavailable, so the work is split between MONODROMY, the
+Coordinator and fresh agents with no stake in it. One principle governs the split: **nobody
+classifies a case they had a hand in**. MONODROMY authored or modelled some cases (records 92–95,
+T², and earlier records); the Coordinator decided or attributed others (§2.6, #785, every
+Coordinator-commissioned experiment). Fresh agents have no stake in any.
+
+| phase | who | what |
+|---|---|---|
+| **1. Protocol review** | **MONODROMY** | One REVIEW of §§3.1–3.4 and §3.6 in the Researcher's place: the questions, the hindsight guard, the taxonomy, the candidate checks and the decision rule. PROCEED, or one round of corrections. The Coordinator then freezes them, before any case is classified (C2). |
+| **2. Case list and dated facts** | **a fresh extractor agent** | Builds the case list from §3.5's sources and, for each case, records the facts of §3.1 (1)–(3): cost, where the gain came from and where it had to hold, the commit-to-build timestamp, and any deciding fact with its link and timestamp. **It classifies nothing.** Runs in parallel with phase 1, since extraction doesn't depend on the taxonomy. |
+| **3. Coding** | **Coder A: MONODROMY**, on every case except those it authored or modelled. **Coder B: a fresh agent**, blind to A, on every case. | Each assigns §3.3's classes and §3.4's "would this check have caught it" from phase 2's facts alone. A and B overlap on all of MONODROMY's eligible cases, so agreement (Cohen's κ) is measured on more than the 15-case minimum of §3.2. |
+| **4. Adjudication** | **a third fresh agent** | Resolves disagreements between A and B, and is the second coder on MONODROMY's own cases (so those also get two independent codings). |
+| **5. Analysis and recommendation** | **the Coordinator** | Computes base rates, κ and each check's catch rate, false-block rate and cost, applies §3.6's frozen decision rule, and writes the journal entry with its postmortem (METHOD.md §6a). It classifies nothing, and its own cases are reported exactly as phases 3–4 coded them. |
+| **Decision** | **Louis** | Whether any check that passes §3.6 becomes a rule in METHOD.md. |
+
+**The Coordinator's other duties:** it supplies this brief, routes the work, answers factual
+questions from the record, and posts the LOGs. It does not edit phase 2's facts or phase 3's codes.
 
 ## 5. Cost, scale and timing
 
