@@ -220,3 +220,17 @@ The report gives the limits' moves across k.
 - **`bench/test_character.py`:** 25 checks of the report's rules on synthetic records: k\* and its absence; each limit; the cost bound; INCOMPLETE; each VOID.
 - **CI** runs both, then the harness and its driver on the repository's own text (15 blocks, the refused and column routes among them). Every decode's identities must hold in the harness's own check.
 - **A container smoke run** (4 CPUs, 1 copy, 4 rounds of 2; not evidence for the i9) held every identity in all 160 decodes but one. That one was Little's law before its point and its change shared a clock reading, and it is what led to the shared reading.
+
+## The preflight
+
+**The DRY preflight of the recipe as frozen** (`just bench-character 1`: two rounds, one decode an observation, no settle, one counter and API round; at c8ec4b93). It ran the whole recipe on a 4-CPU Xeon container (meaning nothing for the i9). It is archived as `2026-11-24-character-stage1-registration/run-20261124T231517Z.tar.gz` (sha256 1d6ab7b4…84d4, 2.5 MB):
+- **the build:** the check against the pin passed (src differs only in the feature's files), and the corpus was checked by its SHA-256;
+- **the decodes:** all 40 grid decodes and every cost-check and public-API decode gave 4 × 209,700,196 bytes;
+- **the identities:** every one held in every grid decode: threads, timelines, flow, forced flow, conservation, admission, Little's law (exact), utilisation;
+- **the outputs:**
+  - the gap's parts and the per-visit moments were present in every grid decode;
+  - the features covered every block, with the width histogram and h₁ of the column for every run-route block. Block 1's histogram is the census's exactly (35116, 7543, 5077, 2730, 718);
+- **the counters and the memory controller:** skipped and recorded (no hardware PMU, and `perf stat -a` cannot count here);
+- **the verdict:** the report voided the run on the machine alone.
+
+The earlier DRYs at b2f9d57f and 75fcb787, before the visits, moments, gap and structure were added, were the same but for those fields, and are not archived.
