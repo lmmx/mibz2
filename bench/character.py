@@ -676,7 +676,9 @@ def demands(grid: list[dict], a) -> None:
     print(
         "\nThe closed network (population N = the window 4k; D each station's demand a block, ms; X blocks a second):"
     )
-    print("k   N    D_scan  D_wkr/k D_read  D_feed  ΣD      X bound  N*      X measured")
+    print(
+        "k   N    D_scan  D_wkr/k D_read  D_feed  ΣD      X bound  N*      X measured  efficiency"
+    )
     for k in GRID:
         xs = [x for x in grid if x["k"] == k]
         ds = {}
@@ -696,7 +698,26 @@ def demands(grid: list[dict], a) -> None:
         knee = total / dmax
         xm = med(x["blocks"] / x["wall_s"] for x in xs)
         print(
-            f"{k:<3} {n:<4} {ds['scanner'][0]:>7.4f} {ds['workers'][0] / k:>7.4f} {ds['reader'][0]:>7.4f} {ds['feeder'][0]:>7.4f} {total:>7.4f} {bound:>8.1f} {knee:>6.1f} {xm:>10.1f}"
+            f"{k:<3} {n:<4} {ds['scanner'][0]:>7.4f} {ds['workers'][0] / k:>7.4f} {ds['reader'][0]:>7.4f} {ds['feeder'][0]:>7.4f} {total:>7.4f} {bound:>8.1f} {knee:>6.1f} {xm:>10.1f}  {xm / bound:>9.3f}"
+        )
+    print(
+        "\nThe gap, from the timestamps (the queueing-discipline lead; medians, a decode): the workers'"
+        "\nidle time while the scanner waits for admission, in the start-up and in the drain, each a"
+        "\nshare of the workers' time (k x wall); the head-of-line blocking (a block ready while an"
+        "\nearlier one is not), in block-seconds, and the ready bytes it holds on average; the rest of"
+        "\nthe ready blocks' wait (the reader's own pace), in block-seconds"
+    )
+    print("k   idle@adm  idle@start idle@drain  HOL blk-s  HOL MB   rest blk-s")
+    for k in GRID:
+        xs = [x for x in grid if x["k"] == k and "gap" in x]
+        if not xs:
+            continue
+        g = lambda f: med(x["gap"][f] for x in xs)  # noqa: E731
+        kw = med(k * x["wall_s"] for x in xs) * 1e9
+        wall = med(x["wall_s"] for x in xs)
+        print(
+            f"{k:<3} {g('idle_admission_ns') / kw:>8.3f} {g('idle_startup_ns') / kw:>10.3f} {g('idle_drain_ns') / kw:>10.3f}"
+            f" {g('hol_ns') / 1e9:>10.3f} {g('hol_byte_ns') / 1e9 / wall / 2**20:>8.2f} {g('ready_rest_ns') / 1e9:>11.3f}"
         )
 
 

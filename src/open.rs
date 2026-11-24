@@ -767,6 +767,10 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         use crate::character::route;
         #[cfg(feature = "character")]
         let mut way = route::SKIPPED;
+        #[cfg(feature = "character")]
+        if crate::character::features_on() {
+            crate::character::block_features(r.records());
+        }
         if let Some(cap) = Self::cap(r.records().len(), n, p) {
             let ran = self
                 .open

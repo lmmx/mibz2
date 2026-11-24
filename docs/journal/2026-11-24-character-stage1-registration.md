@@ -1,6 +1,6 @@
 # bench-character, stage 1: the decoder's character across 1–20 workers (registration)
 
-*Registered before any data. Brief: `docs/journal/2026-11-24-algorithm-level/briefs/character.md` at c57640c4 (§1–§4, §7a's operational laws, §8), with §7b's analysis additions (bbb1a10f; the Coordinator's request of 24 November for visits, service times with their C², classes and occupancy per activity per block), on `docs/journal-algorithm-level`; assignment by the Coordinator, 24 November. Stage 1 of two: the baseline with the public API's sweep. Stage 2 (the interventions, the fractional factorial, the models) is a recipe of its own, after this one's data. A C1a diagnostic: its rule is posted on #145 before the data, and it decides nothing.*
+*Registered before any data. Brief: `docs/journal/2026-11-24-algorithm-level/briefs/character.md` at c57640c4 (§1–§4, §7a's operational laws, §8), with §7b's analysis additions (bbb1a10f; the Coordinator's request of 24 November for visits, service times with their C², classes and occupancy per activity per block) and the queueing-discipline lead's (`leads/queueing-discipline.md`, journal §56, 15a7685a: efficiency against the bound, the gap's parts, the blocks' structure known at dispatch), on `docs/journal-algorithm-level`; assignment by the Coordinator, 24 November. Stage 1 of two: the baseline with the public API's sweep. Stage 2 (the interventions, the fractional factorial, the models) is a recipe of its own, after this one's data. A C1a diagnostic: its rule is posted on #145 before the data, and it decides nothing.*
 
 ## The question
 
@@ -118,7 +118,7 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
 - **The public API:** 3 rounds, each asking for every count from 1 to 20 once in a drawn order, one decode each.
 - **The structural features,** untimed:
   - the census (`examples/census.rs`, in a build of its own) of the open kernel's blocks on one copy;
-  - the harness's `--features` pass: each block's route, n, r, bytes and h₁ (the first-order entropy of its decoded bytes).
+  - the harness's `--features` pass: each block's route, n, r, bytes, h₁ of its decoded bytes, and for every run-route block (not only Open's) h₁ of its BWT column and its runs' widths in the census's bins (1, 2–3, 4–16, 17–127, 128+; MONODROMY's record 122), from its run records. That pass alone turns on the structure's O(r) count a block, so no timed decode pays it. These are the per-block counters a size-aware dispatch would know, for the simulation to replay.
 
   The four copies are the same 431 blocks, so the report joins the features to the block rows by place mod 431. The census is kept beside them for the math-targets join: its rows are the Open blocks in place order, 233 distinct.
 - **Every decode's process figures:**
@@ -146,7 +146,12 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
 - **the buffers:** each one's time-averaged occupancy and high-water mark;
 - **the laws:** each identity's count of decodes holding and failing; the utilisation and bottleneck table;
 - **visits, service and demand** (brief §7b): at each count, each activity's visits a block V, mean service a visit S, its C², and its demand D = V·S;
-- **the closed network** (brief §7b), its population the window N = 4k, its stations the scanner (one server), the workers (k), the reader and the feeder (one each): each station's demand a block, the asymptotic bound X ≤ min(N/ΣD, 1/max(D/servers)), the knee N\* = ΣD/max(D/servers), and the measured X;
+- **the closed network** (brief §7b), its population the window N = 4k, its stations the scanner (one server), the workers (k), the reader and the feeder (one each): each station's demand a block, the asymptotic bound X ≤ min(N/ΣD, 1/max(D/servers)) (no think time: Z = 0), the knee N\* = ΣD/max(D/servers), the measured X, and **the efficiency**, the measured X over the bound;
+- **the gap's parts** (the queueing-discipline lead), from every decode's timestamps:
+  - the workers' idle time while the scanner waits for admission;
+  - the workers' idle time in the start-up and in the drain;
+  - the head-of-line blocking: for each block, its time ready while an earlier block is not, so the reader cannot take it (a block ready at t_ready waits on the latest earlier t_ready), in block-seconds and byte-weighted (the ready bytes it holds, which count against the cap);
+  - the rest of the ready blocks' wait (the reader's own pace);
 - **k\* and the near-optimal set,** and each count's limit with the limit's moves;
 - **the ledgers' cost,** the counters, the memory controller and the public API;
 - **each route's blocks:** their count, n, r/n and h₁, and their demand per row at each activity at 1, 10 and 20 workers.

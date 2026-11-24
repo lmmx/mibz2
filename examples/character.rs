@@ -391,6 +391,8 @@ struct ThreadOut {
     unattributed: [u64; NA + 1],
     /// the scanner's waits for admission by what held it: the window, the ready bytes' cap
     slot_bound: [u64; 2],
+    /// its waits' intervals: the scanner's for admission, a worker's for a job
+    gaps: Vec<(u64, u64)>,
     /// each activity's visits' service times (wall, begin to end, nested activities within):
     /// their count, sum (ns) and sum of squares (ns²), for the means and C²
     moments: [(u64, f64, f64); NA],
@@ -446,6 +448,7 @@ fn walk(
         unattributed: [0; NA + 1],
         slot_bound: [0; 2],
         moments: [(0, 0.0, 0.0); NA],
+        gaps: Vec::new(),
     };
     let mut bound = 0usize;
     if ev.is_empty() {
@@ -528,6 +531,11 @@ fn walk(
                         if e.tag == ch::Tag::SlotWait as u8 {
                             o.slot_bound[bound] += e.ns - w0;
                             bound = 0;
+                        }
+                        if (ro == Role::Scanner && e.tag == ch::Tag::SlotWait as u8)
+                            || (ro == Role::Worker && e.tag == ch::Tag::JobWait as u8)
+                        {
+                            o.gaps.push((w0, e.ns));
                         }
                         if c0 != UNREAD && e.cpu != UNREAD {
                             o.wait_cpu += e.cpu.saturating_sub(c0);
@@ -636,6 +644,7 @@ fn main() {
 fn features(file: &str, out: &str) {
     let data: &'static [u8] = std::fs::read(file).expect("read the input").leak();
     ch::set_on(true);
+    ch::set_features(true);
     let mut r = mibz2::BzReader::parallel_workers(
         data,
         1,
@@ -651,6 +660,11 @@ fn features(file: &str, out: &str) {
         std::thread::sleep(Duration::from_millis(1));
     }
     ch::set_on(false);
+    let feats: std::collections::HashMap<u32, ([u64; 5], f64)> = ch::take_features()
+        .into_iter()
+        .map(|(p, b, h)| (p, (b, h)))
+        .collect();
+    ch::set_features(false);
     let ledgers = ch::take();
     let mut rows: Vec<(u32, u64, u64)> = Vec::new(); // (place, route packing, bytes)
     let mut routes = std::collections::HashMap::new();
@@ -664,7 +678,8 @@ fn features(file: &str, out: &str) {
         }
     }
     rows.sort();
-    let mut s = String::from("place\troute\tn\tr\tbytes\th1\n");
+    let mut s =
+        String::from("place\troute\tn\tr\tbytes\th1\th1_L\tw1\tw2_3\tw4_16\tw17_127\tw128\n");
     let mut at = 0usize;
     for (place, _, len) in rows {
         let blk = &bytes[at..at + len as usize];
@@ -683,7 +698,14 @@ fn features(file: &str, out: &str) {
             })
             .sum();
         let (ro, n, r) = route::unpack(routes.get(&place).copied().unwrap_or(0));
-        let _ = writeln!(s, "{place}\t{ro}\t{n}\t{r}\t{len}\t{h1:.6}");
+        // (the run records' widths and the BWT column's entropy, where the block took the run
+        // route; empty on the column route)
+        let (w, hl) = feats
+            .get(&place)
+            .map_or((String::from("\t\t\t\t"), String::new()), |(b, h)| {
+                (b.map(|x| x.to_string()).join("\t"), format!("{h:.6}"))
+            });
+        let _ = writeln!(s, "{place}\t{ro}\t{n}\t{r}\t{len}\t{h1:.6}\t{hl}\t{w}");
     }
     assert_eq!(at, bytes.len(), "the blocks' bytes are the output");
     std::fs::write(out, s).expect("OUT.tsv");
@@ -968,10 +990,52 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         format!("{wk_un} ns of worker activity outside any block"),
     ));
     let all_ok = checks.iter().all(|c| c.1);
+    // ---- the gap to the bound, from the timestamps (the queueing-discipline lead) ----
+    // the workers' idle time while the scanner waits for admission; in the start-up and in the
+    // drain; and the head-of-line blocking: a block ready while an earlier one is not, so the
+    // reader cannot take it (byte-weighted too: what holds the ready bytes' cap)
+    let scan_waits: Vec<(u64, u64)> = threads
+        .iter()
+        .filter(|t| t.role == Role::Scanner)
+        .flat_map(|t| t.gaps.iter().copied())
+        .collect();
+    let overlap = |a: &[(u64, u64)], b: &[(u64, u64)]| -> u64 {
+        // (both sorted, each non-overlapping within itself)
+        let (mut i, mut j, mut s) = (0, 0, 0u64);
+        while i < a.len() && j < b.len() {
+            let lo = a[i].0.max(b[j].0);
+            let hi = a[i].1.min(b[j].1);
+            if hi > lo {
+                s += hi - lo;
+            }
+            if a[i].1 < b[j].1 {
+                i += 1;
+            } else {
+                j += 1;
+            }
+        }
+        s
+    };
+    let (mut idle_adm, mut idle_start, mut idle_drain) = (0u64, 0u64, 0u64);
+    for t in threads.iter().filter(|t| t.role == Role::Worker) {
+        idle_adm += overlap(&t.gaps, &scan_waits);
+        idle_start += overlap(&t.gaps, &[(0, t1)]);
+        idle_drain += overlap(&t.gaps, &[(t2, end_ns)]);
+    }
+    let (mut hol, mut hol_bytes, mut ready_rest) = (0u128, 0u128, 0u128);
+    let mut before = 0u64;
+    for b in &blocks {
+        let (ready, taken) = (b.t[3], b.t[4]);
+        let held = before.min(taken).saturating_sub(ready);
+        hol += u128::from(held);
+        hol_bytes += u128::from(held) * u128::from(b.out_bytes);
+        ready_rest += u128::from(taken.saturating_sub(ready) - held);
+        before = before.max(ready);
+    }
     // ---- the line ----
     let _ = write!(
         line,
-        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"identities_ok\":{all_ok},\"identities\":[",
+        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"gap\":{{\"idle_admission_ns\":{idle_adm},\"idle_startup_ns\":{idle_start},\"idle_drain_ns\":{idle_drain},\"hol_ns\":{hol},\"hol_byte_ns\":{hol_bytes},\"ready_rest_ns\":{ready_rest}}},\"identities_ok\":{all_ok},\"identities\":[",
         PHASES.map(js).join(",")
     );
     for (i, (name, ok, why)) in checks.iter().enumerate() {

@@ -475,6 +475,80 @@ pub fn take_occ(to: u64) -> [Occ; OCCS] {
     o
 }
 
+static FEATURES: AtomicBool = AtomicBool::new(false);
+/// Each run-route block's structure (the untimed features pass only): (place, its runs'
+/// widths in the census's bins 1, 2–3, 4–16, 17–127, 128+, and h₁ of its BWT column, bits a
+/// byte)
+type Features = (u32, [u64; 5], f64);
+static FEATS: Mutex<Vec<Features>> = Mutex::new(Vec::new());
+
+/// Turn the blocks' structure on or off (the harness's untimed `--features` pass alone: an
+/// O(r) pass a block, never in a timed decode)
+pub fn set_features(on: bool) {
+    FEATS.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    FEATURES.store(on, Ordering::SeqCst);
+}
+
+#[inline]
+pub(crate) fn features_on() -> bool {
+    FEATURES.load(Ordering::Relaxed)
+}
+
+/// (a worker, its current block's) run records (`byte << 8 | length`, a long run cut into
+/// several): its runs' widths' histogram and the column's first-order entropy
+pub(crate) fn block_features(records: &[u16]) {
+    let mut bins = [0u64; 5];
+    let mut count = [0u64; 256];
+    let bin = |w: u64| match w {
+        0..=1 => 0,
+        2..=3 => 1,
+        4..=16 => 2,
+        17..=127 => 3,
+        _ => 4,
+    };
+    // (a long run is cut into several records: consecutive records of one byte are one run)
+    let (mut cur, mut width) = (None, 0u64);
+    for &x in records {
+        let (byte, w) = (x >> 8, u64::from(x & 0xFF));
+        count[usize::from(byte)] += w;
+        if cur == Some(byte) {
+            width += w;
+        } else {
+            if cur.is_some() {
+                bins[bin(width)] += 1;
+            }
+            (cur, width) = (Some(byte), w);
+        }
+    }
+    if cur.is_some() {
+        bins[bin(width)] += 1;
+    }
+    let n: u64 = count.iter().sum();
+    let h1 = if n == 0 {
+        0.0
+    } else {
+        count
+            .iter()
+            .filter(|&&c| c > 0)
+            .map(|&c| {
+                let q = c as f64 / n as f64;
+                -q * q.log2()
+            })
+            .sum()
+    };
+    let mut place = CURRENT;
+    with(|b| place = b.cur);
+    FEATS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push((place, bins, h1));
+}
+
+/// The blocks' structure recorded since `set_features(true)`
+pub fn take_features() -> Vec<Features> {
+    std::mem::take(&mut *FEATS.lock().unwrap_or_else(|e| e.into_inner()))
+}
+
 /// The time now, ns from the epoch
 pub fn now_ns() -> u64 {
     epoch().elapsed().as_nanos() as u64
