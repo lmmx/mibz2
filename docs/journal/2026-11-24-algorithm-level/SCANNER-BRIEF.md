@@ -1,5 +1,16 @@
 # Brief: the serial scanner at high worker counts. A profile first, then a gated parallel scan
 
+## Amendment, 24 November 2026, 21:45: a finer worker grid (Louis)
+
+Louis: "1 6 and 10 is too coarse. we should tighten that so we can model better, set shift points [or at least optimal ones] properly." This amendment supersedes every worker grid below.
+- **Both parts run every worker count from 1 to 12, then 14, 16 and 20.** Pin or unpin as the earlier recipes did, and state which.
+- **The profile (part 1) reports, at each count:**
+  - the scanner's busy and idle time;
+  - the workers' busy and idle time;
+  - the measured crossover, where the scanner's throughput meets the workers' combined throughput.
+- **The gate in part 2 is set from that crossover,** derived in the registration before part 2's data, not guessed. The adoption rule is judged at every count in the grid.
+- **A model:** fit a simple pipeline model (a serial stage feeding k parallel workers through a bounded queue) to the profile. Predict the shift point, and check the prediction against the measured grid.
+
 *Commissioned by the Coordinator on 24 November 2026. Louis: "yes commission both … be autonomous". It follows the four-arm verdict (journal §44): at 10 workers, supplying the scanner's output saves 19% (C/A 0.806 [0.782, 0.831]), while at 6 workers it saves about 2% and at 1 worker nothing. The scanner reads the bits and does the Huffman decode only; MTF/RLE2, the inversion and emission run in the workers. Assigned to the Pathfinder, in the order below.*
 
 ## Part 1 — profile the scanner (a diagnostic; it decides nothing)

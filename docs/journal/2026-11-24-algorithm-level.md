@@ -1289,3 +1289,12 @@ Wall-time ratios against A, with 95% intervals:
 - **Consequences:**
   - The cross-stage track (CROSS-STAGE.md) becomes a priority beside the inversion work.
   - At 10 workers the first target is the scanner's serial cost. Earlier parallel-scan attempts (C-37 at 0.883 with regressions; the streaming version at 1.54×) failed on scheduling and memory, not on potential.
+
+## 45. Louis's four points: a finer grid, notes kept, the mathematics' targets, durable records
+
+Louis: "first off, 1 6 and 10 is too coarse. we should tighten that so we can model better, set shift points [or at least optimal ones] properly. also perhaps we need to ensure we have done it in the ideal way (maybe add to the antigravity work list and monodromy) … secondly i want you to be keeping notes of your last message in the journal please. thirdly i would like you to establish what exactly we can find new maths for - my sense is that the induction part is the ... factory er, not the doorman the other one... also please can you ensure everything is a durable record and just respond by summarising these rather than you know, writing off the cuff..."
+
+1. **Grid.** `SCANNER-BRIEF.md` is amended. Every worker count runs from 1 to 12, then 14, 16 and 20. The gate's threshold is derived from the measured crossover and a fitted pipeline model, before part 2's data. The method's soundness goes to MONODROMY and to Neon's work list (channel #31).
+2. **Notes.** `COORDINATOR-NOTES.md` records each substantive reply to Louis, from now on.
+3. **The mathematics' targets.** `MATH-TARGETS.md`. The induction runs in the workers (the assemblers), so the mathematical target is the inversion's emission and construction. Emission's oracle ceiling is 0.83–0.85 at 1–6 workers, and 0.92 at 10 behind the scanner (D/C). Construction's share is unmeasured, so a worker-time-split oracle is queued. The scanner (the doorman) is first an engineering target.
+4. **Durability.** Every decision is in this journal, the briefs and the channel; replies to Louis are summaries of the record.
