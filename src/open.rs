@@ -356,6 +356,7 @@ impl Kernel {
         cap: Cap,
         out: &mut Vec<u8>,
     ) -> Option<(Counts, u32, u32)> {
+        ch!(begin A6a);
         // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
         out.resize(n as usize + INLINE, 0);
         let mut pass = self.begin(&mut out[..], cap.m, cap.strips);
@@ -369,9 +370,14 @@ impl Kernel {
             self.spill.taken = pass.queues.chunks();
         }
         if over || f.m > cap.m || ns > cap.strips {
+            ch!(end A6a);
             return None;
         }
-        Some(self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads))
+        ch!(end A6a);
+        ch!(begin A6b);
+        let done = self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads);
+        ch!(end A6c);
+        Some(done)
     }
 
     /// The construction after its first pass `f` (`records` read again only without `QUEUE`;
@@ -519,6 +525,8 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
+        ch!(end A6b);
+        ch!(begin A6c);
         if QUEUE && !wide && m >= 65_536 {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
@@ -621,7 +629,9 @@ impl Kernel {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
         let (stats, mark, bits) =
             self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+        ch!(begin A7);
         self.walk(n, stats.retained, mark, bits, out);
+        ch!(end A7);
         Some(stats)
     }
 
@@ -753,6 +763,14 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         true
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
+        #[cfg(feature = "character")]
+        use crate::character::route;
+        #[cfg(feature = "character")]
+        let mut way = route::SKIPPED;
+        #[cfg(feature = "character")]
+        if crate::character::features_on() {
+            crate::character::block_features(r.records());
+        }
         if let Some(cap) = Self::cap(r.records().len(), n, p) {
             let ran = self
                 .open
@@ -766,14 +784,27 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 {
                     self.opened += 1;
                 }
+                ch!(point Route, u64::MAX, route::pack(
+                    if cap.m == Cap::NONE.m { route::OPEN } else { route::OPEN_DENSE },
+                    n,
+                    r.records().len()
+                ));
                 return true;
             }
             #[cfg(test)]
             {
                 self.capped += 1;
             }
+            #[cfg(feature = "character")]
+            {
+                way = route::REFUSED;
+            }
         }
-        self.lazy.invert_runs(r, n, p, out, k)
+        ch!(point Route, u64::MAX, route::pack(way, n, r.records().len()));
+        ch!(begin A8);
+        let done = self.lazy.invert_runs(r, n, p, out, k);
+        ch!(end A8);
+        done
     }
     fn invert(&mut self, l: &[u8], c: &[u32; 256], p: u32, out: &mut Vec<u8>) {
         self.lazy.invert(l, c, p, out);

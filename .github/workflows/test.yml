@@ -60,6 +60,21 @@ jobs:
           git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
+      # bench-character's ledgers (docs/journal/2026-11-24-character-stage1-registration.md):
+      # every thread's activities nested and in order, every block's points once, every buffer
+      # empty at the end and Little's law exact, the bytes unchanged, nothing recorded off; then
+      # the harness and its driver on the repository's own text, every decode's identities
+      # holding in the harness's own check
+      - name: The character ledgers (research feature)
+        run: |
+          cargo test --release --features character --test character
+          git ls-files '*.md' '*.rs' '*.py' | sort | xargs cat | bzip2 -9 > chr.bz2
+          cargo build --release --features character --example character
+          mkdir chr-smoke
+          python3 bench/character_run.py --bin target/release/examples/character --corpus chr.bz2 \
+            --single chr.bz2 --out chr-smoke --rounds 2 --band-rounds 2 --reps 1 --settle 0 \
+            --per-block-rounds 1 --pmu-repeats 1 --api-rounds 1 --prewarm 0
+          python3 -c 'import json,sys; r=[json.loads(l) for l in open("chr-smoke/runs.jsonl")]; g=[x for x in r if x.get("section")=="grid"]; bad=[(x["k"], [c["name"] + ": " + c["detail"][:300] for c in x["identities"] if not c["ok"]]) for x in g if not x.get("identities_ok")]; f=[x for x in r if x.get("kind")=="failed"]; print(len(g), "grid decodes; identities failing at", bad, "; failed", len(f)); sys.exit(1 if bad or f or len(g)!=40 else 0)'
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -204,6 +219,10 @@ jobs:
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
+      # bench-character's report (bench/character.py, stage 1) on synthetic records: k*, the
+      # limits, the ledgers' cost bound, INCOMPLETE and each VOID
+      - name: The character study's report (synthetic records)
+        run: python3 bench/test_character.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

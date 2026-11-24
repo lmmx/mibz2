@@ -1940,3 +1940,115 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The decoder's character across 1 to 20 workers, stage 1: the baseline as a network of
+# activities, buffers and resources (docs/journal/2026-11-24-character-stage1-registration.md;
+# the brief docs/journal/2026-11-24-algorithm-level/briefs/character.md at c57640c4, stage 1
+# with the public API's sweep; its C1a rule posted on #145 before the data). DIAGNOSTIC: it
+# decides nothing. Master at PIN with the `character` research feature (src/character.rs: each
+# thread's ledger of activities A0 to A10 and its waits, each block's points, the buffers' live
+# occupancy). Every decode in a fresh process (examples/character.rs), driven by
+# bench/character_run.py:
+# - the grid: production's lazy workers at every count from 1 to 20 (a window of 4k), 12
+#   randomised complete rounds and 4 more at 7 to 16 (the noisy band), after 50 s of discarded
+#   pre-warm; an observation 3 decodes, each in its own process with the ledgers on, settle 1 s;
+#   every block's row in the first 4 rounds;
+# - the ledgers' cost, interleaved: 6 pairs, off and on, at 1, 10 and 20;
+# - the counters at 1, 8, 10, 16 and 20 (two groups, 3 each), where the PMU counts; the
+#   memory controller where `perf stat -a` can count it;
+# - the public API's sweep: `BzReader::parallel` at 1 to 20 threads asked, 3 rounds.
+# bench/character.py reports each count's demand, waits, occupancy and limit, the operational
+# laws, k* with its interval and the near-optimal set, and writes the TSVs for math-targets.
+# About 23 minutes with the build. DRY (the first positional argument: two rounds, one decode
+# an observation, no settle; not evidence) checks the wiring.
+#   just submit bench-character
+bench-character DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
+    COPIES=4 ROUNDS=12 BAND_ROUNDS=16 REPS=3 SETTLE=1 SEED=20261124 BLOCK_ROUNDS=4 PMU_REPEATS=3 API_ROUNDS=3 PREWARM=50
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { ROUNDS=2; BAND_ROUNDS=3; REPS=1; SETTLE=0; BLOCK_ROUNDS=1; PMU_REPEATS=1; API_ROUNDS=1; PREWARM=2; }
+    W=$PWD/target/character
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-character (docs/journal/2026-11-24-character-stage1-registration.md; diagnostic) at $(git rev-parse HEAD): the decoder's character, stage 1, master $PIN with the character feature, production's lazy workers at 1 to 20, unpinned, $ROUNDS randomised rounds of $REPS decodes, settle $SETTLE s, seed $SEED, on $COPIES copies of corpora/wikidata.bz2; the ledgers' cost, the counters, the public API"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-character: DRY RUN: two rounds, one decode an observation, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-character: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-character: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the build, checked: master's decoder at PIN, plus the research feature's hooks alone
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-character: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-character: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features character --example character --example ab --example windows
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    # (the census, untimed, in a build of its own: its per-block pass never in the timed binary)
+    CARGO_TARGET_DIR=$W/census-target cargo build -q --release --features census --example census
+    CEN=$W/census-target/release/examples/census
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$CH" "$CEN" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-character: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine: its topology once (NUMA dropped), its frequency policy observed
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    cat /proc/sys/kernel/perf_event_paranoid > "$O/perf_event_paranoid.txt" 2>/dev/null || true
+    for f in scaling_governor scaling_driver energy_performance_preference; do
+      echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+    done > "$O/frequency-policy.txt"
+    echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    echo "thp: $(cat /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    echo "rapl energy readable: $([ -r /sys/class/powercap/intel-rapl:0/energy_uj ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+    grep -m1 microcode /proc/cpuinfo >> "$O/frequency-policy.txt" || true
+    uname -a > "$O/uname.txt"
+    # the census of the open kernel's blocks (one copy, untimed), for the features' join
+    "$CEN" "$corpus" "$O/census.tsv"
+    # the run
+    python3 bench/character_run.py --bin "$CH" --corpus "$W/wikidata-x$COPIES.bz2" --single "$corpus" \
+      --out "$O" --rounds $ROUNDS --band-rounds $BAND_ROUNDS --reps $REPS --settle $SETTLE --seed $SEED --prewarm $PREWARM \
+      --per-block-rounds $BLOCK_ROUNDS --pmu-repeats $PMU_REPEATS --api-rounds $API_ROUNDS \
+      || echo "bench-character: the driver failed (console.log says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/character.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --features "$O/features.tsv" \
+      --lscpu-e "$O/lscpu-e.txt" --blocks-dir "$O" --tsv-dir "$O/tsv" --rounds $ROUNDS --band-rounds $BAND_ROUNDS --reps $REPS --api-rounds $API_ROUNDS \
+      --seed $SEED | tee "$O/report.txt" \
+      || echo "bench-character: VOID, no report (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
