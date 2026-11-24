@@ -105,6 +105,10 @@ pub mod itrace;
 pub mod mtf;
 // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
 mod open;
+// (research only, `census`: the open kernel's blocks' structure, block by block)
+#[cfg(feature = "census")]
+#[doc(hidden)]
+pub mod census;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]
