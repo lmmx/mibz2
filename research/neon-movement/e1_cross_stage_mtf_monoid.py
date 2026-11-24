@@ -466,11 +466,11 @@ def decode_from_gap_streams_zero_L(
 
 def measure_retained_gap_streams(blk: common.BlockData, limit: int = 16, anchor_stride: int = 16) -> dict[str, Any]:
     """Measure MONODROMY 115 NEEDS M-22 on Open's retained rows M (at LIMIT=16)."""
-    ret = common.build_retained_system(blk, limit=limit)
+    ret = common.build_retained_system_genuine(blk, L_min=limit)
     # Build per-symbol sorted retained-row indices (each retained row j has domain row x and byte L[x])
     by_sym: list[list[int]] = [[] for _ in range(256)]
     for j in range(ret.m):
-        x = ret.ret_row[j]
+        x = ret.rows[j]
         by_sym[blk.L[x]].append(x)
 
     n_gaps = 0
