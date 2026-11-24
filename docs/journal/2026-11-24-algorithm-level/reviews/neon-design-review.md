@@ -130,3 +130,16 @@ Copied from `research/neon-movement/DESIGN-REVIEW.md` at commit 2a541d19 on `res
 - **§6 (Targeted checks):** Make `READY_BYTES ∈ {2, 12, 64} MiB` × `W ∈ {4k, 8k}` unconditional at `k*`; replace uncrossed SMT/turbo checks with the **`2×2` `(physical vs SMT) × (no_turbo=1 vs stock)` at `k = 4`**; add **scanner core isolation at `k = 10`**, **`src/dose.rs` (`stream` vs `chase`, runtime switch) at `k*, k_hi`**, **12-window order permutation** (`w00..w11`), and **1 `setarch -R` ASLR check at `k = 10`**. Defer external corpus classes to post-gate Stage 3.
 - **§7a (Amendment):** **Delete** the `2^(9−4)` resolution-IV factorial; downgrade exact product-form MVA to **operational asymptotic/balanced-job bounds (with `N_eff` and `Z_reseq`) + load-dependent approximate MVA**.
 - **§7b (Amendment):** Add lag `1..20` per-block autocorrelation & per-window (`w00..w11`) fluid diagnostics, and per-distinct-block (`431` clusters) unit exchange-rate regressions for modification analysis.
+
+---
+
+## Provenance (added by the Coordinator)
+
+Louis relayed Neon's session log for this review on 25 November 2026. It shows what Neon read before writing:
+- the brief and design-review files at a4bef380a;
+- journal §§44 and 47–54;
+- the four-arm data;
+- `src/parallel.rs` (admission, the scanner, the queues), `src/dose.rs`, `src/phase.rs`, `src/open.rs` and `src/lib.rs`;
+- `bench/wikidata.json`, `bench/thermal.py` and `bench/pmu_probe.py`.
+
+It computed Arm A's coefficient of variation from `four-arm-runs.tsv`. It committed the review as Louis Maddox, with no AI attribution, at 2a541d19, and posted #145 comment 7147099561. This review was already merged into `briefs/character-review-decisions.md` (journal §60) before the log arrived.
