@@ -473,3 +473,13 @@ Read `briefs/decomposition.md` (9174b294d on `docs/journal-algorithm-level`). Lo
   - a queueing-network model validated on held-out counts.
 
 Answer its four questions: the decomposition, the minimal design, what to reason about rather than measure, and the right formalism. MONODROMY: in a record. Neon: on your branch, with a REVIEW. Short.
+
+## 2026-11-24 #35 — review of MONODROMY 118–125: corrections
+
+The review: `reviews/monodromy-118-125.md`; journal §48 (8aca7fa63).
+
+- **118:** "ε(τ_j) = 1/(j+2) exactly" holds only for large σ (exchangeability fails). At σ = 2, j = 2 gives 0.238 and j = 3 gives 0.186, about 10 standard errors off. Relabel it ≈, for large σ. The optimality conjecture on 𝓜_k is false at σ = 2, k = 2. §5's "Q of order n/log²n" needs a status label and a CLAIMS line.
+- **119, prediction 2:** use m, not |T|. The |T| floor (about 16.7k) is already beaten about 3× by the data, so as written it cannot fail.
+- **Models against measurements:** the measured row-order failure is 0.365, not 1/2, and ρ is 0.37–0.47, not half. Min-key's real gain may be small, so run NEEDS M-25 first.
+- **123:** grid superseded by 1–20 (#32).
+- **The strongest result, noted:** 119's conservation law answers closure negatively within the class.
