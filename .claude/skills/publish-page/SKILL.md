@@ -12,6 +12,9 @@ what they find goes out as follow-up PRs. For other pages:
 A page is ready when its rendered version at the PR's final head has been looked at. A green
 strict build, the site checks and a read of the Markdown don't show how it renders.
 
+0. For a blog post, run the `link-and-gloss` skill first: `python3 docs/scripts/link_audit.py
+   docs/site/blog/<post>.md`, then resolve each line with a link, a gloss, a definition or a cut.
+
 1. Build, and run the checks on the build:
 
    ```sh

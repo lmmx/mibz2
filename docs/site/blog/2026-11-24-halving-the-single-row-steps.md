@@ -36,14 +36,18 @@ A few terms carry the post:
 
 - **The BWT and LF.** bzip2 sorts the rotations of each block of text and keeps the last letter of
   each, the Burrows–Wheeler transform (BWT). Undoing it follows a map, LF, from each row of the
-  sorted table to the row one letter earlier in the text.
-- **Our three decoders.** The walk applies LF one row at a time. Cells and Open move whole
-  stretches of rows at once, wherever neighbouring rows share their letter, and Open walks the thin
-  stretches.
+  sorted table to the row one letter earlier in the text
+  ([the structure of that map](2026-11-08-inverse-bwt-navigation.md)).
+- **Our three decoders.** The walk applies LF one row at a time.
+  [Cells](2026-11-10-rauzy-veech-reconstruction.md) and [Open](2026-11-19-open-returns.md) move
+  whole stretches of rows at once, wherever neighbouring rows share their letter, and Open walks
+  the thin stretches.
 - **The current family.** Decoders that move intervals of rows by fixed translations and compose
   those moves. The walk, Cells and Open all belong to it.
-- **A width-1 row** is a run of one letter, so no stretch carries it. A block has h₁ of them.
-- **An event** is a step that settles one row on its own. Open's events are its m retained steps:
+- **A width-1 row** is a run of one letter, so no stretch carries it. A block has h₁ of them, and
+  on our benchmark [most come from random IDs](2026-11-20-where-the-decoding-work-goes.md).
+- **An event** is a step that settles one row on its own
+  ([what decoding pays for](2026-11-18-what-decoding-pays-for.md) counts them). Open's events are its m retained steps:
   one on each width-1 row, and the rest on rows of wider runs. Each retained step writes a word,
   the letters between it and the next.
 
@@ -51,16 +55,23 @@ Until now our research moved in small steps, each making a decoder a few per cen
 are after is a new decoder, as different from ours as Rauzy–Veech induction, the mathematics
 behind Cells, was from the walk. In the past week we built what it takes to pursue one:
 
-- **A target that is met or not.** An exact decoder must settle every block with at most h₁/2
+- **[A target that is met or not](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md).** An exact decoder must settle every block with at most h₁/2
   events in all, in two passes over the block and no more memory than Open, and beat Open's whole
   decoding time.
-- **A proved lower bound, G1.** Every decoder in the current family pays at least one event per
+- **[A proved lower bound, G1](https://github.com/lmmx/mibz2/blob/620eacc724988238fe6341c1102b9b2320847279/docs/journal/monodromy/2026-11-24-g1-scoped.md).** Every decoder in the current family pays at least one event per
   width-1 row, so at least h₁. Anything that meets the target is a new algorithm, not an increment.
-- **A census of our benchmark's blocks.** Three structural features of a block predict the time
+- **[A census of our benchmark's blocks](https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md).** Three structural features of a block predict the time
   Open spends building its structures, with a held-out R² of 0.96.
-- **Fourteen candidate frameworks closed,** each kept with its counterexample, its scope and what
+- **[Fourteen candidate frameworks closed](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md),** each kept with its counterexample, its scope and what
   would get past it.
-- **The transformation that connects our three decoders,** with the one thing it can never remove.
+- **The transformation that connects our three decoders,** with the one thing it can never remove
+  (§4).
+
+<aside class="il-gloss" markdown>**Rauzy–Veech induction** studies a line cut into intervals and
+shuffled, an interval exchange, by cutting off the shorter end again and again until the pieces
+repeat. A block's runs of equal letters form such an exchange, so the same steps move whole runs at
+a time. The kernel built on it is told in [A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md),
+and the dictionary between the two worlds in [Towers, words and loops](2026-11-16-mathematical-dictionary.md).</aside>
 
 The search was reframed four times on the way: use everything, count the cost, set a target that is
 met or not, and keep the method rather than the result (§§1–2). The last came from an essay against
@@ -107,12 +118,23 @@ correctness theorems. We did the same. A census of our benchmark's blocks now pr
 Open spends building its structures from three features of a block (held-out R² 0.96), and a lower
 bound, G1 (§3), says what every decoder in the current family must pay.
 
+<aside class="il-gloss" markdown>**[The census](https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md)** timed Open on each of the 232 distinct
+blocks of our Wikidata benchmark, one worker at a time, and asked whether a few features of a
+block's structure predict where the time goes. For building Open's structures they do: three
+features explain 96% of the variation on blocks held out of the fit. For writing the output they
+don't, which is one reason the price of an event (§5) stays an open question.</aside>
+
 **Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge
 could be done with *fewer than one* press of the A button. That is a minimisation turned into a
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
 working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
 confirmed the payoff, and only then found how the real game could produce it, one supplied
 condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.
+
+<aside class="il-gloss" markdown>**The A-button challenge** is a long-running game among Super
+Mario 64 players: finish each star with as few presses of the jump button as can be managed. Where
+the record stood at one press, one project asked whether a star could be had with none, and set
+out to answer it either with a route or with a proof, checked by machine, that no route exists.</aside>
 
 What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every
 ordinary route relies on. mibz2 has an exact counterpart.
@@ -320,6 +342,11 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
   $LF(x_i) = b_c + \sum_{j<i} g_j$. One step of the frontier is a matter of counting letters in
   gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.
 
+<aside class="il-gloss" markdown>**Backward search** is how a compressed full-text index finds a
+pattern. It reads the pattern from its last letter to its first, and each letter narrows an
+interval of sorted rows by one LF step. Searching for many patterns at once moves all their
+intervals together, which is the frontier's step in another use.</aside>
+
 The random IDs show what the frontier changes and what it doesn't:
 
 <figure class="bf-fig">
@@ -426,6 +453,11 @@ translation, and positions come only from labels on the start rows of those fact
 decoder of that kind pays $c_1 \ge h_1 - |B|$ events, where $B$ is the set of width-1 rows placed
 by a label read off an uncharged observation. All of the theorem's content is in how large $B$ can
 be.
+
+<aside class="il-gloss" markdown>**An uncharged observation** is something a decoder may read
+for free under our counting rules: a summary that folds the whole block into a few numbers, such as
+how many of each letter it holds, or the first moment below. Only reading a single row's own record
+to settle that row costs an event, so the question is how much such free summaries can place.</aside>
 
 A row can be placed from an observation only if every valid column with the same observation puts
 it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into
