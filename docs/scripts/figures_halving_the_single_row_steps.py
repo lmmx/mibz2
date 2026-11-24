@@ -44,6 +44,27 @@ def marker(mid):
             '</marker></defs>')
 
 
+# SMIL: each stepper frame animates in from its own start. blog.js restarts the frame's timeline
+# (setCurrentTime(0)) every time a frame is shown, and jumps to the end for reduced motion.
+EASE = 'calcMode="spline" keyTimes="0;1" keySplines="0.4 0 0.2 1"'
+
+
+def fade(content, begin, dur=0.45):
+    """Content that fades in at `begin` seconds."""
+    return (f'<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{begin:.2f}s" '
+            f'dur="{dur}s" fill="freeze"/>{content}</g>')
+
+
+def drawn(cls, d, begin, dur=0.55, head=None):
+    """A path that draws itself from its start; its arrowhead appears as the line arrives."""
+    out = (f'<path class="{cls}" d="{d}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1">'
+           f'<animate attributeName="stroke-dashoffset" from="1" to="0" begin="{begin:.2f}s" dur="{dur}s" '
+           f'fill="freeze" {EASE}/>')
+    if head:
+        out += f'<set attributeName="marker-end" to="url(#{head})" begin="{begin + dur:.2f}s" fill="freeze"/>'
+    return out + "</path>"
+
+
 def lf_of(L):
     order = sorted(set(L))
     C = {c: sum(1 for x in L if x < c) for c in order}
@@ -215,6 +236,7 @@ def fig2():
         o = [svg_open(W, H, f"The pair (s, c) = ({num(s)}, {num(c)}), its right triangle {num(p)}, {num(q)}, {num(h)}, "
                             "and how close s/c is to the square root of two."), marker("fx2-head")]
         o.append(text(180, 24, "(s, c) → (3s − 4c, 3c − 2s)" if back else "(s, c) → (3s + 4c, 2s + 3c)", "fx-rule"))
+        prev = tri[kk - 1] if kk > 0 and not back else None
         o.append(text(180, 43, "the rule run backwards: every pair shrinks" if back else "keeps s² − 2c² = −1", "bf-tm"))
         # the triangle to scale, hypotenuse fixed; earlier ones dashed at the same corner
         hyp = 150
@@ -224,15 +246,25 @@ def fig2():
             for j in range(kk):
                 pj, qj, hj = tri[j]
                 sj = hyp / hj
-                o.append(f'<path class="fx-ghost" d="M{x0},{y0} L{f(x0 + pj * sj)},{y0} L{x0},{f(y0 - qj * sj)} Z"/>')
+                ghost = f'<path class="fx-ghost" d="M{x0},{y0} L{f(x0 + pj * sj)},{y0} L{x0},{f(y0 - qj * sj)} Z"/>'
+                o.append(fade(ghost, 0.5) if j == kk - 1 else ghost)
         x1, y2 = x0 + p * sc_, y0 - q * sc_
-        o.append(f'<path class="fx-tri" d="M{x0},{y0} L{f(x1)},{y0} L{x0},{f(y2)} Z"/>')
+        d_now = f"M{x0},{y0} L{f(x1)},{y0} L{x0},{f(y2)} Z"
+        if prev:
+            # the triangle eases from the last one's proportions to this one's
+            pp, pq, ph = prev
+            ps = hyp / ph
+            d_prev = f"M{x0},{y0} L{f(x0 + pp * ps)},{y0} L{x0},{f(y0 - pq * ps)} Z"
+            o.append(f'<path class="fx-tri" d="{d_now}"><animate attributeName="d" from="{d_prev}" to="{d_now}" '
+                     f'begin="0s" dur="0.7s" fill="freeze" {EASE}/></path>')
+        else:
+            o.append(fade(f'<path class="fx-tri" d="{d_now}"/>', 0, 0.6))
         o.append(f'<path class="fx-right" d="M{x0 + 11},{y0} L{x0 + 11},{y0 - 11} L{x0},{y0 - 11}"/>')
-        o.append(text((x0 + x1) / 2, y0 + 18, num(p), "fx-side"))
-        o.append(text(x0 - 8, (y0 + y2) / 2 + 4, num(q), "fx-side", "end"))
-        o.append(text((x0 + x1) / 2 + 10, (y0 + y2) / 2 - 4, num(h), "fx-side", "start"))
-        o.append(text(180, 256, f"s = {num(s)} · c = {num(c)}", "fx-pair"))
-        o.append(text(180, 274, "s² − 2c² = −1 at every size" if back else "short sides differ by one", "bf-tm"))
+        o.append(fade(text((x0 + x1) / 2, y0 + 18, num(p), "fx-side")
+                      + text(x0 - 8, (y0 + y2) / 2 + 4, num(q), "fx-side", "end")
+                      + text((x0 + x1) / 2 + 10, (y0 + y2) / 2 - 4, num(h), "fx-side", "start"), 0.45))
+        o.append(fade(text(180, 256, f"s = {num(s)} · c = {num(c)}", "fx-pair")
+                      + text(180, 274, "s² − 2c² = −1 at every size" if back else "short sides differ by one", "bf-tm"), 0.3))
         # the ladder: distance of s/c from root two, log scale, one rung per pair
         ax, top, bot = 70, 312, 438
         o.append(text(180, 300, "distance of s/c from √2", "bf-tm"))
@@ -248,17 +280,24 @@ def fig2():
             sj, cj = pairs[j]
             yy = ypos(math.log10(abs(sj / cj - math.sqrt(2))))
             cur = j == kk and not back
-            o.append(f'<circle class="{"fx-dot-on" if cur else "fx-dot"}" cx="{ax}" cy="{f(yy)}" r="{5 if cur else 3.5}"/>')
-            o.append(text(ax + 14, yy + 4, f"{num(sj)}/{num(cj)}", "fx-frac" if cur else "fx-row", "start"))
-            o.append(text(300, yy + 4, dist[j], "fx-frac" if cur else "fx-row", "end"))
+            labels = (text(ax + 14, yy + 4, f"{num(sj)}/{num(cj)}", "fx-frac" if cur else "fx-row", "start")
+                      + text(300, yy + 4, dist[j], "fx-frac" if cur else "fx-row", "end"))
+            if cur:
+                # the new rung: the dot slides down from the last one, then its labels appear
+                y_from = ypos(math.log10(abs(pairs[j - 1][0] / pairs[j - 1][1] - math.sqrt(2)))) if j else top
+                o.append(f'<circle class="fx-dot-on" cx="{ax}" cy="{f(yy)}" r="5"><animate attributeName="cy" '
+                         f'from="{f(y_from)}" to="{f(yy)}" begin="0s" dur="0.8s" fill="freeze" {EASE}/></circle>')
+                o.append(fade(labels, 0.75))
+            else:
+                o.append(f'<circle class="fx-dot" cx="{ax}" cy="{f(yy)}" r="3.5"/>')
+                o.append(labels)
         if back:
             ya = ypos(math.log10(abs(pairs[4][0] / pairs[4][1] - math.sqrt(2))))
             yb = ypos(math.log10(abs(pairs[0][0] / pairs[0][1] - math.sqrt(2))))
-            o.append(f'<path class="fx-back" d="M{312},{f(ya)} C{344},{f(ya)} {344},{f(yb)} {314},{f(yb)}" '
-                     'marker-end="url(#fx2-head)"/>')
-            o.append(text(180, H - 10, "An exact s² = 2c² would shrink forever, so none exists.", "fx-pair"))
+            o.append(drawn("fx-back", f"M{312},{f(ya)} C{344},{f(ya)} {344},{f(yb)} {314},{f(yb)}", 0.3, 1.1, "fx2-head"))
+            o.append(fade(text(180, H - 10, "An exact s² = 2c² would shrink forever, so none exists.", "fx-pair"), 1.3))
         else:
-            o.append(text(180, H - 10, f"s / c = {ratio[kk]}", "fx-pair"))
+            o.append(fade(text(180, H - 10, f"s / c = {ratio[kk]}", "fx-pair"), 0.9))
         o.append("</svg>")
         return "".join(o)
 
@@ -480,7 +519,7 @@ def fig5():
     yL, yF = 72, 230
     mid = 190
 
-    def column(y, s, name, mark=(), dim=False, nums_below=False):
+    def column(y, s, name, mark=(), dim=False, nums_below=False, ring_at=None):
         o = [text(X0 - 12, y + CH / 2 + 6, name, "fx-math", "end")]
         for i, ch in enumerate(s):
             x = X0 + i * CW
@@ -489,28 +528,36 @@ def fig5():
             o.append(text(x + (CW - 4) / 2, y + CH / 2 + 5, ch, "fx-letter"))
             o.append(text(x + (CW - 4) / 2, y + CH + 14 if nums_below else y - 7, str(i), "fx-row"))
             if i in mark:
-                o.append(f'<rect class="fx-sel" x="{x - 3}" y="{y - 3}" width="{CW + 2}" height="{CH + 6}" rx="5"/>')
+                ring = f'<rect class="fx-sel" x="{x - 3}" y="{y - 3}" width="{CW + 2}" height="{CH + 6}" rx="5"/>'
+                o.append(fade(ring, ring_at + 0.12 * list(mark).index(i), 0.35) if ring_at is not None else ring)
         return o
 
-    def arrow(i, j, cls):
+    def column_in(y, s, name, begin, **kw):
+        return [fade("".join(column(y, s, name, **kw)), begin, 0.45)]
+
+    def arrow(i, j, cls, begin=None):
         x0 = X0 + i * CW + (CW - 4) / 2
         x1 = X0 + j * CW + (CW - 4) / 2
-        return (f'<path class="fx-lf {cls}" d="M{f(x0)},{yL + CH + 5} C{f(x0)},{(yL + yF) / 2 + 24} '
-                f'{f(x1)},{(yL + yF) / 2 - 24} {f(x1)},{yF - 7}" marker-end="url(#fx5-head)"/>')
+        d = (f"M{f(x0)},{yL + CH + 5} C{f(x0)},{(yL + yF) / 2 + 24} "
+             f"{f(x1)},{(yL + yF) / 2 - 24} {f(x1)},{yF - 7}")
+        if begin is None:
+            return f'<path class="fx-lf {cls}" d="{d}" marker-end="url(#fx5-head)"/>'
+        return drawn(f"fx-lf {cls}", d, begin, 0.5, "fx5-head")
 
-    def lines(y, ls, cls="fx-pair"):
-        return [text(mid, y + 17 * k, t, cls) for k, t in enumerate(ls)]
+    def lines(y, ls, cls="fx-pair", begin=None):
+        out = [text(mid, y + 17 * k, t, cls) for k, t in enumerate(ls)]
+        return out if begin is None else [fade("".join(out), begin)]
 
     frames = []
-    o = [svg_open(W, H, texts[0]), marker("fx5-head")] + column(yL, L, "L", sel, dim=True)
-    o += lines(160, ["selected rows, in row order:", "0, 1, 3, 5, 6"])
-    o += lines(206, ["scattered: no two of them need be neighbours"], "bf-tm")
+    o = [svg_open(W, H, texts[0]), marker("fx5-head")] + column(yL, L, "L", sel, dim=True, ring_at=0.1)
+    o += lines(160, ["selected rows, in row order:", "0, 1, 3, 5, 6"], begin=0.75)
+    o += lines(206, ["scattered: no two of them need be neighbours"], "bf-tm", begin=0.95)
     o.append("</svg>")
     frames.append("".join(o))
-    o = [svg_open(W, H, texts[1]), marker("fx5-head")] + column(yL, L, "L", sel, dim=True) + column(yF, F, "F", nums_below=True)
-    for x in sel:
-        o.append(arrow(x, LF[x], f"fx-{LETTER[L[x]]}"))
-    o += lines(H - 42, ["LF of each, in source order:", "1, 4, 3, 6, 2 (not sorted)"])
+    o = [svg_open(W, H, texts[1]), marker("fx5-head")] + column(yL, L, "L", sel, dim=True) + column_in(yF, F, "F", 0, nums_below=True)
+    for k, x in enumerate(sel):
+        o.append(arrow(x, LF[x], f"fx-{LETTER[L[x]]}", 0.3 + 0.18 * k))
+    o += lines(H - 42, ["LF of each, in source order:", "1, 4, 3, 6, 2 (not sorted)"], begin=1.4)
     o.append("</svg>")
     frames.append("".join(o))
     o = [svg_open(W, H, texts[2]), marker("fx5-head")] + column(yL, L, "L", sel, dim=True) + column(yF, F, "F", grouped, dim=True, nums_below=True)
@@ -520,17 +567,18 @@ def fig5():
         xa = X0 + min(ds) * CW
         xb = X0 + max(ds) * CW + CW - 4
         yb = yF + CH + 24
-        o.append(f'<path class="fx-brace fx-{LETTER[ch]}" d="M{xa},{yb} L{xa},{yb + 5} L{xb},{yb + 5} L{xb},{yb}"/>')
-        o.append(text((xa + xb) / 2, yb + 21, f"{ch} → {', '.join(map(str, ds))}", "fx-brace-t"))
-    o += lines(22, ["the new frontier 1, 2, 3, 4, 6 is sorted,", "with no comparisons"])
+        kb = sorted(by).index(ch)
+        o.append(drawn(f"fx-brace fx-{LETTER[ch]}", f"M{xa},{yb} L{xa},{yb + 5} L{xb},{yb + 5} L{xb},{yb}", 0.2 + 0.3 * kb, 0.45))
+        o.append(fade(text((xa + xb) / 2, yb + 21, f"{ch} → {', '.join(map(str, ds))}", "fx-brace-t"), 0.45 + 0.3 * kb))
+    o += lines(22, ["the new frontier 1, 2, 3, 4, 6 is sorted,", "with no comparisons"], begin=1.3)
     o.append("</svg>")
     frames.append("".join(o))
     o = [svg_open(W, H, texts[3]), marker("fx5-head")] + column(yL, L, "L", [0, 6, 1, 5], dim=True) + column(yF, F, "F", [1, 2, 4, 6], dim=True, nums_below=True)
-    for x in (0, 6, 1, 5):
-        o.append(arrow(x, LF[x], f"fx-{LETTER[L[x]]}"))
-    o += lines(22, ["within one letter, destinations differ by a count"])
-    o += lines(H - 60, ["a at rows 0 and 6: one a in rows 0–5, so", "LF(6) − LF(0) = 2 − 1 = 1"], "bf-t")
-    o += lines(H - 24, ["n at rows 1 and 5: two n's in rows 1–4, so", "LF(5) − LF(1) = 6 − 4 = 2"], "bf-t")
+    for k, x in enumerate((0, 6, 1, 5)):
+        o.append(arrow(x, LF[x], f"fx-{LETTER[L[x]]}", 0.1 + 0.2 * k))
+    o += lines(22, ["within one letter, destinations differ by a count"], begin=0.1)
+    o += lines(H - 60, ["a at rows 0 and 6: one a in rows 0–5, so", "LF(6) − LF(0) = 2 − 1 = 1"], "bf-t", begin=0.9)
+    o += lines(H - 24, ["n at rows 1 and 5: two n's in rows 1–4, so", "LF(5) − LF(1) = 6 − 4 = 2"], "bf-t", begin=1.3)
     o.append("</svg>")
     frames.append("".join(o))
     write("fig5.svg", step_svg(frames[0], "The column annb$na with rows 0, 1, 3, 5 and 6 selected; LF sends them to 1, 4, 3, 6, 2, and grouping by letter sorts them to 1, 2, 3, 4, 6 with no comparisons."))

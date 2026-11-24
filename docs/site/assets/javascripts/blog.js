@@ -500,6 +500,17 @@
     const show = () => {
       const fr = model.frames[i];
       svg.innerHTML = fr.svg;
+      // a frame may animate itself (SMIL): start its timeline again each time it is shown, or,
+      // for a reader who asks for less motion, show its last state at once
+      if (svg.setCurrentTime) {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          svg.pauseAnimations();
+          svg.setCurrentTime(30);
+        } else {
+          svg.setCurrentTime(0);
+          svg.unpauseAnimations();
+        }
+      }
       text.textContent = `Step ${i + 1} of ${model.frames.length}. ${fr.text}`;
       slider.value = i;
       prev.disabled = i === 0;
