@@ -7,7 +7,7 @@
 
    The fonts in ../fonts/ are the Latin subsets Google Fonts serves, all under the SIL Open
    Font License 1.1: EB Garamond (Georg Duffner, Octavio Pardo), Cinzel Decorative (Natanael
-   Gama) and Manufacturing Consent (Fredrick Brennan). */
+   Gama), Cinzel (Natanael Gama) and Manufacturing Consent (Fredrick Brennan). */
 
 @font-face {
   font-family: "EB Garamond";
@@ -38,6 +38,13 @@
   src: url("../fonts/cinzel-decorative-900-latin.woff2") format("woff2");
 }
 @font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/cinzel-700-latin.woff2") format("woff2");
+}
+@font-face {
   font-family: "Manufacturing Consent";
   font-style: normal;
   font-weight: 400;
@@ -57,6 +64,8 @@
   --il-c: var(--il-lapis);
   --il-serif: "EB Garamond", Georgia, "Iowan Old Style", serif;
   --il-display: "Cinzel Decorative", "EB Garamond", Georgia, serif;
+  /* plain Cinzel for a gloss's term: Cinzel Decorative's A reads as a lambda in "A cocycle" */
+  --il-caps: "Cinzel", "EB Garamond", Georgia, serif;
   --il-black: "Manufacturing Consent", "EB Garamond", Georgia, serif;
 }
 [data-md-color-scheme="slate"] .md-typeset {
@@ -136,11 +145,19 @@
 }
 .md-typeset .il-gloss p:last-child { margin-bottom: 0; }
 .md-typeset .il-gloss p strong {
-  font: 700 0.82em/1 var(--il-display);
+  font: 700 0.8em/1 var(--il-caps);
   font-style: normal;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   color: var(--il-lapis);
 }
+/* a term that links to its source keeps the term's colour, underlined */
+.md-typeset .il-gloss p strong a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--il-lapis) 45%, transparent);
+  text-underline-offset: 2px;
+}
+.md-typeset .il-gloss p strong a:hover { color: var(--md-accent-fg-color); }
 @media screen and (max-width: 44.9375em) {
   .md-typeset .il-gloss { margin-left: 0.4em; }
 }
