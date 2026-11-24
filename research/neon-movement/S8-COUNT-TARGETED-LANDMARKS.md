@@ -38,8 +38,8 @@ At every level $j$, $Y_j \subset Y_{j-1}$ is a non-empty section of a single-cyc
 
 **`NEEDS M-21b` Pre-Registered Verdict:** **`6/6` admitted blocks pass `< 0.5%` of `n` (`0.068%–0.219%`, `10–20×` better than frequency-rank `1.3–1.9%`) -> MONODROMY's count-targeted prediction STANDS.**
 
-## 5. Referee Under $\Pi$
+## 5. Referee Under $\Pi$ (with `#26` accounting note)
 
 - **`Q`:** Does NOT fall below `h_1` (raw `Q = 1.033–1.165 n`; `ORTH-BIDIR` cuts total `Q` by `2–3×` to `0.339–0.596 n` = `5.0–10.2 h_1`, dominated by thick-strip build + retained induction).
-- **`D`:** **Major find in `D`:** raw count-targeted induction achieves `D = 608–1,974` (`0.068–0.219%` of `n`) at `k = 3`, and `ORTH-BIDIR` pushes `D` to **`627–1,776`** (`0.070–0.197%` of `n`, up to **`1,435×`** depth collapse!) at `P = 4–6`.
-- **Verdict:** Confirms MONODROMY's `NEEDS M-21b` prediction cleanly on `6/6` blocks; a strong find in dependent depth `D`, not a cut in addressed accesses `Q`.
+- **`D`:** **Real find in `D`:** raw count-targeted induction achieves `D = 608–1,974` (`0.068–0.219%` of `n`) at `k = 3`, and `ORTH-BIDIR` pushes `D` to **`627–1,776`** (`0.070–0.197%` of `n`, up to **`1,435×`** depth collapse) at `P = 4–6`. **Caveat (`#26`):** `D` above counts the build rounds plus `|Y_k|` (matching MONODROMY 114 §6); unrolling the stored return chains (parallel prefix sum of chain lengths + scatter: `+O(log n)` parallel depth, or `+n` if unrolled serially) and the `L[LF^t]` label precompute (read from the return chains in level `j-1` during online execution) must be charged in a full end-to-end cost vector.
+- **Verdict:** Confirms MONODROMY's `NEEDS M-21b` prediction cleanly on `6/6` blocks; a solid find in dependent depth `D`, not a cut in addressed accesses `Q`.

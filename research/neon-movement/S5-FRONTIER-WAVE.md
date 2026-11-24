@@ -43,13 +43,12 @@ Script: [`s5_frontier_wave.py`](s5_frontier_wave.py); raw JSON: [`results_s5_fro
 
 *\*`synth-hex-iid-65536` has zero runs of width `\ge 16`, so `L_{\min} = 2` (width `\ge 2` runs as anchors) is reported.*
 
-## 5. Referee Verdict in `(Q, D, P, S)` under `Π`
+## 5. Referee Verdict in `(Q, D, P, S)` under `Π` (corrected per `#24`/`#26`)
 
+- **Total `D` vs wave `D_wave`:** `48\text{--}86` is the thin-wave phase depth `D_{\mathrm{wave}}` alone; gluing the `K_{\mathrm{exc}}` excursions is a dependent chain of length `K_{\mathrm{exc}}`, so **total dependent depth is `D_{\mathrm{tot}} = 14{,}865\text{--}44{,}055`** (from `results_s5_frontier_wave.json`), NOT `48\text{--}86`.
+- **Uncharged scatter and bitmap (`Q_{\mathrm{thin}} = 0` corrected):** `exc_words[eid].append(b)` performs `m` addressed stores (`Q_{\mathrm{scatter}} = m`) unless replaced by pointer-free radix sorting of `(eid, t, b)` triples (adding `+4` passes and `+3.2\text{--}7.2` `P_{\mathrm{bytes}}`). Probing the `n`-bit `is_thin` bitmap adds `\approx 0.125\,n` bytes per round (`6.4\text{--}11.1` extra `P_{\mathrm{bytes}}` across `51\text{--}89` rounds).
 - **Contraction on novel random hex vs Wikidata:**
-  - On **templated novel 40-hex (`synth-tmpl-hex-1000x40`)**, the `∂_thick`-wave collapses `Q_{\mathrm{tot}}` (INCLUDING thick-strip acquisition!) to **`0.058 h_1`** (`17\times` below `h_1`!) in `41` rounds (`d_{\max} = 41` = exact 40-hex SHA1 + delimiter!).
-  - On **all 6 admitted Wikidata blocks**, `p99 = 41\text{--}43` and `d_{\max} = 48\text{--}86`, cutting `Q_{\mathrm{run}}` to `K_{\mathrm{exc}} = 0.365\text{--}0.634\,h_1` with **`Q_{\text{thin-wave}} = 0`** and the lowest streamed byte volume of any `Q_{\mathrm{thin}} = 0` method (`P_{\mathrm{bytes}} = 19.6\text{--}75.0`, `S = 2.55\text{--}4.74\text{ MB}`)!
-  - On **pure unstructured novel hex (`r/n = 0.936`)**, `L_{\min} = 16` degenerates (`K_{\mathrm{exc}} = 1`) and `L_{\min} = 2` pays `P_{\mathrm{bytes}} = 464.4` (`24\times` higher than `block-0.L`), proving how strongly the `IN`-merge wave leverages scaffold sparsity `r/n \ll 1`.
-- **Where the cost goes under `Π`:**
-  - In **stream-wave mode**: `Q_{\mathrm{thin}} = 0` and `D_{\mathrm{thin}} = 0`, relocated into `P = 51\text{--}89` sweeps over `IN` (`> K = 2`), plus thick-strip acquisition `Q_{\mathrm{acq,strips}}` and excursion glue `Q_{\mathrm{run,exc}} = K_{\mathrm{exc}}`.
-  - In **probe-wave mode** (`P = 3`): `Q = Q_{\mathrm{acq,strips}} + m + K_{\mathrm{exc}}`, but thin-wave dependent depth collapses from `m` (`88\text{--}202\text{k}`) to **`d_{\max} = 48\text{--}86`** (`> 1{,}000\times` reduction!) with strictly ascending-row accesses in every round.
-- **Verdict:** Among all `Q_{\mathrm{thin}} = 0` senses, `∂_thick`-Wave achieves the **lowest byte volume (`19.6\text{--}75.0`) and lowest memory (`2.55\text{--}4.74\text{ MB}`)** on real Wikidata blocks, while cleanly confirming `P = d_{\max} > K = 2` under `Π`'s strict pass budget.
+  - On **templated novel 40-hex (`synth-tmpl-hex-1000x40`)**, `K_{\mathrm{exc}} = 2{,}001` (`0.050\,h_1`) and `d_{\max} = 41` (`Q_{\mathrm{acq,strips}} + K_{\mathrm{exc}} = 0.058\,h_1`, plus `Q_{\mathrm{scatter}} = m` or word-sort passes).
+  - On **all 6 admitted Wikidata blocks**, `K_{\mathrm{exc}} = 0.365\text{--}0.634\,h_1`, `D_{\mathrm{wave}} = 48\text{--}86`, `D_{\mathrm{tot}} = 14.9\text{k--}44.1\text{k}`, `P = 51\text{--}89 > K = 2`, wave `P_{\mathrm{bytes}} = 19.6\text{--}75.0` (plus bitmap and word-sort passes).
+  - On **pure unstructured novel hex (`r/n = 0.936`)**, `L_{\min} = 16` degenerates (`K_{\mathrm{exc}} = 1`) and `L_{\min} = 2` pays `P_{\mathrm{bytes}} = 464.4`.
+- **Verdict:** `M-21`-style stream wave with `Y = \partial_{\mathrm{thick}}`; total `D` is `14.9\text{k--}44.1\text{k}` and pointer-free operation requires `P \gg K = 2` plus word-sort and bitmap traffic.
