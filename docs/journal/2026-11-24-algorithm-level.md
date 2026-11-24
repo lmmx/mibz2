@@ -1280,7 +1280,7 @@ Wall-time ratios against A, with 95% intervals:
 - **Verdict by the registered rule: INTERACTION.**
 - **What it means:**
   - At 1 and 6 workers, emission is the lever and the scanner barely matters.
-  - At 10 workers the serial scanner (Huffman/MTF front end) is the binding constraint. Removing it alone saves 19%.
+  - At 10 workers the serial scanner, which reads the bits and decodes the Huffman codes, is the binding constraint. *(Corrected by the writer: the workers do MTF/RLE2, the inversion and emission.)* Removing it alone saves 19%.
   - With the scanner removed, supplied codes save a further 8% (D/C 0.920). §30 saw nothing from them because the scanner hid it.
   - So the 10-worker null in §30 was masked, as ChatGPT Pro (§42) suggested. An algorithm that changes **both** the scanner's work and emission has up to about 26% of whole-decoder time on the table at 10 workers.
 - **Caveats:**

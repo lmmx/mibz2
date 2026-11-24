@@ -10,7 +10,7 @@
 
 When mibz2 decompresses a file, two kinds of work happen:
 
-1. **The doorman** (the "scanner"). There's one of him. He opens each compressed parcel and unpacks it into a pile of raw pieces: he reads the compressed bits and undoes the first couple of encoding layers. He works **alone and in order**, one parcel after another.
+1. **The doorman** (the "scanner"). There's one of him. He opens each compressed parcel and unpacks it into a pile of raw pieces: he reads the compressed bits and decodes the Huffman codes. *(Corrected: the move-to-front and run-length layers are undone by the workers, not the doorman.)* He works **alone and in order**, one parcel after another.
 2. **The assemblers** (the "workers"). There can be 1, 6 or 10 of them, working in parallel. Each takes an unpacked pile and rebuilds the original text from it. This is the "undo the scramble" step we've spent weeks on.
 
 ### What we tested
@@ -37,11 +37,11 @@ Each figure is whole-decompressor time against today's decoder; lower is better,
 **With 1 or 6 assemblers,** the assemblers are the slow part, so the instruction sheet (B) saves about 15%. Removing the doorman's work (C) does almost nothing, because he keeps up easily.
 
 **With 10 assemblers,** it flips:
-- The instruction sheet (B) does **nothing**. That's the result we got last week, which made it look as if there was "no room to improve at 10 workers".
+- The instruction sheet (B) does **nothing**. That's the result of the first supplied-codes test (§30, earlier the same day; *corrected from "last week"*), which made it look as if there was "no room to improve at 10 workers".
 - Removing the doorman's work (C) saves **19%**. With ten fast assemblers, everyone is waiting at the door. The doorman is the bottleneck.
 - **Both together (D) save 26%.** Once the doorman isn't holding things up, the assemblers' instruction sheet suddenly matters again.
 
-So last week's "no gain at 10 workers" was an illusion. The doorman was hiding the assemblers' savings: speeding up the assemblers can't help if they're all standing at the door waiting. That's what "interaction" means here: the two fixes are worth more together than either looked alone.
+So the earlier "no gain at 10 workers" was an illusion. The doorman was hiding the assemblers' savings: speeding up the assemblers can't help if they're all standing at the door waiting. That's what "interaction" means here: the two fixes are worth more together than either looked alone.
 
 ### Why it matters
 
