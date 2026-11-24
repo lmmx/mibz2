@@ -748,3 +748,42 @@ Louis relayed MONODROMY's session summary of record 98. It adds, in plain terms:
   escapes."
 
 **Still Louis's to fix:** the pass budget K, the family of blocks, and the utility thresholds.
+
+## 22. Louis: two work streams, random and non-random, and the step change as the challenge
+
+> "I think we don't want to limit ourselves as well with the random element, the non-random element.
+> Well, I mean, we probably want to separate those two, don't we, into two separate work streams, and
+> establish what can be shown for each of them, best case and worst case. But then together we want
+> the whole thing to work well, don't we? So this is part of the task and part of the formulation. But
+> if we need to, establish a direction by kind of not considering one part and then bringing it in,
+> and that is of course an appropriate way to work. But at the end of the day, we do need to establish
+> an application in the real world, of course. But like I say, we have this example of the traversal
+> to Rauzy–Veech induction step change, which is what we want to formalize as something we want to
+> do, right? And that's hopefully what we're moving towards, and hopefully what MONODROMY has helped
+> us formalize as a task, a challenge."
+
+**The Coordinator's answer.**
+- **The split is by row, and it composes.** Blocks mix both kinds of content, and the width-1 count
+  splits with them: h₁ = h₁(random) + h₁(non-random). The whole-block target (c₁ < h₁) is met if the
+  non-random stream gets below its share while the random stream holds at its own, so the streams
+  can be worked separately and their results add up.
+
+| | Stream N: non-random (repeated hashes, numbers, copied text) | Stream R: random (the GUIDs) |
+|---|---|---|
+| Where it stands | record 98's one open cell (E2: positions by a global, non-rigid procedure within K passes) | conjectured closed (no O(1)-pass decoder) |
+| Best case | a construction whose cost scales with something small on real data (the Rauzy–Veech pattern again) | the conjecture fails, or a cheap format-level change works |
+| Worst case | an obstruction proved here too | the conjecture proved: a floor for random content; only a format change helps |
+| Share of the prize | about a third to a half of width-1 work (GUIDs own 54–67% of width-1 rows) | the rest |
+
+  Working one stream while setting the other aside is a legitimate way to find a direction, with
+  the combination checked at the end on whole real blocks.
+- **The step change, formalised as the challenge.** The traversal → Rauzy–Veech step was (1) a change
+  of class, a different proof of inversion; (2) a cost that scales with a different parameter, small
+  on real data (dependent steps from n to about n/9 on Wikidata); (3) a result that held on real
+  blocks and became the new best. The challenge is to do it again: leave the class 𝓡 (which now
+  contains the walk and Rauzy–Veech alike), with cost scaling with a parameter small on Wikidata's
+  blocks (below h₁, within K passes), holding on real blocks against master, worked as two streams
+  whose best and worst cases are partial or definitive answers. Those three conditions are the "yes"
+  of FRONTIER's draft target (PR #816).
+- **Remaining for the formulation:** K and the family 𝓕 (Louis's), and writing the two-stream split
+  into the target section, offered as a draft for Louis to edit.
