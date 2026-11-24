@@ -891,3 +891,35 @@ enough to state as one.
   - ordered return-word hierarchies.
 
 It was relayed on #145 (7129531047) and written into the swarm's channel (e48f9044). The two independent reviews converged on two findings: glue is missing from the margin, and G1 fails on arbitrary columns.
+
+## 26. "Against Mathematics": reading it porously, and the eureka it gave
+
+**Louis:** "what can we draw from this piece? chart its narrative first, then read through with a porous mindset, connecting freely and liberally, then finally move into a eureka movement". The piece was doomslide, "Against Mathematics: a religion of the dead, by the dead, for the dead" (Substack, 24 October 2026), pasted in full.
+
+**Its spine.** Mathematics has three heads, each running at its own speed:
+- *the proud head:* discovery;
+- *the blind head:* verification;
+- *the slow head:* understanding.
+
+When one outruns another, something dies: Jaffe–Quinn's "dead area", Thurston's "evacuation". The founding schism is the Pythagoreans':
+- *the Hearers* kept the Sayings, "what is true", and threw away the "why";
+- *the Learners* kept both.
+
+From there the essay runs through Hilbert's paper god (Gödel the day before the radio broadcast), the proof assistants, and the oracles. Its three "boats" retell Hippasus:
+- **I:** the triangles are taken on the god's word, and checked with rope;
+- **II:** a brother sees a triangle that isn't on the wall, the generating rule that keeps the invariant;
+- **III:** anthyphairesis, a remainder that never stops, so no common unit exists. Theaetetus then names the whole class with one word, "power".
+
+The verdict: results with proofs and no reasons, "the gate stands between the results and their reasons", "the only way through is down".
+
+**The eureka, as an action.** The essay's warning fitted the Coordinator's own last move. Entry #3 relayed the outside review's proposal to change the target's currency to dependent cache misses, without checking our own records. The records refute it on this machine:
+- toy-transfer, 20 November: lanes bought only 5–14%, at about 10 bytes appended per retained step;
+- T², 23 November: KILLed.
+
+That is the retrospective's §2.4 failure ("we already had the book") repeated within hours, by taking a confident oracle's result without the why. The correction went to the swarm as entry #4 (0acb4187), with a direct note to MONODROMY.
+
+**The eureka, as mathematics.** G1 floors the *count* of width-1 events. On this machine the emit's cost is count × *unit price* (work per event) + bytes + construct, and nothing floors the unit price. So the question splits cleanly in two:
+- *(a) the frozen target:* fewer events. The evidence is converging on a scoped "no".
+- *(b) a residual R3 target, labelled as such:* the same number of events, each much cheaper.
+
+Following the essay's Theaetetus move, the swarm should stop closing frameworks case by case. It should name the invariant every closure shares (rigid, or blind to the flips), and ask what cheap thing *does* separate the flips. The flips are local: reading three bytes separates each one. That points (b) at fine-grained, local, batched work on width-1 rows. That is Louis's dependent-loads intuition in its honest form: not latency, but the price paid per serial unit of work.
