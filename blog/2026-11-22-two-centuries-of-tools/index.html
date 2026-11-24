@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94d79f277d72">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=ac1edca41e5d">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=94d79f277d72">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3112,18 +3112,18 @@
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>The claimed proof of the Riemann Hypothesis announced on 20 November draws on a wide toolkit. An independent map of it lists about fifty established techniques, from Parseval's identity in 1799 to the Gan–Gross–Prasad conjectures in 2012. They come from nine branches of mathematics, and twenty-one of them predate 1950. Exactly one entry is marked as the claimed new mechanism. The argument's weight is not where its code is either. Analytic number theory takes 1.4% of the formal proof's lines but an estimated 11% of the argument.</p>
+<p>The claimed proof of the Riemann Hypothesis announced on 20 November draws on a wide toolkit. An independent map of it lists about fifty established techniques, from Parseval's identity in 1799 to the Gan–Gross–Prasad conjectures in 2012. They come from nine branches of mathematics, and twenty-one of them predate 1950; exactly one entry is marked as the claimed new mechanism. Nor is the argument's weight where its code is: analytic number theory takes 1.4% of the formal proof's lines but an estimated 11% of the argument.</p>
 <p>mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against <em>recency bias</em>, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.</p>
-<p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a><sup id="fnref:lean"><a class="footnote-ref" href="#fn:lean">2</a></sup>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a><sup id="fnref:tao"><a class="footnote-ref" href="#fn:tao">3</a></sup>). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.</p>
+<p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a><sup id="fnref:lean"><a class="footnote-ref" href="#fn:lean">2</a></sup>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a><sup id="fnref:tao"><a class="footnote-ref" href="#fn:tao">3</a></sup>). The figures below come from readings of the proof, not verifications of it, and our own change of method has no results yet.</p>
 <aside class="il-gloss">
 <p><strong>Mathlib</strong> is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.</p>
 </aside>
 <p><strong>The takeaways:</strong></p>
 <ul>
-<li><strong>One new mechanism, about fifty old ones.</strong> The proof composes one new idea with established results from two centuries of mathematics. Two fifths of those results predate 1950.</li>
-<li><strong>Where the code is, the argument often isn't.</strong> Most of the formal proof's lines build infrastructure. Some of the branches that carry the argument hold a small share of the code.</li>
+<li><strong>One new mechanism, about fifty old ones.</strong> The proof composes one new idea with established results from two centuries of mathematics, two fifths of which predate 1950.</li>
+<li><strong>Where the code is, the argument often isn't.</strong> Most of the formal proof's lines build infrastructure. Some of the branches on which the argument rests hold a small share of the code.</li>
 <li><strong>Recency bias is a risk for a search like ours.</strong> Our teams now search classical mathematics as deliberately as modern, and record the era of every tool a chain uses.</li>
-<li><strong>A broad toolkit needs a way to be used.</strong> The proof's route transplants a solved case, Stepanov's proof for curves over finite fields, step by step. Each step that fails over the integers says which tool to fetch. We use the same mechanism to say where each old tool enters our problem.</li>
+<li><strong>A broad toolkit needs a way to be used.</strong> The proof's route transplants a solved case, Stepanov's proof for curves over finite fields, step by step. Each step that fails over the integers says which tool to fetch, and we use the same mechanism to say where each old tool enters our problem.</li>
 </ul>
 <p><a href="../2026-11-21-besieging-hard-problems/">Our earlier post</a> and our <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">research journal</a> set out the proof's shape as twelve levers. This post is about its toolkit.</p>
 <h2 id="1-what-is-in-the-proofs-toolkit">1. What is in the proof's toolkit?<a class="headerlink" href="#1-what-is-in-the-proofs-toolkit" title="Permanent link">&para;</a></h2>
@@ -3135,7 +3135,7 @@
 <figcaption>Data from Weiss's anatomy (timeline table), redrawn; years mark an idea's first appearance, and the form used is usually later. Highlighted: the solved case, RH for curves over finite fields (1948); the method transplanted from it, Stepanov's (1969); and the claimed new mechanism (2026). The Riemann Hypothesis itself (posed 1859) and Lean 4 (2021) are not counted as techniques.</figcaption>
 </figure>
 
-<p>The oldest are Parseval's identity (1799) and Gauss sums (1801). Theta functions date from 1829 and complex multiplication from 1857. The Siegel mass formula is from 1935. These are not decorations: Weiss's outline assigns each to a step of the argument. The newest established result is from 2012, so the proof's single new idea sits on top of a stack that took two centuries to build.</p>
+<p>The oldest are Parseval's identity (1799) and Gauss sums (1801); theta functions date from 1829, complex multiplication from 1857 and the Siegel mass formula from 1935. These are not decorations: Weiss's outline assigns each to a step of the argument. The newest established result is from 2012, so the proof's single new idea sits on top of a stack that took two centuries to build.</p>
 <h2 id="2-where-is-the-argument-and-where-is-the-code">2. Where is the argument, and where is the code?<a class="headerlink" href="#2-where-is-the-argument-and-where-is-the-code" title="Permanent link">&para;</a></h2>
 <p>Weiss also compares each branch's share of the Lean code's lines with its estimated importance to the argument.</p>
 <figure class="bf-fig" id="code-vs-argument">
@@ -3144,11 +3144,11 @@
 <figcaption>Data from Weiss's anatomy, redrawn. Code shares are measured by scanning names in the Lean files as text; treat anything under about 7% as rough. Importance is an AI-assisted judgement with a range of several points either way.</figcaption>
 </figure>
 
-<p>Abelian varieties and schemes take 24% of the code but an estimated 6% of the importance. Analytic number theory takes 1.4% of the code and an estimated 11%; Iwasawa theory takes 5% and an estimated 12%. The code is mostly infrastructure: foundations that Mathlib lacks, built so that a small core can carry the argument.</p>
-<p>For a search, this says how to judge a chain of results: by the step it carries, not by how much scaffolding it needs. A classical theorem that settles one step in a page can matter more than a modern framework that needs thousands of lines to set up.</p>
+<p>Abelian varieties and schemes take 24% of the code but an estimated 6% of the importance. Analytic number theory takes 1.4% of the code and an estimated 11%; Iwasawa theory takes 5% and an estimated 12%. The code is mostly infrastructure: foundations that Mathlib lacks, built so that a small core can make the argument.</p>
+<p>For a search, this says how to judge a chain of results: by the step it settles, not by how much scaffolding it needs. A classical theorem that settles one step in a page can matter more than a modern framework that needs thousands of lines to set up.</p>
 <h2 id="3-why-would-a-search-drift-toward-the-recent">3. Why would a search drift toward the recent?<a class="headerlink" href="#3-why-would-a-search-drift-toward-the-recent" title="Permanent link">&para;</a></h2>
 <p>A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.</p>
-<p>Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. A quota over subject areas says nothing about era. A team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.</p>
+<p>Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. Yet a quota over subject areas says nothing about era: a team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.</p>
 <p>The proof's toolkit suggests a different guard. Our team instructions now ask each research chain to:</p>
 <ul>
 <li>mine classical mathematics as hard as modern, from the nineteenth century on;</li>
@@ -3169,12 +3169,12 @@
 <ul>
 <li><strong>Combinatorics on words.</strong> Christoffel words (1875) and Sturmian sequences (Morse and Hedlund, 1940) give the two-letter blocks whose inversion is pure arithmetic. The Chen–Fox–Lyndon factorisation (1958) underlies the bijective BWT.</li>
 <li><strong>Continued fractions and the Euclidean algorithm.</strong> On a two-letter Sturmian block, Rauzy induction <em>is</em> the Euclidean algorithm, and the block has a grammar of size O(log n).</li>
-<li><strong>Interval exchanges and rotations.</strong> LF is an interval exchange. Keane's work (1975), Rauzy's induction (1979) and Veech's (1982) gave our <a href="../2026-11-10-rauzy-veech-reconstruction/">Rauzy–Veech reconstruction</a>.</li>
-<li><strong>Nineteenth-century permutation theory.</strong> LF is one permutation of a block's rows, and its cycle structure is the classical object. This is the area our teams have used least.</li>
+<li><strong>Interval exchanges and rotations.</strong> LF is an interval exchange, and Keane's work (1975), Rauzy's induction (1979) and Veech's (1982) gave our <a href="../2026-11-10-rauzy-veech-reconstruction/">Rauzy–Veech reconstruction</a>.</li>
+<li><strong>Nineteenth-century permutation theory.</strong> LF is one permutation of a block's rows, and its cycle structure is the classical object, yet this is the area our teams have used least.</li>
 </ul>
 <p>The later tools in the figure, recompression (Jeż, 2015) and string attractors (Kempa and Prezza, 2018), are useful, but a search that reaches only for them is the bias in action.</p>
 <h2 id="5-how-does-a-broad-toolkit-get-used-well">5. How does a broad toolkit get used well?<a class="headerlink" href="#5-how-does-a-broad-toolkit-get-used-well" title="Permanent link">&para;</a></h2>
-<p>Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An <a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">illustrated guide</a><sup id="fnref:guide"><a class="footnote-ref" href="#fn:guide">4</a></sup> to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:</p>
+<p>Breadth alone does not say where a tool enters. In the proof, the mechanism that decides it is a transplant of Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields, which works with an auxiliary function that vanishes to high order. An <a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">illustrated guide</a><sup id="fnref:guide"><a class="footnote-ref" href="#fn:guide">4</a></sup> to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:</p>
 <figure class="bf-fig" id="stepanov">
 <p class="bf-title">The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers</p>
 <svg viewBox="0 0 720 298" role="img" aria-label="Stepanov's proof for curves over a finite field, row by row, and its substitute over the integers: vanishing to order m becomes divisibility of an m-fold iterated theta lift, from automorphic forms; counting degrees becomes Bost's slope inequality, from Arakelov geometry; finite extensions become layers of a cyclotomic tower, from Iwasawa theory; upper bounds suffice becomes a localized Landau theorem."><defs><marker id="si-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--bf-muted)"/></marker></defs><text x="110" y="22" class="bf-ts" text-anchor="middle">Stepanov, curves over 𝔽</text><text x="395" y="22" class="bf-ts" text-anchor="middle">the proof, over ℤ</text><text x="625" y="22" class="bf-ts" text-anchor="middle">tools from</text><rect x="10" y="38" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="69" class="bf-t" text-anchor="middle" style="font-size:12.5px">vanishing to order m</text><line x1="212" y1="64" x2="268" y2="64" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="38" width="250" height="52" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:2"/><text x="395" y="61" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">divisibility of an m-fold</text><text x="395" y="78" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">iterated theta lift</text><line x1="522" y1="64" x2="540" y2="64" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="61" class="bf-tm" text-anchor="middle" style="font-size:11.5px">theta lifts on unitary</text><text x="625" y="78" class="bf-tm" text-anchor="middle" style="font-size:11.5px">groups (automorphic forms)</text><rect x="10" y="102" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="133" class="bf-t" text-anchor="middle" style="font-size:12.5px">counting degrees</text><line x1="212" y1="128" x2="268" y2="128" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="102" width="250" height="52" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:2"/><text x="395" y="133" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">Bost’s slope inequality</text><line x1="522" y1="128" x2="540" y2="128" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="125" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Arakelov geometry,</text><text x="625" y="142" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Euclidean lattices</text><rect x="10" y="166" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="197" class="bf-t" text-anchor="middle" style="font-size:12.5px">finite extensions of 𝔽</text><line x1="212" y1="192" x2="268" y2="192" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="166" width="250" height="52" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:2"/><text x="395" y="189" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">layers of a cyclotomic</text><text x="395" y="206" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">tower of fields</text><line x1="522" y1="192" x2="540" y2="192" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="189" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Iwasawa theory,</text><text x="625" y="206" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Ferrero–Washington</text><rect x="10" y="230" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="261" class="bf-t" text-anchor="middle" style="font-size:12.5px">“upper bounds suffice”</text><line x1="212" y1="256" x2="268" y2="256" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="230" width="250" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:2"/><text x="395" y="253" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">a localized theorem</text><text x="395" y="270" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">of Landau type</text><line x1="522" y1="256" x2="540" y2="256" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="261" class="bf-tm" text-anchor="middle" style="font-size:11.5px">analytic number theory</text></svg>
@@ -3186,7 +3186,7 @@
 <aside class="il-gloss">
 <p><strong>Iwasawa theory</strong> follows the arithmetic of a number field up an infinite tower of extensions, each of degree p over the last, and finds that it grows in a regular pattern. Ferrero and Washington proved in 1979 that for the towers built from roots of unity over abelian fields, one constant of that pattern, μ, is zero.</p>
 </aside>
-<p>We use the same mechanism. Each research chain starts from a <em>solved case</em>, a kind of block whose inversion is cheap:</p>
+<p>We use the same mechanism, in which each research chain starts from a <em>solved case</em>, a kind of block whose inversion is cheap:</p>
 <ul>
 <li>a perfectly clustering block, one run per letter;</li>
 <li>a two-letter Sturmian block;</li>
@@ -3200,10 +3200,10 @@
 <figcaption>Failure rates measured on six Wikidata blocks (working-backwards journal, cost map); the classes are regex approximations and "thin" is a run-width proxy. The right-hand column is what the search is for: open questions, not results.</figcaption>
 </figure>
 
-<p>The economics are unchanged. Our charter's rule of <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">mathematical maximalism</a> holds: unlimited ambition in the mathematics that discovers a decoder, strict economy in the decoder that runs. A chain whose substitutes hold but don't yet pay goes to the <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/FRONTIER.md#foundational">Foundational list</a>. Native timing on our test machine, an i9-10900K, is the final word.</p>
+<p>The economics are unchanged, since our charter's rule of <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">mathematical maximalism</a> still holds: unlimited ambition in the mathematics that discovers a decoder, strict economy in the decoder that runs. A chain whose substitutes hold but don't yet pay goes to the <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/FRONTIER.md#foundational">Foundational list</a>, and native timing on our test machine, an i9-10900K, is the final word.</p>
 <h2 id="6-what-happens-next">6. What happens next?<a class="headerlink" href="#6-what-happens-next" title="Permanent link">&para;</a></h2>
 <p>The breadth-oriented team, <a class="il-ref" href="https://github.com/lmmx/mibz2/blob/110eccb96/docs/team/research-charter/launches/2026-11-20-carbon-kitchen-sink.md">Kitchen Sink</a>, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">its first round</a> has been audited. Neither has a result from the new method yet.</p>
-<p>The first thing to report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps carry the argument. If our chains turn out to draw only on the last thirty years, that will be a finding too.</p>
+<p>The first report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps the argument rests on. If our chains turn out to draw only on the last thirty years, that will be a finding too.</p>
 <p><strong>Research records:</strong>
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">the twelve levers</a>;
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md">working backwards and the cost map</a>;
@@ -3398,19 +3398,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/bench.js?v=94d79f277d72"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/couriers.js?v=94d79f277d72"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/blog.js?v=94d79f277d72"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/frontier.js?v=94d79f277d72"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/observatory.js?v=94d79f277d72"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=ac1edca41e5d"></script>
+        <script src="../../assets/javascripts/katex.js?v=94d79f277d72"></script>
       
     
   </body>
