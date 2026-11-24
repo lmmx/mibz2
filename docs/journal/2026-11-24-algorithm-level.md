@@ -625,3 +625,30 @@ three points:
 The thresholds for the first two are set before the data and are Louis's to fix with the
 formulation. The same condition was sent to MONODROMY (CORRECTION 7128643478), asking it to mark
 which backward chains could clear utility on Wikidata's measured structure.
+
+## 18. Louis: in hindsight, Rauzy–Veech was always going to be cost-viable
+
+> "We'll see, that's exactly the thing I'm talking about. As well as that, there's the cost aspect.
+> Like, I think in hindsight we could see that Rauzy–Veech induction would always be like cost viable
+> as opposed to the traversal, right?"
+
+**The Coordinator's answer: yes, and the signal generalises.** The traversal pays one dependent,
+cache-missing load per output byte, about n (around 900,000) a block. Induction made the cost scale
+with the block's *structure*, its runs and then a walk over only the retained rows, and that
+structure is small on real blocks: the census (#805) gives a mean maximal run of about 16 rows (about
+n/16 runs) and a median m/n of 0.114 (about n/9 dependent steps, each copying about ten bytes). That
+was knowable before building, by counting runs on real blocks.
+
+**The general test:** a structural step is cost-viable when its cost scales with a *different*
+parameter, *measured small on real inputs*: the cost theorems' "the form changes" (PROOF-PROGRAMME
+§5.9) joined to the census. For any candidate: what does its cost scale with, and is that much smaller
+than h₁ on Wikidata's blocks? If not, it may be beautiful and will not pay — Louis's utility condition
+(§17), made predictive.
+
+**What it points at for the next step.** Below h₁, the remaining expensive work is concentrated in
+the width-1 runs, mostly random identifiers (h₁/m a median 0.39). A new algorithm must scale with
+something much smaller than their count: FRONTIER's toy-transfer note already pointed at acting on
+those runs collectively, through what they share (format, alphabet), not one by one. Whether such a
+quantity is small on real blocks is now a measurable question, to be asked of every candidate.
+
+Added to FRONTIER.md's target as "the viability check" (PR #816).
