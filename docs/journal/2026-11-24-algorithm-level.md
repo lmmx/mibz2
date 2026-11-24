@@ -1034,3 +1034,28 @@ Louis approved commissioning the outside review's proposed experiment. The recip
 **Also decided:**
 - The retrospective's §2.4 gets a dated correction (#824).
 - The 10-worker bound diagnostic is deferred.
+
+## 32. Back to the original intent: construction, and a rubric fixed before the output
+
+**Louis:** "all this work … from the Mario thing to the Doom slide piece … was all meant to reframe the entire effort towards asking a question that was sufficiently powerful to unlock something that would give us an entirely new basis for the BWT inversion rather than an incremental gain." Then: "it's no longer a matter of asking the models to formulate the problem, but rather to begin taking a pop at solving it in this kind of proof formalized way … lower the floor more accurately than raise the ceiling."
+
+**The Coordinator's diagnosis.** The reframing was used to *police* candidates (fourteen screens, lower bounds, a rigorous target), never to *generate* them. Record 108 then showed that the frozen binary target can't tell discovery from bookkeeping. Channel entries #13 and #14 redirect both agents to construction, with three conditions for a new basis, modelled on walk → Rauzy–Veech:
+1. a new object, not rows and not intervals of rows;
+2. a cost law in a parameter that is small where runs fail;
+3. acquisition from the run records without an LF walk.
+
+**The plan, as Louis set it.**
+- Two Antigravity chats run to completion: the Neon-role and Carbon-role prompts, both on the Gemini 4 Carbon model.
+- The Coordinator critiques their output against the rubric below.
+- A fresh pass on the Gemini 4 Neon model is then built from that critique. It avoids what Carbon reproduced, and attempts a proof-formalised construction from a different direction.
+
+**The rubric (fixed before any output).** For each candidate, mark each criterion met, partial or not, with evidence:
+- **R1 New object.** The decoder acts on something other than rows or intervals of rows, and the object is defined exactly.
+- **R2 A new cost parameter.** Its cost law is stated in a parameter that is small exactly where runs fail (novel random content), and the parameter is measured on the six blocks.
+- **R3 Acquisition without the old mechanism.** It is built from the BWT/run records in O(1) streaming passes, with no row-by-row LF walk hidden in the build. The instruction set is declared.
+- **R4 Floor lowered, not relocated.** Below G1's floor in a declared execution model, with no cost moved into an uncharged build pass (record 108's convention).
+- **R5 Proof form.** Stated as a theorem with premises, each marked proved, measured or open. A named near miss says exactly where its cost goes.
+- **R6 Not incremental.** Route class R2 (escape) or R3 (reframe), not R1 (reshaping inside 𝓡). It is not a restatement of the walk, Cells, Open, T², lanes or the frontier.
+- **R7 Utility.** A supplied-state payoff stated in whole-decoder terms, or an honest statement that none can yet be given.
+
+**Verdict.** "Starts to overthrow induction" means R1–R3 are met and R4 is at least partial. Anything less is reported as such, with what it would take to close the gap.
