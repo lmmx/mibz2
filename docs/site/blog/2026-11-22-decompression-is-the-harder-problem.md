@@ -1,7 +1,7 @@
 ---
 title: "Playing the hand you're dealt: in conversation with Thomas Murphy"
 image: assets/social/blog-2026-11-22-decompression-is-the-harder-problem.png
-description: "Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format."
+description: "A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "Thomas Murphy of Tropik and I talk about agent swarms, and why the
 
 # Playing the hand you're dealt: in conversation with Thomas Murphy
 
-Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
+A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
 {: .post-dek }
 
 22 November 2026 · 15 min read · Meta
