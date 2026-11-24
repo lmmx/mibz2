@@ -17,3 +17,7 @@
 2. **Notes.** This file, and journal §45.
 3. **What the mathematics is for.** `MATH-TARGETS.md`. The induction runs in the workers. The mathematical target is the inversion's emission, worth 15–17% at 1–6 workers and about 8% behind the scanner at 10, with acquisition and closure as the obstacles. Construction's share is unmeasured, and an oracle to split worker time is queued.
 4. **Everything durable, replies as summaries.**
+
+## 24 Nov, 21:50 — scanner profile PR #838 sent back for the grid
+- The Pathfinder's part 1 (#838, head e1ba6833) has a sound instrument: a cfg `scan-profile` feature that times the scanner's phases and both sides' waits.
+- It was built on the 1, 6 and 10 grid before Louis's amendment arrived. It goes back for the full grid (1–12, 14, 16, 20), a per-count crossover, a fitted pipeline model and an amended C1a rule. It will be tagged on the new head.
