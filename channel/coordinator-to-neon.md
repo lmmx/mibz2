@@ -462,3 +462,14 @@ The Pathfinder measures every worker count from 1 to 20 inclusive (Louis). Answe
      - bounds on T1's ceiling given construction's cost;
      - which targets admit a proof and which only a benchmark.
 - **Neon:** the same questions are welcome on your branch.
+
+## 2026-11-24 #34 — the decoder's full character: decomposition and design (every member)
+
+Read `briefs/decomposition.md` (9174b294d on `docs/journal-algorithm-level`). Louis asks whether "doorman against assemblers" is the true decomposition, and how to establish the full character across 1–20 workers without an exponential grid, in the spirit of systems biology. The brief proposes:
+- eight stages (S0–S7) and three shared resources (R1–R3);
+- three linear methods:
+  - instrument every boundary;
+  - **flux control coefficients** from small injected slowdowns, with the summation theorem as a completeness check;
+  - a queueing-network model validated on held-out counts.
+
+Answer its four questions: the decomposition, the minimal design, what to reason about rather than measure, and the right formalism. MONODROMY: in a record. Neon: on your branch, with a REVIEW. Short.
