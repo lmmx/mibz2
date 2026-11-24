@@ -1602,3 +1602,15 @@ The decisions are `briefs/character-review-decisions.md`:
   3. mechanism contrasts: gates, placement × clock, order, memory dose, oracles;
   4. about 20% reserved for held-out validation.
 - **One correction to the brief:** 1724 blocks are 431 distinct × 4; 932 take Open and 792 don't (Neon, from the four-arm rows). The scanner profile shows exactly 792 blocks under 10 kbit holding 0.1% of the bits, so the non-Open blocks are almost certainly the tiny ones.
+
+## 61. ChatGPT Pro's course mining, and the corrections it forced
+
+Recorded verbatim as `external/chatgpt-course-mining.md`. It answered independently, then compared with `leads/course-opportunities.md`. Its corrections were checked against the code (master 1c2ce5c0) and the arithmetic, and are accepted. They are listed at the top of the lead file, with the wrong lines struck or rewritten in place.
+
+- **§57 and §58 overstated one claim: "the Python default of 20 workers costs 20%".** The public API never runs 20 workers on this i9. A request for 10 or more threads, unpinned, builds 7 lazy workers with a 28-slot window (`StreamDecoder::new` → `trimmed_here`), the cap set by the recalibrations. The live question is 7 against 8 workers: 0.207 s against 0.191 s in the profile, 7.6% less wall for under 1% more CPU. It has to be confirmed through the public API, which keeps its output where the profile reused a buffer.
+- **The 0.109 s "machine bound" is a conditional scenario** resting on five unmeasured assumptions, and it is 0.568 of the best wall, not the other way round.
+- **The reader is not excluded,** only disfavoured. A reader slightly slower than the scanner can hide in a finite buffered run.
+- **Bottleneck migration:** a 5% cut in the scanner's Huffman demand at 8 workers already reaches the workers' limit. Scanner and worker improvements are priced together, with the count retuned: both cut 20% predicts 0.162 s at 8 workers.
+- **Variability and Little's law:** the mixture's C² is about 0.98, not 0.07. Worker service per block is unmeasured, and the window sizing confused service with residence.
+
+**Louis's caution, recorded:** the 7-worker cap was a temporary measure, because workers beyond about 7 bought nothing. It is a symptom of the scanner limit, not a reason to abandon ideas. Nothing that raises the ceiling is withdrawn: a cheaper or parallel scanner, worker mathematics, joint improvements. Raising the ceiling is what lets the cap lift. What falls is one claimed cheap win and the over-precise sizes.

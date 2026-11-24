@@ -6,6 +6,21 @@ The profile showed that a two-station model (one serial scanner feeding k worker
 
 All figures are from `scan-profile/run-20261124T223748Z` (i9-10900K, 10 cores, 20 threads, one corpus, unpinned) unless marked as a prediction or an estimate.
 
+## Corrections after ChatGPT Pro's independent reading (25 November)
+
+ChatGPT Pro answered the same question independently, then compared (`../external/chatgpt-course-mining.md`). Its corrections were checked against the code and the arithmetic, and are accepted. The struck or rewritten lines below follow them.
+
+1. **The public default doesn't run 20 workers.** On this i9, unpinned, a request for 10 or more threads builds 7 lazy workers with 28 slots (`StreamDecoder::new`, `trimmed_here`, checked at master 1c2ce5c0). That cap came from the recalibrations, which found extra workers bought nothing. The real default question is **7 against 8 workers**: 0.2069 s against 0.1911 s in the profile (7.6% less wall, 0.9% more CPU, 2.1% more own memory), to be confirmed through the public API, since the profile used explicit workers and a reused output buffer. The 20-against-8 comparison stands as a measurement of explicit workers only.
+2. **The machine bound was mis-stated.** The arithmetic (about 0.109 s) reproduces, but it is the best wall's 0.568, not "the best wall is 0.57 of the bound". More importantly, it rests on five unmeasured assumptions (comparable frequency, busy time as transferable demand, known sibling overlap, worker-worker sharing transferring to scanner-worker, no new costs). It is a **conditional capacity scenario for parallel scanning**, not a balanced-job bound and not "43% lost". ChatGPT's own idealised allocations: two scanners and eight workers about 0.172 s (−10%); perfectly flexible sharing about 0.156 s (−18%).
+3. **The reader isn't excluded.** "If the reader limited, the window would fill" is false for a finite buffered run. A reader 1% slower than the scanner accumulates about 18 blocks of lead, which fits under both gates. Argued, not proved: substantial reader backpressure is unlikely; a near co-bottleneck reader isn't excluded. Stage 1 now measures the reader's work and wait.
+4. **Bottleneck migration.** The scanner's clock does not pass 1:1 into the wall: at 8 workers a 5% cut in Huffman demand already reaches the workers' limit. Restoring 1.41 ns a symbol predicts 3.96% at 8 workers, not 7%. Scanner and worker improvements must be priced together, with the worker count retuned after either. Cutting both by 20% at 8 workers predicts 0.162 s (−15.7%). A 20% worker cut lets 6 workers match today's best.
+5. **Variability:** the tiny blocks make the whole mixture's C² about 0.98, not 0.07. And these are scanner-side figures: worker service per block was not measured, so they can't rule out worker-size-based policies. The size-based-scheduling exclusion below is withdrawn to "not supported yet".
+6. **Little's law:** 8–9 blocks used service demand, not residence time, and its boundary doesn't match issued − taken. W = 4k throughout the sweep, so memory growth can't be attributed to workers rather than slots. The window question needs a fixed-k window experiment (8 workers, windows 16 against 32).
+7. **Smaller corrections:** the decoder is a finite pipeline with feedback-controlled admission, not a closed system in which blocks circulate (a credit-token surrogate would be). Phase-type methods also cover low variability, so they are deferred, not ruled out. JSQ-d is not replication. The fit's 32 ms constant is not a fixed overhead, but its cause is unidentified.
+
+**What this does not abandon.** The 7-worker cap is a symptom of the scanner limit, not a reason to stop: the cap exists because workers past about 7 bought nothing, and raising the scanner's ceiling is exactly what would let it lift. Every ceiling-raising lead stands: a cheaper or parallel scanner, worker mathematics (which lowers the knee and buys the same speed with fewer cores), and joint improvements. What falls is one claimed cheap win (20 → 8) and the over-precise sizes.
+
+
 ## The measured inputs
 
 | quantity | value | where from |
@@ -18,7 +33,7 @@ All figures are from `scan-profile/run-20261124T223748Z` (i9-10900K, 10 cores, 2
 | efficiency against the busiest server | 0.945–0.998 | §57 |
 | blocks | 1724, of which 792 are tiny (under 10 kbit, 0.1% of the bits) | per-block records |
 | the 932 real blocks' variability | CV 0.25–0.29 in symbols, read and decode time (C² ≈ 0.07) | per-block records |
-| Python default k | `available_parallelism()` = 20 here | `src/python.rs` |
+| what the public API runs | ~~20 workers~~ **corrected:** asked for 10 or more threads, unpinned on this i9, `StreamDecoder::new` builds 7 lazy workers with a 28-slot window (`trimmed_here`; exactly 10 may build the service core instead). Python asks for `available_parallelism()` = 20 threads | `src/parallel.rs` `StreamDecoder::new`, `src/python.rs` |
 
 ## Opportunities, largest first
 
@@ -26,9 +41,9 @@ All figures are from `scan-profile/run-20261124T223748Z` (i9-10900K, 10 cores, 2
 
 **The tool.** The bottleneck law bounds throughput by the busiest server's demand. The balanced job bound adds the other side: total demand over total capacity. The decoder has been judged only against the first.
 
-**Applied.** Against the busiest server (the scanner), efficiency is 0.97: almost nothing to recover by scheduling. Against the whole machine it is not. The workers' total work rises from 1.43 s at k = 8 to 1.92 s at k = 20 because hyperthreads share cores. If that rise is all SMT sharing, a thread with a busy sibling runs at about 0.745 of a lone thread, so a core running two threads delivers about 1.49 lone-thread equivalents, and the machine about 14.9. Total demand is about 1.43 + 0.19 = 1.62 s, so the machine bound is about 1.62 / 14.9 ≈ 0.109 s. **Estimate:** the best wall, 0.191 s, is about 0.57 of the machine bound. The other 43% is lost because one server does all the scanning: it is the topology's, and no discipline reaches it.
+**Applied.** Against the busiest server (the scanner), efficiency is 0.97: almost nothing to recover by scheduling. Against the whole machine it is not. The workers' total work rises from 1.43 s at k = 8 to 1.92 s at k = 20 because hyperthreads share cores. If that rise is all SMT sharing, a thread with a busy sibling runs at about 0.745 of a lone thread, so a core running two threads delivers about 1.49 lone-thread equivalents, and the machine about 14.9. Total demand is about 1.43 + 0.19 = 1.62 s, so the pooled-work scenario is about 1.62 / 14.9 ≈ 0.109 s, which is 0.568 of the best wall. **Conjectured (corrected, see correction 2):** a conditional capacity scenario, resting on five unmeasured assumptions, not a bound.
 
-**Is the scanner really the limit above the knee?** The design review warns that a busy-time crossing alone doesn't show it: a slow consumer (the in-order reader) could control throughput instead. The profile has the evidence it asks for, in aggregate: at k = 10 the scanner works for 0.945 of the wall, its waits for admission (0.014) and input (0.007) are small, and 1.67 workers are idle on average. If the reader were the limit, the window would fill and the scanner would wait on admission; it doesn't. The per-interval version (workers empty *while* the scanner is producing) comes from stage 1's ordered trace.
+**Is the scanner really the limit above the knee?** The design review warns that a busy-time crossing alone doesn't show it: a slow consumer (the in-order reader) could control throughput instead. The profile has the evidence it asks for, in aggregate: at k = 10 the scanner works for 0.945 of the wall, its waits for admission (0.014) and input (0.007) are small, and 1.67 workers are idle on average. ~~If the reader were the limit, the window would fill and the scanner would wait on admission; it doesn't.~~ (Corrected, see correction 3: this disfavours substantial reader backpressure but doesn't exclude a near co-bottleneck reader.) The per-interval version (workers empty *while* the scanner is producing) comes from stage 1's ordered trace.
 
 **What it means.** This is the size of the prize for a parallel or cheaper scanner on this machine, and a cross-check on the four-arm test: arm C (the scanner's output supplied) ran at 0.806 of the shipped decoder at 10 workers, inside this bound.
 
@@ -40,7 +55,7 @@ All figures are from `scan-profile/run-20261124T223748Z` (i9-10900K, 10 cores, 2
 
 **The tool.** Provision servers for the offered load: R = w/s servers' worth here, plus a margin for variability (square-root staffing gives R + β√R; with C² ≈ 0.07 the margin is small).
 
-**Applied (measured).** R = 7.5. The Python binding's default is every logical CPU, 20 here. Against k = 8, k = 20 takes 0.230 s against 0.191 s (20% longer), 2.14 against 1.61 s of user CPU (+34%) and 74.8 against 54.1 MB of the decode's own peak memory (+38%). From k = 9 the extra workers add CPU and memory and no speed; from k = 16 they slow the scanner (opportunity 3).
+**Applied (measured, explicit workers; see correction 1 for what the public API runs).** R = 7.5. With 20 explicit workers, Against k = 8, k = 20 takes 0.230 s against 0.191 s (20% longer), 2.14 against 1.61 s of user CPU (+34%) and 74.8 against 54.1 MB of the decode's own peak memory (+38%). From k = 9 the extra workers add CPU and memory and no speed; from k = 16 they slow the scanner (opportunity 3).
 
 **What it needs.** R depends on the data, so a fixed cap is a stopgap. Both s and w are linear in a block's symbols with a small per-block term (the scan fit gives 1.5 ns a symbol), so R can be estimated online from the first few blocks' free counters and the workers' busy times: a renewal-reward estimate (Harchol-Balter ch. 23), time-average rate = E[work a block] / E[time a block].
 
@@ -54,7 +69,7 @@ All figures are from `scan-profile/run-20261124T223748Z` (i9-10900K, 10 cores, 2
 - its decode costs 1.41 ns a symbol at k = 1 and 1.51 ns at k ≥ 3 (7% slower);
 - at k ≥ 16 its work rises 23%, with the wall following.
 
-The i9-10900K's all-core turbo is lower than its single-core and favoured-core turbo (Turbo Boost Max 3.0 picks two favoured cores). **Hypothesis:** pinning the scanner to a favoured core, with its SMT sibling kept free, recovers most of both: about 7% on the plateau and the whole 20% step at k ≥ 16.
+The i9-10900K's all-core turbo is lower than its single-core and favoured-core turbo (Turbo Boost Max 3.0 picks two favoured cores). **Hypothesis:** pinning the scanner to a favoured core, with its SMT sibling kept free, recovers most of both: about 4% on the plateau at 8 workers (corrected from 7% for bottleneck migration, correction 4) and the 20% step at k ≥ 16.
 
 **Test.** A pinned variant of the scanner profile at k ∈ {8, 10, 16, 20}: scanner on a favoured core with its sibling idle, against unpinned. Cheap, and it decides the hypothesis before any production code. **As the design review requires,** it records each role's CPU, core and sibling, and the achieved frequency, temperature and throttling status with every timing, because placement also changes cache sharing, and SMT sharing and frequency droop must be separated by a placement × verified-frequency contrast, not assumed.
 
@@ -72,9 +87,9 @@ The i9-10900K's all-core turbo is lower than its single-core and favoured-core t
 
 **The tool.** N = X·R: the work in flight needed to keep a server busy is its throughput times the residence time.
 
-**Applied.** At the best point X ≈ 1724 / 0.191 ≈ 9000 blocks a second, and a block resides about s + w ≈ 0.9 ms before it can be read, so about 8–9 blocks in flight keep the scanner busy. The window is 4k slots: 32 at k = 8, 80 at k = 20. Slot waits are already near zero on the plateau, so the window is not binding there. Memory grows about 2.4 MB a worker, not a slot (the 12 MiB ready cap bounds the slots' share), so opportunity 2 is the memory lever; this one matters only if the window's memory becomes significant.
+**Applied.** At the best point X ≈ 1724 / 0.191 ≈ 9000 blocks a second, and a block resides about s + w ≈ 0.9 ms before it can be read, so about 8–9 blocks in flight keep the scanner busy (~~withdrawn~~: service demand is not residence time; correction 6). The window is 4k slots: 32 at k = 8, 80 at k = 20. Slot waits are already near zero on the plateau, so the window is not binding there. Memory grows about 2.4 MB a worker, not a slot (the 12 MiB ready cap bounds the slots' share), so opportunity 2 is the memory lever; this one matters only if the window's memory becomes significant.
 
-**Classes.** 46% of the blocks are tiny (opportunity 6), and a slot holds a block whatever its size, so the window measured in work is about half its nominal size. Work-based admission (from `queueing-discipline.md`) fixes that if it ever binds.
+**Classes.** 46% of the blocks are tiny (opportunity 6). ~~So the window measured in work is about half its nominal size~~ (withdrawn: occupancy is residence-weighted; correction 6). Work-based admission (from `queueing-discipline.md`) fixes that if it ever binds.
 
 ### 6. Workload characterisation and representativeness (Jain ch. 4–6; Harchol-Balter ch. 18, classed networks)
 
@@ -90,12 +105,21 @@ Already in `../briefs/character.md` for activities; the new use is a 2-factor or
 
 ## Ruled out by the measurements
 
-- **Size-based scheduling (SJF, SRPT, LPT; task assignment by size, SITA; Harchol-Balter ch. 20, 24, 28–33).** These pay off with high job-size variability, above all heavy tails. The real blocks have C² ≈ 0.07, and efficiency against the busiest server is at least 0.945, so at most about 5% is there to recover.
+- **Size-based scheduling (SJF, SRPT, LPT; task assignment by size, SITA; Harchol-Balter ch. 20, 24, 28–33).** These pay off with high job-size variability, above all heavy tails. **Withdrawn to "not supported yet" (correction 5):** the mixture's C² is about 0.98, and worker service per block was not measured.
 - **Redundancy and power-of-d (the Redundancy-d paper).** They help when servers' delays are independent and variable; here they are neither, and duplicating work costs the scarce resource.
-- **Why scheduling matters so little here.** The decoder is a closed batch system: a fixed population of blocks circulates. Schroeder, Wierman and Harchol-Balter (NSDI 2006, on 15-857's reading list) show that scheduling policies have much less effect in closed systems than in open ones. That is consistent with the 0.945–0.998 efficiency measured.
-- **Heavy-tail machinery (Pareto, matrix-analytic methods).** No heavy tail in this corpus. Re-check per corpus under 6.
+- **Why scheduling matters so little here.** (Corrected, correction 7: the decoder is a finite pipeline with feedback-controlled admission, not a closed system.) Schroeder, Wierman and Harchol-Balter (NSDI 2006, on 15-857's reading list) show that scheduling policies have much less effect in closed systems than in open ones. That is consistent with the 0.945–0.998 efficiency measured.
+- **Heavy-tail machinery (Pareto, matrix-analytic methods).** No heavy tail in this corpus. Re-check per corpus under 6. Phase-type methods also fit low variability: deferred because simulation is cheaper, not ruled out.
 
 ## Sequence
+
+**Revised after the corrections (ChatGPT Pro's §5, adopted):**
+1. 7 against 8 workers through the public API (the existing recalibration's design, on current master), logging asked threads, built workers, window and output contract.
+2. The scanner-placement contrast, with the timers on and off near 16 workers and achieved frequency (stage 2).
+3. The joint improvement frontier at 6, 8 and 10 workers: scanner and worker oracles together, with the reader's activity measured.
+4. Stage 1's trace for a validated finite-run simulation; MVA only as a surrogate comparison.
+5. More corpora, chosen by measured scanner/worker demand ratio and block classes, before any default changes.
+
+**The original sequence, kept for the record:**
 
 1. **Now, cheap:** the pinned scanner-profile variant (3) and the adaptive-cap design (2), registered for adoption with the threshold from the profile.
 2. **With stage 1 (#841):** MVA and the simulation validated against the 20 walls (4); the per-visit demands confirm the machine-bound estimate (1).

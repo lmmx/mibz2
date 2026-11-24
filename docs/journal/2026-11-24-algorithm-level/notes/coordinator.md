@@ -107,3 +107,9 @@
 - The courses mined against it (§58, `leads/course-opportunities.md`): the machine bound (about 43% left on this machine, all in the one-scanner topology; an estimate); right-sizing the worker count adaptively; the scanner on the fastest core with its sibling idle (a hypothesis; pinned run); a simulation with MVA on a surrogate; Little's law for the window; workload classes (46% of blocks are tiny). Ruled out: size-based scheduling and redundancy.
 - ChatGPT Pro's design review recorded verbatim (§59): keep stage 1, replace stage 2's factorials with a sequential design, MVA only on a surrogate, under-lock sequence numbers for the trace. Two corrections made to the course file.
 - Louis asked whether to give ChatGPT a further prompt to mine the courses: yes, independently first, then comparing. The prompt is `briefs/chatgpt-course-mining-prompt.md`.
+
+## 25 Nov — ChatGPT Pro's course mining; corrections accepted
+- Recorded verbatim (`external/chatgpt-course-mining.md`, journal §61).
+- My "the default 20 workers costs 20%" was wrong: the public API builds 7 lazy workers (28 slots) on this i9 from 10 threads asked. The live default question is 7 against 8 (−7.6% wall in the profile), to be tested through the public API.
+- The 0.109 s scenario is conditional, not a bound; the reader is disfavoured, not excluded; bottleneck migration caps a scanner-only gain at 8 workers at about 4%; joint scanner-and-worker improvements are the frontier.
+- Louis: the 7 cap is temporary, a symptom of the scanner limit; ideas that raise the ceiling are not abandoned.
