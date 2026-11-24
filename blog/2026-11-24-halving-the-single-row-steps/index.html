@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=e2e0ba3268c9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=84e7243efbe4">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=e2e0ba3268c9">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3168,47 +3168,29 @@
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>There is no new decoder yet. What this post reports is a change in the size of step we attempt,
-and what it has already established. Our current family of decoders provably can't halve the
-number of rows it settles one at a time, so any decoder that does must be a new algorithm. That is
-now a yes-or-no target. The first test of a candidate representation has also come back: handed
-the decoding order for free, the whole decoder ran 16% faster on one thread, and barely faster on
-ten.</p>
-<p>A few terms carry the post:</p>
-<ul>
-<li><strong>The BWT and LF.</strong> bzip2 sorts the rotations of each block of text and keeps the last letter of
-  each, the Burrows–Wheeler transform (BWT). Undoing it follows a map, LF, from each row of the
-  sorted table to the row one letter earlier in the text
-  (<a href="../2026-11-08-inverse-bwt-navigation/">the structure of that map</a>).</li>
-<li><strong>Our three decoders.</strong> The walk applies LF one row at a time.
-  <a href="../2026-11-10-rauzy-veech-reconstruction/">Cells</a> and <a href="../2026-11-19-open-returns/">Open</a> move
-  whole stretches of rows at once, wherever neighbouring rows share their letter, and Open walks
-  the thin stretches.</li>
-<li><strong>The current family.</strong> Decoders that move intervals of rows by fixed translations and compose
-  those moves. The walk, Cells and Open all belong to it.</li>
-<li><strong>A width-1 row</strong> is a run of one letter, so no stretch carries it. A block has h₁ of them, and
-  on our benchmark <a href="../2026-11-20-where-the-decoding-work-goes/">most come from random IDs</a>.</li>
-<li><strong>An event</strong> is a step that settles one row on its own
-  (<a href="../2026-11-18-what-decoding-pays-for/">what decoding pays for</a> counts them). Open's events are its m retained steps:
-  one on each width-1 row, and the rest on rows of wider runs. Each retained step writes a word,
-  the letters between it and the next.</li>
-</ul>
-<p>Until now our research moved in small steps, each making a decoder a few per cent faster. What we
-are after is a new decoder, as different from ours as Rauzy–Veech induction, the mathematics
-behind Cells, was from the walk. In the past week we built what it takes to pursue one:</p>
-<ul>
-<li><strong><a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">A target that is met or not</a>.</strong> An exact decoder must settle every block with at most h₁/2
-  events in all, in two passes over the block and no more memory than Open, and beat Open's whole
-  decoding time.</li>
-<li><strong><a href="https://github.com/lmmx/mibz2/blob/620eacc724988238fe6341c1102b9b2320847279/docs/journal/monodromy/2026-11-24-g1-scoped.md">A proved lower bound, G1</a>.</strong> Every decoder in the current family pays at least one event per
-  width-1 row, so at least h₁. Anything that meets the target is a new algorithm, not an increment.</li>
-<li><strong><a href="https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md">A census of our benchmark's blocks</a>.</strong> Three structural features of a block predict the time
-  Open spends building its structures, with a held-out R² of 0.96.</li>
-<li><strong><a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">Fourteen candidate frameworks closed</a>,</strong> each kept with its counterexample, its scope and what
-  would get past it.</li>
-<li><strong>The transformation that connects our three decoders,</strong> with the one thing it can never remove
-  (§4).</li>
-</ul>
+<p>For most of its life this project has improved its decoders a few per cent at a time. bzip2
+sorts the rotations of each block of text and keeps the last letter of each, the Burrows–Wheeler
+transform (BWT). Undoing it means following a map, LF, from each row of the sorted table to the
+row one letter earlier in the text (<a href="../2026-11-08-inverse-bwt-navigation/">the structure of that map</a>).
+Our first decoder, the walk, applies LF one row at a time. Two later ones,
+<a href="../2026-11-10-rauzy-veech-reconstruction/">Cells</a> and <a href="../2026-11-19-open-returns/">Open</a>, move
+whole stretches of rows together wherever neighbouring rows share their letter, and Open walks the
+thin stretches. Each refinement of these three made decoding a little faster, yet none changed
+what decoding fundamentally costs.</p>
+<p>This post is about changing the size of step we attempt. What we are after is a decoder as
+different from ours as Rauzy–Veech induction, the mathematics behind Cells, was from the walk, and
+the past week went into making that search well posed. There is no new decoder to report. What
+there is, instead, is a sharp boundary. Call an <em>event</em> a step that settles one row on its own
+(<a href="../2026-11-18-what-decoding-pays-for/">what decoding pays for</a> counts them), and a <em>width-1 row</em>
+one whose letter forms a run of length one, so that no stretch can carry it; a block has h₁ of
+them, and on our benchmark <a href="../2026-11-20-where-the-decoding-work-goes/">most come from random IDs</a>.
+Our three decoders belong to one family, the <strong>current family</strong>: decoders that move intervals of
+rows by fixed translations and compose those moves. We have now proved that every member of that
+family pays at least one event per width-1 row. A decoder that settles a block in h₁/2 events or
+fewer therefore cannot be a refinement of anything we have; it must be a new algorithm. That
+recasts an open-ended search as a binary target, which a candidate either meets or provably misses.
+The first test of a candidate representation has also returned: given the decoding order for
+free, the whole decoder ran 16% faster on one thread, a gain that all but vanished at ten.</p>
 <aside class="il-gloss">
 <p><strong>Rauzy–Veech induction</strong> studies a line cut into intervals and
 shuffled, an interval exchange, by cutting off the shorter end again and again until the pieces
@@ -3216,13 +3198,29 @@ repeat. A block's runs of equal letters form such an exchange, so the same steps
 a time. The kernel built on it is told in <a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a>,
 and the dictionary between the two worlds in <a href="../2026-11-16-mathematical-dictionary/">Towers, words and loops</a>.</p>
 </aside>
-<p>The search was reframed four times on the way: use everything, count the cost, set a target that is
-met or not, and keep the method rather than the result (§§1–2). The last came from
+<p>Four pieces of work make the target usable. The first is the
+<a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">target itself, stated exactly</a>:
+an exact decoder must settle every block with at most h₁/2 events in all, in two passes over the
+block and with no more memory than Open, and must beat Open's whole decoding time. Open's own
+events are its m retained steps, one on each width-1 row and the rest on rows of wider runs, each
+writing a word, the letters between it and the next. The second is the
+<a href="https://github.com/lmmx/mibz2/blob/620eacc724988238fe6341c1102b9b2320847279/docs/journal/monodromy/2026-11-24-g1-scoped.md">lower bound, G1</a>,
+which proves the h₁ floor for the current family and so guarantees that anything meeting the
+target is new. The third is a
+<a href="https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md">census of our benchmark's blocks</a>,
+in which three structural features of a block predict the time Open spends building its
+structures, with a held-out R² of 0.96. The fourth is a record of
+<a href="https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md">fourteen candidate frameworks</a>
+already closed, each kept with its counterexample, its scope and what would get past it. Beneath
+all four lies the transformation that connects our three decoders, together with the one invariant
+it can never remove (§4).</p>
+<p>On the way, the search was reframed four times: to use everything, to count the cost, to fix a
+binary target, and to keep the method rather than the result (§§1–2). The last of these came from
 <a href="https://doomslide.substack.com/p/against-mathematics">an essay against AI mathematics</a>, and it
-became a precise question about our decoders. The rest of the post works that
-question through. It sets out the routes we have (§3) and the transformation between them (§4). It
-then tests two proposals against it (§5), says what a new route would have to be (§6), and ends on
-where the search stands (§7).</p>
+sharpened into a precise question about our decoders, which the rest of the post works through. It
+sets out the routes we have (§3) and the transformation between them (§4), tests two proposals
+against it (§5), says what a new route would have to be (§6), and closes with where the search
+stands (§7).</p>
 <h2 id="1-the-goal-a-new-algorithm-not-a-faster-one">1. The goal: a new algorithm, not a faster one<a class="headerlink" href="#1-the-goal-a-new-algorithm-not-a-faster-one" title="Permanent link">&para;</a></h2>
 <p>The step from the walk to induction is the model. The walk follows the block's cycle one row at a
 time. Induction reframed the same permutation as an interval exchange, and moved whole stretches of
@@ -3262,9 +3260,9 @@ block's structure predict where the time goes. For building Open's structures th
 features explain 96% of the variation on blocks held out of the fit. For writing the output they
 don't, which is one reason the price of an event (§5) stays an open question.</p>
 </aside>
-<p><strong>Set a target that is met or not.</strong> A <a href="https://github.com/tra38/sm64-wmotr-abc-proof">Super Mario 64 project</a> asked whether a level's challenge
-could be done with <span class="il-black">fewer than one</span> press of the A button. That is a minimisation turned into a
-yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
+<p><strong>Fix a binary target.</strong> A <a href="https://github.com/tra38/sm64-wmotr-abc-proof">Super Mario 64 project</a> asked whether a level's challenge
+could be done with <span class="il-black">fewer than one</span> press of the A button. That recasts a minimisation as a
+decision problem, settled either by a route or by a proof that none exists. Its decisive move came from
 working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
 confirmed the payoff, and only then found how the real game could produce it, one supplied
 condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.</p>
@@ -3632,8 +3630,8 @@ decoding time.</p>
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 <span class="arithmatex">\(h_1/m \ge 2/3\)</span>. Across the 232 distinct blocks of our benchmark, <span class="arithmatex">\(h_1/m\)</span> is 0.41 overall and
-0.30 to 0.83 block by block. A yes therefore has to write the word of every retained step more
-cheaply, not just the random IDs.</p>
+0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of every
+retained step more cheaply, not merely those of the random IDs.</p>
 <p>The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
 work proves one, closes one, or measures what one would need.</p>
 <figure class="bf-fig">
@@ -3664,7 +3662,7 @@ work proves one, closes one, or measures what one would need.</p>
 </figure>
 
 <p>Read together, the four reframings say what the search now values. Using everything supplies
-the material. Counting the cost supplies the measure. The yes-or-no target supplies the line a candidate has
+the material. Counting the cost supplies the measure. The binary target supplies the line a candidate has
 to cross. The last says what to keep from each attempt: not the verdict alone, but the method
 behind it, the transformation with its invariant, which can generate the next route. The three
 decoders are results. Contraction along compose is a method: it explains why each route costs what
@@ -3849,19 +3847,19 @@ it is what we now count as progress.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/bench.js?v=e2e0ba3268c9"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=e2e0ba3268c9"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/blog.js?v=e2e0ba3268c9"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=e2e0ba3268c9"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/observatory.js?v=e2e0ba3268c9"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=84e7243efbe4"></script>
+        <script src="../../assets/javascripts/katex.js?v=e2e0ba3268c9"></script>
       
     
   </body>
