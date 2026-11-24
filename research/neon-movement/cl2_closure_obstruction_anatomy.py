@@ -135,7 +135,20 @@ def analyze_block(blk: common.BlockData, lmin: int) -> dict[str, Any]:
     q_R = exact_q_min_and_verify_ell_star(R)
     sched_R_v = cl1.measure_schedule_metrics(R, v)
 
-    # 2. Sweep 1 (uncapped M-17 ascending) + free terminal-byte rider `last_byte`
+    # 2a. Exact M-17 Gauss-Seidel Sweep 1 (all j, y != mark) + free `last_byte` rider
+    next_gs = R[:]
+    last_byte_gs = v[:]
+    for j in range(m):
+        y = next_gs[j]
+        if y != j and y != mark:
+            next_gs[j] = next_gs[y]
+            last_byte_gs[j] = last_byte_gs[y]
+    gs_by_first = cl1.measure_schedule_metrics(next_gs, v)
+    gs_by_last = cl1.measure_schedule_metrics(next_gs, last_byte_gs)
+    M_gs, R_gs = extract_surviving_bijection(next_gs, mark)
+    q_Rgs = exact_q_min_and_verify_ell_star(R_gs)
+
+    # 2b. CL1 Sweep 1 (D_1 only: y < j, y != mark) + free terminal-byte rider `last_byte`
     next1 = R[:]
     last_byte1 = v[:]
     composed1 = [False] * m
