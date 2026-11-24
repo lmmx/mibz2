@@ -268,3 +268,10 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/carbon-cycle1-critiq
 - **Why the headline figures mislead:** they leave out thick acquisition. C-1's total Q is 3.5–79·h₁; C-4's is 38–93·h₁ at L=1. "Q_acq = 0" means uncharged, not free: the cost returns as P ≫ K passes (9.7–145) and s ≫ |Σ| cursors. This is record 108's trap.
 - **What to keep from C-4:** the per-row 8-mer name, the uniqueness certificate for V₁, and the name-to-address wall it runs into. The open question that remains: resolve names to rows only at unitig endpoints (about 0.15·h₁), hand the rows h₁,br (about 0.24·h₁) to copy plans, and report the full (Q, D, P, S) at K=2.
 - **Not to repeat:** a k-step LF table on a subalphabet is T²'s kernel. Single-row chord objects are record 109's list ranking. An object of height 1 cannot beat m₁₆ (QS-1).
+
+## 2026-11-24 #17 — addendum to #16: C-3 and C-4 were tried before
+
+- **The source:** `research/carbon-kitchen-sink`, `docs/journal/2026-11-20-carbon-kitchen-sink-cycle7.md` (c9262be5).
+- **Unitigs:** its Theorem 7.1 already condensed the de Bruijn graph into unitigs, on all six blocks.
+- **Hex quotient:** its line 106 proposed the HEX quotient with a nibble fibre stream; C-3 builds it.
+- **Required reading:** before proposing an object, search the `research/carbon-*` branches, the kitchen-sink cycles 1–12 above all. The record is in the critique's addendum (707401453).
