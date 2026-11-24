@@ -36,8 +36,14 @@ The work's largest component is named, and **DECODE-DOMINATED** added iff the Hu
 least 0.60 of the work. If the overhead's interval at the judged count lies wholly above 1.03, the
 classification is labelled PERTURBED.
 
+**Memory and scheduling,** every decode's (the harness's: peak and time-averaged resident memory,
+user and system CPU, minor and major page faults, voluntary and involuntary context switches),
+reported as the untimed decodes' medians at each count; every decode's row is in the bundle's
+runs.tsv.
+
 **VOID** (exit 1): the file missing or malformed; the machine not an i9-10900K; any (round,
-workers, timed) decode missing, duplicated or unexpected; any decode's output not OUT_BYTES; a
+workers, timed) decode missing, duplicated or unexpected; any decode's output not OUT_BYTES, or
+its memory and scheduling figures missing; a
 timed decode without a block's or a worker's record, its blocks not one each of 0..N-1 (N the
 same in every timed decode), or its worker records not one a worker.
 """
@@ -56,6 +62,8 @@ MODEL = "i9-10900K"
 WIKIDATA_X4_OUT = 4 * 209_700_196
 WORK_BOUND, SLOT_SMALL, WAIT_BIG, DECODE_DOMINANT, PERTURB = 0.85, 0.05, 0.10, 0.60, 1.03
 PHASES = ["header", "bitmap", "selectors", "tables", "prep", "decode"]
+# every decode's memory and scheduling figures (the harness's)
+SCHED = ["peak_kb", "mean_kb", "user_s", "sys_s", "minflt", "majflt", "nvcsw", "nivcsw"]
 
 
 def counts(s):
@@ -116,6 +124,16 @@ def load(path, workers, rounds, out_bytes, errors):
                     errors.append(f"{where}: wall {wall!r}")
                 if x.get("bytes") != out_bytes:
                     errors.append(f"{where}: {x.get('bytes')} bytes, not {out_bytes}")
+                bad = [
+                    f
+                    for f in SCHED
+                    if not isinstance(x.get(f), (int, float))
+                    or isinstance(x.get(f), bool)
+                    or not math.isfinite(x[f])
+                    or x[f] < 0
+                ]
+                if bad:
+                    errors.append(f"{where}: no memory or scheduling figures for {bad}")
                 if not timed:
                     continue
                 n, sums = x.get("n"), x.get("sums")
@@ -373,6 +391,22 @@ def report(got, workers, rounds, judged):
             f"{g['k']:<3}{g['untimed']:>10.4f}       {m['work'] / m['wall']:.3f} / {(m['slot'] + m['input']) / m['wall']:.3f}"
             f"                {m['busy_per_worker'] / 1e9:.4f} / {m['idle_per_worker'] / 1e9:.4f}            "
             f"{g['rho']:.3f}  {g['label']}"
+        )
+    print(
+        "\n## Memory and scheduling (the untimed decodes' medians; every decode's own figures are "
+        "in the bundle's runs.tsv)"
+    )
+    print(
+        "k  rss mean MB  rss peak MB  user s  sys s  cpu/wall  minor faults  major  vol. ctxsw  invol. ctxsw"
+    )
+    for w in workers:
+        xs = [got[(r, w, False)] for r in range(rounds)]
+        md = lambda f: statistics.median(x[f] for x in xs)  # noqa: E731
+        cpu = statistics.median((x["user_s"] + x["sys_s"]) / x["wall_s"] for x in xs)
+        print(
+            f"{w:<3}{md('mean_kb') / 1024:>10.1f}{md('peak_kb') / 1024:>13.1f}{md('user_s'):>8.3f}"
+            f"{md('sys_s'):>7.3f}{cpu:>10.2f}{md('minflt'):>14.0f}{md('majflt'):>7.0f}"
+            f"{md('nvcsw'):>12.0f}{md('nivcsw'):>14.0f}"
         )
     cross = crossover([(g["k"], g["rho"]) for g in grid])
     print(

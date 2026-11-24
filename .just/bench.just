@@ -1944,8 +1944,8 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # The parallel decoder's serial scanner profiled: work against waiting, by component, at every
 # worker count from 1 to 20 (registration
 # docs/journal/2026-11-24-scan-profile-registration.md, its classification frozen before the
-# data; the brief docs/journal/2026-11-24-algorithm-level/SCANNER-BRIEF.md at c74884ce, part 1,
-# with Louis's amendment of the grid). DIAGNOSTIC: it
+# data; the brief docs/journal/2026-11-24-algorithm-level/briefs/scanner.md at a3f7d9ed, part 1,
+# with Louis's amendments: the grid, and memory and scheduling). DIAGNOSTIC: it
 # decides nothing; it tells a cheaper or parallel scanner what it must beat. One build, this
 # checkout at the ready tag: master PIN plus the `scan-profile` research feature
 # (src/scan_profile.rs, its hooks in src/block.rs and src/parallel.rs) and its harness
@@ -1959,7 +1959,9 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # the workers' busy and idle time and rho (the scanner's rate over the workers' combined rate);
 # the measured crossover (rho falling through 1) and a pipeline model's fit (a serial stage
 # feeding k workers) with its shift point and residuals; classified at every count, judged at 10
-# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED. About 35 minutes with the build. DRY (the
+# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED; and every decode's memory (peak and
+# time-averaged RSS) and scheduling (user and system CPU, page faults, context switches), each
+# decode a row of the bundle's runs.tsv. About 35 minutes with the build. DRY (the
 # first positional argument: two rounds, no settle; not evidence) checks the wiring.
 #   just submit bench-scan-profile
 bench-scan-profile DRY="":

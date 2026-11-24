@@ -1,14 +1,16 @@
 # bench-scan-profile: registration
 
 *24 November 2026. Written and frozen before any data, on `bench/scan-profile`. The brief is
-`docs/journal/2026-11-24-algorithm-level/SCANNER-BRIEF.md` (part 1) at c74884ce, #145 QUEUED
+`docs/journal/2026-11-24-algorithm-level/briefs/scanner.md` (part 1) at a3f7d9ed (it was
+`SCANNER-BRIEF.md` at edc32f1b and c74884ce), #145 QUEUED
 7145028132, commissioned after the four-arm verdict (LOG 7144221012; journal §44).
 
 **Amended before any data** to Louis's finer grid (the brief's amendment at c74884ce, which
 supersedes its grid, as Louis then corrected it through the Coordinator): every worker count
 from 1 to 20 inclusive. The amendment also
 adds, at each count, the scanner's and the workers' busy and idle time and the measured
-crossover, and a fitted pipeline model's shift point, checked against the measured grid. The
+crossover, and a fitted pipeline model's shift point, checked against the measured grid. Louis
+then added memory and scheduling figures for every decode, written as a TSV in the bundle. The
 first draft's head was e1ba6833, and the first amended one's (1 to 12, 14, 16, 20) a7e251ef;
 the instrument is unchanged. The recipe is
 `just bench-scan-profile`, run as `just submit bench-scan-profile`. The report is
@@ -76,6 +78,16 @@ estimate, not a measurement.
     20 rounds;
   - the timed decode runs first in even rounds;
   - 2 s of settle precede each decode.
+- **Memory and scheduling, every decode (timers on or off):**
+  - the peak resident memory: the high-water mark reset before the decode
+    (`/proc/self/clear_refs`) and read after (`VmHWM`);
+  - the time-averaged resident memory: `/proc/self/statm` read every 5 ms by a sampler thread of
+    the harness's, which runs in both kinds of decode;
+  - from `getrusage` (RUSAGE_SELF: every thread's, exited ones included): user and system CPU
+    time, minor and major page faults, and voluntary and involuntary context switches.
+
+  They go into the bundle as `runs.tsv`, one row a (workers, round, timers on or off), with the
+  timed rows' scanner and worker totals, for the journal's math-targets project.
 - **The records:** every timed decode's block totals (summed over its blocks), with the harness's
   check that its blocks are one each of 0..N−1, and every worker's record. Every block's own
   record is kept only for the first two rounds (40 decodes), which feed the per-block fit and
@@ -122,6 +134,9 @@ Each figure is the median over a count's 20 timed decodes, at **every count of t
   the right model (channel #31).
 - **The grid table:** at each count, the untimed wall, the scanner's busy and idle shares, a
   worker's busy and idle time, rho and the classification.
+- **Memory and scheduling:** at each count, the untimed decodes' medians of the mean and peak
+  resident memory, user and system CPU and their sum over the wall, minor and major faults, and
+  voluntary and involuntary context switches.
 - **The timers' overhead:** each round's paired wall ratio, timed over untimed (geometric mean,
   95% interval).
 
@@ -151,7 +166,7 @@ Beside it:
 - the file missing or malformed;
 - the machine not an i9-10900K;
 - any (round, workers, timed) decode missing, duplicated or unexpected;
-- any output not 4 × 209,700,196 bytes;
+- any output not 4 × 209,700,196 bytes, or any decode's memory and scheduling figures missing;
 - a timed decode without its records, its blocks not one each of 0..N−1 (N the same throughout),
   or its worker records not one a worker.
 
@@ -164,13 +179,14 @@ Beside it:
   - every worker records its end, the jobs summing to the blocks;
   - nothing is recorded with the timers off.
 - **The harness's order test** passes.
-- **`bench/test_scan_profile.py`:** 17 checks. They cover:
+- **`bench/test_scan_profile.py`:** 18 checks. They cover:
   - each classification, DECODE-DOMINATED, the largest component named, PERTURBED;
   - the per-block fit recovering a known 2 ns a symbol and 50 ns a switch;
   - on a 15-count grid built from a known pipeline (a 0.05 s serial stage, 0.40 s of work in all),
     the measured crossover at k = 8.00 and the model's k* within 0.1 of 8;
   - no crossover in a grid where the scanner never binds;
-  - each VOID, among them the harness's block check failing and a per-block record missing.
+  - each VOID, among them the harness's block check failing, a per-block record missing, and a
+    decode's scheduling figures missing.
 - **Lints:** clippy `-D warnings` with and without `--all-features`, `cargo fmt` and ruff are clean.
 - **A smoke run here** (4 copies; 1, 2 and 4 workers; 2 rounds; no settle; a 4-CPU Xeon, so its
   timings mean nothing):

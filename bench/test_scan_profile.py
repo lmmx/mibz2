@@ -50,7 +50,9 @@ def records(work=0.9, slot=0.02, inp=0.01, decode_share=0.8, overhead=1.0, edit=
             for timed in (True, False):
                 wall = base * (1 + rng.gauss(0, 0.002)) * (overhead if timed else 1.0)
                 x = {"kind": "decode", "round": r, "workers": w, "timed": timed, "order": 0,
-                     "wall_s": wall, "bytes": OUT}  # fmt: skip
+                     "wall_s": wall, "bytes": OUT, "peak_kb": 300_000, "mean_kb": 250_000.0,
+                     "user_s": wall * w, "sys_s": 0.05, "minflt": 9000, "majflt": 0,
+                     "nvcsw": 1000, "nivcsw": 300}  # fmt: skip
                 if timed:
                     wns = base * 1e9
                     blocks = []
@@ -107,6 +109,7 @@ def main():
                 "CLASSIFICATION at 10 workers: SCANNER-BOUND",
                 "largest component: decode",
                 "DECODE-DOMINATED",
+                "## Memory and scheduling",
             ],
             absent=["PERTURBED"],
         )  # fmt: skip
@@ -199,6 +202,8 @@ def main():
          "block records not", {}),
         ("a worker record missing", records(edit=lambda x: {**x, "workers_rec": x["workers_rec"][1:]} if x.get("workers_rec") and x["workers"] == 6 else x),
          "worker records, not 6", {}),
+        ("no context switches recorded", records(edit=lambda x: {k: v for k, v in x.items() if k != "nivcsw"} if x["round"] == 3 else x),
+         "no memory or scheduling figures", {}),
         ("a NaN wall", records(edit=lambda x: {**x, "wall_s": float("nan")} if x["round"] == 3 else x), "wall", {}),
         ("no meta", "\n".join(records().splitlines()[1:]) + "\n", "0 meta lines", {}),
     ]:  # fmt: skip
