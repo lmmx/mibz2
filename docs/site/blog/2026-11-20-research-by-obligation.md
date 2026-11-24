@@ -61,7 +61,7 @@ The register is for judging, not for generating. Early in the week it was used f
 
 **Explore** generates from mathematical structure. The charter names four routes, as tools rather than quotas. *Representation import* asks what richer object this is an instance of: both earlier breakthroughs came this way, from seeing the row map as an interval exchange. *Obstruction inversion* takes a failure's narrowest witness and asks which assumption another primitive could escape. *Primitive ablation* forbids a dominant operation and checks the cost doesn't reappear elsewhere. *Small-instance discovery* finds the best exact construction on tiny inputs and looks for the law behind it.
 
-**Triage, Deepen, Confront and Learn** judge. Every candidate must say which paid work disappears, what replaces it, and how the information it needs is obtained: we call this *acquisition first*, because several elegant ideas died on the cost of getting their inputs rather than using them. Every cost model is treated as a diagnostic, and with reason. A cache model ranked two of Open's variants the wrong way round, predicting a win for the one that runs 10–16% slower natively. None of the six candidates that passed a model passed native timing.
+**Triage, Deepen, Confront and Learn** judge. Every candidate must say which paid work disappears, what replaces it, and how the information it needs is obtained: we call this *acquisition first*, because several elegant ideas died on the cost of getting their inputs rather than using them. Every cost model is treated as a diagnostic, and with reason. A cache model ranked two of Open's variants the <span class="il-black">wrong</span> way round, predicting a win for the one that runs 10–16% slower natively. None of the six candidates that passed a model passed native timing.
 
 The cycle asks two separate questions of every candidate. Has the primitive changed, or only how the same operations run? We call the first *reorientation* and the second *traction*: Rauzy–Veech induction was reorientation, replacing single steps with operations on whole intervals, while the backward build was traction on Open's existing return map. And has the complete cost fallen? A new representation is not automatically a cheaper computation. The compact rank structure did change the primitive, removing the stored edges entirely, and lost because each step became several dependent lookups.
 
@@ -127,6 +127,8 @@ For the slope $3/8$, letter $k$ of the word is $b$ when $\lfloor 3(k+1)/8 \rfloo
 <figcaption>Conceptual. The middle panel's measurements are in the table below.</figcaption>
 </figure>
 
+<p class="il-rubric-head">How a surrogate was tried the same evening, and answered the wrong question</p>
+
 The first version of our transfer went wrong in an instructive way. We named the missing ingredient as run width, since the toy has two enormous runs and the random IDs have none, and tested an obvious surrogate the same evening: walking many independent stretches of the path at once, as mibz2's plain decoder already does. It gave no gain on Open's walk, and more to the point, it was the wrong test. Running walks side by side still follows the same edges; it is a speed-up of the old operation, not a new one.
 
 The correction, which came out of the discussion, is that the toy's real power is not width but **cheap global coordinates**: a compact number ($k\alpha$ modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse.
@@ -151,7 +153,7 @@ There is a limit, which the research line also proved. Every text coded from a r
 
 That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way $k\alpha$ does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of $\alpha$, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
 
-<aside class="il-gloss" markdown>**Ostrowski numeration** writes a whole number as a sum of the denominators of $\alpha$'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.</aside>
+<aside class="il-gloss" markdown>**Ostrowski numeration** sets forth a whole number as a sum of the denominators of $\alpha$'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.</aside>
 
 ## 7. Where this leaves us
 

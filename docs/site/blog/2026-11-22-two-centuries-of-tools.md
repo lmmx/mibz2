@@ -31,7 +31,7 @@ mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for f
 
 **Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](https://leanprover-community.github.io/blog/posts/riemann-hypothesis/)[^lean], which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/)[^tao]). The figures below come from readings of the proof, not verifications of it, and our own change of method has no results yet.
 
-<aside class="il-gloss" markdown>**Mathlib** is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.</aside>
+<aside class="il-gloss" markdown>**Mathlib** is the library of mathematics written in Lean by its community, wherein a new proof finds the definitions and proved theorems it builds on: each checked by Lean's kernel.</aside>
 
 **The takeaways:**
 
@@ -74,6 +74,8 @@ For a search, this says how to judge a chain of results: by the step it settles,
 
 A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.
 
+<p class="il-rubric-head">Against a quota that counted subjects and forgot the centuries</p>
+
 Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. Yet a quota over subject areas says nothing about era: a team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.
 
 The proof's toolkit suggests a different guard. Our team instructions now ask each research chain to:
@@ -101,7 +103,7 @@ Some of these are classical in the sense this post means:
 - **Combinatorics on words.** Christoffel words (1875) and Sturmian sequences (Morse and Hedlund, 1940) give the two-letter blocks whose inversion is pure arithmetic. The Chen–Fox–Lyndon factorisation (1958) underlies the bijective BWT.
 - **Continued fractions and the Euclidean algorithm.** On a two-letter Sturmian block, Rauzy induction *is* the Euclidean algorithm, and the block has a grammar of size O(log n).
 - **Interval exchanges and rotations.** LF is an interval exchange, and Keane's work (1975), Rauzy's induction (1979) and Veech's (1982) gave our [Rauzy–Veech reconstruction](2026-11-10-rauzy-veech-reconstruction.md).
-- **Nineteenth-century permutation theory.** LF is one permutation of a block's rows, and its cycle structure is the classical object, yet this is the area our teams have used least.
+- **Nineteenth-century permutation theory.** LF is one permutation of a block's rows, and its cycle structure is the classical object, yet this is the area our teams have used <span class="il-black">least</span>.
 
 The later tools in the figure, recompression (Jeż, 2015) and string attractors (Kempa and Prezza, 2018), are useful, but a search that reaches only for them is the bias in action.
 

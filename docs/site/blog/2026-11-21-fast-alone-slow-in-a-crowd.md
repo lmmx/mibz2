@@ -132,6 +132,8 @@ The results, as the candidate's time over 0.5.8's, with 95% intervals over the 1
 | 8 | 8 | 1.049 (1.023, 1.075) | 1.009 | 1.036 | slower |
 | 10 | 7 | 1.012 (0.991, 1.033) | 0.980 | 1.010 | no change detected |
 
+<p class="il-rubric-head">Of eight lanes that ran swift alone and fell behind in company</p>
+
 Ten threads was not faster and eight was slower, so the verdict was not adopted. A diagnostic run with the worker count fixed agreed: 0.946 at 6 workers and 1.044 at 8. Read by worker count, the results make one sequence, 0.950 with 6, 1.012 with 7 and 1.049 with 8, and each worker added took away more of the gain.
 
 **What plausibly happened.** On one thread, the lanes used capacity the memory system had spare: it can serve many outstanding requests at once, and a single dependent walk asks for one at a time. With eight workers each walking eight lanes, up to 64 lookups compete for the same L3 cache and the same memory bandwidth, alongside every other part of eight decodes. Capacity that was idle for one worker is therefore already in use. The candidate also widened each worker's working set, because its wider cut-off keeps more rows. On the six Wikidata blocks examined most closely, its overflow pages took 184 to 216 KiB per worker, close to the 256 KiB of level-2 cache each core has. Both effects would plausibly push more data out to the shared L3, where every worker meets.
@@ -157,7 +159,7 @@ Each candidate passes three tests in turn. The C harness times the idea on Open'
 | eight lanes, R4 and the 24-row cut-off | 0.43–0.57 | 0.872 (0.820, 0.928) | 0.950, 1.049, 1.012 at 6, 8, 10 threads | lost on the i9 |
 | R4 alone, 16-row cut-off | (part of the row above) | about 0.95 | 0.956, 0.982, 0.985 at 6, 8, 10 threads | not adopted: 10 threads just inconclusive |
 
-The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one neither earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. By contrast, the one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.
+The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one <span class="il-black">neither</span> earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. By contrast, the one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.
 
 ## 6. What comes next
 
@@ -168,6 +170,8 @@ mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.
 The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result shows that a kernel's gain depends on how many workers run it.
 
 The general lesson is about where a speed-up comes from. A change that removes instructions or wrong guesses spends nothing the other cores need, so it tends to survive crowding. A change that gains by using more of the shared cache or memory system spends exactly what the other cores need, so its one-thread gain says little about many. The same test applies beyond Open. Prefetching, larger lookup tables and wider buffers all draw on that shared budget, and each would need its i9 run before its one-thread result could be trusted.
+
+<aside class="il-gloss" markdown>**A borrowed speed-up**, a loan even, from the shared cache falls due when the crowd arrives: the eight lanes gained 13% alone and lost 5% with eight workers. An account of one candidate on one machine, not a law of kernels.</aside>
 
 ---
 

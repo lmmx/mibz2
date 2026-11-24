@@ -101,15 +101,23 @@ Three refusals from the research lines show where the work is.
 - **The GUID wall.** No predicate on local structure picks the GUID rows out for a shortcut, because random identifiers have none. The escape would be to store them other than as BWT rows, which bzip2's format does not allow.
 - **The copy sector.** Three independent mechanisms found the repeated `sha1` and text rows and cut the hops spent on them by 16–58%, byte-exact. All three lose 1.14–2.64× end to end, because finding a copy costs more than emitting it saves. A saved hop costs 10.1–10.5 ns, against 5.79 ns to emit a row. The structure is real and common; recognising it is the obstruction, on the research host.
 
+<aside class="il-gloss" markdown>
+
+**Sturmian blocks** are the two-letter kind, after the Sturmian sequences of Morse and Hedlund (1940), wherein Rauzy induction is the Euclidean algorithm itself; whence a solver of O(log n) steps. Wikidata never rouses it: `gcd(w) = 1` on every block.
+
+</aside>
+
 Each refusal has three possible answers, and each has an example:
 
 - **Weaken the hypothesis.** Open's correctness never needed the density line r/n < 0.15. A cap checked by the first pass replaced it, which admitted the dense band up to 0.28 (#703).
 - **Certify it more cheaply.** The fast elimination loop needs a block without long spirals. Rather than detect spirals, one comparison checks that the widest strip is at most 32,768 rows. No elimination step widens a node, so the widest strip bounds every spiral's length.
 - **Change the representation.** Open itself: the first return to the thin runs needs no assumption on the block, where earlier routes were gated by density and budget.
 
-The first two add or move a branch of the dispatch. Only the third removes branches, and it is what keeps the decoder from becoming a tree that grows with every regime found.
+The first two add or move a branch of the dispatch. Only the third <span class="il-black">removes</span> branches, and it is what keeps the decoder from becoming a tree that grows with every regime found.
 
 We propose to keep a map of these moves, in which each entry records the hypothesis moved from, the move and the result, along with the witness, the status and the measured effect. The obstructions go in it too, each with its scope, because a failed implementation is not an impossible construction: the copy sector lost on one machine against one base; only an exact obstruction with a witness rules a construction out, and only within its scope.
+
+<aside class="il-gloss" markdown>**A loss**, a heavy loss even, is no proof of impossibility: the copy sector lost 1.14–2.64× on one host against one base. A judgement of three implementations, not of the construction.</aside>
 
 ## 5. The stutter
 
