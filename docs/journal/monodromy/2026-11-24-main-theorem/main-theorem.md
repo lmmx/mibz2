@@ -28,6 +28,8 @@ def S (c) : ℕ := openPeakScratch c   -- state beyond the output: at most shipp
 3. **No cost moved off the ledger.** Every rule must be declared with a sound derivation from the records and the facts already held. A yes must also carry the utility receipts of §7. Fewer events that cost more time is not a yes.
 4. **Depth is not the count** (record 98). Parallelism, chains and SIMD count per row.
 6. **Dependent loads stated alongside c₁** (added 24 November after the outside review's point 2; stricter, so admissible under C2). A *dependent load* is a read whose address is computed from the value of an earlier read, other than at a sequential or fixed-stride address. A yes must state d(D, c) per block and have d(D, c) ≤ d(Open, c) on every block of 𝓕. It does not replace c₁; a no is still a statement about c₁.
+6b. **Dependent misses** (added after the full outside review): under a fixed memory model 𝓗 (cache capacity, line size, workers; machine facts, NEEDS M-8), the count of cache-missing dependent loads satisfies D_𝓗(D, c) ≤ D_𝓗(Open, c) per block.
+7. **No advice** (added after the full outside review; stricter). The decoder is one fixed program, independent of 𝓕, with no stored answers or per-block tables. The bound must hold in probability on the uniform family 𝓖(S, m, k) of record 103 §4, and 𝓕 validates it. A bound shown on 𝓕 alone is not a yes.
 5. **Fixed before the data.** These values are fixed before Neon's N-0 measurement (h₁R/h₁ on 𝓕). Under C2 they are never relaxed after any data is seen. Where MONODROMY and Neon disagree, the stricter reading holds, logged in CLAIMS.md.
 
 ## 2. The calculus 𝓡 and its cost (record 98 §1)
@@ -65,6 +67,7 @@ def c₁ (τ : Trace Λ c) : ℕ := (τ.events.filter (·.subjectWidth = 1)).car
 ```lean
 /-- G1 (argued: records 96, 98; Lean target, about 600–1,000 lines) -/
 theorem G1 (D : Decoder 𝓡) (c : Column) (hc : c.singleCycle) : c₁ (D.trace c) ≥ c.h₁
+-- Scoped provenance theorem; calculus settled and proof in record 103 (prims free; compose charged at its join row once per DAG node; links per execution). Row-preserving.
 -- singleCycle added after Neon's N-1 break 1 (L = "aab", p = 0). It holds on all of 𝓕.
 
 /-- P1, additivity (proved here, §4.1) -/
@@ -141,15 +144,17 @@ Neon's E2 screen, on its branch. Its premises go here with citations when they l
 |---|---|---|
 | everything in 𝓡: the walk, Cells and Rauzy–Veech, Open, lanes, T² | **closed** (G1, argued) | one currency: an RV step on a width-1 piece is a rule application on a width-1 subject. RV is not the answer |
 | E3, list ranking, pointer jumping, sort-based contraction | **closed: inside 𝓡** (record 99 corrects record 98) | a pointer jump composes x→LF(x) with LF(x)→LF²(x), a rigid fact on a width-1 interval. Contraction splices x by composing pred(x)'s fact with x's. Each costs a width-1 event, so c₁ = Θ(n log n) and Θ(n) respectively. Depth falls, count doesn't |
-| E1, class facts ("LF^k restricted to D_u is order-preserving onto I_u") | **closed as an escape** [argued, record 99] | at k = 1 it is LF's definition in rank form. Evaluating it at a row is that row's primitive fact. A class fact gives successors in bulk, not text positions. Turning it into output order needs the chain or E2 |
+| E1, class facts ("LF^k restricted to D_u is order-preserving onto I_u") | **conditional barrier; bulk uses open** (relabelled, record 103) [argued, record 99] | at k = 1 it is LF's definition in rank form. Evaluating it at a row is that row's primitive fact. A class fact gives successors in bulk, not text positions. Turning it into output order needs the chain or E2 |
 | E2, local (k-context or landmark placement) | **closed** | 3-byte global sensitivity (FRONTIER, Epsilon E1, proved and verified) |
-| E2 at O(1) depth | **closed under audit** | Gamma's G1 (L-complete under uniform TC⁰) |
-| E2, labels first | **closed** | run labels determine the text (record 84), so positions cost at least the labels |
+| E2 at O(1) depth | **conditional barrier (only if L ≠ TC⁰)** | Gamma's G1 (L-complete under uniform TC⁰) |
+| E2, labels first | **a reduction, not a lower bound** | run labels determine the text (record 84), so positions cost at least the labels |
 | **E2, global, non-rigid, not O(1) depth, within K passes** | **OPEN** | no construction, no obstruction: stream N's territory |
 
 ## 6. What a "no" is, and the margin
 
 **Scope (after the outside review's 3b and record 101):** a no must name the part of global E2 it covers. With record 101 it covers Λ_agg(𝒫, D) with |𝒫| + 2|D| ≤ ν′ (coarse aggregates). It leaves open exactly: global positional rules whose input separates Θ(ν′) flip pairs (fine input, read once, many rows placed). That residue is stream N's cell; a no that does not reach it is a partial no and must be reported as one.
+
+**Logic (record 103):** PN ∧ PR ∧ Pglue ⟹ goal is one sufficient construction. Refuting a premise does not refute the goal. A no quantifies over a declared decoder class, never over the premises.
 
 **A no:** a theorem that for every decoder over Λ = 𝓡 ∪ E1 ∪ E3 ∪ E2-local ∪ E2-O(1), some c ∈ 𝓕 has c₁ > (1 − δ)·h₁. That is, the open cell is empty on 𝓕. It ends the major shot cleanly.
 
