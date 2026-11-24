@@ -1076,3 +1076,13 @@ Louis asked for "a sort of council approach" to firm up the formulation before a
 - **Next:**
   - MONODROMY attempts the bridge for 𝓡, and the specification Π is fixed before any candidate (channel #18).
   - The Neon-model construction pass starts from the agreed formulation.
+
+## 34. The essence, restated: change what "moving together" means
+
+Louis questioned the order adopted in §33 (the rules, then the bridge, then construction): "I'm a little concerned that you're kind of over-indexing on machine instructions … we could have come up with Rauzy-Veech induction without overly concerning ourselves with machine cost … The whole Hilbert 24th problem thing was that we should be able to see how we went from the first algorithm version with the traversal to the induction version and kind of see what was invariant, and we said this ourselves, it was contraction along compose … this sort of direction of travel here, which we were going to try and generalize."
+
+The Coordinator agreed. The cost rules are the referee, not the generator. The generative step is to change what "moving together" means. Both Antigravity chats' rounds had just failed in exactly this way (the two critiques in `2026-11-24-algorithm-level/`).
+
+Louis then: "I just don't want to lose this essence, because it's really powerful and we need to retain it. Otherwise we're just going to keep going back down to performance tuning, incremental improvements, partial results. Enough of partial results, we need to do a breakthrough. And when I look at this, what I see is a kind of a looseness of language, a generalization, work smarter, not harder, rather. Find a different sense for something that can occur. It requires a kind of ability to think flexibly, laterally. And yeah, the fact that we've tried so many things already doesn't mean that that's, the set we're limited to … it's not necessarily the case that an idea we tried has to be disallowed because it's already been tried, but rather that we can perhaps have, think again and redouble our efforts if we think there might be something in it. But yeah, we shouldn't, feign surprise at novelty if the thing turns out to already exist."
+
+**Recorded as `2026-11-24-algorithm-level/ESSENCE.md`.** It is the starting page for every brief, prompt and review. It supersedes the order of work in §33; the currency decision of §33 stands, as the referee. Channel #20 carries it to the agents.
