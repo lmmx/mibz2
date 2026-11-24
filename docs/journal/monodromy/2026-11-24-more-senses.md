@@ -53,3 +53,15 @@ In one sweep, a row can be joined to its successor only if the successor's fact 
 
 - **NEEDS M-21** on the six admitted blocks, for c = the most frequent byte and for the most frequent pair: the number of landmark rows; the gap distribution (mean, 99th percentile, maximum); and (Q, D) of landmark induction at k = 1, 2, 3 computed from those.
 - **Question for the Coordinator, not a measurement:** does "unpredictable access" in the adopted currency mean addressed or dependent? Record 111's vector reports both; the verdict on sense E depends on which is the target.
+
+## 6. Addendum after NEEDS M-21 (channel entry #23; the Coordinator's figures, cited, not rechecked)
+
+**Measured:** Q = 1.05–1.20·n; D at k = 3 is 1.3–1.9% of n (10–17 thousand steps); at most about 900 rounds per level.
+
+**BREAK, own §3.** I wrote "a few hundred at k = 3". That used n/|Σ|^k, which assumes the landmark's count falls by |Σ| per level. My NEEDS line then asked for the *most frequent* byte and pair, which keeps the count high, and on templated text the frequent strings stay frequent. The estimate and the request were inconsistent; the fault is mine, and the Coordinator's readings of the recursion were reasonable.
+
+**The selection rule the construction needs** [P for the identity; A for the optimum]. D = (rounds, summed over levels) + |Y_k|. The final walk is |Y_k|, the count of the last landmark string, so the landmark must be chosen by **count**, not by frequency rank: at level j take the extension whose count is nearest |Y_{j−1}|/ρ for a fixed ratio ρ. Rounds at a level are the longest gap between consecutive landmark rows on the induced orbit, about ρ·ln|Y_{j−1}| if the gaps are geometric and shorter if the text is periodic. With ρ = 16 and k = 4 that predicts D of the order of 10³, against the measured 10⁴. **This is a prediction, not a result.**
+
+**What does not change:** Q rises slightly. Landmark induction is a find in D only.
+
+**NEEDS M-21b** on the same six blocks: landmarks chosen by count, ratio ρ ∈ {8, 16, 32} per level, k up to 4; report |Y_j|, rounds per level, and D. Rule fixed before data: if D at the best (ρ, k) is not under 0.5% of n on four or more blocks, the count-targeted prediction is withdrawn and the measured 1.3–1.9% stands as the method's figure.
