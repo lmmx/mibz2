@@ -80,11 +80,13 @@ The later tools in the figure, recompression (Jeż, 2015) and string attractors 
 
 ## 5\. How does a broad toolkit get used well?
 
-Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>)[^/mibz2/pr-preview/pr-810/blog/2026-11-22-two-centuries-of-tools/#guide] to the proof's architecture, read here beside [an explanation of the proof for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>)[^/mibz2/pr-preview/pr-810/blog/2026-11-22-two-centuries-of-tools/#zeta], calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
+Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>)[^/mibz2/pr-preview/pr-810/blog/2026-11-22-two-centuries-of-tools/#guide] to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
 
 The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers
 
 The four rows are the guide's dictionary, quoted. The fields on the right are where each substitute's tools come from, read from the guide's flow diagram. A reading of the proof's architecture, not a verified dependency graph.
+
+We read the guide beside [a working draft that explains the proof for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>)[^/mibz2/pr-preview/pr-810/blog/2026-11-22-two-centuries-of-tools/#zeta].
 
 Each distant theory in the toolkit entered because one row needed a substitute. Iwasawa theory and the Ferrero–Washington theorem (1979) entered because Stepanov passes to all finite extensions of a field, and the proof needed a tower of fields instead.
 
