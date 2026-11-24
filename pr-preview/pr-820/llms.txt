@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [Between the routes](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-24-between-the-routes/index.md>): An essay against AI mathematics revives Hilbert's lost 24th problem, which names what links our three decoders and what none can remove.
+- [Advancing the search](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-24-advancing-the-search/index.md>): Our search for a new algorithm to undo bzip2's block sort has been reframed four times, and each reframing has changed what we count as progress.
 - [Playing the hand you're dealt](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-22-decompression-is-the-harder-problem/index.md>): A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
 - [Correctness is uniform, cost is not](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-22-correctness-is-uniform-cost-is-not/index.md>): Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.
 - [Two centuries of tools](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/index.md>): A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.

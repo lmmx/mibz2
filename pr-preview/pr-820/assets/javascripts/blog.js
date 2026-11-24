@@ -167,7 +167,8 @@
   };
 
   // .bf-stepper: a figure that shows a process one step at a time (Back, Play, Next, a slider),
-  // with each step said in words. data-model names the process: "lyndon" (cutting a Lyndon
+  // with each step said in words. data-model names the process: "frames" (frames written in the
+  // page as <template class="bf-frame">), "lyndon" (cutting a Lyndon
   // word into its tree; data-stages lists the words to choose from), "induction"
   // (Rauzy–Veech induction on the block aab) or "cutloop" (cutting banana$'s loop open). Without JavaScript the figure shows its
   // static summary (.bf-step-static) instead.
@@ -480,10 +481,18 @@
     const stages = q(".bf-step-stages");
     const [prev, play, next, slider] = ["prev", "play", "next", "slider"].map((a) => q(`[data-act="${a}"]`));
     let model, i = 0, timer = null;
+    // data-model="frames": the frames are written in the page, one <template class="bf-frame"
+    // data-text="…"><svg>…</svg></template> each; the figure's <svg> keeps its own viewBox.
+    const inlineFrames = () => ({
+      frames: [...fig.querySelectorAll("template.bf-frame")].map((t) => {
+        const s = t.content.querySelector("svg"); // wrapped in <svg> so the parser reads it as SVG
+        return { svg: s ? s.innerHTML : t.innerHTML, text: t.dataset.text || "" };
+      }),
+    });
     const load = (word) => {
       const m = fig.dataset.model;
-      model = m === "lyndon" ? lyndonFrames(word) : m === "cutloop" ? cutloopFrames() : inductionFrames();
-      svg.setAttribute("viewBox", `0 0 540 ${model.height}`);
+      model = m === "frames" ? inlineFrames() : m === "lyndon" ? lyndonFrames(word) : m === "cutloop" ? cutloopFrames() : inductionFrames();
+      if (model.height) svg.setAttribute("viewBox", `0 0 540 ${model.height}`);
       slider.max = model.frames.length - 1;
       i = 0;
       show();
