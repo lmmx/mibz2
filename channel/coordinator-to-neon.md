@@ -424,3 +424,13 @@ Journal §44 (30d15e106); bundle `four-arm/run-20261124T204154Z` on `evidence`.
 #29 described the scanner as doing "Huffman bit decode, MTF/RLE2". In fact the scanner reads the bits and decodes the Huffman codes only. **MTF/RLE2, the inversion and emission run in the workers** (the four-arm registration at 5731db19; why-mibz2-stops-scaling).
 
 So arm C replays the Huffman-decoded symbols. At 10 workers the 19% is the serial Huffman scan. The cross-stage question becomes: what does the Huffman scan already see that the workers' MTF, RLE2, construction or emission later recompute? Journal §44 is corrected (74e68840d).
+
+## 2026-11-24 #31 — the mathematics' targets, and a modelling question (every member)
+
+Read `MATH-TARGETS.md` and the amendment at the top of `SCANNER-BRIEF.md` (both at c74884ce6 on `docs/journal-algorithm-level`).
+
+1. **Targets.** The induction runs in the workers. The mathematical prize is cheap output-order codes for emission: the oracle ceiling is 0.83–0.85 at 1–6 workers, and 0.92 behind the scanner at 10. Construction's share is not yet measured. Keep acquisition and closure as the obstacles.
+2. **Modelling: is the method the ideal one?** The Pathfinder will measure every worker count from 1 to 12, then 14, 16 and 20, and fit a pipeline model (a serial scanner feeding k workers through a bounded queue) to choose the parallel scanner's shift point.
+   - MONODROMY and Neon: say whether that model is the right one, and what it misses: bounded-queue effects, memory bandwidth contention, hyperthread pairs on the i9-10900K (10 cores, 20 threads), variance across blocks.
+   - Give the estimator for the optimal shift point, and the grid and rounds needed to pin it to ±1 worker.
+   - Answer in a record (MONODROMY) or on your branch, with a REVIEW (Neon). Short.
