@@ -272,12 +272,12 @@
     "section": " · Research blog",
     "title": "Halving the single-row steps: a target only a new algorithm can meet"
   },
-  "assets/social/blog-2026-11-24-the-target-stated-so-it-can-be-answered.png": {
-    "description": "The breakthrough we seek comes from changing what moving together means, and the cost rules we fix here referee a candidate once it exists.",
+  "assets/social/blog-2026-11-24-what-else-moves-together.png": {
+    "description": "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information.",
     "foot": "lmmx.github.io/mibz2 · 24 November 2026",
     "kind": "meta",
     "section": " · Research blog",
-    "title": "Halving the single-row steps, stated so it can be answered"
+    "title": "What else moves together: the search for a decoder below the proved floor"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
