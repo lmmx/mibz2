@@ -1059,3 +1059,20 @@ Louis approved commissioning the outside review's proposed experiment. The recip
 - **R7 Utility.** A supplied-state payoff stated in whole-decoder terms, or an honest statement that none can yet be given.
 
 **Verdict.** "Starts to overthrow induction" means R1–R3 are met and R4 is at least partial. Anything less is reported as such, with what it would take to close the gap.
+
+## 33. The council, and the currency decided
+
+Louis asked for "a sort of council approach" to firm up the formulation before any construction. Three members answered one brief independently (`council/BRIEF.md`): MONODROMY (record 111), Neon (`research/council-neon`) and ChatGPT Pro (`council/chatgpt.md`, verbatim). `council/COMPARISON.md` compares them.
+
+- **Where they agree:**
+  - A charge means something only against a declared instruction set.
+  - A basis is a representation with soundness, a parameter defined from the input, and a cost law that includes acquisition.
+  - The split into easy and hard rows leaves the theorem.
+  - A "no" quantifies over every program within the budget.
+  - Whole-decoder time is a separate empirical receipt.
+- **The decisive point (ChatGPT's):** G1 is a floor on a proof calculus, not a machine floor. Claiming "below G1 on a machine" first needs a bridge theorem: every decoder of the old class costs at least κ·h₁ in the declared currency. None exists yet.
+- **The currency:** Neon's all-instruction currency is degenerate, since r ≥ h₁ forces word-packing. The adopted structure is ChatGPT's, with MONODROMY's cost vector (Q, D, P, S).
+- **Louis's decision.** Asked what "lower the floor" means, he chose real machine cost: fewer unpredictable memory reads and scans than one per lone row, on a declared machine model, backed by the bridge proof, with the old bookkeeping target kept as version 1. The Coordinator had asked him in plain terms, after he said the shorthand was unreadable to him.
+- **Next:**
+  - MONODROMY attempts the bridge for 𝓡, and the specification Π is fixed before any candidate (channel #18).
+  - The Neon-model construction pass starts from the agreed formulation.

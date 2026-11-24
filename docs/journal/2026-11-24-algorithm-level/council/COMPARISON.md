@@ -1,4 +1,4 @@
-*Draft, pending Louis's confirmation of the currency question. An independent reviewer compared the three answers listed in [INDEX.md](INDEX.md) and checked disputed facts against the pinned sources. The Coordinator spot-checked one: the supplied-codes result is journal §30, not §29.*
+*Adopted 24 November 2026. Louis chose "real machine cost" as the meaning of "lower the floor": fewer unpredictable memory reads and scans than one per lone row, on a declared machine model, backed by a bridge proof that the old methods really pay that floor. The old bookkeeping target is kept as version 1. An independent reviewer compared the three answers in [INDEX.md](INDEX.md) and checked disputed facts against the pinned sources. The Coordinator spot-checked one: the supplied-codes result is journal §30, not §29.*
 
 # Council comparison: MONODROMY (111), Neon, ChatGPT Pro
 
