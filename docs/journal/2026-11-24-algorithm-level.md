@@ -317,3 +317,57 @@ formulation effort." This record is kept up to date as the discussion continues.
   what representation would restore its effect. The toy-transfer note's candidate is Ostrowski
   numeration, generalised to Rauzy–Veech and Bratteli–Vershik coordinates, for random access to
   position k; its guess at what breaks is run width, lost to random identifiers.
+
+## 9. Louis: "didn't we already have a whole theory about, like, obstructions, remember?"
+
+**Yes: `docs/team/research-charter/FRONTIER.md`.** The Coordinator had not connected it in §§3–8,
+which is the lookup failure §3.2 diagnoses, made again. What it holds:
+
+- **A format for obstructions:** "When a failure exposes a significant obstruction, record three
+  things under its row: the concrete **witness**; its exact **scope**: which algorithms,
+  representations and cost model it binds; the **escape condition**: which assumption a different
+  formulation would have to drop. An obstruction with no stated scope is not established."
+- **Foundational questions (track 1)**, each asking whether a core operation is necessary:
+  1. *Must the decoder follow an orbit at all?* "Is there a formulation in which output positions
+     are computed rather than reached?" Known obstruction: text-order run labels determine the
+     text (record 84), so "any 'placement' must be cheaper than the labels it implies".
+  2. *Is the first return the right object?* Repeated cuts shrink the retained set fast
+     (110,273 → 17,657 → 3,916 rows on block 0). "What is the limit object of repeated cutting?"
+  3. *Can geometry replace rows?* "an exact reconstruction whose work scales with the number of
+     structural events … and whose only n-scale work is sequential byte writing?"
+  4. *Is the inverse BWT the right problem?* "Not yet examined by anyone."
+  5. *Copies from completed output.*
+- **Known structural obstructions** ("Do not rediscover these; build on them"), among them:
+  - the accelerated induction floor r (Cells at 1.013–1.019r), which rules out better monotone
+    induction schedules (records 79–80);
+  - run labels determine the text (record 84);
+  - Φ-copy fragments are cyclic (85–94% on dependency cycles), which rules out in-place
+    write-once Φ replay;
+  - **Gamma's G1:** `Phi_BWT` is L-complete under uniform TC⁰ reductions, which rules out O(1)-depth
+    global coordinate formulas (and NC¹ unless NC¹ = L). It is marked "under audit";
+  - 3-byte global sensitivity, which rules out local-context or UUID-landmark placement;
+  - the density-ratio obstruction against symbol-level recompression and tunnelling at post-Open
+    mean width 1.6–2.2;
+  - cross-block width-1 indistinguishability.
+- **Foundational formulations**, kept for their mathematics even when their first implementation
+  loses (the direct BWT-space contraction algebra, Gamma's G1 and G2), each with what is known
+  against it.
+
+### How it bears on the formulation
+
+- **It is the "negative space" the formulation needs, already half-built.** Each obstruction says
+  what a new structural step can't be; its **escape condition** says what it must drop. A new
+  algorithm must sit inside every escape condition at once. That is ChatGPT's "impossibility
+  results as constructive operators" (§7), and FRONTIER already records obstructions in the form
+  that use needs.
+- **It constrains the Sturmian ladder directly.** The toy's closed form is an O(1)-depth coordinate
+  formula. G1 (if its audit holds) says no such formula exists for the general BWT. So the walk-free
+  inversion cannot generalise to all inputs, and must exploit the structure of the blocks it serves.
+  G1's escape condition is the place to look: structure a general reduction doesn't have. Record 96
+  and the census say what Wikidata's blocks do and don't have (width-1 runs a median 39% of retained
+  rows).
+- **Foundational question 1 is the formulation's question** ("output positions computed rather
+  than reached"), and its record-84 obstruction is the first constraint on any answer.
+- **Status:** much of FRONTIER's obstruction table is marked "under audit" or "conjectural", some of
+  it is measured on six blocks, and none of it is machine-checked. A formal proof system would
+  give these entries the status SSL-Coq's checked obstructions have.
