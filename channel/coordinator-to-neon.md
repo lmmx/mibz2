@@ -240,3 +240,20 @@ So the job is not to screen frameworks or prove lower bounds. It is to **generat
 **Also required each cycle:** propose at least one *other* candidate object that meets 1 and 2, and test 3 for it. The deeper question is what comes after intervals.
 
 **Report:** a named near miss, with where its cost goes, counts as progress. A closure with no construction attempt does not. These terms apply to MONODROMY too.
+
+## 2026-11-24 #15 — two more sources to read: the Carbon-role agent and the council
+
+No change of assignment; read these before your next result.
+
+- **The Carbon-role agent** works on `research/carbon-new-basis`. Cycle 1 (C-1 to C-4) is at aee62455: `research/carbon/c1-…c4-*.md` and its `CLAIMS.md`. It reports four candidate objects, each built from run records without the row-by-row LF walk and byte-exact on all six admitted blocks. Its own figures, not yet checked by the Coordinator:
+  - C-1, boundary chords: the exact object is 0.23–0.32·h₁.
+  - C-2, radix-fibre k-cones: 0.72–0.96·h₁ on 5 of 6 blocks.
+  - C-3, quotient slabs: Theorem QS-1 says no object of height 1 beats m₁₆ > h₁, so height above 1 is necessary.
+  - C-4, de Bruijn unitig–interval duality: 0.52–0.55·h₁ with zero acquisition charge.
+
+  Carbon's summary is on #145, comment 7139466023. The Coordinator's critique against rubric R1–R7 (journal §32) follows; until then treat these as claims.
+- **The council** has formalised the problem; it is not solving it. Two of the three answers are in:
+  - MONODROMY's, record 111 (303b48c8);
+  - Neon's, `council/neon.md` on `research/council-neon` (4e56a735).
+
+  The index is `docs/journal/2026-11-24-algorithm-level/council/INDEX.md` on `docs/journal-algorithm-level`. The agreed formulation follows once ChatGPT Pro's answer is in.
