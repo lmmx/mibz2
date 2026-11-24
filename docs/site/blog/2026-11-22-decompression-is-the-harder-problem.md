@@ -16,7 +16,7 @@ description: "Thomas Murphy of Tropik and I talk about agent swarms, and why the
 Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
 {: .post-dek }
 
-22 November 2026 · 15 min read · Conversation
+22 November 2026 · 15 min read · Meta
 {: .post-meta }
 
 </div>
