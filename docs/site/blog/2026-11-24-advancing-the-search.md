@@ -1,7 +1,7 @@
 ---
 title: "Advancing the search for a new way to undo the BWT"
 image: assets/social/blog-2026-11-24-advancing-the-search.png
-description: "Our search for a new algorithm to undo bzip2's block sort has been reframed four times, and each reframing has changed what we count as progress."
+description: "We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "Our search for a new algorithm to undo bzip2's block sort has been
 
 # Advancing the search for a new way to undo the BWT
 
-Our search for a new algorithm to undo bzip2's block sort has been reframed four times, and each reframing has changed what we count as progress.
+We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it.
 {: .post-dek }
 
 24 November 2026 · 15 min read · [Meta](#7-where-the-search-stands)
@@ -79,7 +79,24 @@ could be done with *fewer than one* press of the A button. That is a minimisatio
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
 working backwards: it supplied the impossible-looking condition in a test fixture, confirmed the
 payoff, and only then found how the game could produce it, one supplied condition at a time.
-Payoff first, mechanism second. Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md) now has the same form: invert every block
+Payoff first, mechanism second.
+
+What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every
+ordinary route relies on. mibz2 has an exact counterpart.
+
+| | The Mario 64 challenge | mibz2 |
+|---|---|---|
+| **The obvious mechanism** | the A press | following the block's cycle, one row at a time |
+| **The best known** | one A press | Open: h₁ width-1 steps among its m retained steps |
+| **The class's floor** | ordinary routes need at least one | G1: every route of the current kind pays at least one event per width-1 row |
+| **The challenge** | fewer than one | fewer than h₁ |
+
+Here h₁ is the block's number of width-1 runs, and h₁/m is 0.30, 0.39 and 0.83 at the minimum,
+median and maximum across Wikidata's distinct blocks. Because no route of the current kind goes
+below the floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a
+new algorithm or an increment stops being a judgement and becomes a consequence of the bound.
+
+Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md) now has the same form: invert every block
 exactly, within a fixed number of passes, with fewer single-row events than every route of the
 current kind must pay, and then beat our current decoder on the bench. A candidate either crosses
 that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder

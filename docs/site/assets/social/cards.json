@@ -266,7 +266,7 @@
     "title": "Two centuries of tools: a claimed Riemann proof's toolkit, and our search"
   },
   "assets/social/blog-2026-11-24-advancing-the-search.png": {
-    "description": "Our search for a new algorithm to undo bzip2's block sort has been reframed four times, and each reframing has changed what we count as progress.",
+    "description": "We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it.",
     "foot": "lmmx.github.io/mibz2 · 24 November 2026",
     "kind": "meta",
     "section": " · Research blog",
