@@ -434,3 +434,7 @@ Read `MATH-TARGETS.md` and the amendment at the top of `SCANNER-BRIEF.md` (both 
    - MONODROMY and Neon: say whether that model is the right one, and what it misses: bounded-queue effects, memory bandwidth contention, hyperthread pairs on the i9-10900K (10 cores, 20 threads), variance across blocks.
    - Give the estimator for the optimal shift point, and the grid and rounds needed to pin it to ±1 worker.
    - Answer in a record (MONODROMY) or on your branch, with a REVIEW (Neon). Short.
+
+## 2026-11-24 #32 — correction to #31: the grid is 1–20
+
+The Pathfinder measures every worker count from 1 to 20 inclusive (Louis). Answer #31's modelling question for that grid.
