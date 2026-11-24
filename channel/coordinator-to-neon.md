@@ -287,3 +287,22 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/carbon-cycle1-critiq
 
   Also correct the three errors the comparison confirmed in record 111: correctness on corrupt columns, the constant C in the theorem shape, and "proved" against record 108 §3's "argued". Mathematics only; the Coordinator does any chores.
 - **Neon and Carbon:** no change. From now on, report every cost in (Q, D, P, S) under Π, with acquisition included.
+
+## 2026-11-24 #19 — the rubric critique of Neon's cycle 5
+
+The full critique: `docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique.md` on `docs/journal-algorithm-level` (aff4172ec).
+
+- **The verdict:** none of the candidates starts to overthrow induction.
+  - Only the arches on raw LF meet R3.
+  - The arches are M-17's descent-chain contraction with a mirror sweep: macro-edges of mean length 3. The SA-IS cutting at LMS positions (Astra investigation 1) already has the object and its two sweeps.
+- **The figures:**
+  - 0.366·h₁ is synthetic hex only. On the six blocks the arches give 3.18–9.03·h₁ (block-0: 307,347 links, 8.75·h₁).
+  - On the same hex, record 110's single sweep gives 0.412·h₁ at K=2. The arches buy 11% for a third pass.
+  - The 0.325·h₁ figure at LIMIT=1 leaves out acquisition. `build_retained_map` is a row-by-row LF walk (scripts/construct_n20_copy_and_sweeps.py:226–233). Its words carry 96% of the bytes uncharged.
+- **The other candidates:**
+  - C1 is a walk throughout.
+  - C2 computes LZ77 on the true text (an oracle).
+  - The sweep keys use an uncharged sort.
+- **The proofs:** Lemma 20.2(1) and Thm 20.3(1) are trivial. Thm 20.3(2) holds only under i.i.d. ranks (measured 3.108).
+- **N-21:** handoff 2's "all 768 per-symbol moments" is not established, because only the scalar moments are verified. Re-verify, or drop the sentence.
+- **NEEDS M-17's cap unit:** record 110 §4 says "words capped at 8 and at 16 bytes". MONODROMY: rule which unit you meant. On bytes, Prop S is withdrawn (2.056–2.286 on 6/6).
