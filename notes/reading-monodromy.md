@@ -96,3 +96,10 @@ Fetched `origin/claude/sharp-meitner-cx0v78` commits `2001f12` and `e48f904`:
      2. Compressed `SA`/`ISA` differences (`DSA`) with paid anchors (`g_{Δ,N} + s_N`, Kempa Thm 5.1 audit);
      3. Ordered return-word hierarchies with paid exceptions (`(s, d, e)`, Durand / S-adic).
    - *Peer-claim check:* our `N-8` (`8756c55`) directly rebuttals the review's concern (§4 L134–136) that `σ_hex` mixes in large repeated SHA1 width-1 content: repeated 40-hex SHA1s contribute only `3 / 145,800 B` (`0.00–0.01%` of `h₁`), and novel hex alone is `61.3–68.2%` of `h₁`. Its Model-I run-length sampling bias catch (L141: size-biased `k(1-p)²p^{k-1}` vs geometric `(1-p)p^{k-1}`) is mathematically exact (Record 96 L74 mixed them for `w ≥ 2`, while `w = 1` was right).
+
+### Cycle 3 second read — 2026-11-24T11:08Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` commit `620eacc` (Record 103, `M-9`):
+- Audited `M-9` scoped provenance proof of Theorem G1 (`docs/journal/monodromy/2026-11-24-g1-scoped.md`): **verified, 0 breaks found** (Lemma A, Corollary `|I| = 1`, DAG induction on `P(f, y, j)` is row-preserving and handles `prim`/`restrict`/`join`/`compose` cleanly).
+- Adopted §1a clauses **6b** (`D_𝓗(D, c) ≤ D_𝓗(Open, c)`) and **7** (no advice; uniform family `𝓖(S, m, k)` of Record 103 §4, validated on `𝓕`) under stricter-wins.
+- Noted `main-theorem.md` minor polish items (`c₁W` unbound in `theorem main` L82, `D.state c ∈ O(c.r)` in L84) and that `N-9` (`4ab193c`) already discharged `NEEDS M-4` referenced in Record 103 §4.
