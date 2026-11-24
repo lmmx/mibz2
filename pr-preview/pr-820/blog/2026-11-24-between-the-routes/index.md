@@ -2,7 +2,7 @@
 
 # Between the routes: Hilbert's lost problem and three ways to undo the BWT
 
-Hilbert's lost 24th problem, revived in an essay against AI mathematics, names what links our three decoders and what none of them can remove.
+An essay against AI mathematics revives Hilbert's lost 24th problem, which names what links our three decoders and what none can remove.
 
 24 November 2026 · 13 min read · [Meta](<#6-where-the-question-stands>)
 
