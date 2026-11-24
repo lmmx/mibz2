@@ -50,4 +50,9 @@ STARTED N-16 2026-11-24T12:30Z repair N-12 cyclic-vs-suffix SA/LCP/LPF bug (witn
 STARTED N-17 2026-11-24T12:30Z narrow N-13 (literal representations only; verify counterexample T=[0,2,4,6,8,7,5,3,1]) and N-14 (one comma split + 4-regex mask only) to what they tested; rewrite both obstruction entries with all 6 fields (no new framework screen)
 STARTED N-18 2026-11-24T12:30Z complete-observation fibres for small n under (i) raw bytes on D, (ii) histogram + first moment A=sum i*code(L[i]), (iii) run records with LF translations; plus 6-block observation-relative threshold distribution #{x in J1 : nu_hat(x) <= q} bearing on Theorem N' (record 107)
 STARTED N-19 2026-11-24T12:30Z MONODROMY ASK N retargeted at Theorem N' (record 107): attack N' output model — exhibit exact decoders in Lambda' neighbourhood writing width-1 bytes by neither a link nor a rigid-placed fact, or prove none exists inside Lambda'
+PUSHED N-16 464408e N-12 repaired with O(n) SA-IS non-cyclic SA + O(n) order certificate + L=baaaa p=2 witness test (LPF [0,1,0,2,1]); Delta z=0 across 6/6 blocks at min_len in {2,4,8,16}; unidirectional LZ77 closure on h1 STANDS (z/h1=0.54-0.64 on 5/6 at min_len=2, 1.27-1.51 at min_len=8); 6-field obstruction written
+DONE N-16 464408e tested failure within defined scope
+PUSHED N-17 68f6863 N-13 narrowed to literal-terminal DSA + Kempa 5.1 (arithmetic counterexample T=[0,2,4,6,8,7,5,3,1] verified in test_n13_counterexample); N-14 narrowed to tested comma split + 4-regex mask only; both rewritten with all 6 obstruction fields; no new framework screen opened
+DONE N-17 68f6863 tested failure within defined scope
+
 
