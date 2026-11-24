@@ -997,7 +997,15 @@ impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
             mark!(InputWait);
-            match self.rx.recv() {
+            // (research only, `scan-profile`: the wait for input timed)
+            #[cfg(feature = "scan-profile")]
+            let t0 = crate::scan_profile::on().then(std::time::Instant::now);
+            let got = self.rx.recv();
+            #[cfg(feature = "scan-profile")]
+            if let Some(t0) = t0 {
+                crate::scan_profile::input_wait(t0.elapsed().as_nanos() as u64);
+            }
+            match got {
                 Ok(mut chunk) => {
                     mark!(InputGot);
                     let drop_n = (self.released - self.base) as usize;
@@ -1054,6 +1062,10 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
         shared,
     };
     let mut sc = Scanner::new(src);
+    // (research only, `scan-profile`: the slot wait, the read and the hand-off timed, read
+    // once at the scanner's start)
+    #[cfg(feature = "scan-profile")]
+    let prof = crate::scan_profile::on();
     let finish = |res: Option<Error>| {
         let mut st = shared.lock();
         let at = st.issued;
@@ -1071,6 +1083,8 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     loop {
         // a slot first, and a symbols buffer to reuse
         mark!(SlotWait);
+        #[cfg(feature = "scan-profile")]
+        let t_slot = prof.then(std::time::Instant::now);
         let syms = {
             let mut st = shared.lock();
             while !st.cancelled && shared.full(&st) {
@@ -1089,15 +1103,27 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             st.free_syms.pop().unwrap_or_default()
         };
         mark!(SlotGot);
+        #[cfg(feature = "scan-profile")]
+        let t_read = prof.then(std::time::Instant::now);
         let next = catch_unwind(AssertUnwindSafe(|| sc.next(syms)))
             .unwrap_or_else(|p| Err(Error::new(ErrorKind::Internal(panic_message(p)))));
+        #[cfg(feature = "scan-profile")]
+        let t_sent = prof.then(std::time::Instant::now);
+        #[cfg(feature = "scan-profile")]
+        if prof && !matches!(next, Ok(Event::Block { .. })) {
+            crate::scan_profile::block_none();
+        }
         match next {
             Ok(Event::Block {
                 index,
                 bit,
                 symbols,
+                #[cfg(feature = "scan-profile")]
+                end,
                 ..
             }) => {
+                #[cfg(feature = "scan-profile")]
+                let n_syms = symbols.syms.len() as u64;
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
@@ -1113,6 +1139,19 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                     return finish(None);
                 }
                 mark!(Enqueued, place);
+                #[cfg(feature = "scan-profile")]
+                if let (Some(a), Some(b), Some(c)) = (t_slot, t_read, t_sent) {
+                    let ns =
+                        |x: std::time::Instant, y: std::time::Instant| (y - x).as_nanos() as u64;
+                    crate::scan_profile::block_done(
+                        index,
+                        end - bit,
+                        n_syms,
+                        ns(a, b),
+                        ns(b, c),
+                        c.elapsed().as_nanos() as u64,
+                    );
+                }
             }
             Ok(Event::Done) => return finish(None),
             Err(e) => return finish(Some(e)),
@@ -1125,11 +1164,28 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
     let mut scratch = Scratch::<I>::default();
     let slots = shared.slots as usize;
+    // (research only, `scan-profile`: the worker's waits for a job timed, its jobs counted)
+    #[cfg(feature = "scan-profile")]
+    let prof = crate::scan_profile::on().then(std::time::Instant::now);
+    #[cfg(feature = "scan-profile")]
+    let mut rec = crate::scan_profile::WorkerRec::default();
     loop {
         mark!(JobLock);
         mark!(JobRecv);
+        #[cfg(feature = "scan-profile")]
+        let t_wait = prof.map(|_| std::time::Instant::now());
         let job = jobs.recv();
+        #[cfg(feature = "scan-profile")]
+        if let Some(t) = t_wait {
+            rec.idle_ns += t.elapsed().as_nanos() as u64;
+            rec.jobs += u64::from(job.is_some());
+        }
         let Some((place, bit, mut symbols)) = job else {
+            #[cfg(feature = "scan-profile")]
+            if let Some(t0) = prof {
+                rec.life_ns = t0.elapsed().as_nanos() as u64;
+                crate::scan_profile::worker_done(std::mem::take(&mut rec));
+            }
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {

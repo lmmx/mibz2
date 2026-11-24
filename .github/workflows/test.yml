@@ -60,6 +60,13 @@ jobs:
           git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
+      # bench-scan-profile's timers (docs/journal/2026-11-24-scan-profile-registration.md): the
+      # decoder's output unchanged with them on, every block recorded once, the harness's order
+      # balanced
+      - name: The scan-profile timers (research feature)
+        run: |
+          cargo test --release --features scan-profile --test scan_profile
+          cargo test --release --features scan-profile --example scan_profile
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -202,6 +209,9 @@ jobs:
         run: python3 bench/test_workstation_queue.py
       # bench/run-queue.sh serving two scratch repositories: turns, once per commit per
       # repository, the machine lock, one repository's failure not stopping the other
+      # bench-scan-profile's report (bench/scan_profile.py) on synthetic records
+      - name: The scan-profile diagnostic's report (synthetic records)
+        run: python3 bench/test_scan_profile.py
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids

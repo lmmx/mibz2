@@ -116,6 +116,11 @@ pub mod phase;
 mod read;
 pub mod rle;
 pub mod runs;
+// (research only, `scan-profile`: the parallel decoder's scanner timed, by component, and its
+// workers' waits, the bench-scan-profile diagnostic's records)
+#[cfg(feature = "scan-profile")]
+#[doc(hidden)]
+pub mod scan_profile;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;

@@ -77,6 +77,16 @@ pub fn read_item(br: &mut Bits, level: u32, syms: Vec<u16>) -> Result<Item, (Err
 /// stream's end: a block's header and its symbols (into `syms`, reused), or the end and
 /// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
 ///
+// (research only, `scan-profile`: a phase of the read ended, its clock read; off, nothing)
+macro_rules! phase {
+    ($prof:ident, $p:ident) => {
+        #[cfg(feature = "scan-profile")]
+        if $prof {
+            crate::scan_profile::phase_end(crate::scan_profile::Phase::$p);
+        }
+    };
+}
+
 /// Zero-allocation `read_item` using explicit `ScanScratch` (`Scanner<S>` and parallel workers).
 pub fn read_item_with_scratch(
     br: &mut Bits,
@@ -88,6 +98,12 @@ pub fn read_item_with_scratch(
         ($k:expr) => {
             return Err(($k, syms))
         };
+    }
+    #[cfg(feature = "scan-profile")]
+    let prof = crate::scan_profile::on();
+    #[cfg(feature = "scan-profile")]
+    if prof {
+        crate::scan_profile::phase_start();
     }
     let magic = (br.bits(24) as u64) << 24 | br.bits(24) as u64;
     if magic == END_MAGIC {
@@ -107,6 +123,7 @@ pub fn read_item_with_scratch(
     if orig_ptr as usize > 10 + max_len {
         fail!(ErrorKind::BadOrigPtr);
     }
+    phase!(prof, Header);
 
     let (data, mut r) = br.parts();
     let data_len = data.len();
@@ -141,6 +158,9 @@ pub fn read_item_with_scratch(
         br.set(r);
         fail!(ErrorKind::BadSelectors);
     }
+    phase!(prof, Bitmap);
+    #[cfg(feature = "scan-profile")]
+    let (mut switches, mut prev) = (0u64, u8::MAX);
 
     // the selectors, move-to-front coded; those past MAX_SELECTORS are read and dropped
     // (as libbzip2 1.0.8 does: some encoders round their number up)
@@ -168,6 +188,11 @@ pub fn read_item_with_scratch(
             mtf = (mtf & !((low_mask << 8) | 0xff)) | ((mtf & low_mask) << 8) | (v as u64);
             sel_buf[i] = v;
             used_groups |= 1u8 << v;
+            #[cfg(feature = "scan-profile")]
+            if prof {
+                switches += u64::from(i > 0 && v != prev);
+                prev = v;
+            }
         }
         if r.pos > data_len && r.overran(data) {
             br.set(r);
@@ -175,6 +200,11 @@ pub fn read_item_with_scratch(
         }
     }
 
+    phase!(prof, Selectors);
+    #[cfg(feature = "scan-profile")]
+    if prof {
+        crate::scan_profile::counts(n_sel as u64, switches, u64::from(used_groups.count_ones()));
+    }
     let mut lens = [0u8; MAX_ALPHA];
     for g in 0..n_groups {
         let mut curr = r.bits(data, 5) as i32;
@@ -212,6 +242,7 @@ pub fn read_item_with_scratch(
         }
     }
 
+    phase!(prof, Tables);
     let eob = (alpha - 1) as u16;
     if syms.capacity() < MAX_SYMS {
         syms.clear();
@@ -226,6 +257,7 @@ pub fn read_item_with_scratch(
     let mut n = 0usize;
     let mut sel = 0usize;
     let mut tail_buf = [0u16; 66];
+    phase!(prof, Prep);
 
     let res = loop {
         if sel >= sel_cap {
@@ -261,6 +293,7 @@ pub fn read_item_with_scratch(
         }
     };
 
+    phase!(prof, Decode);
     br.set(r);
     if let Err(err) = res {
         fail!(err);
