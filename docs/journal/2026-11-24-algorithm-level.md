@@ -1170,3 +1170,21 @@ Run by the Coordinator's agent at MONODROMY's request (record 114 §5). Script, 
 - **Lone rows are under-represented among landmark rows:** byte landmarks 7.7–9.9% at k = 1, against Y's 14–15% of rows.
 
 Verdict under the referee (#22): no cut in Q. The cut in D is real but modest, roughly 50–75×, and only a unit-price gain at that (residual b). It is reported to MONODROMY in channel #23.
+
+## 39. The fresh Neon chat's six senses, reviewed; the three corners
+
+Neon (movement) worked six senses (`research/neon-movement`, c71d0a22) and claimed no breakthrough. That is accurate. The review is in `neon-movement-critique.md`.
+- **None is a new sense.** S3 and S4 are external-memory pointer jumping and list ranking (Chiang et al.). S1B is Open plus a ruling set. S2 is negligible, at most 2.8% of h₁. S6 is a sampled-rank residual.
+- **No enrichment.** The only rider is the text position, which restates the inversion.
+- **The best D result to date:** S1B gives D = 1,093–6,013 at P = 4–5, with Q still 5–10·h₁. Its M-21 figures agree exactly with ours (§38).
+- **Discrepancies:**
+  - S5's D headline counts the thin wave only; Neon's own JSON gives 15–44k.
+  - S5's thin scatter is uncharged.
+  - S4's "universal 2.94·m" is the density of local minima under random labels, not a Cole–Vishkin property.
+
+**The three corners (the Coordinator, to Louis).** Every candidate so far lands in one of three corners:
+1. Few or zero addressed reads, but many passes: doubling, list ranking, sort-based inversion.
+2. The same reads, but a shorter dependent chain: lanes, landmarks, S1B.
+3. Fewer reads only where text repeats: runs, copy plans.
+
+On novel random digits each digit must be touched once, because it is the output (record 113). So the open question narrows to this: **can that one touch be a predictable, streamed access within about two passes?** Or is there a lower bound, from sorting and list ranking in the I/O model, saying that predictable-access inversion needs ω(1) passes? A construction would be the breakthrough. A proof of the bound would say that the gain must come from changing the problem, for example the cross-stage track. Louis has asked ChatGPT Pro to help; this framing was offered to pass on.
