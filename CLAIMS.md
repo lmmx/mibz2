@@ -58,6 +58,4 @@ PUSHED N-18 6edadf8 Complete-observation fibres (small n, verified M(n,sigma)): 
 DONE N-18 6edadf8 useful new lead
 PUSHED N-19 bf8bab3 ASK N on Theorem N' (Rec 107): proved airtight inside Lambda' (Prop 19.1); exhibited 3 exact T1 decoders in Lambda' neighbourhood breaking c1>=h1-|B| at |B|=0: (1) fill_remaining (L=cab p=0 -> c1=2<3; k=1..6 family c1=h1-k; 6-block ceiling 6.36-6.83% at '4'), (2) copy (n=33 all-w1, c1=31<33; 6-block ceiling N-16), (3) E1 class fact (n=17 all-w1, c1=14<17; completed 18-row witness c1|_J1=5<7)
 DONE N-19 bf8bab3 useful new lead
-
-
-
+STARTED N-20 2026-11-24T16:43Z constructive one-pass copy-plan & macro-object acquisition from run records (MONODROMY ASK N(1) + Coordinator #12/#13/#14 + NEEDS M-17): declare exact instruction sets I_strict & I_lenient; build & run 3 copy/phrase acquisitions (Phi-run, per-symbol cursor/sweep copy, run-boundary attractor), 1 new post-interval basis object (Unimodal Orbit Arches via 2-cursor boustrophedon), and MONODROMY NEEDS M-17 sweep composition on 6 admitted blocks; fixed rules before data: (a) K=2 lenient yes iff 1-pass non-walking count <= h1/2 & state <= openPeakScratch on 6/6 blocks, else named near-miss + 6-field obstruction; (b) NEEDS M-17 retained 1-sweep withdrawn iff < 2.3 retained rows/link on >= 4 blocks
