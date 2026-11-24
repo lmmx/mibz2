@@ -1,4 +1,4 @@
-"""Ten figures of "Halving the single-row steps" (blog/2026-11-24-halving-the-single-row-steps.md), drawn as
+"""The eleven figures of "Halving the single-row steps" (blog/2026-11-24-halving-the-single-row-steps.md), drawn as
 the objects they show: rings for cycles, ribbons for intervals moved by one translation,
 triangles for triangles, and one colour per letter across the post.
 
@@ -729,6 +729,69 @@ def fig10():
     write("fig10.svg", "".join(o))
 
 
+# ---------------------------------------------------------------- anthyphairesis (#825's figure)
+def fig_anth():
+    pairs = [(169, 239)]
+    while pairs[-1] != (1, 1):
+        a, d = pairs[-1]
+        pairs.append((d - a, 2 * a - d))  # the sliver is the next side; what is left is the next diagonal
+    assert pairs == [(169, 239), (70, 99), (29, 41), (12, 17), (5, 7), (2, 3), (1, 1)]
+    signs = [d * d - 2 * a * a for a, d in pairs]
+    assert signs == [-1, 1, -1, 1, -1, 1, -1]
+    W, H = 360, 356
+    a_ = [svg_open(W, H, "The essay's pairs from 169 against 239 down to 1 against 1, each drawn at the same width: "
+                         "the side laid along the diagonal leaves a sliver, and the sliver is the next square's side; "
+                         "d squared minus twice a squared alternates between minus one and plus one."),
+          text(180, 20, "Side along diagonal, again and again", "bf-ts"),
+          text(330, 40, "d² − 2a²", "fx-row", "end")]
+    X0, BW, Y0, RH, BH = 64, 220, 50, 36, 18
+    for k, (a, d) in enumerate(pairs):
+        y = Y0 + k * RH
+        side = BW * a / d
+        if k + 1 < len(pairs):
+            a2, d2 = pairs[k + 1]
+            # ribbon: this row's sliver becomes the next row's side
+            x0, x1 = X0 + side, X0 + BW
+            n0, n1 = X0, X0 + BW * a2 / d2
+            ym, yn = y + BH, y + RH
+            a_.append(f'<path class="fx-ribbon fx-b" d="M{f(x0)},{ym} C{f(x0)},{f(ym + 10)} {f(n0)},{f(yn - 10)} '
+                      f'{f(n0)},{yn} L{f(n1)},{yn} C{f(n1)},{f(yn - 10)} {f(x1)},{f(ym + 10)} {f(x1)},{ym} Z"/>')
+        a_.append(f'<rect class="fx-cell fx-a" x="{X0}" y="{y}" width="{f(side)}" height="{BH}"/>')
+        if a != d:
+            a_.append(f'<rect class="fx-cell fx-b" x="{f(X0 + side)}" y="{y}" width="{f(BW - side)}" height="{BH}"/>')
+        a_.append(f'<rect class="fx-run" x="{X0}" y="{y}" width="{BW}" height="{BH}"/>')
+        a_.append(text(X0 - 8, y + 13, f"{a}/{d}", "fx-row", "end"))
+        a_.append(text(330, y + 13, f"{signs[k]:+d}".replace("-", "−"), "fx-frac", "end"))
+    a_ += [text(180, H - 40, "green: the side a · amber: the sliver d − a,", "bf-tm"),
+           text(180, H - 24, "which becomes the next square's side", "bf-tm"),
+           text(180, H - 8, "every row drawn at the same width: the shape repeats", "bf-tm"), "</svg>"]
+    r2 = math.sqrt(2)
+    steps = [(1.0, r2), (1.0, r2 - 1), (3 - 2 * r2, r2 - 1)]
+    assert abs(steps[2][0] - (steps[1][0] - 2 * steps[1][1])) < 1e-12
+    b = [svg_open(W, H, "A two-interval exchange with lengths 1 and the square root of two; each step subtracts the "
+                        "shorter interval from the longer, as many times as it fits."), marker("fxa-head"),
+         text(180, 20, "The same step on two intervals", "bf-ts")]
+    notes = ["lengths 1 and √2", "B loses one copy of A: 1 and √2 − 1", "A loses two copies of B, and so on"]
+    BX, BWID = 40, 280
+    for k, ((la, lb), note) in enumerate(zip(steps, notes)):
+        y = 44 + k * 78
+        tot = la + lb
+        wa = BWID * la / tot
+        b.append(f'<rect class="fx-cell fx-a" x="{BX}" y="{y}" width="{f(wa)}" height="24"/>')
+        b.append(f'<rect class="fx-cell fx-n" x="{f(BX + wa)}" y="{y}" width="{f(BWID - wa)}" height="24"/>')
+        b.append(f'<rect class="fx-run" x="{BX}" y="{y}" width="{f(wa)}" height="24"/>')
+        b.append(f'<rect class="fx-run" x="{f(BX + wa)}" y="{y}" width="{f(BWID - wa)}" height="24"/>')
+        b.append(text(BX + wa / 2, y + 16, "A", "fx-math-s"))
+        b.append(text(BX + wa + (BWID - wa) / 2, y + 16, "B", "fx-math-s"))
+        b.append(text(180, y + 42, note, "bf-tm"))
+        if k < 2:
+            b.append(f'<path class="fx-flow" d="M180,{y + 48} L180,{y + 70}" marker-end="url(#fxa-head)"/>')
+    b += [text(180, H - 40, "for √2 the steps never end: 1; 2, 2, 2, …", "fx-pair"),
+          text(180, H - 22, "for whole numbers they end,", "bf-tm"),
+          text(180, H - 7, "as Euclid's algorithm does", "bf-tm"), "</svg>"]
+    write("fig11.svg", '<div class="fx-panels">' + "".join(a_) + "".join(b) + "</div>")
+
+
 TITLES = {
     1: "The same permutation, read as a loop and as an exchange of runs",
     2: "One rule that generates the answers, and proves the impossibility",
@@ -740,6 +803,7 @@ TITLES = {
     8: "Same letters, same moment, different permutations",
     9: "A shared context can carry width-1 rows inside it",
     10: "The next test: supply the order, keep everything else",
+    11: "Anthyphairesis: subtract the side from the diagonal, and repeat",
 }
 
 
@@ -764,7 +828,7 @@ def apply():
         s = s[:a] + fig + s[b:]
     open(POST, "w").write(s)
 
-for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10):
+for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig_anth):
     fn()
 apply()
-print("ten figures drawn and placed; every value asserted")
+print("eleven figures drawn and placed; every value asserted")

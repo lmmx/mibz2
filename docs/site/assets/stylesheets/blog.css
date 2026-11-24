@@ -1054,3 +1054,4 @@
 /* a single drawing is shown at its own size at most, centred, never scaled up */
 .bf-fig svg.fx-solo { display: block; width: 100%; height: auto; margin: 0 auto; }
 .bf-fig svg.bf-step-svg.fx-solo { margin: 0 auto; }
+.bf-fig .fx-math-s { fill: var(--bf-ink); font: italic 15px KaTeX_Math, "Times New Roman", serif; }
