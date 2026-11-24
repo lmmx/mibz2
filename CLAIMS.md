@@ -6,3 +6,5 @@ STARTED C-3 2026-11-24T17:10Z Polychromatic Quotient Slabs (Pi_R subalphabet-mer
 STARTED C-4 2026-11-24T17:10Z De Bruijn Unitig-Interval Duality (multiplicity-1 unitigs U_ksqcup multiplicity->=2 intervals I_k^{>=2} at k=8): prove Lemma U-1 (zero-sort local |I_u|=1 certificate from O(1) cursor passes), declare instruction set, byte-exact construction & decode on 6 admitted blocks, count vs h1 and T^2 (m/2) + Name-to-Address Resolution Wall
 PUSHED C-1 c622d68 Bipartite Boundary-Return Chords (66/66 byte-exact): exact chi_2/h1=0.229-0.320 (0.161-0.285*T^2), chi_4/h1=0.260-0.424; 1-pass Q_thin=0 cursor sweep Q_run=0.793-0.911*h1; named near-miss (lowering L fragments thick bands 27k->223k; Sweep 2 adds ~0.98*h1 Q_thin)
 DONE C-1 c622d68 useful new lead
+PUSHED C-2 33831cd Subalphabet Radix-Fiber k-Cones (Theorem RF-1 proved, 48/48 byte-exact, Q_acq_thin=0): RF3_hex16 1-pass beats T^2 on 6/6 (0.851-0.990*T^2); 2-pass Q_run=0.720-0.955*h1 on 5/6 (0.588-0.711*T^2 on 6/6), RF2_uuid18 2-pass Q_run=0.736-0.983*h1 on 5/6; named near-miss (m16/h1=2.1-3.3 non-hex dilution + UUID hyphens + S=64n relocation)
+DONE C-2 33831cd useful new lead
