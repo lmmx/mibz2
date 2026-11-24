@@ -2,7 +2,7 @@
 
 # Playing the hand you're dealt: in conversation with Thomas Murphy
 
-A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
+A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
 
 22 November 2026 · 15 min read · Meta
 
