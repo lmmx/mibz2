@@ -211,11 +211,18 @@ We have three exact routes along LF, at very different costs:
 - **Open** ([Open Returns](2026-11-19-open-returns.md)) does the same for thick stretches and walks
   the thin ones.
 
-No route can shortcut a **width-1 row**, a run of one letter whose neighbours differ, so no stretch
-carries it. On our Wikidata benchmark most of these rows come from
-[random statement IDs](2026-11-20-where-the-decoding-work-goes.md). We have proved a lower
-bound, G1: in the family of methods these routes belong to, every width-1 row costs
-at least one step, which we call an event.
+A **width-1 row** is a run of one letter whose neighbours differ, so no stretch carries it. We have
+proved a lower bound, G1: in the family of methods these three routes belong to, every width-1 row
+costs at least one step, which we call an event.
+
+On our Wikidata benchmark most of these rows come from
+[random statement IDs](2026-11-20-where-the-decoding-work-goes.md). On six blocks we measured
+closely, about 65% of the width-1 rows lie in hexadecimal tokens that occur only once, 18% in hex
+tokens that repeat and 17% in everything else. Repetition is not the difficulty. Across 3,645
+repeated 40-character SHA-1 hashes on those blocks, only 3 bytes fall in width-1 runs. Each novel
+hash has about 36 of its 40 bytes in them, close to the $(15/16)^2 \times 40 \approx 35$ that random
+hex predicts. So a block splits into two streams, the random rows and the rest, and the cost adds
+over the two.
 
 ## 4. Between the routes we have
 
@@ -392,9 +399,17 @@ interior rows directly.
 
 ## 7. Where the search stands
 
-The frozen target asks whether some exact decoder can take substantially fewer events than Open on
-real blocks. Open pays at least one event per retained step, not only per width-1 row, so a yes
-would have to carry all of the retained words, not just the random IDs.
+The frozen target is precise. On every block, an exact decoder must pay at most half of h₁ in
+single-row events, in at most two passes over the block and no more scratch memory than Open. It
+must be one fixed program with no stored answers, and it must beat our current decoder on whole
+decoding time.
+
+The target is harder than its headline. Counted strictly, Open pays one event for every retained
+step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
+steps on wide runs would remain, so a decoder that cheapens only the random rows needs
+$h_1/m \ge 2/3$. Across the 232 distinct blocks of our benchmark, $h_1/m$ is 0.41 overall and
+0.30 to 0.83 block by block. A yes therefore has to carry all of the retained words more cheaply,
+not just the random IDs.
 
 - **The count.** G1 holds for routes built by contracting stretches, with sharing. What it doesn't
   cover is a rule applied to a whole scattered set, with a short description that is also cheap to
@@ -433,6 +448,7 @@ it is what we now count as progress.
   (described) and an audit of the records below (§6), all verbatim.
 - [The ordered frontier and the transformation between decoders](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md) and
   [abbreviation, batching and the block checksum](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md), our research records.
+- The two streams and the totals: [the six-block measurements](https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md) and [the 232-block baseline](https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md). The frozen target: [the main theorem](https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md), §1.
 - [Toy-transfer](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md), the lanes experiments with their later correction, and
   [the squared map](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md).
 - The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes
