@@ -90,7 +90,7 @@ Report steady state, start-up and drain separately. W = 4k changes both workers 
   - LLC, L2 and dTLB misses, memory-stall cycles.
 
   Also read uncore IMC CAS read/write counts where available. LLC misses × 64 is not DRAM traffic, and uncore bytes are not attributable per stage.
-- **Structural features** (n, r, h₁, m₁₆, width histogram) are computed outside the timed runs, joined by block identity, and grouped by distinct block. The census has 233 distinct blocks repeated four times, not 932 independent samples.
+- **Structural features** (n, r, h₁, m₁₆, width histogram) are computed outside the timed runs, joined by block identity, and grouped by distinct block. The corpus has 1724 blocks: 431 distinct blocks repeated four times. 932 take Open (233 distinct × 4) and 792 do not (198 distinct × 4; corrected after Neon's design review). Fits cluster by distinct block, never by the 1724 rows.
 
 ## 4. Completeness: accounting identities, not a coefficient sum
 

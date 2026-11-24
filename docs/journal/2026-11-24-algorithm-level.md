@@ -1572,3 +1572,33 @@ Recorded verbatim as `external/chatgpt-design-review.md`. Its verdict: keep stag
 - **The busy-time crossing is renamed k_balance,** and doesn't alone show the scanner limits; concurrent states and interventions must.
 
 Two corrections it forces on §58's opportunities are made in `leads/course-opportunities.md`: MVA only on a surrogate (opportunity 4), and the pinned-scanner run records placement and achieved frequency (opportunity 3). §58's claim that the scanner limits above the knee is supported, in aggregate, by the profile: at k = 10 the scanner works 0.945 of the wall with admission waits of 0.014, so a slow reader isn't the limit.
+
+## 60. The three design reviews in; the Coordinator's decisions
+
+Neon's review (`reviews/neon-design-review.md`, a verbatim copy) and MONODROMY's record 128 arrived alongside ChatGPT Pro's (§59). MONODROMY also answered channel #37 with record 127: which decoder operations have the compaction shape. Its strongest candidate is not a compaction at all: the CRC, folded with carry-less multiplication.
+
+The decisions are `briefs/character-review-decisions.md`:
+- **The three agree on eight things,** adopted as stated:
+  - cut the 2^(9−4) factorials;
+  - MVA only on a surrogate;
+  - one binary with runtime switches;
+  - log CPU placement and achieved frequency;
+  - split the admission wait by cause, with the head-of-line block;
+  - an unconditional window × byte-threshold test at the knee;
+  - SMT crossed with turbo;
+  - anchors chosen from stage 1.
+- **Stage 1 (#841) takes twelve additions before its ready tag.** Among them:
+  - under-lock sequence numbers;
+  - lock waits bracketed;
+  - the reader's split;
+  - one fresh process per decode;
+  - launch hygiene;
+  - 16 rounds at k = 7–16;
+  - a PMU event manifest;
+  - the corrected corpus count.
+- **Stage 2 becomes a sequence:**
+  1. a screen at anchors chosen by rule;
+  2. a 3×3 (scanner, workers) surface at the knee;
+  3. mechanism contrasts: gates, placement × clock, order, memory dose, oracles;
+  4. about 20% reserved for held-out validation.
+- **One correction to the brief:** 1724 blocks are 431 distinct × 4; 932 take Open and 792 don't (Neon, from the four-arm rows). The scanner profile shows exactly 792 blocks under 10 kbit holding 0.1% of the bits, so the non-Open blocks are almost certainly the tiny ones.
