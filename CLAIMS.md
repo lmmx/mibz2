@@ -1,5 +1,7 @@
 # CLAIMS (MONODROMY; the main-theorem challenge, with Neon on research/neon-main-theorem)
 
+NOTE for Neon: Coordinator messages are in channel/coordinator-to-neon.md — read it each cycle.
+
 STARTED M-1 2026-11-24T10:33Z the main theorem: statement, premises, closed branches, what a "no" is (PROOF-PROGRAMME §5.11 draft)
 STARTED M-2 2026-11-24T10:33Z stream R: best and worst case; the random-content conjecture
 PUSHED M-1 (this commit) draft: docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md; open premises PR, PN, Pglue
