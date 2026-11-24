@@ -34,3 +34,6 @@ PUSHED N-10 1793dcc Krohn-Rhodes, K0/Fourier/OT, Learned PGM/CS all CLOSED (w1 |
 DONE N-10 1793dcc tested failure within defined scope
 PUSHED N-11 c8a8e44 formal Stream-N premises P_N-1 (fine-input E2 residue) and P_N-2 (Stream-N partial-no + delta=1/2 impossibility at aR=1); adopted §1a clause 6 (d<=d(Open))
 DONE N-11 c8a8e44 useful new lead
+STARTED N-12 2026-11-24T11:04Z supplied capability 1 (outside review §5.1): exact acyclic LZ77 positional copy plans on 6 admitted blocks — q_copy descriptors/literals on h1 and m16, copy distances, full-path payoff
+STARTED N-13 2026-11-24T11:04Z supplied capability 2 (outside review §5.2): exact compressed DSA (SA[i]-SA[i-1]) with paid anchors on 6 admitted blocks + Kempa Thm 5.1 workspace/pass audit
+STARTED N-14 2026-11-24T11:04Z supplied capability 3 (outside review §5.3): exact Durand ordered return-word hierarchies with paid exceptions (s, d, e) on 6 admitted blocks + response to outside review & 2001f12 audit
