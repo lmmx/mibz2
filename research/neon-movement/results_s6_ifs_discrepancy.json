@@ -1,0 +1,874 @@
+{
+  "synth-hex-iid-65536": {
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 65536,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 21.48,
+        "w1_eps_p50": 16,
+        "w1_eps_p99": 73,
+        "w1_eps_max": 93,
+        "w1_zero_eps_frac": 0.0168,
+        "w1_avg_bits_per_eps": 5.39,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 1024,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 2.46,
+        "w1_eps_p50": 2,
+        "w1_eps_p99": 9,
+        "w1_eps_max": 15,
+        "w1_zero_eps_frac": 0.1456,
+        "w1_avg_bits_per_eps": 2.74,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 256,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 1.25,
+        "w1_eps_p50": 1,
+        "w1_eps_p99": 5,
+        "w1_eps_max": 9,
+        "w1_zero_eps_frac": 0.2655,
+        "w1_avg_bits_per_eps": 2.11,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 64,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 0.7,
+        "w1_eps_p50": 1,
+        "w1_eps_p99": 3,
+        "w1_eps_max": 5,
+        "w1_zero_eps_frac": 0.4141,
+        "w1_avg_bits_per_eps": 1.69,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 2044.5,
+        "init_err_max": 2127.0,
+        "boundary_err_median": 16.6,
+        "boundary_err_p99": 67.1
+      },
+      "k=2": {
+        "init_err_median": 127.5936,
+        "init_err_max": 138.0655,
+        "boundary_err_median": 16.6,
+        "boundary_err_p99": 66.6
+      },
+      "k=3": {
+        "init_err_median": 7.9707,
+        "init_err_max": 8.7471,
+        "boundary_err_median": 16.9,
+        "boundary_err_p99": 78.3
+      },
+      "k=4": {
+        "init_err_median": 0.4982,
+        "init_err_max": 0.5582,
+        "boundary_err_median": 16.0,
+        "boundary_err_p99": 72.4
+      },
+      "k=5": {
+        "init_err_median": 0.0312,
+        "init_err_max": 0.0356,
+        "boundary_err_median": 16.3,
+        "boundary_err_p99": 69.7
+      },
+      "k=6": {
+        "init_err_median": 0.0019,
+        "init_err_max": 0.0022,
+        "boundary_err_median": 18.0,
+        "boundary_err_p99": 71.7
+      }
+    },
+    "cost": {
+      "Q": 65536,
+      "Q_over_h1": 1.1406,
+      "Q_acq": 0,
+      "Q_run": 65536,
+      "D": 65536,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 5.016,
+      "S": 394240,
+      "S_over_n": 6.016,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "synth-tmpl-hex-1000x40": {
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 81000,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 359.84,
+        "w1_eps_p50": 274,
+        "w1_eps_p99": 2687,
+        "w1_eps_max": 4289,
+        "w1_zero_eps_frac": 0.0011,
+        "w1_avg_bits_per_eps": 9.22,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 1266,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 3.84,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 18,
+        "w1_eps_max": 276,
+        "w1_zero_eps_frac": 0.1174,
+        "w1_avg_bits_per_eps": 3.1,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 317,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 1.46,
+        "w1_eps_p50": 1,
+        "w1_eps_p99": 6,
+        "w1_eps_max": 72,
+        "w1_zero_eps_frac": 0.2384,
+        "w1_avg_bits_per_eps": 2.22,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1013,
+        "W": 80,
+        "checkpoint_bytes": 1038336,
+        "w1_eps_mean": 0.76,
+        "w1_eps_p50": 1,
+        "w1_eps_p99": 3,
+        "w1_eps_max": 11,
+        "w1_zero_eps_frac": 0.3899,
+        "w1_avg_bits_per_eps": 1.74,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 1402.0,
+        "init_err_max": 6000.0,
+        "boundary_err_median": 270.4,
+        "boundary_err_p99": 2639.3
+      },
+      "k=2": {
+        "init_err_median": 59.7494,
+        "init_err_max": 358.0,
+        "boundary_err_median": 290.2,
+        "boundary_err_p99": 2146.4
+      },
+      "k=3": {
+        "init_err_median": 2.5614,
+        "init_err_max": 32.9218,
+        "boundary_err_median": 297.6,
+        "boundary_err_p99": 4073.0
+      },
+      "k=4": {
+        "init_err_median": 0.098,
+        "init_err_max": 1.9643,
+        "boundary_err_median": 297.4,
+        "boundary_err_p99": 4024.3
+      },
+      "k=5": {
+        "init_err_median": 0.0038,
+        "init_err_max": 0.1172,
+        "boundary_err_median": 300.5,
+        "boundary_err_p99": 3771.9
+      },
+      "k=6": {
+        "init_err_median": 0.0001,
+        "init_err_max": 0.0052,
+        "boundary_err_median": 303.3,
+        "boundary_err_p99": 3977.3
+      }
+    },
+    "cost": {
+      "Q": 81000,
+      "Q_over_h1": 2.0296,
+      "Q_acq": 0,
+      "Q_run": 81000,
+      "D": 81000,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 4.249,
+      "S": 425168,
+      "S_over_n": 5.249,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-0.L": {
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 899931,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 2690.02,
+        "w1_eps_p50": 1093,
+        "w1_eps_p99": 17253,
+        "w1_eps_max": 31653,
+        "w1_zero_eps_frac": 0.0017,
+        "w1_avg_bits_per_eps": 11.39,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14062,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 87.69,
+        "w1_eps_p50": 37,
+        "w1_eps_p99": 900,
+        "w1_eps_max": 3204,
+        "w1_zero_eps_frac": 0.0197,
+        "w1_avg_bits_per_eps": 6.48,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 27.94,
+        "w1_eps_p50": 10,
+        "w1_eps_p99": 332,
+        "w1_eps_max": 847,
+        "w1_zero_eps_frac": 0.0541,
+        "w1_avg_bits_per_eps": 4.83,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 8.0,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 106,
+        "w1_eps_max": 214,
+        "w1_zero_eps_frac": 0.128,
+        "w1_avg_bits_per_eps": 3.39,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 6060.9933,
+        "init_err_max": 67858.0754,
+        "boundary_err_median": 1040.9,
+        "boundary_err_p99": 16911.4
+      },
+      "k=2": {
+        "init_err_median": 63.7689,
+        "init_err_max": 3463.1308,
+        "boundary_err_median": 1408.8,
+        "boundary_err_p99": 15900.0
+      },
+      "k=3": {
+        "init_err_median": 0.3006,
+        "init_err_max": 501.479,
+        "boundary_err_median": 1323.6,
+        "boundary_err_p99": 23234.3
+      },
+      "k=4": {
+        "init_err_median": 0.0032,
+        "init_err_max": 34.8426,
+        "boundary_err_median": 1437.6,
+        "boundary_err_p99": 27072.6
+      },
+      "k=5": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.891,
+        "boundary_err_median": 1355.2,
+        "boundary_err_p99": 18054.7
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.0282,
+        "boundary_err_median": 1366.2,
+        "boundary_err_p99": 17886.2
+      }
+    },
+    "cost": {
+      "Q": 899931,
+      "Q_over_h1": 25.6274,
+      "Q_acq": 0,
+      "Q_run": 899931,
+      "D": 899931,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2063030,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-2.L": {
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 900000,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 2703.21,
+        "w1_eps_p50": 1147,
+        "w1_eps_p99": 17249,
+        "w1_eps_max": 32333,
+        "w1_zero_eps_frac": 0.0015,
+        "w1_avg_bits_per_eps": 11.35,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14063,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 92.41,
+        "w1_eps_p50": 38,
+        "w1_eps_p99": 968,
+        "w1_eps_max": 3308,
+        "w1_zero_eps_frac": 0.0236,
+        "w1_avg_bits_per_eps": 6.48,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 28.62,
+        "w1_eps_p50": 10,
+        "w1_eps_p99": 348,
+        "w1_eps_max": 818,
+        "w1_zero_eps_frac": 0.0503,
+        "w1_avg_bits_per_eps": 4.91,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 7.84,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 89,
+        "w1_eps_max": 213,
+        "w1_zero_eps_frac": 0.1274,
+        "w1_avg_bits_per_eps": 3.42,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 5857.0,
+        "init_err_max": 67531.0,
+        "boundary_err_median": 1132.2,
+        "boundary_err_p99": 16300.6
+      },
+      "k=2": {
+        "init_err_median": 76.1426,
+        "init_err_max": 4545.5116,
+        "boundary_err_median": 1454.9,
+        "boundary_err_p99": 16739.2
+      },
+      "k=3": {
+        "init_err_median": 0.4279,
+        "init_err_max": 489.7007,
+        "boundary_err_median": 1465.0,
+        "boundary_err_p99": 17605.2
+      },
+      "k=4": {
+        "init_err_median": 0.004,
+        "init_err_max": 32.9618,
+        "boundary_err_median": 1429.6,
+        "boundary_err_p99": 27971.3
+      },
+      "k=5": {
+        "init_err_median": 0.0,
+        "init_err_max": 2.2187,
+        "boundary_err_median": 1382.6,
+        "boundary_err_p99": 23539.3
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.0722,
+        "boundary_err_median": 1441.8,
+        "boundary_err_p99": 22998.1
+      }
+    },
+    "cost": {
+      "Q": 900000,
+      "Q_over_h1": 26.2682,
+      "Q_acq": 0,
+      "Q_run": 900000,
+      "D": 900000,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2063168,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-85.L": {
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 899935,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 2853.24,
+        "w1_eps_p50": 1367,
+        "w1_eps_p99": 16626,
+        "w1_eps_max": 34852,
+        "w1_zero_eps_frac": 0.0012,
+        "w1_avg_bits_per_eps": 11.59,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14062,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 103.53,
+        "w1_eps_p50": 38,
+        "w1_eps_p99": 1118,
+        "w1_eps_max": 3448,
+        "w1_zero_eps_frac": 0.0216,
+        "w1_avg_bits_per_eps": 6.53,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 27.89,
+        "w1_eps_p50": 8,
+        "w1_eps_p99": 380,
+        "w1_eps_max": 861,
+        "w1_zero_eps_frac": 0.0548,
+        "w1_avg_bits_per_eps": 4.7,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 7.73,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 94,
+        "w1_eps_max": 217,
+        "w1_zero_eps_frac": 0.123,
+        "w1_avg_bits_per_eps": 3.4,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 6408.4929,
+        "init_err_max": 69460.0772,
+        "boundary_err_median": 1315.9,
+        "boundary_err_p99": 16634.4
+      },
+      "k=2": {
+        "init_err_median": 86.8805,
+        "init_err_max": 4392.4225,
+        "boundary_err_median": 1827.7,
+        "boundary_err_p99": 16084.2
+      },
+      "k=3": {
+        "init_err_median": 0.8554,
+        "init_err_max": 521.5596,
+        "boundary_err_median": 1946.9,
+        "boundary_err_p99": 24962.6
+      },
+      "k=4": {
+        "init_err_median": 0.0066,
+        "init_err_max": 32.9818,
+        "boundary_err_median": 1695.7,
+        "boundary_err_p99": 28118.1
+      },
+      "k=5": {
+        "init_err_median": 0.0001,
+        "init_err_max": 2.0857,
+        "boundary_err_median": 1505.9,
+        "boundary_err_p99": 26369.8
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.0549,
+        "boundary_err_median": 1816.1,
+        "boundary_err_p99": 22110.1
+      }
+    },
+    "cost": {
+      "Q": 899935,
+      "Q_over_h1": 16.2139,
+      "Q_acq": 0,
+      "Q_run": 899935,
+      "D": 899935,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2063038,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-143.L": {
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 899869,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 3230.25,
+        "w1_eps_p50": 1386,
+        "w1_eps_p99": 20112,
+        "w1_eps_max": 34407,
+        "w1_zero_eps_frac": 0.0013,
+        "w1_avg_bits_per_eps": 11.71,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14061,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 86.83,
+        "w1_eps_p50": 36,
+        "w1_eps_p99": 944,
+        "w1_eps_max": 2961,
+        "w1_zero_eps_frac": 0.0216,
+        "w1_avg_bits_per_eps": 6.43,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 26.75,
+        "w1_eps_p50": 10,
+        "w1_eps_p99": 284,
+        "w1_eps_max": 845,
+        "w1_zero_eps_frac": 0.0536,
+        "w1_avg_bits_per_eps": 4.85,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 7.49,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 83,
+        "w1_eps_max": 211,
+        "w1_zero_eps_frac": 0.1251,
+        "w1_avg_bits_per_eps": 3.41,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 6573.4927,
+        "init_err_max": 64467.0716,
+        "boundary_err_median": 1425.8,
+        "boundary_err_p99": 22238.5
+      },
+      "k=2": {
+        "init_err_median": 112.3763,
+        "init_err_max": 4051.1184,
+        "boundary_err_median": 1886.4,
+        "boundary_err_p99": 22644.6
+      },
+      "k=3": {
+        "init_err_median": 1.9153,
+        "init_err_max": 419.3135,
+        "boundary_err_median": 1805.7,
+        "boundary_err_p99": 24249.8
+      },
+      "k=4": {
+        "init_err_median": 0.0336,
+        "init_err_max": 26.3498,
+        "boundary_err_median": 1779.3,
+        "boundary_err_p99": 28802.0
+      },
+      "k=5": {
+        "init_err_median": 0.0006,
+        "init_err_max": 1.5865,
+        "boundary_err_median": 1787.6,
+        "boundary_err_p99": 24863.2
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.0454,
+        "boundary_err_median": 1871.7,
+        "boundary_err_p99": 28865.0
+      }
+    },
+    "cost": {
+      "Q": 899869,
+      "Q_over_h1": 12.3986,
+      "Q_acq": 0,
+      "Q_run": 899869,
+      "D": 899869,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2062906,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-210.L": {
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 899959,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 2944.94,
+        "w1_eps_p50": 1440,
+        "w1_eps_p99": 17603,
+        "w1_eps_max": 35969,
+        "w1_zero_eps_frac": 0.0007,
+        "w1_avg_bits_per_eps": 11.74,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14062,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 87.56,
+        "w1_eps_p50": 40,
+        "w1_eps_p99": 997,
+        "w1_eps_max": 3142,
+        "w1_zero_eps_frac": 0.0175,
+        "w1_avg_bits_per_eps": 6.55,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 24.1,
+        "w1_eps_p50": 9,
+        "w1_eps_p99": 251,
+        "w1_eps_max": 861,
+        "w1_zero_eps_frac": 0.0498,
+        "w1_avg_bits_per_eps": 4.73,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 6.46,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 84,
+        "w1_eps_max": 213,
+        "w1_zero_eps_frac": 0.1326,
+        "w1_avg_bits_per_eps": 3.24,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 5947.4934,
+        "init_err_max": 68224.0758,
+        "boundary_err_median": 1496.3,
+        "boundary_err_p99": 17642.7
+      },
+      "k=2": {
+        "init_err_median": 78.6098,
+        "init_err_max": 3376.9349,
+        "boundary_err_median": 1696.7,
+        "boundary_err_p99": 16746.8
+      },
+      "k=3": {
+        "init_err_median": 0.8982,
+        "init_err_max": 500.8374,
+        "boundary_err_median": 1809.0,
+        "boundary_err_p99": 24855.2
+      },
+      "k=4": {
+        "init_err_median": 0.0114,
+        "init_err_max": 30.342,
+        "boundary_err_median": 1540.6,
+        "boundary_err_p99": 19593.8
+      },
+      "k=5": {
+        "init_err_median": 0.0001,
+        "init_err_max": 0.9448,
+        "boundary_err_median": 1650.1,
+        "boundary_err_p99": 22663.7
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.0572,
+        "boundary_err_median": 1787.7,
+        "boundary_err_p99": 25840.9
+      }
+    },
+    "cost": {
+      "Q": 899959,
+      "Q_over_h1": 9.2728,
+      "Q_acq": 0,
+      "Q_run": 899959,
+      "D": 899959,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2063086,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  },
+  "block-207.L": {
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "ifs_by_B": {
+      "B=1": {
+        "B": 1,
+        "W": 899998,
+        "checkpoint_bytes": 2048,
+        "w1_eps_mean": 2905.15,
+        "w1_eps_p50": 1083,
+        "w1_eps_p99": 18727,
+        "w1_eps_max": 34185,
+        "w1_zero_eps_frac": 0.0012,
+        "w1_avg_bits_per_eps": 11.46,
+        "byte_exact_verified": false
+      },
+      "B=64": {
+        "B": 64,
+        "W": 14063,
+        "checkpoint_bytes": 66560,
+        "w1_eps_mean": 111.93,
+        "w1_eps_p50": 43,
+        "w1_eps_p99": 1413,
+        "w1_eps_max": 3083,
+        "w1_zero_eps_frac": 0.0192,
+        "w1_avg_bits_per_eps": 6.67,
+        "byte_exact_verified": false
+      },
+      "B=256": {
+        "B": 256,
+        "W": 3516,
+        "checkpoint_bytes": 263168,
+        "w1_eps_mean": 29.76,
+        "w1_eps_p50": 9,
+        "w1_eps_p99": 307,
+        "w1_eps_max": 858,
+        "w1_zero_eps_frac": 0.0549,
+        "w1_avg_bits_per_eps": 4.86,
+        "byte_exact_verified": true
+      },
+      "B=1024": {
+        "B": 1024,
+        "W": 879,
+        "checkpoint_bytes": 1049600,
+        "w1_eps_mean": 8.41,
+        "w1_eps_p50": 3,
+        "w1_eps_p99": 104,
+        "w1_eps_max": 217,
+        "w1_zero_eps_frac": 0.139,
+        "w1_avg_bits_per_eps": 3.35,
+        "byte_exact_verified": false
+      }
+    },
+    "contraction_curve": {
+      "k=1": {
+        "init_err_median": 5451.0,
+        "init_err_max": 64852.0,
+        "boundary_err_median": 1066.1,
+        "boundary_err_p99": 19353.0
+      },
+      "k=2": {
+        "init_err_median": 84.9886,
+        "init_err_max": 2924.1832,
+        "boundary_err_median": 1462.6,
+        "boundary_err_p99": 20323.7
+      },
+      "k=3": {
+        "init_err_median": 1.0393,
+        "init_err_max": 421.4212,
+        "boundary_err_median": 1557.0,
+        "boundary_err_p99": 25340.2
+      },
+      "k=4": {
+        "init_err_median": 0.0132,
+        "init_err_max": 25.6276,
+        "boundary_err_median": 1510.5,
+        "boundary_err_p99": 29960.4
+      },
+      "k=5": {
+        "init_err_median": 0.0002,
+        "init_err_max": 1.2942,
+        "boundary_err_median": 1485.1,
+        "boundary_err_p99": 25533.2
+      },
+      "k=6": {
+        "init_err_median": 0.0,
+        "init_err_max": 0.037,
+        "boundary_err_median": 1553.0,
+        "boundary_err_p99": 24264.2
+      }
+    },
+    "cost": {
+      "Q": 899998,
+      "Q_over_h1": 14.4214,
+      "Q_acq": 0,
+      "Q_run": 899998,
+      "D": 899998,
+      "D_over_n": 1.0,
+      "P": 2,
+      "P_acq": 1,
+      "P_run": 1,
+      "P_bytes": 1.292,
+      "S": 2063164,
+      "S_over_n": 2.292,
+      "s_cursors": 256,
+      "notes": "IFS+eps exact walk: compresses target delta bits (from 20b to ~5-9b), but Q=n and D=n unchanged!"
+    }
+  }
+}
