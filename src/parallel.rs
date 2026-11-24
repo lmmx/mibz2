@@ -96,7 +96,7 @@ type Res = Result<Vec<u8>, Error>;
 /// scanner issues a place only within the window, and the reader takes them in order), so
 /// the map stays empty; it is there so that no order of inserts could lose a block. Its
 /// decoded bytes are counted (`bytes`), for the scanner's cap.
-struct Ready {
+pub(crate) struct Ready {
     ring: Vec<Option<(u64, Res)>>,
     over: BTreeMap<u64, Res>,
     len: usize,
@@ -123,7 +123,7 @@ impl Ready {
     }
 
     /// `place`'s block in (replacing any it had, as a map's insert does)
-    fn insert(&mut self, place: u64, res: Res) {
+    pub(crate) fn insert(&mut self, place: u64, res: Res) {
         let _ = self.remove(&place);
         self.bytes += Self::size(&res);
         self.len += 1;
@@ -185,13 +185,13 @@ impl Ready {
 /// The jobs between the scanner and the workers: a queue and its condition, a waiting
 /// worker woken one at a time, and only while one waits
 #[derive(Default)]
-struct Jobs {
+pub(crate) struct Jobs {
     q: Mutex<JobQueue>,
     cv: Condvar,
 }
 
 #[derive(Default)]
-struct JobQueue {
+pub(crate) struct JobQueue {
     q: VecDeque<Job>,
     /// the scanner has ended: no job comes after those queued
     closed: bool,
@@ -277,27 +277,27 @@ impl Drop for JobsTx {
     }
 }
 
-struct State {
+pub(crate) struct State {
     /// decoded blocks (or errors) by their place in the stream, not yet read
-    ready: Ready,
+    pub(crate) ready: Ready,
     /// blocks given a place (the scanner's), and taken by the reader
-    issued: u64,
-    taken: u64,
+    pub(crate) issued: u64,
+    pub(crate) taken: u64,
     /// the number of places once the scanner has ended (its last perhaps an error)
-    end: Option<u64>,
-    cancelled: bool,
+    pub(crate) end: Option<u64>,
+    pub(crate) cancelled: bool,
     /// buffers to reuse: decoded blocks' and symbols', and the input's chunks the scanner is
     /// done with (`StreamDecoder::spare`)
-    free_out: Vec<Vec<u8>>,
-    free_syms: Vec<Vec<u16>>,
-    free_in: Vec<Vec<u8>>,
+    pub(crate) free_out: Vec<Vec<u8>>,
+    pub(crate) free_syms: Vec<Vec<u16>>,
+    pub(crate) free_in: Vec<Vec<u8>>,
     /// the reader waits for a block (on `Shared::cv`), the scanner for room (on
     /// `Shared::scan_cv`): each is woken only while it waits, and only by what it waits for
-    reader_waiting: bool,
-    scanner_waiting: bool,
+    pub(crate) reader_waiting: bool,
+    pub(crate) scanner_waiting: bool,
     /// (testing) the scanner's waits with room in the window: the cap's
     #[cfg(test)]
-    capped_waits: u64,
+    pub(crate) capped_waits: u64,
     /// the decode's terminal failure, if it failed as a whole (the service core's outer
     /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
     /// reader's error in place of `Cancelled`
@@ -323,6 +323,13 @@ impl State {
         }
     }
 
+    pub(crate) fn record_capped_wait_if_any(&mut self, _shared: &Shared) {
+        #[cfg(test)]
+        {
+            self.capped_waits += u64::from(self.issued - self.taken < _shared.slots);
+        }
+    }
+
     /// The reader's error once the decode is cancelled: the terminal failure, if the decode
     /// failed as a whole, else `Cancelled`
     fn stopped(&self) -> Error {
@@ -332,15 +339,15 @@ impl State {
     }
 }
 
-struct Shared {
+pub(crate) struct Shared {
     state: Mutex<State>,
     /// the reader's condition: a block at its place, the end, or the decode cancelled
-    cv: Condvar,
+    pub(crate) cv: Condvar,
     /// the scanner's: room in the window (and under the cap), or the decode cancelled
-    scan_cv: Condvar,
+    pub(crate) scan_cv: Condvar,
     /// `State::cancelled`, readable without the lock (a worker skipping its job)
-    stopped: AtomicBool,
-    slots: u64,
+    pub(crate) stopped: AtomicBool,
+    pub(crate) slots: u64,
     /// the ready blocks' cap, if the decoder has one (the plain workers')
     cap: Option<Cap>,
     /// the pipelined teams' counts (`StreamDecoder::pipeline_counts`): jobs taken by a
@@ -368,7 +375,7 @@ impl Shared {
         }
     }
 
-    fn lock(&self) -> std::sync::MutexGuard<'_, State> {
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, State> {
         // (a panic while holding the lock is caught where it happens; the state is
         // consistent at every unlock, so a poisoned lock is still usable)
         self.state.lock().unwrap_or_else(|e| e.into_inner())
@@ -399,7 +406,7 @@ impl Shared {
 
     /// Whether the scanner must wait before it issues another block: the window full, or
     /// the cap's bytes ready and unread with the cap's floor of blocks in flight
-    fn full(&self, st: &State) -> bool {
+    pub(crate) fn full(&self, st: &State) -> bool {
         let ahead = st.issued - st.taken;
         ahead >= self.slots
             || self
@@ -426,6 +433,9 @@ pub struct StreamDecoder {
     /// the service core's hub, if it is the service core (`service`, or the default at
     /// `SERVICE_PLAN`): for `is_service` and `service_counts`
     hub: Option<Arc<Hub>>,
+    /// the push-streaming front end's helper scanners, if its scanner is the front end's
+    /// (`parscan`): None for the serial scanner
+    front_helpers: Option<usize>,
 }
 
 #[derive(Default)]
@@ -465,6 +475,13 @@ impl StreamDecoder {
     ///   exactly 4, lazy 4/16 (from 0.5.8: the plan's four workers, the lazy kernel likewise).
     ///
     /// A forced plan is never replaced by them either.
+    ///
+    /// And on the measured i9 from 8 threads asked (`parscan_here`), the push-streaming
+    /// front end (`parscan`) in place of the serial scanner, wherever its topology there has a
+    /// helper scanner: unpinned, the plan's lazy workers at 8 and 9 and 8 of them
+    /// (`PARSCAN_TRIMMED_WORKERS`) from 10, with two helpers; pinned one CPU a core, the
+    /// trimmed six at 8 with one helper, and eight at 10 with two. Below 8 threads, and off
+    /// the i9, the decoder is as above. A forced plan is never replaced by it.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let forced = FORCED.with(|c| c.get()).is_some();
@@ -492,7 +509,18 @@ impl StreamDecoder {
             } else {
                 trimmed_here(threads, plan, k)
             };
-            if let Some((n, lazy)) = cell {
+            // on the measured i9 from 8 threads asked (`parscan_here`), the push-streaming
+            // front end with its helper scanners in place of the serial scanner
+            let front = if !forced && parscan_here(threads, k) {
+                let (n, w, lazy) = parscan_workers(threads, slots, plan, cell);
+                let helpers = parscan_helpers(n, threads);
+                (helpers > 0).then(|| Self::parscan_built(n, w, lazy, k, helpers))
+            } else {
+                None
+            };
+            if let Some(dec) = front {
+                dec
+            } else if let Some((n, lazy)) = cell {
                 Self::workers(n, window(Plan::Workers(n), threads, slots, true), k, lazy)
             } else {
                 Self::defaulted(plan, window(plan, threads, slots, false), k)
@@ -500,6 +528,14 @@ impl StreamDecoder {
         };
         record_built(&dec);
         dec
+    }
+
+    /// The push-streaming front end's helper scanners, if this decoder's scanner is the
+    /// front end's (`parscan`, or `new` where `parscan_here` holds): None for the serial
+    /// scanner. Research and tests only.
+    #[doc(hidden)]
+    pub fn front_helpers(&self) -> Option<usize> {
+        self.front_helpers
     }
 
     /// Whether this decoder is the service core (`service`, or `new` at `SERVICE_PLAN`)
@@ -615,6 +651,21 @@ impl StreamDecoder {
         } else {
             trimmed_here(threads, plan, k)
         };
+        // as `new`: on the measured i9 from 8 threads (`parscan_here`), the front end, its
+        // lazy workers on `I`
+        if !forced && parscan_here(threads, k) {
+            let (n, w, lazy) = parscan_workers(threads, slots, plan, cell);
+            let helpers = parscan_helpers(n, threads);
+            if helpers > 0 {
+                if !lazy {
+                    return Self::new(threads, slots, k);
+                }
+                let mut dec = Self::parscan_capped::<I>(n, w, k, READY_BYTES, helpers);
+                dec.threads = n;
+                record_built(&dec);
+                return dec;
+            }
+        }
         if let Some((_, false)) = cell {
             return Self::new(threads, slots, k);
         }
@@ -691,6 +742,170 @@ impl StreamDecoder {
         });
         dec.kernel = std::any::type_name::<I>();
         dec
+    }
+
+    /// The push-streaming parallel front end (`par_scan`) on the default decoder's workers,
+    /// ready ring and `READY_BYTES` cap, its workers chosen as `new` chooses them (on the
+    /// measured i9 from 10 threads asked, 8 lazy workers where `new` runs 7):
+    /// - with fewer than 6 workers, or 6 below 8 threads asked: the single-slab scanner
+    ///   (`par_scan::single_slab_scanner`);
+    /// - 6 workers from 8 threads asked: the lead scanner and one helper;
+    /// - 7 workers or more: the lead scanner and two demand-driven helpers.
+    pub fn parscan(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+        let threads = threads.max(1);
+        let forced = FORCED.with(|c| c.get()).is_some();
+        let plan = Plan::for_threads(threads);
+        let cell = if forced {
+            None
+        } else {
+            trimmed_here(threads, plan, k)
+        };
+        let (n, w_slots, lazy) = parscan_workers(threads, slots, plan, cell);
+        Self::parscan_built(n, w_slots, lazy, k, parscan_helpers(n, threads))
+    }
+
+    /// The front end's decoder on `n` workers (lazy or not) with `w_slots` blocks in flight
+    /// and `helpers` helper scanners (`parscan`, and `new` where `parscan_here` holds)
+    fn parscan_built(
+        n: usize,
+        w_slots: usize,
+        lazy: bool,
+        k: Kernels,
+        helpers: usize,
+    ) -> StreamDecoder {
+        use super::bwt::{Cells, OpenCells};
+        let mut dec = if lazy {
+            Self::parscan_capped::<OpenCells>(n, w_slots, k, READY_BYTES, helpers)
+        } else {
+            Self::parscan_capped::<Cells>(n, w_slots, k, READY_BYTES, helpers)
+        };
+        dec.threads = n;
+        dec
+    }
+
+    /// `parscan` with explicit inverse-BWT kernel `I` on `threads` workers.
+    pub fn parscan_with<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
+        let helpers = if threads <= 6 {
+            0
+        } else if threads < 10 {
+            1
+        } else {
+            2
+        };
+        Self::parscan_capped::<I>(threads, slots, k, READY_BYTES, helpers)
+    }
+
+    pub(crate) fn parscan_capped<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+        cap: usize,
+        helper_scanners: usize,
+    ) -> StreamDecoder {
+        let threads = threads.max(1);
+        let cap = Cap {
+            bytes: cap,
+            floor: threads as u64 + 2,
+        };
+        let prepare_runs =
+            ((2..=3).contains(&threads) || helper_scanners > 0) && I::default().reads_runs();
+        let mut dec = Self::launch_parscan_hub(
+            threads,
+            slots,
+            Some(cap),
+            helper_scanners,
+            prepare_runs,
+            k,
+            move |shared, jobs, ps_hub| parscan_hub_worker::<I>(shared, jobs, ps_hub, k),
+        );
+        dec.kernel = std::any::type_name::<I>();
+        dec
+    }
+
+    fn launch_parscan_hub<W>(
+        threads: usize,
+        slots: usize,
+        cap: Option<Cap>,
+        helper_scanners: usize,
+        prepare_runs: bool,
+        k: Kernels,
+        work: W,
+    ) -> StreamDecoder
+    where
+        W: Fn(&Shared, &super::par_scan::ParJobs, &super::par_scan::ParScanHub)
+            + Clone
+            + Send
+            + 'static,
+    {
+        use super::par_scan::{
+            par_scanner_helper, par_scanner_lead, single_slab_scanner, ParJobs, ParJobsTx,
+            ParScanHub, PARSCAN_INPUT_QUEUE,
+        };
+        let threads = threads.max(1);
+        let slots_u64 = slots.max(threads) as u64;
+        let shared = Arc::new(Shared::new(slots_u64, cap));
+        let (in_tx, in_rx) = sync_channel::<Vec<u8>>(PARSCAN_INPUT_QUEUE);
+        let job_rx = Arc::new(ParJobs::default());
+        let job_tx = ParJobsTx(job_rx.clone());
+        let ps_hub = Arc::new(ParScanHub::new(
+            threads,
+            slots_u64 as usize,
+            helper_scanners > 0,
+            prepare_runs,
+            k,
+        ));
+        let mut handles = Vec::with_capacity(threads + 1 + helper_scanners);
+        for i in 0..threads {
+            let (shared, job_rx, work, ph) =
+                (shared.clone(), job_rx.clone(), work.clone(), ps_hub.clone());
+            handles.push(
+                std::thread::Builder::new()
+                    .name(format!("mibz2-{i}"))
+                    .spawn(move || work(&shared, &job_rx, &ph))
+                    .expect("spawn a bz2 worker"),
+            );
+        }
+        if helper_scanners > 0 {
+            for h in 0..helper_scanners {
+                let (sh, jr, ph) = (shared.clone(), job_rx.clone(), ps_hub.clone());
+                handles.push(
+                    std::thread::Builder::new()
+                        .name(format!("mibz2-scan-{}", h + 1))
+                        .spawn(move || par_scanner_helper(&sh, &ph, &jr))
+                        .expect("spawn a bz2 helper scanner"),
+                );
+            }
+            let (sh, ph) = (shared.clone(), ps_hub);
+            handles.push(
+                std::thread::Builder::new()
+                    .name("mibz2-scan".into())
+                    .spawn(move || par_scanner_lead(&sh, &ph, in_rx, job_tx))
+                    .expect("spawn the bz2 scanner"),
+            );
+        } else {
+            let (sh, ph) = (shared.clone(), ps_hub);
+            handles.push(
+                std::thread::Builder::new()
+                    .name("mibz2-scan".into())
+                    .spawn(move || single_slab_scanner(&sh, &ph, in_rx, job_tx))
+                    .expect("spawn the bz2 scanner"),
+            );
+        }
+        StreamDecoder {
+            input: Mutex::new(Some(in_tx)),
+            shared,
+            handles: Mutex::new(handles),
+            reader: Mutex::default(),
+            threads,
+            pipelined: false,
+            kernel: "",
+            hub: None,
+            front_helpers: Some(helper_scanners),
+        }
     }
 
     /// Research, opt-in, not the default: `teams` pipelined teams of `k` threads (at least
@@ -795,6 +1010,7 @@ impl StreamDecoder {
             pipelined: false,
             kernel: "",
             hub: None,
+            front_helpers: None,
         }
     }
 
@@ -1129,7 +1345,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         mark!(JobLock);
         mark!(JobRecv);
         let job = jobs.recv();
-        let Some((place, bit, mut symbols)) = job else {
+        let Some(job) = job else {
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {
@@ -1138,65 +1354,159 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
             }
             return;
         };
-        mark!(JobGot, place);
-        if shared.stopped.load(Ordering::Acquire) {
-            continue; // (drain the queue, so the scanner never waits on it)
-        }
-        mark!(DecodeStart, place);
-        // (research only, `phase-counters`: the worker's whole-decode scope, the block's
-        // decode_block)
-        #[cfg(feature = "phase-counters")]
-        crate::phase::whole_begin();
-        // the block's symbols go back to the pool once its rows are known (nothing reads
-        // them after), in the same lock as its output buffer is taken: from the pool for a
-        // block of `POOLED_FROM` rows or more, its own for a smaller one
-        let res = catch_unwind(AssertUnwindSafe(|| {
-            super::decode_owned(&mut symbols, k, &mut scratch, |n, syms| {
+        run_worker_job(shared, job, &mut scratch, slots, k);
+    }
+}
+
+fn parscan_hub_worker<I: super::bwt::InverseBwt>(
+    shared: &Shared,
+    jobs: &super::par_scan::ParJobs,
+    ps_hub: &super::par_scan::ParScanHub,
+    k: Kernels,
+) {
+    use super::par_scan::ParPayload;
+    let mut scratch = Scratch::<I>::default();
+    let slots = shared.slots as usize;
+    loop {
+        mark!(JobLock);
+        mark!(JobRecv);
+        let Some((place, bit, payload)) = jobs.recv(ps_hub) else {
+            #[cfg(feature = "trace")]
+            if crate::trace::level() > 0 {
+                crate::trace::buffers(&scratch.buffers());
+                crate::trace::allocations(std::mem::take(&mut scratch.allocation_history));
+            }
+            return;
+        };
+        match payload {
+            ParPayload::Symbols(symbols) => {
+                run_worker_job(shared, (place, bit, symbols), &mut scratch, slots, k);
+            }
+            ParPayload::Prepared(prep) => {
+                mark!(JobGot, place);
+                if shared.stopped.load(Ordering::Acquire) {
+                    continue; // (drain the queue, as `run_worker_job` does)
+                }
+                mark!(DecodeStart, place);
+                #[cfg(feature = "phase-counters")]
+                crate::phase::whole_begin();
+                let res = catch_unwind(AssertUnwindSafe(|| {
+                    super::decode_prepared_runs(
+                        prep,
+                        k,
+                        &mut scratch,
+                        |n, prev_records, used_cp| {
+                            ps_hub.recycle_prepared(prev_records, used_cp);
+                            if n >= POOLED_FROM {
+                                shared
+                                    .lock()
+                                    .free_out
+                                    .pop()
+                                    .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
+                            } else {
+                                Vec::new()
+                            }
+                        },
+                    )
+                }));
+                #[cfg(feature = "phase-counters")]
+                crate::phase::whole_end();
+                mark!(
+                    DecodeEnd,
+                    place,
+                    res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
+                    res.as_ref()
+                        .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
+                );
+                let res = match res {
+                    Ok(r) => r,
+                    Err(p) => {
+                        scratch = Scratch::default();
+                        Err(ErrorKind::Internal(panic_message(p)))
+                    }
+                }
+                .map_err(|kind| Error {
+                    kind,
+                    block: Some(place),
+                    bit: Some(bit),
+                });
                 let mut st = shared.lock();
-                if syms.capacity() > 0 && st.free_syms.len() < slots {
-                    st.free_syms.push(syms);
+                let wake = shared.insert_locked(&mut st, place, res);
+                drop(st);
+                mark!(Ready, place);
+                if wake {
+                    shared.cv.notify_one();
                 }
-                if n >= POOLED_FROM {
-                    st.free_out
-                        .pop()
-                        .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
-                } else {
-                    Vec::new()
-                }
-            })
-        }));
-        #[cfg(feature = "phase-counters")]
-        crate::phase::whole_end();
-        mark!(
-            DecodeEnd,
-            place,
-            res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
-            res.as_ref()
-                .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
-        );
-        let res = match res {
-            Ok(r) => r,
-            Err(p) => {
-                scratch = Scratch::default();
-                Err(ErrorKind::Internal(panic_message(p)))
             }
         }
-        .map_err(|kind| Error {
-            kind,
-            block: Some(place),
-            bit: Some(bit),
-        });
-        let mut st = shared.lock();
-        let wake = shared.insert_locked(&mut st, place, res);
-        // (the symbols, where the block failed before its rows were known)
-        if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
-            st.free_syms.push(std::mem::take(&mut symbols.syms));
+    }
+}
+
+fn run_worker_job<I: super::bwt::InverseBwt>(
+    shared: &Shared,
+    (place, bit, mut symbols): Job,
+    scratch: &mut Scratch<I>,
+    slots: usize,
+    k: Kernels,
+) {
+    mark!(JobGot, place);
+    if shared.stopped.load(Ordering::Acquire) {
+        return; // (drain the queue, so the scanner never waits on it)
+    }
+    mark!(DecodeStart, place);
+    // (research only, `phase-counters`: the worker's whole-decode scope, the block's
+    // decode_block)
+    #[cfg(feature = "phase-counters")]
+    crate::phase::whole_begin();
+    // the block's symbols go back to the pool once its rows are known (nothing reads
+    // them after), in the same lock as its output buffer is taken: from the pool for a
+    // block of `POOLED_FROM` rows or more, its own for a smaller one
+    let res = catch_unwind(AssertUnwindSafe(|| {
+        super::decode_owned(&mut symbols, k, scratch, |n, syms| {
+            let mut st = shared.lock();
+            if syms.capacity() > 0 && st.free_syms.len() < slots {
+                st.free_syms.push(syms);
+            }
+            if n >= POOLED_FROM {
+                st.free_out
+                    .pop()
+                    .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
+            } else {
+                Vec::new()
+            }
+        })
+    }));
+    #[cfg(feature = "phase-counters")]
+    crate::phase::whole_end();
+    mark!(
+        DecodeEnd,
+        place,
+        res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
+        res.as_ref()
+            .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
+    );
+    let res = match res {
+        Ok(r) => r,
+        Err(p) => {
+            *scratch = Scratch::default();
+            Err(ErrorKind::Internal(panic_message(p)))
         }
-        drop(st);
-        mark!(Ready, place);
-        if wake {
-            shared.cv.notify_one();
-        }
+    }
+    .map_err(|kind| Error {
+        kind,
+        block: Some(place),
+        bit: Some(bit),
+    });
+    let mut st = shared.lock();
+    let wake = shared.insert_locked(&mut st, place, res);
+    // (the symbols, where the block failed before its rows were known)
+    if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
+        st.free_syms.push(std::mem::take(&mut symbols.syms));
+    }
+    drop(st);
+    mark!(Ready, place);
+    if wake {
+        shared.cv.notify_one();
     }
 }
 
@@ -2358,6 +2668,7 @@ impl StreamDecoder {
             pipelined: false,
             kernel: "",
             hub: Some(hub),
+            front_helpers: None,
         }
     }
 }
@@ -3274,6 +3585,108 @@ fn window(plan: Plan, threads: usize, slots: usize, trimmed: bool) -> usize {
     }
 }
 
+/// The front end's workers at `threads` asked, with `plan` and `new`'s trimmed cell `cell`
+/// (`StreamDecoder::parscan`): `new`'s workers and window, but 8 where `new` trims to
+/// `TRIMMED_WORKERS` (7) from 10 threads, the serial scanner's share now spread over the
+/// helper scanners; under a plan of teams, a worker a physical core
+fn parscan_workers(
+    threads: usize,
+    slots: usize,
+    plan: Plan,
+    cell: Option<(usize, bool)>,
+) -> (usize, usize, bool) {
+    if let Some((c_n, lazy)) = cell {
+        let n = if threads >= TEN_CORES.0 && c_n == TRIMMED_WORKERS {
+            PARSCAN_TRIMMED_WORKERS
+        } else {
+            c_n
+        };
+        return (n, window(Plan::Workers(n), threads, slots, true), lazy);
+    }
+    match plan {
+        Plan::Workers(n) => (n, window(plan, threads, slots, false), plan.lazy()),
+        Plan::Teams { .. } => {
+            let phys = physical_cores().unwrap_or(threads).clamp(1, threads);
+            let w = (slots.saturating_mul(phys) / threads.max(1)).max(phys);
+            (phys, w, phys >= LAZY_FROM_THREADS)
+        }
+    }
+}
+
+/// The front end's workers on the measured i9 from 10 threads asked, where `new`'s plain
+/// scanner runs `TRIMMED_WORKERS` (7)
+pub const PARSCAN_TRIMMED_WORKERS: usize = 8;
+
+/// The front end's helper scanners for `n` workers at `threads` asked: two from 7 workers,
+/// one at 6 workers from 8 threads asked, none otherwise (the single-slab scanner)
+pub(crate) fn parscan_helpers(n: usize, threads: usize) -> usize {
+    if n >= 7 {
+        2
+    } else if n >= 6 && threads >= 8 {
+        1
+    } else {
+        0
+    }
+}
+
+#[cfg(test)]
+thread_local! {
+    /// (testing) `parscan_here` false on this thread while a `SerialScannerOnly` is held
+    static SERIAL_SCANNER_ONLY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Testing: while held, the default decoder on this thread keeps its serial scanner
+/// wherever it would take the front end (`parscan_here`), so the tests of the serial
+/// scanner's own dispatch on the i9 (its trimmed workers, windows and plans, which it still
+/// runs below 8 threads and off the i9) check exactly that dispatch. Restored on drop
+#[cfg(test)]
+pub(crate) struct SerialScannerOnly(bool);
+
+#[cfg(test)]
+impl SerialScannerOnly {
+    pub(crate) fn hold() -> Self {
+        SerialScannerOnly(SERIAL_SCANNER_ONLY.with(|c| c.replace(true)))
+    }
+}
+
+#[cfg(test)]
+impl Drop for SerialScannerOnly {
+    fn drop(&mut self) {
+        SERIAL_SCANNER_ONLY.with(|c| c.set(self.0));
+    }
+}
+
+/// The fewest threads asked at which the default decoder runs the front end
+/// (`parscan_here`): below it, the default decoder is exactly what it was
+pub const PARSCAN_FROM_THREADS: usize = 8;
+
+/// Whether the default decoder (`StreamDecoder::new`) runs the push-streaming front end in
+/// place of its serial scanner at `threads` asked: from `PARSCAN_FROM_THREADS` (8), on the
+/// measured i9's profile alone (`measured_i9`: the i9-10900K, its 20 CPUs on 10 cores, no CPU
+/// quota, the AVX2 and CLMUL kernels; any affinity), and only where the front end's topology
+/// there has a helper scanner (`parscan_helpers`). Below 8 threads, the measured ancestor lost
+/// 11% at 6 (#145, LOG 7076671871), so the default stays on its serial scanner; on every other
+/// machine it is unchanged. The cheap conditions first, as `trimmed_read`
+pub(crate) fn parscan_here(threads: usize, k: Kernels) -> bool {
+    if threads < PARSCAN_FROM_THREADS {
+        return false;
+    }
+    #[cfg(test)]
+    if SERIAL_SCANNER_ONLY.with(|c| c.get()) {
+        return false;
+    }
+    match overridden() {
+        Some(m) => measured_i9(k, &m),
+        None => {
+            k.avx2
+                && k.clmul
+                && FACTS.may_be_i9(&RealFs)
+                && i9_profile(k, FACTS.machine(&RealFs).as_ref())
+                && cpu_quota(&RealFs) == Quota::Unlimited
+        }
+    }
+}
+
 /// The lazy workers the default decoder runs on the measured i9 at 10 threads asked or more
 /// (`trims_to_seven`), in place of the plan's ten: lazy whatever `LAZY_FROM_THREADS` says
 pub const TRIMMED_WORKERS: usize = 7;
@@ -3612,6 +4025,7 @@ mod lazy_as_tests {
             );
             assert_eq!(a.threads, b.threads, "threads at {t}");
             assert_eq!(a.window(), b.window(), "window at {t}");
+            assert_eq!(a.front_helpers(), b.front_helpers(), "front end at {t}");
             assert_eq!(a.kernel == lazy, b.kernel == stop, "kernel at {t}");
             if a.kernel != lazy {
                 assert_eq!(a.kernel, b.kernel, "kernel at {t}");
@@ -4844,6 +5258,9 @@ mod plan_tests {
     /// decoder its plan builds, since `LAZY_FROM_THREADS` stays 8
     #[test]
     fn seven_lazy_workers_on_the_i9() {
+        // (the serial scanner's dispatch: from 8 threads the i9 takes the front end,
+        // `parscan_here`, tested in `front_end_tests`)
+        let _serial = SerialScannerOnly::hold();
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
             return;
         }
@@ -5172,6 +5589,9 @@ mod plan_tests {
     ///   `planned(Workers(3), 12)`. The trap inverted: this must not be lazy.
     #[test]
     fn the_pinned_cells_on_the_i9() {
+        // (the serial scanner's dispatch: from 8 threads the i9 takes the front end,
+        // `parscan_here`, tested in `front_end_tests`)
+        let _serial = SerialScannerOnly::hold();
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
             return;
         }
@@ -5533,6 +5953,9 @@ mod plan_tests {
     /// keep master's plan; the service core's predicate still reads the affinity
     #[test]
     fn pinned_or_unpinned_on_the_i9() {
+        // (the serial scanner's dispatch: from 8 threads the i9 takes the front end,
+        // `parscan_here`, tested in `front_end_tests`)
+        let _serial = SerialScannerOnly::hold();
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
             return;
         }
@@ -6541,6 +6964,9 @@ mod plan_tests {
     /// every other budget, on the scalar kernels, off the target, and with a plan forced
     #[test]
     fn the_service_default() {
+        // (the serial scanner's dispatch: from 8 threads the i9 takes the front end,
+        // `parscan_here`, tested in `front_end_tests`)
+        let _serial = SerialScannerOnly::hold();
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
             return;
         }
@@ -6706,6 +7132,104 @@ mod plan_tests {
         for t in [1, 2, 4, 6, 8, 64] {
             let p = Plan::for_threads(t);
             assert!(p.threads() <= t.max(1), "{t}: {p:?}");
+        }
+    }
+}
+
+/// The default decoder's push-streaming front end (`parscan_here`): on the measured i9 from
+/// 8 threads asked, pinned or not, with its helper scanners; nowhere below 8, off the i9, on
+/// the scalar kernels, under a CPU quota, or with a plan forced. And its output exact
+#[cfg(test)]
+mod front_end_tests {
+    use super::*;
+
+    const BOTH: Kernels = Kernels {
+        avx2: true,
+        clmul: true,
+    };
+
+    fn built(m: &Machine, t: usize, k: Kernels) -> (Option<usize>, usize, u64, bool) {
+        let (dec, b) =
+            observe_builds(|| with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, k)));
+        assert_eq!(b.len(), 1, "{t}");
+        assert_eq!((b[0].threads, b[0].window), (dec.threads(), dec.window()));
+        let got = (
+            dec.front_helpers(),
+            dec.threads(),
+            dec.window(),
+            dec.is_lazy(),
+        );
+        dec.close();
+        got
+    }
+
+    #[test]
+    fn on_the_i9_from_eight_threads() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let i9 = Machine::service_target();
+        for t in 1..=24 {
+            let got = built(&i9, t, BOTH);
+            if t < PARSCAN_FROM_THREADS {
+                assert_eq!(got.0, None, "unpinned {t}");
+                continue;
+            }
+            // unpinned: from 10, 8 lazy workers (`PARSCAN_TRIMMED_WORKERS`) where the serial
+            // scanner runs 7, the window scaled to them; at 8 and 9 the plan's own workers
+            let (n, w) = if t >= TEN_CORES.0 {
+                (PARSCAN_TRIMMED_WORKERS, 4 * t * PARSCAN_TRIMMED_WORKERS / t)
+            } else {
+                (t, 4 * t)
+            };
+            assert_eq!(got, (Some(2), n, w as u64, true), "unpinned {t}");
+        }
+        // pinned one CPU a core: at 8, the trimmed six workers and one helper; at 10, eight
+        for (t, want) in [
+            (6, (None, 5, 20, true)),
+            (
+                8,
+                (Some(1), TRIMMED_AT_EIGHT, 4 * TRIMMED_AT_EIGHT as u64, true),
+            ),
+            (10, (Some(2), PARSCAN_TRIMMED_WORKERS, 32, true)),
+        ] {
+            assert_eq!(built(&Machine::pinned_i9(t), t, BOTH), want, "pinned {t}");
+        }
+    }
+
+    #[test]
+    fn nowhere_else() {
+        let i9 = Machine::service_target();
+        for t in [8, 10, 12, 20] {
+            assert_eq!(built(&i9, t, Kernels::scalar()).0, None, "scalar {t}");
+            let mut amd = i9.clone();
+            amd.machine.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
+            amd.target.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
+            assert_eq!(built(&amd, t, BOTH).0, None, "amd {t}");
+            let quota = Machine {
+                quota: Quota::Cpus(16.0),
+                ..i9.clone()
+            };
+            assert_eq!(built(&quota, t, BOTH).0, None, "quota {t}");
+            let forced = with_plan(Plan::Workers(t), || built(&i9, t, BOTH));
+            assert_eq!(forced.0, None, "forced {t}");
+            // this machine (the tests' runner, not the i9)
+            let here = StreamDecoder::new(t, 4 * t, Kernels::detect());
+            assert_eq!(here.front_helpers(), None, "here {t}");
+        }
+    }
+
+    #[test]
+    fn exact_on_the_i9() {
+        let i9 = Machine::service_target();
+        let want = crate::decode(service_tests::Z).unwrap();
+        for t in [8, 10, 20] {
+            let mut r = with_machine(i9.clone(), || {
+                crate::BzReader::parallel(service_tests::Z, t)
+            });
+            let mut out = Vec::new();
+            std::io::Read::read_to_end(&mut r, &mut out).unwrap();
+            assert!(out == want, "{t}");
         }
     }
 }

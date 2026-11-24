@@ -134,10 +134,15 @@ fn the_entry_points_reach_the_service_core() {
             res.unwrap_or_else(|err| panic!("{name}: {e:?}: {err}"));
             assert!(got == *data, "{name}: {e:?}: the bytes");
             // (lazy workers beat the service core at 10 threads, #145 LOG 6905312941, so
-            // it is no longer the default: lazy workers of a block each, seven of them,
-            // #515 and REVIEW 6943617731)
+            // it is no longer the default: lazy workers of a block each, seven of them
+            // behind the serial scanner, #515 and REVIEW 6943617731; eight behind the
+            // push-streaming front end from 8 threads, `parallel::PARSCAN_TRIMMED_WORKERS`)
             assert!(!b.service && !b.pipelined, "{name}: {e:?}: {b:?}");
-            assert_eq!(b.threads, 7, "{name}: {e:?}");
+            assert_eq!(
+                b.threads,
+                mibz2::parallel::PARSCAN_TRIMMED_WORKERS,
+                "{name}: {e:?}"
+            );
             assert!(b.counts.is_none(), "{name}: {e:?}");
         }
     }
@@ -217,9 +222,11 @@ fn the_existing_plan_otherwise() {
         (i9.clone(), 7, false, 7, false),
         (i9.clone(), 8, false, 8, false),
         (i9.clone(), 9, false, 9, false),
-        (i9.clone(), 10, false, 7, true),
-        (i9.clone(), 11, false, 7, true),
-        (i9.clone(), 20, false, 7, true),
+        // from 10: the serial scanner's trim was seven lazy workers; the push-streaming
+        // front end (from 8 threads on the i9, `parallel::parscan_here`) runs eight
+        (i9.clone(), 10, false, 8, true),
+        (i9.clone(), 11, false, 8, true),
+        (i9.clone(), 20, false, 8, true),
         (limited.clone(), 6, false, 6, false),
         (limited.clone(), 8, false, 8, false),
         (limited.clone(), 10, false, 10, false),
@@ -241,7 +248,9 @@ fn the_existing_plan_otherwise() {
         (Machine::pinned_i9(8), 6, false, 6, false),
         (Machine::pinned_i9(10), 8, false, 8, false),
         (Machine::pinned_i9(8), 8, false, 6, true),
-        (Machine::pinned_i9(10), 10, false, 7, true),
+        // (at 10, the push-streaming front end's eight lazy workers where the serial
+        // scanner's trim is seven; at 8, the front end keeps the trim's six)
+        (Machine::pinned_i9(10), 10, false, 8, true),
         (Machine::pinned_i9(7), 7, false, 7, false),
         // fewer cores than the threads asked: never trimmed
         (Machine::pinned_i9(4), 6, false, 6, false),
