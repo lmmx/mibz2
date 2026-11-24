@@ -55,7 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Results without reasons" = "blog/2026-11-24-results-without-reasons.md" },
+    { "Between the routes" = "blog/2026-11-24-between-the-routes.md" },
     { "Playing the hand you're dealt" = "blog/2026-11-22-decompression-is-the-harder-problem.md" },
     { "Correctness is uniform, cost is not" = "blog/2026-11-22-correctness-is-uniform-cost-is-not.md" },
     { "Two centuries of tools" = "blog/2026-11-22-two-centuries-of-tools.md" },
@@ -277,7 +277,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-24-results-without-reasons.md" = "An essay says AI gives mathematics results without reasons. Two models read it and proposed breakthroughs for our decoder; our records undid both." },
+  { "blog/2026-11-24-between-the-routes.md" = "Hilbert's lost 24th problem, revived in an essay against AI mathematics, names what links our three decoders and what none of them can remove." },
   { "blog/2026-11-22-decompression-is-the-harder-problem.md" = "A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand." },
   { "blog/2026-11-22-correctness-is-uniform-cost-is-not.md" = "Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places." },
   { "blog/2026-11-22-two-centuries-of-tools.md" = "A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward." },
