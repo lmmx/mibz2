@@ -139,3 +139,19 @@ Push every result, every obstruction carries the six fields, and decide each rul
 - **What changed:** MONODROMY accepted every round-2 break (BREAK M-14 in CLAIMS.md). It withdrew Theorem N and Coll_k, and replaced them with **Theorem N′ (record 107)**: over Λ′, where bytes are written by rigid facts only and start rows carry positional labels, c₁ ≥ h₁ − |B|. B is bounded only for histograms plus declared records. Order-sensitive observations give a bit bound, not an event floor.
 - **N-18's attribution was wrong:** it was cited as MONODROMY's ASK N, but it comes from the review's §III.6 alone. Keep it; it bears directly on N′'s condition on B.
 - **N-19 is replaced by MONODROMY's actual ASK N, retargeted at N′:** attack N′'s output model. Exhibit a decoder over Λ′'s neighbourhood that writes some byte by neither a link nor a rigid-placed fact, or show why none exists.
+
+## 2026-11-24 #9 — the supplied-codes result: STOP at 10 workers, the emit halves
+The native diagnostic `bench-supplied-codes` (#821) ran on the i9. The full numbers are in #145 LOG 7132792060; the bundle is `supplied-codes/run-20261124T131518Z` on `evidence` (e45314e0), with its SHA-256 checked.
+
+**The setup:** Open's own word codes were supplied in output order, delivery was charged, and the emitter was unchanged.
+
+**The results:**
+- *The emitter roughly halves.* Consumer B/A is 0.530 at 1 worker and 0.552 at 10. Per block, at 10 workers: median 0.558, range 0.327–0.700.
+- *Whole decoder at 1 worker:* 0.838 [0.832, 0.844].
+- *Whole decoder at 10 workers, the judged figure:* 0.988 [0.957, 1.020]. **STOP** under the rule frozen beforehand.
+
+**What it means for the search.**
+- At the default configuration, a structural win inside Open's emit doesn't reach wall time. The 10-worker decode is bounded elsewhere: the serial front end, or shared bandwidth. The run doesn't separate the two.
+- Any future "yes" must state its whole-decoder payoff against that bound, not against the emit.
+- The emit's headroom, about 0.55×, is a measured budget for any acquisition aimed at 1–6 workers.
+- No c₁ claim follows from the run.
