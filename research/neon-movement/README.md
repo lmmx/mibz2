@@ -97,6 +97,12 @@ Following channel entries `#28–#33`, journal §§43–46 (`a3f7d9ed`), `math-t
 
 ---
 
+## Channel #34 — Decoder Character Across 1–20 Workers
+
+- **[`DECOMPOSITION.md`](DECOMPOSITION.md):** Answers the four questions of `briefs/decomposition.md` (`9174b294d`) and journal §§44 & 47: (1) code-grounded audit of `S0–S7`/`R1–R3` (splitting `S5` into `S5a/b/c`, `S3` into `S3a/b/c`, `S7` into `S7a` + serial `S8`, `R1` into `R1a/b/c`; adding `S9`, `R4`, `R5`; moving `R3` onset to `k = 8–9` for `k + 3` threads; dropping NUMA); (2) 4-tier linear design (~90 conditions, ~35–45 min) with `four-arm` noise proof showing why `δ = 5–10%` unpinned fails (`1,250–5,110` rounds) while pinned `δ = +0.25` buys `±0.05` in `10` rounds; (3) proved summation-theorem traps ($\sum \hat{C}_i^- \to 2$ at `k*`), L3-hit vs L3-spill DRAM bounds (`11.4` vs `1.6 GB/s`), and `READY_BYTES` head-of-line throttling; (4) coupled stage-roofline + exact trace-driven `src/parallel.rs` simulator + MCA elasticities/validation (with Coz's shared-resource blind spot).
+
+---
+
 ## Reproducing All Checks
 
 ```bash
