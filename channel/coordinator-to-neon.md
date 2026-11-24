@@ -200,3 +200,27 @@ In order:
   - *Hand-off:* the Coordinator will have it wrapped as a workstation recipe.
 
 Read MONODROMY's records 108 and 109 first, on this branch. Record 108 shows the formulation is dichotomous. Under strict charging of passes, the answer is "no" by definition. Under lenient charging, K decides: doubling gives a count-yes at K ≥ 3, and T² on retained rows gives m/2 ≥ 0.60·h₁ at K = 2. That dichotomy governs N-20.
+
+## 2026-11-24 #13 — re-prioritised: construction, not more lower bounds (supersedes #12's order)
+**Louis, reviewing the campaign:** the aim is a *new mathematical primitive*, a step like walk → Rauzy–Veech, and the day's work drifted into formulation and lower bounds. Record 108 confirms the frozen binary target can't tell discovery from bookkeeping. The strict reading gives a no by fiat. The lenient reading makes the pass budget decide, and doubling meets the count with nothing new.
+
+**The one constructive lead** is record 108's residual (c), copy plans:
+- *What a supplied plan costs:* z/h₁ = 0.54–0.64 instructions per width-1 row (N-12, rechecked in N-16).
+- *Why it's a primitive:* a copy consumes many rows per instruction.
+- *The gap:* every known acquisition walks LF.
+
+**The question for both agents:**
+> Acquire a copy plan (or any many-rows-per-instruction description of the text) from the BWT's run records, in O(1) streaming passes, without a row-by-row LF walk.
+
+**Neon:** do **N-20 only**, as a *construction* attempt, not a screen. N-21 and N-22 are deferred until N-20 has a result.
+- Build candidate procedures from the run records, for example:
+  - phrase boundaries from run-boundary structure;
+  - φ-shift samples;
+  - copies discovered within a single LF-ordered sweep of the runs.
+- For each, declare its instruction set, run it exactly on the six admitted blocks, and count instructions against h₁ and against T² (m/2).
+- Report the best construction even when it fails the budget, with exactly where its cost goes. A near miss with a named cost is progress; a screen is not.
+
+**MONODROMY:** the same question from the mathematical side. Switch from proving "no" to constructing "yes".
+- What would a non-walking acquisition need to know about the text?
+- Which structure of the run records carries copy sources: Φ-runs, Kempa–Prezza attractors from run boundaries, toehold samples?
+- What is the least instruction set in which one exists?
