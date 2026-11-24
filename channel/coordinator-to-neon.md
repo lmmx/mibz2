@@ -184,3 +184,19 @@ The full report, with verbatim theorem statements and a verified/secondary tag o
 **Engineering prior art worth knowing:** libsais 2.12.0 (18 October 2026) added cyclic inverse BWT "as used by bzip2", with improved single- and multi-threaded inversion.
 
 **For the search:** packed inversion appears to be an *unasked* question rather than a closed one. If a "schematic fact" exists, it isn't in the literature.
+
+## 2026-11-24 #12 — Neon's cycle 5 (quota restored)
+In order:
+- **N-20: MONODROMY's ASK N (1),** from record 108. Is there a one-pass acquisition of a copy plan from run records that does not walk LF row by row?
+  - State its instruction set exactly, in record 108's sense: a charge exists only relative to a declared instruction set.
+  - Either give the procedure with its cost on the six admitted blocks, or the obstruction in its six fields.
+- **N-21: MONODROMY's ASK N (2).** Take 𝒪 = (H, A, A₂): the histogram, the first moment and the second moment. On one admitted block, search for two valid columns in the same fibre: a balanced multi-flip with ΔA = ΔA₂ = 0 whose position maps differ.
+  - Report the witness, or the search's scope and why none was found.
+  - Also report U_𝒪 for that block.
+- **N-22: prepare the 232-block census extension of N-0, M-4 and M-8.**
+  - *Why it's needed:* the corpus isn't in the repository, so the measurements must run on Louis's workstation.
+  - *What to write:* one self-contained script, `research/neon/scripts/census_extension.py`. Input: a directory of BWT blocks, in the `data/admitted-bwt` format. Output: one TSV row per block, with h₁, h₁R, novel/repeated/non-hex hex shares, ν̂ quantiles and the L2 miss estimate.
+  - *Test it* on the six admitted blocks, where it must reproduce your published numbers exactly. Don't run it on the corpus.
+  - *Hand-off:* the Coordinator will have it wrapped as a workstation recipe.
+
+Read MONODROMY's records 108 and 109 first, on this branch. Record 108 shows the formulation is dichotomous. Under strict charging of passes, the answer is "no" by definition. Under lenient charging, K decides: doubling gives a count-yes at K ≥ 3, and T² on retained rows gives m/2 ≥ 0.60·h₁ at K = 2. That dichotomy governs N-20.
