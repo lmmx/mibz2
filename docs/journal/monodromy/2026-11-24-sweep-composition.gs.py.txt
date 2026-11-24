@@ -1,0 +1,43 @@
+import random, sys, uuid
+def bwt_lf(T):
+    n=len(T); sa=sorted(range(n),key=lambda k:T[k:]+T[:k]) if n<5000 else None
+    if sa is None:
+        # prefix doubling
+        rank=list(T); k=1; sa=list(range(n))
+        while True:
+            key=lambda i:(rank[i],rank[(i+k)%n]); sa.sort(key=key)
+            nr=[0]*n
+            for a in range(1,n): nr[sa[a]]=nr[sa[a-1]]+(key(sa[a])!=key(sa[a-1]))
+            rank=nr
+            if rank[sa[-1]]==n-1: break
+            k*=2
+    L=[T[i-1] for i in sa]
+    order=sorted(range(n),key=lambda x:(L[x],x)); lf=[0]*n
+    for r,x in enumerate(order): lf[x]=r
+    return L,lf
+def sweep(J,ell,order,cap):
+    for x in order:
+        y=J[x]
+        if ell[x]+ell[y]<=cap and y!=x:
+            ell[x]+=ell[y]; J[x]=J[y]
+def links(J,ell,o,n):
+    x=o; t=0; c=0
+    while t<n: t+=ell[x]; x=J[x]; c+=1
+    return c
+random.seed(7)
+def hexrand(n): return [ord(c) for c in ''.join(random.choice('0123456789abcdef') for _ in range(n))]
+def guids(g):
+    s=''.join('{"id":"'+str(uuid.UUID(int=random.getrandbits(128),version=4))+'","n":'+str(i)+'},\n' for i in range(g))
+    return [ord(c) for c in s]
+for name,T in [('hex',hexrand(60000)),('guid-json',guids(1500))]:
+    n=len(T); L,lf=bwt_lf(T)
+    for cap in (8,16,10**9):
+        J=lf[:]; ell=[1]*n; res=[]
+        sweep(J,ell,range(n),cap); res.append(n/links(J,ell,0,n))
+        sweep(J,ell,range(n-1,-1,-1),cap); res.append(n/links(J,ell,0,n))
+        # Jacobi (plain doubling) reference
+        res2=[]
+        J2=lf[:]; e2=[1]*n
+        for _ in range(2):
+            nj=[J2[J2[x]] for x in range(n)]; ne=[e2[x]+e2[J2[x]] for x in range(n)]; J2,e2=nj,ne; res2.append(n/links(J2,e2,0,n))
+        print(name,n,'cap',cap,'GS rows/link after 1,2 sweeps: %.2f %.2f'%tuple(res),'| doubling: %.2f %.2f'%tuple(res2))
