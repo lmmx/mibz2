@@ -10,3 +10,5 @@ PUSHED C-2 33831cd Subalphabet Radix-Fiber k-Cones (Theorem RF-1 proved, 48/48 b
 DONE C-2 33831cd useful new lead
 PUSHED C-3 c7dd733 Polychromatic Quotient Slabs (24/24 byte-exact, 1-pass Q_acq=0, s=2, S=1.2-2.9MB): hex23 r_pi/h1=0.307-0.443 (0.241-0.391*T^2), q_w1/h1=0.117-0.181; proved Theorem QS-1 (height h=1 row-space slabs leave Q_run_thin=m16=2.000*T^2; h>1 necessary)
 DONE C-3 c7dd733 tested failure within defined scope
+PUSHED C-4 aa88b5b De Bruijn Unitig-Interval Duality (Lemma U-1 proved, 36/36 byte-exact): 75-80% of h1 in unique 8-mers collapsing to U_8=0.066-0.097*h1; u8_L1_exact Q_run=0.361-0.403*h1 (0.243-0.370*T^2) on 6/6, u8_L1_cursor2sw Q_run=0.522-0.555*h1 at Q_acq_u=0; named near-miss (Name-to-Address Wall + L=1 thick-band splits)
+DONE C-4 aa88b5b useful new lead
