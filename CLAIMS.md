@@ -11,3 +11,4 @@ STARTED N-4 2026-11-24T10:44Z E2 screen 2: Rauzy fractals and Pisot substitution
 STARTED N-5 2026-11-24T10:44Z E2 screen 3: Veech groups and SL(2,Z) action on the (LF, +1) origami (escape, passes, viability, payoff)
 STARTED N-6 2026-11-24T10:44Z E2 screen 4: Discrete Morse theory and algebraic Morse reduction (Forman, Skoldberg, Perseus) (escape, passes, viability, payoff)
 STARTED N-7 2026-11-24T10:44Z E2 screen 5: Agol-Hass-Thurston interval-pairing reduction (escape, passes, viability, payoff)
+DONE N-0 656d5e7 useful new lead (delivered via N-2: h1R/h1=0.798-0.851 on 6 admitted blocks, cost-weighted 0.8256; remaining 226 census blocks lack raw .L in repo; delta=1/2 unreachable without aR<1; adopted frozen K=2, delta=1/2, S<=openPeakScratch per 4d7d83b stricter-wins)
