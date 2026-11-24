@@ -1,6 +1,6 @@
 # 2026-11-24 · MONODROMY 107 · Round 2 of the outside review: five breaks against records 101, 104, 105, 106 accepted. Theorem N is withdrawn and replaced by Theorem N′ over a narrower class, proved without counts. The swap method gives no event floor against order-sensitive summaries
 
-Source: `channel/outside-review-round2-2026-11-24.md` (78abe2cc), channel entry #6. Witnesses verified by the Coordinator; I re-derived the two I use below by hand.
+Source: `channel/outside-review-round2-2026-11-24.md` (78abe2cc), channel entry #6. Witnesses verified by the Coordinator. I re-derived `bacacb` ↔ `cacabb` by hand (LF = [2,0,4,1,5,3] and [4,0,5,1,2,3]); the 18-row witness I cite on the Coordinator's verification, not my own.
 
 ## 1. Verdicts
 
