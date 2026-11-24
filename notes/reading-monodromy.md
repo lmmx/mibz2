@@ -55,3 +55,27 @@ Fetched `origin/claude/sharp-meitner-cx0v78` commits `4d7d83b`, `a96e969`, `dd1d
 3. **`dd1d6ea` — `docs/journal/monodromy/HANDOFF-2026-11-24.md`:**
    - Notes MONODROMY's next item `M-4` (swap-invariance lemma for aggregate-only global rules on stream R) and confirms our `N-2` finding on `Pglue` (MONODROMY estimates ~10 switches per GUID ≈ 1/3 of `h₁R`; our `N-2` measured exact `all_sw / h₁ = 0.513–0.543` and `w1_switches / h₁N = 1.19–1.63` on all six admitted blocks!).
    - Also notes that anti-cheat clause 2 ("distinguished input") is informal and collapses for general global rules — consistent with our `N-1` audit.
+
+## Cycle 2 read — 2026-11-24T10:54Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `d0d0232` (`9e56347`, `908d292`, `d0d0232`):
+
+1. **`9e56347` — Record 101 (`M-4a`, `M-5`):**
+   - Proves the **Swap-Invariance Lemma** (`docs/journal/monodromy/2026-11-24-swap-invariance.md`): a valid count-preserving flip is a Hamming-distance-2 byte transposition `i < j` with one intervening `a`-or-`b` row `m`, giving `σ' = σ ∘ (3-cycle)` valid iff orbit order matches, exchanging two adjacent text blocks. Lemma 1: `pos'(x) = pos(x)` iff `x` lies in `origPtr`'s arc.
+   - **Theorem 3 (`Λ_agg(𝒫, D)`):** any sound coarse-aggregate rule placing `x` needs `|𝒫| + 2|D| > ν′(x)`. Requests **`NEEDS M-4`** (measure valid flip coverage, greedy disjoint-span `ν′/n`, `|U|`, and orbit cut-point gaps on the 6 admitted blocks).
+   - **M-5 (`Pglue` floor):** `c₁ ≥ seg_R(c) - |U|` over `𝓡 ∪ local ∪ Λ_agg`; predicts `aR ≥ ~0.29` on GUIDs from glue alone.
+
+2. **`908d292` — `channel/coordinator-to-neon.md` entry #2 (interim outside review):**
+   - Amends `N-0`: report `h₁` in 3 parts per block (**novel hex**, **repeated hex**, **non-hex**) with kernel-time-weighted aggregate.
+   - Adds §1a clause 6 (adopted stricter by MONODROMY): a yes must state dependent loads per block `d(D, c) ≤ d(Open, c)`.
+   - Flags two logical gaps in `main-theorem.md` (already caught in `N-1` and repaired in `M-6`).
+   - Prioritises screening **positional copy schemes** (r-index `φ`/toeholds) and **compressed suffix coordinates** (sampled SA, r-index) before the remaining kitchen sink.
+
+3. **`d0d0232` — Record 102 (`M-6`, `M-7`, repaired `main-theorem.md`):**
+   - Accepts all 4 of Neon's `N-1` breaks (`8ec0f0b`) and repairs `main-theorem.md` (`singleCycle` in `G1`, `c₁(Pglue)` in `Pmargin`, `Pstate`, run-based attribution for `Mirror`). Withdraws `NEEDS M-5` as answered by `N-2` (`656d5e7`).
+   - Proves **M-7 (repeats-are-wide lemma)** under model I: at most `log₁₆ N + 16/15 + 1 ≈ 6–7` width-1 rows per repeated hex occurrence. Argues positional copy schemes and r-index `φ` do not enter the open cell on novel content.
+
+### Cycle 2 coordination & adversarial targets spotted
+
+- **Adopt §1a clause 6** (`d(D, c) ≤ d(Open, c)` per block) under stricter-wins.
+- **Do not duplicate `M-4a` or `M-7`:** fulfill `NEEDS M-4` directly (and test whether `ν′(x) = Θ(n)` extends `Λ_agg`'s closure to Stream N!), fulfill amended 3-part `N-0` + test `M-7`'s `≤ 7` prediction empirically, and audit Record 101 Theorem 3's run-record blindness condition (`L = "caab" ↔ "cbaa"`, `D = {2}` breaks `i, j ∉ D` when `D` exposes full run records rather than raw bytes).
