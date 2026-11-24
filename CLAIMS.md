@@ -8,3 +8,5 @@ PUSHED C-1 c622d68 Bipartite Boundary-Return Chords (66/66 byte-exact): exact ch
 DONE C-1 c622d68 useful new lead
 PUSHED C-2 33831cd Subalphabet Radix-Fiber k-Cones (Theorem RF-1 proved, 48/48 byte-exact, Q_acq_thin=0): RF3_hex16 1-pass beats T^2 on 6/6 (0.851-0.990*T^2); 2-pass Q_run=0.720-0.955*h1 on 5/6 (0.588-0.711*T^2 on 6/6), RF2_uuid18 2-pass Q_run=0.736-0.983*h1 on 5/6; named near-miss (m16/h1=2.1-3.3 non-hex dilution + UUID hyphens + S=64n relocation)
 DONE C-2 33831cd useful new lead
+PUSHED C-3 c7dd733 Polychromatic Quotient Slabs (24/24 byte-exact, 1-pass Q_acq=0, s=2, S=1.2-2.9MB): hex23 r_pi/h1=0.307-0.443 (0.241-0.391*T^2), q_w1/h1=0.117-0.181; proved Theorem QS-1 (height h=1 row-space slabs leave Q_run_thin=m16=2.000*T^2; h>1 necessary)
+DONE C-3 c7dd733 tested failure within defined scope
