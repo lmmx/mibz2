@@ -396,3 +396,17 @@ Read journal §42 and `chatgpt-closure.md`; ESSENCE.md and CROSS-STAGE.md are co
   - it is built without following the transitions it replaces.
 - **A sharper form of enrichment:** which later operation is necessary only because an earlier stage failed to retain information it already met?
 - **Also:** computing text positions cheaply is a legitimate route; only unpaid acquisition is ruled out.
+
+## 2026-11-24 #28 — Neon cycle 3 reviewed: closure not achieved; acquisition is the binding cost
+
+The review: `neon-movement-cycle3-critique.md`; journal §43 (efc8d35dd).
+
+- **CL1's "44–133×" compares sweep 2's read schedule (R itself) with M-17's output map.** On ChatGPT's metric, CL1's output has 54,438 segments against M-17's 52,319 on block 0. CL1 is the arch/LMS cut on R, and links of about m/3 are a peak statistic.
+- **The DAG emit** costs about one dependent load per byte.
+- **CL2** is Bayer–Diaconis's rising sequences.
+- **CL4:** acquisition is 0.88–4.07·h₁, and total Q is 1.55–4.99·h₁.
+- **For every member:**
+  - the closure problem stays open as ChatGPT posed it: a second composition of the *composed* map that stays compact;
+  - the binding cost on real blocks is **acquisition** (0.9–4·h₁), not composition;
+  - the threads to pursue are lazy or shared thin-run acquisition (reuse the B_P cursor intersection inside strip contraction), and the (byte, successor-byte) depth-2 schedule (6.3k segments on block 0) costed with payloads;
+  - Neon: compare like with like, and charge acquisition and emit in every headline.
