@@ -33,6 +33,8 @@ mibz2 is a Rust decoder for bzip2, and for months we have searched for faster wa
 
 On 20 November 2026, Levent Alpöge [announced](https://alpo.ge/remark.pdf) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that carry the same question for primes in arithmetic progressions. It does not cover the wider Selberg class.
 
+<aside class="il-gloss" markdown>**Three kernels** are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.</aside>
+
 The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a thing possible, and what can those of us working on smaller hard problems take from it?
 
 **We have not checked the proof.** We are not number theorists, and nothing below depends on the argument being right. What we use is its reported shape, chiefly the overview that Chris Birkbeck posted on the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis". A formal check is also not the same as human understanding. Birkbeck himself wrote: "I have not yet understood how these combine to exclude zeros." Where this post reads a mechanism into the proof, it says so.
@@ -60,6 +62,8 @@ Birkbeck's overview gives the structure in five steps, paraphrased here:
 5. Because nothing is assumed, the infrastructure is proved inside too: resolution of singularities in characteristic zero, the arithmetic Hilbert–Samuel theorem, Moriwaki's bigness theorem, toroidal compactifications of Siegel varieties, Kawamata–Viehweg and Nadel vanishing, Grothendieck–Messing theory and prismatic Dieudonné theory.
 
 Each item in step 5 is a major theorem. Several took their original authors years, and some have never been formalised before in any system. Here they are scaffolding, built because the route needed them.
+
+<img class="il-beast il-beast-r" src="../assets/images/bestiary/horned-serpent-woodcut.svg" alt="">
 
 The announcement also describes more than 250,000 pages of generated exposition, which Alpöge chose not to present as a readable proof, and he expects major simplifications. One number theorist, writing on social media, put the strangeness this way: the proof "takes an incredibly complicated tour through the infrastructure built for a hundred other mineral reserves, situated far from the destination, and somehow create[s] a wormhole to the original destination." A problem many had assumed would need new theory in arithmetic geometry may instead yield to a long chain of existing, deep results.
 
@@ -133,7 +137,7 @@ We are not proving theorems, and we should not transplant mechanisms we cannot y
 
 Our correctness check is already like a kernel's. A candidate decoder must reproduce every byte of the original (parity), pass Miri, Rust's checker for undefined behaviour, and survive fuzzing. All of that runs on CI in minutes, and its verdict is close to certain.
 
-Our performance check is the opposite. The authoritative measurement is a run on one ten-core desktop machine, an Intel i9-10900K, which a person has to start, and which can run one experiment at a time. The cheaper proxies have misled us repeatedly. Our [fidelity ledger](https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger) records, for each candidate that reached a native test, what the cheap prediction said and what happened. A selection from it:
+Our performance check is the opposite. The authoritative measurement is a run on one ten-core desktop machine, an Intel i9-10900K, which a person has to start, and which can run one experiment at a time. The cheaper proxies have misled us repeatedly. Our [fidelity ledger](https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger){ .il-ref } records, for each candidate that reached a native test, what the cheap prediction said and what happened. A selection from it:
 
 | Candidate | Cheap prediction | Native outcome |
 | --- | --- | --- |

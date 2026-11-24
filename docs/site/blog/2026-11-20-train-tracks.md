@@ -25,7 +25,7 @@ Thurston's train tracks squeeze a tangle of curves onto a few weighted branches 
 
 </div>
 
-**What a train track is.** Draw a long, looping curve on a surface: a sphere with a few holes, say, or a doughnut. Many stretches of the curve run side by side before they part. A **train track** replaces all those side-by-side strands with a single branch, and writes on the branch how many strands it stands for. Where strands part or meet, the branches join at a **switch**, smoothly, like railway points, and the numbers must add up there. William Thurston introduced train tracks in the late 1970s to study curves and the maps that move them on surfaces. A few branches and a few numbers then stand for a curve that might wind around thousands of times.
+**What a train track is.** Draw a long, looping curve on a surface: a sphere with a few holes, say, or a doughnut. Many stretches of the curve run side by side before they part. A **train track** replaces all those side-by-side strands with a single branch, and writes on the branch how many strands it stands for. Where strands part or meet, the branches join at a **switch**, smoothly, like railway points, and the numbers must add up there. William Thurston introduced train tracks in the late 1970s to study curves and the maps that move them on surfaces. A few branches and a few numbers then stand for a curve that might wind around thousands of times. Lee Mosher's three-page note[^mosher] is the gentlest way in.
 
 **Why it matters to mibz2.** Undoing bzip2's Burrows–Wheeler transform (BWT) means following one long path through the rows of a block until it has visited every row; each step reads one byte. Most of the cost is that walk. mibz2's kernels save work by treating whole groups of rows that move together as one thing ([A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md), [Open Returns](2026-11-19-open-returns.md)). That is the train-track idea in other clothes. The central operation of train tracks, *splitting*, is the same operation as the Rauzy–Veech induction behind our Cells kernels. Dunfield and Thurston say so in as many words, and we show their figure in [section 3](#3-interval-exchanges-are-train-tracks-and-splitting-is-rauzy-induction).
 
@@ -33,7 +33,7 @@ Thurston's train tracks squeeze a tangle of curves onto a few weighted branches 
 
 ## 1. From curves to branches
 
-The name comes from Thurston's own drawings. In his lecture notes he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."
+The name comes from Thurston's own drawings. In his lecture notes[^thurston] he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."
 
 <figure class="bf-fig" markdown>
 <p class="bf-title">Thurston's corridors, and the track they squeeze down to</p>
@@ -42,7 +42,7 @@ The name comes from Thurston's own drawings. In his lecture notes he asks us to 
 <figcaption>Top: the strands of a curve running side by side in branching corridors. Bottom: each corridor squeezed to one line, a train track, with a train running on it. Reproduced from Thurston, <em>The Geometry and Topology of 3-Manifolds</em>, §8.9 (p. 204 of the notes), for commentary.</figcaption>
 </figure>
 
-The figure below, from Dunfield and Thurston's 2006 paper, shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.
+The figure below, from Dunfield and Thurston's 2006 paper[^dt], shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.
 
 <figure class="bf-fig" markdown>
 <p class="bf-title">Two train tracks</p>
@@ -50,7 +50,7 @@ The figure below, from Dunfield and Thurston's 2006 paper, shows two train track
 <figcaption>Train tracks on a four-punctured sphere and on a torus. Reproduced from Dunfield and Thurston (2006), Figure 16, for commentary.</figcaption>
 </figure>
 
-A track becomes useful once it has numbers. Each branch gets a non-negative **weight**, the number of strands it carries. At every switch the weights must balance. In Masur, Mosher and Schleimer's words, a transverse measure "satisfies the *switch conditions*: for every switch $x \in \tau$ we have $w(a) + w(b) = w(c)$" ([2010, p. 4](https://arxiv.org/abs/1004.4564)). Here $a$ and $b$ are the two branches on the narrow side of the switch and $c$ is the branch on the wide side. So if 5 strands come in on one branch and 3 on the other, the shared branch carries 8.
+A track becomes useful once it has numbers. Each branch gets a non-negative **weight**, the number of strands it carries. At every switch the weights must balance. In Masur, Mosher and Schleimer's words, a transverse measure "satisfies the *switch conditions*: for every switch $x \in \tau$ we have $w(a) + w(b) = w(c)$" (2010, p. 4)[^mms]. Here $a$ and $b$ are the two branches on the narrow side of the switch and $c$ is the branch on the wide side. So if 5 strands come in on one branch and 3 on the other, the shared branch carries 8.
 
 A weighted track like this stands for a whole curve, or a whole family of curves, without drawing any of them. That is the first idea: **many paths that travel together are stored once, with a count.**
 
@@ -115,13 +115,15 @@ One piece is still missing before this is a train track in Thurston's sense: a t
 
 ## 5. Maps that write words
 
-There is a second kind of train track, from Bestvina and Handel's work on maps of graphs, and it is closer to what a decoder does. Here the track is a graph, and a map sends each edge not to one edge but to a whole path of edges. Rafiqi and Zeytin's survey (2026) gives an example on a surface of genus 2, a doughnut with two holes: a track with four edges $e_1, \dots, e_4$ meeting at one vertex $v$, and a map that sends, for instance, $e_1 \mapsto e_1 e_2 e_3 e_1 e_3$ and $e_4 \mapsto e_1 e_2 e_4 e_3$.
+There is a second kind of train track, from Bestvina and Handel's work[^bh] on maps of graphs, and it is closer to what a decoder does. Here the track is a graph, and a map sends each edge not to one edge but to a whole path of edges. Rafiqi and Zeytin's survey (2026)[^rz] gives an example on a surface of genus 2, a doughnut with two holes: a track with four edges $e_1, \dots, e_4$ meeting at one vertex $v$, and a map that sends, for instance, $e_1 \mapsto e_1 e_2 e_3 e_1 e_3$ and $e_4 \mapsto e_1 e_2 e_4 e_3$.
 
 <figure class="bf-fig" markdown>
 <p class="bf-title">A track on a genus-2 surface, mapped into itself</p>
 <img class="bf-src" src="../assets/images/train-tracks/rz-fig1-genus2.png" alt="A two-holed surface with four coloured, oriented loops e1 to e4, all passing through one vertex v.">
-<figcaption>"A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as $e_1 \mapsto e_1 e_2 e_3 e_1 e_3$.</figcaption>
+<figcaption>"A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as <i>e</i><sub>1</sub> ↦ <i>e</i><sub>1</sub><i>e</i><sub>2</sub><i>e</i><sub>3</sub><i>e</i><sub>1</sub><i>e</i><sub>3</sub>.</figcaption>
 </figure>
+
+<aside class="il-gloss" markdown>**A pseudo-Anosov map** stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere except at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.</aside>
 
 Such a map holds two kinds of information. Counting how often each edge appears in each image gives a matrix of non-negative integers, and its largest eigenvalue says how fast paths grow when the map is applied again and again. The words themselves give the order. For a decoder only the second kind is enough: knowing that a stretch of text holds three `a`s and two `n`s does not say which comes first.
 
@@ -147,14 +149,34 @@ These leads now sit in the project's list of open mathematical directions, for t
 
 ---
 
-**Sources:**
-
-- W. P. Thurston, [The Geometry and Topology of 3-Manifolds](https://library.slmath.org/books/gt3m/), lecture notes, Princeton (1980): §8.9, p. 204.
-- N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](https://arxiv.org/abs/math/0510129), *Geometry & Topology* 10 (2006), 2431–2499: §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472).
-- H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](https://arxiv.org/abs/1004.4564), *Duke Mathematical Journal* 161 (2012); arXiv 2010: §2, Figure 1 (p. 4).
-- A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](https://arxiv.org/abs/2610.13347), arXiv 2026: §4.2, Figure 1 (p. 19).
-- L. Mosher, [What is… a train track?](https://www.ams.org/notices/200303/what-is.pdf), *Notices of the AMS* 50 (2003), 354–356.
-- M. Bestvina and M. Handel, Train tracks and automorphisms of free groups, *Annals of Mathematics* 135 (1992), 1–51.
-- Research records: [the run network and its census](https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md); [the origami lift](https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-origami-lift.md).
+**Research records:** [the run network and its census](https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md); [the origami lift](https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-origami-lift.md).
 
 Figures from the papers above are reproduced at reduced size for commentary and criticism, each credited in its caption.
+
+<p class="il-rule" aria-hidden="true">❦</p>
+
+[^mosher]: L. Mosher, [What is… a train track?](https://www.ams.org/notices/200303/what-is.pdf) <span class="il-host">ams.org</span>
+
+    *Notices of the AMS* 50 (2003), 354–356. A three-page note in the *Notices*' "What is…?" series, and the gentlest way in for a reader new to train tracks.
+
+[^thurston]: W. P. Thurston, [The Geometry and Topology of 3-Manifolds](https://library.slmath.org/books/gt3m/) <span class="il-host">library.slmath.org</span>
+
+    Lecture notes, Princeton (1980), §8.9, p. 204. Where train tracks begin, as strands squeezed in branching corridors; the post's first figure is his.
+
+[^dt]: N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](https://arxiv.org/abs/math/0510129) <span class="il-host">arxiv.org</span>
+
+    *Geometry & Topology* 10 (2006), 2431–2499; §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472). Where an interval exchange becomes a one-switch track, and splitting it becomes Rauzy induction.
+
+[^mms]: H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](https://arxiv.org/abs/1004.4564) <span class="il-host">arxiv.org</span>
+
+    *Duke Mathematical Journal* 161 (2012); arXiv 2010, §2, Figure 1 (p. 4). The switch conditions and the split and slide moves, stated exactly.
+
+[^bh]: M. Bestvina and M. Handel, [Train tracks and automorphisms of free groups](https://doi.org/10.2307/2946562) <span class="il-host">doi.org</span>
+
+    *Annals of Mathematics* 135 (1992), 1–51. The second kind of track, a graph whose map sends edges to paths, simplified by folding: the open rows of §6.
+
+[^rz]: A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](https://arxiv.org/abs/2610.13347) <span class="il-host">arxiv.org</span>
+
+    arXiv 2026, §4.2, Figure 1 (p. 19). A survey across surface dynamics, train tracks and arithmetic; its genus-2 example is the map that writes words in §5.
+
+## <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks { #compendium .il-compendium }

@@ -121,6 +121,17 @@ assumption and failed for exactly that reason.
 So at least one expensive failure was not a gap in knowledge but a **failure to look it up**. The
 paper's "observe" phase includes reading what has already been observed.
 
+> **Correction (24 November, later the same day).** The quotation above is from toy-transfer's
+> *early* section. The same file corrects it at L187–208 ("Correction: lanes do pay, once the
+> append is branchless"): with pre-aligned 16-byte stores, 8 lanes cut Open's emit to 0.55–0.78×
+> in a C harness, though either change alone barely moved it. So the early lanes result did not
+> show that the dependent load is not the cost. T² (KILLed, E = 1.22 at 10 workers) remains a
+> negative for its own implementation, which changed footprint and preprocessing too. The causal
+> sentence "failed for exactly that reason" is withdrawn. The lesson of this section stands, and
+> applies to it: this section quoted half of the book it cites. Found by the outside review's
+> second round (`docs/journal/2026-11-24-algorithm-level/chatgpt-round2-response.md` on branch
+> `docs/journal-algorithm-level`) and checked against the file.
+
 A second structural fact: the team already has the role for that lookup. ROLES.md gives the
 Researcher "It judges prior art early: whether a candidate repeats a line already tested", and the
 Optimiser "At each pivot, it first recovers the relevant prior candidates from the record" and

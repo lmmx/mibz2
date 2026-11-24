@@ -248,7 +248,7 @@ The records arrive in $L$ order, so their destinations rise. Sorted by byte, a c
 over the $r$ records, their row starts rise too. One merge of the two lists finds every
 anchor. Brown and Langmead build a *length-capped* structure, which splits long intervals so
 that the walk's average step is bounded, from exactly such a run list in $O(r)$ time and space
-([SEA 2026, Lemma 6](https://arxiv.org/abs/2602.11029)).
+(SEA 2026, Lemma 6)[^bl].
 
 <figure class="bf-fig">
 <p class="bf-title"><code>banana</code>'s three run records, three intervals of a move structure</p>
@@ -295,7 +295,7 @@ caps a block at 900,000 bytes, so the asymptotics are about that generalised mod
 2. **Composed with a move structure built in $O(r)$ time and space,** and walked in $O(n)$
    time, the inverse BWT would take $O(m+n+r+\sigma)$ time and $O(r+\sigma)$ extra working
    memory. Brown and Langmead give such a route from a run-length BWT
-   ([SEA 2026, Lemma 6 and Theorem 9](https://arxiv.org/abs/2602.11029)), for a text with an
+   (SEA 2026, Lemma 6 and Theorem 9)[^bl], for a text with an
    end marker; condition 3 below gives one for bzip2's BWT, which has none.
 
 That memory figure leaves out the compressed input, the $n$ output bytes, the block's Huffman
@@ -326,7 +326,7 @@ Each of those statements has conditions:
    Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle,
    so that proof does not transfer unchanged. A later paper gives a route that needs neither.
    Brown, Sanaullah, Zhang and Langmead
-   ([*Optimal-Time Move Structure Construction*, Theorem 3.9](https://arxiv.org/abs/2603.22147)) build a
+   (*Optimal-Time Move Structure Construction*, Theorem 3.9)[^bszl] build a
    *balanced* move structure, in which every step takes constant time in the worst case, for
    any permutation, in $O(r)$ time and space. Its inputs are each interval's start, the start
    of its image, and the order of the images. For $\Psi$ built from the records, these are the
@@ -418,17 +418,17 @@ were not tried.
 
 **Is any of it new?** Not the observation, which mibz2 recorded in issue #42. The rules it
 rests on are bzip2's format, as Julian Seward designed it, and they are visible in any
-decoder: [Go's](https://go.dev/src/compress/bzip2/bzip2.go) or the
-[Wuffs format notes](https://github.com/google/wuffs/blob/main/std/bzip2/README.md), which
+decoder: Go's[^go] or the
+Wuffs format notes[^wuffs], which
 describe `RUNA` and `RUNB` as repeating "the 0th element". We searched for work that builds a
 run-length BWT or a move structure from MTF- or run-coded input, and found none. That is not
 evidence that none exists. The nearest work builds a run-length BWT from other inputs: from
 the plain text in space bounded by $r$
-([Nishimoto, Kanda and Tabei, ICALP 2022](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99)),
+(Nishimoto, Kanda and Tabei, ICALP 2022)[^nkt],
 from an LZ77 parse
-([Kempa and Kociumaka, FOCS 2020](https://arxiv.org/abs/1910.10631)), and a move structure
+(Kempa and Kociumaka, FOCS 2020)[^kk], and a move structure
 for any permutation, from its intervals, in $O(r)$ time
-([Brown, Sanaullah, Zhang and Langmead, 2026 preprint](https://arxiv.org/abs/2603.22147)).
+(Brown, Sanaullah, Zhang and Langmead, 2026 preprint)[^bszl].
 
 **What is open** is the speculative question: does bzip2's coded form give a stronger
 algorithm or bound than a generic run-length BWT does? One point bears on it. The symbols and
@@ -477,24 +477,36 @@ column ([the appendix, section 4](2026-11-08-inverse-bwt-navigation-notes.md#4-w
 
 ---
 
-**Sources:**
+**Research records:**
+[issue #42](https://github.com/lmmx/mibz2/issues/42): the run counts, the [observation](https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792) that MTF gives the runs, and the [timed move structure](https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621);
+[the run-structures journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md) and [the move-structure walk journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md) (27 October 2026);
+[*The mathematical structure of inverse-BWT navigation*](2026-11-08-inverse-bwt-navigation.md) and its [technical appendix](2026-11-08-inverse-bwt-navigation-notes.md);
+[mibz2's `mtf.rs`](https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs).
 
-- [Issue #42](https://github.com/lmmx/mibz2/issues/42): the run counts, the
-  [observation](https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792) that MTF gives
-  the runs, and the [timed move structure](https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621).
-- [The run-structures journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md)
-  and [the move-structure walk journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md)
-  (27 October 2026).
-- [*The mathematical structure of inverse-BWT navigation*](2026-11-08-inverse-bwt-navigation.md)
-  and its [technical appendix](2026-11-08-inverse-bwt-navigation-notes.md).
-- [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html),
-  SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](https://arxiv.org/abs/2602.11029)).
-- [Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, *Optimal-Time Move Structure Construction*](https://arxiv.org/abs/2603.22147),
-  arXiv:2603.22147 (2026; revised 22 October 2026), Theorem 3.9.
-- [Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, *An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99),
-  ICALP 2022, LIPIcs 229, 99:1–99:20.
-- [Dominik Kempa and Tomasz Kociumaka, *Resolution of the Burrows–Wheeler Transform Conjecture*](https://arxiv.org/abs/1910.10631),
-  FOCS 2020.
-- bzip2's MTF and `RUNA`/`RUNB` rules: [Go's `compress/bzip2`](https://go.dev/src/compress/bzip2/bzip2.go),
-  the [Wuffs bzip2 notes](https://github.com/google/wuffs/blob/main/std/bzip2/README.md) and
-  [mibz2's `mtf.rs`](https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs).
+<p class="il-rule" aria-hidden="true">❦</p>
+
+[^bl]: Nathaniel K. Brown and Ben Langmead, [*Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html) <span class="il-host">drops.dagstuhl.de</span>
+
+    SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](https://arxiv.org/abs/2602.11029)). Length capping from a run list in $O(r)$ time and space (Lemma 6), and inversion in $O(n)$ time and $O(r)$ space for a text with an end marker.
+
+[^bszl]: Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, [*Optimal-Time Move Structure Construction*](https://arxiv.org/abs/2603.22147) <span class="il-host">arxiv.org</span>
+
+    arXiv:2603.22147 (2026; revised 22 October 2026). A balanced move structure, constant time per step in the worst case, for any permutation, built in $O(r)$ time and space (Theorem 3.9).
+
+[^go]: [Go's `compress/bzip2`](https://go.dev/src/compress/bzip2/bzip2.go) <span class="il-host">go.dev</span>
+
+    Go's standard-library bzip2 decoder, where bzip2's MTF and `RUNA`/`RUNB` rules can be read directly.
+
+[^wuffs]: [The Wuffs bzip2 notes](https://github.com/google/wuffs/blob/main/std/bzip2/README.md) <span class="il-host">github.com</span>
+
+    Wuffs's notes on the bzip2 format, which describe `RUNA` and `RUNB` as repeating "the 0th element".
+
+[^nkt]: Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, [*An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99) <span class="il-host">drops.dagstuhl.de</span>
+
+    ICALP 2022, LIPIcs 229, 99:1–99:20. Builds a run-length BWT from the plain text in space bounded by $r$.
+
+[^kk]: Dominik Kempa and Tomasz Kociumaka, [*Resolution of the Burrows–Wheeler Transform Conjecture*](https://arxiv.org/abs/1910.10631) <span class="il-host">arxiv.org</span>
+
+    FOCS 2020. Among the nearest work: a run-length BWT built from an LZ77 parse.
+
+## <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks { #compendium .il-compendium }

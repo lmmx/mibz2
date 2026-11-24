@@ -33,7 +33,7 @@ that chain as a table with one navigation entry per row, which we call the T-vec
 entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block
 size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
 decoding a block, because each step's address comes from the entry just read; mibz2 walks
-many such chains at once so that their memory reads overlap.
+many such chains at once so that their memory reads overlap[^kkp].
 [An earlier post](2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md) works the
 transform through on a small example.
 
@@ -44,9 +44,9 @@ so the whole table can be described by one shift per run, $r$ of them, instead o
 per row, $n$ of them. **A walk can follow those shifts without searching for the right one
 at each step,** by remembering which run it is in. Data structures that do this, *move
 structures*, are published, with proofs:
-[Nishimoto and Tabei (2021)](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101)
+Nishimoto and Tabei (2021)[^nt]
 gave constant-time steps in $O(r)$ machine words, and
-[Brown and Langmead (2026)](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html)
+Brown and Langmead (2026)[^bl]
 inverted a whole BWT in $O(n)$ time with $O(r)$ additional working space, starting from a
 run-length BWT representation.
 
@@ -274,9 +274,9 @@ $$
 In `banana`, the run `aaa` starts at $p=3$, and the `a` rows start at $a=0$: the shift is
 $+3$, as the figure showed. In combinatorics, such a map is a *discrete interval-exchange
 permutation*. This identification is more operationally useful than membership in a
-weak-order lattice, because it tells us exactly how to evaluate the permutation.
+weak-order lattice[^tamayo], because it tells us exactly how to evaluate the permutation.
 
-**The $r$ pieces are an upper bound, not always the fewest.** For the valid cyclic BWT of
+**The $r$ pieces are an upper bound, not always the fewest.** For the valid cyclic BWT[^bijective] of
 `abc`, $L=\texttt{cab}$, $F=\texttt{abc}$ and $r=3$, but $\Psi=(1,2,0)$ has just two maximal
 translated intervals: rows $[0,2)$ have displacement $+1$, and row $[2,3)$ has displacement
 $-2$. The partition of equation (3) is the one the runs induce. Adjacent pieces can share a
@@ -437,7 +437,7 @@ BWTs may have several cycles
 ([appendix section 6](2026-11-08-inverse-bwt-navigation-notes.md#6-cycle-structure-and-necklaces));
 mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021
 structure gives a per-move guarantee independent of single-cycle amortisation, at additional
-construction complexity. Brown and Langmead's [Orbit library](https://github.com/drnatebrown/orbit)
+construction complexity. Brown and Langmead's Orbit library[^orbit]
 implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust
 T-vector.
 
@@ -512,19 +512,34 @@ state carried by the walker, since each step already knows where the last one wa
 
 ---
 
-**Sources:**
+**Research records:**
+[the technical appendix](2026-11-08-inverse-bwt-navigation-notes.md), the secondary derivations, bounds and checks, with their equations;
+[*Building a smaller bzip2 decoding table: from 49 instructions to 12*](2026-11-04-compact30-constructor.md) (4 November 2026), the compact30 architecture and builder evidence.
 
-- [Technical appendix](2026-11-08-inverse-bwt-navigation-notes.md): the secondary derivations,
-  bounds and checks, with their equations.
-- [Daniel Tamayo Jiménez, *Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](https://arxiv.org/abs/2310.19732),
-  PhD thesis (2023): weak order and parabolic quotients.
-- [Takaaki Nishimoto and Yasuo Tabei, *Optimal-Time Queries on BWT-runs Compressed Indexes*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101),
-  ICALP 2021, LIPIcs 198, 101:1–101:15: constant-time move structures.
-- [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html),
-  SEA 2026, LIPIcs 371, paper 9: length capping, and inversion in $O(n)$ time and $O(r)$ space.
-- [Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, *A Survey of the Bijective Burrows–Wheeler Transform*](https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html)
-  (2025), in the Festschrift for Giovanni Manzini, OASIcs 131: cyclic BWT and necklace enumeration.
-- [Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, *Slashing the Time for BWT Inversion*](https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/),
-  DCC 2012, pp. 99–108: multi-chain and multi-character inversion.
-- [*Building a smaller bzip2 decoding table: from 49 instructions to 12*](2026-11-04-compact30-constructor.md)
-  (4 November 2026): compact30 architecture and builder evidence.
+<p class="il-rule" aria-hidden="true">❦</p>
+
+[^kkp]: Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, [*Slashing the Time for BWT Inversion*](https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/) <span class="il-host">researchportal.helsinki.fi</span>
+
+    DCC 2012, pp. 99–108. Multi-chain and multi-character inversion: following many chains at once so their memory reads overlap.
+
+[^nt]: Takaaki Nishimoto and Yasuo Tabei, [*Optimal-Time Queries on BWT-runs Compressed Indexes*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101) <span class="il-host">drops.dagstuhl.de</span>
+
+    ICALP 2021, LIPIcs 198, 101:1–101:15. Constant-time move structures: a walk's steps in constant time and $O(r)$ machine words.
+
+[^bl]: Nathaniel K. Brown and Ben Langmead, [*Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html) <span class="il-host">drops.dagstuhl.de</span>
+
+    SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](https://arxiv.org/abs/2602.11029)). Length capping, and inversion in $O(n)$ time and $O(r)$ space.
+
+[^tamayo]: Daniel Tamayo Jiménez, [*Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](https://arxiv.org/abs/2310.19732) <span class="il-host">arxiv.org</span>
+
+    PhD thesis (2023). Weak order and parabolic quotients.
+
+[^bijective]: Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, [*A Survey of the Bijective Burrows–Wheeler Transform*](https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html) <span class="il-host">drops.dagstuhl.de</span>
+
+    (2025), in the Festschrift for Giovanni Manzini, OASIcs 131. The cyclic BWT and necklace enumeration.
+
+[^orbit]: Nathaniel K. Brown and Ben Langmead, [Orbit](https://github.com/drnatebrown/orbit) <span class="il-host">github.com</span>
+
+    A library implementing move-structure variants; not a verified drop-in replacement for mibz2's Rust T-vector.
+
+## <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks { #compendium .il-compendium }

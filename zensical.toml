@@ -11,6 +11,8 @@ extra_css = [
   "assets/stylesheets/blog.css?v=dev",
   "assets/stylesheets/frontier.css?v=dev",
   "assets/stylesheets/observatory.css?v=dev",
+  # the Thomas Murphy post's devices, used only where a page writes an il-* class
+  "assets/stylesheets/illuminated.css?v=dev",
   # KaTeX, for the maths pymdownx.arithmatex marks (pinned; assets/javascripts/katex.js)
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
 ]

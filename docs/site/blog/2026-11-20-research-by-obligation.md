@@ -111,7 +111,9 @@ That reshaped an idea we had been circling: a zoo. Rather than one universal dec
 
 ## 6. Adapting the method: toy, missing effect, native surrogate
 
-Today Levent Alpöge [announced](https://alpo.ge/remark.pdf) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. (*Update, 21 November:* the same day, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.) What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
+Today Levent Alpöge [announced](https://alpo.ge/remark.pdf) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
+
+<aside class="il-gloss" markdown>**Since then** (a note of 21 November): the same day as the announcement, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.</aside>
 
 As he tells it, he started from a *toy* setting where the theorem was already known (the Riemann Hypothesis over function fields) and re-proved it in a new way chosen so the proof might travel. He then named the ingredient that the hard setting lacks: Stepanov's classical argument uses *multiplicity*, a polynomial vanishing to high order, which over the integers would be "something like differentiating whole numbers". The decisive step was to find a different mechanism, native to the hard setting, with the same effect: chains of theta lifts, each standing in for one order of multiplicity. The human held the analogy; the AI system supplied the technical mastery to build it.
 
@@ -149,6 +151,8 @@ There is a limit, which the research line also proved. Every text coded from a r
 
 That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way $k\alpha$ does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of $\alpha$, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
 
+<aside class="il-gloss" markdown>**Ostrowski numeration** writes a whole number as a sum of the denominators of $\alpha$'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.</aside>
+
 ## 7. Where this leaves us
 
 Three pieces now fit together. The obligation register tells us what our present algorithms pay for. Importing mathematical structure tells us what other operations might exist. Toy-to-hard transfer tells us which missing effects those operations should try to reproduce.
@@ -163,7 +167,7 @@ A new research line is running now, independently, with the geometric leads (squ
 
 **Research records:**
 
-- [The research charter: method](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/METHOD.md) and [frontier and obligation register](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/FRONTIER.md).
+- [The research charter: method](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/METHOD.md){ .il-ink .il-c1 } and [frontier and obligation register](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/FRONTIER.md){ .il-ink .il-c3 }.
 - [Toy, missing ingredient, native surrogate](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-toy-transfer.md), with the correction and the lanes experiment.
 - [Working backwards from the text](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-working-backwards.md).
 - Levent Alpöge, [Remark](https://alpo.ge/remark.pdf) (20 November 2026), announcing the proof. On 20 November its Lean formalisation was reported accepted by three independent kernels (nanoda, con-leche `--verified`, pestka) in the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis".

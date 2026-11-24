@@ -779,6 +779,82 @@ technique, and point to the section where it is worked by hand.
   commit, and followed by a table saying what each instruction does [P: the compact30
   constructor post].
 
+### Ornament: "Playing the hand you're dealt" as a precedent
+
+The Thomas Murphy conversation post is the blog's best-looking post (Louis, 24 November
+2026). Its devices may be reused, but **it is a precedent for judgement, not a template.**
+No device is required in any post, and a post may invent its own.
+
+**An ornament belongs to one word or one moment.** Every device in that post is attached
+to a particular term, link or line. None of it is in the page's frame: headers, headings,
+cards and footers repeat on every page, so ornament placed there repeats too and reads as a
+costume (Louis, 24 November 2026: "if you use sort of manuscript style without thought, it
+becomes very like ugly"). If a device would look the same wherever it was put, leave it out.
+
+**Keep attention with asides, not with longer prose.** The post is Baroque on purpose.
+Instead of stopping the conversation to explain something, it puts the explanation beside
+it, in short fleuron paragraphs in a different literary voice. The reader can take an
+aside or skip it, and the change of voice and ornament keeps the page lively where a
+paragraph of definitions would lose them. The argument's prose stays plain; the asides are
+where the colour goes.
+
+The devices, and when each is used:
+- **A fleuron link** (`❧ link ☙`, in a decorative face) marks a reference the reader needs
+  in order to follow. The face is chosen because it is beautiful in that place, not
+  because it is striking.
+- **Link the document itself.** A term the reader can't be expected to know, because the
+  conversation starts in the middle of things, links to the thing it names: MODE.md and
+  MODE.RATIONALE.md, not a definition of "modes". This rule holds in every post,
+  ornamented or not.
+- **A gloss** (a fleuron, then a short paragraph in italic serif with the term in small
+  capitals) gives context where a footnote would otherwise go. It sits beside the line it
+  explains, so the reader doesn't lose their place. A gloss is in the editor's voice, which
+  may be a little old-fashioned: the agents' message board described as missives, summons
+  and vigil. That voice belongs to the glosses only. The source material and the argument
+  stay plain, and "Plain statement, not mannered prose" still applies to them. An
+  old-fashioned word is acceptable where it says the plain thing; a metaphor that stands
+  in for the claim is not.
+- **A Compendium of Links** closes a post that cites many sources. Every link in the post
+  is numbered where it appears and gathered at the end under an illuminated heading: each
+  entry with the title, the host, and a sentence or two saying what the source is and why
+  it matters here, with a link back to where it was cited. A pile of URLs becomes a reading
+  list the reader can browse afterwards.
+- **Blackletter** adds emphasis the original didn't have. Use it on a word or a short
+  phrase, never on a title or a whole sentence.
+- **Colour and glow** vary from one accent to the next by choice: a glow here, a deep red
+  there. Keep a glow tight, a few pixels with a dark edge, because a diffuse glow blurs the
+  letters.
+- **Neighbouring links** in one passage may take different colours, so they read as
+  separate links.
+- **Code words** (commands, flags, identifiers such as the `/teamwork` and `/swarm`
+  commands) stay monospace, whatever is decorated around them.
+- **Creatures** are traced from manuscripts at full resolution
+  (`docs/art/bestiary/traced/PIPELINE.md`, "Detail Pass"), never drawn freehand or
+  enlarged from a low-detail trace. They may be placed by eye and for play, without each
+  one needing a reason. They must never cover text, and they must work at 390px and in the
+  slate theme.
+- **Animation** (SVG and SMIL) is craft: worth time to get right, or not worth doing.
+  Respect `prefers-reduced-motion`.
+
+**The markup.** `assets/stylesheets/illuminated.css` has these devices for a Markdown post.
+None of them applies unless the post writes its class, and its fonts download only on a
+page that uses them.
+
+| Device | Markdown |
+| --- | --- |
+| Fleuron link | `[MODE.md](url){ .il-ref }`; neighbours take `.il-c1` to `.il-c5` |
+| Neighbouring plain links | `[#160](url){ .il-ink .il-c1 }`, `[#161](url){ .il-ink .il-c2 }` |
+| Gloss | `<aside class="il-gloss" markdown>**The BEAM** is …</aside>`; a term may link to its source, `**[Cocycle](url)**`, and keeps the gloss's colour |
+| Blackletter | `<span class="il-black">…</span>`; red with an edge `il-rubric`; warm halo `il-gild` |
+| Tight glow | `<span class="il-glow">…</span>`, `il-glow-ember` |
+| Creature | `<img class="il-beast il-beast-r" src="…/bestiary/….svg" alt="">` (`-l`, `-c`) |
+| Fleuron rule | `<p class="il-rule" aria-hidden="true">❦</p>` |
+| Compendium | the post's last heading, `## <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks { #compendium .il-compendium }`, with each source a footnote: `[^beam]` in the text, and `[^beam]: [The BEAM](url) <span class="il-host">en.wikipedia.org</span>`, then a blank line and the description indented four spaces |
+
+**Check:** read the page and point at each ornament. Say which word or moment it belongs
+to, and why it is there rather than somewhere else. Remove any ornament that can't be
+answered for.
+
 ### Structure, length and the frame
 
 - **One line of argument.** Detail that isn't on that line goes to a technical appendix
