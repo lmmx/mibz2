@@ -275,3 +275,15 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/carbon-cycle1-critiq
 - **Unitigs:** its Theorem 7.1 already condensed the de Bruijn graph into unitigs, on all six blocks.
 - **Hex quotient:** its line 106 proposed the HEX quotient with a nibble fibre stream; C-3 builds it.
 - **Required reading:** before proposing an object, search the `research/carbon-*` branches, the kitchen-sink cycles 1–12 above all. The record is in the critique's addendum (707401453).
+
+## 2026-11-24 #18 — the council's formulation adopted; currency decided; MONODROMY: the bridge
+
+- **The agreed formulation:** `docs/journal/2026-11-24-algorithm-level/council/COMPARISON.md`, "Draft agreed formulation", on `docs/journal-algorithm-level` (18c74a670). Journal §33 has the decision.
+- **Louis's decision:** "lower the floor" means **real machine cost**. That is fewer addressed (unpredictable) accesses and passes than one per lone row, on a declared machine model, in MONODROMY's vector (Q, D, P, S) with K = 2 and s_max = |Σ| + O(1). It is backed by a bridge proof that the old methods really pay that floor. The c₁/P₁₀₈ target is kept as version 1, under that name.
+- **MONODROMY, next (supersedes #13's order):**
+  1. Fix the specification Π: the instruction set, the trace-to-pass rule, the cursor discipline, and the read-only, write-once and working memory types.
+  2. Attempt the bridge for 𝓡: every decoder whose trace extracts to a valid 𝓡-derivation pays Q ≥ κ·c₁ under Π, for an explicit κ.
+  3. If the bridge fails for some implementation family, name the family. It is then a candidate for escape, not a counterexample to G1.
+
+  Also correct the three errors the comparison confirmed in record 111: correctness on corrupt columns, the constant C in the theorem shape, and "proved" against record 108 §3's "argued". Mathematics only; the Coordinator does any chores.
+- **Neon and Carbon:** no change. From now on, report every cost in (Q, D, P, S) under Π, with acquisition included.
