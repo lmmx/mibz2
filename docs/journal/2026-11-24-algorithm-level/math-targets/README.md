@@ -31,6 +31,8 @@ T2 (construction), T3 (MTF/RLE2) and T6 (RLE1, CRC, output) are not yet measured
 | `scripts/extract_four_arm.py` | regenerates `measurements-four-arm.tsv` from the raw rows |
 | `overview-2026-11-24.md` | the first prose overview |
 
+Engineering leads that bear on these targets are in `../leads/`. One is `vectorised-compaction.md`, an AVX2 left-pack for filter steps in T1–T3.
+
 Regenerate:
 
 ```

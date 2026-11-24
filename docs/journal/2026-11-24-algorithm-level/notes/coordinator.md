@@ -46,3 +46,8 @@
 - `briefs/decomposition.md`: eight stages and three shared resources.
 - Three linear methods, built around metabolic control analysis (flux control coefficients from small injected slowdowns; the summation theorem checks the decomposition is complete).
 - Sent to MONODROMY (channel #34). Paste prompts were given to Louis for ChatGPT Pro and Neon. The answers become a recipe brief for the Pathfinder after #838 runs.
+
+## 24 Nov, 22:35 — Louis's copy_if post, assessed
+- Hand-vectorised stream compaction: a compare-to-mask, compress, store and popcount advance. The workstation's i9 has no AVX-512, so the AVX2 form (a movemask-indexed shuffle table plus vpermd) is the one that applies.
+- It fits three filter steps in the workers: run-record extraction from the bitmaps `runs.rs` already builds; the thin/thick partition in Open's construction; and lanes' appends.
+- An engineering lead that lowers the price of each filter step, not mathematics. It is held until the decomposition measurement shows which worker stage controls throughput. Recorded as `leads/vectorised-compaction.md`.
