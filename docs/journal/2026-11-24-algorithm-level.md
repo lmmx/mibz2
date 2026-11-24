@@ -817,3 +817,26 @@ enough to state as one.
   repository with the specification, the calculus 𝓡, G1 (about 600–1,000 lines), the main theorem with
   premises as explicit hypotheses, and a CI audit that none is assumed silently (new infrastructure,
   Louis's approval). Recommended: step 1 now, step 2 once the statement settles.
+
+## 24. Both agents on one challenge, with crossed streams
+
+**Louis:** "shall we now put the same challenge to both monodromy and neon and see what we get?"
+
+**Louis:** "Should we perhaps encourage them to like cross their work streams in such a way that they don't overlap, but like are encouraged to like read what the other is saying at the same time by pulling in the branch from the other? This would kind of make them co-coordinators and mean that they don't have to communicate, but they could like swarm on the blocker themselves … mine all of the resources that have been established and really go hard on this problem and potentially make the breakthrough in collaboration."
+
+**The design adopted.** Generation is collaborative and verification adversarial:
+- *Split by stream.*
+  - MONODROMY owns the main theorem's statement and stream R (random content).
+  - Neon owns stream N (non-random content, the E2 open cell): it screens the kitchen-sink frameworks for escape, passes, viability and payoff, in that order.
+- *Crossed reading, no messages.* Each fetches the other's branch at the start of every cycle and builds on it with citations.
+- *Signals:*
+  - `CLAIMS.md` lines `STARTED`, `PUSHED`, `DONE`, `DROPPED` (and `NEEDS` for a measurement MONODROMY wants run);
+  - tagged commit subjects (`claim:`, `result:`, `premise:`, `break:`, `read:`);
+  - a push after every result;
+  - one REVIEW per cycle on #145, or on the branch under `channel/` if posting isn't possible.
+- *Adversarial checks:* each tries to break the other's claimed proofs and constructions.
+- *Provisional parameters:* K = 3, 𝓕 = 232 Wikidata blocks plus the six admitted blocks.
+
+**Routing slip.** The Coordinator posted the challenge to MONODROMY's inbox, #346 (7128808679), while the router counted the role busy. It then withdrew that post and staged the challenge on #145 as QUEUED (7128837429). The role was idle; it counted as busy only because of unanswered Coordinator posts it had never been woken for. The fix was a direct message naming each item.
+
+**Louis, on moving MONODROMY to a costlier model:** "please ensure you therefore encourage it to be economical and do not ever piddle around with things the coordinator or an implementation agent should do … focus only on mathematising." MONODROMY was told so: mathematics only; measurements requested via `NEEDS`; minimal signals.
