@@ -1043,11 +1043,21 @@ Rows are zero-indexed."
   ordered by stable character partition / The result is ready for another collective LF step."
   It shows 1, 3, 4, 5, 6.
 
-**Error, to fix in any redraw.** Throughout, the figure treats selected row 3 as a b, drawn in
-orange and mapped to 4, but L[3] is a, and the top row colours it teal. With C($) = 0,
-C(a) = 1, C(b) = 4 and C(n) = 5, the selected rows 0, 1, 3, 5 and 6 map to 1, 5, 2, 6 and 3.
-After the stable partition they are a: 1, 2, 3 (from 0, 3 and 6) and n: 5, 6 (from 1 and 5),
-so the frontier is 1, 2, 3, 5, 6. The response's lemma holds; its illustration doesn't.
+**Error, to fix in any redraw.** The figure's caption and its drawing disagree.
+- **The caption** gives L = annb$na. With $ smallest, C($) = 0, C(a) = 1, C(b) = 3 and C(n) = 4,
+  so LF = [1, 4, 5, 3, 0, 6, 2].
+- **The top row draws** a, n, b, a, $, n, a. That is anba$na, with the b at row 2 and an a at
+  row 3.
+- **The map:** the figure's selected rows are a0, n1, b3, n5 and a6. It maps them to 1, 5, 4, 6
+  and 3, which is LF of the *drawn* string (C(b) = 4, C(n) = 5), with its b relabelled as row 3.
+- **Under the caption's L,** the same rows map to 1, 4, 3, 6 and 2. Stably partitioned, that
+  is a: 1, 2 (from 0 and 6), b: 3 (from 3) and n: 4, 6 (from 1 and 5), so the frontier is
+  1, 2, 3, 4, 6, not the figure's 1, 3, 4, 5, 6.
+
+A redraw should pick one string and compute from it. The lemma itself is unaffected.
+
+*Corrected 24 November 2026.* The first version of this note (3b68d6b) misread the caption's
+L[3] as a and gave the frontier as 1, 2, 3, 5, 6. The Coordinator caught it.
 
 **10. Two orientations of the same inversion problem (IMG_7395: 230,498 bytes, 3612c05f1afcc815).**
 This sits after "rather than by following each field's orbit separately." in §III.5.
