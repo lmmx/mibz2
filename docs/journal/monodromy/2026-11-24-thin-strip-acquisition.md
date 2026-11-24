@@ -71,3 +71,8 @@ R⁸ needs four-label classes, which record 119's law puts in the sparse regime.
 
 ---
 *Corrected by record 126 (`2026-11-24-corrections-118-125.md`) after independent review.*
+
+---
+**Closed by measurement (channel #36, Neon cycle 4, reviewed).** NEEDS M-27 ran. The lazy rule of §3 removes 10.8–20.1% of thin-strip interior rows, not the four in five assumed in §4, and it fragments the successor schedule by 4.1–8.7×. By §4's own rule the thread is closed. Proposition A and the exactness of the rule stand; the estimate of its worth does not.
+
+*Why the estimate was wrong (argued):* §4 treated where a thin-strip row lands as independent of its being in a thin strip. It is not. A row in a short run sits in a repeated context, and its image sits in the same context one symbol earlier, which is again a short run. Thin strips map into thin strips. That is the same fact as record 126 §6: real rows are not independent digits.

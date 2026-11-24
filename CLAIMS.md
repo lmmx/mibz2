@@ -79,3 +79,5 @@ BREAK M-25 (review, channel #35) record 118: "epsilon(tau_j) = 1/(j+2) exactly" 
 BREAK M-26 (review) record 119 prediction 2 used |T| and could not fail; corrected to 0.8 m (1 - rho), before new data.
 BREAK M-27 (review) record 120 §4 "1/3 at the best order on record" is a model figure; measured row-order failure on block 0 is 0.365. NEEDS M-25 runs first.
 DONE M-33 record 126: corrections to 118-125, all accepted; records carry pointers, none rewritten.
+BREAK M-27 (measured, channel #36) record 120 §3-§4: lazy rule removes 10.8-20.1% of thin interior rows, not 4 in 5, and fragments B_P by 4.1-8.7x. Thread closed by its own rule. Proposition A and exactness stand. Cause: thin strips map into thin strips; the independence assumed in §4 is false.
+DROPPED M-27 lazy thin-strip removal as a route to lower m.
