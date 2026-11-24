@@ -13,3 +13,7 @@ h1, r, m16	count	block	lone rows, runs, retained rows	measured	MONODROMY records
 Q, D, P, S	reads, depth, passes, bytes	candidate algorithm	the referee for any mathematical candidate	per candidate	essence.md; council/comparison.md
 successor-address segments (+1)	count	retained map	closure: does compactness survive composition	measured for M-17 and CL1	external/chatgpt-closure.md; reviews/neon-movement-cycle3-critique.md
 LLC misses, memory bandwidth	count, GB/s	hardware	contention at high worker counts	not yet	MONODROMY to advise (channel #33)
+rho	ratio	whole decoder	scanner rate over the workers' combined rate; above 1 the workers bind	measured	data/measurements-scan-profile.tsv
+efficiency_vs_busiest_server	ratio	whole decoder	max(scanner work, one worker's busy) over the wall; what a queueing discipline could still recover	measured	data/measurements-scan-profile.tsv
+rss_own_peak_mb	MB	whole decoder	the decode's own peak memory, less the process base	measured	data/measurements-scan-profile.tsv
+cpu_over_wall	ratio	whole decoder	CPU time spent per wall second; rises past the knee with no gain	measured	data/measurements-scan-profile.tsv

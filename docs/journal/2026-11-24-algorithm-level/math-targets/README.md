@@ -29,6 +29,9 @@ T2 (construction), T3 (MTF/RLE2) and T6 (RLE1, CRC, output) are not yet measured
 | `data/measurements-four-arm.tsv` | per worker count and arm: rounds, median and mean wall, paired ratio with its 95% interval, median and maximum peak RSS |
 | `data/four-arm-runs.tsv`, `data/four-arm-report.txt` | the raw rows and report from the bundle `four-arm/run-20261124T204154Z` (`evidence` at c9302539, SHA-256 736e0624…976c) |
 | `scripts/extract_four_arm.py` | regenerates `measurements-four-arm.tsv` from the raw rows |
+| `data/measurements-scan-profile.tsv` | per worker count (1–20): walls, scanner work and slot waits, worker busy and idle, rho, efficiency against the busiest server, the decode's own RSS, CPU, faults and context switches |
+| `data/scan-profile-runs.tsv`, `data/scan-profile-report.txt` | the raw rows and report from the bundle `scan-profile/run-20261124T223748Z` (`evidence` at 41389cbe, SHA-256 530f97e0…8260) |
+| `scripts/extract_scan_profile.py` | regenerates `measurements-scan-profile.tsv` from the raw rows |
 | `overview-2026-11-24.md` | the first prose overview |
 
 Engineering leads that bear on these targets are in `../leads/`. One is `vectorised-compaction.md`, an AVX2 left-pack for filter steps in T1–T3.
@@ -37,6 +40,7 @@ Regenerate:
 
 ```
 python3 scripts/extract_four_arm.py data/four-arm-runs.tsv data/four-arm-report.txt > data/measurements-four-arm.tsv
+python3 scripts/extract_scan_profile.py data/scan-profile-runs.tsv > data/measurements-scan-profile.tsv
 ```
 
 ## Open questions

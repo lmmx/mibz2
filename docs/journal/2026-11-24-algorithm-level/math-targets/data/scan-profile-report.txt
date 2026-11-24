@@ -1,0 +1,277 @@
+# bench-scan-profile (diagnostic: decides nothing)
+
+Unpinned throughout: production's lazy workers at exactly k (`BzReader::parallel_workers`), the scanner on its own thread beside them.
+
+## 1 workers (20 timed decodes, medians)
+wall 1.2990 s timed, 1.3038 s untimed (timed over untimed: 1.0031 [0.9922, 1.0141], the timers' overhead)
+the scanner: busy (work) 0.1738 s (0.134 of the wall, the mean's 95% half-width 0.2%); idle: slot waits (the window full) 1.1195 s (0.862), input waits 0.0014 s (0.001)
+the work by component: header 0.0001 s (0.001), bitmap 0.0003 s (0.002), selectors 0.0064 s (0.037), tables 0.0125 s (0.072), prep 0.0055 s (0.032), decode 0.1414 s (0.813), remainder 0.0074 s (0.043), hand-off 0.0001 s (0.001)
+rates: 2183.1 Mbit and 575.0 M symbols a second of work; decode 1.41 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.45 ns a symbol, -3.3 ns a switch, 0.3 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 144 us, p90 208 us, max 1307 us
+the workers: busy 1.2965 s a worker (the mean's 95% half-width 1.1%), idle 0.0018 s a worker; mean idle workers 0.00 of 1
+rho, the scanner's rate over the workers' combined rate: 7.461 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 2 workers (20 timed decodes, medians)
+wall 0.6856 s timed, 0.6829 s untimed (timed over untimed: 1.0031 [0.9966, 1.0097], the timers' overhead)
+the scanner: busy (work) 0.1819 s (0.265 of the wall, the mean's 95% half-width 0.1%); idle: slot waits (the window full) 0.4983 s (0.727), input waits 0.0014 s (0.002)
+the work by component: header 0.0001 s (0.001), bitmap 0.0003 s (0.002), selectors 0.0066 s (0.036), tables 0.0129 s (0.071), prep 0.0057 s (0.032), decode 0.1482 s (0.816), remainder 0.0077 s (0.042), hand-off 0.0002 s (0.001)
+rates: 2085.7 Mbit and 549.4 M symbols a second of work; decode 1.48 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.51 ns a symbol, -4.9 ns a switch, 0.3 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 149 us, p90 213 us, max 1314 us
+the workers: busy 0.6824 s a worker (the mean's 95% half-width 0.5%), idle 0.0019 s a worker; mean idle workers 0.01 of 2
+rho, the scanner's rate over the workers' combined rate: 3.752 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 3 workers (20 timed decodes, medians)
+wall 0.4663 s timed, 0.4693 s untimed (timed over untimed: 0.9958 [0.9897, 1.0020], the timers' overhead)
+the scanner: busy (work) 0.1861 s (0.399 of the wall, the mean's 95% half-width 0.5%); idle: slot waits (the window full) 0.2763 s (0.592), input waits 0.0014 s (0.003)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.002), selectors 0.0068 s (0.036), tables 0.0129 s (0.069), prep 0.0060 s (0.032), decode 0.1516 s (0.814), remainder 0.0083 s (0.045), hand-off 0.0002 s (0.001)
+rates: 2038.5 Mbit and 536.9 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.52 ns a symbol, -3.4 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 150 us, p90 217 us, max 1493 us
+the workers: busy 0.4626 s a worker (the mean's 95% half-width 0.5%), idle 0.0026 s a worker; mean idle workers 0.02 of 3
+rho, the scanner's rate over the workers' combined rate: 2.486 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 4 workers (20 timed decodes, medians)
+wall 0.3542 s timed, 0.3550 s untimed (timed over untimed: 0.9983 [0.9920, 1.0047], the timers' overhead)
+the scanner: busy (work) 0.1857 s (0.524 of the wall, the mean's 95% half-width 0.1%); idle: slot waits (the window full) 0.1638 s (0.462), input waits 0.0014 s (0.004)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.002), selectors 0.0067 s (0.036), tables 0.0127 s (0.068), prep 0.0062 s (0.033), decode 0.1511 s (0.814), remainder 0.0085 s (0.046), hand-off 0.0002 s (0.001)
+rates: 2043.0 Mbit and 538.1 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.53 ns a symbol, -3.0 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 152 us, p90 215 us, max 1333 us
+the workers: busy 0.3510 s a worker (the mean's 95% half-width 0.6%), idle 0.0022 s a worker; mean idle workers 0.03 of 4
+rho, the scanner's rate over the workers' combined rate: 1.890 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 5 workers (20 timed decodes, medians)
+wall 0.2830 s timed, 0.2840 s untimed (timed over untimed: 0.9995 [0.9943, 1.0048], the timers' overhead)
+the scanner: busy (work) 0.1854 s (0.655 of the wall, the mean's 95% half-width 0.1%); idle: slot waits (the window full) 0.0925 s (0.327), input waits 0.0014 s (0.005)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.002), selectors 0.0066 s (0.036), tables 0.0124 s (0.067), prep 0.0063 s (0.034), decode 0.1506 s (0.813), remainder 0.0089 s (0.048), hand-off 0.0002 s (0.001)
+rates: 2046.6 Mbit and 539.0 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.52 ns a symbol, -2.7 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 151 us, p90 222 us, max 1364 us
+the workers: busy 0.2791 s a worker (the mean's 95% half-width 0.6%), idle 0.0023 s a worker; mean idle workers 0.04 of 5
+rho, the scanner's rate over the workers' combined rate: 1.506 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 6 workers (20 timed decodes, medians)
+wall 0.2380 s timed, 0.2381 s untimed (timed over untimed: 0.9993 [0.9936, 1.0051], the timers' overhead)
+the scanner: busy (work) 0.1853 s (0.779 of the wall, the mean's 95% half-width 0.1%); idle: slot waits (the window full) 0.0471 s (0.198), input waits 0.0014 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0066 s (0.036), tables 0.0121 s (0.065), prep 0.0062 s (0.034), decode 0.1506 s (0.812), remainder 0.0093 s (0.050), hand-off 0.0002 s (0.001)
+rates: 2046.7 Mbit and 539.1 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.53 ns a symbol, -2.8 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 152 us, p90 222 us, max 1508 us
+the workers: busy 0.2339 s a worker (the mean's 95% half-width 0.5%), idle 0.0025 s a worker; mean idle workers 0.06 of 6
+rho, the scanner's rate over the workers' combined rate: 1.262 (the workers bind)
+by the classification: QUEUE-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 7 workers (20 timed decodes, medians)
+wall 0.2069 s timed, 0.2069 s untimed (timed over untimed: 1.0022 [0.9956, 1.0088], the timers' overhead)
+the scanner: busy (work) 0.1860 s (0.899 of the wall, the mean's 95% half-width 0.4%); idle: slot waits (the window full) 0.0151 s (0.073), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0066 s (0.036), tables 0.0120 s (0.064), prep 0.0060 s (0.032), decode 0.1508 s (0.812), remainder 0.0099 s (0.053), hand-off 0.0002 s (0.001)
+rates: 2039.6 Mbit and 537.2 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.55 ns a symbol, -2.2 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 154 us, p90 227 us, max 1734 us
+the workers: busy 0.2014 s a worker (the mean's 95% half-width 0.5%), idle 0.0036 s a worker; mean idle workers 0.12 of 7
+rho, the scanner's rate over the workers' combined rate: 1.083 (the workers bind)
+by the classification: MIXED; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 8 workers (20 timed decodes, medians)
+wall 0.1921 s timed, 0.1911 s untimed (timed over untimed: 1.0018 [0.9900, 1.0137], the timers' overhead)
+the scanner: busy (work) 0.1862 s (0.969 of the wall, the mean's 95% half-width 0.2%); idle: slot waits (the window full) 0.0006 s (0.003), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0067 s (0.036), tables 0.0119 s (0.064), prep 0.0056 s (0.030), decode 0.1509 s (0.810), remainder 0.0106 s (0.057), hand-off 0.0003 s (0.002)
+rates: 2037.5 Mbit and 536.6 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.52 ns a symbol, -1.6 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 152 us, p90 217 us, max 1486 us
+the workers: busy 0.1786 s a worker (the mean's 95% half-width 0.9%), idle 0.0119 s a worker; mean idle workers 0.50 of 8
+rho, the scanner's rate over the workers' combined rate: 0.959 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 9 workers (20 timed decodes, medians)
+wall 0.1971 s timed, 0.1971 s untimed (timed over untimed: 0.9965 [0.9739, 1.0195], the timers' overhead)
+the scanner: busy (work) 0.1883 s (0.955 of the wall, the mean's 95% half-width 1.1%); idle: slot waits (the window full) 0.0036 s (0.018), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0067 s (0.036), tables 0.0119 s (0.064), prep 0.0057 s (0.030), decode 0.1513 s (0.805), remainder 0.0116 s (0.062), hand-off 0.0005 s (0.003)
+rates: 2014.8 Mbit and 530.7 M symbols a second of work; decode 1.51 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.53 ns a symbol, -3.4 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 152 us, p90 220 us, max 1525 us
+the workers: busy 0.1742 s a worker (the mean's 95% half-width 1.7%), idle 0.0217 s a worker; mean idle workers 1.00 of 9
+rho, the scanner's rate over the workers' combined rate: 0.925 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 10 workers (20 timed decodes, medians) (judged)
+wall 0.2000 s timed, 0.2012 s untimed (timed over untimed: 0.9764 [0.9277, 1.0276], the timers' overhead)
+the scanner: busy (work) 0.1890 s (0.945 of the wall, the mean's 95% half-width 2.3%); idle: slot waits (the window full) 0.0029 s (0.014), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0067 s (0.036), tables 0.0120 s (0.063), prep 0.0059 s (0.031), decode 0.1514 s (0.802), remainder 0.0119 s (0.063), hand-off 0.0007 s (0.004)
+rates: 2007.2 Mbit and 528.7 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.61 ns a symbol, -2.2 ns a switch, 0.1 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 152 us, p90 216 us, max 1538 us
+the workers: busy 0.1670 s a worker (the mean's 95% half-width 3.0%), idle 0.0341 s a worker; mean idle workers 1.67 of 10
+rho, the scanner's rate over the workers' combined rate: 0.884 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED
+
+## 11 workers (20 timed decodes, medians)
+wall 0.1981 s timed, 0.1967 s untimed (timed over untimed: 1.0295 [0.9807, 1.0808], the timers' overhead)
+the scanner: busy (work) 0.1899 s (0.958 of the wall, the mean's 95% half-width 4.6%); idle: slot waits (the window full) 0.0015 s (0.008), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0068 s (0.036), tables 0.0120 s (0.063), prep 0.0057 s (0.030), decode 0.1517 s (0.800), remainder 0.0124 s (0.065), hand-off 0.0008 s (0.004)
+rates: 1998.1 Mbit and 526.3 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.64 ns a symbol, -6.4 ns a switch, 0.5 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 157 us, p90 254 us, max 1863 us
+the workers: busy 0.1588 s a worker (the mean's 95% half-width 1.4%), idle 0.0381 s a worker; mean idle workers 2.12 of 11
+rho, the scanner's rate over the workers' combined rate: 0.836 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 12 workers (20 timed decodes, medians)
+wall 0.1985 s timed, 0.1974 s untimed (timed over untimed: 1.0173 [0.9649, 1.0726], the timers' overhead)
+the scanner: busy (work) 0.1905 s (0.960 of the wall, the mean's 95% half-width 4.2%); idle: slot waits (the window full) 0.0007 s (0.004), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0068 s (0.036), tables 0.0121 s (0.063), prep 0.0057 s (0.030), decode 0.1520 s (0.798), remainder 0.0128 s (0.067), hand-off 0.0008 s (0.004)
+rates: 1990.8 Mbit and 524.4 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.57 ns a symbol, -4.7 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 156 us, p90 220 us, max 1608 us
+the workers: busy 0.1541 s a worker (the mean's 95% half-width 1.4%), idle 0.0431 s a worker; mean idle workers 2.62 of 12
+rho, the scanner's rate over the workers' combined rate: 0.809 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 13 workers (20 timed decodes, medians)
+wall 0.1979 s timed, 0.1966 s untimed (timed over untimed: 1.0206 [0.9739, 1.0695], the timers' overhead)
+the scanner: busy (work) 0.1913 s (0.966 of the wall, the mean's 95% half-width 3.8%); idle: slot waits (the window full) 0.0006 s (0.003), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0068 s (0.036), tables 0.0120 s (0.063), prep 0.0056 s (0.029), decode 0.1520 s (0.796), remainder 0.0134 s (0.070), hand-off 0.0008 s (0.004)
+rates: 1983.5 Mbit and 522.4 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.56 ns a symbol, -5.7 ns a switch, 0.2 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 153 us, p90 218 us, max 1700 us
+the workers: busy 0.1473 s a worker (the mean's 95% half-width 1.6%), idle 0.0473 s a worker; mean idle workers 3.12 of 13
+rho, the scanner's rate over the workers' combined rate: 0.770 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 14 workers (20 timed decodes, medians)
+wall 0.1978 s timed, 0.1978 s untimed (timed over untimed: 0.9861 [0.9341, 1.0409], the timers' overhead)
+the scanner: busy (work) 0.1916 s (0.969 of the wall, the mean's 95% half-width 3.4%); idle: slot waits (the window full) 0.0002 s (0.001), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0067 s (0.035), tables 0.0119 s (0.062), prep 0.0056 s (0.029), decode 0.1520 s (0.795), remainder 0.0138 s (0.072), hand-off 0.0009 s (0.005)
+rates: 1979.8 Mbit and 521.5 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.79 ns a symbol, -14.6 ns a switch, 0.5 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 156 us, p90 260 us, max 1709 us
+the workers: busy 0.1418 s a worker (the mean's 95% half-width 1.8%), idle 0.0531 s a worker; mean idle workers 3.76 of 14
+rho, the scanner's rate over the workers' combined rate: 0.740 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 15 workers (20 timed decodes, medians)
+wall 0.1984 s timed, 0.2114 s untimed (timed over untimed: 0.9835 [0.9343, 1.0352], the timers' overhead)
+the scanner: busy (work) 0.1924 s (0.970 of the wall, the mean's 95% half-width 3.5%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0014 s (0.007)
+the work by component: header 0.0000 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0068 s (0.035), tables 0.0121 s (0.063), prep 0.0056 s (0.029), decode 0.1523 s (0.793), remainder 0.0140 s (0.073), hand-off 0.0010 s (0.005)
+rates: 1972.1 Mbit and 519.4 M symbols a second of work; decode 1.52 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.54 ns a symbol, -3.0 ns a switch, 0.3 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 153 us, p90 211 us, max 1979 us
+the workers: busy 0.1351 s a worker (the mean's 95% half-width 1.7%), idle 0.0600 s a worker; mean idle workers 4.55 of 15
+rho, the scanner's rate over the workers' combined rate: 0.702 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 16 workers (20 timed decodes, medians)
+wall 0.2355 s timed, 0.2163 s untimed (timed over untimed: 1.0512 [1.0099, 1.0942], the timers' overhead)
+the scanner: busy (work) 0.2295 s (0.974 of the wall, the mean's 95% half-width 3.3%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0014 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0106 s (0.046), tables 0.0177 s (0.077), prep 0.0056 s (0.024), decode 0.1823 s (0.793), remainder 0.0122 s (0.053), hand-off 0.0011 s (0.005)
+rates: 1653.1 Mbit and 435.4 M symbols a second of work; decode 1.82 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.80 ns a symbol, -11.9 ns a switch, 0.5 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 160 us, p90 269 us, max 1597 us
+the workers: busy 0.1178 s a worker (the mean's 95% half-width 2.2%), idle 0.1151 s a worker; mean idle workers 7.82 of 16
+rho, the scanner's rate over the workers' combined rate: 0.513 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 17 workers (20 timed decodes, medians)
+wall 0.2318 s timed, 0.2332 s untimed (timed over untimed: 0.9887 [0.9617, 1.0165], the timers' overhead)
+the scanner: busy (work) 0.2258 s (0.974 of the wall, the mean's 95% half-width 3.0%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0014 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0104 s (0.046), tables 0.0170 s (0.075), prep 0.0056 s (0.025), decode 0.1791 s (0.792), remainder 0.0125 s (0.055), hand-off 0.0011 s (0.005)
+rates: 1680.0 Mbit and 442.5 M symbols a second of work; decode 1.79 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.85 ns a symbol, -20.2 ns a switch, 0.6 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 1 us, median 156 us, p90 256 us, max 1869 us
+the workers: busy 0.1128 s a worker (the mean's 95% half-width 1.9%), idle 0.1163 s a worker; mean idle workers 8.53 of 17
+rho, the scanner's rate over the workers' combined rate: 0.499 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 18 workers (20 timed decodes, medians)
+wall 0.2344 s timed, 0.2330 s untimed (timed over untimed: 1.0055 [0.9819, 1.0297], the timers' overhead)
+the scanner: busy (work) 0.2279 s (0.972 of the wall, the mean's 95% half-width 1.3%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0014 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0104 s (0.046), tables 0.0174 s (0.076), prep 0.0055 s (0.024), decode 0.1807 s (0.794), remainder 0.0121 s (0.053), hand-off 0.0012 s (0.005)
+rates: 1664.9 Mbit and 438.5 M symbols a second of work; decode 1.81 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 2.17 ns a symbol, -48.6 ns a switch, 0.9 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 159 us, p90 268 us, max 1911 us
+the workers: busy 0.1063 s a worker (the mean's 95% half-width 1.0%), idle 0.1250 s a worker; mean idle workers 9.62 of 18
+rho, the scanner's rate over the workers' combined rate: 0.466 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 19 workers (20 timed decodes, medians)
+wall 0.2330 s timed, 0.2319 s untimed (timed over untimed: 1.0035 [0.9972, 1.0098], the timers' overhead)
+the scanner: busy (work) 0.2265 s (0.972 of the wall, the mean's 95% half-width 0.5%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0015 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.002), selectors 0.0103 s (0.045), tables 0.0172 s (0.076), prep 0.0056 s (0.025), decode 0.1794 s (0.793), remainder 0.0123 s (0.054), hand-off 0.0013 s (0.006)
+rates: 1674.7 Mbit and 441.1 M symbols a second of work; decode 1.80 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.96 ns a symbol, -22.9 ns a switch, 0.6 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 159 us, p90 267 us, max 1935 us
+the workers: busy 0.1007 s a worker (the mean's 95% half-width 0.3%), idle 0.1298 s a worker; mean idle workers 10.56 of 19
+rho, the scanner's rate over the workers' combined rate: 0.444 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## 20 workers (20 timed decodes, medians)
+wall 0.2320 s timed, 0.2303 s untimed (timed over untimed: 1.0053 [0.9990, 1.0116], the timers' overhead)
+the scanner: busy (work) 0.2255 s (0.972 of the wall, the mean's 95% half-width 0.4%); idle: slot waits (the window full) 0.0001 s (0.000), input waits 0.0014 s (0.006)
+the work by component: header 0.0001 s (0.000), bitmap 0.0003 s (0.001), selectors 0.0100 s (0.044), tables 0.0169 s (0.075), prep 0.0056 s (0.025), decode 0.1785 s (0.792), remainder 0.0124 s (0.055), hand-off 0.0014 s (0.006)
+rates: 1682.5 Mbit and 443.1 M symbols a second of work; decode 1.79 ns a symbol
+table switching: 438 switches in 1163 selectors a block; the decode phase fit across blocks (2 decodes with every block's record): 1.89 ns a symbol, -14.4 ns a switch, 0.4 us a block
+a block's read, less its input waits (the first decode with every block's record): p10 2 us, median 157 us, p90 266 us, max 1761 us
+the workers: busy 0.0960 s a worker (the mean's 95% half-width 0.5%), idle 0.1323 s a worker; mean idle workers 11.44 of 20
+rho, the scanner's rate over the workers' combined rate: 0.426 (the scanner binds)
+by the classification: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED (decides nothing at this count)
+
+## The grid
+k  wall(untimed) s  scanner busy/idle (of wall)  worker busy/idle s a worker  rho    class
+1      1.3038       0.134 / 0.863                1.2965 / 0.0018            7.461  QUEUE-BOUND
+2      0.6829       0.265 / 0.729                0.6824 / 0.0019            3.752  QUEUE-BOUND
+3      0.4693       0.399 / 0.595                0.4626 / 0.0026            2.486  QUEUE-BOUND
+4      0.3550       0.524 / 0.466                0.3510 / 0.0022            1.890  QUEUE-BOUND
+5      0.2840       0.655 / 0.332                0.2791 / 0.0023            1.506  QUEUE-BOUND
+6      0.2381       0.779 / 0.204                0.2339 / 0.0025            1.262  QUEUE-BOUND
+7      0.2069       0.899 / 0.080                0.2014 / 0.0036            1.083  MIXED
+8      0.1911       0.969 / 0.011                0.1786 / 0.0119            0.959  SCANNER-BOUND
+9      0.1971       0.955 / 0.026                0.1742 / 0.0217            0.925  SCANNER-BOUND
+10     0.2012       0.945 / 0.021                0.1670 / 0.0341            0.884  SCANNER-BOUND
+11     0.1967       0.958 / 0.014                0.1588 / 0.0381            0.836  SCANNER-BOUND
+12     0.1974       0.960 / 0.011                0.1541 / 0.0431            0.809  SCANNER-BOUND
+13     0.1966       0.966 / 0.010                0.1473 / 0.0473            0.770  SCANNER-BOUND
+14     0.1978       0.969 / 0.008                0.1418 / 0.0531            0.740  SCANNER-BOUND
+15     0.2114       0.970 / 0.008                0.1351 / 0.0600            0.702  SCANNER-BOUND
+16     0.2163       0.974 / 0.006                0.1178 / 0.1151            0.513  SCANNER-BOUND
+17     0.2332       0.974 / 0.006                0.1128 / 0.1163            0.499  SCANNER-BOUND
+18     0.2330       0.972 / 0.006                0.1063 / 0.1250            0.466  SCANNER-BOUND
+19     0.2319       0.972 / 0.007                0.1007 / 0.1298            0.444  SCANNER-BOUND
+20     0.2303       0.972 / 0.006                0.0960 / 0.1323            0.426  SCANNER-BOUND
+
+## Memory and scheduling (the untimed decodes' medians; every decode's own figures are in the bundle's runs.tsv)
+The resident memory is the decode's own: the process's, less its base at the decode's start (the input and the runtime; each decode runs in a fresh process).
+k  rss mean MB  rss peak MB  user s  sys s  cpu/wall  minor faults  major  vol. ctxsw  invol. ctxsw
+1        27.1         30.1   1.478  0.019      1.15          8050      0        2138             2
+2        31.7         35.5   1.544  0.018      2.29          9722      0        1830             3
+3        34.9         39.0   1.581  0.019      3.41         10786      0        1504             2
+4        38.4         42.8   1.586  0.019      4.53         12022      0        1309             2
+5        41.5         46.5   1.577  0.022      5.63         13106      0        1150             1
+6        44.1         49.6   1.584  0.022      6.74         13902      0         961             1
+7        47.0         53.0   1.591  0.022      7.79         14521      0         894             1
+8        47.9         54.1   1.605  0.023      8.52         14756      0        1000             2
+9        53.0         60.0   1.704  0.029      8.90         16156      0        1289             3
+10       55.1         62.2   1.855  0.030      9.42         16975      0        1359             4
+11       57.2         64.7   1.944  0.031     10.09         17554      0        1470             6
+12       59.4         67.8   2.068  0.036     10.62         18292      0        1612             5
+13       61.3         69.3   2.131  0.037     11.05         18770      0        1830             5
+14       61.3         69.9   2.168  0.039     11.22         18838      0        2059             6
+15       60.8         70.8   2.178  0.037     10.44         19034      0        2245             7
+16       63.6         71.9   2.196  0.044     10.35         19240      0        2316             7
+17       61.3         69.0   2.132  0.042      9.26         18596      0        2372             6
+18       62.2         70.1   2.126  0.043      9.33         18814      0        2394             7
+19       64.2         72.9   2.142  0.044      9.44         19640      0        2384             6
+20       66.2         74.8   2.144  0.042      9.52         20052      0        2384             6
+the base, every decode: 47.0 to 47.2 MB (median 47.2)
+
+the measured crossover (rho falls through 1, interpolated in k): k = 7.67
+the model's service times, from the counts up to 4 (uncontended): the serial stage 106.6 us a block, a worker 798.3 us a block; its predicted shift point k = w / s = 7.49
+the pipeline model fitted to the untimed walls, wall(k) = c + max(b, a / k): k* = 7.17, a = 1.2791 s, b = 0.1784 s, c = 0.0319 s; residuals (s): 1 -0.0072, 2 +0.0115, 3 +0.0110, 4 +0.0034, 5 -0.0037, 6 -0.0070, 7 -0.0078, 8 -0.0192, 9 -0.0132, 10 -0.0091, 11 -0.0136, 12 -0.0129, 13 -0.0137, 14 -0.0125, 15 +0.0010, 16 +0.0060, 17 +0.0229, 18 +0.0227, 19 +0.0216, 20 +0.0199; RMS 0.0136 s
+
+CLASSIFICATION at 10 workers: SCANNER-BOUND; the work's largest component: decode; DECODE-DOMINATED. What a cheaper or parallel scanner must beat: the serial scanner's work, 0.1890 s a decode of the wall's 0.2000 s, against the workers' 0.1670 s each.

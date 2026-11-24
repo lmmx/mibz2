@@ -1526,3 +1526,49 @@ Louis asked whether the decoder's conventional queueing could be replaced by ano
 The question is added to the design review as question 6.
 
 **Correction:** the time-of-day point was one file title, not a standing rule for prose.
+
+## 57. The scanner profile across 1–20 workers: the toy model predicts the knee, the discipline has little to give, and the default over-provisions
+
+The bundle `scan-profile/run-20261124T223748Z` (`evidence` at 41389cbe, SHA-256 530f97e0…8260, checked) is from `bench-scan-profile` (#838) on the i9-10900K: 10 cores, 20 threads, one corpus (47.4 MB compressed, 839 MB out, 1724 blocks), 20 timed and 20 untimed decodes at each worker count from 1 to 20, unpinned. It is a diagnostic: it decides nothing. The per-count summary is `math-targets/data/measurements-scan-profile.tsv`, derived by `math-targets/scripts/extract_scan_profile.py` from the bundle's `runs.tsv` (copied beside it, with `report.txt`).
+
+**What was found (measured):**
+- **The two-station model predicts the knee.** From the counts 1–4 alone, the service times are 106.6 µs a block for the scanner and 798.3 µs a block for a worker, so the predicted crossover is k = 798.3 / 106.6 = 7.49. The measured crossover, where rho falls through 1, is 7.67. The fit wall(k) = c + max(b, a/k) over all 20 counts gives k\* = 7.17, a = 1.279 s, b = 0.178 s, c = 0.032 s, RMS residual 13.6 ms. The residuals are systematic in two places: about −13 ms at k = 8–14, and about +21 ms at k ≥ 17 (the step below).
+- **Below the knee the workers bind; above it the scanner does.** Scanner slot waits fall from 0.86 of the wall at k = 1 to 0.003 at k = 8. Worker idle time stays under 4 ms until k = 8, then grows with every added worker.
+- **The best wall is 0.191 s, at k = 8** (4390 MB/s of output). From 8 to 14 the wall is flat at 0.197 ± 0.005 s.
+- **At k ≥ 16 the wall steps up 20%, to 0.230 s, because the scanner slows.** The scanner's own work rises from 0.186 s (k ≤ 8) to 0.229 s (k = 16), +23%, while its share of the wall stays at 0.97. That the scanner's thread now shares a physical core with a busy worker (SMT) is the hypothesis; the step lines up with 16 workers plus the scanner and reader exceeding the 10 cores' spare siblings, but no run here pinned threads to test it.
+- **Efficiency against the busiest server's demand is 0.945–0.998 at every count.** That is max(scanner work, one worker's busy time) over the wall. It is 0.97 on the plateau and lowest (0.945) at k = 10.
+- **The scanner's work is 81% Huffman decode,** at 1.41 ns a symbol at k = 1 and 1.51 ns at k ≥ 3 (7% slower: a lower all-core turbo is the likely cause, not measured). Tables are 7%, selectors 4%. A per-block fit finds no cost per table switch (−3 ns a switch, i.e. nothing measurable), with 438 switches in 1163 selectors a block.
+- **Over-provisioning costs:** the Python binding's default is `available_parallelism()`, 20 workers on this machine. Against k = 8, k = 20 has wall 0.230 s against 0.191 s (+20%), user CPU 2.14 s against 1.61 s (+34%) and the decode's own peak RSS 74.8 MB against 54.1 MB (+38%). From k = 9, CPU rises with no gain in wall.
+
+**What it means:**
+- **Step 4 of the programme is done for this corpus,** and steps 2–3's toy model (a serial stage feeding k parallel servers) is validated: four counts predict the knee to within 0.2 workers. The model's two numbers, s and w, are the whole first-order story here.
+- **Louis's queueing question (§56) has its answer on this corpus: no discipline is far better.** Efficiency against the busiest server is at least 0.945 everywhere, so reordering, size-aware dispatch, helpers or relaxed resequencing could recover at most about 5% (3% on the plateau). The big gains are elsewhere: lower demand at the bottleneck, or more servers for it.
+- **Two cheap engineering leads follow, and both are production defaults, so both need an adoption registration:**
+  1. **Don't spawn workers past the knee.** A default of k\* rather than every logical CPU saves 20% wall, a third of the CPU and a third of the memory on this machine. k\* = w/s depends on the data (compression ratio, block content), so a fixed number is a stopgap. Both s and w are measurable online during a decode (the scan's counters and the workers' busy times), so an adaptive cap is possible.
+  2. **Keep the scanner's core to itself.** If the SMT hypothesis holds, reserving the scanner's sibling thread removes the 23% scanner slowdown at high k. A pinned run tests it first.
+- **Where the mathematics fits, sharpened.** The response is piecewise. Below k\*, wall ≈ a/k, so only the workers' demand (targets T1–T3 and T6: emission, construction, MTF/RLE2, RLE1/CRC) moves it. Above k\*, wall ≈ b, so only the scanner (T4, Huffman decode at 1.5 ns a symbol) moves it. On a 10-core machine k\* ≈ 7.5 is already inside the machine, so beyond k\* the scanner is the binding target, which is what the four-arm test's arm C showed at 10 workers (0.806). Reducing worker demand lowers k\* and helps machines with fewer cores; reducing scanner demand raises the ceiling everywhere.
+
+**Limits:** one machine, one corpus, unpinned. The crossover depends on the corpus. The SMT and turbo explanations are hypotheses. Stage 1 of the character recipe (#841, 12 randomised rounds, per-visit moments and per-block timestamps) is the next measurement and will test the efficiency figure against its gap decomposition.
+
+## 58. The courses mined against the scanner profile
+
+Louis: "that is awesome and also suggests we need to mine these courses for opportunities then." The result is `leads/course-opportunities.md`, read from the full course sources against the measurements of §57. The findings, largest first:
+- **The machine bound (balanced job bounds):** against the busiest server the decoder is 0.97 efficient. Against the whole machine it is about 0.57 (estimate): total demand about 1.62 s over about 14.9 lone-thread equivalents gives about 0.109 s, against the best wall of 0.191 s. The 43% gap belongs to the topology (one serial scanner), and no discipline reaches it.
+- **Right-size the worker count (capacity provisioning), measured:** the Python default of 20 workers costs 20% more wall, 34% more CPU and 38% more memory than 8. The cap should be adaptive, from an online renewal-reward estimate of w/s.
+- **Put the bottleneck on the fastest core (hypothesis):** the scanner decodes 7% slower once other cores are busy and 23% slower at k ≥ 16. A pinned run on a favoured core with its sibling idle tests it.
+- **MVA instead of the hard-max fit:** the fit's 32 ms constant is an artefact of the knee's curvature (only 2.5 ms of the wall at k = 8 is outside the scanner).
+- **Little's law for the window,** and **workload classes:** 792 of the 1724 blocks are tiny (0.1% of the bits); the real blocks' sizes have C² ≈ 0.07.
+- **Ruled out:** size-based scheduling and redundancy, by the low variability and the 0.945 efficiency floor. The decoder is a closed batch system, where scheduling matters little (Schroeder, Wierman and Harchol-Balter, NSDI 2006).
+
+## 59. ChatGPT Pro's design review, recorded
+
+Recorded verbatim as `external/chatgpt-design-review.md`. Its verdict: keep stage 1; amend stage 2 before freezing it. It is the first of the three design-review answers (MONODROMY and Neon are outstanding). The points that change what we do:
+- **Stage 2 shrinks to a sequential design:** a screen of the nine +20% coordinates at two counts bracketing the transition (120 observations), a full 2³ over at most three coordinates (128), then mechanism contrasts (W × byte threshold; placement × verified frequency) and a reserved 20% for unseen validation. The two nine-factor fractional factorials go: 32 rows cannot resolve 46 coefficients, and the amended grid would have been about 1,440 observations, not 888.
+- **A factorial main effect is not the baseline sensitivity:** for T = max(a, b) the baseline coefficient is 1, the balanced factorial's marginal effect 1/2. The two estimands must not be mixed across worker counts.
+- **Exact MVA doesn't apply to the real pipeline;** it applies to a documented surrogate, with its error against the simulation reported. Bounds aggregate demands by resource: X ≤ min(1/D_scanner, k/D_worker, 1/D_consumer).
+- **Tracing hazard, from the pinned code:** Ready is marked after the lock is released, Taken under it, and Enqueued after the send, so a timestamp sort can produce an impossible queue history. Transitions need under-lock sequence numbers.
+- **The admission semantics enter the model verbatim:** full = ahead ≥ W ∥ (ready_bytes ≥ threshold ∧ ahead ≥ floor). The byte threshold gates new scanning only, and taken advances when the reader acquires a buffer, not when it finishes it.
+- **Measurement validity:** one binary with runtime-selected treatments and fixed launch layout; the achieved frequency, temperature and throttling with every timing; counters gated to the stopwatch; a published PMU event manifest.
+- **The busy-time crossing is renamed k_balance,** and doesn't alone show the scanner limits; concurrent states and interventions must.
+
+Two corrections it forces on §58's opportunities are made in `leads/course-opportunities.md`: MVA only on a surrogate (opportunity 4), and the pinned-scanner run records placement and achieved frequency (opportunity 3). §58's claim that the scanner limits above the knee is supported, in aggregate, by the profile: at k = 10 the scanner works 0.945 of the wall with admission waits of 0.014, so a slow reader isn't the limit.

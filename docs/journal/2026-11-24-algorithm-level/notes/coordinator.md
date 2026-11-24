@@ -101,3 +101,9 @@
   - it can close the gap to the ceiling: head-of-line blocking at the in-order resequencer, the straggler drain, and service-time variability;
   - candidates: size-aware dispatch using the scan's free counters; head-of-line helpers; work-based admission; a parallel scanner (the only one that raises the ceiling).
   - The deciding measurement is efficiency against the bound at each k, from stage 1's timestamps. It is added to the design review as question 6.
+
+## 25 Nov — the scanner profile read; the courses mined; ChatGPT's design review recorded
+- The profile (journal §57): four worker counts predict the knee (7.49 predicted, 7.67 measured). Best wall 0.191 s at 8 workers. Efficiency against the busiest server is at least 0.945 at every count, so no queueing discipline is far better (Louis's §56 question, answered). At 16+ workers the scanner slows 23% and the wall rises 20%. The Python default of 20 workers costs 20% wall, 34% CPU and 38% memory against 8.
+- The courses mined against it (§58, `leads/course-opportunities.md`): the machine bound (about 43% left on this machine, all in the one-scanner topology; an estimate); right-sizing the worker count adaptively; the scanner on the fastest core with its sibling idle (a hypothesis; pinned run); a simulation with MVA on a surrogate; Little's law for the window; workload classes (46% of blocks are tiny). Ruled out: size-based scheduling and redundancy.
+- ChatGPT Pro's design review recorded verbatim (§59): keep stage 1, replace stage 2's factorials with a sequential design, MVA only on a surrogate, under-lock sequence numbers for the trace. Two corrections made to the course file.
+- Louis asked whether to give ChatGPT a further prompt to mine the courses: yes, independently first, then comparing. The prompt is `briefs/chatgpt-course-mining-prompt.md`.
