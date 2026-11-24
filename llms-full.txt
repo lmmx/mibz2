@@ -1597,7 +1597,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# At ten workers the serial scanner hides the emitter's gain: both stages supplied save 26%
+# A masked bottleneck: emission's gain reappears once the serial scanner is cleared
 
 Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
 

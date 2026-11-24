@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [The scanner hides the emitter](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-scanner-hides-the-emitter/index.md>): Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
+- [A masked bottleneck](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-scanner-hides-the-emitter/index.md>): Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
 - [What else moves together](<https://lmmx.github.io/mibz2/blog/2026-11-24-what-else-moves-together/index.md>): The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information.
 - [Halving the single-row steps](<https://lmmx.github.io/mibz2/blog/2026-11-24-halving-the-single-row-steps/index.md>): We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it.
 - [Playing the hand you're dealt](<https://lmmx.github.io/mibz2/blog/2026-11-22-decompression-is-the-harder-problem/index.md>): A discussion of the mibz2 swarm, and why the Hutter Prize has it backwards: it rewards whoever stacks the deck best, when real data deals you the hand.
