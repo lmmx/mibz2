@@ -136,12 +136,15 @@ stated. We held both eurekas to our records.
   it. They bought 5–14%. The entry's conclusion: "the dependent load is not the main cost: about ten
   bytes are appended per retained step".
 - **The squared map, 23 November.** A design that halved the number of dependent steps was built
-  and measured, and was slower than master on ten workers (1.22 times master's time). Our
+  and measured. On ten workers its emit was 1.22 times as slow per step, and the whole decode about
+  1.3 times as slow. Our
   [retrospective](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md) put it in one line: it was "built on the opposite assumption and failed
   for exactly that reason".
 
-So the miss count is a worse guide to the decoder's cost than the plain count of steps. The
-correction went to the swarm within the hour.
+On these two experiments, cutting misses or waiting didn't buy time; the cost was the work done at
+each step. (Neither count is a reliable proxy for time on its own: the same number of steps ran
+5–14% faster in lanes, and fewer misses ran slower.) The correction went to the swarm within the
+hour.
 
 **The ordered frontier is the walk, scheduled differently.** Our mathematician agent took
 ChatGPT's construction apart in an [afternoon's record](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md):
