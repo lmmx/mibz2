@@ -1143,3 +1143,20 @@ Louis asked the other model to read lmmx/page-dewarp's history and find where JA
 **The question it leaves, in the essence's terms.** What *other* information does one LF step carry, at no extra cost, beyond where its own row goes, and beyond where its run goes? It would have to be the discrete counterpart of a gradient taken along a different coordinate, one that enables a different algorithm.
 
 **Caution from the records.** Order-free aggregates of the column, such as the first moment A = Σ i·code(L[i]), carry information that "separates every flip and decodes nothing" (N-18). The analogue sought is information about *the map's behaviour*, not a fingerprint of the input.
+
+## 37. Enrichment along composition: the second principle
+
+Louis, to the other model: "the one other thing that strikes me is that we had a gradient based problem… and we improved the quality of the gradients involved… hmmmmmm".
+
+The other model's reply (condensed; Louis pasted it in the Coordinator's session):
+- page-dewarp made three gradient improvements: autodiff (access to information the old solver didn't use), `maxcor` 10 → 100 (more information extracted from a succession of gradients; 871 → 147 evaluations on one image), and float64 (stability).
+- AD is *lifting* a computation into a richer algebra. Forward mode works over pairs (a, a′) with (a, a′)(b, b′) = (ab, a′b + ab′), so the extra information propagates automatically.
+- Hence the proposal: alongside *contraction along composition* (what else moves together? share existing work), pursue *enrichment along composition* (what else can be computed together? make existing work yield more, so that later work is unnecessary).
+- It also proposed opening the shared-representation track under this framing. It asks whether enriching Huffman or MTF could yield constraints on text positions before LF is built. It warns that "some obvious enrichments, such as accumulating occurrence counts alongside MTF, are already represented in your research", and that information which merely restates the inversion problem doesn't count.
+
+**Louis:** "Sure, do whatever you think best."
+
+**The Coordinator's decisions:**
+- ESSENCE.md now holds both principles.
+- Channel #22 gives MONODROMY enrichment as a parallel line beside the senses of moving together. It starts with what one LF or run step reveals at no extra cost.
+- The cross-stage track opens under the enrichment framing (`2026-11-24-algorithm-level/CROSS-STAGE.md`).

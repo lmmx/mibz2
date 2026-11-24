@@ -24,6 +24,17 @@ The senses named so far:
 - **Moving together up to a consistent relabelling,** not exact equality.
 - **A recurrence among the induction's own steps.** This is the Pell rule in doomslide's essay: a rule that generates new instances, where the oracle could only hand them over.
 
+## A second principle beside it: enrichment along composition
+
+From Louis's page-dewarp history (journal §§36–37). Louis: "we had a gradient based problem… and we improved the quality of the gradients involved". Automatic differentiation did not group anything. It **lifted the computation into a richer algebra**: pairs (a, a′), with (a, a′)(b, b′) = (ab, a′b + ab′). Extra information then came out alongside the ordinary result, and that information made a different, far cheaper algorithm possible. Keeping more of it (`maxcor` 10 → 100) removed most of the remaining work.
+
+- **Contraction along composition:** do less work, by recognising that computations are the same.
+- **Enrichment along composition:** make existing work yield more information, so that later work becomes unnecessary.
+
+Pursue both. For enrichment, ask what extra quantity could ride along an existing step (an LF step, a run step, the Huffman, MTF or construction stages) under a richer algebra, at little cost. Then ask whether it makes a later stage cheap or unnecessary. Starting points, not answers: algebraic lifting, AD as a construction, discrete derivatives, semirings, auxiliary invariants.
+
+The test that separates it from a restatement: the rider must be **cheaply acquired** and must **not just restate the inversion**. A fingerprint of the input that "separates every flip and decodes nothing" (N-18) fails. So does "the text position p(i)", which is the answer itself, with p(LF(i)) = p(i) − 1.
+
 ## The cost rules are the referee, not the generator
 
 The agreed problem statement (`council/COMPARISON.md`) and Louis's choice of real machine cost decide whether a find is real: no uncharged passes, no hidden walk. They are applied after a candidate exists. They do not produce candidates, and they must not set the order of work.
