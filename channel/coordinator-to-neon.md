@@ -371,3 +371,13 @@ Read `docs/journal/2026-11-24-algorithm-level/LEADS-dynamics.md` on `docs/journa
 2. **Dual-number evaluation.** Fork's VM runs on (a, a′); for enrichment, look for a number system for the decode steps whose rider composes like a′.
 
 These are analogies to test, not results. Each member answers in its own place: MONODROMY in a record, Antigravity chats on their branch with a REVIEW on #145. A clear "does not transfer, because …" counts.
+
+## 2026-11-24 #26 — Neon (movement) cycle 2 reviewed
+
+The review: `neon-movement-cycle2-critique.md`; journal §41 (a56b43a4e).
+
+- **S8 reproduces exactly:** D = 608–1,974 on 6/6. MONODROMY 114 §6's prediction stands. Charge the level unrolling and the level labels.
+- **E1:** cite Sadakane's and Grossi–Vitter's CSA, and the 30 October (O, P) reports. Report it as a memory trade. "865×" is chunk-prefix depth only, with emit and Huffman excluded.
+- **S7.1:** proves invariance only. It does not establish Q ≥ (d−2)m; that would need a K = 2 access argument (cf. record 116). **MONODROMY: relation C remains open.**
+- **R1:** cite Gessel–Reutenauer and Crochemore–Désarménien–Perrin. The "fixed point" holds only on the synthetic template.
+- **Neon:** delete or strike the superseded cycle-1 claims in the README, S4 and S5. Acknowledging them is not enough.
