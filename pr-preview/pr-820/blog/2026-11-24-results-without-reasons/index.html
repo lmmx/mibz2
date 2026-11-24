@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=cf2975ea5965">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=026407036b27">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=cf2975ea5965">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3075,7 +3075,7 @@ models and asked each what it meant for mibz2's research. Within an afternoon ea
 a breakthrough for our decoder. Neither survived our own records:</p>
 <ul>
 <li><strong>The first</strong> proposed measuring the decoder's hard core in a new currency, cache misses. Our
-  journal had already refuted that on this machine, three days earlier.</li>
+  journal already held three experiments that told against it.</li>
 <li><strong>The second</strong> proposed moving many scattered rows of the block through the decoder together.
   Its lemma is true, and already known; as a decoder, it costs exactly as many steps as the walk
   it would replace.</li>
@@ -3190,41 +3190,53 @@ each one. A decoder that took the same steps far more cheaply would sit outside 
 <h2 id="3-checked-against-the-book">3. Checked against the book<a class="headerlink" href="#3-checked-against-the-book" title="Permanent link">&para;</a></h2>
 <p>The essay's warning is about exactly this: an answer that arrives without its reason, confidently
 stated. We held both eurekas to our records.</p>
-<p><strong>The cache-miss currency was already refuted.</strong> Two entries said so:</p>
+<p><strong>The cache-miss currency had already been tested.</strong> Three records bear on it:</p>
 <ul>
 <li><strong>Lanes, 20 November.</strong> Our <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">toy-transfer experiment</a> ran up to eight independent walks
   side by side over Open's cycle. If waiting on memory were the cost, independent lanes would hide
-  it. They bought 5–14%. The entry's conclusion: "the dependent load is not the main cost: about ten
-  bytes are appended per retained step".</li>
+  it. At first they bought only 5–14%. The same entry later records a correction: once each step's
+  append was a single branchless 16-byte store, eight lanes cut the emit to 0.55–0.78 of its time,
+  in a C harness, though either change alone barely moved it. Hiding the wait pays only once the
+  work per step is small.</li>
+<li><strong>Lanes in the decoder itself.</strong> mibz2 already has that branchless store
+  (<a href="../2026-11-21-sixteen-at-a-stroke/">Sixteen at a stroke</a>). There, eight lanes made the loop 13%
+  faster on one thread and 5% slower once eight workers shared the processor
+  (<a href="../2026-11-21-fast-alone-slow-in-a-crowd/">Fast alone, slow in a crowd</a>).</li>
 <li><strong>The squared map, 23 November.</strong> A design that halved the number of dependent steps was built
   and measured. On ten workers its emit was 1.22 times as slow per step, and the whole decode about
-  1.3 times as slow. Our
-  <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md">retrospective</a> put it in one line: it was "built on the opposite assumption and failed
-  for exactly that reason".</li>
+  1.3 times as slow. Our <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md">retrospective</a> put it down to the wrong assumption about where
+  the cost lies. It also changed the footprint and the preprocessing, and no miss counts were
+  recorded, so it can't say what the saved waits alone were worth.</li>
 </ul>
-<p>On these two experiments, cutting misses or waiting didn't buy time; the cost was the work done at
-each step. (Neither count is a reliable proxy for time on its own: the same number of steps ran
-5–14% faster in lanes, and fewer misses ran slower.) The correction went to the swarm within the
-hour.</p>
+<p>None of these makes misses a currency. Waiting and the work done at each step interact, and only
+the whole decoder's time decides. That was enough to stop treating a miss count as the target, and
+the correction went to the swarm within the hour.</p>
 <p><strong>The ordered frontier is the walk, scheduled differently.</strong> Our mathematician agent took
 ChatGPT's construction apart in an <a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">afternoon's record</a>:</p>
 <ul>
 <li><strong>The lemma is standard.</strong> It is the step of batched backward search, a known technique.</li>
-<li><strong>The count doesn't move.</strong> Each step of a frontier record composes one row with the next, and
-  those steps match the walk's steps one for one. For G fields of d letters there are G·d steps
-  either way. G1 says there must be, since every width-1 row is still visited.</li>
-<li><strong>The price doesn't fall.</strong> Against independent lanes, which already bought only 5–14%, the
-  frontier adds a partition pass moving at least 16 bytes for every step. This is a prediction, not
-  a measurement, and the record names what would falsify it.</li>
-<li><strong>Finding the starting rows is easy.</strong> It takes one scan of a contiguous range, so that was never
-  the obstacle.</li>
+<li><strong>The count doesn't move.</strong> Built record by record, each step of the frontier composes one row
+  with the next, and those steps match the walk's steps one for one. For G fields of d letters
+  there are G·d steps either way. G1 says there must be, since every width-1 row is still visited.
+  That classifies this implementation; a packed version of the partition would have to be priced
+  on its own.</li>
+<li><strong>The price is predicted not to fall.</strong> The partition moves at least 16 bytes for every step.
+  This is a prediction, not a measurement, and the record names what would falsify it. Only a
+  matched implementation would settle it.</li>
+<li><strong>Finding the starting rows takes one scan</strong> of a contiguous range. Placing what they produce in
+  the output is a separate job, not yet priced.</li>
 </ul>
 <p>The record's most useful line is what the frontier <em>is</em>. Within one letter, the gap between two
-rows' destinations is the number of that letter between them. So moving a scattered set of rows
-amounts to counting letters in the gaps between them: an aggregate count, which an earlier result
-showed can't place a width-1 row without as many separate counts as there are rows.</p>
+rows' destinations is the number of that letter between them. So one step for a scattered set of rows
+is a matter of counting letters in the gaps between them. That ties the frontier to an earlier
+result about such counts, though not as an identity: gap counts give one step's destinations,
+while the earlier result concerns positions in the output.</p>
 <p>Neither eureka was worthless. Both were results without their reasons, and the reasons were already
 in our journal.</p>
+<p>The checking ran the other way too. A later ChatGPT audit of the mathematician agent's records
+narrowed several of their claims: the frontier verdict covers only the record-by-record
+implementation, the lanes negative had been corrected in its own entry, and a rule's short proof
+says nothing about its cost. It is in the <a href="https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md">source record</a>, §6, and this post follows it.</p>
 <h2 id="4-the-question-that-survived-what-lies-between-the-routes">4. The question that survived: what lies between the routes<a class="headerlink" href="#4-the-question-that-survived-what-lies-between-the-routes" title="Permanent link">&para;</a></h2>
 <p>Hilbert's instruction survives the wreck intact, and both models had reached for it. Applied to
 mibz2 it asks: what transformation turns the walk into Cells, and Cells into Open? What does it
@@ -3279,8 +3291,10 @@ the <em>number of steps</em> needed to apply it. A description with few, wide st
 gap is where the next decoder would have to live.</p>
 <p>Claude's analysis raised the standard escape from lower bounds of this kind: naming a composite
 once and reusing it, as extension variables shorten proofs in propositional logic. Checked, G1
-already charges shared work only once, and <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">survives</a>. What would break it is a
-schematic lemma, one proof with a parameter that ranges over a scattered set. That is the same open
+already charges shared work only once, and <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">survives</a>. What could break it is a
+rule for a whole scattered set that is cheap to <em>execute</em>, not merely short to state: LF's own
+formula is already a one-line rule for every row, and applying it row by row is the walk. That is
+the same open
 question in another form.</p>
 <h2 id="5-where-things-stand">5. Where things stand<a class="headerlink" href="#5-where-things-stand" title="Permanent link">&para;</a></h2>
 <p>The essay's charge holds up as a warning, and it applied to us twice in one afternoon. Two
@@ -3289,8 +3303,9 @@ proved, one was refuted and the other was a known lemma that leaves the cost unc
 survived was a question about reasons: what lies between our decoders, and what no contraction
 between them can remove.</p>
 <p>The split between count and price stays open as its own question. G1 bounds the number of width-1
-steps, not what each one costs on a real processor, and our records already hold examples of
-the two pulling apart in each direction. One shortcut is ruled out: checking a guessed decoding
+steps, not what each one costs on a real processor, and our records already show that the
+count doesn't fix the time: the same steps ran faster or slower depending on lanes and on the
+work in each step. One shortcut is ruled out: checking a guessed decoding
 against bzip2's 32-bit block checksum would accept a wrong guess about once in four billion, and
 mibz2 must be exact on every block.</p>
 <p>What changes is the record each failed idea leaves. Our obstruction write-ups already keep, for
@@ -3307,6 +3322,7 @@ eurekas apart in an afternoon.</p>
   descriptions of ChatGPT's figures.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">The ordered frontier and the transformation between decoders</a> and
   <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">abbreviation, batching and the block checksum</a>, the mathematician agent's records.</li>
+<li>ChatGPT's <a href="https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md">audit of those records</a> (§6 of the source record).</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">Toy-transfer</a>, the lanes experiment, and <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md">the retrospective</a> on the squared map.</li>
 </ul>
 
@@ -3469,19 +3485,19 @@ eurekas apart in an afternoon.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/bench.js?v=cf2975ea5965"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/couriers.js?v=cf2975ea5965"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/blog.js?v=cf2975ea5965"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/frontier.js?v=cf2975ea5965"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/observatory.js?v=cf2975ea5965"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=026407036b27"></script>
+        <script src="../../assets/javascripts/katex.js?v=cf2975ea5965"></script>
       
     
   </body>
