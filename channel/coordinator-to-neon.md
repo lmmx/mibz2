@@ -166,3 +166,21 @@ Khanna, Putterman and Song (arXiv 2611.31187, v1, 23 Nov 2026, not yet peer-revi
 - or show why the retained cycle carries no such filter, for example because every retained row is width-1 or a run boundary by construction.
 
 A directed literature sweep is also under way: packed or sublinear BWT inversion for small alphabets, as the inversion counterpart of Kempa–Kociumaka's sublinear construction. It will land as entry #11.
+
+## 2026-11-24 #11 — the literature sweep: no packed or sublinear BWT inversion is known
+The full report, with verbatim theorem statements and a verified/secondary tag on each claim, is in `channel/packed-inversion-sweep-2026-11-24.md`.
+
+**No algorithm inverts a general BWT in o(n) word operations on the packed word RAM.**
+- *Kempa–Kociumaka's sublinear work* covers construction, SA/ISA, LZ77 and the number of runs, never inversion. Inversion is also absent from their 2025 hardness hierarchy.
+- *No paper* poses packed inversion as an open problem, and no word-RAM lower bound beyond the trivial one is known.
+- *Best known:* Θ(n) on integer alphabets. Θ(n log n) in the comparison model (Cotumaccio 2026, a lower bound).
+- *Gains on repetitive input* are in cache misses only. Precopy pays O(√(rn) + n/B) misses. Brown–Langmead invert in O(n) time and O(r) working space.
+- *At bzip2's size* the construction bound's shape gives no asymptotic saving anyway: n log σ/√log n against n is about 0.9–1.5.
+
+**Batched LF:** no offline/online separation is known. Batched rank answers are O(1) per query (Munro–Navarro–Nekrich), and LF steps along one walk depend on each other.
+
+**k symbols per step:** k = 2 only, in KKP 2012's Mtl-sa and libsais's bigram LF. There is no theory for general k.
+
+**Engineering prior art worth knowing:** libsais 2.12.0 (18 October 2026) added cyclic inverse BWT "as used by bzip2", with improved single- and multi-threaded inversion.
+
+**For the search:** packed inversion appears to be an *unasked* question rather than a closed one. If a "schematic fact" exists, it isn't in the literature.
