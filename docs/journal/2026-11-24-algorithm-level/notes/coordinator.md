@@ -67,3 +67,6 @@
 ## 24 Nov, 22:48 — copy_if post read in full; MONODROMY asked to generalise
 - Louis supplied the post's source. The full text is verified: about 10–40× from register compress, store and popcount advance. The AVX2 alternatives are aqrit's tiny LUT, Cordes's BMI2 pext, and switch plus shuffle. The benchmark-hygiene appendix applies to the decomposition recipe. `leads/vectorised-compaction.md` is updated.
 - Louis asked whether anything besides copy_if could use the idea. That went to MONODROMY (channel #37).
+
+## 24 Nov, 22:55 — the evening's report
+- Written at Louis's request as `reports/2026-11-24-evening.md` (journal §50). It covers the formulation, the system, the mathematics and the toy problem, with every figure sourced from a record.

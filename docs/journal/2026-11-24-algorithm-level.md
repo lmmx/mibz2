@@ -1400,3 +1400,12 @@ The review is `reviews/neon-movement-cycle4-critique.md`. All-in Q at k = 0, wit
 - Q-to-seconds exchange rates for emission and construction, from the 232 census blocks.
 - Fuse the `runs.rs` front end into Open's Pass 1 inside the worker, saving a pass. Unmeasured.
 - Pass the Huffman selectors on as a regime hint. Unmeasured.
+
+## 50. Report: from a search to a formulated, measurable problem
+
+Louis: "ok nice so basically we are now producing a proper formulation of the task and properly turning it into a toy problem, this is excellent. can you please write a report on what we found and put it in the journal". The report is `reports/2026-11-24-evening.md`. It covers:
+- the formulation;
+- the decoder as a system, with the four-arm ceilings and the decomposition;
+- what has been ruled out, proved and left open in the mathematics;
+- the toy problem as it now stands;
+- the method, and an index of the records.
