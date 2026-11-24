@@ -3,7 +3,7 @@
 ## Amendment, 24 November 2026, 21:45: a finer worker grid (Louis)
 
 Louis: "1 6 and 10 is too coarse. we should tighten that so we can model better, set shift points [or at least optimal ones] properly." This amendment supersedes every worker grid below.
-- **Both parts run every worker count from 1 to 12, then 14, 16 and 20.** Pin or unpin as the earlier recipes did, and state which.
+- **Both parts run every worker count from 1 to 20 inclusive** (corrected by Louis at 21:55: "do 1-20"). Pin or unpin as the earlier recipes did, and state which.
 - **The profile (part 1) reports, at each count:**
   - the scanner's busy and idle time;
   - the workers' busy and idle time;
