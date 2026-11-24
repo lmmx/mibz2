@@ -1,6 +1,6 @@
 ---
-title: "Advancing the search for a new way to undo the BWT"
-image: assets/social/blog-2026-11-24-advancing-the-search.png
+title: "Halving the single-row steps: a target only a new algorithm can meet"
+image: assets/social/blog-2026-11-24-halving-the-single-row-steps.png
 description: "We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it."
 ---
 
@@ -11,7 +11,7 @@ description: "We now search for a new way to undo bzip2's block sort by forbiddi
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Advancing the search for a new way to undo the BWT
+# Halving the single-row steps: a target only a new algorithm can meet
 
 We now search for a new way to undo bzip2's block sort by forbidding the obvious mechanism and asking whether any exact decoder can do without it.
 {: .post-dek }
@@ -25,18 +25,31 @@ We now search for a new way to undo bzip2's block sort by forbidding the obvious
 
 </div>
 
-mibz2 has two kinds of research. One makes our existing decoders faster, a few per cent at a time.
-The other looks for a new decoder: a different way to undo bzip2's block sort, as different from
-ours as Rauzy–Veech induction was from the row-by-row walk it replaced. The first kind is judged by
-the bench. The second is what we are actually after, and it is much harder to search for, because
-there is no number to climb towards.
+For most of its life, mibz2's research has moved in small steps. Each change made the existing
+decoder a few per cent faster, and the bench judged it. What we are actually after is bigger: a new
+decoder, a different way to undo bzip2's block sort, as different from ours as Rauzy–Veech induction
+was from the row-by-row walk it replaced. In the past week we changed the size of step we attempt.
+We set a target that no edit to our decoder can meet, by theorem, and built what it takes to pursue
+it:
+
+- **A target that is met or not.** It was frozen before the new measurements. An exact decoder must
+  pay at most half the width-1 events that the current kind must, in two passes over the block and
+  no more memory than Open, and then beat Open on the bench.
+- **A proved lower bound, G1,** for every route of the current kind. Anything below it is a new
+  algorithm, not an increment.
+- **A census of our benchmark's blocks.** It predicts the cost of building Open's structures from
+  block structure alone.
+- **Fourteen candidate frameworks closed.** Each keeps its counterexample, its scope and what would
+  get past it.
+- **The transformation that connects our three decoders,** with the one thing it can never remove.
 
 This post reads our own search. In the past week it has been reframed four times: use everything,
 count the cost, set a target that is met or not, and keep the method rather than the result. Each
-reframing changed what we count as progress (§§1–2). The last one, prompted by an essay against AI
-mathematics, turned into a precise question about our decoders, and the rest of the post works it
-through: the routes we have (§3), the transformation between them (§4), two proposals tested
-against it (§5), what a new route would have to be (§6), and where the search stands (§7).
+reframing changed what we count as progress (§§1–2). The last one came from an essay against AI mathematics, and it
+turned into a precise question about our decoders. The rest of the post works that question
+through. It sets out the routes we have (§3) and the transformation between them (§4). It then
+tests two proposals against it (§5), says what a new route would have to be (§6), and ends on
+where the search stands (§7).
 
 ## 1. The goal: a new algorithm, not a faster one
 
@@ -89,7 +102,7 @@ ordinary route relies on. mibz2 has an exact counterpart.
 | **The obvious mechanism** | the A press | following the block's cycle, one row at a time |
 | **The best known** | one A press | Open: h₁ width-1 steps among its m retained steps |
 | **The class's floor** | ordinary routes need at least one | G1: every route of the current kind pays at least one event per width-1 row |
-| **The challenge** | fewer than one | fewer than h₁ |
+| **The challenge** | fewer than one | at most h₁/2 |
 
 Here h₁ is the block's number of width-1 runs, and h₁/m is 0.30, 0.39 and 0.83 at the minimum,
 median and maximum across Wikidata's distinct blocks. Because no route of the current kind goes
@@ -97,8 +110,8 @@ below the floor, anything below it is, by theorem, not an edit to Open. Whether 
 new algorithm or an increment stops being a judgement and becomes a consequence of the bound.
 
 Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md) now has the same form: invert every block
-exactly, within a fixed number of passes, with fewer single-row events than every route of the
-current kind must pay, and then beat our current decoder on the bench. A candidate either crosses
+exactly, in two passes and no more memory than Open, with at most half the single-row events that
+every route of the current kind must pay, and then beat our current decoder on the bench. A candidate either crosses
 that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder
 what the new idea would compute, for free, and measure what it buys.
 
