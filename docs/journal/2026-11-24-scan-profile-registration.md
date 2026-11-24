@@ -131,7 +131,19 @@ worker's busy time. A cheaper or parallel scanner must bring the first below the
   - the Huffman decode was 0.74–0.81 of the scanner's work, at about 2.4 ns a symbol;
   - 438 table switches in 1,163 selectors a block;
   - the report read the records and classified the scanner QUEUE-BOUND at 4 workers there.
-- **The recipe's DRY preflight:** below.
+- **The recipe's DRY preflight** (`just bench-scan-profile 1`, two rounds, no settle, at
+  3d22242c) ran the whole recipe here, and is archived as
+  `2026-11-24-scan-profile-registration/run-20261124T213843Z.tar.gz`:
+  - the build check against the pin passed, and the corpus was checked by its SHA-256;
+  - every decode gave 838,800,784 bytes, and every timed decode recorded all 1,724 blocks and
+    one record a worker;
+  - the report found the records whole and voided them on the machine alone (a 4-CPU Xeon).
+
+  Read anyway, at "10 workers" on 4 CPUs (oversubscribed, meaning nothing for the i9), the
+  report showed what it can see:
+  - the scanner's work 0.82 of the wall, the Huffman decode 0.55 of that;
+  - the hand-off into the job queue 0.28 of the work (its lock and wake-up, contended);
+  - 4.9 of 10 workers idle on average.
 
 ## Reproduce
 
