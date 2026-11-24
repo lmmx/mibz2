@@ -764,6 +764,32 @@ technique, and point to the section where it is worked by hand.
   for after the stepper, and give the stepper a static fallback without JavaScript. Drive
   every step in Chromium and check for script errors before publishing. (Louis, 10 November
   2026, on the Rauzy–Veech post's Lyndon figure, after ChatGPT's walkthrough of it.)
+- **A stepper's frames move; they never just swap.** A frame that replaces the last one at
+  once makes the reader find what changed. Animate each frame in from the one before, in SMIL
+  inside the frame's own `<svg>`, so the eye follows the change (Louis, 24 November 2026: "much
+  less jumpy. Makes it easier to mentally follow what's going on"). This holds for every
+  stepper, whether its frames are written in the page (`data-model="frames"`) or drawn by
+  `blog.js`.
+  - **Animate what changed, and only that.** A line or arrow that is new draws itself, with
+    its arrowhead appearing as it arrives. A shape that changes size or proportion morphs from
+    the last frame's shape (`<animate attributeName="d">`). A point that moves slides from its
+    last place. New labels and new rows fade in after the thing they label has arrived.
+    Anything unchanged stays still.
+  - **One order, short and eased.** Stagger new elements in reading order, about 0.1–0.2 s
+    apart. Ease each one with `calcMode="spline" keySplines="0.4 0 0.2 1"`. Finish the whole
+    frame within about 1.5 s, well inside Play's 2.6 s step.
+  - **The end state is the frame.** Every animation uses `fill="freeze"` and ends exactly on
+    the static drawing, so a reader who stops at any step sees the same figure as before. The
+    values are not animated through intermediate numbers.
+  - **The runtime is already there.** `blog.js` restarts a frame's timeline each time it is
+    shown (`setCurrentTime(0)`), whether by Next, Back, Play or the slider. For a reader who
+    asks for reduced motion it shows the last state at once. Elements start hidden
+    (`opacity="0"`) only inside an animated group.
+  - **The helpers.** `docs/scripts/figures_halving_the_single_row_steps.py` has `fade`
+    (appear at a time), `drawn` (a path that draws itself, with its arrowhead set as it lands)
+    and the morph and slide patterns. Copy them rather than writing new ones.
+  - **Check it moving.** Capture each frame mid-animation (about 0.3 s after Next) and at rest
+    (2 s), and check the reduced-motion end state. Don't record the animation.
 - **A figure with several readings teaches them one at a time.** The Lyndon figure first put
   the tree, the suffix ranks and the Lyndon table on one canvas, and a reader could not see
   which row answered which question. Start with the rule worked by hand on the highlighted
