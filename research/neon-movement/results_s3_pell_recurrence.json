@@ -1,0 +1,746 @@
+{
+  "synth-hex-iid-65536": {
+    "n": 65536,
+    "r": 61356,
+    "h1": 57458,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 65536,
+      "doubling_rounds_full": 16,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 32768,
+          "macro_over_h1": 0.5703,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 95.999,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 16384,
+          "macro_over_h1": 0.2851,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 191.998,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 8192,
+          "macro_over_h1": 0.1426,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 287.995,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 4096,
+          "macro_over_h1": 0.0713,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 383.989,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 65536,
+        "Q_over_h1": 1.1406,
+        "Q_acq": 65536,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 117,
+        "P_acq": 116,
+        "P_run": 1,
+        "P_bytes": 1518.618,
+        "S": 2361344,
+        "S_over_n": 36.031,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=16): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": true,
+      "raw_full_rounds": 16,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 117,
+        "P_acq": 116,
+        "P_run": 1,
+        "P_bytes": 1525.0,
+        "S": 1572864,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (16 rounds): LITERALLY Q=0, D=0, relocated to P=117, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 0,
+      "self_overlap_rows": 0,
+      "zorich_accel_rows": 0,
+      "w1_affected": 0
+    }
+  },
+  "synth-tmpl-hex-1000x40": {
+    "n": 81000,
+    "r": 42866,
+    "h1": 39909,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 47001,
+      "doubling_rounds_full": 16,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 23501,
+          "macro_over_h1": 0.5889,
+          "doubling_passes": 5,
+          "doubling_P_bytes": 41.778,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 11751,
+          "macro_over_h1": 0.2944,
+          "doubling_passes": 10,
+          "doubling_P_bytes": 83.556,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 5876,
+          "macro_over_h1": 0.1472,
+          "doubling_passes": 15,
+          "doubling_P_bytes": 125.333,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 2938,
+          "macro_over_h1": 0.0736,
+          "doubling_passes": 20,
+          "doubling_P_bytes": 167.108,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 81312,
+        "Q_over_h1": 2.0374,
+        "Q_acq": 47313,
+        "Q_run": 33999,
+        "D": 5,
+        "D_over_n": 6.2e-05,
+        "P": 84,
+        "P_acq": 83,
+        "P_run": 1,
+        "P_bytes": 652.791,
+        "S": 1712132,
+        "S_over_n": 21.137,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=16): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 17,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 124,
+        "P_acq": 123,
+        "P_run": 1,
+        "P_bytes": 1488.0,
+        "S": 1944000,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (17 rounds): LITERALLY Q=0, D=0, relocated to P=124, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 1,
+      "self_overlap_rows": 1,
+      "zorich_accel_rows": 1,
+      "w1_affected": 0
+    }
+  },
+  "block-0.L": {
+    "n": 899931,
+    "r": 51184,
+    "h1": 35116,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 88290,
+      "doubling_rounds_full": 17,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 44145,
+          "macro_over_h1": 1.2571,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 9.418,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 22073,
+          "macro_over_h1": 0.6286,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 18.836,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 11037,
+          "macro_over_h1": 0.3143,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 28.255,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 5519,
+          "macro_over_h1": 0.1572,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 37.672,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 1022047,
+        "Q_over_h1": 29.1049,
+        "Q_acq": 210406,
+        "Q_run": 811641,
+        "D": 10,
+        "D_over_n": 1.1e-05,
+        "P": 124,
+        "P_acq": 123,
+        "P_run": 1,
+        "P_bytes": 156.816,
+        "S": 4346056,
+        "S_over_n": 4.829,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=17): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21598344,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 0,
+      "self_overlap_rows": 0,
+      "zorich_accel_rows": 0,
+      "w1_affected": 0
+    }
+  },
+  "block-2.L": {
+    "n": 900000,
+    "r": 54532,
+    "h1": 34262,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 109542,
+      "doubling_rounds_full": 17,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 54771,
+          "macro_over_h1": 1.5986,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 11.684,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 27386,
+          "macro_over_h1": 0.7993,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 23.369,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 13693,
+          "macro_over_h1": 0.3997,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 35.053,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 6847,
+          "macro_over_h1": 0.1998,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 46.737,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 1023609,
+        "Q_over_h1": 29.8759,
+        "Q_acq": 233151,
+        "Q_run": 790458,
+        "D": 10,
+        "D_over_n": 1.1e-05,
+        "P": 124,
+        "P_acq": 123,
+        "P_run": 1,
+        "P_bytes": 195.93,
+        "S": 5133944,
+        "S_over_n": 5.704,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=17): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21600000,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 0,
+      "self_overlap_rows": 0,
+      "zorich_accel_rows": 0,
+      "w1_affected": 0
+    }
+  },
+  "block-85.L": {
+    "n": 899935,
+    "r": 79375,
+    "h1": 55504,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 155124,
+      "doubling_rounds_full": 18,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 77562,
+          "macro_over_h1": 1.3974,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 16.548,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 38781,
+          "macro_over_h1": 0.6987,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 33.095,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 19391,
+          "macro_over_h1": 0.3494,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 49.643,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 9696,
+          "macro_over_h1": 0.1747,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 66.19,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 947729,
+        "Q_over_h1": 17.075,
+        "Q_acq": 202918,
+        "Q_run": 744811,
+        "D": 9,
+        "D_over_n": 1e-05,
+        "P": 131,
+        "P_acq": 130,
+        "P_run": 1,
+        "P_bytes": 289.544,
+        "S": 6214984,
+        "S_over_n": 6.906,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=18): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21598440,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 0,
+      "self_overlap_rows": 0,
+      "zorich_accel_rows": 0,
+      "w1_affected": 0
+    }
+  },
+  "block-143.L": {
+    "n": 899869,
+    "r": 108335,
+    "h1": 72578,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 193449,
+      "doubling_rounds_full": 18,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 96725,
+          "macro_over_h1": 1.3327,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 20.638,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 48363,
+          "macro_over_h1": 0.6664,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 41.275,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 24182,
+          "macro_over_h1": 0.3332,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 61.912,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 12091,
+          "macro_over_h1": 0.1666,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 82.549,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 1036245,
+        "Q_over_h1": 14.2777,
+        "Q_acq": 329825,
+        "Q_run": 706420,
+        "D": 11,
+        "D_over_n": 1.2e-05,
+        "P": 131,
+        "P_acq": 130,
+        "P_run": 1,
+        "P_bytes": 364.375,
+        "S": 8483532,
+        "S_over_n": 9.428,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=18): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21596856,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 1,
+      "self_overlap_rows": 12,
+      "zorich_accel_rows": 12,
+      "w1_affected": 0
+    }
+  },
+  "block-210.L": {
+    "n": 899959,
+    "r": 128732,
+    "h1": 97054,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 202025,
+      "doubling_rounds_full": 18,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 101013,
+          "macro_over_h1": 1.0408,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 21.55,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 50507,
+          "macro_over_h1": 0.5204,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 43.1,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 25254,
+          "macro_over_h1": 0.2602,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 64.651,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 12627,
+          "macro_over_h1": 0.1301,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 86.2,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 970042,
+        "Q_over_h1": 9.9949,
+        "Q_acq": 272108,
+        "Q_run": 697934,
+        "D": 10,
+        "D_over_n": 1.1e-05,
+        "P": 131,
+        "P_acq": 130,
+        "P_run": 1,
+        "P_bytes": 381.17,
+        "S": 8219980,
+        "S_over_n": 9.134,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=18): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21599016,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 0,
+      "self_overlap_rows": 0,
+      "zorich_accel_rows": 0,
+      "w1_affected": 0
+    }
+  },
+  "block-207.L": {
+    "n": 899998,
+    "r": 87111,
+    "h1": 62407,
+    "s3a_pell_doubling": {
+      "L_min": 16,
+      "m_retained": 134609,
+      "doubling_rounds_full": 18,
+      "checkpoints": [
+        {
+          "j": 1,
+          "stride": 2,
+          "macro_steps": 67305,
+          "macro_over_h1": 1.0785,
+          "doubling_passes": 7,
+          "doubling_P_bytes": 14.358,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 2,
+          "stride": 4,
+          "macro_steps": 33653,
+          "macro_over_h1": 0.5393,
+          "doubling_passes": 14,
+          "doubling_P_bytes": 28.716,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 3,
+          "stride": 8,
+          "macro_steps": 16827,
+          "macro_over_h1": 0.2696,
+          "doubling_passes": 21,
+          "doubling_P_bytes": 43.075,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        },
+        {
+          "j": 4,
+          "stride": 16,
+          "macro_steps": 8414,
+          "macro_over_h1": 0.1348,
+          "doubling_passes": 28,
+          "doubling_P_bytes": 57.433,
+          "byte_exact": true,
+          "note_tree_vs_mat": "macro_steps=ceil(m/2^j); zero-copy tree emit still addresses m leaves, while full j_max sort-emit has Q_run=0!"
+        }
+      ],
+      "retained_full_byte_exact": true,
+      "retained_full_cost": {
+        "Q": 1005580,
+        "Q_over_h1": 16.1133,
+        "Q_acq": 240191,
+        "Q_run": 765389,
+        "D": 11,
+        "D_over_n": 1.2e-05,
+        "P": 131,
+        "P_acq": 130,
+        "P_run": 1,
+        "P_bytes": 249.639,
+        "S": 5889428,
+        "S_over_n": 6.544,
+        "s_cursors": 256,
+        "notes": "Retained-map Pell list ranking (L_min=16, rounds=18): Q_doubling=0, D_doubling=0, Q_run_lone=0!"
+      },
+      "raw_full_verified_in_python": false,
+      "raw_full_rounds": 20,
+      "raw_full_cost": {
+        "Q": 0,
+        "Q_over_h1": 0.0,
+        "Q_acq": 0,
+        "Q_run": 0,
+        "D": 0,
+        "D_over_n": 0.0,
+        "P": 145,
+        "P_acq": 144,
+        "P_run": 1,
+        "P_bytes": 1740.0,
+        "S": 21599952,
+        "S_over_n": 24.0,
+        "s_cursors": 256,
+        "notes": "Pure raw-LF Pell list ranking (20 rounds): LITERALLY Q=0, D=0, relocated to P=145, S=24n"
+      }
+    },
+    "s3b_zorich_cycle_audit": {
+      "self_overlap_runs": 1,
+      "self_overlap_rows": 1,
+      "zorich_accel_rows": 1,
+      "w1_affected": 0
+    }
+  }
+}
