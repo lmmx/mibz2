@@ -1262,3 +1262,30 @@ The review: `neon-movement-cycle3-critique.md`. The recomputed figures on block 
 - **The binding cost is acquisition, not composition.** The most promising threads:
   - lazy or shared acquisition for thin runs, reusing the B_P cursor intersection inside strip contraction;
   - CL2's depth-2 schedule keyed by (byte, successor's byte), 6.3k segments on block 0, still to be costed with payloads.
+
+## 44. The four-arm oracle: INTERACTION. At 10 workers the scanner is the wall, and behind it emission is worth having
+
+`bench-four-arm`, run on the workstation (i9-10900K) at 5731db19. The bundle is `four-arm/run-20261124T204154Z` on `evidence` at c9302539. The Coordinator checked its SHA-256 (736e0624…976c). All 20 rounds' outputs match the reference: 838,800,784 bytes, CRC d7626c17, 0 mismatches.
+
+Wall-time ratios against A, with 95% intervals:
+
+| workers | B (supplied codes) | C (supplied scanner output) | D (both) | D / better single arm |
+|---|---|---|---|---|
+| 1 | 0.830 [0.825, 0.834] | 0.996 [0.991, 1.001] | 0.825 [0.820, 0.831] | 0.994 against B |
+| 6 | 0.850 [0.844, 0.855] | 0.982 [0.979, 0.986] | 0.830 [0.827, 0.834] | 0.977 against B |
+| **10 (judged)** | **0.976 [0.936, 1.017]** | **0.806 [0.782, 0.831]** | **0.741 [0.717, 0.766]** | **0.920 [0.901, 0.939] against C** |
+
+- **Harness check:** B at 10 workers reproduces §30 (0.976 against 0.988; the intervals overlap).
+- **Peak RSS:** C and D are 3–5% lower.
+- **Verdict by the registered rule: INTERACTION.**
+- **What it means:**
+  - At 1 and 6 workers, emission is the lever and the scanner barely matters.
+  - At 10 workers the serial scanner (Huffman/MTF front end) is the binding constraint. Removing it alone saves 19%.
+  - With the scanner removed, supplied codes save a further 8% (D/C 0.920). §30 saw nothing from them because the scanner hid it.
+  - So the 10-worker null in §30 was masked, as ChatGPT Pro (§42) suggested. An algorithm that changes **both** the scanner's work and emission has up to about 26% of whole-decoder time on the table at 10 workers.
+- **Caveats:**
+  - These are oracles: the scanner output and the codes were supplied, with acquisition outside the clock. The open problem is acquiring them cheaply.
+  - "Scanner removed" also removes serial bit-decode work that a real algorithm must still do somewhere, in parallel or cheaper.
+- **Consequences:**
+  - The cross-stage track (CROSS-STAGE.md) becomes a priority beside the inversion work.
+  - At 10 workers the first target is the scanner's serial cost. Earlier parallel-scan attempts (C-37 at 0.883 with regressions; the streaming version at 1.54×) failed on scheduling and memory, not on potential.
