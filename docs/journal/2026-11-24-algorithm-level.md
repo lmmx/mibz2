@@ -1442,3 +1442,22 @@ They are merged into `briefs/character.md`.
 **Cost:** 240 baseline observations, plus 648 intervention observations (p = 9), plus 36 PMU, plus follow-ups. It is split into two recipes, after the scanner profile.
 
 **Housekeeping:** at Louis's instruction ("do not title things with times of day … title them according to the content or relevance"), the report is renamed `reports/2026-11-24-from-search-to-formulated-problem.md`.
+
+## 52. The programme chain, after Jain; MVA and a fractional factorial added
+
+Louis restated the aim. The toy problem and simulation set-up are for a Jain-style performance analysis (https://www.cs.wustl.edu/~jain/iucee/index.html; *The Art of Computer Systems Performance Analysis*, 1991). That analysis is to yield a systems-biology model of the program, which in turn locates where new mathematical devices fit.
+
+`programme.md` lays out the chain in eight steps, each with its status. It is now the entry page:
+1. task and referee — done;
+2. the toy problem — done;
+3. structure — designed;
+4. measurement — the scanner profile is running;
+5. experimental design — being built;
+6. the model;
+7. where mathematics fits;
+8. the mathematics.
+
+**Amendment to `briefs/character.md` (§7a):**
+- the operational laws (Little, utilisation, forced flow) are the completeness checks;
+- mean-value analysis of the closed network (W = 4k) sits beside the discrete-event simulation;
+- a 2^(9−4) resolution-IV fractional factorial at k = 8 and 10 replaces one-factor-at-a-time there, so that two-factor interactions are not confounded with main effects. The four-arm result was itself an interaction.

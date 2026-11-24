@@ -160,6 +160,14 @@ Each is run at a few anchors only:
    - interaction terms are not identified by one-at-a-time experiments, so the constrained network form is the assumption under test.
 8. **Coz, or controlled virtual speedups,** for one or two leading targets afterwards. Progress is ordered output bytes. Each finding is validated by a real small change.
 
+## 7a. Amendment (journal §52, from Jain's methodology): operational laws, MVA and a fractional factorial
+
+- §4's identities are the **operational laws**: Little's law, utilisation and forced flow. Check them explicitly per activity and buffer.
+- Add **mean-value analysis** of the closed network (window W = 4k) beside the discrete-event simulation, as the analytic model and a check on the simulation.
+- At **k = 8 and 10**, replace one-factor-at-a-time with a **2^(9−4) resolution-IV fractional factorial** (32 runs) over the nine activities, at +20%. It estimates main effects clear of two-factor interactions, which one-factor-at-a-time cannot see.
+  - The other anchors keep one-factor-at-a-time.
+  - If the budget is too tight, use a 16-run resolution-III design plus a fold-over, and say so in the registration.
+
 ## 8. Process
 
 - The Pathfinder splits this into recipes: stage 1 with the public-API sweep, then stage 2 with the targeted checks. Each is a C1a diagnostic with its rule posted on #145 before the data.

@@ -74,3 +74,8 @@
 ## 24 Nov, 23:10 — ChatGPT Pro's decomposition answer; the recipe brief
 - ChatGPT Pro's answer is recorded verbatim (`external/chatgpt-decomposition.md`). Compared with MONODROMY's and Neon's in journal §51, and merged into `briefs/character.md` for the Pathfinder, to follow the scanner profile.
 - The report is renamed by content, at Louis's instruction: `reports/2026-11-24-from-search-to-formulated-problem.md`.
+
+## 24 Nov, 23:20 — the programme chain, after Jain
+- Louis restated the aim: toy problem → Jain-style performance analysis → systems-biology model → where new mathematics fits.
+- `programme.md` gives the eight steps and their status.
+- `briefs/character.md` is amended (§52): operational laws as identities, MVA for the closed network, and a fractional factorial at k = 8 and 10. The Pathfinder is told.
