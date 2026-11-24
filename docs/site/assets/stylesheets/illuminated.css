@@ -182,6 +182,19 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 0 4px rgba(255, 214, 120, 0.55);
 }
 
+/* A mock-heroic rubric over a small skirmish, as a polemical tract titles its chapters
+   ("Against the Beclauded Subagent"): <p class="il-rubric-head">Of …</p>. Deep claret
+   blackletter, no glow; never over a result. */
+.md-typeset { --il-claret: #7a0d12; }
+[data-md-color-scheme="slate"] .md-typeset { --il-claret: #e27a86; }
+.md-typeset p.il-rubric-head {
+  margin: 1.6em 0 0.5em;
+  font: 400 1.65em/1.15 var(--il-black);
+  letter-spacing: 0.01em;
+  color: var(--il-claret);
+  text-wrap: balance;
+}
+
 /* A tight glow on ordinary type: a few pixels with a dark edge, never a haze. */
 .md-typeset .il-glow {
   color: #7dff4f;
