@@ -728,3 +728,23 @@ Folded into FRONTIER.md's target section in PR #816.
 **Proposed next step:** a focused kitchen-sink cycle (Carbon or Neon) screening each framework
 against the E2 cell, then the survivors' cost-weighted applicability on the census, once Louis has
 fixed K and 𝓕.
+
+## 21. MONODROMY's own account, as Louis saw it in its session
+
+Louis relayed MONODROMY's session summary of record 98. It adds, in plain terms:
+
+- **A gap it caught in its own proof before committing:** "without counting the output chain's links,
+  the LF walk would score c₁ = 0, so I'm adding width-1 chain links to c₁ and redoing the injectivity
+  argument around join points." The cost now counts "every operation on a single row anywhere in the
+  program, including construction, helpers and each step of the output chain."
+- **"Two existing algorithms already meet it"** as originally worded: two-ended Open, if read as
+  depth ("only about h₁/2 single-row steps on the critical path"); and sorting-based list ranking
+  (Chiang et al.), with no single-row steps at all, "known and slower, needing a logarithmic number of
+  passes over the data". Hence the repairs: a count, not a depth; a pass budget K ("I suggested 3");
+  per block over a stated family ("a corpus total could be met on easy blocks alone").
+- **Where a yes would have to live:** "on non-random content such as repeated hashes and numbers.
+  There the missing step is learning the grouping without each row's own first step."
+- **On Lean:** "A checked version would make the class boundary exact; it would not rule out the
+  escapes."
+
+**Still Louis's to fix:** the pass budget K, the family of blocks, and the utility thresholds.
