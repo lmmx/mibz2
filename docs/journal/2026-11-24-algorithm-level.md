@@ -532,3 +532,26 @@ does, it has not escaped.
 
 This is offered as the "what the agents may do" part of the formulation: admit R2 and R3 only;
 every subgoal on the backward chain; progress as premises discharged.
+
+## 14. Louis: "yes put fewer than h₁ to monodromy … this is gold"
+
+> "yes put fewer than h₁ to monodromy. also please ensure we are recording these messages in
+> journal - this is gold"
+
+**Done.** CHECKPOINT to MONODROMY on #346 (see #145 for the routing), asking for inputs to Louis's
+formulation, not the formulation itself:
+1. a precise definition of the class record 96 bounds, tight enough that the walk cannot hide in a
+   helper, with its escape condition;
+2. whether "fewer than h₁" is well-posed: any trivial way to meet it that is still a walk; per block
+   or over the corpus;
+3. the backward chain from the target (§11), each step marked native, missing or blocked, checked
+   against FRONTIER's obstructions (record 84, Gamma's G1, 3-byte global sensitivity, the induction
+   floor r);
+4. whether §13's route classes are the right cut, and whether "best outcome still ≥ h₁?" is
+   decidable from record 96 alone;
+5. whether a Lean statement of the class and the floor is the right first proof target, and its
+   rough size, with nothing built until Louis decides on the repository.
+
+**On recording.** Every exchange of this discussion is kept here, in order, with Louis's words
+quoted (§§1–14). The record stays open on its branch (#808) while the formulation discussion
+continues, and merges to master when it ends.
