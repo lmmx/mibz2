@@ -189,7 +189,16 @@ interval overlaps that one. If not, the verdict is still reported, labelled UNVA
     store held 233 keys (106.3 MB);
   - per-decode peaks were 200–255 MB;
   - the scorer read the records, and voided them on the machine alone.
-- **The recipe's DRY preflight:** reported on #145 and archived with the PR.
+- **The recipe's DRY preflight** (`just bench-four-arm 1`, two rounds, no settle, at bc8b0d98) is
+  archived as `2026-11-24-four-arm-registration/run-20261124T200338Z.tar.gz`. It ran the whole
+  recipe here:
+  - the build check against the pin passed, and the corpus was checked by its SHA-256;
+  - the oracle pass on the four copies: 1,724 blocks (431 distinct, 50.1 MB of symbols), 233 code
+    keys (106.3 MB), with no collision, conflict or missing block;
+  - all 24 timed decodes and both checks: 838,800,784 bytes each, CRC-32 d7626c17, 1,724 blocks
+    replayed, 932 supplied blocks checked, no mismatch;
+  - peaks were about 360–375 MB;
+  - the scorer found the records whole and voided them on the machine alone (a 4-CPU Xeon).
 
 ## Reproduce
 
