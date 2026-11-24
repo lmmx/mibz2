@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=a9faaf3dc3d7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=5263144ac265">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=a9faaf3dc3d7">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3133,7 +3133,7 @@
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>This day began as a search for a new mathematical basis for undoing bzip2's block sort and ended
+<p>The work began as a search for a new mathematical basis for undoing bzip2's block sort and ended
 with a problem that can be stated, measured and refereed. Three things now hold it in place. A
 cost referee says what would count as beating the floor, and the method for finding candidates is
 set apart from it (<a href="../2026-11-24-what-else-moves-together/">What else moves together</a>). Oracle
@@ -3141,7 +3141,7 @@ measurements say where whole-decoder time can be won at all: up to 26% at ten wo
 until now behind the serial scanner
 (<a href="../2026-11-24-the-scanner-hides-the-emitter/">Masked bottlenecks in a two-stage decoder</a>). And
 the mathematics has a map of what has been ruled out, a conservation law that bounds one whole
-class of routes, and a short list of open threads. This post gathers them, drawing every figure from <a href="https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md">the day's report</a> and the records it cites.</p>
+class of routes, and a short list of open threads. This post gathers them, drawing every figure from <a href="https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md">the formulation report</a> and the records it cites.</p>
 <h2 id="1-the-formulation-and-two-corrections">1. The formulation, and two corrections<a class="headerlink" href="#1-the-formulation-and-two-corrections" title="Permanent link">&para;</a></h2>
 <p>The problem statement agreed by three independent answers asks for one uniform program, exact on
 every column, that builds its structures from the column within fixed budgets and pays at most
@@ -3187,7 +3187,10 @@ picture rather than a decomposition: the plan adds a serial tail for retiring an
 blocks, treats move-to-front decoding and run formation as one fused activity, and treats the
 variation between blocks as a covariate. Two corrections from <a href="https://github.com/lmmx/mibz2/blob/b34a05daefefc81d5ab2d2cba4f58752e7d4287a/docs/journal/2026-11-24-algorithm-level/external/chatgpt-decomposition.md">one of the answers</a> shape the
 design. Requested threads are not actual workers, since a request for ten or more runs seven
-workers, so the mechanism study names its worker counts directly. And the summation theorem of
+workers, so the mechanism study names its worker counts directly. And the
+scanner's waiting is not proof of too few workers: admission is limited by the blocks issued but
+not yet taken in order, and by a 12 MiB threshold on finished output, so a slow early block can
+stall the scanner while later blocks wait to be written. And the summation theorem of
 control analysis is no test of completeness: for a stage whose rate is the minimum of two others,
 the coefficients sum to two under slowdowns and to zero under speedups, so completeness has to come
 from accounting identities instead. Each stage will be slowed by 20%, with 10% follow-ups to check
@@ -3265,7 +3268,7 @@ problem then has three parts.</p>
    together they are worth up to 26% at ten.</li>
 </ol>
 <p>The ceilings came from oracles run before any candidate was built, and the routes' figures from
-reviews made independently of the work they judged; most of the day's headlines shrank under that
+reviews made independently of the work they judged; most of the headlines shrank under that
 review. What remains is smaller than the morning hoped and much better defined: a referee for any
 candidate, a price for each stage, and a record of the routes already closed.</p>
 <hr />
@@ -3436,19 +3439,19 @@ candidate, a price for each stage, and a record of the routes already closed.</p
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/bench.js?v=a9faaf3dc3d7"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/couriers.js?v=a9faaf3dc3d7"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/blog.js?v=a9faaf3dc3d7"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/frontier.js?v=a9faaf3dc3d7"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/observatory.js?v=a9faaf3dc3d7"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=5263144ac265"></script>
+        <script src="../../assets/javascripts/katex.js?v=a9faaf3dc3d7"></script>
       
     
   </body>
