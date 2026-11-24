@@ -1013,3 +1013,24 @@ Louis approved commissioning the outside review's proposed experiment. The recip
 - *At 10 workers, the default,* the whole decoder barely moves: **0.988 [0.957, 1.020]**. The verdict is **STOP**.
 
 **The reading.** At ten workers the decode is bounded outside Open's emit, by the serial front end or by shared bandwidth. So the search's "price" question has a second floor beneath it: a structural step inside the kernel pays in wall time only where the kernel is the bound. Verdict LOG 7132792060; channel entry #9.
+
+## 31. A new MST result, and the literature on packed inversion
+
+**Louis:** "Does this brand new discovery help us fundamentally in any way? And might we look for new significant proofs in fundamental algorithms in recent literature?" The discovery is arXiv 2611.31187, a deterministic O(m) MST. Then: "Do whatever you think."
+
+**The MST result, read for structure:**
+- It doesn't help directly: inversion is already linear.
+- Two of its mechanisms are structurally close to ours:
+  - an offline-batch versus online separation (Komlós against Pettie);
+  - contract-then-filter recursion.
+- They gave MONODROMY one question (channel entry #10): is there a "supported row", whose placement is certified by structure Open has already built?
+
+**The directed sweep** is kept in [`2026-11-24-algorithm-level/packed-inversion-sweep.md`](2026-11-24-algorithm-level/packed-inversion-sweep.md):
+- No packed or sublinear BWT inversion is known, and none is posed as open.
+- The best known is Θ(n) on integer alphabets and Θ(n log n) in the comparison model.
+- At bzip2's size, the asymptotics offer nothing.
+- libsais 2.12 (October 2026) now does cyclic, bzip2-style inversion with bigram LF. It's engineering prior art to benchmark against.
+
+**Also decided:**
+- The retrospective's §2.4 gets a dated correction (#824).
+- The 10-worker bound diagnostic is deferred.
