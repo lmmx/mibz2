@@ -27,6 +27,7 @@ def S (c) : ℕ := openPeakScratch c   -- state beyond the output: at most shipp
 2. **No bundling.** A rule application with s rows in its subject is charged the number of those rows whose own run records it takes as distinguished inputs, not 1. Packing single-row determinations into one "multi-row" step doesn't reduce c₁. Only rows determined from aggregate information go uncharged.
 3. **No cost moved off the ledger.** Every rule must be declared with a sound derivation from the records and the facts already held. A yes must also carry the utility receipts of §7. Fewer events that cost more time is not a yes.
 4. **Depth is not the count** (record 98). Parallelism, chains and SIMD count per row.
+6. **Dependent loads stated alongside c₁** (added 24 November after the outside review's point 2; stricter, so admissible under C2). A *dependent load* is a read whose address is computed from the value of an earlier read, other than at a sequential or fixed-stride address. A yes must state d(D, c) per block and have d(D, c) ≤ d(Open, c) on every block of 𝓕. It does not replace c₁; a no is still a statement about c₁.
 5. **Fixed before the data.** These values are fixed before Neon's N-0 measurement (h₁R/h₁ on 𝓕). Under C2 they are never relaxed after any data is seen. Where MONODROMY and Neon disagree, the stricter reading holds, logged in CLAIMS.md.
 
 ## 2. The calculus 𝓡 and its cost (record 98 §1)
@@ -63,7 +64,8 @@ def c₁ (τ : Trace Λ c) : ℕ := (τ.events.filter (·.subjectWidth = 1)).car
 
 ```lean
 /-- G1 (argued: records 96, 98; Lean target, about 600–1,000 lines) -/
-theorem G1 (D : Decoder 𝓡) (c : Column) : c₁ (D.trace c) ≥ c.h₁
+theorem G1 (D : Decoder 𝓡) (c : Column) (hc : c.singleCycle) : c₁ (D.trace c) ≥ c.h₁
+-- singleCycle added after Neon's N-1 break 1 (L = "aab", p = 0). It holds on all of 𝓕.
 
 /-- P1, additivity (proved here, §4.1) -/
 theorem c₁_split (σ : Split) (τ : Trace Λ c) :
@@ -76,7 +78,8 @@ theorem main (σ : Split) (DN : StreamDecoder .N) (DR : StreamDecoder .R)
     (PR : ∀ c ∈ 𝓕, c₁ (DR c) ≤ aR c * c.h₁R)            -- stream R's premise (MONODROMY)
     (Pglue : Glue DN DR)                                 -- the two streams' outputs interleave exactly
     (Pbudget : ∀ c ∈ 𝓕, passes DN c + passes DR c + passes Pglue c ≤ K)
-    (Pmargin : ∀ c ∈ 𝓕, aN c * c.h₁N + aR c * c.h₁R ≤ (1 - δ) * c.h₁) :
+    (Pstate : ∀ c ∈ 𝓕, state DN c + state DR c + state Pglue c ≤ S c)   -- N-1 break 2
+    (Pmargin : ∀ c ∈ 𝓕, aN c * c.h₁N + aR c * c.h₁R + c₁ (Pglue c) ≤ (1 - δ) * c.h₁) :   -- glue charged (N-1 break 2; review 3a)
     ∃ D : Decoder (𝓡 ∪ ΛN ∪ ΛR), ∀ c ∈ 𝓕,
       D.passes c ≤ K ∧ D.state c ∈ O(c.r) ∧ c₁ (D.trace c) ≤ (1 - δ) * c.h₁
 ```
@@ -92,6 +95,8 @@ Here h₁N + h₁R = h₁ is the split of the width-1 runs by σ.
 - A width-1 link has a single start.
 
 So c₁ is a sum over rows, and any partition of the rows splits it.
+
+**Attribution (repair after N-1 break 3):** a `prim R` or `mirror R` event is attributed to the run R it is built from, not to its subject interval (a mirror's subject is LF(R), which can lie in the other stream).
 
 **Not covered:** events on wider subjects cost nothing in c₁ and are not split. That is the point of counting width 1 only.
 
@@ -140,6 +145,8 @@ Neon's E2 screen, on its branch. Its premises go here with citations when they l
 | **E2, global, non-rigid, not O(1) depth, within K passes** | **OPEN** | no construction, no obstruction: stream N's territory |
 
 ## 6. What a "no" is, and the margin
+
+**Scope (after the outside review's 3b and record 101):** a no must name the part of global E2 it covers. With record 101 it covers Λ_agg(𝒫, D) with |𝒫| + 2|D| ≤ ν′ (coarse aggregates). It leaves open exactly: global positional rules whose input separates Θ(ν′) flip pairs (fine input, read once, many rows placed). That residue is stream N's cell; a no that does not reach it is a partial no and must be reported as one.
 
 **A no:** a theorem that for every decoder over Λ = 𝓡 ∪ E1 ∪ E3 ∪ E2-local ∪ E2-O(1), some c ∈ 𝓕 has c₁ > (1 − δ)·h₁. That is, the open cell is empty on 𝓕. It ends the major shot cleanly.
 
