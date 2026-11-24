@@ -16,6 +16,101 @@ a new construction could replace (T3, the substitution points L0–L6). A candid
 frontier can be submitted there as the lemma it replaces, scored separately on correctness,
 computational content and measured cost.
 
+## The target (the major shot)
+
+*24 November 2026, at Louis's direction; the reasoning is in
+[`docs/journal/2026-11-24-algorithm-level.md`](../../journal/2026-11-24-algorithm-level.md) (the
+record of the conversation that led here). Louis is writing the formulation; this section holds
+its current candidate and will be replaced by his text.*
+
+The research effort has two tracks. **Pot shots** improve the current algorithms and are judged
+by the bench. **The major shot** looks for a structural step to a new inversion algorithm, as the
+steps from the LF walk to Rauzy–Veech induction and to Open's first returns were, judged by a
+yes/no target, not a score. Everything on this page serves the major shot unless marked otherwise.
+
+**The candidate target:** invert a block with **fewer than h₁ dependent single-row operations**,
+where h₁ is the block's number of width-1 runs (h₁/m: 0.30 / 0.39 / 0.83 on Wikidata's distinct
+blocks, #805).
+- *Why it forces a new kind of step:* MONODROMY record 96 argues that every rigid jump-walk route
+  spends at least h₁ single-row operations, and Open meets that exactly. The induction floor
+  (records 79–80: no monotone induction schedule beats about r steps) and h₁ ≤ r should also put
+  Rauzy–Veech routes above the target, provided their steps and single-row operations are counted
+  in one currency. So a yes cannot be an increment to Open or a re-scheduling of induction.
+- *What a yes needs: all three of correctness, escape and utility.*
+  1. **Correct:** the inversion proved correct.
+  2. **Escaped:** below h₁ by the class definition.
+  3. **Useful** (Louis: "Can we guarantee that we won't get big ideas that don't have any utility in
+     the real world? Because that is another condition"). Utility is part of the target, not an
+     afterthought. It is checked at three points, and an idea that fails any of them is not a yes,
+     however elegant:
+     - *before formal work:* **cost-weighted applicability** on the census (#805). The share of
+       Wikidata's kernel time in the blocks where the idea's conditions hold, not the share of
+       blocks, gives its ceiling. The two-letter Sturmian solver, exact on 5,627 Sturmian BWTs and
+       firing on 0% of Wikidata, is the cautionary case: correct, new, and useless here;
+     - *before construction:* the **supplied-capability payoff** (METHOD.md §3a) on real blocks
+       through the shipped path must show real headroom;
+     - *at the end:* the finished candidate must **beat master on the bench**: faster beyond noise
+       on a primary corpus, with no primary loss, under PERFORMANCE-POLICY.md. Fewer operations
+       that cost more time is not a yes.
+     The thresholds for the first two are set before the data (RULES C1a) and are Louis's to fix
+     with the formulation.
+- *The viability check, in hindsight from Rauzy–Veech* (Louis: "in hindsight we could see that
+  Rauzy–Veech induction would always be cost viable as opposed to the traversal"). The traversal pays
+  about n dependent loads a block. Induction made the cost scale with the block's structure instead,
+  its runs and then a walk over the retained rows, and that structure is small on real blocks (#805:
+  mean maximal run about 16 rows; median m/n 0.114, so about n/9 dependent steps). A structural step
+  is cost-viable when its cost scales with a *different* parameter that is *measured small on real
+  inputs*. So every candidate states what its cost scales with, and the census says whether that is
+  much smaller than h₁ on Wikidata's blocks, before anything is built.
+- *What a no would be:* a proof that no route in a stated, wider class goes below h₁ on blocks of
+  Wikidata's structure. That ends the major shot cleanly, and is worth as much as a yes.
+
+**MONODROMY record 98's repairs** (#145 REVIEW 7128634595, record 98 at eae9ca91; inputs to the
+formulation, labels as the record gives them):
+- **The class, as a calculus 𝓡 of rigid facts:** a fact says LF^h(x) = x + t on an interval, with one
+  emitted word; facts come one per run from its record and are restricted, composed and joined.
+  The LF walk, Cells, Open, lanes and T² are all in 𝓡. Its cost c₁ counts width-1 events anywhere,
+  construction and helpers included, so induction steps and walk steps are in one currency.
+  G1 (argued): c₁ ≥ h₁ for every decoder in 𝓡.
+- **The target, repaired:** exact inversion of every column in a stated family 𝓕 with
+  **c₁ < h₁(column)**, in at most **K streaming passes** (fixed in advance, e.g. 3) and O(r) words
+  beyond the output. A *count*, not a depth (two-ended Open already halves the depth); a *budget*,
+  because sort-based list ranking has c₁ = 0 in Θ(log n) passes and is a known, slower algorithm.
+  K and 𝓕 are Louis's to fix.
+- **The escapes** (drop "every fact is a translation on an interval"): E1 class facts (blocked on
+  random content: keys shatter by k ≈ 5, record 96 G3); **E2 positional facts** (blocked when labels
+  come first, record 84; at O(1) depth, Gamma's G1; and as rigid segment composition — **open** for
+  a global, non-rigid, non-O(1)-depth procedure in K passes, with no construction and no
+  obstruction); E3 sort-based (native, fails K); E4 another input or problem (narrow within standard
+  bzip2 streams, which carry only L and `origPtr`).
+- **Conjectured:** on random-digit content, no O(1)-pass decoder meets the target. A yes, if one
+  exists, lives in E2's open cell on non-random content; the copy sector is a candidate.
+- **R1 / R2 by the calculus:** R1 is in 𝓡 (best outcome ≥ h₁ by G1); R2 uses a fact type outside 𝓡
+  and must respect K. Decidable syntactically for a candidate written in the calculus; for Rust,
+  by an audit mapping operations to rules.
+- **Lean:** about 600–1,000 lines for the calculus, Lemma 3 and G1, second after the shared
+  specification.
+
+**Open premises** (to be filled by the backward chain): each is a step a new algorithm would have to
+achieve, marked **native** (computable from the run records within budget), **missing** (a named
+research question) or **blocked** (by an obstruction below, named). MONODROMY (#346,
+CHECKPOINT 7128531277) and Neon (`research/neon-fewer-than-h1`) are working the same question
+independently: the class definition, whether the target is well-posed, and the backward chains.
+
+**Route classes.** Every fork in the major shot states the class of its best possible outcome:
+
+| Class | What it changes | Best outcome | Track |
+|---|---|---|---|
+| R0, tuning | the implementation | smaller constants | pot shots |
+| R1, reshaping inside the class | the layout or representation of the same objects | still ≥ h₁ | pot shots (the salami trap) |
+| R2, escaping the class | a different proof of inversion, hence a different algorithm | below h₁ | major shot |
+| R3, changing the problem | what is computed at all (foundational question 4) | outside the frame | major shot |
+
+Only R2 and R3 forks are admitted to the major shot. Every subgoal sits on the backward chain from
+the target. Intermediate milestones are judged by whether they discharge a premise, never by
+whether the work is faster yet. Speed is measured on the supplied-state payoff at the start and on
+the finished candidate at the end (METHOD.md §3a).
+
 ## Pending mathematical leads
 
 This is an inbox for directions Louis introduces between cycles. A lead is an invitation, not an
@@ -70,6 +165,7 @@ reorient.
 |---|---|---|---|---|---|
 | f5961bfb, for Neon cycle 3 | The search kept returning to classical permutation inversion: induced sorting, pair recompression, the direction duality (audit, branch `audit/neon-cycles-1-2`) | Make computational obligations the unit of research; reorientation by default; the obligation register; the bzip2 pipeline before the decoded column made admissible | Investigations that replace ordering operations collectively, rather than reorganise them | pending cycle 3 | pending |
 | 6d9acc87, for Neon cycle 3 onward | The obligation register was being used to generate ideas as well as judge them; agents self-classified; cost models were uncalibrated (0 of 6 promoted candidates passed natively) | Generation from mathematical structure, with obligations kept for evaluation; classification by the auditors; cost models treated as diagnostic; witness, scope and escape condition recorded for obstructions. Methodology frozen until evidence arrives | Mechanisms from structure, not from rephrased cost lists | pending | pending |
+| 24 November 2026, Louis in the Coordinator's session | Incremental work had become the default: candidates were changes to the same algorithm, judged by the bench at every step, and mechanisms were built before their payoff was known (T², the zero-fill, the evolutionary lines) | **Methodology unfrozen** (Louis: "yes unfreeze the methodology"). The target section above; route classes R0–R3 with only R2/R3 in the major shot; working backwards from the goal (METHOD.md §3a); payoff first, from a supplied capability; result statuses; strength labels on obstructions | Structural candidates that escape the known classes, judged by premises discharged | pending | pending |
 
 ## Foundational questions (track 1)
 
@@ -111,6 +207,11 @@ Each questions whether a current core operation is necessary. None is settled.
 ## Known structural obstructions
 
 Do not rediscover these; build on them.
+
+*From 24 November 2026, every row states its **reach** (bounded to a stated class, or global) and
+its **strength** (checked by a proof assistant; argued in prose and reviewed; or measured, with the
+number of blocks). Rows written before that date are argued or measured unless a row says
+otherwise; much of the table is under audit.*
 
 | Obstruction | What it rules out | Evidence |
 |---|---|---|
