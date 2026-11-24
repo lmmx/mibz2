@@ -48,6 +48,7 @@ Take each item in order of first appearance, and choose one of four:
 | a term an earlier post explains, and the argument only needs its name | **link at first use** to that post | "Open ([Open Returns](2026-11-19-open-returns.md))" |
 | a term no post explains, in one clause | **define it inline**, in the sentence that uses it | "a valid column, one that is the BWT of some text" |
 | context the argument doesn't use: history, an analogy's source, what a named project is, why a number is what it is | **a gloss** beside the line | the Mario 64 A-button challenge; batched backward search |
+| an obscure outside name or term: a person, a work, a classical idea | **a fleuron link at first use** to its reference page, in the decorative face: `[Theaetetus](url){ .il-ref }` (Louis, 24 November 2026: "use of an obscure term like that should link to it") | *Theaetetus*, Theodorus, Hilbert's 24th problem, the Archimedes Palimpsest |
 | something the post neither needs nor can explain briefly | **cut it** | an internal shorthand from a journal |
 
 Rules for choosing:

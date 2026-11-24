@@ -125,7 +125,7 @@ features explain 96% of the variation on blocks held out of the fit. For writing
 don't, which is one reason the price of an event (§5) stays an open question.</aside>
 
 **Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge
-could be done with *fewer than one* press of the A button. That is a minimisation turned into a
+could be done with <span class="il-black">fewer than one</span> press of the A button. That is a minimisation turned into a
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
 working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
 confirmed the payoff, and only then found how the real game could produce it, one supplied
@@ -167,19 +167,21 @@ with machine-checked proofs and nobody to explain them. Those reports are the es
 
 Three older ideas carry its argument, and each bears on our search:
 
-- **Hearers and Learners.** After Pythagoras died, his followers split. The Hearers kept his
+- **Hearers and Learners.** After Pythagoras died, his followers split. The [Hearers](https://en.wikipedia.org/wiki/Akousmatikoi){ .il-ref } kept his
   sayings and dropped the reasons; the Learners kept both. A register of closed frameworks is a
   list of sayings unless each entry keeps its reason: the counterexample, the scope, what would get
   past it, and what the attempt revealed.
 - **Archimedes' *Method*.** Archimedes sent the librarian at Alexandria not only his results and
-  their proofs, but the mechanical method that found them, so that others might "discover other
+  their proofs, but the [mechanical method](https://en.wikipedia.org/wiki/The_Method_of_Mechanical_Theorems){ .il-ref } that found them, so that others might "discover other
   theorems in addition, which have not yet occurred to me". A result, its proof and a method that
   generates more results are three different things, and only the last moves a search forward.
-- **Hilbert's lost 24th problem.** Hilbert planned a 24th problem for his 1900 list and left it in a
+- **Hilbert's lost 24th problem.** Hilbert planned a [24th problem](https://en.wikipedia.org/wiki/Hilbert%27s_twenty-fourth_problem){ .il-ref } for his 1900 list and left it in a
   notebook: a theory of the simplicity of proofs. Its key sentence is an instruction: "Given two
   routes, it is not right to take either of these two or to look for a third; it is necessary to
   investigate the area lying between the two routes." Using everything had been a search for a
   third route. This says to study the map between the routes we already have.
+
+<aside class="il-gloss" markdown>**The *Method*** came down to us in a single copy, the [Archimedes Palimpsest](https://en.wikipedia.org/wiki/Archimedes_Palimpsest){ .il-ref }, made in the tenth century and scraped from its parchment in the thirteenth, that the leaves might carry a prayer book. Heiberg read it beneath the prayers in 1906, and much of it was recovered only by imaging, between 1999 and 2008: a method nearly lost under a book of results of another kind.</aside>
 
 The essay makes the distinction between a result and a method with its own mathematics. In one
 retelling, the Pythagoreans are handed a wall of right triangles with whole-number sides. Checking
@@ -204,7 +206,7 @@ The essay's next retelling turns the rule into a proof. Lay the side of a square
 diagonal. It fits once, with a sliver left over. The sliver is the side of a smaller square in the
 corner, and the measuring starts again on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
-and the diagonal. The Greeks called this alternate subtraction anthyphairesis. It is the Euclidean
+and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
 algorithm on two lengths.
 
 <figure class="bf-fig">
@@ -219,10 +221,10 @@ as the side was laid along the diagonal, and its sequence of steps is the contin
 ratio of the lengths. Rauzy–Veech induction, the step that took mibz2 from the walk to Cells, is
 anthyphairesis on many intervals at once.
 
-The essay ends the story with a name. Plato records it in the *Theaetetus* (147d): Theodorus showed,
+The essay ends the story with a name. Plato records it in the [*Theaetetus*](https://en.wikipedia.org/wiki/Theaetetus_(dialogue)){ .il-ref } (147d): [Theodorus](https://en.wikipedia.org/wiki/Theodorus_of_Cyrene){ .il-ref .il-c3 } showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
 have no common measure with a foot. Theaetetus stopped taking the cases one at a time and called
-them all *powers*. That is the move from checking frameworks to naming an operation. Contraction
+them all <span class="il-rubric">powers</span>. That is the move from checking frameworks to naming an operation. Contraction
 along compose, in §4, is our attempt at it: one name for what turns each of our decoders into the
 next.
 
