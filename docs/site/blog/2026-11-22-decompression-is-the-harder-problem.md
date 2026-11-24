@@ -1,7 +1,7 @@
 ---
-title: "Decompression is the harder problem: a conversation with Thomas Murphy"
+title: "Playing the hand you're dealt: in conversation with Thomas Murphy"
 image: assets/social/blog-2026-11-22-decompression-is-the-harder-problem.png
-description: "Thomas Murphy of Tropik and I talk about agent swarms and message boards, and why a fast decompressor is a stranger problem than a proof."
+description: "Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "Thomas Murphy of Tropik and I talk about agent swarms and message 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Decompression is the harder problem: a conversation with Thomas Murphy
+# Playing the hand you're dealt: in conversation with Thomas Murphy
 
-Thomas Murphy of Tropik and I talk about agent swarms and message boards, and why a fast decompressor is a stranger problem than a proof.
+Thomas Murphy of Tropik and I talk about agent swarms, and why the Hutter Prize has it backwards: it lets you stack the deck by designing your own format.
 {: .post-dek }
 
 22 November 2026 · 15 min read · Conversation
