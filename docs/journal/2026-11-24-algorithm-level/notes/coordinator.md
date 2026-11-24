@@ -36,3 +36,8 @@
 - `math-targets/` is now a small project: a README, `targets.tsv`, `metrics.tsv`, the four-arm data and an extraction script.
 - MONODROMY is asked what to measure and what to reason about (channel #33).
 - The Pathfinder is asked to add memory and scheduling metrics to the scanner profile before it is tagged.
+
+## 24 Nov, 22:12 — #838 (51f6c16f) held: unrelated files swept in
+- The update adds memory and scheduling metrics per decode: peak and time-averaged RSS, user and system CPU, page faults and context switches.
+- Each decode now runs in a fresh process. In one long-lived process, glibc's per-thread arenas carried earlier decodes' heap forward (1 worker peaked at 80 MB first, 236 MB after 20 workers). A fresh process avoids that without an allocator change.
+- Its last commit also modified 35 unrelated bench files (+3,154/−908), apparently an accidental add of working-tree changes. Returned for a revert commit; no tag until the diff is scoped.
