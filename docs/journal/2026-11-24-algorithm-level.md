@@ -371,3 +371,43 @@ which is the lookup failure §3.2 diagnoses, made again. What it holds:
 - **Status:** much of FRONTIER's obstruction table is marked "under audit" or "conjectural", some of
   it is measured on six blocks, and none of it is machine-checked. A formal proof system would
   give these entries the status SSL-Coq's checked obstructions have.
+
+## 10. Louis: "what are we drawing from it exactly, and where are we storing that durably? Is it going in FRONTIER?"
+
+> "we were using the term escape condition, witness, scope, and so on, but surely we need to change
+> it further to … align with what we've come up with, this Mario Eureka movement idea, right?"
+
+**What already exists, in pieces** (found before answering, after §9's lesson):
+- METHOD.md §3a's two axes: a *different primitive with a cost gain* is "a candidate
+  bouleversement"; a different primitive without one is "mathematics worth keeping".
+- FRONTIER's toy-transfer lead, sharpened since the note: "The capability to transfer is cheap
+  global coordinate evaluation (or cheap composition of long orbit segments), not run width".
+- FRONTIER's "Working backwards" lead: "oracle headroom first" — the Mario move, in one lead.
+- FRONTIER's "Shape of the RH proof" lead: "the target as an exclusion statement over a family",
+  never adopted.
+- Obstructions with witness, scope and escape condition (§9).
+
+**What the Mario work adds:**
+1. **One target at the root.** FRONTIER has no statement that its leads, obligations and
+   obstructions hang from. SSL-Coq's `MainTheorem` makes its open premises the agenda. Ours would
+   be Louis's yes/no formulation, with each obligation, foundational question and obstruction
+   wired to it (an open premise, a closed branch or an escape condition).
+2. **Payoff first, as the default for reorientation.** §3a's first evidence for a reorientation is
+   "a correct construction, and a cheap falsifier aimed at hidden acquisition". Mario reverses the
+   order: supply the capability (the intermediate object the new mathematics would compute) and
+   measure the headroom on real blocks, then build the construction.
+3. **A ladder per toy or lead**, with each rung's status: supplied, partly native, native,
+   machine-checked. Today a lead has a single word ("pending").
+4. **Strength labels on obstructions:** bounded or global; checked, argued, or measured on N
+   blocks. SSL-Coq kept these strictly ("bounded", "not a global impossibility theorem", unchecked
+   proofs kept as unchecked).
+
+**Where:**
+- the *state* (target, premises, ladders, obstruction labels) in FRONTIER.md, with a "Target"
+  section at the top left for Louis's formulation;
+- the *procedure* (payoff first, supplied versus native) in METHOD.md §3a;
+- the reasoning and these exchanges in this record.
+
+**To clear first:** FRONTIER's steering log has "Methodology frozen until evidence arrives"
+(decision 6d9acc87). Changing §3a and FRONTIER's format unfreezes it, which is Louis's call. The
+Coordinator offered to draft the changes as one PR for his approval.
