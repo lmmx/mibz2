@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=95e6e422e622">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=95e6e422e622">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2292,6 +2294,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3112,6 +3125,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3159,7 +3183,7 @@ that chain as a table with one navigation entry per row, which we call the T-vec
 entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block
 size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
 decoding a block, because each step's address comes from the entry just read; mibz2 walks
-many such chains at once so that their memory reads overlap.
+many such chains at once so that their memory reads overlap<sup id="fnref:kkp"><a class="footnote-ref" href="#fn:kkp">1</a></sup>.
 <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/">An earlier post</a> works the
 transform through on a small example.</p>
 <p><strong>The entries of that table are not independent.</strong> When the transformed word <code>banana</code> is
@@ -3169,9 +3193,9 @@ so the whole table can be described by one shift per run, <span class="arithmate
 per row, <span class="arithmatex">\(n\)</span> of them. <strong>A walk can follow those shifts without searching for the right one
 at each step,</strong> by remembering which run it is in. Data structures that do this, <em>move
 structures</em>, are published, with proofs:
-<a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Nishimoto and Tabei (2021)</a>
+Nishimoto and Tabei (2021)<sup id="fnref:nt"><a class="footnote-ref" href="#fn:nt">2</a></sup>
 gave constant-time steps in <span class="arithmatex">\(O(r)\)</span> machine words, and
-<a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Brown and Langmead (2026)</a>
+Brown and Langmead (2026)<sup id="fnref:bl"><a class="footnote-ref" href="#fn:bl">3</a></sup>
 inverted a whole BWT in <span class="arithmatex">\(O(n)\)</span> time with <span class="arithmatex">\(O(r)\)</span> additional working space, starting from a
 run-length BWT representation.</p>
 <p><strong>What is not proved</strong> is that any of them beats mibz2's 32-lane, four-byte-per-row
@@ -3390,8 +3414,8 @@ to exactly one run. Their corresponding intervals partition the domain of <span 
 <p>In <code>banana</code>, the run <code>aaa</code> starts at <span class="arithmatex">\(p=3\)</span>, and the <code>a</code> rows start at <span class="arithmatex">\(a=0\)</span>: the shift is
 <span class="arithmatex">\(+3\)</span>, as the figure showed. In combinatorics, such a map is a <em>discrete interval-exchange
 permutation</em>. This identification is more operationally useful than membership in a
-weak-order lattice, because it tells us exactly how to evaluate the permutation.</p>
-<p><strong>The <span class="arithmatex">\(r\)</span> pieces are an upper bound, not always the fewest.</strong> For the valid cyclic BWT of
+weak-order lattice<sup id="fnref:tamayo"><a class="footnote-ref" href="#fn:tamayo">4</a></sup>, because it tells us exactly how to evaluate the permutation.</p>
+<p><strong>The <span class="arithmatex">\(r\)</span> pieces are an upper bound, not always the fewest.</strong> For the valid cyclic BWT<sup id="fnref:bijective"><a class="footnote-ref" href="#fn:bijective">5</a></sup> of
 <code>abc</code>, <span class="arithmatex">\(L=\texttt{cab}\)</span>, <span class="arithmatex">\(F=\texttt{abc}\)</span> and <span class="arithmatex">\(r=3\)</span>, but <span class="arithmatex">\(\Psi=(1,2,0)\)</span> has just two maximal
 translated intervals: rows <span class="arithmatex">\([0,2)\)</span> have displacement <span class="arithmatex">\(+1\)</span>, and row <span class="arithmatex">\([2,3)\)</span> has displacement
 <span class="arithmatex">\(-2\)</span>. The partition of equation (3) is the one the runs induce. Adjacent pieces can share a
@@ -3521,7 +3545,7 @@ BWTs may have several cycles
 (<a href="../2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces">appendix section 6</a>);
 mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021
 structure gives a per-move guarantee independent of single-cycle amortisation, at additional
-construction complexity. Brown and Langmead's <a href="https://github.com/drnatebrown/orbit">Orbit library</a>
+construction complexity. Brown and Langmead's Orbit library<sup id="fnref:orbit"><a class="footnote-ref" href="#fn:orbit">6</a></sup>
 implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust
 T-vector.</p>
 <p>So there exists a mathematically established family of navigation structures whose storage
@@ -3580,23 +3604,41 @@ structures and run-length BWT
 <p>The general lesson is that a table walked in order can often be replaced by less data plus
 state carried by the walker, since each step already knows where the last one was.</p>
 <hr />
-<p><strong>Sources:</strong></p>
-<ul>
-<li><a href="../2026-11-08-inverse-bwt-navigation-notes/">Technical appendix</a>: the secondary derivations,
-  bounds and checks, with their equations.</li>
-<li><a href="https://arxiv.org/abs/2310.19732">Daniel Tamayo Jiménez, <em>Combinatorics of Permutreehedra and Geometry of s-Permutahedra</em></a>,
-  PhD thesis (2023): weak order and parabolic quotients.</li>
-<li><a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Takaaki Nishimoto and Yasuo Tabei, <em>Optimal-Time Queries on BWT-runs Compressed Indexes</em></a>,
-  ICALP 2021, LIPIcs 198, 101:1–101:15: constant-time move structures.</li>
-<li><a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Nathaniel K. Brown and Ben Langmead, <em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em></a>,
-  SEA 2026, LIPIcs 371, paper 9: length capping, and inversion in <span class="arithmatex">\(O(n)\)</span> time and <span class="arithmatex">\(O(r)\)</span> space.</li>
-<li><a href="https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html">Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, <em>A Survey of the Bijective Burrows–Wheeler Transform</em></a>
-  (2025), in the Festschrift for Giovanni Manzini, OASIcs 131: cyclic BWT and necklace enumeration.</li>
-<li><a href="https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/">Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, <em>Slashing the Time for BWT Inversion</em></a>,
-  DCC 2012, pp. 99–108: multi-chain and multi-character inversion.</li>
-<li><a href="../2026-11-04-compact30-constructor/"><em>Building a smaller bzip2 decoding table: from 49 instructions to 12</em></a>
-  (4 November 2026): compact30 architecture and builder evidence.</li>
-</ul>
+<p><strong>Research records:</strong>
+<a href="../2026-11-08-inverse-bwt-navigation-notes/">the technical appendix</a>, the secondary derivations, bounds and checks, with their equations;
+<a href="../2026-11-04-compact30-constructor/"><em>Building a smaller bzip2 decoding table: from 49 instructions to 12</em></a> (4 November 2026), the compact30 architecture and builder evidence.</p>
+<p class="il-rule" aria-hidden="true">❦</p>
+
+<h2 class="il-compendium" id="compendium"><span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks<a class="headerlink" href="#compendium" title="Permanent link">&para;</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:kkp">
+<p>Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, <a href="https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/"><em>Slashing the Time for BWT Inversion</em></a> <span class="il-host">researchportal.helsinki.fi</span></p>
+<p>DCC 2012, pp. 99–108. Multi-chain and multi-character inversion: following many chains at once so their memory reads overlap.&#160;<a class="footnote-backref" href="#fnref:kkp" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:nt">
+<p>Takaaki Nishimoto and Yasuo Tabei, <a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101"><em>Optimal-Time Queries on BWT-runs Compressed Indexes</em></a> <span class="il-host">drops.dagstuhl.de</span></p>
+<p>ICALP 2021, LIPIcs 198, 101:1–101:15. Constant-time move structures: a walk's steps in constant time and <span class="arithmatex">\(O(r)\)</span> machine words.&#160;<a class="footnote-backref" href="#fnref:nt" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:bl">
+<p>Nathaniel K. Brown and Ben Langmead, <a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html"><em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em></a> <span class="il-host">drops.dagstuhl.de</span></p>
+<p>SEA 2026, LIPIcs 371, paper 9 (<a href="https://arxiv.org/abs/2602.11029">arXiv:2602.11029</a>). Length capping, and inversion in <span class="arithmatex">\(O(n)\)</span> time and <span class="arithmatex">\(O(r)\)</span> space.&#160;<a class="footnote-backref" href="#fnref:bl" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:tamayo">
+<p>Daniel Tamayo Jiménez, <a href="https://arxiv.org/abs/2310.19732"><em>Combinatorics of Permutreehedra and Geometry of s-Permutahedra</em></a> <span class="il-host">arxiv.org</span></p>
+<p>PhD thesis (2023). Weak order and parabolic quotients.&#160;<a class="footnote-backref" href="#fnref:tamayo" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:bijective">
+<p>Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, <a href="https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html"><em>A Survey of the Bijective Burrows–Wheeler Transform</em></a> <span class="il-host">drops.dagstuhl.de</span></p>
+<p>(2025), in the Festschrift for Giovanni Manzini, OASIcs 131. The cyclic BWT and necklace enumeration.&#160;<a class="footnote-backref" href="#fnref:bijective" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:orbit">
+<p>Nathaniel K. Brown and Ben Langmead, <a href="https://github.com/drnatebrown/orbit">Orbit</a> <span class="il-host">github.com</span></p>
+<p>A library implementing move-structure variants; not a verified drop-in replacement for mibz2's Rust T-vector.&#160;<a class="footnote-backref" href="#fnref:orbit" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
@@ -3757,19 +3799,19 @@ state carried by the walker, since each step already knows where the last one wa
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/bench.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/couriers.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/blog.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/frontier.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/observatory.js?v=95e6e422e622"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/katex.js?v=95e6e422e622"></script>
       
     
   </body>

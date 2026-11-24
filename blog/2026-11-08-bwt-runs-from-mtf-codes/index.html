@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=95e6e422e622">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=95e6e422e622">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2177,6 +2179,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3042,6 +3055,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3305,7 +3329,7 @@ The records arrive in <span class="arithmatex">\(L\)</span> order, so their dest
 over the <span class="arithmatex">\(r\)</span> records, their row starts rise too. One merge of the two lists finds every
 anchor. Brown and Langmead build a <em>length-capped</em> structure, which splits long intervals so
 that the walk's average step is bounded, from exactly such a run list in <span class="arithmatex">\(O(r)\)</span> time and space
-(<a href="https://arxiv.org/abs/2602.11029">SEA 2026, Lemma 6</a>).</p>
+(SEA 2026, Lemma 6)<sup id="fnref:bl"><a class="footnote-ref" href="#fn:bl">1</a></sup>.</p>
 <figure class="bf-fig">
 <p class="bf-title"><code>banana</code>'s three run records, three intervals of a move structure</p>
 <div class="bf-frames bf-frames-pair">
@@ -3348,7 +3372,7 @@ caps a block at 900,000 bytes, so the asymptotics are about that generalised mod
 <li><strong>Composed with a move structure built in <span class="arithmatex">\(O(r)\)</span> time and space,</strong> and walked in <span class="arithmatex">\(O(n)\)</span>
    time, the inverse BWT would take <span class="arithmatex">\(O(m+n+r+\sigma)\)</span> time and <span class="arithmatex">\(O(r+\sigma)\)</span> extra working
    memory. Brown and Langmead give such a route from a run-length BWT
-   (<a href="https://arxiv.org/abs/2602.11029">SEA 2026, Lemma 6 and Theorem 9</a>), for a text with an
+   (SEA 2026, Lemma 6 and Theorem 9)<sup id="fnref2:bl"><a class="footnote-ref" href="#fn:bl">1</a></sup>, for a text with an
    end marker; condition 3 below gives one for bzip2's BWT, which has none.</li>
 </ol>
 <p>That memory figure leaves out the compressed input, the <span class="arithmatex">\(n\)</span> output bytes, the block's Huffman
@@ -3378,7 +3402,7 @@ between MTF and the move structure.</p>
    Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle,
    so that proof does not transfer unchanged. A later paper gives a route that needs neither.
    Brown, Sanaullah, Zhang and Langmead
-   (<a href="https://arxiv.org/abs/2603.22147"><em>Optimal-Time Move Structure Construction</em>, Theorem 3.9</a>) build a
+   (<em>Optimal-Time Move Structure Construction</em>, Theorem 3.9)<sup id="fnref2:bszl"><a class="footnote-ref" href="#fn:bszl">2</a></sup> build a
    <em>balanced</em> move structure, in which every step takes constant time in the worst case, for
    any permutation, in <span class="arithmatex">\(O(r)\)</span> time and space. Its inputs are each interval's start, the start
    of its image, and the order of the images. For <span class="arithmatex">\(\Psi\)</span> built from the records, these are the
@@ -3477,17 +3501,17 @@ were not tried.</p>
 <h2 id="6-where-does-this-stand">6. Where does this stand?<a class="headerlink" href="#6-where-does-this-stand" title="Permanent link">&para;</a></h2>
 <p><strong>Is any of it new?</strong> Not the observation, which mibz2 recorded in issue #42. The rules it
 rests on are bzip2's format, as Julian Seward designed it, and they are visible in any
-decoder: <a href="https://go.dev/src/compress/bzip2/bzip2.go">Go's</a> or the
-<a href="https://github.com/google/wuffs/blob/main/std/bzip2/README.md">Wuffs format notes</a>, which
+decoder: Go's<sup id="fnref:go"><a class="footnote-ref" href="#fn:go">3</a></sup> or the
+Wuffs format notes<sup id="fnref:wuffs"><a class="footnote-ref" href="#fn:wuffs">4</a></sup>, which
 describe <code>RUNA</code> and <code>RUNB</code> as repeating "the 0th element". We searched for work that builds a
 run-length BWT or a move structure from MTF- or run-coded input, and found none. That is not
 evidence that none exists. The nearest work builds a run-length BWT from other inputs: from
 the plain text in space bounded by <span class="arithmatex">\(r\)</span>
-(<a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99">Nishimoto, Kanda and Tabei, ICALP 2022</a>),
+(Nishimoto, Kanda and Tabei, ICALP 2022)<sup id="fnref:nkt"><a class="footnote-ref" href="#fn:nkt">5</a></sup>,
 from an LZ77 parse
-(<a href="https://arxiv.org/abs/1910.10631">Kempa and Kociumaka, FOCS 2020</a>), and a move structure
+(Kempa and Kociumaka, FOCS 2020)<sup id="fnref:kk"><a class="footnote-ref" href="#fn:kk">6</a></sup>, and a move structure
 for any permutation, from its intervals, in <span class="arithmatex">\(O(r)\)</span> time
-(<a href="https://arxiv.org/abs/2603.22147">Brown, Sanaullah, Zhang and Langmead, 2026 preprint</a>).</p>
+(Brown, Sanaullah, Zhang and Langmead, 2026 preprint)<sup id="fnref:bszl"><a class="footnote-ref" href="#fn:bszl">2</a></sup>.</p>
 <p><strong>What is open</strong> is the speculative question: does bzip2's coded form give a stronger
 algorithm or bound than a generic run-length BWT does? One point bears on it. The symbols and
 the column determine each other exactly, so the symbols hold no information the runs lack.
@@ -3528,28 +3552,43 @@ and the cheapest conversion is the one never done; whether it pays depends on wh
 stage costs. The same runs could, for example, count compact30's pure-run groups without the
 column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-intervals-say-about-compact30">the appendix, section 4</a>).</p>
 <hr />
-<p><strong>Sources:</strong></p>
-<ul>
-<li><a href="https://github.com/lmmx/mibz2/issues/42">Issue #42</a>: the run counts, the
-  <a href="https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792">observation</a> that MTF gives
-  the runs, and the <a href="https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621">timed move structure</a>.</li>
-<li><a href="https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md">The run-structures journal</a>
-  and <a href="https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md">the move-structure walk journal</a>
-  (27 October 2026).</li>
-<li><a href="../2026-11-08-inverse-bwt-navigation/"><em>The mathematical structure of inverse-BWT navigation</em></a>
-  and its <a href="../2026-11-08-inverse-bwt-navigation-notes/">technical appendix</a>.</li>
-<li><a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Nathaniel K. Brown and Ben Langmead, <em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em></a>,
-  SEA 2026, LIPIcs 371, paper 9 (<a href="https://arxiv.org/abs/2602.11029">arXiv:2602.11029</a>).</li>
-<li><a href="https://arxiv.org/abs/2603.22147">Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, <em>Optimal-Time Move Structure Construction</em></a>,
-  arXiv:2603.22147 (2026; revised 22 October 2026), Theorem 3.9.</li>
-<li><a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99">Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, <em>An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space</em></a>,
-  ICALP 2022, LIPIcs 229, 99:1–99:20.</li>
-<li><a href="https://arxiv.org/abs/1910.10631">Dominik Kempa and Tomasz Kociumaka, <em>Resolution of the Burrows–Wheeler Transform Conjecture</em></a>,
-  FOCS 2020.</li>
-<li>bzip2's MTF and <code>RUNA</code>/<code>RUNB</code> rules: <a href="https://go.dev/src/compress/bzip2/bzip2.go">Go's <code>compress/bzip2</code></a>,
-  the <a href="https://github.com/google/wuffs/blob/main/std/bzip2/README.md">Wuffs bzip2 notes</a> and
-  <a href="https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs">mibz2's <code>mtf.rs</code></a>.</li>
-</ul>
+<p><strong>Research records:</strong>
+<a href="https://github.com/lmmx/mibz2/issues/42">issue #42</a>: the run counts, the <a href="https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792">observation</a> that MTF gives the runs, and the <a href="https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621">timed move structure</a>;
+<a href="https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md">the run-structures journal</a> and <a href="https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md">the move-structure walk journal</a> (27 October 2026);
+<a href="../2026-11-08-inverse-bwt-navigation/"><em>The mathematical structure of inverse-BWT navigation</em></a> and its <a href="../2026-11-08-inverse-bwt-navigation-notes/">technical appendix</a>;
+<a href="https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs">mibz2's <code>mtf.rs</code></a>.</p>
+<p class="il-rule" aria-hidden="true">❦</p>
+
+<h2 class="il-compendium" id="compendium"><span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks<a class="headerlink" href="#compendium" title="Permanent link">&para;</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:bl">
+<p>Nathaniel K. Brown and Ben Langmead, <a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html"><em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em></a> <span class="il-host">drops.dagstuhl.de</span></p>
+<p>SEA 2026, LIPIcs 371, paper 9 (<a href="https://arxiv.org/abs/2602.11029">arXiv:2602.11029</a>). Length capping from a run list in <span class="arithmatex">\(O(r)\)</span> time and space (Lemma 6), and inversion in <span class="arithmatex">\(O(n)\)</span> time and <span class="arithmatex">\(O(r)\)</span> space for a text with an end marker.&#160;<a class="footnote-backref" href="#fnref:bl" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:bl" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:bszl">
+<p>Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, <a href="https://arxiv.org/abs/2603.22147"><em>Optimal-Time Move Structure Construction</em></a> <span class="il-host">arxiv.org</span></p>
+<p>arXiv:2603.22147 (2026; revised 22 October 2026). A balanced move structure, constant time per step in the worst case, for any permutation, built in <span class="arithmatex">\(O(r)\)</span> time and space (Theorem 3.9).&#160;<a class="footnote-backref" href="#fnref:bszl" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:bszl" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:go">
+<p><a href="https://go.dev/src/compress/bzip2/bzip2.go">Go's <code>compress/bzip2</code></a> <span class="il-host">go.dev</span></p>
+<p>Go's standard-library bzip2 decoder, where bzip2's MTF and <code>RUNA</code>/<code>RUNB</code> rules can be read directly.&#160;<a class="footnote-backref" href="#fnref:go" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:wuffs">
+<p><a href="https://github.com/google/wuffs/blob/main/std/bzip2/README.md">The Wuffs bzip2 notes</a> <span class="il-host">github.com</span></p>
+<p>Wuffs's notes on the bzip2 format, which describe <code>RUNA</code> and <code>RUNB</code> as repeating "the 0th element".&#160;<a class="footnote-backref" href="#fnref:wuffs" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:nkt">
+<p>Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, <a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99"><em>An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space</em></a> <span class="il-host">drops.dagstuhl.de</span></p>
+<p>ICALP 2022, LIPIcs 229, 99:1–99:20. Builds a run-length BWT from the plain text in space bounded by <span class="arithmatex">\(r\)</span>.&#160;<a class="footnote-backref" href="#fnref:nkt" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:kk">
+<p>Dominik Kempa and Tomasz Kociumaka, <a href="https://arxiv.org/abs/1910.10631"><em>Resolution of the Burrows–Wheeler Transform Conjecture</em></a> <span class="il-host">arxiv.org</span></p>
+<p>FOCS 2020. Among the nearest work: a run-length BWT built from an LZ77 parse.&#160;<a class="footnote-backref" href="#fnref:kk" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
@@ -3710,19 +3749,19 @@ column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-interval
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/bench.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/couriers.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/blog.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/frontier.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/observatory.js?v=95e6e422e622"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/katex.js?v=95e6e422e622"></script>
       
     
   </body>

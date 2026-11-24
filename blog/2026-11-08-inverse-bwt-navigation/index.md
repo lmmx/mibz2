@@ -6,9 +6,9 @@ The inverse BWT's next-row map is one shift per run of equal bytes, so it can be
 
 8 November 2026 · 14 min read · [Open question](<#6-what-would-it-cost-mibz2-and-what-would-settle-it>)
 
-To undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores that chain as a table with one navigation entry per row, which we call the T-vector. Each entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of decoding a block, because each step's address comes from the entry just read; mibz2 walks many such chains at once so that their memory reads overlap. [An earlier post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works the transform through on a small example.
+To undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores that chain as a table with one navigation entry per row, which we call the T-vector. Each entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of decoding a block, because each step's address comes from the entry just read; mibz2 walks many such chains at once so that their memory reads overlap[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#kkp]. [An earlier post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works the transform through on a small example.
 
-**The entries of that table are not independent.** When the transformed word `banana` is decoded, rows 0, 1 and 2, the three that emit `a`, have next rows 3, 4 and 5. One descriptor covers all three: the first row, the first next row and the length. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: [Nishimoto and Tabei (2021)](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) gave constant-time steps in \\(O(r)\\) machine words, and [Brown and Langmead (2026)](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
+**The entries of that table are not independent.** When the transformed word `banana` is decoded, rows 0, 1 and 2, the three that emit `a`, have next rows 3, 4 and 5. One descriptor covers all three: the first row, the first next row and the length. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: Nishimoto and Tabei (2021)[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#nt] gave constant-time steps in \\(O(r)\\) machine words, and Brown and Langmead (2026)[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#bl] inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
 
 **What is not proved** is that any of them beats mibz2's 32-lane, four-byte-per-row implementation in elapsed CPU cycles. Everything in this post is mathematics and published theory: nothing in it has been built or measured in mibz2, and it changes nothing in the decoder. \\(r\\) has been counted on one corpus, in a scratch run; [section 3](<#3-when-do-the-shifts-save-nothing>) gives that count, and an upper bound on another.
 
@@ -121,9 +121,9 @@ The entire run is represented by one constant displacement. Every character occu
 
 \\\[ \\boxed{\\begin{gathered}\\Psi\\text{ admits a partition into }r\\text{ intervals,}\\\\\\text{on each of which it is a translation.}\\end{gathered}}\\tag{3} \\\]
 
-In `banana`, the run `aaa` starts at \\(p=3\\), and the `a` rows start at \\(a=0\\): the shift is \\(+3\\), as the figure showed. In combinatorics, such a map is a *discrete interval-exchange permutation*. This identification is more operationally useful than membership in a weak-order lattice, because it tells us exactly how to evaluate the permutation.
+In `banana`, the run `aaa` starts at \\(p=3\\), and the `a` rows start at \\(a=0\\): the shift is \\(+3\\), as the figure showed. In combinatorics, such a map is a *discrete interval-exchange permutation*. This identification is more operationally useful than membership in a weak-order lattice[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#tamayo], because it tells us exactly how to evaluate the permutation.
 
-**The \\(r\\) pieces are an upper bound, not always the fewest.** For the valid cyclic BWT of `abc`, \\(L=\\texttt{cab}\\), \\(F=\\texttt{abc}\\) and \\(r=3\\), but \\(\\Psi=(1,2,0)\\) has just two maximal translated intervals: rows \\(\[0,2)\\) have displacement \\(+1\\), and row \\(\[2,3)\\) has displacement \\(-2\\). The partition of equation (3) is the one the runs induce. Adjacent pieces can share a shift.
+**The \\(r\\) pieces are an upper bound, not always the fewest.** For the valid cyclic BWT[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#bijective] of `abc`, \\(L=\\texttt{cab}\\), \\(F=\\texttt{abc}\\) and \\(r=3\\), but \\(\\Psi=(1,2,0)\\) has just two maximal translated intervals: rows \\(\[0,2)\\) have displacement \\(+1\\), and row \\(\[2,3)\\) has displacement \\(-2\\). The partition of equation (3) is the one the runs induce. Adjacent pieces can share a shift.
 
 ### 2.1 What the intervals cost to store
 
@@ -185,7 +185,7 @@ This is a complexity theorem for inversion, not merely compressibility.
 
 **How directly does it apply to bzip2?** The theorem starts from run-length BWT. mibz2 reconstructs the byte sequence \\(L\\) after MTF (undoing bzip2's move-to-front coding, the stage before the inverse BWT), so discovering the runs involves examining \\(n\\) bytes. bzip2's MTF codes already mark where each run starts, so the runs could instead be listed while decoding ([a follow-up post](<https://lmmx.github.io/mibz2/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>)). Given \\(L\\) and its counts, the runs can be enumerated in \\(O(n)\\) time, and the capped structure built from them in \\(O(r)\\), giving an \\(O(n+r)=O(n)\\) path with \\(O(r)\\) navigation storage, when the input sequence and output buffer are accounted for separately. This does not make the entire decompressor \\(O(r)\\) total memory. Linear asymptotic construction does not mean lower constant cost than mibz2's fused counting-sort builder.
 
-The single-cycle amortisation argument applies directly to primitive strings, those that are not a repetition of a shorter string. Periodic cyclic BWTs may have several cycles ([appendix section 6](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)); mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity. Brown and Langmead's [Orbit library](<https://github.com/drnatebrown/orbit>) implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.
+The single-cycle amortisation argument applies directly to primitive strings, those that are not a repetition of a shorter string. Periodic cyclic BWTs may have several cycles ([appendix section 6](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)); mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity. Brown and Langmead's Orbit library[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#orbit] implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.
 
 So there exists a mathematically established family of navigation structures whose storage scales with BWT runs rather than rows, and that supports efficient repeated successor traversal without a fresh general predecessor search on each step.
 
@@ -217,12 +217,32 @@ The general lesson is that a table walked in order can often be replaced by less
 
 ---
 
-**Sources:**
+**Research records:** [the technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>), the secondary derivations, bounds and checks, with their equations; [*Building a smaller bzip2 decoding table: from 49 instructions to 12*](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>) (4 November 2026), the compact30 architecture and builder evidence.
 
-- [Technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>): the secondary derivations, bounds and checks, with their equations.
-- [Daniel Tamayo Jiménez, *Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](<https://arxiv.org/abs/2310.19732>), PhD thesis (2023): weak order and parabolic quotients.
-- [Takaaki Nishimoto and Yasuo Tabei, *Optimal-Time Queries on BWT-runs Compressed Indexes*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>), ICALP 2021, LIPIcs 198, 101:1–101:15: constant-time move structures.
-- [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>), SEA 2026, LIPIcs 371, paper 9: length capping, and inversion in \\(O(n)\\) time and \\(O(r)\\) space.
-- [Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, *A Survey of the Bijective Burrows–Wheeler Transform*](<https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html>) (2025), in the Festschrift for Giovanni Manzini, OASIcs 131: cyclic BWT and necklace enumeration.
-- [Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, *Slashing the Time for BWT Inversion*](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>), DCC 2012, pp. 99–108: multi-chain and multi-character inversion.
-- [*Building a smaller bzip2 decoding table: from 49 instructions to 12*](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>) (4 November 2026): compact30 architecture and builder evidence.
+❦
+
+## Compendium of Links
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#kkp]: Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, [*Slashing the Time for BWT Inversion*](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>) researchportal.helsinki.fi
+
+    DCC 2012, pp. 99–108. Multi-chain and multi-character inversion: following many chains at once so their memory reads overlap.
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#nt]: Takaaki Nishimoto and Yasuo Tabei, [*Optimal-Time Queries on BWT-runs Compressed Indexes*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) drops.dagstuhl.de
+
+    ICALP 2021, LIPIcs 198, 101:1–101:15. Constant-time move structures: a walk's steps in constant time and \\(O(r)\\) machine words.
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#bl]: Nathaniel K. Brown and Ben Langmead, [*Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) drops.dagstuhl.de
+
+    SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](<https://arxiv.org/abs/2602.11029>)). Length capping, and inversion in \\(O(n)\\) time and \\(O(r)\\) space.
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#tamayo]: Daniel Tamayo Jiménez, [*Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](<https://arxiv.org/abs/2310.19732>) arxiv.org
+
+    PhD thesis (2023). Weak order and parabolic quotients.
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#bijective]: Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, [*A Survey of the Bijective Burrows–Wheeler Transform*](<https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html>) drops.dagstuhl.de
+
+    (2025), in the Festschrift for Giovanni Manzini, OASIcs 131. The cyclic BWT and necklace enumeration.
+
+[^/mibz2/blog/2026-11-08-inverse-bwt-navigation/#orbit]: Nathaniel K. Brown and Ben Langmead, [Orbit](<https://github.com/drnatebrown/orbit>) github.com
+
+    A library implementing move-structure variants; not a verified drop-in replacement for mibz2's Rust T-vector.

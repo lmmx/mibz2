@@ -22,13 +22,13 @@ How many letters the rebuild holds, per 100 runs of a Wikidata block
 
 Counted, not timed: medians over the 233 blocks of at least 65,536 rows in the Wikidata corpus. Amber and green are the peaks of letters whose word is longer than one byte, under Cells’ right-end order and under free steps first. Grey is the number of letters, long words or not, left once the free steps run out.
 
-**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](<#2-why-do-only-the-long-words-count>) says where the line between old and new falls.
+**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since[^/mibz2/blog/2026-11-15-induction-width/#lopez][^/mibz2/blog/2026-11-15-induction-width/#fick]. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*[^/mibz2/blog/2026-11-15-induction-width/#layout]: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](<#2-why-do-only-the-long-words-count>) says where the line between old and new falls.
 
 **What this is not.** These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.
 
 **Why mibz2 cares.** Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; [the run's report](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992>)), so the margin is small. [Lazy letters](<https://lmmx.github.io/mibz2/blog/2026-11-16-lazy-letters/index.md>) tested it: holding only the letters still in play, one block per thread beat the teams by 5% at ten threads, and mibz2 0.5.0 uses it from 8 threads up.
 
-[Section 1](<#1-what-does-the-rebuild-hold-on-a-nine-byte-word>) works a nine-byte word by hand and draws its width. [Section 2](<#2-why-do-only-the-long-words-count>) says why only the long words count, and what is classical. [Section 3](<#3-does-the-order-of-steps-matter>) compares twelve orders of steps, and [section 4](<#4-how-narrow-can-a-free-first-order-be>) gives the bound and the theorem. [Section 5](<#5-what-would-it-mean-for-mibz2>) says what is open, and [section 6](<#6-where-to-read-more>) lists the reading.
+[Section 1](<#1-what-does-the-rebuild-hold-on-a-nine-byte-word>) works a nine-byte word by hand and draws its width. [Section 2](<#2-why-do-only-the-long-words-count>) says why only the long words count, and what is classical. [Section 3](<#3-does-the-order-of-steps-matter>) compares twelve orders of steps, and [section 4](<#4-how-narrow-can-a-free-first-order-be>) gives the bound and the theorem. [Section 5](<#5-what-would-it-mean-for-mibz2>) says what is open, and the [Compendium of Links](<#compendium>) lists the reading.
 
 ## 1\. What does the rebuild hold, on a nine-byte word?
 
@@ -80,7 +80,7 @@ Here Right end: \\(W = 3\\), \\(S = 7\\). Free steps first: \\(W = 2\\), \\(S = 
 
 Definitions 1 and 2 are the classical first-return construction behind Rauzy–Veech induction, for which Viana’s survey (2006) is an introduction, in a finite, discrete form: rows instead of a real interval. Definition 3 is the research record’s, not the literature’s.
 
-**What is classical.** Inducing a map on a smaller set by its first return, and shrinking the set step by step, is Rauzy's induction (1979). Veech (1982) developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as \\(a \\mapsto ab\\), was made explicit by Lopez and Narbel (1999). Choosing a different path of steps, instead of always cutting at one end, is the *branching* Rauzy induction of Dolce and Perrin (2017).
+**What is classical.** Inducing a map on a smaller set by its first return[^/mibz2/blog/2026-11-15-induction-width/#viana], and shrinking the set step by step, is Rauzy's induction (1979)[^/mibz2/blog/2026-11-15-induction-width/#rauzy]. Veech (1982)[^/mibz2/blog/2026-11-15-induction-width/#veech] developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as \\(a \\mapsto ab\\), was made explicit by Lopez and Narbel (1999)[^/mibz2/blog/2026-11-15-induction-width/#lopez]. Choosing a different path of steps, instead of always cutting at one end, is the *branching* Rauzy induction of Dolce and Perrin (2017)[^/mibz2/blog/2026-11-15-induction-width/#dolce].
 
 **What is new.** That theory studies orbits, return times, invariant measures and coding. It does not ask how many words a computation must hold at once along a path of steps. Its usual setting also keeps the number of intervals fixed. In mibz2's discrete setting, a step between two letters of equal length deletes one, so the count falls as the rebuild goes on. The closest established ideas come from graph layout. Line up a graph's vertices in some order and cut the line after each prefix. The *cutwidth* of that order is the most edges any cut crosses, and *vertex separation* counts boundary vertices instead of edges. The least vertex separation over all orders equals the graph's *pathwidth* ([Kinnersley 1992](<https://doi.org/10.1016/0020-0190(92)90234-M>)). Width here is the same kind of quantity, with the block's cycle of rows as the graph, its edges bundled into runs, and the kept rows as the prefix. Whether W is exactly a cutwidth is a conjecture. A stand-in for it, the runs crossing the cut upwards, peaks at 0.28 r over the 233 blocks. The exact count on 29 of them peaks at 0.31 r.
 
@@ -126,19 +126,6 @@ Three questions remain open:
 
 The width census and the order census are merged ([\#435](<https://github.com/lmmx/mibz2/pull/435>), [\#437](<https://github.com/lmmx/mibz2/pull/437>)). The confluence proof, [\#438](<https://github.com/lmmx/mibz2/pull/438>), is in review.
 
-## 6\. Where to read more
-
-In order of use for this question:
-
-1. Marcelo Viana, [Ergodic theory of interval exchange maps](<https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621>), *Revista Matemática Complutense* 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.
-2. Luis-Miguel Lopez and Philippe Narbel, Substitutions from Rauzy induction, in *Developments in Language Theory* (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.
-3. Francesco Dolce and Dominique Perrin, [Interval exchanges, admissibility and branching Rauzy induction](<https://doi.org/10.1051/ita/2017004>), *RAIRO – Theoretical Informatics and Applications* 51 (2017), 135–139 ([arXiv](<https://arxiv.org/abs/1305.0120>)). Choosing among many paths of steps, the freedom section 3 uses.
-4. Jon Fickenscher, [Decoding Rauzy induction: an answer to Bufetov's general question](<https://doi.org/10.24033/bsmf.2748>), *Bulletin de la Société Mathématique de France* 145 (2017), 603–621 ([arXiv](<https://arxiv.org/abs/1507.07481>)). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.
-5. Gérard Rauzy, [Échanges d'intervalles et transformations induites](<https://doi.org/10.4064/aa-34-4-315-328>), *Acta Arithmetica* 34 (1979), 315–328, and William A. Veech, [Gauss measures for transformations on the space of interval exchange maps](<https://doi.org/10.2307/1971391>), *Annals of Mathematics* 115 (1982), 201–242. The original papers; not the place to start for width.
-6. Josep Díaz, Jordi Petit and Maria Serna, [A survey of graph layout problems](<https://doi.org/10.1145/568522.568523>), *ACM Computing Surveys* 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.
-
----
-
 **Research records:**
 
 - The width census and its programs: [`2026-11-15-width.md`](<https://github.com/lmmx/mibz2/blob/f03b0fdca71abf45133d0720802ff3d3255a567a/docs/journal/monodromy/2026-11-15-width.md>) (\#435).
@@ -146,3 +133,35 @@ In order of use for this question:
 - The confluence proof: [`2026-11-15-free-closure-confluence.md`](<https://github.com/lmmx/mibz2/blob/e8c5705082a5908916bd8804d8e11c6bb9cbdbc0/docs/journal/monodromy/2026-11-15-free-closure-confluence.md>) (\#438, in review).
 - The thought experiment that defined width: [the team channel, 15 November](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900062843>).
 - The run of a block per thread against teams at ten threads: [the team channel, 15 November](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992>).
+
+❦
+
+## Compendium of Links
+
+[^/mibz2/blog/2026-11-15-induction-width/#lopez]: Luis-Miguel Lopez and Philippe Narbel, [Substitutions from Rauzy induction](<https://doi.org/10.1142/9789812792464_0017>) doi.org
+
+    In *Developments in Language Theory* (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.
+
+[^/mibz2/blog/2026-11-15-induction-width/#fick]: Jon Fickenscher, [Decoding Rauzy induction: an answer to Bufetov's general question](<https://doi.org/10.24033/bsmf.2748>) doi.org
+
+    *Bulletin de la Société Mathématique de France* 145 (2017), 603–621 ([arXiv](<https://arxiv.org/abs/1507.07481>)). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.
+
+[^/mibz2/blog/2026-11-15-induction-width/#layout]: Josep Díaz, Jordi Petit and Maria Serna, [A survey of graph layout problems](<https://doi.org/10.1145/568522.568523>) doi.org
+
+    *ACM Computing Surveys* 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.
+
+[^/mibz2/blog/2026-11-15-induction-width/#viana]: Marcelo Viana, [Ergodic theory of interval exchange maps](<https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621>) doi.org
+
+    *Revista Matemática Complutense* 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.
+
+[^/mibz2/blog/2026-11-15-induction-width/#rauzy]: Gérard Rauzy, [Échanges d'intervalles et transformations induites](<https://doi.org/10.4064/aa-34-4-315-328>) doi.org
+
+    *Acta Arithmetica* 34 (1979), 315–328. The original paper; not the place to start for width.
+
+[^/mibz2/blog/2026-11-15-induction-width/#veech]: William A. Veech, [Gauss measures for transformations on the space of interval exchange maps](<https://doi.org/10.2307/1971391>) doi.org
+
+    *Annals of Mathematics* 115 (1982), 201–242. The original paper on its dynamical and geometric meaning; not the place to start for width.
+
+[^/mibz2/blog/2026-11-15-induction-width/#dolce]: Francesco Dolce and Dominique Perrin, [Interval exchanges, admissibility and branching Rauzy induction](<https://doi.org/10.1051/ita/2017004>) doi.org
+
+    *RAIRO – Theoretical Informatics and Applications* 51 (2017), 135–139 ([arXiv](<https://arxiv.org/abs/1305.0120>)). Choosing among many paths of steps, the freedom section 3 uses.

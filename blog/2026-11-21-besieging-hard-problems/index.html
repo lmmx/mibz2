@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=95e6e422e622">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b643d28ed5f3">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=95e6e422e622">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=95e6e422e622">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3218,6 +3220,9 @@
 </div>
 <p>mibz2 is a Rust decoder for bzip2, and for months we have searched for faster ways to undo the reordering at its core. This post describes how we are rebuilding that search, and why. A proof of the Riemann Hypothesis, built at a scale no person could write and accepted by three independent checkers, has shown what a search can attempt once checking is cheap. Our checks of correctness are already cheap. Our checks of speed are not, so that is where we start.</p>
 <p>On 20 November 2026, Levent Alpöge <a href="https://alpo.ge/remark.pdf">announced</a> a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that carry the same question for primes in arithmetic progressions. It does not cover the wider Selberg class.</p>
+<aside class="il-gloss">
+<p><strong>Three kernels</strong> are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.</p>
+</aside>
 <p>The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a thing possible, and what can those of us working on smaller hard problems take from it?</p>
 <p><strong>We have not checked the proof.</strong> We are not number theorists, and nothing below depends on the argument being right. What we use is its reported shape, chiefly the overview that Chris Birkbeck posted on the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis". A formal check is also not the same as human understanding. Birkbeck himself wrote: "I have not yet understood how these combine to exclude zeros." Where this post reads a mechanism into the proof, it says so.</p>
 <p><strong>The takeaways come first.</strong></p>
@@ -3240,6 +3245,7 @@
 <li>Because nothing is assumed, the infrastructure is proved inside too: resolution of singularities in characteristic zero, the arithmetic Hilbert–Samuel theorem, Moriwaki's bigness theorem, toroidal compactifications of Siegel varieties, Kawamata–Viehweg and Nadel vanishing, Grothendieck–Messing theory and prismatic Dieudonné theory.</li>
 </ol>
 <p>Each item in step 5 is a major theorem. Several took their original authors years, and some have never been formalised before in any system. Here they are scaffolding, built because the route needed them.</p>
+<p><img class="il-beast il-beast-r" src="../../assets/images/bestiary/horned-serpent-woodcut.svg" alt=""></p>
 <p>The announcement also describes more than 250,000 pages of generated exposition, which Alpöge chose not to present as a readable proof, and he expects major simplifications. One number theorist, writing on social media, put the strangeness this way: the proof "takes an incredibly complicated tour through the infrastructure built for a hundred other mineral reserves, situated far from the destination, and somehow create[s] a wormhole to the original destination." A problem many had assumed would need new theory in arithmetic geometry may instead yield to a long chain of existing, deep results.</p>
 <p>A reading project has since published <a href="https://nasqret.github.io/riemann-rev/atlas/">a source-linked atlas</a> of the development, which maps its components to pinned lines of the Lean source and marks which cuts of the argument have been checked separately. Its own summary describes a one-sided bound on sums over primes, supplied by the arithmetic, which analysis turns into a region free of zeros. That is the atlas authors' reading, and we have not checked it either.</p>
 <p><strong>Why the scale matters beyond mathematics.</strong> The usual picture of a great proof is a single insight that makes a hard problem easy. This development may contain such an insight; no one can yet say. What it certainly contains is an enormous amount of machinery assembled around the problem until the conclusion could not be avoided. That suggests some problems were hard not because the necessary idea was out of reach, but because every known route was far too long for people to build and check. If so, the limits on what can be solved were partly limits of human logistics. They were set by how many concepts one mind can hold, how long an argument a community can review, and how much foundational work its attention can pay for.</p>
@@ -3282,7 +3288,7 @@
 <p>We are not proving theorems, and we should not transplant mechanisms we cannot yet explain. We can adopt the method. The <a href="https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">research journal's note on the proof's shape</a> asks of each of the twelve moves what it would mean for us. Four consequences follow.</p>
 <h3 id="the-binding-constraint-is-performance-checking">The binding constraint is performance checking<a class="headerlink" href="#the-binding-constraint-is-performance-checking" title="Permanent link">&para;</a></h3>
 <p>Our correctness check is already like a kernel's. A candidate decoder must reproduce every byte of the original (parity), pass Miri, Rust's checker for undefined behaviour, and survive fuzzing. All of that runs on CI in minutes, and its verdict is close to certain.</p>
-<p>Our performance check is the opposite. The authoritative measurement is a run on one ten-core desktop machine, an Intel i9-10900K, which a person has to start, and which can run one experiment at a time. The cheaper proxies have misled us repeatedly. Our <a href="https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger">fidelity ledger</a> records, for each candidate that reached a native test, what the cheap prediction said and what happened. A selection from it:</p>
+<p>Our performance check is the opposite. The authoritative measurement is a run on one ten-core desktop machine, an Intel i9-10900K, which a person has to start, and which can run one experiment at a time. The cheaper proxies have misled us repeatedly. Our <a class="il-ref" href="https://github.com/lmmx/mibz2/blob/f5bd7a9/docs/team/research-charter/CONTEXT.md#5a-the-fidelity-ledger">fidelity ledger</a> records, for each candidate that reached a native test, what the cheap prediction said and what happened. A selection from it:</p>
 <table>
 <thead>
 <tr>
@@ -3522,19 +3528,19 @@ the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis" (20 No
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/bench.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/couriers.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/blog.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/frontier.js?v=95e6e422e622"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/observatory.js?v=95e6e422e622"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b643d28ed5f3"></script>
+        <script src="../../assets/javascripts/katex.js?v=95e6e422e622"></script>
       
     
   </body>
