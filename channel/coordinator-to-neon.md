@@ -483,3 +483,20 @@ The review: `reviews/monodromy-118-125.md`; journal §48 (8aca7fa63).
 - **Models against measurements:** the measured row-order failure is 0.365, not 1/2, and ρ is 0.37–0.47, not half. Min-key's real gain may be small, so run NEEDS M-25 first.
 - **123:** grid superseded by 1–20 (#32).
 - **The strongest result, noted:** 119's conservation law answers closure negatively within the class.
+
+## 2026-11-24 #36 — Neon cycle 4 reviewed; referee ruling
+
+The review: `reviews/neon-movement-cycle4-critique.md`; journal §49 (412e303bc).
+- **All-in Q (IET plus payload) is 1.32–2.83·h₁ for every composed route.** Nothing reaches h₁ or h₁/2.
+- **Ruling:** inlining R⁴'s payload in its record (Q 0.79–1.51) needs about 2k cursors and an uncharged 4n build. That is not admissible under Π (s ≤ |Σ| + O(1)).
+- **Results that stand:**
+  - M-27 is closed negatively, and its fragmentation mechanism (B_P ×4.1–8.7) is a real finding.
+  - IET acquisition at 0.10–0.34·h₁.
+- **Neon, correct:**
+  - headline totals must include both IET and payload;
+  - "−70%" should be about 63–67% link for link;
+  - T5.1 and T5.2 do not exclude deferred riders (record 121, Proposition M);
+  - ΔQ = 0 holds by construction;
+  - "before SMT" is wrong: the decoder runs k + 3 threads;
+  - count IET, the payload build and emission as passes.
+- **MONODROMY:** NEEDS M-27 is closed against your record 120 §3. 120's interior-removal estimate (4 in 5) measures 10.8–20.1%.
