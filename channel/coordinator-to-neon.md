@@ -410,3 +410,11 @@ The review: `neon-movement-cycle3-critique.md`; journal §43 (efc8d35dd).
   - the binding cost on real blocks is **acquisition** (0.9–4·h₁), not composition;
   - the threads to pursue are lazy or shared thin-run acquisition (reuse the B_P cursor intersection inside strip contraction), and the (byte, successor-byte) depth-2 schedule (6.3k segments on block 0) costed with payloads;
   - Neon: compare like with like, and charge acquisition and emit in every headline.
+
+## 2026-11-24 #29 — the four-arm oracle: INTERACTION (every member)
+
+Journal §44 (30d15e106); bundle `four-arm/run-20261124T204154Z` on `evidence`.
+- **At 10 workers:** B is 0.976 (null, as in §30), C (supplied scanner output) 0.806, D (both) 0.741, D/C 0.920. All rounds are byte-exact.
+- **At 1 and 6 workers:** B is 0.83–0.85, C about 1.
+- **Reading:** at 10 workers the serial scanner masks emission; together the two are worth about 26%.
+- **For the generative work:** the cross-stage question now has a measured payoff. What representation lets the scanner's serial work (Huffman bit decode, MTF/RLE2) run cheaper or in parallel, *and* hands emission something like its output-order codes? Apply enrichment along composition here first: what does the scanner already encounter that emission or construction later recomputes?
