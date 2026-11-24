@@ -1603,7 +1603,7 @@ An essay says AI gives mathematics results without reasons. Two models read it a
 
 24 November 2026 · 11 min read · [Meta](<#5-where-things-stand>)
 
-In October the essayist doomslide published "Against Mathematics", a long polemic about what machines are doing to the subject. Its charge is that mathematics is splitting into results and reasons, and that the machines now produce the first without the second. I gave the essay to two models and asked each what it meant for mibz2's research. Within an afternoon each came back with a breakthrough for our decoder. Neither survived our own records:
+In October the essayist doomslide published ["Against Mathematics"](<https://doomslide.substack.com/p/against-mathematics>), a long polemic about what machines are doing to the subject. Its charge is that mathematics is splitting into results and reasons, and that the machines now produce the first without the second. I gave the essay to two models and asked each what it meant for mibz2's research. Within an afternoon each came back with a breakthrough for our decoder. Neither survived our own records:
 
 - **The first** proposed measuring the decoder's hard core in a new currency, cache misses. Our journal had already refuted that on this machine, three days earlier.
 - **The second** proposed moving many scattered rows of the block through the decoder together. Its lemma is true, and already known; as a decoder, it costs exactly as many steps as the walk it would replace.
@@ -1711,7 +1711,7 @@ What changes is the record each failed idea leaves. Our obstruction write-ups al
 
 **Sources:**
 
-- doomslide, "Against Mathematics: A religion of the dead, by the dead, for the dead", Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
+- doomslide, ["Against Mathematics: A religion of the dead, by the dead, for the dead"](<https://doomslide.substack.com/p/against-mathematics>), Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
 - [The source record](<https://github.com/lmmx/mibz2/blob/b643d28ed5f3e631260fbd4f086e64cbbc4df0bc/docs/journal/2026-11-24-against-mathematics-source.md>): the prompt, ChatGPT's and Claude's analyses verbatim, and descriptions of ChatGPT's figures.
 - [The ordered frontier and the transformation between decoders](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) and [abbreviation, batching and the block checksum](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>), the mathematician agent's records.
 - [Toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>), the lanes experiment, and [the retrospective](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md>) on the squared map.
@@ -2310,7 +2310,9 @@ The claimed proof of the Riemann Hypothesis announced on 20 November draws on a 
 
 mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against *recency bias*, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.
 
-**Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>), which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.
+**Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#lean], which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#tao]). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.
+
+**Mathlib** is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.
 
 **The takeaways:**
 
@@ -2323,7 +2325,7 @@ mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for f
 
 ## 1\. What is in the proof's toolkit?
 
-Eyal Weiss's [anatomy of the claim](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.
+Eyal Weiss's [anatomy of the claim](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#weiss] maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.
 
 Its timeline lists 50 established techniques and one entry marked as the claimed new mechanism: multiplicity from iterated theta lifts, in 2026.
 
@@ -2378,20 +2380,24 @@ The later tools in the figure, recompression (Jeż, 2015) and string attractors 
 
 ## 5\. How does a broad toolkit get used well?
 
-Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>) to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
+Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#guide] to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
 
 The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers
 
 The four rows are the guide's dictionary, quoted. The fields on the right are where each substitute's tools come from, read from the guide's flow diagram. A reading of the proof's architecture, not a verified dependency graph.
 
+We read the guide beside [a working draft that explains the proof for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#zeta].
+
 Each distant theory in the toolkit entered because one row needed a substitute. Iwasawa theory and the Ferrero–Washington theorem (1979) entered because Stepanov passes to all finite extensions of a field, and the proof needed a tower of fields instead.
+
+**Iwasawa theory** follows the arithmetic of a number field up an infinite tower of extensions, each of degree p over the last, and finds that it grows in a regular pattern. Ferrero and Washington proved in 1979 that for the towers built from roots of unity over abelian fields, one constant of that pattern, μ, is zero.
 
 We use the same mechanism. Each research chain starts from a *solved case*, a kind of block whose inversion is cheap:
 
 - a perfectly clustering block, one run per letter;
 - a two-letter Sturmian block;
 - a periodic text;
-- one of Open's thick strips, which collapses in one jump.
+- one of [Open](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-19-open-returns/index.md>)'s thick strips, which collapses in one jump.
 
 The chain writes the cheap inversion as explicit steps, runs it on real blocks, and finds which steps fail. A failing step names the ingredient to search for, in mathematics of any era. Our [cost map](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-20-where-the-decoding-work-goes/index.md>) of the Wikidata benchmark already says where the first steps fail:
 
@@ -2403,15 +2409,35 @@ The economics are unchanged. Our charter's rule of [mathematical maximalism](<ht
 
 ## 6\. What happens next?
 
-The breadth-oriented team, Kitchen Sink, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; [its first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>) has been audited. Neither has a result from the new method yet.
+The breadth-oriented team, [Kitchen Sink](<https://github.com/lmmx/mibz2/blob/110eccb96/docs/team/research-charter/launches/2026-11-20-carbon-kitchen-sink.md>), adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; [its first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>) has been audited. Neither has a result from the new method yet.
 
 The first thing to report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps carry the argument. If our chains turn out to draw only on the last thirty years, that will be a finding too.
 
----
-
-**Sources:** [Weiss's anatomy of the claimed proof](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) (a text scan, with AI-assisted importance estimates); [the architecture guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>); [the proof explained for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>), by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon at the behest of Michael O. Rubinstein (working draft, 21 November 2026); [the Lean community's statement](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>); [Terence Tao on the claim](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>).
-
 **Research records:** [the twelve levers](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md>); [working backwards and the cost map](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md>); [the Rauzy–Veech literature](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-rauzy-veech.md>) and [the Lyndon literature](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-lyndon-literature.md>); [the research method](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md>); [the interval-exchange team's first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>).
+
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#weiss]: [Eyal Weiss, anatomy of the claimed proof](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) eyal-weiss.github.io
+
+    A map of the branches of mathematics the claimed proof draws on, and when each technique appeared. It is a text scan of the Lean archive, not a build or a verification, and its importance weights are AI-assisted estimates. This post's toolkit and code-share figures come from it.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#lean]: [The Lean community's statement](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>) leanprover-community.github.io
+
+    The Lean and Mathlib communities' announcement that the formal artifact is certified: Lean's kernel and several independent checkers accepted it. It certifies the formal proof, not anyone's understanding of the argument.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#tao]: [Terence Tao on the claim](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>) terrytao.wordpress.com
+
+    Tao's post of 20 November on the claim, cited for where human understanding of the argument stands.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#guide]: [The architecture guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>) nasqret.github.io
+
+    An illustrated guide to the proof's architecture. It calls the proof's shape "Stepanov over ℤ" and gives the dictionary row by row; §5's first figure quotes it.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#zeta]: [The proof explained for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>) math.uwaterloo.ca
+
+    A working draft (21 November 2026) by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon, at the behest of Michael O. Rubinstein, explaining the proof in the case of the zeta function.
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/index.md>)
 
@@ -2530,6 +2556,8 @@ Shipped in mibz2 [0.5.10](<https://lmmx.github.io/mibz2/pr-preview/pr-820/benchm
 mibz2 is a Rust decoder for bzip2, and for months we have searched for faster ways to undo the reordering at its core. This post describes how we are rebuilding that search, and why. A proof of the Riemann Hypothesis, built at a scale no person could write and accepted by three independent checkers, has shown what a search can attempt once checking is cheap. Our checks of correctness are already cheap. Our checks of speed are not, so that is where we start.
 
 On 20 November 2026, Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that carry the same question for primes in arithmetic progressions. It does not cover the wider Selberg class.
+
+**Three kernels** are three separately written programs, each re-checking the exported proof from scratch, so that a bug in any one checker can't pass the proof alone.
 
 The Riemann Hypothesis was posed in 1859. It says that the zeros of one function, which governs how the primes are spread out, all lie on a single line. It has been the most famous open problem in mathematics for more than a century, and generations of the strongest mathematicians have failed to settle it. A proof of it, of any length, would be an event. This one is checked by machines, and built at a scale no person could write or read. That raises a second question beside the mathematics. What kind of method makes such a thing possible, and what can those of us working on smaller hard problems take from it?
 
@@ -3073,7 +3101,9 @@ That reshaped an idea we had been circling: a zoo. Rather than one universal dec
 
 ## 6\. Adapting the method: toy, missing effect, native surrogate
 
-Today Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. (*Update, 21 November:* the same day, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.) What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
+Today Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
+
+**Since then** (a note of 21 November): the same day as the announcement, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.
 
 As he tells it, he started from a *toy* setting where the theorem was already known (the Riemann Hypothesis over function fields) and re-proved it in a new way chosen so the proof might travel. He then named the ingredient that the hard setting lacks: Stepanov's classical argument uses *multiplicity*, a polynomial vanishing to high order, which over the integers would be "something like differentiating whole numbers". The decisive step was to find a different mechanism, native to the hard setting, with the same effect: chains of theta lifts, each standing in for one order of multiplicity. The human held the analogy; the AI system supplied the technical mastery to build it.
 
@@ -3108,6 +3138,8 @@ With a few pieces the column stays wide, so a small cut barely damages the toy. 
 There is a limit, which the research line also proved. Every text coded from a rotation has zero entropy: a handful of numbers describe it completely. Real blocks are not like that. A block with about 760 random statement IDs holds about 90,000 random bits, and no global coordinate can be smaller than the information it determines. So on real data the coordinate we are looking for cannot be a single number like \\(k\\alpha\\). At best it describes the structured part, and the random strings must be paid for some other way.
 
 That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way \\(k\\alpha\\) does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of \\(\\alpha\\), say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
+
+**Ostrowski numeration** writes a whole number as a sum of the denominators of \\(\\alpha\\)'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.
 
 ## 7\. Where this leaves us
 
@@ -3216,7 +3248,7 @@ Thurston's train tracks squeeze a tangle of curves onto a few weighted branches 
 
 20 November 2026 · 9 min read · [Open question](<#6-what-is-known-and-what-is-open>)
 
-**What a train track is.** Draw a long, looping curve on a surface: a sphere with a few holes, say, or a doughnut. Many stretches of the curve run side by side before they part. A **train track** replaces all those side-by-side strands with a single branch, and writes on the branch how many strands it stands for. Where strands part or meet, the branches join at a **switch**, smoothly, like railway points, and the numbers must add up there. William Thurston introduced train tracks in the late 1970s to study curves and the maps that move them on surfaces. A few branches and a few numbers then stand for a curve that might wind around thousands of times.
+**What a train track is.** Draw a long, looping curve on a surface: a sphere with a few holes, say, or a doughnut. Many stretches of the curve run side by side before they part. A **train track** replaces all those side-by-side strands with a single branch, and writes on the branch how many strands it stands for. Where strands part or meet, the branches join at a **switch**, smoothly, like railway points, and the numbers must add up there. William Thurston introduced train tracks in the late 1970s to study curves and the maps that move them on surfaces. A few branches and a few numbers then stand for a curve that might wind around thousands of times. Lee Mosher's three-page note[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#mosher] is the gentlest way in.
 
 **Why it matters to mibz2.** Undoing bzip2's Burrows–Wheeler transform (BWT) means following one long path through the rows of a block until it has visited every row; each step reads one byte. Most of the cost is that walk. mibz2's kernels save work by treating whole groups of rows that move together as one thing ([A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-10-rauzy-veech-reconstruction/index.md>), [Open Returns](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-19-open-returns/index.md>)). That is the train-track idea in other clothes. The central operation of train tracks, *splitting*, is the same operation as the Rauzy–Veech induction behind our Cells kernels. Dunfield and Thurston say so in as many words, and we show their figure in [section 3](<#3-interval-exchanges-are-train-tracks-and-splitting-is-rauzy-induction>).
 
@@ -3224,19 +3256,19 @@ Thurston's train tracks squeeze a tangle of curves onto a few weighted branches 
 
 ## 1\. From curves to branches
 
-The name comes from Thurston's own drawings. In his lecture notes he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."
+The name comes from Thurston's own drawings. In his lecture notes[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#thurston] he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."
 
 Thurston's corridors, and the track they squeeze down to
 
 Top: the strands of a curve running side by side in branching corridors. Bottom: each corridor squeezed to one line, a train track, with a train running on it. Reproduced from Thurston, *The Geometry and Topology of 3-Manifolds*, §8.9 (p. 204 of the notes), for commentary.
 
-The figure below, from Dunfield and Thurston's 2006 paper, shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.
+The figure below, from Dunfield and Thurston's 2006 paper[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#dt], shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.
 
 Two train tracks
 
 Train tracks on a four-punctured sphere and on a torus. Reproduced from Dunfield and Thurston (2006), Figure 16, for commentary.
 
-A track becomes useful once it has numbers. Each branch gets a non-negative **weight**, the number of strands it carries. At every switch the weights must balance. In Masur, Mosher and Schleimer's words, a transverse measure "satisfies the *switch conditions*: for every switch \\(x \\in \\tau\\) we have \\(w(a) + w(b) = w(c)\\)" ([2010, p. 4](<https://arxiv.org/abs/1004.4564>)). Here \\(a\\) and \\(b\\) are the two branches on the narrow side of the switch and \\(c\\) is the branch on the wide side. So if 5 strands come in on one branch and 3 on the other, the shared branch carries 8.
+A track becomes useful once it has numbers. Each branch gets a non-negative **weight**, the number of strands it carries. At every switch the weights must balance. In Masur, Mosher and Schleimer's words, a transverse measure "satisfies the *switch conditions*: for every switch \\(x \\in \\tau\\) we have \\(w(a) + w(b) = w(c)\\)" (2010, p. 4)[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#mms]. Here \\(a\\) and \\(b\\) are the two branches on the narrow side of the switch and \\(c\\) is the branch on the wide side. So if 5 strands come in on one branch and 3 on the other, the shared branch carries 8.
 
 A weighted track like this stands for a whole curve, or a whole family of curves, without drawing any of them. That is the first idea: **many paths that travel together are stored once, with a count.**
 
@@ -3295,11 +3327,13 @@ One piece is still missing before this is a train track in Thurston's sense: a t
 
 ## 5\. Maps that write words
 
-There is a second kind of train track, from Bestvina and Handel's work on maps of graphs, and it is closer to what a decoder does. Here the track is a graph, and a map sends each edge not to one edge but to a whole path of edges. Rafiqi and Zeytin's survey (2026) gives an example on a surface of genus 2, a doughnut with two holes: a track with four edges \\(e\_1, \\dots, e\_4\\) meeting at one vertex \\(v\\), and a map that sends, for instance, \\(e\_1 \\mapsto e\_1 e\_2 e\_3 e\_1 e\_3\\) and \\(e\_4 \\mapsto e\_1 e\_2 e\_4 e\_3\\).
+There is a second kind of train track, from Bestvina and Handel's work[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#bh] on maps of graphs, and it is closer to what a decoder does. Here the track is a graph, and a map sends each edge not to one edge but to a whole path of edges. Rafiqi and Zeytin's survey (2026)[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#rz] gives an example on a surface of genus 2, a doughnut with two holes: a track with four edges \\(e\_1, \\dots, e\_4\\) meeting at one vertex \\(v\\), and a map that sends, for instance, \\(e\_1 \\mapsto e\_1 e\_2 e\_3 e\_1 e\_3\\) and \\(e\_4 \\mapsto e\_1 e\_2 e\_4 e\_3\\).
 
 A track on a genus-2 surface, mapped into itself
 
-"A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as $e\_1 \\mapsto e\_1 e\_2 e\_3 e\_1 e\_3$.
+"A genus 2 surface with a train track invariant under a pseudo-Anosov map." Reproduced from Rafiqi and Zeytin (2026), Figure 1, for commentary. The map sends each coloured edge to a word in the edges, such as *e*<sub>1</sub> ↦ *e*<sub>1</sub>*e*<sub>2</sub>*e*<sub>3</sub>*e*<sub>1</sub>*e*<sub>3</sub>.
+
+**A pseudo-Anosov map** stretches a surface by a fixed factor along one family of curves and shrinks it along another, everywhere except at finitely many singular points. Thurston's classification makes it the typical kind of map of a surface to itself, beside periodic and reducible ones.
 
 Such a map holds two kinds of information. Counting how often each edge appears in each image gives a matrix of non-negative integers, and its largest eigenvalue says how fast paths grow when the map is applied again and again. The words themselves give the order. For a decoder only the second kind is enough: knowing that a stretch of text holds three `a`s and two `n`s does not say which comes first.
 
@@ -3325,17 +3359,37 @@ These leads now sit in the project's list of open mathematical directions, for t
 
 ---
 
-**Sources:**
-
-- W. P. Thurston, [The Geometry and Topology of 3-Manifolds](<https://library.slmath.org/books/gt3m/>), lecture notes, Princeton (1980): §8.9, p. 204.
-- N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](<https://arxiv.org/abs/math/0510129>), *Geometry &amp; Topology* 10 (2006), 2431–2499: §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472).
-- H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](<https://arxiv.org/abs/1004.4564>), *Duke Mathematical Journal* 161 (2012); arXiv 2010: §2, Figure 1 (p. 4).
-- A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](<https://arxiv.org/abs/2610.13347>), arXiv 2026: §4.2, Figure 1 (p. 19).
-- L. Mosher, [What is… a train track?](<https://www.ams.org/notices/200303/what-is.pdf>), *Notices of the AMS* 50 (2003), 354–356.
-- M. Bestvina and M. Handel, Train tracks and automorphisms of free groups, *Annals of Mathematics* 135 (1992), 1–51.
-- Research records: [the run network and its census](<https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md>); [the origami lift](<https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-origami-lift.md>).
+**Research records:** [the run network and its census](<https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-run-network.md>); [the origami lift](<https://github.com/lmmx/mibz2/blob/915ba45647f0d8a4bd1f3f8bf03bca2a8cc0d51b/docs/journal/2026-11-20-origami-lift.md>).
 
 Figures from the papers above are reproduced at reduced size for commentary and criticism, each credited in its caption.
+
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#mosher]: L. Mosher, [What is… a train track?](<https://www.ams.org/notices/200303/what-is.pdf>) ams.org
+
+    *Notices of the AMS* 50 (2003), 354–356. A three-page note in the *Notices*' "What is…?" series, and the gentlest way in for a reader new to train tracks.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#thurston]: W. P. Thurston, [The Geometry and Topology of 3-Manifolds](<https://library.slmath.org/books/gt3m/>) library.slmath.org
+
+    Lecture notes, Princeton (1980), §8.9, p. 204. Where train tracks begin, as strands squeezed in branching corridors; the post's first figure is his.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#dt]: N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](<https://arxiv.org/abs/math/0510129>) arxiv.org
+
+    *Geometry &amp; Topology* 10 (2006), 2431–2499; §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472). Where an interval exchange becomes a one-switch track, and splitting it becomes Rauzy induction.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#mms]: H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](<https://arxiv.org/abs/1004.4564>) arxiv.org
+
+    *Duke Mathematical Journal* 161 (2012); arXiv 2010, §2, Figure 1 (p. 4). The switch conditions and the split and slide moves, stated exactly.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#bh]: M. Bestvina and M. Handel, [Train tracks and automorphisms of free groups](<https://doi.org/10.2307/2946562>) doi.org
+
+    *Annals of Mathematics* 135 (1992), 1–51. The second kind of track, a graph whose map sends edges to paths, simplified by folding: the open rows of §6.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-20-train-tracks/#rz]: A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](<https://arxiv.org/abs/2610.13347>) arxiv.org
+
+    arXiv 2026, §4.2, Figure 1 (p. 19). A survey across surface dynamics, train tracks and arithmetic; its genus-2 example is the map that writes words in §5.
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/index.md>)
 
@@ -4383,25 +4437,13 @@ mibz2, our bzip2 decoder, inverts each block's Burrows–Wheeler transform with 
 
 **The setting, in brief.** bzip2 stores a block as the last column \\(L\\) of its sorted rotations, the Burrows–Wheeler transform (BWT), together with the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from that row reads the block backwards, one byte per step. A **run** is a stretch of equal bytes in \\(L\\), and LF shifts all of a run's rows by the same amount. So LF is an **interval exchange**: a handful of intervals, each moved whole to a new place. [The mathematical structure of inverse-BWT navigation](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/index.md>) sets out that structure. [A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) shows Cells shrinking the exchange step by step on a three-byte block, and the [technical companion](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-12-rauzy-technical-companion/index.md>) describes its memory layout.
 
-> [!NOTE]
->
-> **[Wikipedia: Interval exchange transformation](<https://en.wikipedia.org/wiki/Interval_exchange_transformation>)**
->
-> An *interval exchange transformation* cuts an interval into pieces and puts them back in a different order, each piece moved whole, without stretching it. Here, LF does exactly this to the block's rows, one piece per run. Cells repeatedly shrinks the exchange onto a smaller interval, a step known as Rauzy induction, which has no Wikipedia article of its own.
+**An [interval exchange transformation](<https://en.wikipedia.org/wiki/Interval_exchange_transformation>)** cuts an interval into pieces and puts them back in a different order, each piece moved whole, without stretching it. Here, LF does exactly this to the block's rows, one piece per run. Cells repeatedly shrinks the exchange onto a smaller interval, a step known as Rauzy induction, which has no Wikipedia article of its own.
 
 **The simplest correct picture.** Cells shrinks LF's interval exchange from its right-hand end. At each stage it keeps a smaller set of rows. For each interval of kept rows it holds a **return tower**: the rows the LF path passes through before it comes back to a kept row. A tower has a **width**, the number of kept rows at its base, and a **height**, the number of LF steps from its base back to a kept row. It also has a **word**, the bytes those steps read, stored in forward text order. The towers' volumes, width times height, always add up to the block's rows. When the tower that holds bzip2's starting row closes on itself, its word is the block's text, and the starting row says where the text begins in it.
 
-> [!NOTE]
->
-> **[Wikipedia: Rokhlin lemma](<https://en.wikipedia.org/wiki/Rokhlin_lemma>)**
->
-> A *Kakutani–Rokhlin tower* is a base set stacked with its successive images under a map, like the floors of a building. The Rokhlin lemma says that many systems can be cut almost entirely into tall towers, with a small piece left over. Here, the return towers are exact and finite: they cover the rows they describe with nothing left over.
+**A [Kakutani–Rokhlin tower](<https://en.wikipedia.org/wiki/Rokhlin_lemma>)** is a base set stacked with its successive images under a map, like the floors of a building. The Rokhlin lemma says that many systems can be cut almost entirely into tall towers, with a small piece left over. Here, the return towers are exact and finite: they cover the rows they describe with nothing left over.
 
-> [!NOTE]
->
-> **[Wikipedia: Free monoid](<https://en.wikipedia.org/wiki/Free_monoid>)**
->
-> A *free monoid* is the set of all finite strings over an alphabet, the empty string included, combined by concatenation. Here, every word is an element of it: the bytes of one return path, in forward text order.
+**A [free monoid](<https://en.wikipedia.org/wiki/Free_monoid>)** is the set of all finite strings over an alphabet, the empty string included, combined by concatenation. Here, every word is an element of it: the bytes of one return path, in forward text order.
 
 **What we found.**
 
@@ -4431,17 +4473,9 @@ and the LF permutation
 
 \\\[\\pi(x)=C(L\[x\])+\\\#\\{i\<x:L\[i\]=L\[x\]\\}.\\\]
 
-> [!NOTE]
->
-> **[Wikipedia: Alphabet (formal languages)](<https://en.wikipedia.org/wiki/Alphabet_(formal_languages)>)**
->
-> An *alphabet* is the set of symbols that strings are written in. Here it is \\(\\Sigma\\), the 256 possible byte values.
+**An [alphabet](<https://en.wikipedia.org/wiki/Alphabet_(formal_languages)>)** is the set of symbols that strings are written in. Here it is \\(\\Sigma\\), the 256 possible byte values.
 
-> [!NOTE]
->
-> **[Wikipedia: Permutation](<https://en.wikipedia.org/wiki/Permutation>)**
->
-> A *permutation* is a rearrangement of a finite set: each element is sent to exactly one place, and no place is left empty. Here, LF permutes the block's rows, and following it from one row reads the text backwards.
+**A [permutation](<https://en.wikipedia.org/wiki/Permutation>)** is a rearrangement of a finite set: each element is sent to exactly one place, and no place is left empty. Here, LF permutes the block's rows, and following it from one row reads the text backwards.
 
 The output the reference inversion produces is
 
@@ -4467,11 +4501,7 @@ The active permutation is the first-return map
 
 \\\[T\_m(x)=\\pi^{h\_m(x)}(x),\\qquad h\_m(x)=\\min\\{j\>0:\\pi^j(x)\\in D\_m\\}.\\\]
 
-> [!NOTE]
->
-> **[Wikipedia: Poincaré map](<https://en.wikipedia.org/wiki/Poincaré_map>)**
->
-> A *first-return map*, also called a Poincaré map, follows a system from a point of a chosen section until it first comes back to that section, and sends the point to where it lands; the number of steps taken is the return time. Wikipedia's article treats continuous flows. Here, the system is LF, the section is the kept rows, the return time is a tower's height, and the smaller map on the section is the *induced system*.
+**A [first-return map](<https://en.wikipedia.org/wiki/Poincaré_map>)**, also called a Poincaré map, follows a system from a point of a chosen section until it first comes back to that section, and sends the point to where it lands; the number of steps taken is the return time. Wikipedia's article treats continuous flows. Here, the system is LF, the section is the kept rows, the return time is a tower's height, and the smaller map on the section is the *induced system*.
 
 The kept rows are cut into intervals \\(I\_\\alpha\\) on which the return path is the same. Each interval has
 
@@ -4501,11 +4531,7 @@ They form a finite return tower, also called a Kakutani–Rokhlin tower. Its bas
 
 \\\[X\_m=\\bigcup\_{j\\in\\mathbb Z}\\pi^j(D\_m).\\\]
 
-> [!NOTE]
->
-> **[Wikipedia: Orbit (dynamics)](<https://en.wikipedia.org/wiki/Orbit_(dynamics)>)**
->
-> An *orbit* is the set of states a system passes through from a starting point, by applying its map again and again. A permutation of finitely many rows has only cycles for orbits. Here, the *saturation* of the kept rows is the union of every LF cycle that meets them.
+**An [orbit](<https://en.wikipedia.org/wiki/Orbit_(dynamics)>)** is the set of states a system passes through from a starting point, by applying its map again and again. A permutation of finitely many rows has only cycles for orbits. Here, the *saturation* of the kept rows is the union of every LF cycle that meets them.
 
 Every point of \\(X\_m\\) has a unique most recent visit to \\(D\_m\\) before it, and that visit gives its base point and its level. So
 
@@ -4529,19 +4555,11 @@ is a bijection onto \\(X\_m\\), and
 
 \\\[\\eta\\circ\\widehat T\_m=\\pi\\circ\\eta.\\tag{3}\\\]
 
-> [!NOTE]
->
-> **[Wikipedia: Suspension (dynamical systems)](<https://en.wikipedia.org/wiki/Suspension_(dynamical_systems)>)**
->
-> A *suspension* turns a map into a flow: each point rises for a while, set by a "roof" function, before it jumps to its image. Wikipedia describes the continuous version. The *discrete suspension* here does the same in whole steps, by stacking each kept row with the intermediate rows of its return path.
+**A [suspension](<https://en.wikipedia.org/wiki/Suspension_(dynamical_systems)>)** turns a map into a flow: each point rises for a while, set by a "roof" function, before it jumps to its image. Wikipedia describes the continuous version. The *discrete suspension* here does the same in whole steps, by stacking each kept row with the intermediate rows of its return path.
 
 The towers, expanded, are conjugate to the original permutation on its saturation. The smaller map \\(T\_m\\) on the bases is an induced system: it has fewer states and variable return times. Our [notes on itinerary certificates](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md>) (§3) described each step as a conjugacy of the smaller map to the larger one. That overstated it: the conjugacy holds once the tower levels are added, as (3) states.
 
-> [!NOTE]
->
-> **[Wikipedia: Topological conjugacy](<https://en.wikipedia.org/wiki/Topological_conjugacy>)**
->
-> A *conjugacy* is a change of coordinates that turns one system into another step for step, so that the two are the same system described differently. Here, the expanded towers are conjugate to LF on its saturation; the smaller induced map is not, until the tower levels are put back.
+**A [conjugacy](<https://en.wikipedia.org/wiki/Topological_conjugacy>)** is a change of coordinates that turns one system into another step for step, so that the two are the same system described differently. Here, the expanded towers are conjugate to LF on its saturation; the smaller induced map is not, until the tower levels are put back.
 
 ### 1.4 One step
 
@@ -4598,29 +4616,11 @@ Each term of our working vocabulary names one of the objects above. Some name mo
 
 The code says "cell" because a finished return piece is written into the records of both orders, while what remains of each interval stays at the fronts. That is a representation of the induction above, which the [technical companion](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-12-rauzy-technical-companion/#4-how-the-cells-algorithm-implements-that-mathematics>) describes in detail.
 
-> [!NOTE]
->
-> **[Wikipedia: CW complex](<https://en.wikipedia.org/wiki/CW_complex>)**
->
-> A *CW complex* is a space built by gluing cells together: points (0-cells), then edges (1-cells), then discs and their higher-dimensional analogues. Our "cells" are not such cells. In section 3, though, the rows are 0-cells and the LF transitions are 1-cells.
+**A [CW complex](<https://en.wikipedia.org/wiki/CW_complex>)** is a space built by gluing cells together: points (0-cells), then edges (1-cells), then discs and their higher-dimensional analogues. Our "cells" are not such cells. In section 3, though, the rows are 0-cells and the LF transitions are 1-cells.
 
-> [!NOTE]
->
-> **[Wikipedia: Formal grammar](<https://en.wikipedia.org/wiki/Formal_grammar>)**
->
-> A *formal grammar* is a set of rewriting rules, called *productions*, each saying how a symbol may be replaced by a string of other symbols. Here, every rule has the form \\(N\\to UV\\): one symbol stands for the concatenation of two others.
+**A [formal grammar](<https://en.wikipedia.org/wiki/Formal_grammar>)** is a set of rewriting rules, called *productions*, each saying how a symbol may be replaced by a string of other symbols. Here, every rule has the form \\(N\\to UV\\): one symbol stands for the concatenation of two others.
 
-> [!NOTE]
->
-> **[Wikipedia: Straight-line grammar](<https://en.wikipedia.org/wiki/Straight-line_grammar>)**
->
-> A *straight-line grammar*, or straight-line program (SLP), is a grammar that produces exactly one string, never branching or looping. Repeated pieces are named once and reused, so the grammar can be far smaller than its string. Here, Cells' rules form one.
-
-> [!NOTE]
->
-> **[Wikipedia: Directed acyclic graph](<https://en.wikipedia.org/wiki/Directed_acyclic_graph>)**
->
-> A *directed acyclic graph* (DAG) is a set of nodes joined by one-way arrows, with no path that leads back to where it started. Here, each rule points to its two children, and children shared between rules make the grammar a DAG rather than a tree.
+**A [straight-line grammar](<https://en.wikipedia.org/wiki/Straight-line_grammar>)**, or straight-line program (SLP), is a grammar that produces exactly one string, never branching or looping. Repeated pieces are named once and reused, so the grammar can be far smaller than its string. Here, Cells' rules form one.
 
 ### Substitutions, cylinders and grammar nodes
 
@@ -4628,21 +4628,15 @@ Three further descriptions are useful.
 
 **A finite S-adic presentation.** Each stage defines a substitution from the new alphabet of intervals into the previous one. Composed, they give a finite directive sequence of return-word substitutions. The stored object is most directly called an SLP. Versions matter: an assignment such as \\(w\_B\\leftarrow w\_Aw\_B\\) creates a new node that refers to the old values, so the grammar has no cycles.
 
-> [!NOTE]
->
-> **[Wikipedia: Symbolic dynamics](<https://en.wikipedia.org/wiki/Symbolic_dynamics>)**
->
-> *Symbolic dynamics* studies a system through *itineraries*: for each point, the sequence of symbols naming the regions it visits. An *S-adic presentation*, which has no article of its own, builds such sequences by composing a series of substitutions, each replacing every symbol by a word. Here, each stage of the induction is one substitution.
+**[Symbolic dynamics](<https://en.wikipedia.org/wiki/Symbolic_dynamics>)** studies a system through *itineraries*: for each point, the sequence of symbols naming the regions it visits. An *S-adic presentation*, which has no article of its own, builds such sequences by composing a series of substitutions, each replacing every symbol by a word. Here, each stage of the induction is one substitution.
 
 **Cylinder sets.** A base interval lies inside a cylinder of constant return path. It need not be the largest cylinder for its byte word. Isolating the starting row deliberately cuts intervals finer, and equal byte words need not mean equal paths through the rows.
 
-> [!NOTE]
->
-> **[Wikipedia: Cylinder set](<https://en.wikipedia.org/wiki/Cylinder_set>)**
->
-> A *cylinder set* is the set of all sequences that agree on a fixed, finite stretch of positions, for instance all those whose first three symbols are given. Here, a cylinder is the set of rows whose return path follows a given itinerary.
+**A [cylinder set](<https://en.wikipedia.org/wiki/Cylinder_set>)** is the set of all sequences that agree on a fixed, finite stretch of positions, for instance all those whose first three symbols are given. Here, a cylinder is the set of rows whose return path follows a given itinerary.
 
 **Occurrence coordinates.** A grammar node can occur many times in the output. The writer's "first place" for a node is the smallest position of one of its occurrences. It is not a position that belongs to the string value itself.
+
+**A [directed acyclic graph](<https://en.wikipedia.org/wiki/Directed_acyclic_graph>)** (DAG) is a set of nodes joined by one-way arrows, with no path that leads back to where it started. Here, each rule points to its two children, and children shared between rules make the grammar a DAG rather than a tree.
 
 For an unrotated expansion of the root, the first places come from a min-plus computation over the DAG. If \\(N\\to UV\\),
 
@@ -4650,11 +4644,7 @@ For an unrotated expansion of the root, the first places come from a min-plus co
 
 That is why the writer passes over the rules in reverse order. Its next pass writes out factors and copies repeated occurrences, and its handling of the marked path adds the output phase (construction journal, §§3.2 and 3.5).
 
-> [!NOTE]
->
-> **[Wikipedia: Tropical semiring](<https://en.wikipedia.org/wiki/Tropical_semiring>)**
->
-> The *tropical semiring* replaces ordinary addition by taking the minimum, and ordinary multiplication by addition, so that a "sum of products" becomes a "smallest total". Here, rule (5) is such a *min-plus* computation: a node's first place is the smallest of the places its parents offer.
+**The [tropical semiring](<https://en.wikipedia.org/wiki/Tropical_semiring>)** replaces ordinary addition by taking the minimum, and ordinary multiplication by addition, so that a "sum of products" becomes a "smallest total". Here, rule (5) is such a *min-plus* computation: a node's first place is the smallest of the places its parents offer.
 
 ## 3\. Is the induction discrete Morse theory?
 
@@ -4662,27 +4652,15 @@ That is why the writer passes over the rules in reverse order. Its next pass wri
 
 In §8.8 (pp. 205–206), a discrete vector field pairs cells \\((\\sigma,\\tau)\\), with \\(\\sigma\\) a face of \\(\\tau\\) of one dimension lower. Unpaired cells are critical. The field is a gradient when it has no periodic alternating flowline. The discrete flow is
 
-> [!NOTE]
->
-> **[Wikipedia: Discrete Morse theory](<https://en.wikipedia.org/wiki/Discrete_Morse_theory>)**
->
-> *Discrete Morse theory* simplifies a space built from cells by pairing cells off, each with a neighbour one dimension higher, and keeping only the unpaired, *critical* cells, without changing its homology. The pairing is a *discrete vector field*, and following it gives *gradient paths*. Here, each removed row pairs with its outgoing LF edge, and the gradient path from a kept row is its return path.
+**[Discrete Morse theory](<https://en.wikipedia.org/wiki/Discrete_Morse_theory>)** simplifies a space built from cells by pairing cells off, each with a neighbour one dimension higher, and keeping only the unpaired, *critical* cells, without changing its homology. The pairing is a *discrete vector field*, and following it gives *gradient paths*. Here, each removed row pairs with its outgoing LF edge, and the gradient path from a kept row is its return path.
 
 \\\[\\Phi=\\operatorname{Id}+\\partial V+V\\partial,\\\]
 
 and Theorem 8.24 (p. 206) identifies the resulting Morse homology with the original cellular homology. These are constructions on chain modules, with signed or mod-two counts of paths.
 
-> [!NOTE]
->
-> **[Wikipedia: Homology (mathematics)](<https://en.wikipedia.org/wiki/Homology_(mathematics)>)**
->
-> *Homology* counts the holes of a space in each dimension: its connected pieces, its loops, its enclosed cavities and so on. *Cellular homology* computes it from the cells of a complex. Here, every LF cycle is a circle, one piece with one loop, and a valid reduction must keep both.
+**[Homology](<https://en.wikipedia.org/wiki/Homology_(mathematics)>)** counts the holes of a space in each dimension: its connected pieces, its loops, its enclosed cavities and so on. *Cellular homology* computes it from the cells of a complex. Here, every LF cycle is a circle, one piece with one loop, and a valid reduction must keep both.
 
-> [!NOTE]
->
-> **[Wikipedia: Chain complex](<https://en.wikipedia.org/wiki/Chain_complex>)**
->
-> A *chain complex* is a sequence of *chain modules*, here formal sums of cells, linked by boundary maps that send each cell to its boundary; applying a boundary map twice gives zero. Homology is read off from it. Here, the *Morse boundary* in the table below is the boundary map of the reduced complex.
+**A [chain complex](<https://en.wikipedia.org/wiki/Chain_complex>)** is a sequence of *chain modules*, here formal sums of cells, linked by boundary maps that send each cell to its boundary; applying a boundary map twice gives zero. Homology is read off from it. Here, the *Morse boundary* in the table below is the boundary map of the reduced complex.
 
 ### The exact construction for LF
 
@@ -4718,11 +4696,7 @@ So it is legitimate to speak of Morse return paths decorated with word labels. "
 
 Two further qualifications. Suppressing vertices of degree two on a circle is a graph contraction, a Morse reduction. It is not literally a sequence of collapses through free faces inside the original circle, whose vertices each have two incident edges. And discarding a closed LF component without the starting row removes a whole circle, which does not preserve the homology of the full orbit graph. The Morse statement applies component by component to the components still represented.
 
-> [!NOTE]
->
-> **[Wikipedia: Edge contraction](<https://en.wikipedia.org/wiki/Edge_contraction>)**
->
-> An *edge contraction* removes an edge from a graph and merges its two ends into one vertex. Here, suppressing a removed row on an LF circle contracts one edge, and repeated contractions shorten the circle without breaking it.
+**An [edge contraction](<https://en.wikipedia.org/wiki/Edge_contraction>)** removes an edge from a graph and merges its two ends into one vertex. Here, suppressing a removed row on an LF circle contracts one edge, and repeated contractions shorten the circle without breaking it.
 
 ### What the theorem adds
 
@@ -4738,31 +4712,15 @@ In §11.9 (p. 286), a cellular sheaf is a functor
 
 \\\[\\mathcal F:\\operatorname{Face}(X)\\longrightarrow\\mathcal C.\\\]
 
-> [!NOTE]
->
-> **[Wikipedia: Sheaf (mathematics)](<https://en.wikipedia.org/wiki/Sheaf_(mathematics)>)**
->
-> A *sheaf* attaches data to the pieces of a space, with rules saying how the data on overlapping or adjacent pieces must agree; a *global section* is a choice of data everywhere that obeys every rule. A *cellular sheaf* does this on the cells of a complex, with a *stalk* of data on each cell and a map for each face. Here, section 4 asks which sheaf, if any, our words form.
+**A [sheaf](<https://en.wikipedia.org/wiki/Sheaf_(mathematics)>)** attaches data to the pieces of a space, with rules saying how the data on overlapping or adjacent pieces must agree; a *global section* is a choice of data everywhere that obeys every rule. A *cellular sheaf* does this on the cells of a complex, with a *stalk* of data on each cell and a map for each face. Here, section 4 asks which sheaf, if any, our words form.
 
-> [!NOTE]
->
-> **[Wikipedia: Functor](<https://en.wikipedia.org/wiki/Functor>)**
->
-> A *functor* is a map between categories that sends objects to objects and arrows to arrows, keeping identities and composition. Here, the functor that matters sends each LF path to its word, and following two paths in turn to concatenating their words.
+**A [functor](<https://en.wikipedia.org/wiki/Functor>)** is a map between categories that sends objects to objects and arrows to arrows, keeping identities and composition. Here, the functor that matters sends each LF path to its word, and following two paths in turn to concatenating their words.
 
 For \\(\\mathcal C=\\mathbf{Mon}\\), the category of monoids, that requires a monoid at every cell, a monoid homomorphism for every incidence of faces, and compatibility between those homomorphisms. Equation (11.3) on the same page describes the global sections as the limit of that diagram.
 
-> [!NOTE]
->
-> **[Wikipedia: Monoid](<https://en.wikipedia.org/wiki/Monoid>)**
->
-> A *monoid* is a set with an associative way of combining two elements and an identity element that changes nothing. Strings under concatenation, with the empty string, form one, and so do the natural numbers under addition. A *monoid homomorphism* keeps the combining and the identity: word length is one.
+**A [monoid](<https://en.wikipedia.org/wiki/Monoid>)** is a set with an associative way of combining two elements and an identity element that changes nothing. Strings under concatenation, with the empty string, form one, and so do the natural numbers under addition. A *monoid homomorphism* keeps the combining and the identity: word length is one.
 
-> [!NOTE]
->
-> **[Wikipedia: Limit (category theory)](<https://en.wikipedia.org/wiki/Limit_(category_theory)>)**
->
-> A *limit* of a diagram is the most general object with compatible maps to every part of it: a universal way of making all the parts agree at once. Here, the global sections of a sheaf form such a limit.
+**A [limit](<https://en.wikipedia.org/wiki/Limit_(category_theory)>)** of a diagram is the most general object with compatible maps to every part of it: a universal way of making all the parts agree at once. Here, the global sections of a sheaf form such a limit.
 
 A stored word is an element of a monoid. It is not itself a stalk. Our notes said that words are "free-monoid sections" of such a sheaf ([the note on Ghrist's book](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md>), §0), but they never gave the stalks and incidence maps that claim needs.
 
@@ -4788,17 +4746,9 @@ by \\(w\_{\\alpha(x)}\\). Along paths, these labels concatenate in forward outpu
 
 where \\(B\\Sigma^\*\\) is the category with one object, whose morphisms are words and whose composition is concatenation **in traversal order**: a path that takes \\(e\\) and then \\(f\\) is sent to \\(w\_e w\_f\\). (Under the usual convention that \\(g\\circ f\\) means "\\(f\\) first", the target is the opposite monoid \\((\\Sigma^\*)^{\\mathrm{op}}\\) instead.) It uses a monoid as a one-object category, which is a different construction from a sheaf valued in the category of monoids.
 
-> [!NOTE]
->
-> **[Wikipedia: Free category](<https://en.wikipedia.org/wiki/Free_category>)**
->
-> A *free category*, or path category, is built from a directed graph: its arrows are the paths in the graph, and composing two arrows means following one path and then the other. Here, the path category of the return graph is where the functor (8) starts.
+**A [free category](<https://en.wikipedia.org/wiki/Free_category>)**, or path category, is built from a directed graph: its arrows are the paths in the graph, and composing two arrows means following one path and then the other. Here, the path category of the return graph is where the functor (8) starts.
 
-> [!NOTE]
->
-> **[Wikipedia: Category (mathematics)](<https://en.wikipedia.org/wiki/Category_(mathematics)>)**
->
-> A *category* is a collection of objects and arrows between them that can be composed, with an identity arrow on each object. A monoid is exactly a category with one object: its elements are the arrows, and combining them is composition. Here, \\(B\\Sigma^\*\\) is the monoid of words seen this way.
+**A [category](<https://en.wikipedia.org/wiki/Category_(mathematics)>)** is a collection of objects and arrows between them that can be composed, with an identity arrow on each object. A monoid is exactly a category with one object: its elements are the arrows, and combining them is composition. Here, \\(B\\Sigma^\*\\) is the monoid of words seen this way.
 
 The SLP stores compressed expressions for these path labels. Length is then a monoid homomorphism,
 
@@ -4817,11 +4767,7 @@ For the grammar itself, we can build a sheaf of sets on a bipartite incidence gr
 - the maps from a symbol to its edges are identities;
 - the terminals' values are fixed.
 
-> [!NOTE]
->
-> **[Wikipedia: Bipartite graph](<https://en.wikipedia.org/wiki/Bipartite_graph>)**
->
-> A *bipartite graph* has two kinds of vertices, with edges only between the kinds, never within one. Here, the kinds are the grammar's symbols and its productions, and each edge records that a symbol takes part in a production.
+**A [bipartite graph](<https://en.wikipedia.org/wiki/Bipartite_graph>)** has two kinds of vertices, with edges only between the kinds, never within one. Here, the kinds are the grammar's symbols and its productions, and each edge records that a symbol takes part in a production.
 
 Its global sections are the consistent evaluations of the grammar. It is an exact encoding, but it is extra formal structure, and it does not turn concatenation into a monoid homomorphism. There is also a particularly natural sheaf of positions, built in [section 5.3](<#53-the-position-sheaf>).
 
@@ -4843,11 +4789,7 @@ On the induced graph, orient edges in the LF direction and define
 
 This is an integer 1-cocycle. On a graph every 1-cochain is a cocycle, because there are no 2-cells, so what carries the information is its period:
 
-> [!NOTE]
->
-> **[Wikipedia: Cocycle](<https://en.wikipedia.org/wiki/Cocycle>)**
->
-> A *cocycle* is a *cochain*, an assignment of numbers to the edges (or higher cells) of a space, that passes a closure test; on a graph every cochain passes. A *coboundary* is a cochain of the form "value at the head minus value at the tail" for some numbers on the vertices. Here, the step lengths form a cocycle that is not a coboundary, because round the cycle they add up to \\(-d\\), not zero.
+**A [cocycle](<https://en.wikipedia.org/wiki/Cocycle>)** is a *cochain*, an assignment of numbers to the edges (or higher cells) of a space, that passes a closure test; on a graph every cochain passes. A *coboundary* is a cochain of the form "value at the head minus value at the tail" for some numbers on the vertices. Here, the step lengths form a cocycle that is not a coboundary, because round the cycle they add up to \\(-d\\), not zero.
 
 \\\[\\langle a,\[C\_D\]\\rangle=-d.\\tag{10}\\\]
 
@@ -4857,31 +4799,15 @@ It follows that \\(a\\) is not the coboundary of an integer-valued or real-value
 
 Here \\(p(x)\\) is the place in the text just after the word of \\(x\\). The scaled cocycle \\(a/d\\) is a real cocycle with integral period \\(-1\\), so it integrates to a coordinate in \\(\\mathbb R/\\mathbb Z\\), and one marked occurrence fixes the additive phase. This is the exact link to §7.13 (pp. 185–186), and in particular to the correspondence between integral first cohomology and maps to the circle on p. 186.
 
-> [!NOTE]
->
-> **[Wikipedia: Cohomology](<https://en.wikipedia.org/wiki/Cohomology>)**
->
-> *Cohomology* measures when local data, such as a number on every edge, fail to come from one global quantity, such as a position for every vertex. The failure shows up as a nonzero total round a loop, called a *period*. Here, *integral first cohomology* classifies the ways of wrapping a space round a circle, which is how word places become circular coordinates.
+**[Cohomology](<https://en.wikipedia.org/wiki/Cohomology>)** measures when local data, such as a number on every edge, fail to come from one global quantity, such as a position for every vertex. The failure shows up as a nonzero total round a loop, called a *period*. Here, *integral first cohomology* classifies the ways of wrapping a space round a circle, which is how word places become circular coordinates.
 
-> [!NOTE]
->
-> **[Wikipedia: Modular arithmetic](<https://en.wikipedia.org/wiki/Modular_arithmetic>)**
->
-> *Modular arithmetic* is arithmetic on a clock: modulo \\(d\\), two numbers count as equal when they differ by a multiple of \\(d\\). Here, places taken modulo the cycle length \\(d\\) come back to their start after one trip round the cycle, which places as plain integers cannot.
+**[Modular arithmetic](<https://en.wikipedia.org/wiki/Modular_arithmetic>)** is arithmetic on a clock: modulo \\(d\\), two numbers count as equal when they differ by a multiple of \\(d\\). Here, places taken modulo the cycle length \\(d\\) come back to their start after one trip round the cycle, which places as plain integers cannot.
 
-> [!NOTE]
->
-> **[Wikipedia: Circle group](<https://en.wikipedia.org/wiki/Circle_group>)**
->
-> The *circle group* \\(\\mathbb R/\\mathbb Z\\) is the real numbers with only the part after the decimal point kept, so that 0.9 plus 0.2 is 0.1. A coordinate with values there wraps around instead of growing. Here, places in the text divided by \\(d\\) are such *circular coordinates*.
+**The [circle group](<https://en.wikipedia.org/wiki/Circle_group>)** \\(\\mathbb R/\\mathbb Z\\) is the real numbers with only the part after the decimal point kept, so that 0.9 plus 0.2 is 0.1. A coordinate with values there wraps around instead of growing. Here, places in the text divided by \\(d\\) are such *circular coordinates*.
 
 Keep the edge increments as well as the vertex coordinates. At final closure the induced graph may have one vertex and one loop, and the vertex's coordinate alone says nothing about how far the loop winds.
 
-> [!NOTE]
->
-> **[Wikipedia: Winding number](<https://en.wikipedia.org/wiki/Winding_number>)**
->
-> A *winding number* counts how many times a closed loop goes round a point or a circle, with direction. Here, the edge increments record how far round the circle each step goes, which a vertex's circular coordinate alone cannot show.
+**A [winding number](<https://en.wikipedia.org/wiki/Winding_number>)** counts how many times a closed loop goes round a point or a circle, with direction. Here, the edge increments record how far round the circle each step goes, which a vertex's circular coordinate alone cannot show.
 
 ### 5.2 Why modulo \\(n\\) is not always correct
 
@@ -4919,11 +4845,7 @@ A global section satisfies
 
 which is exactly (11). These are maps of sets, or affine maps of torsors. In general they are not group or monoid homomorphisms, since translation by a nonzero constant does not preserve the identity.
 
-> [!NOTE]
->
-> **[Wikipedia: Principal homogeneous space](<https://en.wikipedia.org/wiki/Principal_homogeneous_space>)**
->
-> A *torsor*, also called a principal homogeneous space, is a set where differences between elements make sense but no element is singled out as zero, like positions on a line with no chosen origin. Here, the position sheaf's stalks behave as torsors: one marked occurrence chooses the origin.
+**A [torsor](<https://en.wikipedia.org/wiki/Principal_homogeneous_space>)**, also called a principal homogeneous space, is a set where differences between elements make sense but no element is singled out as zero, like positions on a line with no chosen origin. Here, the position sheaf's stalks behave as torsors: one marked occurrence chooses the origin.
 
 Sections exist precisely when the total increment round each cycle vanishes modulo the chosen modulus. One anchor fixes the remaining additive freedom on each component. With the stalks and restriction maps that were missing, the compatibility claim becomes exact.
 
@@ -4931,11 +4853,7 @@ Sections exist precisely when the total increment round each cycle vanishes modu
 
 Example 7.37 (p. 185) comes just before the §7.13 heading. It uses the discrete Hodge decomposition of Theorem 7.34 (p. 184) to split pairwise comparison data into a gradient ranking and cyclic inconsistencies. For Cells, the relevant lesson is the obstruction to a real-valued ranking on a closed cycle with nonzero circulation.
 
-> [!NOTE]
->
-> **[Wikipedia: Helmholtz–Hodge decomposition](<https://en.wikipedia.org/wiki/Helmholtz–Hodge_decomposition>)**
->
-> The *Helmholtz–Hodge decomposition* splits a flow into a part that comes from a potential and parts that circulate. On a graph of pairwise comparisons, it splits the data into a global ranking plus cyclic inconsistencies; this discrete form is the *discrete Hodge decomposition* Ghrist uses. Here, the nonzero circulation of the step lengths round an LF cycle is what rules out a real-valued ranking of positions.
+**The [Helmholtz–Hodge decomposition](<https://en.wikipedia.org/wiki/Helmholtz–Hodge_decomposition>)** splits a flow into a part that comes from a potential and parts that circulate. On a graph of pairwise comparisons, it splits the data into a global ranking plus cyclic inconsistencies; this discrete form is the *discrete Hodge decomposition* Ghrist uses. Here, the nonzero circulation of the step lengths round an LF cycle is what rules out a real-valued ranking of positions.
 
 The harmonic smoothing in §7.13 has no evident role in exact decoding. Replacing the length cocycle by a cohomologous harmonic representative keeps the winding, but in general it moves the positions given to intermediate vertices. Decoding needs the actual return lengths, not only their cohomology class.
 
@@ -4976,17 +4894,9 @@ The first equation undoes the subtraction of widths; the second adds return time
 
 That is a cheap algebraic check on every update. An equal step uses the corresponding rectangular incidence matrix. Either way, it states that the towers' volume is conserved, without following individual rows.
 
-> [!NOTE]
->
-> **[Wikipedia: Elementary matrix](<https://en.wikipedia.org/wiki/Elementary_matrix>)**
->
-> An *elementary matrix* differs from the identity matrix by a single row operation, such as adding one row to another. Here, \\(M=I+E\_{AB}\\) records one step: adding one interval's width back onto another's.
+**An [elementary matrix](<https://en.wikipedia.org/wiki/Elementary_matrix>)** differs from the identity matrix by a single row operation, such as adding one row to another. Here, \\(M=I+E\_{AB}\\) records one step: adding one interval's width back onto another's.
 
-> [!NOTE]
->
-> **[Wikipedia: Transpose](<https://en.wikipedia.org/wiki/Transpose>)**
->
-> The *transpose* of a matrix swaps its rows and columns. When widths change by a matrix and heights by its transpose, the total of width times height stays the same, the algebra that keeps a dot product fixed. Here, that total is the towers' volume.
+**The [transpose](<https://en.wikipedia.org/wiki/Transpose>)** of a matrix swaps its rows and columns. When widths change by a matrix and heights by its transpose, the total of width times height stays the same, the algebra that keeps a dot product fixed. Here, that total is the towers' volume.
 
 ### 6.3 Bounds on the present schedule of steps
 
@@ -5008,11 +4918,7 @@ steps. After the first subtraction the widths are \\(k\\) and \\(1\\), and repea
 
 The same family shows why long words must stay compressed. Successive return words grow linearly, so storing all of them literally can take quadratic total bytes.
 
-> [!NOTE]
->
-> **[Wikipedia: Big O notation](<https://en.wikipedia.org/wiki/Big_O_notation>)**
->
-> *Big O notation* describes how a quantity grows while ignoring constant factors: \\(O(f)\\) means at most a constant times \\(f\\) for large inputs, and the related \\(\\Omega(f)\\) means at least. Here, it states bounds on the number of steps and on the work of producing the output.
+**[Big O notation](<https://en.wikipedia.org/wiki/Big_O_notation>)** describes how a quantity grows while ignoring constant factors: \\(O(f)\\) means at most a constant times \\(f\\) for large inputs, and the related \\(\\Omega(f)\\) means at least. Here, it states bounds on the number of steps and on the work of producing the output.
 
 ### 6.4 Some batching identities are proved; their speed benefit is not
 
@@ -5026,11 +4932,7 @@ For \\(q\\) consecutive strict bottom wins,
 
 These identities are exact. Binary powering can represent \\(w^q\\) with \\(O(\\log q)\\) extra SLP rules. Changes of order, the boundaries of equal steps, and the transport of the marker must also be composed correctly.
 
-> [!NOTE]
->
-> **[Wikipedia: Exponentiation by squaring](<https://en.wikipedia.org/wiki/Exponentiation_by_squaring>)**
->
-> *Exponentiation by squaring* computes a power \\(x^q\\) with about \\(\\log\_2 q\\) multiplications, by squaring repeatedly and combining the squares that the binary digits of \\(q\\) pick out. Here, the same trick builds a word repeated \\(q\\) times with \\(O(\\log q)\\) grammar rules.
+**[Exponentiation by squaring](<https://en.wikipedia.org/wiki/Exponentiation_by_squaring>)** computes a power \\(x^q\\) with about \\(\\log\_2 q\\) multiplications, by squaring repeatedly and combining the squares that the binary digits of \\(q\\) pick out. Here, the same trick builds a word repeated \\(q\\) times with \\(O(\\log q)\\) grammar rules.
 
 **H.** Whether such acceleration speeds up the actual decoder depends on how often suitable streaks occur and what finding them costs. The identities do show that the topology does not force one operation per elementary subtraction.
 
@@ -5620,13 +5522,13 @@ How many letters the rebuild holds, per 100 runs of a Wikidata block
 
 Counted, not timed: medians over the 233 blocks of at least 65,536 rows in the Wikidata corpus. Amber and green are the peaks of letters whose word is longer than one byte, under Cells’ right-end order and under free steps first. Grey is the number of letters, long words or not, left once the free steps run out.
 
-**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](<#2-why-do-only-the-long-words-count>) says where the line between old and new falls.
+**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#lopez][^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#fick]. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#layout]: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](<#2-why-do-only-the-long-words-count>) says where the line between old and new falls.
 
 **What this is not.** These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.
 
 **Why mibz2 cares.** Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; [the run's report](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992>)), so the margin is small. [Lazy letters](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-16-lazy-letters/index.md>) tested it: holding only the letters still in play, one block per thread beat the teams by 5% at ten threads, and mibz2 0.5.0 uses it from 8 threads up.
 
-[Section 1](<#1-what-does-the-rebuild-hold-on-a-nine-byte-word>) works a nine-byte word by hand and draws its width. [Section 2](<#2-why-do-only-the-long-words-count>) says why only the long words count, and what is classical. [Section 3](<#3-does-the-order-of-steps-matter>) compares twelve orders of steps, and [section 4](<#4-how-narrow-can-a-free-first-order-be>) gives the bound and the theorem. [Section 5](<#5-what-would-it-mean-for-mibz2>) says what is open, and [section 6](<#6-where-to-read-more>) lists the reading.
+[Section 1](<#1-what-does-the-rebuild-hold-on-a-nine-byte-word>) works a nine-byte word by hand and draws its width. [Section 2](<#2-why-do-only-the-long-words-count>) says why only the long words count, and what is classical. [Section 3](<#3-does-the-order-of-steps-matter>) compares twelve orders of steps, and [section 4](<#4-how-narrow-can-a-free-first-order-be>) gives the bound and the theorem. [Section 5](<#5-what-would-it-mean-for-mibz2>) says what is open, and the [Compendium of Links](<#compendium>) lists the reading.
 
 ## 1\. What does the rebuild hold, on a nine-byte word?
 
@@ -5678,7 +5580,7 @@ Here Right end: \\(W = 3\\), \\(S = 7\\). Free steps first: \\(W = 2\\), \\(S = 
 
 Definitions 1 and 2 are the classical first-return construction behind Rauzy–Veech induction, for which Viana’s survey (2006) is an introduction, in a finite, discrete form: rows instead of a real interval. Definition 3 is the research record’s, not the literature’s.
 
-**What is classical.** Inducing a map on a smaller set by its first return, and shrinking the set step by step, is Rauzy's induction (1979). Veech (1982) developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as \\(a \\mapsto ab\\), was made explicit by Lopez and Narbel (1999). Choosing a different path of steps, instead of always cutting at one end, is the *branching* Rauzy induction of Dolce and Perrin (2017).
+**What is classical.** Inducing a map on a smaller set by its first return[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#viana], and shrinking the set step by step, is Rauzy's induction (1979)[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#rauzy]. Veech (1982)[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#veech] developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as \\(a \\mapsto ab\\), was made explicit by Lopez and Narbel (1999)[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#lopez]. Choosing a different path of steps, instead of always cutting at one end, is the *branching* Rauzy induction of Dolce and Perrin (2017)[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#dolce].
 
 **What is new.** That theory studies orbits, return times, invariant measures and coding. It does not ask how many words a computation must hold at once along a path of steps. Its usual setting also keeps the number of intervals fixed. In mibz2's discrete setting, a step between two letters of equal length deletes one, so the count falls as the rebuild goes on. The closest established ideas come from graph layout. Line up a graph's vertices in some order and cut the line after each prefix. The *cutwidth* of that order is the most edges any cut crosses, and *vertex separation* counts boundary vertices instead of edges. The least vertex separation over all orders equals the graph's *pathwidth* ([Kinnersley 1992](<https://doi.org/10.1016/0020-0190(92)90234-M>)). Width here is the same kind of quantity, with the block's cycle of rows as the graph, its edges bundled into runs, and the kept rows as the prefix. Whether W is exactly a cutwidth is a conjecture. A stand-in for it, the runs crossing the cut upwards, peaks at 0.28 r over the 233 blocks. The exact count on 29 of them peaks at 0.31 r.
 
@@ -5724,19 +5626,6 @@ Three questions remain open:
 
 The width census and the order census are merged ([\#435](<https://github.com/lmmx/mibz2/pull/435>), [\#437](<https://github.com/lmmx/mibz2/pull/437>)). The confluence proof, [\#438](<https://github.com/lmmx/mibz2/pull/438>), is in review.
 
-## 6\. Where to read more
-
-In order of use for this question:
-
-1. Marcelo Viana, [Ergodic theory of interval exchange maps](<https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621>), *Revista Matemática Complutense* 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.
-2. Luis-Miguel Lopez and Philippe Narbel, Substitutions from Rauzy induction, in *Developments in Language Theory* (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.
-3. Francesco Dolce and Dominique Perrin, [Interval exchanges, admissibility and branching Rauzy induction](<https://doi.org/10.1051/ita/2017004>), *RAIRO – Theoretical Informatics and Applications* 51 (2017), 135–139 ([arXiv](<https://arxiv.org/abs/1305.0120>)). Choosing among many paths of steps, the freedom section 3 uses.
-4. Jon Fickenscher, [Decoding Rauzy induction: an answer to Bufetov's general question](<https://doi.org/10.24033/bsmf.2748>), *Bulletin de la Société Mathématique de France* 145 (2017), 603–621 ([arXiv](<https://arxiv.org/abs/1507.07481>)). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.
-5. Gérard Rauzy, [Échanges d'intervalles et transformations induites](<https://doi.org/10.4064/aa-34-4-315-328>), *Acta Arithmetica* 34 (1979), 315–328, and William A. Veech, [Gauss measures for transformations on the space of interval exchange maps](<https://doi.org/10.2307/1971391>), *Annals of Mathematics* 115 (1982), 201–242. The original papers; not the place to start for width.
-6. Josep Díaz, Jordi Petit and Maria Serna, [A survey of graph layout problems](<https://doi.org/10.1145/568522.568523>), *ACM Computing Surveys* 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.
-
----
-
 **Research records:**
 
 - The width census and its programs: [`2026-11-15-width.md`](<https://github.com/lmmx/mibz2/blob/f03b0fdca71abf45133d0720802ff3d3255a567a/docs/journal/monodromy/2026-11-15-width.md>) (\#435).
@@ -5744,6 +5633,38 @@ In order of use for this question:
 - The confluence proof: [`2026-11-15-free-closure-confluence.md`](<https://github.com/lmmx/mibz2/blob/e8c5705082a5908916bd8804d8e11c6bb9cbdbc0/docs/journal/monodromy/2026-11-15-free-closure-confluence.md>) (\#438, in review).
 - The thought experiment that defined width: [the team channel, 15 November](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900062843>).
 - The run of a block per thread against teams at ten threads: [the team channel, 15 November](<https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992>).
+
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#lopez]: Luis-Miguel Lopez and Philippe Narbel, [Substitutions from Rauzy induction](<https://doi.org/10.1142/9789812792464_0017>) doi.org
+
+    In *Developments in Language Theory* (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#fick]: Jon Fickenscher, [Decoding Rauzy induction: an answer to Bufetov's general question](<https://doi.org/10.24033/bsmf.2748>) doi.org
+
+    *Bulletin de la Société Mathématique de France* 145 (2017), 603–621 ([arXiv](<https://arxiv.org/abs/1507.07481>)). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#layout]: Josep Díaz, Jordi Petit and Maria Serna, [A survey of graph layout problems](<https://doi.org/10.1145/568522.568523>) doi.org
+
+    *ACM Computing Surveys* 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#viana]: Marcelo Viana, [Ergodic theory of interval exchange maps](<https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621>) doi.org
+
+    *Revista Matemática Complutense* 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#rauzy]: Gérard Rauzy, [Échanges d'intervalles et transformations induites](<https://doi.org/10.4064/aa-34-4-315-328>) doi.org
+
+    *Acta Arithmetica* 34 (1979), 315–328. The original paper; not the place to start for width.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#veech]: William A. Veech, [Gauss measures for transformations on the space of interval exchange maps](<https://doi.org/10.2307/1971391>) doi.org
+
+    *Annals of Mathematics* 115 (1982), 201–242. The original paper on its dynamical and geometric meaning; not the place to start for width.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-15-induction-width/#dolce]: Francesco Dolce and Dominique Perrin, [Interval exchanges, admissibility and branching Rauzy induction](<https://doi.org/10.1051/ita/2017004>) doi.org
+
+    *RAIRO – Theoretical Informatics and Applications* 51 (2017), 135–139 ([arXiv](<https://arxiv.org/abs/1305.0120>)). Choosing among many paths of steps, the freedom section 3 uses.
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/index.md>)
 
@@ -7598,7 +7519,7 @@ Two runs of one byte share its rows in *F*
 
 Conceptual, worked by hand and checked by a script. Green marks the two `a` runs; the band marks `aaa`, whose *k* of 1 sends its rows past the row the first `a` run takes.
 
-Back in `banana`, a walk over the intervals needs one thing more. Each interval's record says where its rows go; its *anchor* names the interval that destination falls in. A walk that knows its current interval then finds the next one by stepping forward from the anchor, instead of searching all the interval starts ([section 1.1 of the inverse-BWT navigation post](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#11-walking-the-intervals-without-a-search>)). The records arrive in \\(L\\) order, so their destinations rise. Sorted by byte, a counting sort over the \\(r\\) records, their row starts rise too. One merge of the two lists finds every anchor. Brown and Langmead build a *length-capped* structure, which splits long intervals so that the walk's average step is bounded, from exactly such a run list in \\(O(r)\\) time and space ([SEA 2026, Lemma 6](<https://arxiv.org/abs/2602.11029>)).
+Back in `banana`, a walk over the intervals needs one thing more. Each interval's record says where its rows go; its *anchor* names the interval that destination falls in. A walk that knows its current interval then finds the next one by stepping forward from the anchor, instead of searching all the interval starts ([section 1.1 of the inverse-BWT navigation post](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#11-walking-the-intervals-without-a-search>)). The records arrive in \\(L\\) order, so their destinations rise. Sorted by byte, a counting sort over the \\(r\\) records, their row starts rise too. One merge of the two lists finds every anchor. Brown and Langmead build a *length-capped* structure, which splits long intervals so that the walk's average step is bounded, from exactly such a run list in \\(O(r)\\) time and space (SEA 2026, Lemma 6)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bl].
 
 `banana`'s three run records, three intervals of a move structure
 
@@ -7617,7 +7538,7 @@ In detail: while undoing MTF and the `RUNA`/`RUNB` counts, a decoder could keep 
 As above, \\(m\\) is the number of symbols in a block; write \\(\\sigma\\) for the number of byte values it uses, at most 256. On a word RAM, the usual model in which one machine word is read or written in one step, with each symbol handled in constant time (and with blocks of any length: bzip2 caps a block at 900,000 bytes, so the asymptotics are about that generalised model):
 
 1. **Building the records** would take \\(O(m+r+\\sigma)\\) time: one pass over the symbols, a counting sort of the \\(r\\) records by byte, and the counts. It would hold \\(O(r+\\sigma)\\) words of working memory: the records and a count per byte value.
-2. **Composed with a move structure built in \\(O(r)\\) time and space,** and walked in \\(O(n)\\) time, the inverse BWT would take \\(O(m+n+r+\\sigma)\\) time and \\(O(r+\\sigma)\\) extra working memory. Brown and Langmead give such a route from a run-length BWT ([SEA 2026, Lemma 6 and Theorem 9](<https://arxiv.org/abs/2602.11029>)), for a text with an end marker; condition 3 below gives one for bzip2's BWT, which has none.
+2. **Composed with a move structure built in \\(O(r)\\) time and space,** and walked in \\(O(n)\\) time, the inverse BWT would take \\(O(m+n+r+\\sigma)\\) time and \\(O(r+\\sigma)\\) extra working memory. Brown and Langmead give such a route from a run-length BWT (SEA 2026, Lemma 6 and Theorem 9)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bl], for a text with an end marker; condition 3 below gives one for bzip2's BWT, which has none.
 
 That memory figure leaves out the compressed input, the \\(n\\) output bytes, the block's Huffman tables and other metadata, and the decoder's other buffers. It is not a memory bound for a whole bzip2 decompressor, which also undoes bzip2's first stage, a run-length code applied before the BWT, and checks a CRC. And the time is still \\(O(n)\\), because \\(n\\) bytes must be written. **Brown and Langmead already invert in \\(O(n)\\) time with \\(O(r)\\) extra space,** so the composition is no new inversion bound. What it would change is the route: no \\(n\\)-byte column between MTF and the move structure.
 
@@ -7625,7 +7546,7 @@ Each of those statements has conditions:
 
 1. **A fixed alphabet.** Moving a byte to the front of the list costs up to \\(\\sigma\\) steps. For bytes that is a constant, and mibz2 does most moves with a few vector shuffles; for a large alphabet it would not be.
 2. **The symbols streamed.** The bounds assume a stream of decoded symbols. mibz2 decodes a block's Huffman codes into an array of symbols first, which is \\(O(m)\\) memory, before MTF reads it ([`Symbols`](<https://github.com/lmmx/mibz2/blob/68d934b/src/block.rs#L23-L34>)). The \\(O(r+\\sigma)\\) figure needs Huffman decoding and MTF fused, or the array counted. Even fused, the block's Huffman *selectors* stay: one per group of 50 symbols, naming the table that group uses, all stored ahead of the symbols, so about \\(m/50\\) entries, which is \\(O(m)\\) state too. So an \\(O(r)\\) memory bound for the whole decompressor would have to account for them as well.
-3. **No end marker.** Brown and Langmead's text ends in a unique terminator, `$`. bzip2's BWT sorts rotations with no terminator and stores the start row instead. A periodic block's map then has several cycles ([the appendix, section 6](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)). Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle, so that proof does not transfer unchanged. A later paper gives a route that needs neither. Brown, Sanaullah, Zhang and Langmead ([*Optimal-Time Move Structure Construction*, Theorem 3.9](<https://arxiv.org/abs/2603.22147>)) build a *balanced* move structure, in which every step takes constant time in the worst case, for any permutation, in \\(O(r)\\) time and space. Its inputs are each interval's start, the start of its image, and the order of the images. For \\(\\Psi\\) built from the records, these are the row starts in \\(F\\) order, the records' starts in \\(L\\), and each record's place in \\(L\\) order, all of which section 3's counting sort already gives. Nothing in that theorem assumes one cycle or a terminator. The inversion then starts at bzip2's stored start row, finds its interval in \\(O(r)\\) steps, and takes \\(n\\) steps of \\(\\Psi\\), writing each row's byte. A periodic block's cycle is shorter than \\(n\\), so the walk goes round it more than once, which writes the period the right number of times. A script that models this walk reproduced every string of up to eight letters over three letters, the 135 periodic ones among them. Applying that theorem to bzip2's \\(\\Psi\\) is our composition, not a result of the paper.
+3. **No end marker.** Brown and Langmead's text ends in a unique terminator, `$`. bzip2's BWT sorts rotations with no terminator and stores the start row instead. A periodic block's map then has several cycles ([the appendix, section 6](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)). Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle, so that proof does not transfer unchanged. A later paper gives a route that needs neither. Brown, Sanaullah, Zhang and Langmead (*Optimal-Time Move Structure Construction*, Theorem 3.9)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bszl] build a *balanced* move structure, in which every step takes constant time in the worst case, for any permutation, in \\(O(r)\\) time and space. Its inputs are each interval's start, the start of its image, and the order of the images. For \\(\\Psi\\) built from the records, these are the row starts in \\(F\\) order, the records' starts in \\(L\\), and each record's place in \\(L\\) order, all of which section 3's counting sort already gives. Nothing in that theorem assumes one cycle or a terminator. The inversion then starts at bzip2's stored start row, finds its interval in \\(O(r)\\) steps, and takes \\(n\\) steps of \\(\\Psi\\), writing each row's byte. A periodic block's cycle is shorter than \\(n\\), so the walk goes round it more than once, which writes the period the right number of times. A script that models this walk reproduced every string of up to eight letters over three letters, the 135 periodic ones among them. Applying that theorem to bzip2's \\(\\Psi\\) is our composition, not a result of the paper.
 
 **The number of symbols is bounded by the runs.** This is an elementary lemma, not a new result, and its proof is short. Let the maximal runs of \\(L\\) have lengths \\(\\ell\_1,\\dots,\\ell\_r\\), which add up to \\(n\\), and count \\(m\\) with the end-of-block symbol, as in section 1.
 
@@ -7658,7 +7579,7 @@ The scratch runs were about twice CI's figures, so they are indicative only. The
 
 ## 6\. Where does this stand?
 
-**Is any of it new?** Not the observation, which mibz2 recorded in issue \#42. The rules it rests on are bzip2's format, as Julian Seward designed it, and they are visible in any decoder: [Go's](<https://go.dev/src/compress/bzip2/bzip2.go>) or the [Wuffs format notes](<https://github.com/google/wuffs/blob/main/std/bzip2/README.md>), which describe `RUNA` and `RUNB` as repeating "the 0th element". We searched for work that builds a run-length BWT or a move structure from MTF- or run-coded input, and found none. That is not evidence that none exists. The nearest work builds a run-length BWT from other inputs: from the plain text in space bounded by \\(r\\) ([Nishimoto, Kanda and Tabei, ICALP 2022](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99>)), from an LZ77 parse ([Kempa and Kociumaka, FOCS 2020](<https://arxiv.org/abs/1910.10631>)), and a move structure for any permutation, from its intervals, in \\(O(r)\\) time ([Brown, Sanaullah, Zhang and Langmead, 2026 preprint](<https://arxiv.org/abs/2603.22147>)).
+**Is any of it new?** Not the observation, which mibz2 recorded in issue \#42. The rules it rests on are bzip2's format, as Julian Seward designed it, and they are visible in any decoder: Go's[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#go] or the Wuffs format notes[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#wuffs], which describe `RUNA` and `RUNB` as repeating "the 0th element". We searched for work that builds a run-length BWT or a move structure from MTF- or run-coded input, and found none. That is not evidence that none exists. The nearest work builds a run-length BWT from other inputs: from the plain text in space bounded by \\(r\\) (Nishimoto, Kanda and Tabei, ICALP 2022)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#nkt], from an LZ77 parse (Kempa and Kociumaka, FOCS 2020)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#kk], and a move structure for any permutation, from its intervals, in \\(O(r)\\) time (Brown, Sanaullah, Zhang and Langmead, 2026 preprint)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bszl].
 
 **What is open** is the speculative question: does bzip2's coded form give a stronger algorithm or bound than a generic run-length BWT does? One point bears on it. The symbols and the column determine each other exactly, so the symbols hold no information the runs lack. Any gain would have to come from what the decoder computes cheaply on the way: avoiding the expansion of \\(L\\), its scan and an \\(n\\)-byte temporary, which is a shortcut in computation, not extra information about the permutation. So the research question, beyond composing known results, is about the model of input: what bounds on one-pass move-structure construction, upper or lower, can be proved for a decoder that reads only the stream of MTF and `RUNA`/`RUNB` symbols, that don't already follow from known run-length BWT and move-structure results? It is open, and we have not established that an answer would be new.
 
@@ -7674,16 +7595,35 @@ The general point is that a stage's input is often already in the form a later s
 
 ---
 
-**Sources:**
+**Research records:** [issue \#42](<https://github.com/lmmx/mibz2/issues/42>): the run counts, the [observation](<https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792>) that MTF gives the runs, and the [timed move structure](<https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621>); [the run-structures journal](<https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md>) and [the move-structure walk journal](<https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md>) (27 October 2026); [*The mathematical structure of inverse-BWT navigation*](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/index.md>) and its [technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>); [mibz2's `mtf.rs`](<https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs>).
 
-- [Issue \#42](<https://github.com/lmmx/mibz2/issues/42>): the run counts, the [observation](<https://github.com/lmmx/mibz2/issues/42#issuecomment-6451443792>) that MTF gives the runs, and the [timed move structure](<https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621>).
-- [The run-structures journal](<https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md>) and [the move-structure walk journal](<https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md>) (27 October 2026).
-- [*The mathematical structure of inverse-BWT navigation*](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/index.md>) and its [technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>).
-- [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>), SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](<https://arxiv.org/abs/2602.11029>)).
-- [Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, *Optimal-Time Move Structure Construction*](<https://arxiv.org/abs/2603.22147>), arXiv:2603.22147 (2026; revised 22 October 2026), Theorem 3.9.
-- [Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, *An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99>), ICALP 2022, LIPIcs 229, 99:1–99:20.
-- [Dominik Kempa and Tomasz Kociumaka, *Resolution of the Burrows–Wheeler Transform Conjecture*](<https://arxiv.org/abs/1910.10631>), FOCS 2020.
-- bzip2's MTF and `RUNA`/`RUNB` rules: [Go's `compress/bzip2`](<https://go.dev/src/compress/bzip2/bzip2.go>), the [Wuffs bzip2 notes](<https://github.com/google/wuffs/blob/main/std/bzip2/README.md>) and [mibz2's `mtf.rs`](<https://github.com/lmmx/mibz2/blob/68d934b/src/mtf.rs>).
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bl]: Nathaniel K. Brown and Ben Langmead, [*Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) drops.dagstuhl.de
+
+    SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](<https://arxiv.org/abs/2602.11029>)). Length capping from a run list in \\(O(r)\\) time and space (Lemma 6), and inversion in \\(O(n)\\) time and \\(O(r)\\) space for a text with an end marker.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#bszl]: Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, [*Optimal-Time Move Structure Construction*](<https://arxiv.org/abs/2603.22147>) arxiv.org
+
+    arXiv:2603.22147 (2026; revised 22 October 2026). A balanced move structure, constant time per step in the worst case, for any permutation, built in \\(O(r)\\) time and space (Theorem 3.9).
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#go]: [Go's `compress/bzip2`](<https://go.dev/src/compress/bzip2/bzip2.go>) go.dev
+
+    Go's standard-library bzip2 decoder, where bzip2's MTF and `RUNA`/`RUNB` rules can be read directly.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#wuffs]: [The Wuffs bzip2 notes](<https://github.com/google/wuffs/blob/main/std/bzip2/README.md>) github.com
+
+    Wuffs's notes on the bzip2 format, which describe `RUNA` and `RUNB` as repeating "the 0th element".
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#nkt]: Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, [*An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99>) drops.dagstuhl.de
+
+    ICALP 2022, LIPIcs 229, 99:1–99:20. Builds a run-length BWT from the plain text in space bounded by \\(r\\).
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/#kk]: Dominik Kempa and Tomasz Kociumaka, [*Resolution of the Burrows–Wheeler Transform Conjecture*](<https://arxiv.org/abs/1910.10631>) arxiv.org
+
+    FOCS 2020. Among the nearest work: a run-length BWT built from an LZ77 parse.
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/index.md>)
 
@@ -7693,9 +7633,9 @@ The inverse BWT's next-row map is one shift per run of equal bytes, so it can be
 
 8 November 2026 · 14 min read · [Open question](<#6-what-would-it-cost-mibz2-and-what-would-settle-it>)
 
-To undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores that chain as a table with one navigation entry per row, which we call the T-vector. Each entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of decoding a block, because each step's address comes from the entry just read; mibz2 walks many such chains at once so that their memory reads overlap. [An earlier post](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works the transform through on a small example.
+To undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores that chain as a table with one navigation entry per row, which we call the T-vector. Each entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of decoding a block, because each step's address comes from the entry just read; mibz2 walks many such chains at once so that their memory reads overlap[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#kkp]. [An earlier post](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works the transform through on a small example.
 
-**The entries of that table are not independent.** When the transformed word `banana` is decoded, rows 0, 1 and 2, the three that emit `a`, have next rows 3, 4 and 5. One descriptor covers all three: the first row, the first next row and the length. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: [Nishimoto and Tabei (2021)](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) gave constant-time steps in \\(O(r)\\) machine words, and [Brown and Langmead (2026)](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
+**The entries of that table are not independent.** When the transformed word `banana` is decoded, rows 0, 1 and 2, the three that emit `a`, have next rows 3, 4 and 5. One descriptor covers all three: the first row, the first next row and the length. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: Nishimoto and Tabei (2021)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#nt] gave constant-time steps in \\(O(r)\\) machine words, and Brown and Langmead (2026)[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#bl] inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
 
 **What is not proved** is that any of them beats mibz2's 32-lane, four-byte-per-row implementation in elapsed CPU cycles. Everything in this post is mathematics and published theory: nothing in it has been built or measured in mibz2, and it changes nothing in the decoder. \\(r\\) has been counted on one corpus, in a scratch run; [section 3](<#3-when-do-the-shifts-save-nothing>) gives that count, and an upper bound on another.
 
@@ -7808,9 +7748,9 @@ The entire run is represented by one constant displacement. Every character occu
 
 \\\[ \\boxed{\\begin{gathered}\\Psi\\text{ admits a partition into }r\\text{ intervals,}\\\\\\text{on each of which it is a translation.}\\end{gathered}}\\tag{3} \\\]
 
-In `banana`, the run `aaa` starts at \\(p=3\\), and the `a` rows start at \\(a=0\\): the shift is \\(+3\\), as the figure showed. In combinatorics, such a map is a *discrete interval-exchange permutation*. This identification is more operationally useful than membership in a weak-order lattice, because it tells us exactly how to evaluate the permutation.
+In `banana`, the run `aaa` starts at \\(p=3\\), and the `a` rows start at \\(a=0\\): the shift is \\(+3\\), as the figure showed. In combinatorics, such a map is a *discrete interval-exchange permutation*. This identification is more operationally useful than membership in a weak-order lattice[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#tamayo], because it tells us exactly how to evaluate the permutation.
 
-**The \\(r\\) pieces are an upper bound, not always the fewest.** For the valid cyclic BWT of `abc`, \\(L=\\texttt{cab}\\), \\(F=\\texttt{abc}\\) and \\(r=3\\), but \\(\\Psi=(1,2,0)\\) has just two maximal translated intervals: rows \\(\[0,2)\\) have displacement \\(+1\\), and row \\(\[2,3)\\) has displacement \\(-2\\). The partition of equation (3) is the one the runs induce. Adjacent pieces can share a shift.
+**The \\(r\\) pieces are an upper bound, not always the fewest.** For the valid cyclic BWT[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#bijective] of `abc`, \\(L=\\texttt{cab}\\), \\(F=\\texttt{abc}\\) and \\(r=3\\), but \\(\\Psi=(1,2,0)\\) has just two maximal translated intervals: rows \\(\[0,2)\\) have displacement \\(+1\\), and row \\(\[2,3)\\) has displacement \\(-2\\). The partition of equation (3) is the one the runs induce. Adjacent pieces can share a shift.
 
 ### 2.1 What the intervals cost to store
 
@@ -7872,7 +7812,7 @@ This is a complexity theorem for inversion, not merely compressibility.
 
 **How directly does it apply to bzip2?** The theorem starts from run-length BWT. mibz2 reconstructs the byte sequence \\(L\\) after MTF (undoing bzip2's move-to-front coding, the stage before the inverse BWT), so discovering the runs involves examining \\(n\\) bytes. bzip2's MTF codes already mark where each run starts, so the runs could instead be listed while decoding ([a follow-up post](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>)). Given \\(L\\) and its counts, the runs can be enumerated in \\(O(n)\\) time, and the capped structure built from them in \\(O(r)\\), giving an \\(O(n+r)=O(n)\\) path with \\(O(r)\\) navigation storage, when the input sequence and output buffer are accounted for separately. This does not make the entire decompressor \\(O(r)\\) total memory. Linear asymptotic construction does not mean lower constant cost than mibz2's fused counting-sort builder.
 
-The single-cycle amortisation argument applies directly to primitive strings, those that are not a repetition of a shorter string. Periodic cyclic BWTs may have several cycles ([appendix section 6](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)); mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity. Brown and Langmead's [Orbit library](<https://github.com/drnatebrown/orbit>) implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.
+The single-cycle amortisation argument applies directly to primitive strings, those that are not a repetition of a shorter string. Periodic cyclic BWTs may have several cycles ([appendix section 6](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces>)); mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity. Brown and Langmead's Orbit library[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#orbit] implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.
 
 So there exists a mathematically established family of navigation structures whose storage scales with BWT runs rather than rows, and that supports efficient repeated successor traversal without a fresh general predecessor search on each step.
 
@@ -7904,15 +7844,35 @@ The general lesson is that a table walked in order can often be replaced by less
 
 ---
 
-**Sources:**
+**Research records:** [the technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>), the secondary derivations, bounds and checks, with their equations; [*Building a smaller bzip2 decoding table: from 49 instructions to 12*](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-04-compact30-constructor/index.md>) (4 November 2026), the compact30 architecture and builder evidence.
 
-- [Technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>): the secondary derivations, bounds and checks, with their equations.
-- [Daniel Tamayo Jiménez, *Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](<https://arxiv.org/abs/2310.19732>), PhD thesis (2023): weak order and parabolic quotients.
-- [Takaaki Nishimoto and Yasuo Tabei, *Optimal-Time Queries on BWT-runs Compressed Indexes*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>), ICALP 2021, LIPIcs 198, 101:1–101:15: constant-time move structures.
-- [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>), SEA 2026, LIPIcs 371, paper 9: length capping, and inversion in \\(O(n)\\) time and \\(O(r)\\) space.
-- [Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, *A Survey of the Bijective Burrows–Wheeler Transform*](<https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html>) (2025), in the Festschrift for Giovanni Manzini, OASIcs 131: cyclic BWT and necklace enumeration.
-- [Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, *Slashing the Time for BWT Inversion*](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>), DCC 2012, pp. 99–108: multi-chain and multi-character inversion.
-- [*Building a smaller bzip2 decoding table: from 49 instructions to 12*](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-04-compact30-constructor/index.md>) (4 November 2026): compact30 architecture and builder evidence.
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#kkp]: Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, [*Slashing the Time for BWT Inversion*](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>) researchportal.helsinki.fi
+
+    DCC 2012, pp. 99–108. Multi-chain and multi-character inversion: following many chains at once so their memory reads overlap.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#nt]: Takaaki Nishimoto and Yasuo Tabei, [*Optimal-Time Queries on BWT-runs Compressed Indexes*](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) drops.dagstuhl.de
+
+    ICALP 2021, LIPIcs 198, 101:1–101:15. Constant-time move structures: a walk's steps in constant time and \\(O(r)\\) machine words.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#bl]: Nathaniel K. Brown and Ben Langmead, [*Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) drops.dagstuhl.de
+
+    SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](<https://arxiv.org/abs/2602.11029>)). Length capping, and inversion in \\(O(n)\\) time and \\(O(r)\\) space.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#tamayo]: Daniel Tamayo Jiménez, [*Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](<https://arxiv.org/abs/2310.19732>) arxiv.org
+
+    PhD thesis (2023). Weak order and parabolic quotients.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#bijective]: Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, [*A Survey of the Bijective Burrows–Wheeler Transform*](<https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html>) drops.dagstuhl.de
+
+    (2025), in the Festschrift for Giovanni Manzini, OASIcs 131. The cyclic BWT and necklace enumeration.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/#orbit]: Nathaniel K. Brown and Ben Langmead, [Orbit](<https://github.com/drnatebrown/orbit>) github.com
+
+    A library implementing move-structure variants; not a verified drop-in replacement for mibz2's Rust T-vector.
 
 ← [The mathematical structure of inverse-BWT navigation](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-08-inverse-bwt-navigation/index.md>)
 
@@ -9170,6 +9130,8 @@ The design above is the second one. The first put every message on one PR, \#145
 
 **A new run displaced the one in progress, and nothing caught the loss.** The automation keeps one current run per task. When an event arrived while a long run was still working, the new run took its place, and the earlier one stopped without an error, a partial result or any record of what it had read. There was no dead-letter queue to catch it. That evening six briefs to the Optimiser went this way. Each run started and began reading, and each was overtaken within two or three minutes: by the other agents' reviews of the same checkpoint, by a bot, or by a merge. None of them committed anything. From outside, it simply looked as if the Optimiser had gone quiet.
 
+**A dead-letter queue** is the post office's room for letters that can be neither delivered nor returned. A message system keeps one so that a failed message is set aside where someone can find it. The first design had none, so a displaced run left no trace.
+
 **Routing by header was brittle.** Each agent decided from `TO:` and `TYPE:` lines whether a comment was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded exactly right for both, and a message that failed the test was dropped without trace.
 
 **Noise spent the wakes.** Every one of those runs counts against a task's use of the automation, and on a busy board most of them went on comments the agent then ignored.
@@ -9208,9 +9170,13 @@ Both mistakes have the same shape: an agent's report of its own action is a clai
 | `audit` | every message on \#145 and the inboxes since the inbox cutover | in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
 | the tripwire | each new comment on \#145 or an inbox, checked by a GitHub Actions workflow that runs independently of the Coordinator | in use as a record: a failing check on \#145's head until the next commit there; no event for the Coordinator |
 
-The first four are one stdlib script, [`coord.py`](<https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py>), added in [\#186](<https://github.com/lmmx/mibz2/pull/186>), and the repository's `CLAUDE.md` says when the Coordinator runs each one. (`TYPE: QUEUED` is a staging label added with the inboxes: work for a busy role waits on \#145 until the Coordinator dispatches it.) The script only reads: it never posts, edits or deletes. The tripwire can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never dispatches anything itself, so it can't create work of its own.
+The first four are one stdlib script, [`coord.py`](<https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py>), added in [\#186](<https://github.com/lmmx/mibz2/pull/186>), and the repository's `CLAUDE.md` says when the Coordinator runs each one. The script only reads: it never posts, edits or deletes. The tripwire can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never dispatches anything itself, so it can't create work of its own.
 
-The tripwire needed the same treatment as everything else. A workflow started by a comment runs only from master, so each version could be tested only after it merged. The Coordinator tested each one with a deliberate, labelled misroute on \#145, and each test found something that the code and its unit tests hadn't. (A check run is one line in a PR's list of checks. GitHub groups a workflow's check runs into a check suite, and the Coordinator's subscription hears only when a suite finishes.)
+**QUEUED** marks work that must wait its turn. While a role is busy, its next brief is set down on \#145, and the Coordinator carries it to the role's inbox once the role is free.
+
+The tripwire needed the same treatment as everything else. A workflow started by a comment runs only from master, so each version could be tested only after it merged. The Coordinator tested each one with a deliberate, labelled misroute on \#145, and each test found something that the code and its unit tests hadn't.
+
+**A check run** is one line in a pull request's list of checks. GitHub gathers a workflow's runs into a suite, and the Coordinator hears only when a whole suite finishes.
 
 - **The first** was classified correctly, and then its warning couldn't be posted: \#145 is locked, and the Actions bot can't comment on a locked conversation.
 - **The second** raised a failing check run on \#145 instead. The check showed red, but nothing woke the Coordinator.

@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=026407036b27">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=026407036b27">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1392,6 +1394,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         6. What happens next?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
       </span>
     </span>
   </a>
@@ -3049,6 +3062,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#compendium" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3090,7 +3114,10 @@
 </div>
 <p>The claimed proof of the Riemann Hypothesis announced on 20 November draws on a wide toolkit. An independent map of it lists about fifty established techniques, from Parseval's identity in 1799 to the Gan–Gross–Prasad conjectures in 2012. They come from nine branches of mathematics, and twenty-one of them predate 1950. Exactly one entry is marked as the claimed new mechanism. The argument's weight is not where its code is either. Analytic number theory takes 1.4% of the formal proof's lines but an estimated 11% of the argument.</p>
 <p>mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against <em>recency bias</em>, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.</p>
-<p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a>). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.</p>
+<p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a><sup id="fnref:lean"><a class="footnote-ref" href="#fn:lean">2</a></sup>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a><sup id="fnref:tao"><a class="footnote-ref" href="#fn:tao">3</a></sup>). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.</p>
+<aside class="il-gloss">
+<p><strong>Mathlib</strong> is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.</p>
+</aside>
 <p><strong>The takeaways:</strong></p>
 <ul>
 <li><strong>One new mechanism, about fifty old ones.</strong> The proof composes one new idea with established results from two centuries of mathematics. Two fifths of those results predate 1950.</li>
@@ -3100,8 +3127,8 @@
 </ul>
 <p><a href="../2026-11-21-besieging-hard-problems/">Our earlier post</a> and our <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">research journal</a> set out the proof's shape as twelve levers. This post is about its toolkit.</p>
 <h2 id="1-what-is-in-the-proofs-toolkit">1. What is in the proof's toolkit?<a class="headerlink" href="#1-what-is-in-the-proofs-toolkit" title="Permanent link">&para;</a></h2>
-<p>Eyal Weiss's <a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">anatomy of the claim</a> maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.</p>
-<p>Its timeline lists 50 established techniques and one entry marked as the claimed new mechanism: multiplicity from iterated theta lifts, in 2026.</p>
+<p>Eyal Weiss's <a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">anatomy of the claim</a><sup id="fnref:weiss"><a class="footnote-ref" href="#fn:weiss">1</a></sup> maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.</p>
+<p>Its timeline lists 50 established techniques and one entry marked as the claimed new mechanism: <span class="il-rubric">multiplicity from iterated theta lifts</span>, in 2026.</p>
 <figure class="bf-fig" id="timeline">
 <p class="bf-title">Fifty established techniques and one new mechanism, by the year each idea appeared</p>
 <svg viewBox="0 0 720 248" role="img" aria-label="Timeline of 50 established techniques from 1799 to 2012, 21 of them before 1950, with RH for curves over finite fields in 1948 and Stepanov's method in 1969 highlighted, and one new mechanism in 2026."><line x1="57.5" y1="30" x2="57.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="57.5" y="208" class="bf-tm" text-anchor="middle">1800</text><line x1="126.25" y1="30" x2="126.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="126.25" y="208" class="bf-tm" text-anchor="middle">1825</text><line x1="195.0" y1="30" x2="195.0" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="195.0" y="208" class="bf-tm" text-anchor="middle">1850</text><line x1="263.75" y1="30" x2="263.75" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="263.75" y="208" class="bf-tm" text-anchor="middle">1875</text><line x1="332.5" y1="30" x2="332.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="332.5" y="208" class="bf-tm" text-anchor="middle">1900</text><line x1="401.25" y1="30" x2="401.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="401.25" y="208" class="bf-tm" text-anchor="middle">1925</text><line x1="470.0" y1="30" x2="470.0" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="470.0" y="208" class="bf-tm" text-anchor="middle">1950</text><line x1="538.75" y1="30" x2="538.75" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="538.75" y="208" class="bf-tm" text-anchor="middle">1975</text><line x1="607.5" y1="30" x2="607.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="607.5" y="208" class="bf-tm" text-anchor="middle">2000</text><line x1="676.25" y1="30" x2="676.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="676.25" y="208" class="bf-tm" text-anchor="middle">2025</text><line x1="470.0" y1="24" x2="470.0" y2="190" style="stroke:var(--bf-ink);stroke-width:1.5;stroke-dasharray:5 3"/><text x="464.0" y="22" class="bf-tm" text-anchor="end">21 before 1950</text><text x="476.0" y="22" class="bf-tm" text-anchor="start">29 after</text><circle cx="54.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="60.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="115.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="137.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="192.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="214.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="258.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="283.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="283.0" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="318.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="324.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="382.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="382.0" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="401.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="412.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="428.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="431.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="459.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="464.5" cy="170" r="5.5" style="fill:var(--bf-green)"/><circle cx="464.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="467.25" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="472.75" cy="131" r="4.5" style="fill:var(--bf-steel)"/><circle cx="475.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="478.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="494.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="503.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="505.75" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="505.75" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="508.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="508.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="522.25" cy="170" r="5.5" style="fill:var(--bf-green)"/><circle cx="530.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="533.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="533.25" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="536.0" cy="131" r="4.5" style="fill:var(--bf-steel)"/><circle cx="536.0" cy="118" r="4.5" style="fill:var(--bf-steel)"/><circle cx="549.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="549.75" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="552.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="555.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="563.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="563.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="569.0" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="577.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="577.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="580.0" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="585.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="596.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="624.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="640.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><rect x="673.0" y="150" width="12" height="12" transform="rotate(45 679.0 156)" style="fill:var(--bf-amber)"/><text x="460.5" y="108" class="bf-tm" text-anchor="end" style="font-size:11px">RH for curves (1948)</text><line x1="464.5" y1="112" x2="464.5" y2="148" style="stroke:var(--bf-green);stroke-width:1"/><text x="526.25" y="98" class="bf-tm" text-anchor="start" style="font-size:11px">Stepanov (1969)</text><line x1="522.25" y1="102" x2="522.25" y2="140" style="stroke:var(--bf-green);stroke-width:1"/><text x="677.0" y="134" class="bf-t-strong" text-anchor="end" style="font-size:11.5px">new (2026)</text><circle cx="40" cy="232" r="4.5" style="fill:var(--bf-steel)"/><text x="50" y="236" class="bf-tm" text-anchor="start">established technique</text><circle cx="220" cy="232" r="5.5" style="fill:var(--bf-green)"/><text x="230" y="236" class="bf-tm" text-anchor="start">the solved case and its method</text><rect x="445" y="226" width="10" height="10" transform="rotate(45 450 231)" style="fill:var(--bf-amber)"/><text x="462" y="236" class="bf-tm" text-anchor="start">the claimed new mechanism</text></svg>
@@ -3138,6 +3165,7 @@
 </figure>
 
 <p>Some of these are classical in the sense this post means:</p>
+<p><img class="il-beast il-beast-r" src="../../assets/images/bestiary/striped-amphisbaena-roundel.svg" alt=""></p>
 <ul>
 <li><strong>Combinatorics on words.</strong> Christoffel words (1875) and Sturmian sequences (Morse and Hedlund, 1940) give the two-letter blocks whose inversion is pure arithmetic. The Chen–Fox–Lyndon factorisation (1958) underlies the bijective BWT.</li>
 <li><strong>Continued fractions and the Euclidean algorithm.</strong> On a two-letter Sturmian block, Rauzy induction <em>is</em> the Euclidean algorithm, and the block has a grammar of size O(log n).</li>
@@ -3146,20 +3174,24 @@
 </ul>
 <p>The later tools in the figure, recompression (Jeż, 2015) and string attractors (Kempa and Prezza, 2018), are useful, but a search that reaches only for them is the bias in action.</p>
 <h2 id="5-how-does-a-broad-toolkit-get-used-well">5. How does a broad toolkit get used well?<a class="headerlink" href="#5-how-does-a-broad-toolkit-get-used-well" title="Permanent link">&para;</a></h2>
-<p>Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An <a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">illustrated guide</a> to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:</p>
+<p>Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An <a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">illustrated guide</a><sup id="fnref:guide"><a class="footnote-ref" href="#fn:guide">4</a></sup> to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:</p>
 <figure class="bf-fig" id="stepanov">
 <p class="bf-title">The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers</p>
 <svg viewBox="0 0 720 298" role="img" aria-label="Stepanov's proof for curves over a finite field, row by row, and its substitute over the integers: vanishing to order m becomes divisibility of an m-fold iterated theta lift, from automorphic forms; counting degrees becomes Bost's slope inequality, from Arakelov geometry; finite extensions become layers of a cyclotomic tower, from Iwasawa theory; upper bounds suffice becomes a localized Landau theorem."><defs><marker id="si-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--bf-muted)"/></marker></defs><text x="110" y="22" class="bf-ts" text-anchor="middle">Stepanov, curves over 𝔽</text><text x="395" y="22" class="bf-ts" text-anchor="middle">the proof, over ℤ</text><text x="625" y="22" class="bf-ts" text-anchor="middle">tools from</text><rect x="10" y="38" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="69" class="bf-t" text-anchor="middle" style="font-size:12.5px">vanishing to order m</text><line x1="212" y1="64" x2="268" y2="64" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="38" width="250" height="52" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:2"/><text x="395" y="61" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">divisibility of an m-fold</text><text x="395" y="78" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">iterated theta lift</text><line x1="522" y1="64" x2="540" y2="64" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="61" class="bf-tm" text-anchor="middle" style="font-size:11.5px">theta lifts on unitary</text><text x="625" y="78" class="bf-tm" text-anchor="middle" style="font-size:11.5px">groups (automorphic forms)</text><rect x="10" y="102" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="133" class="bf-t" text-anchor="middle" style="font-size:12.5px">counting degrees</text><line x1="212" y1="128" x2="268" y2="128" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="102" width="250" height="52" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:2"/><text x="395" y="133" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">Bost’s slope inequality</text><line x1="522" y1="128" x2="540" y2="128" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="125" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Arakelov geometry,</text><text x="625" y="142" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Euclidean lattices</text><rect x="10" y="166" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="197" class="bf-t" text-anchor="middle" style="font-size:12.5px">finite extensions of 𝔽</text><line x1="212" y1="192" x2="268" y2="192" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="166" width="250" height="52" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:2"/><text x="395" y="189" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">layers of a cyclotomic</text><text x="395" y="206" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">tower of fields</text><line x1="522" y1="192" x2="540" y2="192" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="189" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Iwasawa theory,</text><text x="625" y="206" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Ferrero–Washington</text><rect x="10" y="230" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="261" class="bf-t" text-anchor="middle" style="font-size:12.5px">“upper bounds suffice”</text><line x1="212" y1="256" x2="268" y2="256" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="230" width="250" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:2"/><text x="395" y="253" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">a localized theorem</text><text x="395" y="270" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">of Landau type</text><line x1="522" y1="256" x2="540" y2="256" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="261" class="bf-tm" text-anchor="middle" style="font-size:11.5px">analytic number theory</text></svg>
 <figcaption>The four rows are the guide's dictionary, quoted. The fields on the right are where each substitute's tools come from, read from the guide's flow diagram. A reading of the proof's architecture, not a verified dependency graph.</figcaption>
 </figure>
 
+<p>We read the guide beside <a href="https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf">a working draft that explains the proof for the zeta function</a><sup id="fnref:zeta"><a class="footnote-ref" href="#fn:zeta">5</a></sup>.</p>
 <p>Each distant theory in the toolkit entered because one row needed a substitute. Iwasawa theory and the Ferrero–Washington theorem (1979) entered because Stepanov passes to all finite extensions of a field, and the proof needed a tower of fields instead.</p>
+<aside class="il-gloss">
+<p><strong>Iwasawa theory</strong> follows the arithmetic of a number field up an infinite tower of extensions, each of degree p over the last, and finds that it grows in a regular pattern. Ferrero and Washington proved in 1979 that for the towers built from roots of unity over abelian fields, one constant of that pattern, μ, is zero.</p>
+</aside>
 <p>We use the same mechanism. Each research chain starts from a <em>solved case</em>, a kind of block whose inversion is cheap:</p>
 <ul>
 <li>a perfectly clustering block, one run per letter;</li>
 <li>a two-letter Sturmian block;</li>
 <li>a periodic text;</li>
-<li>one of Open's thick strips, which collapses in one jump.</li>
+<li>one of <a href="../2026-11-19-open-returns/">Open</a>'s thick strips, which collapses in one jump.</li>
 </ul>
 <p>The chain writes the cheap inversion as explicit steps, runs it on real blocks, and finds which steps fail. A failing step names the ingredient to search for, in mathematics of any era. Our <a href="../2026-11-20-where-the-decoding-work-goes/">cost map</a> of the Wikidata benchmark already says where the first steps fail:</p>
 <figure class="bf-fig" id="our-dictionary">
@@ -3170,21 +3202,42 @@
 
 <p>The economics are unchanged. Our charter's rule of <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">mathematical maximalism</a> holds: unlimited ambition in the mathematics that discovers a decoder, strict economy in the decoder that runs. A chain whose substitutes hold but don't yet pay goes to the <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/FRONTIER.md#foundational">Foundational list</a>. Native timing on our test machine, an i9-10900K, is the final word.</p>
 <h2 id="6-what-happens-next">6. What happens next?<a class="headerlink" href="#6-what-happens-next" title="Permanent link">&para;</a></h2>
-<p>The breadth-oriented team, Kitchen Sink, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">its first round</a> has been audited. Neither has a result from the new method yet.</p>
+<p>The breadth-oriented team, <a class="il-ref" href="https://github.com/lmmx/mibz2/blob/110eccb96/docs/team/research-charter/launches/2026-11-20-carbon-kitchen-sink.md">Kitchen Sink</a>, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">its first round</a> has been audited. Neither has a result from the new method yet.</p>
 <p>The first thing to report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps carry the argument. If our chains turn out to draw only on the last thirty years, that will be a finding too.</p>
-<hr />
-<p><strong>Sources:</strong>
-<a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">Weiss's anatomy of the claimed proof</a> (a text scan, with AI-assisted importance estimates);
-<a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">the architecture guide</a>;
-<a href="https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf">the proof explained for the zeta function</a>, by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon at the behest of Michael O. Rubinstein (working draft, 21 November 2026);
-<a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">the Lean community's statement</a>;
-<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Terence Tao on the claim</a>.</p>
 <p><strong>Research records:</strong>
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">the twelve levers</a>;
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md">working backwards and the cost map</a>;
-<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-rauzy-veech.md">the Rauzy–Veech literature</a> and <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-lyndon-literature.md">the Lyndon literature</a>;
+<a class="il-ink il-c1" href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-rauzy-veech.md">the Rauzy–Veech literature</a> and <a class="il-ink il-c4" href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-lyndon-literature.md">the Lyndon literature</a>;
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">the research method</a>;
 <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">the interval-exchange team's first round</a>.</p>
+<p class="il-rule" aria-hidden="true">❦</p>
+
+<h2 class="il-compendium" id="compendium"><span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks<a class="headerlink" href="#compendium" title="Permanent link">&para;</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:weiss">
+<p><a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">Eyal Weiss, anatomy of the claimed proof</a> <span class="il-host">eyal-weiss.github.io</span></p>
+<p>A map of the branches of mathematics the claimed proof draws on, and when each technique appeared. It is a text scan of the Lean archive, not a build or a verification, and its importance weights are AI-assisted estimates. This post's toolkit and code-share figures come from it.&#160;<a class="footnote-backref" href="#fnref:weiss" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:lean">
+<p><a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">The Lean community's statement</a> <span class="il-host">leanprover-community.github.io</span></p>
+<p>The Lean and Mathlib communities' announcement that the formal artifact is certified: Lean's kernel and several independent checkers accepted it. It certifies the formal proof, not anyone's understanding of the argument.&#160;<a class="footnote-backref" href="#fnref:lean" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:tao">
+<p><a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Terence Tao on the claim</a> <span class="il-host">terrytao.wordpress.com</span></p>
+<p>Tao's post of 20 November on the claim, cited for where human understanding of the argument stands.&#160;<a class="footnote-backref" href="#fnref:tao" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:guide">
+<p><a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">The architecture guide</a> <span class="il-host">nasqret.github.io</span></p>
+<p>An illustrated guide to the proof's architecture. It calls the proof's shape "Stepanov over ℤ" and gives the dictionary row by row; §5's first figure quotes it.&#160;<a class="footnote-backref" href="#fnref:guide" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:zeta">
+<p><a href="https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf">The proof explained for the zeta function</a> <span class="il-host">math.uwaterloo.ca</span></p>
+<p>A working draft (21 November 2026) by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon, at the behest of Michael O. Rubinstein, explaining the proof in the case of the zeta function.&#160;<a class="footnote-backref" href="#fnref:zeta" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
@@ -3345,19 +3398,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/bench.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/couriers.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/blog.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/frontier.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/observatory.js?v=026407036b27"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/katex.js?v=026407036b27"></script>
       
     
   </body>

@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=026407036b27">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=026407036b27">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3219,7 +3221,10 @@
 <p>Tracing every expensive row back to the byte it spells answered it. The repetitive JSON skeleton is already nearly free: keys are about a third of the text and about 1% of the rows that stand alone. Unique random statement IDs, about 5% of the text, hold about 62% of them. Hashes that are reused form small runs, one row per copy. So the obligation "follow retained rows one by one" is, in large part, the obligation to spell random strings (<a href="../2026-11-20-where-the-decoding-work-goes/">the post</a>).</p>
 <p>That reshaped an idea we had been circling: a zoo. Rather than one universal decoder, a repertoire of exact methods, each very good on one kind of structure, with the decoder recognising which applies. Repeated random strings might be copied once one copy is decoded; unique ones might be a true floor for any method that relies on repetition. Recognition has to be cheap, read from what the compressed block already gives us, and the first number to know is how much a perfect choice of method could save. An earlier attempt to tune Open per block found under 1% to gain, which is why that number comes first.</p>
 <h2 id="6-adapting-the-method-toy-missing-effect-native-surrogate">6. Adapting the method: toy, missing effect, native surrogate<a class="headerlink" href="#6-adapting-the-method-toy-missing-effect-native-surrogate" title="Permanent link">&para;</a></h2>
-<p>Today Levent Alpöge <a href="https://alpo.ge/remark.pdf">announced</a> that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. (<em>Update, 21 November:</em> the same day, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.) What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.</p>
+<p>Today Levent Alpöge <a href="https://alpo.ge/remark.pdf">announced</a> that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.</p>
+<aside class="il-gloss">
+<p><strong>Since then</strong> (a note of 21 November): the same day as the announcement, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.</p>
+</aside>
 <p>As he tells it, he started from a <em>toy</em> setting where the theorem was already known (the Riemann Hypothesis over function fields) and re-proved it in a new way chosen so the proof might travel. He then named the ingredient that the hard setting lacks: Stepanov's classical argument uses <em>multiplicity</em>, a polynomial vanishing to high order, which over the integers would be "something like differentiating whole numbers". The decisive step was to find a different mechanism, native to the hard setting, with the same effect: chains of theta lifts, each standing in for one order of multiplicity. The human held the analogy; the AI system supplied the technical mastery to build it.</p>
 <p>We have a toy setting of our own. When a block's last column has exactly one run per letter, its text is the coding of an especially simple interval exchange; Ferenczi and Zamboni proved that these "perfectly clustering" words are exactly the codings of symmetric interval exchanges, the structure our earlier kernels rest on. With two letters they are the Christoffel and Sturmian words, and their text needs no walk at all.</p>
 <p>Take the slope <span class="arithmatex">\(3/8\)</span>. Letter <span class="arithmatex">\(k\)</span> of the word is <span class="arithmatex">\(b\)</span> when <span class="arithmatex">\(\lfloor 3(k+1)/8 \rfloor - \lfloor 3k/8 \rfloor = 1\)</span> and <span class="arithmatex">\(a\)</span> otherwise, which for <span class="arithmatex">\(k = 0, \dots, 7\)</span> gives <code>aabaabab</code>. Sort its eight rotations and read the last column: <code>bbbaaaaa</code>, two runs, the smallest a column can have. A decoder that knew the slope would not need the column at all. It could write any letter of the text directly from its position, in any order, with no step depending on the one before. For an irrational slope <span class="arithmatex">\(\alpha\)</span> the same holds with <span class="arithmatex">\(\lfloor (k+1)\alpha \rfloor - \lfloor k\alpha \rfloor\)</span>: every output position is computed, not reached.</p>
@@ -3273,6 +3278,9 @@
 <p>With a few pieces the column stays wide, so a small cut barely damages the toy. With a thousand pieces the runs average two and a half rows, narrower than the random strings in our real blocks, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.</p>
 <p>There is a limit, which the research line also proved. Every text coded from a rotation has zero entropy: a handful of numbers describe it completely. Real blocks are not like that. A block with about 760 random statement IDs holds about 90,000 random bits, and no global coordinate can be smaller than the information it determines. So on real data the coordinate we are looking for cannot be a single number like <span class="arithmatex">\(k\alpha\)</span>. At best it describes the structured part, and the random strings must be paid for some other way.</p>
 <p>That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way <span class="arithmatex">\(k\alpha\)</span> does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of <span class="arithmatex">\(\alpha\)</span>, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.</p>
+<aside class="il-gloss">
+<p><strong>Ostrowski numeration</strong> writes a whole number as a sum of the denominators of <span class="arithmatex">\(\alpha\)</span>'s continued-fraction approximations, each taken at most as many times as the next partial quotient allows, as decimal writes it as a sum of powers of ten.</p>
+</aside>
 <h2 id="7-where-this-leaves-us">7. Where this leaves us<a class="headerlink" href="#7-where-this-leaves-us" title="Permanent link">&para;</a></h2>
 <p>Three pieces now fit together. The obligation register tells us what our present algorithms pay for. Importing mathematical structure tells us what other operations might exist. Toy-to-hard transfer tells us which missing effects those operations should try to reproduce.</p>
 <p>The method in one chain: model the obligations, because they decompose and algorithms don't; generate ideas from mathematical structure; judge them against the obligations, with acquisition counted and models treated as diagnostics; and when a phenomenon makes the problem easy somewhere, find what makes it easy, break it on purpose, and look for a different mechanism that recreates the effect where it is missing.</p>
@@ -3281,7 +3289,7 @@
 <hr />
 <p><strong>Research records:</strong></p>
 <ul>
-<li><a href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/METHOD.md">The research charter: method</a> and <a href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/FRONTIER.md">frontier and obligation register</a>.</li>
+<li><a class="il-ink il-c1" href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/METHOD.md">The research charter: method</a> and <a class="il-ink il-c3" href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/FRONTIER.md">frontier and obligation register</a>.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-toy-transfer.md">Toy, missing ingredient, native surrogate</a>, with the correction and the lanes experiment.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-working-backwards.md">Working backwards from the text</a>.</li>
 <li>Levent Alpöge, <a href="https://alpo.ge/remark.pdf">Remark</a> (20 November 2026), announcing the proof. On 20 November its Lean formalisation was reported accepted by three independent kernels (nanoda, con-leche <code>--verified</code>, pestka) in the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis".</li>
@@ -3447,19 +3455,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/bench.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/couriers.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/blog.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/frontier.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/observatory.js?v=026407036b27"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/katex.js?v=026407036b27"></script>
       
     
   </body>

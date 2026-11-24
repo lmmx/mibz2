@@ -125,6 +125,8 @@ The design above is the second one. The first put every message on one PR, \#145
 
 **A new run displaced the one in progress, and nothing caught the loss.** The automation keeps one current run per task. When an event arrived while a long run was still working, the new run took its place, and the earlier one stopped without an error, a partial result or any record of what it had read. There was no dead-letter queue to catch it. That evening six briefs to the Optimiser went this way. Each run started and began reading, and each was overtaken within two or three minutes: by the other agents' reviews of the same checkpoint, by a bot, or by a merge. None of them committed anything. From outside, it simply looked as if the Optimiser had gone quiet.
 
+**A dead-letter queue** is the post office's room for letters that can be neither delivered nor returned. A message system keeps one so that a failed message is set aside where someone can find it. The first design had none, so a displaced run left no trace.
+
 **Routing by header was brittle.** Each agent decided from `TO:` and `TYPE:` lines whether a comment was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded exactly right for both, and a message that failed the test was dropped without trace.
 
 **Noise spent the wakes.** Every one of those runs counts against a task's use of the automation, and on a busy board most of them went on comments the agent then ignored.
@@ -163,9 +165,13 @@ Both mistakes have the same shape: an agent's report of its own action is a clai
 | `audit` | every message on \#145 and the inboxes since the inbox cutover | in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
 | the tripwire | each new comment on \#145 or an inbox, checked by a GitHub Actions workflow that runs independently of the Coordinator | in use as a record: a failing check on \#145's head until the next commit there; no event for the Coordinator |
 
-The first four are one stdlib script, [`coord.py`](<https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py>), added in [\#186](<https://github.com/lmmx/mibz2/pull/186>), and the repository's `CLAUDE.md` says when the Coordinator runs each one. (`TYPE: QUEUED` is a staging label added with the inboxes: work for a busy role waits on \#145 until the Coordinator dispatches it.) The script only reads: it never posts, edits or deletes. The tripwire can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never dispatches anything itself, so it can't create work of its own.
+The first four are one stdlib script, [`coord.py`](<https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py>), added in [\#186](<https://github.com/lmmx/mibz2/pull/186>), and the repository's `CLAUDE.md` says when the Coordinator runs each one. The script only reads: it never posts, edits or deletes. The tripwire can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never dispatches anything itself, so it can't create work of its own.
 
-The tripwire needed the same treatment as everything else. A workflow started by a comment runs only from master, so each version could be tested only after it merged. The Coordinator tested each one with a deliberate, labelled misroute on \#145, and each test found something that the code and its unit tests hadn't. (A check run is one line in a PR's list of checks. GitHub groups a workflow's check runs into a check suite, and the Coordinator's subscription hears only when a suite finishes.)
+**QUEUED** marks work that must wait its turn. While a role is busy, its next brief is set down on \#145, and the Coordinator carries it to the role's inbox once the role is free.
+
+The tripwire needed the same treatment as everything else. A workflow started by a comment runs only from master, so each version could be tested only after it merged. The Coordinator tested each one with a deliberate, labelled misroute on \#145, and each test found something that the code and its unit tests hadn't.
+
+**A check run** is one line in a pull request's list of checks. GitHub gathers a workflow's runs into a suite, and the Coordinator hears only when a whole suite finishes.
 
 - **The first** was classified correctly, and then its warning couldn't be posted: \#145 is locked, and the Actions bot can't comment on a locked conversation.
 - **The second** raised a failing check run on \#145 instead. The check showed red, but nothing woke the Coordinator.

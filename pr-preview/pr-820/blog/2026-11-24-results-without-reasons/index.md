@@ -6,7 +6,7 @@ An essay says AI gives mathematics results without reasons. Two models read it a
 
 24 November 2026 · 11 min read · [Meta](<#5-where-things-stand>)
 
-In October the essayist doomslide published "Against Mathematics", a long polemic about what machines are doing to the subject. Its charge is that mathematics is splitting into results and reasons, and that the machines now produce the first without the second. I gave the essay to two models and asked each what it meant for mibz2's research. Within an afternoon each came back with a breakthrough for our decoder. Neither survived our own records:
+In October the essayist doomslide published ["Against Mathematics"](<https://doomslide.substack.com/p/against-mathematics>), a long polemic about what machines are doing to the subject. Its charge is that mathematics is splitting into results and reasons, and that the machines now produce the first without the second. I gave the essay to two models and asked each what it meant for mibz2's research. Within an afternoon each came back with a breakthrough for our decoder. Neither survived our own records:
 
 - **The first** proposed measuring the decoder's hard core in a new currency, cache misses. Our journal had already refuted that on this machine, three days earlier.
 - **The second** proposed moving many scattered rows of the block through the decoder together. Its lemma is true, and already known; as a decoder, it costs exactly as many steps as the walk it would replace.
@@ -114,7 +114,7 @@ What changes is the record each failed idea leaves. Our obstruction write-ups al
 
 **Sources:**
 
-- doomslide, "Against Mathematics: A religion of the dead, by the dead, for the dead", Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
+- doomslide, ["Against Mathematics: A religion of the dead, by the dead, for the dead"](<https://doomslide.substack.com/p/against-mathematics>), Substack, 24 October 2026. Quotations of Archimedes and Hilbert are from the essay.
 - [The source record](<https://github.com/lmmx/mibz2/blob/b643d28ed5f3e631260fbd4f086e64cbbc4df0bc/docs/journal/2026-11-24-against-mathematics-source.md>): the prompt, ChatGPT's and Claude's analyses verbatim, and descriptions of ChatGPT's figures.
 - [The ordered frontier and the transformation between decoders](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) and [abbreviation, batching and the block checksum](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>), the mathematician agent's records.
 - [Toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>), the lanes experiment, and [the retrospective](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-24-retrospective-proposal.md>) on the squared map.

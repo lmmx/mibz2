@@ -66,17 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=026407036b27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8e9a40c30886">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=026407036b27">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=026407036b27">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2023,10 +2025,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-where-to-read-more" class="md-nav__link">
+  <a href="#compendium" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Where to read more
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
       </span>
     </span>
   </a>
@@ -3039,10 +3041,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-where-to-read-more" class="md-nav__link">
+  <a href="#compendium" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Where to read more
+        <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks
       </span>
     </span>
   </a>
@@ -3103,10 +3105,10 @@
 <figcaption>Counted, not timed: medians over the 233 blocks of at least 65,536 rows in the Wikidata corpus. Amber and green are the peaks of letters whose word is longer than one byte, under Cells’ right-end order and under free steps first. Grey is the number of letters, long words or not, left once the free steps run out.</figcaption>
 </figure>
 
-<p><strong>What is classical and what is new.</strong> The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as <em>cutwidth</em>: line a graph's vertices up, cut the line between any two, and count the edges that cross. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says where the line between old and new falls.</p>
+<p><strong>What is classical and what is new.</strong> The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since<sup id="fnref:lopez"><a class="footnote-ref" href="#fn:lopez">1</a></sup><sup id="fnref:fick"><a class="footnote-ref" href="#fn:fick">2</a></sup>. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as <em>cutwidth</em><sup id="fnref:layout"><a class="footnote-ref" href="#fn:layout">3</a></sup>: line a graph's vertices up, cut the line between any two, and count the edges that cross. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says where the line between old and new falls.</p>
 <p><strong>What this is not.</strong> These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.</p>
 <p><strong>Why mibz2 cares.</strong> Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the run's report</a>), so the margin is small. <a href="../2026-11-16-lazy-letters/">Lazy letters</a> tested it: holding only the letters still in play, one block per thread beat the teams by 5% at ten threads, and mibz2 0.5.0 uses it from 8 threads up.</p>
-<p><a href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word">Section 1</a> works a nine-byte word by hand and draws its width. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says why only the long words count, and what is classical. <a href="#3-does-the-order-of-steps-matter">Section 3</a> compares twelve orders of steps, and <a href="#4-how-narrow-can-a-free-first-order-be">section 4</a> gives the bound and the theorem. <a href="#5-what-would-it-mean-for-mibz2">Section 5</a> says what is open, and <a href="#6-where-to-read-more">section 6</a> lists the reading.</p>
+<p><a href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word">Section 1</a> works a nine-byte word by hand and draws its width. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says why only the long words count, and what is classical. <a href="#3-does-the-order-of-steps-matter">Section 3</a> compares twelve orders of steps, and <a href="#4-how-narrow-can-a-free-first-order-be">section 4</a> gives the bound and the theorem. <a href="#5-what-would-it-mean-for-mibz2">Section 5</a> says what is open, and the <a href="#compendium">Compendium of Links</a> lists the reading.</p>
 <h2 id="1-what-does-the-rebuild-hold-on-a-nine-byte-word">1. What does the rebuild hold, on a nine-byte word?<a class="headerlink" href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word" title="Permanent link">&para;</a></h2>
 <p>Suppose you want to compress the word <code>possesses</code>. Its nine rotations, sorted, are its nine rows, and the last byte of each gives the last column <code>sspssseeo</code>. LF sends each row to the row of the rotation one byte earlier in the text:</p>
 <table>
@@ -3220,7 +3222,7 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
 </div>
 <figcaption>Definitions 1 and 2 are the classical first-return construction behind Rauzy–Veech induction, for which Viana’s survey (2006) is an introduction, in a finite, discrete form: rows instead of a real interval. Definition 3 is the research record’s, not the literature’s.</figcaption>
 </figure>
-<p><strong>What is classical.</strong> Inducing a map on a smaller set by its first return, and shrinking the set step by step, is Rauzy's induction (1979). Veech (1982) developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as <span class="arithmatex">\(a \mapsto ab\)</span>, was made explicit by Lopez and Narbel (1999). Choosing a different path of steps, instead of always cutting at one end, is the <em>branching</em> Rauzy induction of Dolce and Perrin (2017).</p>
+<p><strong>What is classical.</strong> Inducing a map on a smaller set by its first return<sup id="fnref:viana"><a class="footnote-ref" href="#fn:viana">4</a></sup>, and shrinking the set step by step, is Rauzy's induction (1979)<sup id="fnref:rauzy"><a class="footnote-ref" href="#fn:rauzy">5</a></sup>. Veech (1982)<sup id="fnref:veech"><a class="footnote-ref" href="#fn:veech">6</a></sup> developed its dynamical and geometric meaning. Writing the orbit segments as words, so that each step becomes a substitution such as <span class="arithmatex">\(a \mapsto ab\)</span>, was made explicit by Lopez and Narbel (1999)<sup id="fnref2:lopez"><a class="footnote-ref" href="#fn:lopez">1</a></sup>. Choosing a different path of steps, instead of always cutting at one end, is the <em>branching</em> Rauzy induction of Dolce and Perrin (2017)<sup id="fnref:dolce"><a class="footnote-ref" href="#fn:dolce">7</a></sup>.</p>
 <p><strong>What is new.</strong> That theory studies orbits, return times, invariant measures and coding. It does not ask how many words a computation must hold at once along a path of steps. Its usual setting also keeps the number of intervals fixed. In mibz2's discrete setting, a step between two letters of equal length deletes one, so the count falls as the rebuild goes on. The closest established ideas come from graph layout. Line up a graph's vertices in some order and cut the line after each prefix. The <em>cutwidth</em> of that order is the most edges any cut crosses, and <em>vertex separation</em> counts boundary vertices instead of edges. The least vertex separation over all orders equals the graph's <em>pathwidth</em> (<a href="https://doi.org/10.1016/0020-0190(92)90234-M">Kinnersley 1992</a>). Width here is the same kind of quantity, with the block's cycle of rows as the graph, its edges bundled into runs, and the kept rows as the prefix. Whether W is exactly a cutwidth is a conjecture. A stand-in for it, the runs crossing the cut upwards, peaks at 0.28 r over the 233 blocks. The exact count on 29 of them peaks at 0.31 r.</p>
 <p><strong>A trap in the terms.</strong> The geometric side of the theory draws each interval as a rectangle, in <em>zippered rectangles</em>, and calls the interval's length its rectangle's width. That is λ, a length, not a count of live words, and has nothing to do with W.</p>
 <h2 id="3-does-the-order-of-steps-matter">3. Does the order of steps matter?<a class="headerlink" href="#3-does-the-order-of-steps-matter" title="Permanent link">&para;</a></h2>
@@ -3250,17 +3252,6 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
 <li><strong>The closure without the steps.</strong> An equal-length step says that every row of one letter goes next to the other: a forced adjacency. Genome assemblers join every forced adjacency at once when they compact a graph's unbranched paths, called <em>unitigs</em>. That compaction does not depend on any order. The conjecture is that the free closure is exactly that compaction. If so, it could be computed without simulating any step.</li>
 </ul>
 <p>The width census and the order census are merged (<a href="https://github.com/lmmx/mibz2/pull/435">#435</a>, <a href="https://github.com/lmmx/mibz2/pull/437">#437</a>). The confluence proof, <a href="https://github.com/lmmx/mibz2/pull/438">#438</a>, is in review.</p>
-<h2 id="6-where-to-read-more">6. Where to read more<a class="headerlink" href="#6-where-to-read-more" title="Permanent link">&para;</a></h2>
-<p>In order of use for this question:</p>
-<ol>
-<li>Marcelo Viana, <a href="https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621">Ergodic theory of interval exchange maps</a>, <em>Revista Matemática Complutense</em> 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.</li>
-<li>Luis-Miguel Lopez and Philippe Narbel, Substitutions from Rauzy induction, in <em>Developments in Language Theory</em> (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.</li>
-<li>Francesco Dolce and Dominique Perrin, <a href="https://doi.org/10.1051/ita/2017004">Interval exchanges, admissibility and branching Rauzy induction</a>, <em>RAIRO – Theoretical Informatics and Applications</em> 51 (2017), 135–139 (<a href="https://arxiv.org/abs/1305.0120">arXiv</a>). Choosing among many paths of steps, the freedom section 3 uses.</li>
-<li>Jon Fickenscher, <a href="https://doi.org/10.24033/bsmf.2748">Decoding Rauzy induction: an answer to Bufetov's general question</a>, <em>Bulletin de la Société Mathématique de France</em> 145 (2017), 603–621 (<a href="https://arxiv.org/abs/1507.07481">arXiv</a>). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.</li>
-<li>Gérard Rauzy, <a href="https://doi.org/10.4064/aa-34-4-315-328">Échanges d'intervalles et transformations induites</a>, <em>Acta Arithmetica</em> 34 (1979), 315–328, and William A. Veech, <a href="https://doi.org/10.2307/1971391">Gauss measures for transformations on the space of interval exchange maps</a>, <em>Annals of Mathematics</em> 115 (1982), 201–242. The original papers; not the place to start for width.</li>
-<li>Josep Díaz, Jordi Petit and Maria Serna, <a href="https://doi.org/10.1145/568522.568523">A survey of graph layout problems</a>, <em>ACM Computing Surveys</em> 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.</li>
-</ol>
-<hr />
 <p><strong>Research records:</strong></p>
 <ul>
 <li>The width census and its programs: <a href="https://github.com/lmmx/mibz2/blob/f03b0fdca71abf45133d0720802ff3d3255a567a/docs/journal/monodromy/2026-11-15-width.md"><code>2026-11-15-width.md</code></a> (#435).</li>
@@ -3269,6 +3260,42 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
 <li>The thought experiment that defined width: <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900062843">the team channel, 15 November</a>.</li>
 <li>The run of a block per thread against teams at ten threads: <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the team channel, 15 November</a>.</li>
 </ul>
+<p class="il-rule" aria-hidden="true">❦</p>
+
+<h2 class="il-compendium" id="compendium"><span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks<a class="headerlink" href="#compendium" title="Permanent link">&para;</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:lopez">
+<p>Luis-Miguel Lopez and Philippe Narbel, <a href="https://doi.org/10.1142/9789812792464_0017">Substitutions from Rauzy induction</a> <span class="il-host">doi.org</span></p>
+<p>In <em>Developments in Language Theory</em> (DLT 1999, World Scientific), 200–209. Rauzy induction read as substitutions on words.&#160;<a class="footnote-backref" href="#fnref:lopez" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:lopez" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:fick">
+<p>Jon Fickenscher, <a href="https://doi.org/10.24033/bsmf.2748">Decoding Rauzy induction: an answer to Bufetov's general question</a> <span class="il-host">doi.org</span></p>
+<p><em>Bulletin de la Société Mathématique de France</em> 145 (2017), 603–621 (<a href="https://arxiv.org/abs/1507.07481">arXiv</a>). Despite the title, not about decompression: it shows how an interval exchange is recovered from the products of its induction's steps.&#160;<a class="footnote-backref" href="#fnref:fick" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:layout">
+<p>Josep Díaz, Jordi Petit and Maria Serna, <a href="https://doi.org/10.1145/568522.568523">A survey of graph layout problems</a> <span class="il-host">doi.org</span></p>
+<p><em>ACM Computing Surveys</em> 34 (2002), 313–356. Cutwidth, vertex separation and their relatives.&#160;<a class="footnote-backref" href="#fnref:layout" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:viana">
+<p>Marcelo Viana, <a href="https://doi.org/10.5209/rev_REMA.2006.v19.n1.16621">Ergodic theory of interval exchange maps</a> <span class="il-host">doi.org</span></p>
+<p><em>Revista Matemática Complutense</em> 19 (2006), 7–100. A survey, and the gentlest way in to first returns and Rauzy–Veech induction.&#160;<a class="footnote-backref" href="#fnref:viana" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:rauzy">
+<p>Gérard Rauzy, <a href="https://doi.org/10.4064/aa-34-4-315-328">Échanges d'intervalles et transformations induites</a> <span class="il-host">doi.org</span></p>
+<p><em>Acta Arithmetica</em> 34 (1979), 315–328. The original paper; not the place to start for width.&#160;<a class="footnote-backref" href="#fnref:rauzy" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:veech">
+<p>William A. Veech, <a href="https://doi.org/10.2307/1971391">Gauss measures for transformations on the space of interval exchange maps</a> <span class="il-host">doi.org</span></p>
+<p><em>Annals of Mathematics</em> 115 (1982), 201–242. The original paper on its dynamical and geometric meaning; not the place to start for width.&#160;<a class="footnote-backref" href="#fnref:veech" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:dolce">
+<p>Francesco Dolce and Dominique Perrin, <a href="https://doi.org/10.1051/ita/2017004">Interval exchanges, admissibility and branching Rauzy induction</a> <span class="il-host">doi.org</span></p>
+<p><em>RAIRO – Theoretical Informatics and Applications</em> 51 (2017), 135–139 (<a href="https://arxiv.org/abs/1305.0120">arXiv</a>). Choosing among many paths of steps, the freedom section 3 uses.&#160;<a class="footnote-backref" href="#fnref:dolce" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
@@ -3429,19 +3456,19 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/bench.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/couriers.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/blog.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/frontier.js?v=026407036b27"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/observatory.js?v=026407036b27"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8e9a40c30886"></script>
+        <script src="../../assets/javascripts/katex.js?v=026407036b27"></script>
       
     
   </body>

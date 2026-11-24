@@ -10,7 +10,9 @@ The claimed proof of the Riemann Hypothesis announced on 20 November draws on a 
 
 mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against *recency bias*, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.
 
-**Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>), which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.
+**Where things stand.** The proof is an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#lean], which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress ([Tao](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#tao]). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.
+
+**Mathlib** is the library of mathematics written in Lean by its community: definitions and proved theorems that a new proof builds on, each checked by Lean's kernel.
 
 **The takeaways:**
 
@@ -23,7 +25,7 @@ mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for f
 
 ## 1\. What is in the proof's toolkit?
 
-Eyal Weiss's [anatomy of the claim](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.
+Eyal Weiss's [anatomy of the claim](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#weiss] maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.
 
 Its timeline lists 50 established techniques and one entry marked as the claimed new mechanism: multiplicity from iterated theta lifts, in 2026.
 
@@ -78,20 +80,24 @@ The later tools in the figure, recompression (Jeż, 2015) and string attractors 
 
 ## 5\. How does a broad toolkit get used well?
 
-Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>) to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
+Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An [illustrated guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#guide] to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:
 
 The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers
 
 The four rows are the guide's dictionary, quoted. The fields on the right are where each substitute's tools come from, read from the guide's flow diagram. A reading of the proof's architecture, not a verified dependency graph.
 
+We read the guide beside [a working draft that explains the proof for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>)[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#zeta].
+
 Each distant theory in the toolkit entered because one row needed a substitute. Iwasawa theory and the Ferrero–Washington theorem (1979) entered because Stepanov passes to all finite extensions of a field, and the proof needed a tower of fields instead.
+
+**Iwasawa theory** follows the arithmetic of a number field up an infinite tower of extensions, each of degree p over the last, and finds that it grows in a regular pattern. Ferrero and Washington proved in 1979 that for the towers built from roots of unity over abelian fields, one constant of that pattern, μ, is zero.
 
 We use the same mechanism. Each research chain starts from a *solved case*, a kind of block whose inversion is cheap:
 
 - a perfectly clustering block, one run per letter;
 - a two-letter Sturmian block;
 - a periodic text;
-- one of Open's thick strips, which collapses in one jump.
+- one of [Open](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-19-open-returns/index.md>)'s thick strips, which collapses in one jump.
 
 The chain writes the cheap inversion as explicit steps, runs it on real blocks, and finds which steps fail. A failing step names the ingredient to search for, in mathematics of any era. Our [cost map](<https://lmmx.github.io/mibz2/pr-preview/pr-820/blog/2026-11-20-where-the-decoding-work-goes/index.md>) of the Wikidata benchmark already says where the first steps fail:
 
@@ -103,12 +109,32 @@ The economics are unchanged. Our charter's rule of [mathematical maximalism](<ht
 
 ## 6\. What happens next?
 
-The breadth-oriented team, Kitchen Sink, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; [its first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>) has been audited. Neither has a result from the new method yet.
+The breadth-oriented team, [Kitchen Sink](<https://github.com/lmmx/mibz2/blob/110eccb96/docs/team/research-charter/launches/2026-11-20-carbon-kitchen-sink.md>), adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; [its first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>) has been audited. Neither has a result from the new method yet.
 
 The first thing to report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps carry the argument. If our chains turn out to draw only on the last thirty years, that will be a finding too.
 
----
-
-**Sources:** [Weiss's anatomy of the claimed proof](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) (a text scan, with AI-assisted importance estimates); [the architecture guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>); [the proof explained for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>), by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon at the behest of Michael O. Rubinstein (working draft, 21 November 2026); [the Lean community's statement](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>); [Terence Tao on the claim](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>).
-
 **Research records:** [the twelve levers](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md>); [working backwards and the cost map](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md>); [the Rauzy–Veech literature](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-rauzy-veech.md>) and [the Lyndon literature](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-lyndon-literature.md>); [the research method](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md>); [the interval-exchange team's first round](<https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md>).
+
+❦
+
+## Compendium of Links
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#weiss]: [Eyal Weiss, anatomy of the claimed proof](<https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html>) eyal-weiss.github.io
+
+    A map of the branches of mathematics the claimed proof draws on, and when each technique appeared. It is a text scan of the Lean archive, not a build or a verification, and its importance weights are AI-assisted estimates. This post's toolkit and code-share figures come from it.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#lean]: [The Lean community's statement](<https://leanprover-community.github.io/blog/posts/riemann-hypothesis/>) leanprover-community.github.io
+
+    The Lean and Mathlib communities' announcement that the formal artifact is certified: Lean's kernel and several independent checkers accepted it. It certifies the formal proof, not anyone's understanding of the argument.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#tao]: [Terence Tao on the claim](<https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/>) terrytao.wordpress.com
+
+    Tao's post of 20 November on the claim, cited for where human understanding of the argument stands.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#guide]: [The architecture guide](<https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf>) nasqret.github.io
+
+    An illustrated guide to the proof's architecture. It calls the proof's shape "Stepanov over ℤ" and gives the dictionary row by row; §5's first figure quotes it.
+
+[^/mibz2/pr-preview/pr-820/blog/2026-11-22-two-centuries-of-tools/#zeta]: [The proof explained for the zeta function](<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf>) math.uwaterloo.ca
+
+    A working draft (21 November 2026) by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon, at the behest of Michael O. Rubinstein, explaining the proof in the case of the zeta function.
