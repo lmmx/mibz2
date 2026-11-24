@@ -79,3 +79,20 @@ Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `d0d0232` (`9e56347`, 
 
 - **Adopt §1a clause 6** (`d(D, c) ≤ d(Open, c)` per block) under stricter-wins.
 - **Do not duplicate `M-4a` or `M-7`:** fulfill `NEEDS M-4` directly (and test whether `ν′(x) = Θ(n)` extends `Λ_agg`'s closure to Stream N!), fulfill amended 3-part `N-0` + test `M-7`'s `≤ 7` prediction empirically, and audit Record 101 Theorem 3's run-record blindness condition (`L = "caab" ↔ "cbaa"`, `D = {2}` breaks `i, j ∉ D` when `D` exposes full run records rather than raw bytes).
+
+## Cycle 3 read — 2026-11-24T11:03Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` commits `2001f12` and `e48f904`:
+
+1. **`2001f12` — Record 102 §3 & `main-theorem.md` (`c₁` convention fixed):**
+   - Adopts Neon's stricter option (ii) from `N-1` break 3.3: `c₁` counts every 1-row-subject event in runs of *any* width, and links always count (`c₁(LF walk) = n`, `c₁(Open) ≥ m`, Record 98 L52 superseded).
+   - Makes `σ` three-way `(R, N, W)` and adds `c₁W c` to `Pmargin`.
+   - *Minor audit note:* `main-theorem.md` L82 introduces `c₁W` as an unbound symbol in `theorem main` (needs a `DW` / `W`-stream premise or definition) and L84 still prints `D.state c ∈ O(c.r)` instead of `≤ S c`.
+
+2. **`e48f904` — `channel/coordinator-to-neon.md` entry #3 & `channel/outside-review-2026-11-24.md` (full ChatGPT Pro review):**
+   - Recommends keeping `c₁` as rigid-calculus diagnostic while adding a dependent-miss conjunct `D_𝓗` (matching §1a clause 6), replacing finite `𝓕` with a uniform structural family (to exclude `𝓕`-indexed lookup advice), defining what `K` counts (working-array scans/sorts), and fixing the "no" to cover global E2.
+   - Directs Stream N screening of **three specific supplied capabilities** (measuring descriptor/anchor/exception counts on expensive rows `h₁` and `m₁₆` and full-path payoff *before* acquisition work):
+     1. Acyclic positional copy plans (LZ77 / Kempa–Prezza attractors and macro schemes, `q_copy`);
+     2. Compressed `SA`/`ISA` differences (`DSA`) with paid anchors (`g_{Δ,N} + s_N`, Kempa Thm 5.1 audit);
+     3. Ordered return-word hierarchies with paid exceptions (`(s, d, e)`, Durand / S-adic).
+   - *Peer-claim check:* our `N-8` (`8756c55`) directly rebuttals the review's concern (§4 L134–136) that `σ_hex` mixes in large repeated SHA1 width-1 content: repeated 40-hex SHA1s contribute only `3 / 145,800 B` (`0.00–0.01%` of `h₁`), and novel hex alone is `61.3–68.2%` of `h₁`. Its Model-I run-length sampling bias catch (L141: size-biased `k(1-p)²p^{k-1}` vs geometric `(1-p)p^{k-1}`) is mathematically exact (Record 96 L74 mixed them for `w ≥ 2`, while `w = 1` was right).
