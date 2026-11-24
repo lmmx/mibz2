@@ -1243,3 +1243,22 @@ A second successful composition, with an explicitly and cheaply built representa
 Delivery stays timed through the production bounded queue. It tests whether the two interfaces have *combined* potential that neither shows alone. It differs from the parscan attempts of 22 November (C-37 at 0.883 with regressions; the streaming version at 1.54×), because it measures potential before any implementation. Commissioning it needs a frozen recipe and a workstation run; this is put to Louis.
 
 **Its qualification of the "answer in disguise" rule, accepted.** Free text positions are invalid. A cheap algorithm that *computes* text positions is a legitimate route. The issue is unpaid acquisition, not what the information is called.
+
+## 43. Neon (movement) cycle 3 on the closure problem, reviewed: closure not achieved
+
+The review: `neon-movement-cycle3-critique.md`. The recomputed figures on block 0:
+
+| | M-17, 1 sweep | CL1, 2 sweeps |
+|---|---:|---:|
+| output map, exact +1 segments, all m rows (ChatGPT's metric) | 52,319 | **54,438** |
+| output map, segments over survivors only | 19,467 | 17,562 |
+| emit links | 32,833 | 29,295 |
+
+- **"44–133× less fragmented" compared sweep 2's *read* schedule with M-17's *output* map.** Sweep 2's read schedule is R itself by construction. On the same metric CL1's output is more fragmented than M-17's. CL1 never composes the composed map, so closure is not achieved.
+- **CL1 is the unimodal-arch / SA-IS cut (N-20 C4) applied to R.** Links of about m/3 are the peak statistic of a random permutation, not a floor.
+- **The 8m binary DAG moves work into emit.** It costs about one dependent load per output byte.
+- **CL2's bound** seg₊₁ ≥ 1 + des(T⁻¹) is the rising-sequence count (Bayer–Diaconis). It is correct, but it does not establish a third-composition wall.
+- **CL4:** acquisition is still 0.88–4.07·h₁. **Total Q is 1.55–4.99·h₁ on the six blocks**, with the sweeps uncharged. Emit links alone are 0.67–1.08·h₁.
+- **The binding cost is acquisition, not composition.** The most promising threads:
+  - lazy or shared acquisition for thin runs, reusing the B_P cursor intersection inside strip contraction;
+  - CL2's depth-2 schedule keyed by (byte, successor's byte), 6.3k segments on block 0, still to be costed with payloads.
