@@ -1,0 +1,293 @@
+/* The illuminated devices of "Playing the hand you're dealt" (blog/2026-11-22-
+   decompression-is-the-harder-problem), for any page to use where it chooses.
+
+   Nothing here applies to a page by default: every rule needs an il-* class that an author
+   writes into the Markdown, and the fonts download only on a page that sets text in them.
+   When each device is used is in .claude/skills/write-blog-post/SKILL.md, "Ornament".
+
+   The fonts in ../fonts/ are the Latin subsets Google Fonts serves, all under the SIL Open
+   Font License 1.1: EB Garamond (Georg Duffner, Octavio Pardo), Cinzel Decorative (Natanael
+   Gama) and Manufacturing Consent (Fredrick Brennan). */
+
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fonts/eb-garamond-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/eb-garamond-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/cinzel-decorative-700-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("../fonts/cinzel-decorative-900-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Manufacturing Consent";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/manufacturing-consent-400-latin.woff2") format("woff2");
+}
+
+/* The post's colours: lapis, fleuron green, rubric red, and five link inks for links that
+   sit side by side. Slate gets lighter values of each. */
+.md-typeset {
+  --il-lapis: #2346e0;
+  --il-leaf: #0f8a3c;
+  --il-leaf-light: #18a84a;
+  --il-rubric: #e0141d;
+  --il-ember: #e0101f;
+  --il-ember-edge: #1a0003;
+  --il-c: var(--il-lapis);
+  --il-serif: "EB Garamond", Georgia, "Iowan Old Style", serif;
+  --il-display: "Cinzel Decorative", "EB Garamond", Georgia, serif;
+  --il-black: "Manufacturing Consent", "EB Garamond", Georgia, serif;
+}
+[data-md-color-scheme="slate"] .md-typeset {
+  --il-lapis: #8aa2ff;
+  --il-leaf: #4cc27a;
+  --il-leaf-light: #6fd08c;
+  --il-rubric: #ff5a5f;
+  --il-ember: #ff2233;
+}
+.md-typeset .il-c1 { --il-c: #0047ff; }
+.md-typeset .il-c2 { --il-c: #8400ff; }
+.md-typeset .il-c3 { --il-c: #009e17; }
+.md-typeset .il-c4 { --il-c: #d63a00; }
+.md-typeset .il-c5 { --il-c: #0080c6; }
+[data-md-color-scheme="slate"] .md-typeset .il-c1 { --il-c: #7d9bff; }
+[data-md-color-scheme="slate"] .md-typeset .il-c2 { --il-c: #b98bff; }
+[data-md-color-scheme="slate"] .md-typeset .il-c3 { --il-c: #4fd16a; }
+[data-md-color-scheme="slate"] .md-typeset .il-c4 { --il-c: #ff8a5c; }
+[data-md-color-scheme="slate"] .md-typeset .il-c5 { --il-c: #5cc4ff; }
+
+/* An ordinary link in one of the five inks, for links that sit side by side:
+   [#160](url){ .il-ink .il-c1 }, [#161](url){ .il-ink .il-c2 } */
+.md-typeset a.il-ink {
+  color: var(--il-c);
+  text-decoration-color: color-mix(in srgb, var(--il-c) 45%, transparent);
+}
+.md-typeset a.il-ink:hover { color: var(--md-accent-fg-color); }
+
+/* A fleuron link: [MODE.md](url){ .il-ref } or { .il-ref .il-c2 }. The fleurons are not
+   underlined, and the link never breaks from them. */
+.md-typeset a.il-ref {
+  color: var(--il-c);
+  font: 700 0.98em/1.1 var(--il-display);
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-decoration-color: var(--il-lapis);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.md-typeset a.il-ref::before,
+.md-typeset a.il-ref::after {
+  display: inline-block;
+  color: var(--il-leaf);
+  font: 400 1.2em/1 var(--il-serif);
+  text-decoration: none;
+}
+.md-typeset a.il-ref::before { content: "❧"; margin-right: 0.18em; }
+.md-typeset a.il-ref::after { content: "☙"; margin-left: 0.18em; }
+.md-typeset a.il-ref:hover { color: var(--md-accent-fg-color); }
+/* a code word keeps its monospace inside a fleuron link: [`/teamwork`](url){ .il-ref } */
+.md-typeset a.il-ref code {
+  font-weight: 700;
+  letter-spacing: 0;
+  color: inherit;
+}
+
+/* A gloss: the explanation beside the line, in the editor's voice.
+   <aside class="il-gloss" markdown>**The BEAM** is the virtual machine ...</aside> */
+.md-typeset .il-gloss {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.55em;
+  margin: 0.4em 0 1.1em 1.4em;
+}
+.md-typeset .il-gloss::before {
+  content: "❧";
+  grid-row: 1 / span 20;
+  color: var(--il-leaf);
+  font: 400 1.15em/1.3 var(--il-serif);
+}
+.md-typeset .il-gloss > * { grid-column: 2; }
+.md-typeset .il-gloss p {
+  margin: 0 0 0.4em;
+  font: italic 1.12em/1.45 var(--il-serif);
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .il-gloss p:last-child { margin-bottom: 0; }
+.md-typeset .il-gloss p strong {
+  font: 700 0.82em/1 var(--il-display);
+  font-style: normal;
+  letter-spacing: 0.02em;
+  color: var(--il-lapis);
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .il-gloss { margin-left: 0.4em; }
+}
+
+/* Blackletter, for emphasis the original didn't have: a word or a short phrase.
+   il-black is plain; il-rubric is red with a dark edge and a tight glow; il-gild is ink with
+   a warm halo. */
+.md-typeset .il-black,
+.md-typeset .il-rubric,
+.md-typeset .il-gild {
+  font: 400 1.25em/1 var(--il-black);
+  letter-spacing: 0.01em;
+}
+.md-typeset .il-rubric {
+  color: var(--il-ember);
+  text-shadow: 1px 0 0 var(--il-ember-edge), -1px 0 0 var(--il-ember-edge),
+    0 1px 0 var(--il-ember-edge), 0 -1px 0 var(--il-ember-edge),
+    0 0 3px rgba(255, 40, 50, 0.55);
+}
+.md-typeset .il-gild {
+  padding: 0 0.04em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 0 4px rgba(255, 214, 120, 0.55);
+}
+
+/* A tight glow on ordinary type: a few pixels with a dark edge, never a haze. */
+.md-typeset .il-glow {
+  color: #7dff4f;
+  text-shadow: 1px 0 0 #031a00, -1px 0 0 #031a00, 0 1px 0 #031a00, 0 -1px 0 #031a00,
+    0 0 4px #39ff14;
+}
+.md-typeset .il-glow-ember {
+  color: var(--il-ember);
+  text-shadow: 1px 0 0 var(--il-ember-edge), -1px 0 0 var(--il-ember-edge),
+    0 1px 0 var(--il-ember-edge), 0 -1px 0 var(--il-ember-edge),
+    0 0 5px rgba(255, 40, 50, 0.7);
+}
+
+/* A traced creature, placed by eye: <img class="il-beast il-beast-r" src="..." alt="">.
+   It floats beside the text, never over it. */
+.md-typeset img.il-beast {
+  width: var(--il-beast-w, clamp(64px, 18vw, 150px));
+  height: auto;
+}
+.md-typeset img.il-beast-r { float: right; margin: 0 0 0.6em 1em; }
+.md-typeset img.il-beast-l { float: left; margin: 0 1em 0.6em 0; }
+.md-typeset img.il-beast-c { display: block; margin: 0.6em auto; }
+
+/* A fleuron rule between movements: <p class="il-rule" aria-hidden="true">❦</p> */
+.md-typeset .il-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  margin: 1.6em auto;
+  color: var(--il-leaf);
+  font: 400 1.15rem/1 var(--il-serif);
+}
+.md-typeset .il-rule::before,
+.md-typeset .il-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--il-leaf-light) 30%, var(--il-lapis) 70%, transparent);
+}
+
+/* The Compendium of Links. The post's last heading,
+     ## <span class="il-cap">C</span>ompendium of <span class="il-cap">L</span>inks { #compendium .il-compendium }
+   turns the footnotes after it into the compendium: write each citation as a footnote,
+   [^beam], and its entry as
+     [^beam]: [The BEAM](https://...) <span class="il-host">en.wikipedia.org</span>
+         What it is, and why it matters here.
+   The footnote's own number links down to it, and its ↩ back to the text. */
+.md-typeset h2.il-compendium {
+  margin: 2.4em 0 0.4em;
+  padding: 0.25em 0 0.2em;
+  text-align: center;
+  font: 700 clamp(1.05rem, 4.4vw, 1.4rem)/1.2 var(--il-display);
+  letter-spacing: 0.02em;
+  background: linear-gradient(170deg, #9fd0ff 0%, #3a7bff 35%, #1638c8 60%, #6aa8ff 80%, #1a2f9e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 #0a1450) drop-shadow(0 0 1px #0a1450);
+}
+.md-typeset h2.il-compendium .il-cap {
+  display: inline-block;
+  font: 900 2.1em/1.15 var(--il-display);
+  vertical-align: -0.2em;
+  padding: 0.06em 0.04em 0.1em;
+  margin: -0.1em -0.02em -0.12em -0.04em;
+  background: linear-gradient(160deg, #d8ecff, #3a7bff 50%, #0f2aa8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.md-typeset h2.il-compendium .headerlink { display: none; }
+.md-typeset h2.il-compendium + .il-rule { margin-top: 0.2em; }
+.md-typeset h2.il-compendium ~ .footnote {
+  font-size: inherit;
+  color: var(--md-default-fg-color);
+}
+.md-typeset h2.il-compendium ~ .footnote > hr { display: none; }
+.md-typeset h2.il-compendium ~ .footnote > ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: il-fn;
+}
+.md-typeset h2.il-compendium ~ .footnote > ol > li {
+  counter-increment: il-fn;
+  position: relative;
+  margin: 0 0 0.8em;
+  padding-left: 2em;
+  border-left: 2px solid transparent;
+  scroll-margin-top: 30vh;
+}
+.md-typeset h2.il-compendium ~ .footnote > ol > li::before {
+  content: counter(il-fn);
+  position: absolute;
+  left: 0;
+  width: 1.5em;
+  text-align: right;
+  font: 600 0.78em/2em var(--md-text-font-family, sans-serif);
+  color: var(--il-lapis);
+}
+.md-typeset h2.il-compendium ~ .footnote > ol > li:hover { border-left-color: var(--il-leaf-light); }
+.md-typeset h2.il-compendium ~ .footnote > ol > li:target {
+  background: color-mix(in srgb, var(--il-lapis) 8%, transparent);
+  border-radius: 8px;
+}
+.md-typeset h2.il-compendium ~ .footnote p {
+  margin: 0;
+  font: 1.12em/1.45 var(--il-serif);
+  overflow-wrap: anywhere;
+}
+.md-typeset h2.il-compendium ~ .footnote p > a:first-child {
+  font: 600 1.05em/1.4 var(--il-serif);
+  color: var(--il-lapis);
+  text-decoration-color: color-mix(in srgb, var(--il-lapis) 40%, transparent);
+  text-underline-offset: 2px;
+}
+.md-typeset .il-host {
+  margin-left: 0.3em;
+  font: 0.75em/1 var(--md-text-font-family, sans-serif);
+  color: var(--il-leaf);
+}
+.md-typeset h2.il-compendium ~ .footnote .footnote-backref {
+  color: var(--il-leaf-light);
+  text-decoration: none;
+}
