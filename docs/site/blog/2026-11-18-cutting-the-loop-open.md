@@ -39,7 +39,7 @@ The pieces are also few, because the open paths travel in *bundles* of neighbour
 
 The choice of rows to keep matters. On Wikidata the cut keeps every run of 16 rows or fewer. On a test block those are 93% of the runs but hold 10% of the rows. Keeping them therefore removes most of the places where neighbouring paths would split, while 90% of the rows stay on open paths.
 
-On Wikidata, one traced letter spells about sixteen. Over the large Wikidata blocks, bundles cover a median 88.7% of each block, and tracing one path per bundle reads 5.5% of it. Yet two blocks of nearly equal run density differ by 66% in that cost. Sixteen is the saving in finding the paths, not in decoding, because the decoder still writes every output byte. It also still builds and walks a table of the kept rows' returns, one entry per kept row.
+On Wikidata, one traced letter spells about sixteen. Over the large Wikidata blocks, bundles cover a median 88.7% of each block, and tracing one path per bundle reads 5.5% of it. Yet two blocks of nearly equal run density differ by 66% in that cost. Sixteen is the saving in <span class="il-black">finding</span> the paths, not in decoding, because the decoder still writes every output byte. It also still builds and walks a table of the kept rows' returns, one entry per kept row.
 
 The decoder built on it, in one decode of the test block, asked for about 40% less additional heap than eager Cells. Over the whole Wikidata benchmark, on one four-CPU cloud virtual machine without SMT siblings, it is 9–21% slower than eager Cells and 7–8% faster than lazy Cells. The test with many blocks competing for cache is still to come.
 
@@ -298,6 +298,8 @@ The open decoder beat lazy Cells at every worker count and lost to eager Cells a
 </figure>
 
 A cache simulation of the frozen block's decode counted 11% fewer instructions and 27% fewer first-level data-cache misses than eager Cells; those are simulated counts, not times. How much of the wall-time gap comes from building and walking the kept rows' table is not yet measured over the whole decode. Our reading, an **interpretation**, is that this table is the main cost eager Cells does not pay. The phase measurement shows its size on one block.
+
+<p class="il-rubric-head">Of the switch cut, that kept fewer rows and paid more to find them</p>
 
 **A smaller kept system is not always cheaper to build.** A harder cut, the *switch cut*, keeps only the rows where a path switches between narrow and wide runs. On the frozen block its output phase took half as long as the decoder's above. But its build took 3.6 times as long, because finding the narrow side's words meant tracing 58,581 more letters. The smaller system was real, and this way of reaching it was slower.
 

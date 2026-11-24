@@ -67,11 +67,13 @@ The band admits a block with r/n between 0.15 and 0.28 if Open's first pass stay
 
 A denser block also means more elimination work, so the port needs a bound on it. Open eliminates intervals by Rauzy–Veech steps: each step replaces the wider of two strips with the difference of their widths. No step ever makes a strip wider, so the widest strip at the start bounds every later step. A block whose strips are all at most 32,768 rows wide therefore runs the plain elimination loop unchanged. A block that fails this certificate takes a contracted loop instead. It treats a long *spiral*, a run of steps that peels one strip against the same partner, as one step, building its word by repeated squaring.
 
-On Wikidata no block fails the certificate, so the contracted loop never runs: it bounds the worst case and is not a speed-up.
+On Wikidata no block fails the certificate, so the contracted loop never runs: it <span class="il-black">bounds</span> the worst case and is not a speed-up.
 
 ## 3. Where do the extra buffers live?
 
 Admitting the dense blocks must not bring back the memory it saves. The research line's second idea, *EdgesMux*, places working buffers inside the `edges` array, which the kernel does not write until a late phase. Its lifetime argument (Theorem 19.1 of the [cycle 19 journal](https://github.com/lmmx/mibz2/blob/7d86bb8601800414b2e02a1bd37a493d5cde52c3/docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md)) is that each buffer's last read comes before `edges` is first written. Its verifier poisons each buffer after its last read, over 1,000 runs, and the output stays exact.
+
+<aside class="il-gloss" markdown>**To poison** a buffer is to spoil its contents on purpose once its last read is done, whereby any later read would show in the output. The output stayed exact over 1,000 runs; poisoned earlier, as a control, it breaks.</aside>
 
 Most of this was already in 0.5.10, which put the elimination's nodes in `edges` ([#692](https://github.com/lmmx/mibz2/pull/692)). The port moves the remaining buffer, the strips' image order, into the first words of `edges`, worth 27–28 KiB a worker. Its tests poison each region of `edges` after its last read, and the output stays exact; poisoned earlier, as a control, the output breaks.
 
@@ -118,6 +120,8 @@ The change came from Mechanisms, one of our AI research lines. Its cycle 19 buil
 </figure>
 
 **The memory claim held,** against a newer baseline. The line measured the ten-worker maximum heap falling from 9,979 KiB to 1,346 KiB against 0.5.8. By 0.5.10, however, the admitted blocks were already at about 1.3 MiB. The gain that remains is the dense blocks' fallback, which no longer allocates its table.
+
+<p class="il-rubric-head">Of a contention model that promised half, and a kernel that came in slower</p>
 
 **The speed predictions did not.** The contention model predicted the dense blocks would take under half the cycles, with a cache share of about 2 MiB per worker. Natively, on one thread, Open is slower than the fallback on these blocks, because with the cache to itself the fallback's full table is fast. With four workers in the container, Open takes 7.5% less time on them. On the i9 the whole decoder is faster from 8 threads up. That gain comes through the smaller working set, so it is spread over all blocks rather than concentrated in the five. The line's other claims shrank too. EdgesMux was worth 432 KiB against 0.5.8, yet most of it had already shipped in 0.5.10. The spiral contraction, for its part, never runs on Wikidata.
 
