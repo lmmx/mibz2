@@ -50,7 +50,9 @@ Throughout this document these are different objects, and none implies another:
    equivalence. Translating Rust into Lean (Aeneas, for example) is a later option, not part of
    this plan.
 4. **Cost:** time, memory and traffic. It stays an empirical question, decided by measurement on
-   the i9. A proof can suggest a cost model; it does not establish one.
+   the i9. A proof can suggest a cost model; it does not establish one. §5.9 states cost bounds
+   inside a stated model, beside the correctness theorems; the model's fit to the i9 stays
+   measured.
 
 ## 1. The shared specification
 
@@ -360,7 +362,8 @@ straight to the i9.
 blocks some test selects. This section keeps three things apart that are easy to merge: the
 routes that ship, the routes under research, and the reference they are all held to. It then
 gives the shape of a route's theorem, what to do when a conditional theorem does not give a fast
-decoder, and the census that would put numbers on each route.
+decoder, and the census that would put numbers on each route. §5.9 pairs each route's
+correctness theorem with a cost statement, and §5.10 makes contention a term of it.
 
 ### 5.1 Three levels
 
@@ -643,6 +646,119 @@ fixed, and the hypothesis returns transformed: weakened, certified, or replaced 
 representation that does not need it. This is an analogy for the method, not evidence for any
 route. [MODE.RATIONALE.md](../MODE.RATIONALE.md) ("Differential recurrence") already sets it out.
 
+### 5.9 Cost theorems beside correctness theorems
+
+*24 November 2026, at Louis's direction ("cost theorems look like a good idea … cost is just as
+important as correctness. Likewise, machine contention should be modeled … we just need to
+formalize them"). The method is from Bach, Black, Huiberts and Kafer, "Beyond Smoothed Analysis:
+Analyzing the Simplex Method by the Book" (arXiv 2510.21613, STOC), as read in
+[Jeremy Kun's review](https://www.jeremykun.com/shortform/2026-11-23-2007/).*
+
+Their method has three steps: observe the real implementation on real inputs; model both so that
+the model matches what was observed; then prove, with the assumptions fixed before the bounds.
+The bounds are stated in parameters that can be effectively estimated on real instances (their
+mean width, estimated from 100 random directions). A closing postmortem (their §6) audits the
+input assumptions, the model assumptions, the method and the outcomes against observation.
+METHOD.md §6a gives our records the same shape.
+
+**The pair.** Each route of §5.2 gets a cost statement beside `route_i`:
+
+```lean
+/-- block statistics, each cheaply measurable on a real block (which ones: not yet chosen) -/
+def θ : Column → Θ
+/-- the machine: workers W, the shared L3, memory bandwidth and the latency it meets -/
+structure Machine where ...
+/-- route i's cost on x in a stated cost model: work, dependent loads, DRAM bytes -/
+def cost_i : Machine → Column → ℝ
+
+theorem route_i      : ∀ x, P_i x → ∀ out, F_i x = some out → out = x.decode
+theorem route_i_cost : ∀ M x, P_i x → cost_i M x ≤ g_i (θ x) M
+```
+
+The bound is deterministic and conditional: it holds on every block with the given `θ`, not in
+expectation over some distribution of blocks. It is stated in model units, and the map from those
+units to i9 time is measured, with its interval (§0, item 4).
+
+**What a cost statement must carry.**
+1. **`θ`'s estimator and its cost.** Each component says how it is computed on a block, exactly
+   or from a sample of stated size, and what computing it costs. An estimate carries its error
+   into the bound.
+2. **`θ` measured on real blocks** of the bench's Wikidata corpus before any bound uses it. A
+   parameter that cannot be measured cheaply on a real block may appear inside a proof, not in
+   `g_i`.
+3. **An explicit machine term:** W, the shared L3 (20 MiB on the i9, so about L3/W a worker), and
+   memory bandwidth as DRAM bytes per output byte at W, meeting the latency of §5.10's model. A
+   bound without a machine term is a bound at W = 1, and says so.
+4. **A derived dispatch line.** Where two routes both apply, the line between them is where `g_i`
+   and `g_j` cross, given `θ` and the machine. PERFORMANCE-POLICY.md ("Adaptive dispatch is
+   fair") asks a rule to predict the cheaper route from properties observed at run time and to
+   hold on held-out data. A line derived from `g_i` meets the first by construction and is then
+   checked against the second. A line fitted with no `g_i` behind it stays admissible under that
+   policy; it is not a cost theorem.
+
+**Which `θ`: not chosen here.** By the book, the assumptions are fixed from observation before any
+bound. The observation is the block census registered on #145 (LOG 7126445058, amended by LOG
+7126478963): which cheaply measurable properties of a real Wikidata block predict the Open
+kernel's per-block emit and construct cost on the i9, scored on blocks held out by identity. Its
+verdict says whether a `θ` of at most three features exists for Open. Until it reports, no route
+has a `θ` and no `g_i` is written.
+
+**The first two routes:** Open (`Kernel::try_run` under `OpenCellsOf::cap`), where the census
+measures, and `Segmented`, the total path, against which every other route's `g_i` is compared.
+The cells kernels and the cooperative walks follow once these two have been compared on data.
+
+**Where the analogy doesn't transfer.**
+- *Determinism lives in the model, not the machine.* A bound in counts and bytes holds on every
+  block. What they cost in time varies with the run, the other workers and placement.
+- *The constants are not predictive at first.* A `g_i` with loose constants ranks routes before
+  it prices them, as the moonshot proxy ranks well and prices poorly (bench/moonshot/README.md).
+  It decides a dispatch line only once its constants are checked against i9 cost on held-out
+  blocks; until then it is diagnostic (METHOD.md §5).
+- *A parameter that predicts cost is not thereby its cause.* The census says which features a
+  test could manipulate (as r/n can) and which are only correlates (LOG 7126478963). `g_i` uses
+  parameters the construction's argument uses. A correlate that only predicts belongs in an
+  admission test `A_i`, not in the bound.
+
+**Changing a parameter mid-proof** (their §6.3, adopted). A parameter may change in the middle of
+a proof only when it refines the model of an assumption already made, and the refined parameter
+is then checked on data before the bound is used. A parameter that adds an assumption goes back
+to observation first.
+
+### 5.10 Contention as a model term
+
+**What master models.** The moonshot scorer's contention proxy (bench/moonshot/README.md §3,
+constants in `bench/moonshot/calibration.json`) is a cache and dependency model of one worker
+decoding one block. The LLC is 20 MiB / W. The DRAM latency is a queue in the memory controller's
+load, idle + k·U/(1 − U), with U the share of a 33.39 GB/s ceiling, idle 437.7 cycles and
+k = 38.28, fitted to bench-imc-ten's four (GB/s, latency) readings
+(`imc-ten/run-20261118T090842Z`, evidence fa9707e9). Each arm's latency is solved as a fixed
+point with its own bandwidth. κ, the L3-hit latency's rise per worker, fitted to 0, at its bound.
+The proxy is advisory: its rank agreement with the i9 is good and its magnitudes are not, and
+its calibration predates the repoint of its baseline to `OpenCells` (0.5.12), so its ratios are a
+ranking until it is refitted.
+
+**What is missing.** A cost model per route and per block that carries this term. The proxy
+predicts a kernel's ratio over the corpus, not a route's cost on a block with given `θ` at given
+W. §5.5 asks for DRAM bytes per output byte at 1 and 10 workers per route; no `g_i` takes them
+yet.
+
+**What the term must explain.** Two measured anomalies on the i9:
+- *Work removed, time unchanged at W = 10.* R5-Head's construction stack (#734, `bench-open-r5`)
+  at 10 threads: CPU 0.950 [0.940, 0.961], wall 1.000 [0.983, 1.017] (#145, LOG 7074713448); on
+  a later master, CPU 0.955, wall 0.968 [0.934, 1.004] (LOG 7077947832). That LOG reads the flat
+  wall as the 8–20-thread plateau, a serial or shared stage capping the pipeline; which of those
+  it is, is not established.
+- *Footprint added, time rising only with W.* T²'s emit over base's: E = 0.990 [0.982, 0.997] at
+  1 worker, 1.021 at 6, 1.219 [1.178, 1.261] at 10
+  ([2026-11-23-emit-cost-sq.md](../../journal/2026-11-23-emit-cost-sq.md), evidence a01d1f9c).
+  MONODROMY record 95 (#145, REVIEW 7099387596) attributes the rise to L3 capacity, conjectured:
+  T²'s extra 8m bytes a worker, at 10 workers, exceed what the 20 MiB L3 leaves for m ≥ 130k, and
+  base's own emit rises from 4.94 to 6.18 ns a row from 1 to 10 workers.
+
+A `g_i` with a W term has to predict both: no wall gain from removed work at W = 10, and a cost
+that appears only past about L3/W a worker. A model in instructions alone predicts neither (RULES
+C4: more instructions can buy overlap, locality or less contention).
+
 ## 6. Links
 
 - The hand proof: [docs/journal/2026-11-18-open-return/proof.md](../../journal/2026-11-18-open-return/proof.md)
@@ -655,3 +771,8 @@ route. [MODE.RATIONALE.md](../MODE.RATIONALE.md) ("Differential recurrence") alr
   `docs/journal/2026-11-22-carbon-kitchen-sink-cycle46.md` and
   `docs/journal/2026-11-22-carbon-kitchen-sink-cycle47.md`, with their directories
 - The analogy of §5.8: [MODE.RATIONALE.md](../MODE.RATIONALE.md), "Differential recurrence"
+- The method of §5.9: Bach, Black, Huiberts and Kafer, "Beyond Smoothed Analysis: Analyzing the
+  Simplex Method by the Book", [arXiv 2510.21613](https://arxiv.org/abs/2510.21613); the block
+  census that will fix `θ`: #145, LOG 7126445058 and LOG 7126478963
+- The contention model of §5.10: [bench/moonshot/README.md](../../../bench/moonshot/README.md) §3
+  and [calibration.json](../../../bench/moonshot/calibration.json)

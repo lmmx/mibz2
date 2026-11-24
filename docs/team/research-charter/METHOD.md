@@ -214,6 +214,45 @@ derivation and cost.
   - read a structural lower bound as a time bound;
   - call anything optimal without naming the class it is optimal in.
 
+## 6a. Records by the book
+
+*24 November 2026, with PROOF-PROGRAMME.md §5.9. The form follows Bach, Black, Huiberts and
+Kafer (arXiv 2510.21613), who fix a model's assumptions from the real implementation and real
+inputs before any bound, and close with a postmortem. MONODROMY record 95 (#145, REVIEW
+7099387596) is why: a synthetic pre-screen's latency was read onto a kernel bound by work.*
+
+A record that models or predicts cost opens with **the book** and closes with **the postmortem**.
+Keep both short.
+
+**The book** (before any model or prediction):
+1. **Input features relied on.** Each one, and whether it is measured: a link to the census
+   output or the evidence it comes from (bundle and digest, file and line). No link means
+   assumed, and says so.
+2. **The real code path.** The shipped route the claim is about, at a commit, with its stage
+   costs as measured (emit, construct, and so on, in ns a row at the worker counts judged).
+3. **Assumptions knowingly unrealistic**, each with why it is tolerable here.
+
+**The pre-screen checks** (record 95), before a synthetic pre-screen's ratio is read onto a real
+kernel:
+- **A. The m-slope test.** If the real loop's elasticity in m is a fraction φ of the synthetic's,
+  at most φ of its time is the synthetic's bottleneck.
+- **B. The latency-free ablation.** The real loop with its dependent loads made independent gives
+  its work floor; a latency trick's ceiling is (real − floor) / real.
+- **C. The footprint check.** Extra bytes a worker × W must fit in what L3 leaves at the judged
+  worker count.
+
+A synthetic pre-screen is valid only for the bottleneck it reproduces.
+
+**The postmortem** (once the outcome is in):
+1. **Input assumptions:** which features held on the real blocks, and which did not.
+2. **Model assumptions:** which held, and which the outcome refuted.
+3. **Method:** what the check that should have caught the error was, and whether it ran.
+4. **Outcome against observation:** predicted against measured, figure by figure.
+
+**Refining a parameter** (their §6.3). A parameter may change mid-argument only when it refines
+the model of an assumption already in the book, and it is then checked on data. A parameter
+that adds an assumption goes into the book first.
+
 ## 7. The lessons that cost the most
 
 These are in [CONTEXT.md](CONTEXT.md) §4–5, with evidence. In brief:

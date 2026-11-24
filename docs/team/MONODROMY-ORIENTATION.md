@@ -375,7 +375,9 @@ A B5 objection blocks a merge. B7: a Miri timeout is never a PASS.
 - MONODROMY's cursor: `team-state/monodromy:state/cursor.json` (`processed_comment_ids`).
 - PROTOCOL.md §1 still lists only #160-#162 and #222. #314 and #346 are defined in coord.py's ROLES (pathfinder :70-75, monodromy :78-83) and in OWNERSHIP.md:103.
 
-**Records:** `docs/journal/monodromy/` holds only `README.md` today.
+**Records:** `docs/journal/monodromy/` holds only `README.md` today. A record that models or
+predicts cost takes the by-the-book form of `research-charter/METHOD.md` §6a (added 24 November
+2026).
 
 **Pathfinder:** a peer, not a superior or a subordinate. Exchange is direct, #346 ↔ #314. Its #313 record is the PF branch cited throughout, including the hypothesis register, interval-exchange, tunnels, chunked-link, backward-table and two-modes journals.
 
