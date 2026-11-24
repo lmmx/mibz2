@@ -30,6 +30,10 @@ def S (c) : ℕ := openPeakScratch c   -- state beyond the output: at most shipp
 6. **Dependent loads stated alongside c₁** (added 24 November after the outside review's point 2; stricter, so admissible under C2). A *dependent load* is a read whose address is computed from the value of an earlier read, other than at a sequential or fixed-stride address. A yes must state d(D, c) per block and have d(D, c) ≤ d(Open, c) on every block of 𝓕. It does not replace c₁; a no is still a statement about c₁.
 6b. **Dependent misses** (added after the full outside review): under a fixed memory model 𝓗 (cache capacity, line size, workers; machine facts, NEEDS M-8), the count of cache-missing dependent loads satisfies D_𝓗(D, c) ≤ D_𝓗(Open, c) per block.
 7. **No advice** (added after the full outside review; stricter). The decoder is one fixed program, independent of 𝓕, with no stored answers or per-block tables. The bound must hold in probability on the uniform family 𝓖(S, m, k) of record 103 §4, and 𝓕 validates it. A bound shown on 𝓕 alone is not a yes.
+**Standing of clauses 6 and 6b (Coordinator's entry #4, the team's own records):** toy-transfer (20 November) and the T² kill (23 November, E = 1.22) show misses are not the emit's cost on this machine. So 6 and 6b are kept (dropping them would be a relaxation) but they are not the machine test and are measured only for a candidate yes. **The machine conjunct is clause 3 as frozen: beat master on whole-decoder time.** Working model, optional: emit time ≈ α·events + β·bytes + construct. c₁ is the proxy for the first term.
+
+**Residual, labelled, not a relaxation:** G1 floors the *count* of width-1 events. Nothing here floors their *unit price* α. A route that keeps c₁ ≥ h₁ and lowers α is outside this theorem and is neither a yes nor a no of it.
+
 5. **Fixed before the data.** These values are fixed before Neon's N-0 measurement (h₁R/h₁ on 𝓕). Under C2 they are never relaxed after any data is seen. Where MONODROMY and Neon disagree, the stricter reading holds, logged in CLAIMS.md.
 
 ## 2. The calculus 𝓡 and its cost (record 98 §1)
