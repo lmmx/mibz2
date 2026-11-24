@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=6793043730e4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=e6fe27285d4e">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=6793043730e4">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3531,6 +3531,32 @@ interior rows directly.</p>
 <figcaption>Exact, on a valid column whose LF is one cycle of 18 rows. Green: rows 1 and 3, which share the context abcdef. Amber: rows 4 and 6, width-1 runs inside those paths. A rule keyed on the shared context at its start carries them, so an argument that charges width-1 rows has to cover rows inside multi-row rules directly.</figcaption>
 </figure>
 
+<p><strong>The scoped no, and what lies just outside it.</strong> These pieces combine into one theorem over a
+declared class of decoders. Suppose every byte is written by a rigid fact, an interval moved by one
+translation, and positions come only from labels on the start rows of those facts. Then every
+decoder of that kind pays <span class="arithmatex">\(c_1 \ge h_1 - |B|\)</span> events, where <span class="arithmatex">\(B\)</span> is the set of width-1 rows placed
+by a label read off an uncharged observation. All of the theorem's content is in how large <span class="arithmatex">\(B\)</span> can
+be.</p>
+<p>A row can be placed from an observation only if every valid column with the same observation puts
+it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into
+counting. Across all 5,880 valid columns of ten letters over three symbols, the histogram plus the
+first moment leaves 96.4% of them sharing their observation with a column that decodes differently,
+and pins down only 22% of the width-1 rows. On our six measured blocks, observations made of
+interval histograms and declared run records place half the width-1 rows only after 6,903 to 14,120
+separate observations. That is reading the block row by row under another name.</p>
+<p>Just outside the class, the bound does break, and the way it breaks is informative. Three exact
+decoders beat it on small witnesses. One fills the last unwritten slots from the histogram, one
+copies a stretch of output already written, and one moves a shared context, as in the 18-row
+column above. None comes near half on real blocks:</p>
+<ul>
+<li><strong>Filling from the histogram</strong> can skip at most the commonest letter's width-1 rows, about 7% of
+  them. On every block that letter is the digit 4, which every version-4 ID carries in a fixed place.</li>
+<li><strong>Copying, even planned for free,</strong> still leaves more than half of the width-1 rows as literals
+  on five blocks of six.</li>
+<li><strong>Shared contexts</strong> break into single rows on random fields beyond about five letters.</li>
+</ul>
+<p>A negative result in this shape is one theorem over a stated class, with a section saying what it
+does not cover, and the nearest decoders outside it measured.</p>
 <h2 id="7-where-the-search-stands">7. Where the search stands<a class="headerlink" href="#7-where-the-search-stands" title="Permanent link">&para;</a></h2>
 <p>The frozen target is precise. On every block, an exact decoder must pay at most half of h₁ in
 single-row events, in at most two passes over the block and no more scratch memory than Open. It
@@ -3542,6 +3568,14 @@ steps on wide runs would remain, so a decoder that cheapens only the random rows
 <span class="arithmatex">\(h_1/m \ge 2/3\)</span>. Across the 232 distinct blocks of our benchmark, <span class="arithmatex">\(h_1/m\)</span> is 0.41 overall and
 0.30 to 0.83 block by block. A yes therefore has to carry all of the retained words more cheaply,
 not just the random IDs.</p>
+<p>The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
+work proves one, closes one, or measures what one would need.</p>
+<figure class="bf-fig">
+<p class="bf-title">The main theorem, as premises</p>
+<svg viewBox="0 0 720 348" role="img" aria-label="The main theorem as seven premises with their status: the split partly measured, additivity proved, stream N, stream R, glue and budget open, and the margin failing while random rows cost one event each; together they would give an exact decoder with at most half of h1 single-row events."><rect class="bf-card" x="0.0" y="8.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="30.0" text-anchor="start">split</text><text class="bf-ttiny" x="110.0" y="30.0" text-anchor="start">sort width-1 rows into random (R) and the rest (N), from the run records</text><rect class="bf-pill-next" x="580.0" y="14.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="29.0" text-anchor="middle">partly measured</text><rect class="bf-card" x="0.0" y="48.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="70.0" text-anchor="start">additivity</text><text class="bf-ttiny" x="110.0" y="70.0" text-anchor="start">events add over stream N, stream R and the wide rows</text><rect class="bf-pill-hi" x="580.0" y="54.0" width="128.0" height="22.0" rx="11"/><text class="bf-t-green" x="644.0" y="69.0" text-anchor="middle">proved</text><rect class="bf-card" x="0.0" y="88.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="110.0" text-anchor="start">stream N</text><text class="bf-ttiny" x="110.0" y="110.0" text-anchor="start">a procedure for the non-random width-1 rows, below their count</text><rect class="bf-pill-ready" x="580.0" y="94.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="109.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="128.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="150.0" text-anchor="start">stream R</text><text class="bf-ttiny" x="110.0" y="150.0" text-anchor="start">random rows cost a events each: a ≥ 1 for the current kind; best known a = 1</text><rect class="bf-pill-ready" x="580.0" y="134.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="149.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="168.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="190.0" text-anchor="start">glue</text><text class="bf-ttiny" x="110.0" y="190.0" text-anchor="start">the streams&#x27; outputs interleave exactly; each boundary is an event unless placed</text><rect class="bf-pill-ready" x="580.0" y="174.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="189.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="208.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="230.0" text-anchor="start">budget</text><text class="bf-ttiny" x="110.0" y="230.0" text-anchor="start">two passes and Open&#x27;s memory, across both streams and the glue</text><rect class="bf-pill-ready" x="580.0" y="214.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-ready-t" x="644.0" y="229.0" text-anchor="middle">open</text><rect class="bf-card" x="0.0" y="248.0" width="720.0" height="34.0" rx="4"/><text class="bf-ts" x="14.0" y="270.0" text-anchor="start">margin</text><text class="bf-ttiny" x="110.0" y="270.0" text-anchor="start">stream N + stream R + wide rows + glue ≤ h₁/2</text><rect class="bf-pill-next" x="580.0" y="254.0" width="128.0" height="22.0" rx="11"/><text class="bf-pill-next-t" x="644.0" y="269.0" text-anchor="middle">fails at a = 1</text><path class="bf-arrow" d="M360.0,288.0 L360.0,304.0"/><path class="bf-arrow" d="M357.0,297.7 L360.0,304.0 L363.0,297.7"/><rect class="bf-card-hi" x="90.0" y="306.0" width="540.0" height="34.0" rx="6"/><text class="bf-t" x="360.0" y="328.0" text-anchor="middle">⇒ an exact decoder outside the current kind, with at most h₁/2 single-row events</text></svg>
+<figcaption>Status as of 24 November 2026. The theorem is conditional: if every premise holds on every block, a decoder meeting the target exists. Random rows are well over half of h₁ on the blocks measured, so while each still costs one event (a = 1) the margin cannot hold; meeting it means beating the floor on random content itself.</figcaption>
+</figure>
+
 <ul>
 <li><strong>The count.</strong> G1 holds for routes built by contracting stretches, with sharing. What it doesn't
   cover is a rule applied to a whole scattered set, with a short description that is also cheap to
@@ -3578,6 +3612,7 @@ it is what we now count as progress.</p>
 <li><a href="https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md">The ordered frontier and the transformation between decoders</a> and
   <a href="https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md">abbreviation, batching and the block checksum</a>, our research records.</li>
 <li>The two streams and the totals: <a href="https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md">the six-block measurements</a> and <a href="https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md">the 232-block baseline</a>. The frozen target: <a href="https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md">the main theorem</a>, §1.</li>
+<li>The scoped no: <a href="https://github.com/lmmx/mibz2/blob/bc1429ed92baab9b3e468fd5b5b8718ccd555741/docs/journal/monodromy/2026-11-24-mixed-calculus-repair.md">Theorem N′</a>, <a href="https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n18-complete-observation-fibres.md">the observation fibres</a> and <a href="https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n19-theorem-nprime-output-model.md">the three decoders outside the class</a>.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md">Toy-transfer</a>, the lanes experiments with their later correction, and
   <a href="https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md">the squared map</a>.</li>
 <li>The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes
@@ -3743,19 +3778,19 @@ it is what we now count as progress.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/bench.js?v=6793043730e4"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6793043730e4"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/blog.js?v=6793043730e4"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/frontier.js?v=6793043730e4"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/observatory.js?v=6793043730e4"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=e6fe27285d4e"></script>
+        <script src="../../assets/javascripts/katex.js?v=6793043730e4"></script>
       
     
   </body>

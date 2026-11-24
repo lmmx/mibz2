@@ -1801,11 +1801,29 @@ A shared context can carry width-1 rows inside it
 
 Exact, on a valid column whose LF is one cycle of 18 rows. Green: rows 1 and 3, which share the context abcdef. Amber: rows 4 and 6, width-1 runs inside those paths. A rule keyed on the shared context at its start carries them, so an argument that charges width-1 rows has to cover rows inside multi-row rules directly.
 
+**The scoped no, and what lies just outside it.** These pieces combine into one theorem over a declared class of decoders. Suppose every byte is written by a rigid fact, an interval moved by one translation, and positions come only from labels on the start rows of those facts. Then every decoder of that kind pays \\(c\_1 \\ge h\_1 - |B|\\) events, where \\(B\\) is the set of width-1 rows placed by a label read off an uncharged observation. All of the theorem's content is in how large \\(B\\) can be.
+
+A row can be placed from an observation only if every valid column with the same observation puts it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into counting. Across all 5,880 valid columns of ten letters over three symbols, the histogram plus the first moment leaves 96.4% of them sharing their observation with a column that decodes differently, and pins down only 22% of the width-1 rows. On our six measured blocks, observations made of interval histograms and declared run records place half the width-1 rows only after 6,903 to 14,120 separate observations. That is reading the block row by row under another name.
+
+Just outside the class, the bound does break, and the way it breaks is informative. Three exact decoders beat it on small witnesses. One fills the last unwritten slots from the histogram, one copies a stretch of output already written, and one moves a shared context, as in the 18-row column above. None comes near half on real blocks:
+
+- **Filling from the histogram** can skip at most the commonest letter's width-1 rows, about 7% of them. On every block that letter is the digit 4, which every version-4 ID carries in a fixed place.
+- **Copying, even planned for free,** still leaves more than half of the width-1 rows as literals on five blocks of six.
+- **Shared contexts** break into single rows on random fields beyond about five letters.
+
+A negative result in this shape is one theorem over a stated class, with a section saying what it does not cover, and the nearest decoders outside it measured.
+
 ## 7\. Where the search stands
 
 The frozen target is precise. On every block, an exact decoder must pay at most half of h₁ in single-row events, in at most two passes over the block and no more scratch memory than Open. It must be one fixed program with no stored answers, and it must beat our current decoder on whole decoding time.
 
 The target is harder than its headline. Counted strictly, Open pays one event for every retained step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the steps on wide runs would remain, so a decoder that cheapens only the random rows needs \\(h\_1/m \\ge 2/3\\). Across the 232 distinct blocks of our benchmark, \\(h\_1/m\\) is 0.41 overall and 0.30 to 0.83 block by block. A yes therefore has to carry all of the retained words more cheaply, not just the random IDs.
+
+The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of work proves one, closes one, or measures what one would need.
+
+The main theorem, as premises
+
+Status as of 24 November 2026. The theorem is conditional: if every premise holds on every block, a decoder meeting the target exists. Random rows are well over half of h₁ on the blocks measured, so while each still costs one event (a = 1) the margin cannot hold; meeting it means beating the floor on random content itself.
 
 - **The count.** G1 holds for routes built by contracting stretches, with sharing. What it doesn't cover is a rule applied to a whole scattered set, with a short description that is also cheap to apply: the Build, Advance and Emit of §6.
 - **The price.** A separate question. The records show the price per event moving with the work in each step and with how steps overlap, not with either count alone.
@@ -1826,6 +1844,7 @@ Read together, the four reframings say what the search now values. Using everyth
 - [The source record](<https://github.com/lmmx/mibz2/blob/f438f38dbc2d25d3aa964633abf48ee9c453b35f/docs/journal/2026-11-24-against-mathematics-source.md>): two readings of the essay, their figures (described) and an audit of the records below (§6), all verbatim.
 - [The ordered frontier and the transformation between decoders](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md>) and [abbreviation, batching and the block checksum](<https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md>), our research records.
 - The two streams and the totals: [the six-block measurements](<https://github.com/lmmx/mibz2/blob/8756c557205290add83d3f90a0dc0a222fb03fb5/research/neon/n8-amended-n0-copies-rindex.md>) and [the 232-block baseline](<https://github.com/lmmx/mibz2/blob/656d5e7ab8faaee34172bf8355f676224dc70b48/research/neon/n2-f-baseline-and-needs-m2.md>). The frozen target: [the main theorem](<https://github.com/lmmx/mibz2/blob/cdeef65aba3b5ebad758cf4f5d169f0534bf80ab/docs/journal/monodromy/2026-11-24-main-theorem/main-theorem.md>), §1.
+- The scoped no: [Theorem N′](<https://github.com/lmmx/mibz2/blob/bc1429ed92baab9b3e468fd5b5b8718ccd555741/docs/journal/monodromy/2026-11-24-mixed-calculus-repair.md>), [the observation fibres](<https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n18-complete-observation-fibres.md>) and [the three decoders outside the class](<https://github.com/lmmx/mibz2/blob/bf8bab3d6e658f81cb156841296e8fd79753388f/research/neon/n19-theorem-nprime-output-model.md>).
 - [Toy-transfer](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md>), the lanes experiments with their later correction, and [the squared map](<https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md>).
 - The first moment, the Build/Advance/Emit interface, the multi-row witness and the supplied-codes test are from the audit (source record §6); the witnesses were checked independently.
 
