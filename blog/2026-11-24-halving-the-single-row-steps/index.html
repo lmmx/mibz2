@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=80a50f3acbf0">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=c282b422b4a1">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=80a50f3acbf0">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3268,7 +3268,7 @@ features explain 96% of the variation on blocks held out of the fit. For writing
 don't, which is one reason the price of an event (§5) stays an open question.</p>
 </aside>
 <p><strong>Fix a binary target.</strong> A <a href="https://github.com/tra38/sm64-wmotr-abc-proof">Super Mario 64 project</a> asked whether a level's challenge
-could be done with <span class="il-black">fewer than one</span> press of the A button. That recasts a minimisation as a
+could be done with <span class="il-black il-bl-abtn">fewer than <span class="il-bl-half">one</span></span> press of the A button. That recasts a minimisation as a
 decision problem, settled either by a route or by a proof that none exists. Its decisive move was to work backwards: it set the impossible-looking condition by hand in a
 modified copy of the game, confirmed the payoff, and only then sought how the real game could
 produce it, one supplied condition at a time. Payoff first and mechanism second is also the logic
@@ -3368,7 +3368,7 @@ a square has no whole-number ratio to its side.</p>
 fits once, with a sliver left over, and that sliver is the side of a smaller square in the corner,
 on which the measuring begins again as on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
-and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
+and the diagonal. The Greeks called this alternate subtraction <span class="il-black il-bl-redfig">anthyphairesis</span>. It is the Euclidean
 algorithm on two lengths (<a href="https://mathcs.clarku.edu/~djoyce/elements/bookX/propX2.html"><em>Elements</em> X.2</a>).</p>
 <figure class="bf-fig">
 <p class="bf-title">Anthyphairesis: subtract the side from the diagonal, and repeat</p>
@@ -3383,7 +3383,7 @@ ratio of the lengths. Rauzy–Veech induction, the step that took mibz2 from the
 anthyphairesis on many intervals at once.</p>
 <p>The essay ends the story with a name. Plato records it in the <a class="il-ref" href="https://en.wikipedia.org/wiki/Theaetetus_(dialogue)"><em>Theaetetus</em></a> (<a href="https://www.perseus.tufts.edu/hopper/text?doc=Plat.%20Theaet.%20147d">147d</a>): <a class="il-ref il-c3" href="https://en.wikipedia.org/wiki/Theodorus_of_Cyrene">Theodorus</a> showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
-have no common measure with a foot. Theaetetus ceased to take the cases one at a time and named them all together as <span class="il-rubric">powers</span>. It is the move from checking cases to naming an operation, the move our search must make with its
+have no common measure with a foot. Theaetetus ceased to take the cases one at a time and named them all together as <span class="il-black il-bl-leaf">powers</span>. It is the move from checking cases to naming an operation, the move our search must make with its
 frameworks. Contraction
 along compose, in §4, is our attempt at it: one name for what turns each of our decoders into the
 next.</p>
@@ -3566,7 +3566,7 @@ the first moment</p>
 <div class="arithmatex">\[A(L) = \sum_i i \cdot \mathrm{code}(L[i])\]</div>
 <p>changes by <span class="arithmatex">\((i-j)(\mathrm{code}(L[j]) - \mathrm{code}(L[i])) \ne 0\)</span> under any swap of unequal letters
 at <span class="arithmatex">\(i\)</span> and <span class="arithmatex">\(j\)</span>, and a run of code <span class="arithmatex">\(a\)</span> over <span class="arithmatex">\([s, e)\)</span> contributes <span class="arithmatex">\(a\,(s+e-1)(e-s)/2\)</span>, so A takes one
-pass over the runs. Yet it decodes <span class="il-black">nothing</span>: <code>bca</code> and <code>cab</code> have the same letters and the same
+pass over the runs. Yet it decodes <span class="il-black il-bl-hollow">nothing</span>: <code>bca</code> and <code>cab</code> have the same letters and the same
 moment, A = 2, while their LF maps are [1, 2, 0] and [2, 0, 1]. Separating swaps is not the same as decoding, so a stronger lower bound must find two valid columns that every permitted observation,
 taken together, fails to tell apart.</p>
 <aside class="il-gloss">
@@ -3632,7 +3632,7 @@ decoding time.</p>
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 <span class="arithmatex">\(h_1/m \ge 2/3\)</span>. Across the 232 distinct blocks of our benchmark, <span class="arithmatex">\(h_1/m\)</span> is 0.41 overall and
-0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of <span class="il-black">every</span>
+0.30 to 0.83 block by block. A decoder that meets the target must therefore write the word of <span class="il-black il-bl-every"><span>e</span><span>v</span><span>e</span><span>r</span><span>y</span></span>
 retained step more cheaply, not merely those of the random IDs.</p>
 <p>The target is the conclusion of a conditional theorem. Its premises are the agenda: each piece of
 work proves one, closes one, or measures what one would need.</p>
@@ -3848,19 +3848,19 @@ it is what we now count as progress.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/bench.js?v=80a50f3acbf0"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/couriers.js?v=80a50f3acbf0"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/blog.js?v=80a50f3acbf0"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/frontier.js?v=80a50f3acbf0"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/observatory.js?v=80a50f3acbf0"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c282b422b4a1"></script>
+        <script src="../../assets/javascripts/katex.js?v=80a50f3acbf0"></script>
       
     
   </body>
