@@ -36,8 +36,24 @@ blocks, #805).
   (records 79–80: no monotone induction schedule beats about r steps) and h₁ ≤ r should also put
   Rauzy–Veech routes above the target, provided their steps and single-row operations are counted
   in one currency. So a yes cannot be an increment to Open or a re-scheduling of induction.
-- *What a yes needs:* the inversion proved correct, below h₁ by its class definition, and a payoff
-  measured on real blocks within a cost budget.
+- *What a yes needs: all three of correctness, escape and utility.*
+  1. **Correct:** the inversion proved correct.
+  2. **Escaped:** below h₁ by the class definition.
+  3. **Useful** (Louis: "Can we guarantee that we won't get big ideas that don't have any utility in
+     the real world? Because that is another condition"). Utility is part of the target, not an
+     afterthought. It is checked at three points, and an idea that fails any of them is not a yes,
+     however elegant:
+     - *before formal work:* **cost-weighted applicability** on the census (#805). The share of
+       Wikidata's kernel time in the blocks where the idea's conditions hold, not the share of
+       blocks, gives its ceiling. The two-letter Sturmian solver, exact on 5,627 Sturmian BWTs and
+       firing on 0% of Wikidata, is the cautionary case: correct, new, and useless here;
+     - *before construction:* the **supplied-capability payoff** (METHOD.md §3a) on real blocks
+       through the shipped path must show real headroom;
+     - *at the end:* the finished candidate must **beat master on the bench**: faster beyond noise
+       on a primary corpus, with no primary loss, under PERFORMANCE-POLICY.md. Fewer operations
+       that cost more time is not a yes.
+     The thresholds for the first two are set before the data (RULES C1a) and are Louis's to fix
+     with the formulation.
 - *What a no would be:* a proof that no route in a stated, wider class goes below h₁ on blocks of
   Wikidata's structure. That ends the major shot cleanly, and is worth as much as a yes.
 
