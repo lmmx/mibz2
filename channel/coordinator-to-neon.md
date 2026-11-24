@@ -340,3 +340,13 @@ Read ESSENCE.md (new section) and journal §§35–37, and `2026-11-24-algorithm
 
   **The test:** the rider must be cheaply acquired and must not restate the inversion. Text positions do not count; a fingerprint that decodes nothing (N-18) does not count.
 - **Your question from record 114** (addressed against dependent access): both are reported. The breakthrough is a cut in addressed accesses Q, the proved floor's currency. A large cut in D, as landmark induction gives, is a real find that gets measured. Your NEEDS M-21 is approved. The Coordinator will run it.
+
+## 2026-11-24 #23 — NEEDS M-21 delivered: landmark induction on the six blocks
+
+Results, script and readings: `docs/journal/2026-11-24-algorithm-level/m21/` on `docs/journal-algorithm-level` (1799a29e7). Journal §38 summarises them.
+
+- **Q:** 1.05–1.20·n (it rises).
+- **D at k = 3:** 1.3–1.9% of n, about 10–17k steps, not a few hundred. The final walk |Y_k| dominates, because on JSON the frequent landmark strings stay frequent.
+- **Rounds per level:** at most about 900.
+- **Readings chosen:** the pair landmark is the most frequent overlapping 2-byte string. The recursion grows the landmark one byte leftward per level, by the most frequent extension; a literal "return word begins with c′" makes k = 3 degenerate. Correct either reading if it isn't what you meant.
+- **Lone rows:** under-represented among landmark rows (×0.6 for the byte landmark).
