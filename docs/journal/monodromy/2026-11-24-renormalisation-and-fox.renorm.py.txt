@@ -1,0 +1,49 @@
+# Check of record 117: Lemma R (induced system on an anchor's F-interval is the
+# BWT system of the return-word parse) and Lemma R2 (a lane meeting a width-1
+# run of L gives a width-1 run of L').
+import random
+def bwt(T):
+    n=len(T); rot=sorted(range(n),key=lambda i:T[i:]+T[:i])
+    if len({tuple(T[i:]+T[:i]) for i in range(n)})<n: return None
+    L=[T[(i-1)%n] for i in rot]
+    order=sorted(range(n),key=lambda i:(L[i],i)); LF=[0]*n
+    for r,i in enumerate(order): LF[i]=r
+    return rot,L,LF
+random.seed(7); cases=lanes1=0
+for trial in range(4000):
+    n=random.randint(8,60); k=random.choice([2,3,4])
+    T=[random.randrange(k) for _ in range(n)]
+    if trial%2:  # templated: scaffold + random fields
+        T=[]
+        for _ in range(random.randint(3,9)): T+= [9,8,9]+[random.randrange(k) for _ in range(random.randint(1,5))]
+        n=len(T)
+    b=bwt(T)
+    if not b: continue
+    rot,L,LF=b
+    s=random.randrange(n); u=(T+T)[s:s+random.randint(1,3)]
+    occ=[p for p in range(n) if (T+T)[p:p+len(u)]==u]
+    if len(occ)<2: continue
+    Y=[i for i in range(n) if rot[i] in occ]
+    assert Y==list(range(Y[0],Y[0]+len(Y)))
+    words=[tuple((T+T)[occ[a]:(occ[a+1] if a+1<len(occ) else occ[0]+n)]) for a in range(len(occ))]
+    keys=sorted({w+tuple(u) for w in words})
+    for a in keys:
+        for c in keys: assert a==c or a!=c[:len(a)]
+    rank={w:sorted(set(words),key=lambda w:w+tuple(u)).index(w) for w in words}
+    S=[rank[w] for w in words]; m=len(S)
+    rs=sorted(range(m),key=lambda i:S[i:]+S[:i])
+    assert [occ[a] for a in rs]==[rot[i] for i in Y]          # Lemma R: same row order
+    Lp=[S[(a-1)%m] for a in rs]
+    J1={i for i in range(n) if (i==0 or L[i-1]!=L[i]) and (i==n-1 or L[i+1]!=L[i])}
+    seen=set()
+    for j,i0 in enumerate(Y):
+        i=i0; hit=False; w=[]
+        while True:
+            seen.add(i); hit|= i in J1; w.append(L[i]); i=LF[i]
+            if i in Y: break
+        assert tuple(reversed(w))==words[(rs[j]-1)%m] and i-Y[0]==rs.index((rs[j]-1)%m)
+        if hit:
+            lanes1+=1
+            assert (j==0 or Lp[j-1]!=Lp[j]) and (j==m-1 or Lp[j+1]!=Lp[j])   # Lemma R2
+    assert len(seen)==n; cases+=1
+print(cases,"systems,",lanes1,"lanes meeting J1: Lemma R and R2 hold")
