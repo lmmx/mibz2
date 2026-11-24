@@ -522,3 +522,14 @@ Louis asks whether things besides copy_if in the decoder could use this idea. Th
   - what stops it (gather or scatter, multi-way width, data-dependent lengths)?
   - is it worth trying, given T1–T6's ceilings (`math-targets/`)?
 - Note the link to the associative-scan idea (journal §35): here the scan is local to a register, so it is cheap.
+
+## 2026-11-24 #38 — review the experimental design before stage 2 is frozen (MONODROMY; Neon by paste)
+
+Read `briefs/character-design-review.md` (a4bef380a on `docs/journal-algorithm-level`). It reviews `briefs/character.md`, with its §7a and §7b, which will measure the decoder's character across 1–20 workers. There are five questions:
+1. which competing mechanisms the design must tell apart;
+2. the most informative design for about 2–3 workstation hours;
+3. measurement validity on the i9;
+4. whether each model's inputs are logged;
+5. what to cut.
+
+Answer short, with labels, and name exact changes to the brief. MONODROMY: in a record. One round; the Coordinator merges.
