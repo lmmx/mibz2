@@ -158,7 +158,7 @@ What the [frontier](<https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a
 - **Cheap starting rows, unpriced assembly.** The rows where IDs begin lie in one contiguous range and take one scan to find. Placing each ID's letters in the output is a further job.
 - **Gap counts.** Within one letter c, the gap between consecutive destinations is the number of c's between the two source rows: with \\(b\_c = LF(x\_0)\\) and \\(g\_i\\) the count of c in \\(\[x\_i, x\_{i+1})\\), \\(LF(x\_i) = b\_c + \\sum\_{j\<i} g\_j\\). One step of the frontier is a matter of counting letters in gaps. The hard part is many steps: carrying each ID's identity to its place in the output.
 
-**Backward search** is how a compressed full-text index finds a pattern. It reads the pattern from its last letter to its first, and each letter narrows an interval of sorted rows by one LF step. Searching for many patterns at once moves all their intervals together, which is the frontier's step put to another use.
+**Backward search** is this same step in an older trade. Herein a compressed full-text index seeks a pattern from its last letter to its first, each letter narrowing an interval of sorted rows by one LF step; and many patterns sought at once move all their intervals together: the frontier's step, put to another use.
 
 The random IDs show what the frontier changes and what it doesn't:
 
@@ -202,6 +202,8 @@ with a fixed language for the description z, its size, and the cost of building,
 
 changes by \\((i-j)(\\mathrm{code}(L\[j\]) - \\mathrm{code}(L\[i\])) \\ne 0\\) under any swap of unequal letters at \\(i\\) and \\(j\\), and a run of code \\(a\\) over \\(\[s, e)\\) contributes \\(a\\,(s+e-1)(e-s)/2\\), so A takes one pass over the runs. Yet it decodes nothing: `bca` and `cab` have the same letters and the same moment, A = 2, while their LF maps are \[1, 2, 0\] and \[2, 0, 1\]. Separating swaps is not the same as decoding, so a stronger lower bound must find two valid columns that every permitted observation, taken together, fails to tell apart.
 
+**A witness** that tells every swapped pair apart, a perfect witness even, may still know naught of the order: `bca` and `cab` share A = 2 and decode differently. A fact about one summary, not a verdict on all.
+
 Same letters, same moment, different permutations
 
 Exact. The first moment A = Σ i·code(L\[i\]) changes under every swap of unequal letters, so it tells apart every pair our swap-based lower bounds rely on, and it takes one pass over the runs. Yet these two columns share it and decode differently. Separating swaps is not decoding.
@@ -217,6 +219,8 @@ Exact, on a valid column whose LF is one cycle of 18 rows. Green: rows 1 and 3, 
 **An uncharged observation** is something a decoder may read for free under our counting rules: a summary that folds the whole block into a few numbers, such as how many of each letter it holds, or the first moment below. Only the reading of a single row's own record, to settle that row, is charged as an event; whence the question of how much such free summaries can place.
 
 A row can be placed from an observation only if every valid column with the same observation puts it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into counting. Across all 5,880 valid columns of ten letters over three symbols, the histogram plus the first moment leaves 96.4% of them sharing their observation with a column that decodes differently, and pins down only 22% of the width-1 rows. On our six measured blocks, observations made of interval histograms and declared run records place half the width-1 rows only after 6,903 to 14,120 separate observations. That is reading the block row by row under another name.
+
+Of three decoders that broke the bound, and came nowhere near half
 
 Just outside the class, the bound does break, and the way it breaks is informative. Three exact decoders beat it on small witnesses. One fills the last unwritten slots from the histogram, one copies a stretch of output already written, and one moves a shared context, as in the 18-row column above. None comes near half on real blocks:
 
