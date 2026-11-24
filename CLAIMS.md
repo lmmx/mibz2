@@ -46,3 +46,8 @@ DONE N-14 2e69bd2 tested failure within defined scope
 STARTED N-15 2026-11-24T11:10Z NEEDS M-8: exact i9-10900K memory model H (L1d/L2/L3-per-worker at 10W, 64B line) and simulated dependent-miss count D_H(Open, c) on the 6 admitted blocks
 PUSHED N-15 372b0f9 NEEDS M-8 discharged on 6 admitted blocks: i9-10900K H (64B, L1d=32K, L2=256K, L3/10W=2048K), Open D_L2=14,630-95,695 (0.42-1.20*h1), D_L3_co=5,618-12,768 (6.25% compulsory only)
 DONE N-15 372b0f9 useful new lead
+STARTED N-16 2026-11-24T12:30Z repair N-12 cyclic-vs-suffix SA/LCP/LPF bug (witness L=baaaa p=2 -> LPF [0,1,0,2,1]), add witness test, rerun z/h1 on 6 blocks, re-evaluate closure under fixed rule (stands iff z/h1 > 0.50 on >=1 block at min_len=2, else reopen), add 6-field obstruction
+STARTED N-17 2026-11-24T12:30Z narrow N-13 (literal representations only; verify counterexample T=[0,2,4,6,8,7,5,3,1]) and N-14 (one comma split + 4-regex mask only) to what they tested; rewrite both obstruction entries with all 6 fields (no new framework screen)
+STARTED N-18 2026-11-24T12:30Z complete-observation fibres for small n under (i) raw bytes on D, (ii) histogram + first moment A=sum i*code(L[i]), (iii) run records with LF translations; plus 6-block observation-relative threshold distribution #{x in J1 : nu_hat(x) <= q} bearing on Theorem N' (record 107)
+STARTED N-19 2026-11-24T12:30Z MONODROMY ASK N retargeted at Theorem N' (record 107): attack N' output model — exhibit exact decoders in Lambda' neighbourhood writing width-1 bytes by neither a link nor a rigid-placed fact, or prove none exists inside Lambda'
+
