@@ -74,8 +74,9 @@ a time. The kernel built on it is told in [A new way back from the BWT](2026-11-
 and the dictionary between the two worlds in [Towers, words and loops](2026-11-16-mathematical-dictionary.md).</aside>
 
 The search was reframed four times on the way: use everything, count the cost, set a target that is
-met or not, and keep the method rather than the result (§§1–2). The last came from an essay against
-AI mathematics, and it became a precise question about our decoders. The rest of the post works that
+met or not, and keep the method rather than the result (§§1–2). The last came from
+[an essay against AI mathematics](https://doomslide.substack.com/p/against-mathematics), and it
+became a precise question about our decoders. The rest of the post works that
 question through. It sets out the routes we have (§3) and the transformation between them (§4). It
 then tests two proposals against it (§5), says what a new route would have to be (§6), and ends on
 where the search stands (§7).
@@ -104,7 +105,8 @@ correct indefinitely, and whether it helps is discovered only at the end.
 
 ## 2. Four reframings of the search
 
-**Use everything.** A claimed proof of the Riemann hypothesis, still awaiting independent checking,
+**Use everything.** A [claimed proof of the Riemann hypothesis](https://alpo.ge/remark.pdf), still
+awaiting independent checking,
 built on
 [fifty older tools reaching back two centuries](2026-11-22-two-centuries-of-tools.md), made
 mathematical distance look cheap. Our [method](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md) adopted mathematical maximalism: no limit on
@@ -124,7 +126,7 @@ block's structure predict where the time goes. For building Open's structures th
 features explain 96% of the variation on blocks held out of the fit. For writing the output they
 don't, which is one reason the price of an event (§5) stays an open question.</aside>
 
-**Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge
+**Set a target that is met or not.** A [Super Mario 64 project](https://github.com/tra38/sm64-wmotr-abc-proof) asked whether a level's challenge
 could be done with <span class="il-black">fewer than one</span> press of the A button. That is a minimisation turned into a
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
 working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
@@ -132,9 +134,9 @@ confirmed the payoff, and only then found how the real game could produce it, on
 condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.
 
 <aside class="il-gloss" markdown>**The A-button challenge** is a long-running game among Super
-Mario 64 players: finish each star with as few presses of the jump button as can be managed. Where
-the record stood at one press, one project asked whether a star could be had with none, and set
-out to answer it either with a route or with a proof, checked by machine, that no route exists.</aside>
+Mario 64 players: finish the game pressing the jump button as few times as can be managed. With
+the record at one press, [this project](https://github.com/tra38/sm64-wmotr-abc-proof) sets out to prove, checked by machine in the Rocq
+proof assistant, that the game can never be finished with none.</aside>
 
 What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every
 ordinary route relies on. mibz2 has an exact counterpart.
@@ -207,7 +209,7 @@ diagonal. It fits once, with a sliver left over. The sliver is the side of a sma
 corner, and the measuring starts again on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
 and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
-algorithm on two lengths.
+algorithm on two lengths ([*Elements* X.2](https://mathcs.clarku.edu/~djoyce/elements/bookX/propX2.html)).
 
 <figure class="bf-fig">
 <p class="bf-title">Anthyphairesis: subtract the side from the diagonal, and repeat</p>
@@ -221,7 +223,7 @@ as the side was laid along the diagonal, and its sequence of steps is the contin
 ratio of the lengths. Rauzy–Veech induction, the step that took mibz2 from the walk to Cells, is
 anthyphairesis on many intervals at once.
 
-The essay ends the story with a name. Plato records it in the [*Theaetetus*](https://en.wikipedia.org/wiki/Theaetetus_(dialogue)){ .il-ref } (147d): [Theodorus](https://en.wikipedia.org/wiki/Theodorus_of_Cyrene){ .il-ref .il-c3 } showed,
+The essay ends the story with a name. Plato records it in the [*Theaetetus*](https://en.wikipedia.org/wiki/Theaetetus_(dialogue)){ .il-ref } ([147d](https://www.perseus.tufts.edu/hopper/text?doc=Plat.%20Theaet.%20147d)): [Theodorus](https://en.wikipedia.org/wiki/Theodorus_of_Cyrene){ .il-ref .il-c3 } showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
 have no common measure with a foot. Theaetetus stopped taking the cases one at a time and called
 them all <span class="il-rubric">powers</span>. That is the move from checking frameworks to naming an operation. Contraction

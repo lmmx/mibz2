@@ -11,6 +11,10 @@ It reports two things, for the link-and-gloss skill (.claude/skills/link-and-glo
    its headings or its bold terms), used in this post with no link on the paragraph of its first
    use. Each comes with the posts that explain it, so the writer can link the right one.
 
+3. **Outside work named but not linked.** A paragraph that names a project, paper, essay,
+   proof, theorem, problem, book or person's work, or sets a title in italics, but carries no
+   link to it. A named outside source is a reference the reader can't follow without a link.
+
 Figures, code, front matter and the Sources footer are skipped. The report is a worklist, not a
 verdict: a common word can match by accident, and the writer decides what each line needs (a link
 at first use, a gloss beside it, or nothing).
@@ -143,6 +147,57 @@ def main(path):
             print(f"- `{k}` (line {n}): explained in {', '.join(sorted(posts)[:3])}")
     if not hits:
         print("- none")
+    print("\n## 3. Outside work named but not linked in its paragraph\n")
+    hits = outside_unlinked(joined)
+    for n, found, head in hits:
+        print(f"- line {n}: {', '.join(found)}: \"{head}…\"")
+    if not hits:
+        print("- none")
+
+
+OUTSIDE = [
+    # a kind of outside work, named
+    re.compile(r"\b(?:project|paper|preprint|essay|repository|notebook|treatise|dialogue|challenge)\b", re.I),
+    # an italic title, *Like This*
+    re.compile(r"(?<![*\w])\*[A-Z][^*\n]{2,60}\*(?!\*)"),
+    # an author in parentheses, (Bach, Black ...)
+    re.compile(r"\((?:[A-Z][a-zà-ÿ’'-]+(?:,| and)\s?){2,}"),
+    # names that stand for their work
+    re.compile(r"\b(?:Hilbert|Archimedes|Euclid|Plato|Pythagoras|Aristotle|Gödel|Turing|Poincaré|"
+               r"Brouwer|Thurston|Theaetetus|Theodorus|Riemann|Mario)\b"),
+]
+
+
+def paragraphs(joined):
+    """Consecutive prose lines grouped into paragraphs, as (first line number, text)."""
+    out, cur, start = [], [], None
+    for n, l in joined:
+        if l.strip() == "" or l.startswith("#") or l.startswith("|"):
+            if cur:
+                out.append((start, " ".join(cur)))
+            cur, start = [], None
+            continue
+        if start is None:
+            start = n
+        cur.append(l.strip())
+    if cur:
+        out.append((start, " ".join(cur)))
+    return out
+
+
+def outside_unlinked(joined):
+    """Each outside work or name at its first mention, if no paragraph up to there links it."""
+    hits, linked = [], set()
+    for n, p in paragraphs(joined):
+        found = {m.group(0).strip("*( ").lower() for rx in OUTSIDE for m in rx.finditer(p)}
+        if "](http" in p:
+            linked |= found
+            continue
+        new = sorted(found - linked)
+        if new:
+            hits.append((n, new, p[:90]))
+            linked |= found  # report each once
+    return hits
 
 
 if __name__ == "__main__":

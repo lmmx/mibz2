@@ -29,15 +29,36 @@ write-blog-post's "Ornament" section; this skill decides where that markup goes.
 python3 docs/scripts/link_audit.py docs/site/blog/<post>.md
 ```
 
-It prints two worklists:
+It prints three worklists:
 - **Used before it is explained:** terms the post defines in bold or in a heading, but uses
   earlier. Each needs a forward pointer, a link, a gloss at first use, or the definition moved up.
 - **Explained in another post, not linked at first use here:** terms that other posts define (in
   bold, or as a title), with the posts that explain them.
+- **Outside work named but not linked:** a paragraph that names a project, paper, essay,
+  repository, challenge or similar, sets a title in italics, cites authors in parentheses, or
+  names a figure whose work it leans on (Hilbert, Archimedes, Plato…), with no external link up to
+  that point. Each is listed once, at its first unlinked mention.
 
 The script finds candidates, and it misses things: internal names used in passing, results quoted
 without a source, numbers without a referent. So after it, **read the post as a stranger** and add
 to the list every place where you'd ask "what's that?", "says who?" or "which one?".
+
+### Outside work is the commonest miss
+
+A post that names someone else's work and doesn't link it leaves the reader nowhere to go: "a
+Super Mario 64 project", "a paper analysing the simplex method", "Hilbert's lost 24th problem",
+"Plato records it in the *Theaetetus*". The "Halving the single-row steps" post shipped with all
+four unlinked, and a fresh-reader pass and Louis each caught them (24 November 2026). The rule:
+- **Every named outside work links to the work itself at first mention:** the repository, the
+  paper (arXiv or DOI), the essay, the passage in a standard edition (Perseus for Plato, Joyce
+  for Euclid), or a reference article where the work has no home of its own (a Wikipedia article
+  for Hilbert's 24th problem or Archimedes' *Method*).
+- **Open the link before using it.** A link has to load and be the thing described. Read what it
+  says about itself, and make the prose match it, not the other way round. The Mario project's
+  repository says it is "attempting to prove SM64 will never be completed in 0 A presses", so the
+  gloss says that, not a paraphrase from memory.
+- **A gloss doesn't replace the link.** A gloss may say what the work is, but the link goes on its
+  first mention in the prose or in the gloss's term.
 
 ## 2. Decide, for each item: link, gloss, inline, or cut
 
@@ -100,6 +121,8 @@ LF step per letter. Run for many patterns at once, it moves their intervals toge
 - [ ] Every project name, kernel, theorem label, census and experiment links to the post or record
       that explains it, at first use.
 - [ ] Every quoted number links to where it was measured.
+- [ ] Every named outside work (project, paper, essay, book, passage, person's result) links to
+      the work itself at first mention, and each link has been opened and matches the prose.
 - [ ] Each gloss can be pointed at: which word, and why there.
 - [ ] The prose reads correctly with every gloss skipped.
 - [ ] The strict build, `check_render.py`, `check_site.py` and `look_pages.py` pass (publish-page).
