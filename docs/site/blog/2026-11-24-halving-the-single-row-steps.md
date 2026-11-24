@@ -88,7 +88,7 @@ blocks now predicts the cost of building Open's structures from block structure 
 bound, G1 (§3), says what every route of our current kind must pay.
 
 **Set a target that is met or not.** A Super Mario 64 project asked whether a level's challenge
-could be done with *fewer than one* press of the A button. That is a minimisation turned into a
+could be done with <span class="il-black">fewer than one</span> press of the A button. That is a minimisation turned into a
 yes-or-no question, answered by a route or by a proof that none exists. Its decisive move came from
 working backwards: it supplied the impossible-looking condition in a test fixture, confirmed the
 payoff, and only then found how the game could produce it, one supplied condition at a time.
@@ -109,7 +109,7 @@ median and maximum across Wikidata's distinct blocks. Because no route of the cu
 below the floor, anything below it is, by theorem, not an edit to Open. Whether a candidate is a
 new algorithm or an increment stops being a judgement and becomes a consequence of the bound.
 
-Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md) now has the same form: invert every block
+Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md){ .il-ref } now has the same form: invert every block
 exactly, in two passes and no more memory than Open, with at most half the single-row events that
 every route of the current kind must pay, and then beat our current decoder on the bench. A candidate either crosses
 that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder
@@ -139,6 +139,8 @@ Three older ideas carry its argument, and each bears on our search:
   investigate the area lying between the two routes." Using everything had been a search for a
   third route. This says to study the map between the routes we already have.
 
+<aside class="il-gloss" markdown>**The *Method*** came down to us in a single copy, made in the tenth century and scraped from its parchment in the thirteenth, that the leaves might carry a prayer book. Heiberg read it beneath the prayers in 1906, and much of it was recovered only by imaging, between 1999 and 2008: a method nearly lost under a book of results of another kind.</aside>
+
 The essay makes the distinction between a result and a method with its own mathematics. In one
 retelling, the Pythagoreans are handed a wall of right triangles with whole-number sides. Checking
 them one by one, with knotted rope, gives results. Looking at the triangles whose short sides
@@ -162,7 +164,7 @@ The essay's next retelling turns the rule into a proof. Lay the side of a square
 diagonal. It fits once, with a sliver left over. The sliver is the side of a smaller square in the
 corner, and the measuring starts again on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
-and the diagonal. The Greeks called this alternate subtraction anthyphairesis. It is the Euclidean
+and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
 algorithm on two lengths.
 
 <figure class="bf-fig">
@@ -180,7 +182,7 @@ anthyphairesis on many intervals at once.
 The essay ends the story with a name. Plato records it in the *Theaetetus* (147d): Theodorus showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
 have no common measure with a foot. Theaetetus stopped taking the cases one at a time and called
-them all *powers*. That is the move from checking frameworks to naming an operation. Contraction
+them all <span class="il-rubric">powers</span>. That is the move from checking frameworks to naming an operation. Contraction
 along compose, in §4, is our attempt at it: one name for what turns each of our decoders into the
 next.
 
@@ -297,6 +299,12 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
   between the two source rows: with $b_c = LF(x_0)$ and $g_i$ the count of c in $[x_i, x_{i+1})$,
   $LF(x_i) = b_c + \sum_{j<i} g_j$. One step of the frontier is a matter of counting letters in
   gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.
+
+<aside class="il-gloss" markdown>
+
+**Backward search** is how a compressed index of a text finds a pattern: it reads the pattern from its last letter to its first, and each letter narrows a range of sorted rows by one LF step. Batched, many such ranges go through each step together.
+
+</aside>
 
 The random IDs show what the frontier changes and what it doesn't:
 
