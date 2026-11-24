@@ -1,12 +1,22 @@
 # Lead: hand-vectorised stream compaction (copy_if), for the workers' stages
 
-*Louis, 24 November 2026, ~22:30, found it after following causal profiling (Coz) into performance engineering: https://loonatick-src.github.io/posts/vectorized-copy-if-analysis/ (Chaitanya Kumar, 25 May 2026). Only about 60% of the page was read verbatim. The later sections, including the fixed version's speedups, came back as a summary and are unverified.*
+*Louis, 24 November 2026, ~22:30, found it after following causal profiling (Coz) into performance engineering: https://loonatick-src.github.io/posts/vectorized-copy-if-analysis/ (Chaitanya Kumar, 25 May 2026). Source, read in full: https://github.com/loonatick-src/loonatick-src.github.io/blob/main/content/posts/vectorized-copy-if-analysis.md (verified 22:45; it was earlier read only in part).*
 
 ## What the post shows
 
 - `copy_if` (stream compaction) does not autovectorise. Each output position depends on all the earlier predicate results: a loop-carried dependency.
 - **The trick:** compare a whole vector at once to get a bitmask, compress the selected lanes into contiguous order, store the full vector unaligned, and advance the output pointer by `popcount(mask)`. The loop is branchless, and the trailing garbage is overwritten by the next store, so the output buffer needs padding.
-- The post does this with AVX-512 (`vpcompressd`). **On Zen 4 the memory-destination form is microcoded** (144 uops), and runs at about 4 GB/s. The register-destination form followed by a plain store is the fix, reported at about 10–40× over `std::copy_if` (unverified). Lesson: check uops.info before choosing an intrinsic.
+- The post does this with AVX-512 (`vpcompressd`). **On Zen 4 the memory-destination form is microcoded** (144 uops), and runs at about 4 GB/s. The fix (after Lemire) is the register-destination form `_mm512_maskz_compress_epi32` followed by a plain `_mm512_storeu`, advancing by `popcnt(mask)`. The output needs padding for the overrun. **Verified: about 10–40× over `std::copy_if`**, on a Zen 4 Ryzen 7 255, 32-bit ints, predicate `x > 0`, about 50% selectivity. Lesson: check uops.info before choosing an intrinsic.
+
+## Other ways to do the compress step, from the post
+
+- **Tiny lookup tables** (aqrit, Stack Overflow): a shuffle-mask table indexed by the movemask.
+- **BMI2 `pext`/`pdep`** (Peter Cordes): an AVX2 left-pack without a large table.
+- **Switch plus shuffle** (Z Boson).
+- **A masked-store variant** (Mysticial): `vpcompressd` to a register, then a masked `vmovdqu32`. No padding is needed, at 2 uops on Zen 4.
+- **Portable SIMD libraries:** EVE, highway, xsimd.
+
+The post's appendix also gives **benchmark hygiene** that applies to the decomposition recipe: disabling SMT, setting thread affinity, raising scheduling priority, and checking with llvm-mca. It uses top-down analysis (`perf stat`, Yasin) and, on AMD, IBS sampling to avoid skid.
 
 ## Fit for mibz2
 

@@ -63,3 +63,7 @@
   - it warns that the summation theorem over-sums near a min-crossover and checks time, not resources.
 - **ChatGPT Pro:** pending, by paste from Louis.
 - Once all three are in, the Coordinator writes the recipe brief for the Pathfinder.
+
+## 24 Nov, 22:48 — copy_if post read in full; MONODROMY asked to generalise
+- Louis supplied the post's source. The full text is verified: about 10–40× from register compress, store and popcount advance. The AVX2 alternatives are aqrit's tiny LUT, Cordes's BMI2 pext, and switch plus shuffle. The benchmark-hygiene appendix applies to the decomposition recipe. `leads/vectorised-compaction.md` is updated.
+- Louis asked whether anything besides copy_if could use the idea. That went to MONODROMY (channel #37).
