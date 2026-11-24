@@ -272,6 +272,13 @@
     "section": " · Research blog",
     "title": "Halving the single-row steps: a target only a new algorithm can meet"
   },
+  "assets/social/blog-2026-11-24-the-target-stated-so-it-can-be-answered.png": {
+    "description": "Before we attempt a construction, we fix how cost is counted and what counts as a pass or as new so that either answer settles something.",
+    "foot": "lmmx.github.io/mibz2 · 24 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Halving the single-row steps, stated so it can be answered"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
