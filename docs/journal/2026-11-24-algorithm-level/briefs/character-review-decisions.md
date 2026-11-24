@@ -107,3 +107,11 @@ These change what stage 1 records. They are cheap now, and impossible to add aft
 | bandwidth against L3 | M: two antagonists and a small-block corpus; N: byte thresholds {2, 12, 64} MiB and dose stream/chase; C: an unresolved term unless identified | dose stream/chase only; the rest deferred until stage 1's traffic shows the question is live |
 | where SMT is tested | N: 2×2 at k = 4; M: at fixed k; course lead: the scanner at 10 and 16 | both: the clean 2×2 at 4, and the scanner placement where the profile saw the step |
 | ASLR | N: on, plus one `setarch -R` check at 10; M: on; C: on, recorded | on, recorded; the single `setarch -R` check at k = 10 is kept (N) because it is cheap |
+
+## 5. Later decisions
+
+- **The oracle arms B and C run from the four-arm binary, not ported into #841** (the Pathfinder's question, 25 November 2026).
+  - **Why:** porting means bringing #821's change to Open's emission path, and #835's scan-oracle replay, into the recipe as runtime switches. That is a large source review for no gain in identification. The oracles answer a different question from pacing, and the four-arm design pairs each arm with its own A in one binary.
+  - **The rule:** B and C are reported only as ratios against the four-arm binary's own A, never against #841's baseline.
+  - **The check:** the two binaries' A walls are compared at the knee. A gap beyond their intervals is reported as a layout effect, and the oracle ratios still stand, being within-binary.
+- **The memory dose (stream/chase) goes behind the pacing hook at a tag's end,** not through `src/dose.rs`, whose pad fires only on blocks the Cells kernel admits. On the OpenCells path LazyCells refuses every block first, so `dose.rs` would do nothing there.
