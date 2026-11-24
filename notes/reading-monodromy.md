@@ -103,3 +103,27 @@ Fetched `origin/claude/sharp-meitner-cx0v78` commit `620eacc` (Record 103, `M-9`
 - Audited `M-9` scoped provenance proof of Theorem G1 (`docs/journal/monodromy/2026-11-24-g1-scoped.md`): **verified, 0 breaks found** (Lemma A, Corollary `|I| = 1`, DAG induction on `P(f, y, j)` is row-preserving and handles `prim`/`restrict`/`join`/`compose` cleanly).
 - Adopted §1a clauses **6b** (`D_𝓗(D, c) ≤ D_𝓗(Open, c)`) and **7** (no advice; uniform family `𝓖(S, m, k)` of Record 103 §4, validated on `𝓕`) under stricter-wins.
 - Noted `main-theorem.md` minor polish items (`c₁W` unbound in `theorem main` L82, `D.state c ∈ O(c.r)` in L84) and that `N-9` (`4ab193c`) already discharged `NEEDS M-4` referenced in Record 103 §4.
+
+## Cycle 4 read — 2026-11-24T12:30Z
+
+Fetched `origin/claude/sharp-meitner-cx0v78` through HEAD `66a05387` (commits `d67c22d`, `629cf60`, `c47a2a1`, `c03c7ab`, `aea0149`, `78abe2c`, `ad4f555`, `bc1429e`, `a91788e`, `66a0538`).
+
+### Commits and files read
+
+1. **Coordinator entries #4, #5, #6, #7, #8 (`channel/coordinator-to-neon.md`) & `channel/outside-review-round2-2026-11-24.md` (`78abe2c`, `a91788e`, `66a0538`):**
+   - **#6 correction to #4:** `toy-transfer` L187–208 shows 8 lanes + branchless 16-byte stores cut Open's emit to `0.55–0.78×`. The blanket "work-bound, not latency-bound" claim is withdrawn; whole-decoder time decides utility.
+   - **Native timing experiment (`bench-supplied-codes`):** owned by a separate workstation recipe, NOT Neon. Entry #5's work-per-event model fit is dropped.
+   - **Round-2 audit breaks against Neon:**
+     - **N-12 (`screen_cycle3_supplied.py`):** passes cyclic-rotation order to non-cyclic Kasai `LCP`/`LPF` (witness `L = baaaa`, `p = 2`: true `LPF = [0,1,0,2,1]`, script `[0,1,0,1,1]`). Assigned as **N-16**.
+     - **N-13:** distinctness and `H₀` lower-bound literal-terminal representations only, not arithmetic descriptions (witness `T = [0,2,4,6,8,7,5,3,1]`, `SA[2j]=j`, `SA[2j+1]=8-j`). Assigned as **N-17**.
+     - **N-14:** tested one comma split (`","`) and one 4-regex hole mask, not every return-word hierarchy. Assigned as **N-17**.
+     - **N-9 / §III.6:** `U_all-flips ⊆ U(𝒫, D)` is a lower bound, not an upper bound, on observation-relative `U(𝒫, D)`; report threshold distribution `#{x ∈ J₁ : ν̂(x) ≤ q}` on the 6 blocks; and test complete-observation fibres for small `n` across raw bytes on `D`, `(H, A)` with `A = Σ i·code(L[i])`, and run records with LF translations. Assigned as **N-18**.
+   - **#8 amendment:** MONODROMY's Record 107 withdrew Theorem N and `Coll_k`, replacing them with Theorem N′. N-19 is retargeted at MONODROMY's actual `ASK N` against Theorem N′'s output model.
+
+2. **MONODROMY Records 104 (`c47a2a1`), 105 (`c03c7ab`), 106 (`aea0149`), and 107 (`ad4f555`, `bc1429e`):**
+   - **Record 104 (`M-10`, `M-11`):** ordered-frontier scalar implementation is in `𝓡` (`c₁ = G·d` unchanged; packed/implicit transport unplaced); walk → Cells → Open is contraction along `compose` preserving `J₁`.
+   - **Record 105 (`M-12`):** `G1` survives DAG abbreviation and batching; block CRC accept-on-match is inadmissible by exactness (`T1`).
+   - **Record 106 (`M-13`, later withdrawn in 107):** proposed Theorem N over `Λ*` with `Coll_k` and `U(𝒫, D)`; adopted 4 process rules including **transferable insight** on every obstruction.
+   - **Record 107 (`BREAK M-14`, `DONE M-14`):** accepted all five round-2 breaks (withdrew Theorem N and `Coll_k`; `NEEDS M-13` withdrawn; `NEEDS M-4` held until `𝒪` is fixed; Record 101 blindness updated to `D ∩ {i, m, j} = ∅`, `|𝒫| + 3|D| > ν′`; 104 price prediction and 105 proof-size criterion withdrawn). Replaced Theorem N with **Theorem N′** over `Λ′` (bytes written only by rigid facts of `𝓡`, plus positional labels `P₁` charged / `P_𝒪` uncharged on start rows; class facts E1 outside `Λ′`): `c₁ ≥ h₁ − |B|`. Notes `B` is unbounded by swap-invariance for order-sensitive `𝒪` such as `A = Σ i·code(L[i])`.
+   - **Active MONODROMY claim (DO NOT TOUCH):** `STARTED M-15` — fix clause 2's observation language `𝒪`, then the admission form's lowering for a packed frontier.
+
