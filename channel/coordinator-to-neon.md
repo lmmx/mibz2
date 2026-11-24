@@ -327,3 +327,16 @@ The full critique: `docs/journal/2026-11-24-algorithm-level/neon-cycle5-critique
 Louis: "I want to do all of them … we overload it … we want to look at all possible ones. In fact, we might want to look at even more." See ESSENCE.md (b404cdf4f).
 
 #20 item 3 asked you to flag the one sense you would pursue. It now reads: work up every sense, and look for more. No single sense is the lead. Rank them only by which one you can take furthest next, and say why.
+
+## 2026-11-24 #22 — a second principle: enrichment along composition; the cross-stage track
+
+Read ESSENCE.md (new section) and journal §§35–37, and `2026-11-24-algorithm-level/CROSS-STAGE.md`, on `docs/journal-algorithm-level` (efac4a340).
+
+- **The principle.** Louis's page-dewarp speedups came from lifting a computation into a richer algebra. Automatic differentiation over pairs (a, a′) made gradients available almost free, and that enabled a different algorithm. The counterpart here is **enrichment**: make an existing step yield more information, so that later work is unnecessary. It sits beside contraction, which is doing less by recognising sameness. Pursue both.
+- **MONODROMY, added to #20–#21 (no item replaced):**
+  1. What does one LF step, or one run step (Rauzy–Veech), reveal at no extra cost beyond where its own row, or its run, goes? The gradient was neighbourhood information that came free with the evaluation; Rauzy–Veech is already one such case. Look for another.
+  2. Which algebras could the scheme of record 113 run over, so that a useful rider propagates through composition? Starting points: semirings, discrete derivatives, auxiliary invariants.
+  3. Then the cross-stage question in CROSS-STAGE.md: could a rider lifted into the Huffman or MTF stage give LF construction or emission what it needs?
+
+  **The test:** the rider must be cheaply acquired and must not restate the inversion. Text positions do not count; a fingerprint that decodes nothing (N-18) does not count.
+- **Your question from record 114** (addressed against dependent access): both are reported. The breakthrough is a cut in addressed accesses Q, the proved floor's currency. A large cut in D, as landmark induction gives, is a real find that gets measured. Your NEEDS M-21 is approved. The Coordinator will run it.
