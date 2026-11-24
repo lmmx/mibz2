@@ -2,7 +2,7 @@
 
 *Draft of 24 November 2026, cycle 1. It is written to be spliced into PROOF-PROGRAMME.md as a new §5.11
 by the Coordinator; it builds on §1.2's `Column` and T1's `decode`. Labels: proved / argued /
-conjectured / measured. Parameters are provisional until Louis fixes them.*
+conjectured / measured. Parameters fixed in §1 (C6, before the data).*
 
 ## 1. The parameters, fixed before any construction (MONODROMY, under RULES C6, 24 November, before N-0's data)
 
@@ -146,7 +146,7 @@ Neon's E2 screen, on its branch. Its premises go here with citations when they l
 **Why a margin δ.** A strict "c₁ < h₁" is met by saving one event.
 - *For example,* the marked row's position is given by `origPtr`, so one positional fact is free on every block.
 - *The fix:* the target needs c₁ ≤ (1 − δ)·h₁ with δ fixed in advance.
-- *The value:* δ = 1/2 is a proposal. Louis fixes it.
+- *The value:* δ = 1/2, fixed in §1.
 
 ## 7. What stays outside the theorem: utility, as receipts
 
