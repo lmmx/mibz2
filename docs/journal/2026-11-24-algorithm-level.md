@@ -228,3 +228,54 @@ answers:
 - **What the agents do:** propose characterisations, attempt proofs, extract algorithms, measure
   payoffs; how a failed proof is recorded so that it names the missing ingredient.
 - **How a yes is confirmed:** a proof checked by Lean, and a measured payoff on real blocks.
+
+## 7. Addendum: ChatGPT on "the move 37", relayed by Louis
+
+Louis asked ChatGPT "what would you say the move 37 of this work is?" Its answer, in summary,
+with its key lines quoted:
+
+- **The Mario project's move 37** is Astral Rejection itself: treating Mario not as one entity at
+  one location but as "a collection of memory fields that can temporarily disagree". The question
+  changes from "How can Mario physically reach the pyramid top without jumping?" to "How can the
+  game simultaneously believe Mario is touching the warp and standing on the pyramid top?", which
+  makes stored graphics, cached floors, object interactions and allocation order components of a
+  solution.
+- **Its proposed move 37 for us: impossibility results as constructive operators.** "Specify a
+  desirable performance bound → derive necessary conditions for achieving it → determine which
+  conditions are currently impossible → find a representation that removes those constraints →
+  discover a different class of algorithm." "Instead of asking how to make the existing algorithm
+  faster, we ask what would have to be true for an apparently impossible performance improvement to
+  become possible? Then work backward."
+- **Artificially construct the winning implementation** ("oracle-assisted algorithm discovery"):
+  intermediate information already available, expensive lookups free, data in the ideal
+  representation, perfect scheduling foreknowledge; then "progressively replace each artificial
+  advantage with something the real algorithm produces, measuring the cost of discharging every
+  assumption." It distinguishes this from the assumption-discharge ladder: "That ladder validates
+  an existing candidate. This technique would generate candidates backward from artificially
+  achieved performance."
+- **Three methodologies:** forward optimisation ("What can we improve?"), formal investigation
+  ("What is possible or impossible?"), and backward synthesis ("If we could already achieve the
+  desired result, what would be the cheapest way to make its assumptions real?"). "It might be
+  discovering that the expensive operation we have been trying to optimise does not need to exist
+  in its present form at all." And: "I don't think we've demonstrated that this will produce
+  MONODROMY's breakthrough yet. But of all the methodological ideas we've discussed, this is the
+  one I would most like to see tested."
+
+### The Coordinator's reading
+
+- **It agrees with §3.4**, and sharpens it: the supplied-state step is a way to *generate*
+  candidates, not only to check one. The capability supplied is the hypothesis about where a new
+  algorithm's advantage would come from.
+- **It connects to Louis's yes/no target.** "Specify a desirable performance bound" is the
+  threshold; "what would have to be true" is the specification's necessary conditions; a new
+  representation that makes them true is the structural step. A yes is a representation whose
+  assumptions have all been discharged, proved correct and measured on real blocks.
+- **One caution.** An oracle can trivialise the problem: supplying the output itself makes
+  everything free. The supplied capability must be an intermediate mathematical object a new
+  algorithm could plausibly compute — rows' output positions, the cycle's structure, a
+  coordinate system on the interval exchange — not the answer. Choosing which objects to supply is
+  where the mathematics enters, and where the formulation of §6 has to be precise.
+- **Necessity results become inputs, not end points.** Record 96 says every rigid jump-walk route
+  pays per width-1 run. Read constructively, a step to a different class must not be a rigid
+  jump-walk over those runs: it must represent them differently. That is a constraint the next
+  representation has to satisfy, and so it guides the search.
