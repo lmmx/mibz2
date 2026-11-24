@@ -1,0 +1,380 @@
+#!/usr/bin/env python3
+"""Phase 2 extraction for the retrospective (docs/journal/2026-11-24-retrospective-proposal.md,
+as corrected by MONODROMY 97). Reads cached sources (see README.md), writes cases.tsv,
+cases.md, facts.tsv and outcomes.sealed.tsv. It classifies nothing."""
+import json, re, os, sys, subprocess, datetime as dt, glob, collections
+
+SRC = sys.argv[1]          # cache directory
+REPO = sys.argv[2]         # git repository (all refs fetched)
+OUT = sys.argv[3]          # output directory
+os.makedirs(OUT, exist_ok=True)
+
+exec(open(os.path.join(SRC, 'cases_def.py')).read())  # defines C
+
+def P(x): return dt.datetime.fromisoformat(x.replace('Z', '+00:00'))
+def iso(t): return t.astimezone(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ') if t else ''
+
+prs = {p['number']: p for p in json.load(open(f'{SRC}/prs.json'))}
+prmeta = {int(k): v for k, v in json.load(open(f'{SRC}/prmeta.json')).items()}
+prc = {int(k): v for k, v in json.load(open(f'{SRC}/prcomments.json')).items()}
+comments = []
+for f, issue in [('c145.json', 145)] + [(f'inbox_{i}.json', i) for i in (160, 161, 162, 222, 314, 346, 363)]:
+    for c in json.load(open(f'{SRC}/{f}')):
+        c['issue'] = issue; c['t'] = P(c['created_at']); comments.append(c)
+cbyid = {c['id']: c for c in comments}
+for n, cs in prc.items():
+    for c in cs: cbyid.setdefault(c['id'], {'id': c['id'], 'body': c['b'], 't': P(c['t']), 'issue': n,
+                                           'html_url': f'https://github.com/lmmx/mibz2/pull/{n}#issuecomment-{c["id"]}'})
+
+# evidence bundles: path, evidence commit, start, finished, minutes(finished), minutes(submission)
+bundles = []
+for l in open(f'{SRC}/../ev/mins.tsv'):
+    f, ec, st, fin, mf, ms = (l.rstrip('\n').split('\t') + [''] * 6)[:6]
+    bundles.append(dict(path=f, ec=ec, start=P(st) if st else None, fin=P(fin) if fin else None,
+                        mf=float(mf) if mf else None, ms=float(ms) if ms else None))
+queue_desc = {}
+for l in open(f'{SRC}/queue_hist.txt'):
+    parts = l.split('|', 1)
+    queue_desc[parts[0].split()[0].replace('bench-', '')] = parts[1].strip() if len(parts) > 1 else ''
+
+def git(*a): return subprocess.run(['git', '-C', REPO] + list(a), capture_output=True, text=True).stdout
+
+# ---- dated documents: every version of every journal / charter / record markdown file
+DOC_REFS = [('origin/master', 'docs/journal'), ('origin/master', 'docs/team/research-charter'),
+            ('origin/pr497', 'docs/journal/monodromy')]
+versions = collections.defaultdict(list)   # (ref, path) -> [(time, commit)]
+for ref, d in DOC_REFS:
+    out = git('log', '--format=@%H %aI', '--name-only', ref, '--', d)
+    cur = None
+    for l in out.splitlines():
+        if l.startswith('@'):
+            h, t = l[1:].split(); cur = (h, P(t))
+        elif l.endswith('.md') and cur:
+            versions[(ref, l)].append((cur[1], cur[0]))
+for k in versions: versions[k].sort()
+_cat = subprocess.Popen(['git', '-C', REPO, 'cat-file', '--batch'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+_blob = {}
+def show(commit, path):
+    key = (commit, path)
+    if key in _blob: return _blob[key]
+    _cat.stdin.write(f'{commit}:{path}\n'.encode()); _cat.stdin.flush()
+    hdr = _cat.stdout.readline().decode()
+    if hdr.endswith('missing\n'): _blob[key] = ''; return ''
+    n = int(hdr.split()[2]); data = _cat.stdout.read(n); _cat.stdout.read(1)
+    _blob[key] = data.decode('utf-8', 'replace'); return _blob[key]
+def doc_before(ref, path, cutoff):
+    vs = [v for v in versions[(ref, path)] if v[0] < cutoff]
+    return (vs[-1], show(vs[-1][1], path)) if vs else (None, None)
+def doc_first(path):
+    for ref, _ in DOC_REFS:
+        if versions.get((ref, path)): return versions[(ref, path)][0]
+    return None
+
+MEAS = re.compile(r'\d[\d,.]*\s?(%|×|x\b|ns|µs|ms|MB|MiB|KiB|GB/s|MB/s|Ir|B/B|c/B|cycles|instructions)|\b[01]\.\d{2,3}\b|\[\s?[01]\.\d+')
+OUTCOME = re.compile(r'NOT ADOPTED|ADOPTS|ADOPTED|\bKILL|\bmerged\b|\bclosed\b|[Cc]losing|not shown|[Vv]erdict|[Rr]esult|regression|slower|faster|FASTER|SLOWER|\bpass(ed|es)?\b|\bfail|\bwon\b|\blost\b|\bwin\b|negative|confirms?|refuted|falsified|INCONCLUSIVE|HELD|null\b|stays|superseded|[Ss]hipped', re.I)
+PREMISE = re.compile(r'\b(predict\w*|expect\w*|hypothes\w*|premise|assum\w*|estimat\w*|priced|model(led|s)?|should|would|because|so that|the gain|saves?|cuts?|removes?|fewer|smaller|binds?|bound by|bottleneck|dominat\w*|costs? (about|only)|is (about|nearly) \d)', re.I)
+LEAK = re.compile(r'NOT ADOPTED|\bKILL\b|closed unmerged|\bstands\b|\bVOID\b|failed|\blost\b|refuted|falsified|merged as|superseded|was slower|not shown|NO.GO|SHELVE', re.I)
+def scrub(t):
+    return '; '.join(x for x in re.split(r';\s*', t) if not LEAK.search(x))
+
+def sentences(text):
+    text = re.sub(r'<!--.*?-->', ' ', text or '', flags=re.S)
+    text = re.sub(r'\s+', ' ', text)
+    return [s.strip() for s in re.split(r'(?<=[.;:!?])\s+(?=[A-Z*(`-])', text) if 20 < len(s.strip()) < 600]
+
+def clip(s, n=330): s = s.replace('\t', ' ').replace('|', '\\|'); return s if len(s) <= n else s[:n - 1] + '…'
+def tsv(s): return (s or '').replace('\t', ' ').replace('\n', ' / ')
+
+def pr_link(n): return f'https://github.com/lmmx/mibz2/pull/{n}'
+def blob_link(ref, path, commit=None):
+    if commit: return f'https://github.com/lmmx/mibz2/blob/{commit[:12]}/{path}'
+    br = 'master' if ref == 'origin/master' else 'pull/497'
+    return f'https://github.com/lmmx/mibz2/blob/{br}/{path}' if br == 'master' else f'{path} (PR #497 branch)'
+
+def match_bundles(recipes):
+    out = []
+    for r in recipes or []:
+        for b in bundles:
+            d = b['path'].split('/')[0]
+            if ('/' in r and b['path'].startswith(r)) or ('/' not in r and d == r):
+                out.append(b)
+    return out
+
+ROLE = re.compile(r'^FROM:\s*(\S+(?: \S+)*)', re.M)
+def from_role(body):
+    m = ROLE.search(body or ''); return m.group(1).strip().lower() if m else ''
+
+def verdict_text(ref):
+    kind, _, rest = ref.partition(':')
+    if kind == 'merged':
+        p = prs[int(rest)]; return (P(p['merged_at']), f'merged {p["merged_at"]}', pr_link(int(rest)))
+    if kind == 'c145':
+        c = cbyid[int(rest)]; return (c['t'], c['body'], c.get('html_url'))
+    if kind == 'pr':
+        n, cid = rest.split(':'); n = int(n); cid = int(cid)
+        if cid == 0:
+            p = prs[n]; return (None, p['body'] or '', pr_link(n))
+        c = cbyid[cid]; return (c['t'], c['body'], c['html_url'])
+    if kind == 'journal':
+        v = doc_first(rest); txt = open(os.path.join(REPO_WT, rest)).read() if os.path.exists(os.path.join(REPO_WT, rest)) else ''
+        lv = None
+        for k in versions:
+            if k[1] == rest and versions[k]: lv = versions[k][-1]
+        return (v[0] if v else None, txt, f'https://github.com/lmmx/mibz2/blob/master/{rest}')
+    return (None, '', '')
+REPO_WT = OUT.split('/docs/journal/')[0]
+
+def verdict_quote(body):
+    s = sentences(body)
+    keys = re.compile(r'NOT ADOPTED|ADOPTS|KILL|[Vv]erdict|[Cc]losing|[Cc]losed|[Rr]esult|not shown|merged|FAIL|PASS|INCONCLUSIVE|stays|no trim|SHELVE|none adopts|did not|lost|NO.GO', re.I)
+    hit = [x for x in s if keys.search(x)]
+    return ' '.join((hit or s)[:3])
+
+rows, facts, sealed, mdparts = [], [], [], []
+shared_first = collections.Counter(v.get('first_commit') for v in prmeta.values())
+def latest_distinct(hits, k):
+    seen, out = set(), []
+    for h in reversed(hits):
+        if h[3] in seen: continue
+        seen.add(h[3]); out.append(h)
+        if len(out) == k: break
+    return list(reversed(out))
+for c in C:
+    cid = c['id']; nums = c.get('prs', [])
+    # ---- commit to build
+    cands = []; early_commit_notes = []
+    for n in nums:
+        if n in prs: cands.append((P(prs[n]['created_at']), f'PR #{n} opened', pr_link(n)))
+        fm = prmeta.get(n, {}).get('first_commit')
+        if fm and n in prs:
+            gap = (P(prs[n]['created_at']) - P(fm)).total_seconds() / 3600
+            if gap <= 12 and shared_first[fm] == 1: cands.append((P(fm), f'PR #{n} first commit (author date)', pr_link(n) + '/commits'))
+            else: early_commit_notes.append(f'PR #{n}\'s earliest listed commit is {iso(P(fm))}, {gap:.0f} h before it opened' + (' and is listed on other PRs too' if shared_first[fm] > 1 else '') + '; it may belong to a base branch, so it is not used.')
+    for j in c.get('journals', []):
+        if 'registration' in j:
+            v = doc_first(j)
+            if v: cands.append((v[0], f'registration {j} first commit {v[1][:8]}', blob_link('origin/master', j, v[1])))
+    if not nums:
+        for j in c.get('journals', []):
+            v = doc_first(j)
+            if v: cands.append((v[0], f'{j} first commit {v[1][:8]} (no PR; earliest recorded)', blob_link('origin/master', j, v[1])))
+    if c.get('commission'):
+        cc = cbyid[c['commission']]; cands.append((cc['t'], f'commission {cc["id"]}', cc['html_url']))
+    cands.sort(key=lambda x: x[0])
+    ctb = cands[0] if cands else (None, 'unrecorded', '')
+    cut = ctb[0]
+
+    # ---- verdict (sealed)
+    vt, vbody, vlink = verdict_text(c['verdict'])
+    vdate = vt
+    if c.get('vgrep'):
+        path = c['verdict'].split(':', 1)[1]
+        h = git('log', '--reverse', '--format=%H %aI', '-S', c['vgrep'], 'origin/master', '--', path).split('\n')[0].split()
+        if h: vdate = P(h[1]); vlink = f'https://github.com/lmmx/mibz2/blob/{h[0][:12]}/{path}'
+    if c.get('vdate_from') == 'pr_opened': vdate = P(prs[nums[0]]['created_at'])
+    if vdate is None:
+        closes = [P(prs[n]['closed_at']) for n in nums if n in prs and prs[n].get('closed_at')]
+        vdate = max(closes) if closes else None
+
+    # ---- cost
+    bs = match_bundles(c.get('recipes'))
+    i9 = []; tot_f = 0.0; nf = 0
+    for b in bs:
+        m = b['mf'] if b['mf'] is not None else b['ms']
+        src = 'started→finished.txt' if b['mf'] is not None else 'bundle start (name)→evidence commit'
+        i9.append(f'{b["path"].replace(".tar.gz","")}: {m} min ({src})')
+        if m is not None: tot_f += m; nf += 1
+    runs = []
+    for n in nums:
+        br = prmeta.get(n, {}).get('bench_runs')
+        if br: runs += [r for r in br]
+    ci = f'{len(runs)} Benchmark workflow runs on the PR branches' if runs else ('0 Benchmark workflow runs found on the PR branches' if nums else 'unrecorded')
+    days = f'{(vdate - cut).total_seconds() / 86400:.2f}' if (vdate and cut) else 'unrecorded'
+    tok = []
+    for cm in comments:
+        if any(f'#{n}' in cm['body'] for n in nums) and re.search(r'\b\d[\d.]*\s?[MK]?\s?tokens\b', cm['body']):
+            tok.append(f'{cm["html_url"]}: ' + clip(re.search(r'[^.\n]*\btokens\b[^.\n]*', cm['body']).group(0), 160))
+    cost = {'i9': '; '.join(i9) if i9 else ('none on the evidence branch' if c.get('recipes') is not None else 'no i9 bundle named'),
+            'i9_total_min': f'{tot_f:.1f} over {nf} bundle(s)' if nf else '0',
+            'ci': ci, 'days': days, 'agent': '; '.join(tok[:3]) if tok else 'unrecorded'}
+
+    # ---- premises: first commit message, commission, PR bodies (current text), registration at first commit
+    prem = []
+    srcs = []
+    if c.get('commission'):
+        cc = cbyid[c['commission']]; srcs.append((cc['t'], cc['body'], cc['html_url']))
+    for n in nums:
+        m = prmeta.get(n, {})
+        if m.get('first_msg'): srcs.append((P(m['first_commit']), m['first_msg'], pr_link(n) + ' (first commit message)'))
+        if n in prs: srcs.append((P(prs[n]['created_at']), prs[n]['body'] or '', pr_link(n) + ' (PR body, current text)'))
+    for j in c.get('journals', []):
+        v = doc_first(j)
+        if v and 'registration' in j: srcs.append((v[0], show(v[1], j), blob_link('origin/master', j, v[1]) + ' (at its first commit)'))
+    srcs.sort(key=lambda x: x[0])
+    order = lambda x: (0 if 'commission' in x[2] or 'issuecomment' in x[2] else 1 if 'first commit)' in x[2] else 2 if 'first commit message' in x[2] else 3)
+    for t, body, link in sorted(srcs, key=order):
+        for s in sentences(body):
+            if PREMISE.search(s) and not OUTCOME.search(s) and not LEAK.search(s) and len(prem) < 6:
+                prem.append((t, link, s))
+        if len(prem) >= 6: break
+
+    # ---- same-quantity facts: every dated document before the cutoff whose line matches the premise terms and carries a measurement
+    kw = re.compile(c['kw'], re.I)
+    hits = []
+    if cut:
+        for (ref, path), vs in versions.items():
+            if path in c.get('journals', []) and 'registration' not in path: continue
+            v, txt = doc_before(ref, path, cut)
+            if not txt: continue
+            for line in txt.splitlines():
+                if kw.search(line) and MEAS.search(line):
+                    hits.append((v[0], 'doc', blob_link(ref, path, v[1]), path, line.strip()))
+        for cm in comments:
+            if cm['t'] >= cut: continue
+            for line in (cm['body'] or '').splitlines():
+                if kw.search(line) and MEAS.search(line):
+                    hits.append((cm['t'], f'#{cm["issue"]} {from_role(cm["body"]) or cm.get("user","")}', cm['html_url'], f'comment {cm["id"]}', line.strip()))
+    hits.sort(key=lambda x: x[0])
+    for h in hits: facts.append([cid, iso(h[0]), h[1], h[2], tsv(clip(h[4], 400))])
+    ndocs = len({h[2] for h in hits})
+
+    # ---- counterfactual candidates: i9 bundles of <= 10 min before the cutoff whose recipe text matches the terms
+    cf = []
+    if cut:
+        for b in bundles:
+            if b['start'] and b['start'] < cut:
+                m = b['mf'] if b['mf'] is not None else b['ms']
+                d = b['path'].split('/')[0]
+                desc = queue_desc.get(d, '')
+                if m is not None and m <= 10 and (kw.search(d) or kw.search(desc)):
+                    cf.append(f'{b["path"].replace(".tar.gz","")} ({m} min; {clip(scrub(desc),120) or "no queue description"})')
+
+    # ---- review routing: Researcher / Optimiser comments naming the case's PRs or recipes
+    refs = [f'#{n}' for n in nums] + [f'bench-{r.split("/")[0]}' for r in (c.get('recipes') or [])]
+    rv = []
+    for cm in comments:
+        role = from_role(cm['body'])
+        if not role or not any(x in role for x in ('researcher', 'optimizer', 'optimiser')): continue
+        if any(re.search(re.escape(r) + r'\b', cm['body']) for r in refs):
+            rv.append(cm)
+    rv.sort(key=lambda x: x['t'])
+    first_bundle = min([b['start'] for b in bs if b['start']] or [None]) if bs else None
+    def rel(t):
+        if cut and t < cut: return 'before commit_to_build'
+        if first_bundle and t < first_bundle: return 'after commit_to_build, before the first i9 bundle'
+        return 'after commit_to_build'
+    routing = []
+    for who in ('researcher', 'optim'):
+        x = [cm for cm in rv if who in from_role(cm['body'])]
+        if x: routing.append(f'{"Researcher" if who=="researcher" else "Optimiser"}: {len(x)} comment(s); earliest {x[0]["html_url"]} ({iso(x[0]["t"])}, {rel(x[0]["t"])})')
+        else: routing.append(f'{"Researcher" if who=="researcher" else "Optimiser"}: unrecorded (no comment from the role naming {", ".join(refs) or "the case"})')
+
+    # ---- MONODROMY and Coordinator involvement, by citation
+    own_text = ' '.join([(prs[n]['body'] or '') for n in nums if n in prs] + [vbody or ''] +
+                        [show(versions[('origin/master', j)][-1][1], j) for j in c.get('journals', []) if versions.get(('origin/master', j))])
+    recs = sorted(set(re.findall(r'(?:MONODROMY(?:\'s)?|[Rr]ecords?) (\d{1,2})\b', own_text)), key=int)
+    mono_files = []
+    for (ref, path), vs in versions.items():
+        if ref != 'origin/pr497' or 'retrospective' in path or path.endswith('README.md'): continue
+        txt = show(vs[-1][1], path)
+        if any(re.search(re.escape(r) + r'\b', txt) for r in refs if r.startswith('#')) or \
+           any(r in txt for r in refs if r.startswith('bench-')):
+            mono_files.append(os.path.basename(path))
+    mono = []
+    if 'MONODROMY' in own_text or recs: mono.append('cited in the case\'s own documents' + (f' (records {", ".join(recs)})' if recs else ''))
+    if mono_files: mono.append('records naming its PRs or recipes: ' + ', '.join(sorted(mono_files)))
+    if 'MONODROMY' in c['origin']: mono.append('origin field names MONODROMY')
+    coord = []
+    if cut and cut < P('2026-11-06T13:00:00Z'): coord.append('pre-team era (before RULES.md, 6 Nov): the one Claude session, later the Coordinator, did the work')
+    if 'Coordinator' in c['origin']: coord.append('origin field names the Coordinator')
+    cm_comm = [cm for cm in comments if from_role(cm['body']).startswith('coordinator') and re.search(r'TYPE:\s*(QUEUED|CHECKPOINT|PROPOSAL)', cm['body'] or '')
+               and any(re.search(re.escape(r) + r'\b', cm['body']) for r in refs) and cut and cm['t'] <= cut + dt.timedelta(hours=1)]
+    if cm_comm: coord.append('Coordinator assignment naming it at or before commit_to_build: ' + ', '.join(x['html_url'] for x in cm_comm[:3]))
+    if cut and cut >= P('2026-11-06T13:00:00Z'): coord.append('every merge or close after 6 Nov is formally the Coordinator\'s decision (CLAUDE.md); not counted as involvement')
+
+    # ---- the gain's source and where it had to hold: quoted
+    gain_q, hold_q = [], []
+    GAIN = re.compile(r'(measured|counted|callgrind|\bIr\b|instructions|harness|synthetic|toy|natively|native|\bC harness|model|chaingrind|Xeon|EPYC|VM|i9|cores?|threads?|one block|blocks?|corpus|Wikidata|predict)', re.I)
+    HOLD = re.compile(r'(ADOPTS iff|rule|gate|criterion|benefit|must|at \d+(, \d+)* (and \d+ )?threads|unpinned|pinned|i9|wikidata ?(x|×)4|10 threads|end.to.end|paired)', re.I)
+    for t, link, s in [(t, l, s) for t, b, l in srcs for s in sentences(b)]:
+        if GAIN.search(s) and MEAS.search(s) and not OUTCOME.search(s) and not LEAK.search(s) and len(gain_q) < 3: gain_q.append(f'"{clip(s,300)}" ({link})')
+    for r in (c.get('recipes') or []):
+        d = r.split('/')[0]
+        if d in queue_desc and f'bench-{d}' not in ' '.join(hold_q): hold_q.append(f'queue entry bench-{d}: "{clip(scrub(queue_desc[d]),300)}"')
+    for t, link, s in [(t, l, s) for t, b, l in srcs for s in sentences(b)]:
+        if HOLD.search(s) and not OUTCOME.search(s) and not LEAK.search(s) and len(hold_q) < 4: hold_q.append(f'"{clip(s,300)}" ({link})')
+
+    first_i9 = min([b['start'] for b in bs if b['start']] or [None]) if bs else None
+    base_moved = ''
+    if len(set(b['path'].split('/')[0] for b in bs)) and len(bs) > 1:
+        base_moved = f'{len(bs)} i9 bundles over {len(set(b["path"].split("/")[0] for b in bs))} recipe(s); coders check whether master moved between them.'
+
+    row = dict(id=cid, title=c['title'], prs=' '.join(f'#{n}' for n in nums), deciding_machine=c['machine'],
+               origin=c['origin'], commit_to_build=f'{iso(ctb[0])} — {ctb[1]} {ctb[2]}'.strip(),
+               claimed_gain_source=' || '.join(gain_q) or 'not found by the extractor in the pre-build sources (see cases.md)',
+               must_hold=' || '.join(hold_q) or 'not found by the extractor in the pre-build sources',
+               cost_i9=cost['i9'], cost_i9_total=cost['i9_total_min'], cost_ci=cost['ci'],
+               cost_calendar_days=cost['days'], cost_agent=cost['agent'],
+               premises=' || '.join(f'[{iso(t)}] "{clip(s,260)}" ({l})' for t, l, s in prem) or 'none extracted',
+               same_quantity_facts=f'{len(hits)} lines in {ndocs} documents before commit_to_build (facts.tsv)',
+               counterfactual_real_block_le10min='; '.join(cf) or 'none found',
+               review_routing=' || '.join(routing),
+               monodromy_involved=('yes: ' + '; '.join(mono)) if mono else 'no citation found',
+               coordinator_involved=('yes: ' + '; '.join(x for x in coord if not x.startswith('every merge'))) if [x for x in coord if not x.startswith('every merge')] else 'no citation found',
+               notes=' '.join([base_moved] + early_commit_notes).strip())
+    rows.append(row)
+    vq = ''
+    if c.get('vgrep') or c.get('vline'):
+        pat = c.get('vgrep') or c.get('vline'); ls = (vbody or '').splitlines()
+        i = next((k for k, l in enumerate(ls) if pat in l), None)
+        vq = ' '.join(x.strip() for x in ls[i:i + 3] if x.strip()) if i is not None else ''
+    elif c['verdict'].startswith('journal:'):
+        ls = (vbody or '').splitlines()
+        for i, l in enumerate(ls):
+            if i < 2 and l.startswith('# '): continue
+            if re.search(r'(^#+ .*(Result|Verdict|verdict))|^\*\*(Result|Verdict)|^## Result|Verdict[:.]', l):
+                vq = ' '.join(x.strip() for x in ls[i:i + 4] if x.strip()); break
+        if not vq: vq = ' '.join(ls[:3])
+    else:
+        vq = verdict_quote(vbody)
+    sealed.append([cid, c['outcome'], vlink, iso(vdate) if vdate else '', tsv(clip(vq, 700)), tsv(c.get('notes', ''))])
+
+    # ---- markdown
+    md = [f'## {cid}: {c["title"]}', '',
+          f'- **PRs:** {", ".join(f"[#{n}]({pr_link(n)})" for n in nums) or "none"}',
+          f'- **Journal sources:** {", ".join(c.get("journals", [])) or "none listed"}',
+          f'- **i9 recipes:** {", ".join(c.get("recipes") or []) or "none"}',
+          f'- **Deciding machine:** {c["machine"]}',
+          f'- **Origin (as recorded):** {c["origin"]}',
+          f'- **commit_to_build:** {iso(ctb[0])}, {ctb[1]} ({ctb[2]})',
+          f'- **Cost:** i9 {cost["i9_total_min"]} min [{cost["i9"]}]; CI: {cost["ci"]}; calendar days, commit to verdict: {cost["days"]}; agent runs/tokens: {cost["agent"]}',
+          '', '**claimed_gain_source** (quoted):', ''] + [f'- {g}' for g in gain_q or ['not found by the extractor']] + \
+         ['', '**must_hold** (quoted):', ''] + [f'- {h}' for h in hold_q or ['not found by the extractor']] + \
+         ['', '**Premises** (quoted from the sources dated at or before commit_to_build; PR bodies are their current text):', ''] + \
+         [f'- [{iso(t)}] "{clip(s, 400)}" ({l})' for t, l, s in prem or []] + ([] if prem else ['- none extracted']) + \
+         ['', f'**same_quantity_facts:** {len(hits)} matching lines in {ndocs} documents dated before commit_to_build, searched on `{c["kw"]}` with a measurement on the line. All are in `facts.tsv`; the latest line from each of the 10 latest documents:', ''] + \
+         [f'- [{iso(h[0])}] {h[3]} ({h[1]}): "{clip(h[4], 300)}" — {h[2]}' for h in latest_distinct(hits, 10)] + ([] if hits else ['- none']) + \
+         ['', f'**Counterfactual real-block i9 measurements (≤ 10 min) before commit_to_build, matching the terms:** {"; ".join(cf) or "none found"}', '',
+          f'**Review routing:** ' + ' / '.join(routing), '',
+          f'**monodromy_involved:** {row["monodromy_involved"]}', '',
+          f'**coordinator_involved:** {row["coordinator_involved"]}', '']
+    if row['notes']: md += [f'**Notes:** {row["notes"]}', '']
+    mdparts.append('\n'.join(md))
+
+cols = list(rows[0].keys())
+with open(f'{OUT}/cases.tsv', 'w') as f:
+    f.write('\t'.join(cols) + '\n')
+    for r in rows: f.write('\t'.join(tsv(str(r[k])) for k in cols) + '\n')
+with open(f'{OUT}/facts.tsv', 'w') as f:
+    f.write('id\tdate\tsource\tlink\tline\n')
+    for r in facts: f.write('\t'.join(r) + '\n')
+with open(f'{OUT}/outcomes.sealed.tsv', 'w') as f:
+    f.write('id\toutcome\tverdict_link\tverdict_date\tverdict_reason_quoted\tsealed_notes\n')
+    for r in sealed: f.write('\t'.join(r) + '\n')
+with open(f'{OUT}/cases.md', 'w') as f:
+    f.write('# Retrospective cases: the extracted facts\n\n'
+            'Phase 2 of the retrospective (`docs/journal/2026-11-24-retrospective-proposal.md` §4a, as corrected by MONODROMY 97). '
+            'One section per idea, in the order of `cases.tsv`. It states no verdicts: those are in `outcomes.sealed.tsv`, '
+            'which coders do not open. Method and limits are in `README.md`.\n\n')
+    f.write('\n'.join(mdparts))
+print(len(rows), 'cases;', len(facts), 'fact lines')
