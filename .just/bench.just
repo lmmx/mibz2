@@ -2094,7 +2094,9 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
       [ -z "$beyond" ] \
         || { echo "bench-kernel-choice: the builds differ in the harness or the build: $(echo $beyond)"; exit 1; }
       if [ -n "$PRESPIN" ]; then
-        git show "$head:examples/ab.rs" | grep -q -- '"--prespin-ms"' \
+        # (git grep, never `git show | grep -q`: under pipefail, grep -q quitting at the first
+        # match leaves git show a SIGPIPE, and the pipeline fails on a head that has the option)
+        git grep -q -e '"--prespin-ms"' "$head" -- examples/ab.rs \
           || { echo "bench-kernel-choice: PRESPIN $PRESPIN, but the head's harness has no --prespin-ms (it predates #874: merge master into the head)"; exit 1; }
       fi
       printf '%s\n' "$changed" > "$O/src-changed.txt"
