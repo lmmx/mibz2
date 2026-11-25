@@ -19,11 +19,20 @@ submit recipe *args:
       flock -n 9 || { echo "submit: another workstation run holds the machine lock $lock ($(cat "$lock" 2>/dev/null)); nothing was run"; exit 1; }
       echo "pid $$, just submit {{ recipe }}, since $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$lock"
     fi
+    # the bundle is the one bench/bundle.sh says it made (it appends its path to SUBMIT_BUNDLES);
+    # only a recipe that never ran bundle.sh falls back to the new target/*/*.tar.gz, so a tarball
+    # a recipe fetches or caches under target/ is never taken for its bundle
+    export SUBMIT_BUNDLES
+    SUBMIT_BUNDLES=$(mktemp) || { echo "submit: could not make a temporary file (nothing was run)"; exit 1; }
     before=$(ls target/*/*.tar.gz 2>/dev/null | sort)
     {{ just_executable() }} {{ recipe }} {{ args }}
     status=$?
-    made=$(comm -13 <(echo "$before") <(ls target/*/*.tar.gz 2>/dev/null | sort) | grep . || true)
-    [ "$(echo "$made" | grep -c .)" = 1 ] || { echo "submit: {{ recipe }} made $(echo "$made" | grep -c .) bundles, not one; submit one with: just submit-bundle <tarball>"; exit 1; }
+    made=$(sort -u "$SUBMIT_BUNDLES" | grep . || true)
+    rm -f "$SUBMIT_BUNDLES"
+    if [ -z "$made" ]; then
+      made=$(comm -13 <(echo "$before") <(ls target/*/*.tar.gz 2>/dev/null | sort) | grep . || true)
+    fi
+    [ "$(echo "$made" | grep -c .)" = 1 ] || { echo "submit: {{ recipe }} made $(echo "$made" | grep -c .) bundles, not one$([ -z "$made" ] || echo " ($(echo $made))"); submit one with: just submit-bundle <tarball>"; exit 1; }
     bash bench/submit.sh "$made" || { echo "submit: not submitted; the bundle is kept. Retry with: just submit-bundle $made"; exit 1; }
     exit $status
 
