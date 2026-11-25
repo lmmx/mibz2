@@ -46,4 +46,4 @@ A mathematical idea pays only if the part it improves has room. So before lookin
 | 3 | the full matrix run | Pathfinder (recipe), Louis's workstation | after step 2 |
 | 4 | the analysis: main effects, interactions and the ceiling table | Coordinator, MONODROMY | after each run |
 | 5 | Antigravity, first pass: mathematics against the shape we have, gaps marked | Louis runs it | prompt ready (`antigravity/prompt-1.md`) |
-| 6 | Antigravity, second pass: mathematics against the full ceiling table | Louis runs it | after step 4 |
+| 6 | Antigravity, second pass: mathematics against the full ceiling table | Louis runs it | prompt ready (`antigravity/prompt-2.md`) |
