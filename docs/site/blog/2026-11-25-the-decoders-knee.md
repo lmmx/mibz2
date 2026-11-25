@@ -1,7 +1,7 @@
 ---
 title: "The decoder's knee"
 image: assets/social/blog-2026-11-25-the-decoders-knee.png
-description: "A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments."
+description: "A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments."
 ---
 
 <div class="post-hero" markdown>
@@ -13,10 +13,10 @@ description: "A two-station queue predicts from four worker counts where adding 
 
 # The decoder's knee
 
-A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.
+A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments.
 {: .post-dek }
 
-25 November 2026 · 12 min read · [Research in progress](#8-what-runs-next)
+25 November 2026 · 14 min read · [Research in progress](#9-what-runs-next)
 {: .post-meta }
 
 </div>
@@ -104,14 +104,14 @@ or 3% on the plateau. The large gains lie in less work at the bottleneck, or mor
 
 Three performance-analysis courses were read in full, with their sources saved, and then mined for
 opportunities against these measurements by four readers, each writing an answer before seeing the
-others ([the summary](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)). Three of those readings are in; the fourth, aimed at where
-mathematics rather than engineering fits, is still to come.
+others ([the summary](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)). The fourth, aimed at where mathematics rather than engineering fits, is the subject of §5.
 
 | Reader | What it found that the others had not |
 |---|---|
 | [The first reading](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md) | right-sizing the worker count; putting the bottleneck on the fastest core; mean-value analysis in place of the hard-max fit |
 | [An outside model](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md) | the public API's actual worker count; bottleneck migration; the variability of block sizes |
 | [A second agent](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md) | two avoidable copies in the scanner, about 8% of its demand; the same worker-count error |
+| [The fourth reading](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md) | the scan as a chain at its latency floor; a design space for the scanner–worker boundary; construction as the largest worker target |
 
 The disagreements were the useful part. The first reading had claimed that the Python binding's
 default of 20 workers costs 20% of the wall. Two readers, independently, found that the public API
@@ -165,7 +165,44 @@ The run flagged its own instrument as perturbing at 10 and 20 workers: the cost 
 include 1 but are wide, so timings from the ledgers at high counts may be inflated by up to about
 9%, while shares, counts and the identities are unaffected.
 
-## 5. Designing for a purpose
+## 5. The fourth reading, and a design space
+
+The fourth reading registered its plan for analysing stages 1 and 2 before stage 1 ran, and then
+asked what the measurements imply about the scanner itself ([record 129](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md)). At 1.41 to
+1.51 ns a symbol, the Huffman scan takes about 7 cycles a symbol, one first-level cache load's
+latency: the scan is a single dependent chain running at its latency floor. The lever is
+therefore fewer lookups a symbol, decoding several symbols with each lookup. A 10-bit window bounds
+that at about 2.6 symbols a lookup, and the reading conjectures 13 to 17% off the best wall; the
+cheapest test is to count cycles a symbol on the scanner at one worker, where about 7 cycles and no
+cache misses would confirm the floor.
+
+A companion record enumerated the ways the scanner's obligations could be divided between the
+scanner and the workers, and scored each placement with the two-station law
+([record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md)). Three placements lead, all conjectured: an index of block starts, so that
+each worker scans its own block, at −15%; decoding several symbols a lookup, still serially, at
+−17%; and both together at −19%. Its separating principle is to keep an obligation on a serial path
+only if its state has no small summary, and to cut the path wherever the format resets that state.
+One placement it rules out: decoding a single block's Huffman codes in parallel. The table is
+chosen afresh every 50 symbols by a running symbol count that nothing in the stream
+re-synchronises, so each chunk would have to carry at least 50 hypotheses, and a k-way split
+loses for every k below 50; the obstruction is proved from the format, its cost argued.
+
+The same record measured where the workers' time goes on a real block at one worker: construction
+of the inversion's structures 45%, emission 38%, move-to-front and run records 10%, and the final
+run-length expansion and checksum 6%, shares that hold at 8 and 16 workers. Construction, not
+emission, is the largest target for mathematics in the workers. Of the two leads at the scanner,
+decoding several symbols a lookup becomes an engineering prototype, and the index of block starts
+the larger structural lead.
+
+Stage 1's traces have also been analysed by program ([journal §71](https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md); [the outputs](https://github.com/lmmx/mibz2/tree/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/analysis)).
+The lower bound, the busiest of the scanner, the workers and the reader, is tight below the knee,
+with the wall within 1.4% of it up to 6 workers, and loosest at the knee itself, 4 to 5% at 8 to 11
+workers, where dependencies, starvation and blocking cost most. Issuing blocks is smooth, but taking
+them is bursty: when a slow block at the head of the line finishes, a run of ready blocks is taken
+at once, the signature of putting completed blocks back in order. These describe one corpus's
+traces, not guarantees.
+
+## 6. Designing for a purpose
 
 A question about method came next: whether the decoder could be studied the way systems biology
 studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that
@@ -196,7 +233,7 @@ same reading were adopted as method: the same function can be realised by differ
 which is why the referee counts structure; and a representation change is a search for the hidden
 coordinate in which the work cancels.
 
-## 6. The dynamical layer
+## 7. The dynamical layer
 
 The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top
 of continuous quantities such as occupancy and time. The language for that is the theory of hybrid
@@ -222,7 +259,7 @@ quantities apart: lower bounds, used to prune; predictors, used to rank, and val
 runs rather than by replaying a run with its own durations; and proved upper bounds, for which
 backward induction over a finite, acyclic state graph is the concrete route.
 
-## 7. How the work is done
+## 8. How the work is done
 
 The method is written down so that it can be reused
 ([the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md)). It starts from a measured surprise rather than a technique, poses the
@@ -234,13 +271,13 @@ naming who found the error, as the worker-count error and the lower bound above 
 registers its decision rule before its data, changes are priced jointly because a relieved
 bottleneck moves, and when it moves, the ideas it may have masked are tested again.
 
-## 8. What runs next
+## 9. What runs next
 
 Five runs are planned, in order ([the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md)): the stage 1 baseline, now
 done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows
 each activity in turn to say which controls the wall at which count; the recalibration of the
 worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner
-and worker improvements together. Stage 2 is running now, and none of its results are in. Each cost
+and worker improvements together. Stage 2 is being run again after its first part failed on the workstation, and none of its results are in. Each cost
 it finds controlling will be classed as engineering, a matter of how the work is done, or as a
 candidate for mathematics, a matter of what work is done.
 
@@ -253,4 +290,5 @@ candidate for mathematics, a matter of what work is done.
 - The design thread: [structure and function](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md), with [the outside answer on motifs](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md) and [on Khammash](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md); journal §§64–65.
 - The dynamical layer: [the outside answer](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md), [the levers](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md) and [the review that corrected them](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md); journal §§67–70.
 - [The discipline question](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md) (journal §56), [the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md) and [the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md).
+- The fourth reading: [record 129](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md) and [record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md); stage 1 by program, [journal §71](https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md).
 - [The journal](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md).

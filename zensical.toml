@@ -283,7 +283,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-25-the-decoders-knee.md" = "A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments." },
+  { "blog/2026-11-25-the-decoders-knee.md" = "A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments." },
   { "blog/2026-11-24-posing-the-inversion-problem.md" = "The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits." },
   { "blog/2026-11-24-the-scanner-hides-the-emitter.md" = "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone." },
   { "blog/2026-11-24-what-else-moves-together.md" = "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information." },
