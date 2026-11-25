@@ -1,7 +1,7 @@
 factor	part	oracle	built	checked_byte_identical	measured	notes
-S	Huffman scan	scan-oracle (#835)	yes	yes (slice A, every arm)	slice A (ideal-parts/run-20261125T105502Z)	ROOM at 10 only; co-limits with E at 8
-E	emission	supplied codes (#821)	yes	yes (slice A, every arm)	slice A (ideal-parts/run-20261125T105502Z)	ROOM at 1 and 6; handover 286-418 ms
-C	construction	ideal-construction	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	no	src/ideal/construction.rs; 114.06 MiB on wikidata x4 (233 distinct Open blocks)
-M	MTF/RLE2	ideal-mtf	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	no	src/ideal/mtf.rs; 31.96 MiB on wikidata x4 (431 distinct blocks)
-R	RLE1, CRC, output	ideal-rle1	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	no	src/ideal/rle1.rs; 199.99 MiB on wikidata x4; handover copy dominates replay
-D	delivery	ideal-delivery (reader mode)	yes	yes (Check SHA-256 on wikidata, wikidata x4, ab corpora; 1/4/8w)	no	src/ideal/delivery.rs; 0 bytes store; 0 bytes copied in Discard
+S	Huffman scan	scan-oracle (#835)	yes	yes (slice A, every arm)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: ROOM at 10 (0.919); co-limits with C at 6-8
+E	emission	supplied codes (#821)	yes	yes (slice A, every arm)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: ROOM at 1 and 6; masked above; handover ~40 ms/thread
+C	construction	ideal-construction	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: ROOM at 1 (0.579) and 6 (0.754); behind S at 8-10
+M	MTF/RLE2	ideal-mtf	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: ROOM at 1 and 6 (0.92)
+R	RLE1, CRC, output	ideal-rle1	yes	yes (wikidata, wikidata x4, ab corpora; 1/4/8w)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: no room as measured; handover exceeds the saving at 8-10
+D	delivery	ideal-delivery (reader mode)	yes	yes (Check SHA-256 on wikidata, wikidata x4, ab corpora; 1/4/8w)	full matrix (ideal-matrix/run-20261125T125334Z)	full matrix: NO ROOM at 6 and 10; room only with S ideal

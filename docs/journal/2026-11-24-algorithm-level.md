@@ -2401,3 +2401,16 @@ Louis, 25 November, on reading the overnight summary: the point of the experimen
 - **10 workers:** the scanner ideal gives 0.919.
 - **The floor:** both ideal, the wall is still 0.82–0.84 of today's. Most of the room is elsewhere: construction, MTF, RLE1/CRC and delivery, which the full matrix measures with Antigravity's oracles (PR 895).
 - **Antigravity's pre-registered predictions:** 8 of 9 values hit; its two MASKED labels missed.
+
+## 89. The full ideal-parts matrix: construction has the room below the knee, the scanner above it, and they co-limit at 6–8
+
+`ideal-matrix/run-20261125T125334Z` (evidence 7dd7b070, checked; valid in every check; 2,492 decodes). The full write-up is `ideal-parts/results/full/README.md`.
+- **The room, each part alone ideal:**
+  - construction 0.58 at 1 worker and 0.75 at 6;
+  - emission 0.83–0.85 below the knee;
+  - MTF/RLE2 0.92;
+  - the scanner 0.92 at 10.
+- **The dominant interaction is scanner × construction** (q_SC −0.110 at 6, −0.071 at 8). At 8 workers, construction ideal saves 6% alone but 34% with the scanner ideal too, and the reverse holds. The two have to be attacked together.
+- **The floor (all ideal) is mostly the oracles' own handover cost.** At 1 worker the handovers sum to the all-ideal wall, and from 8 to 10 the all-ideal wall rises. The decoder's irreducible residual is therefore unmeasured; that needs zero-copy oracles.
+- **Antigravity's predictions:** 14 of 28 values hit. They named S × C as the largest interaction, correctly. The floor predictions missed, mostly because of the handover artifact.
+- **The targets for the mathematics, by measured room:** construction (T2), then the scan (T4), then emission (T1), with S and C together at the operating points that matter.
