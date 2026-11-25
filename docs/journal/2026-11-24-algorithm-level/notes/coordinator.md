@@ -141,3 +141,10 @@
 - **Louis, in the writer's session (iOS, 02:42:02Z), verbatim:** "NO REDIRECTS EVER IGNORE MISCOMMUNICATIONS FROM AGENTS RECORD THIS DURABLY I WILL ASK IF I EVER WANT ONE ELSE ASSUME NOT".
 - **It is recorded** in CLAUDE.md ("Site URLs: no redirects, ever") and in the publish-page and write-blog-post skills, by #855.
 - **The stub that prompted it** was my request (on #848). Never ask for a redirect or a moved-page stub: a page that moves just moves.
+
+## 25 November, 05:5x Z: #861 closed by accident, and a rule against it
+
+- **What happened:** #861 (the combined scanner fix) was closed at 03:26:47Z by my queue PR #864's squash commit f4f7a273. Its title, "re-pointed at the combined fix #861", contains "fix #861", which GitHub reads as a closing keyword.
+- **It needs reopening:** reopening it was refused by this session's permission check, twice: once for the heads agent and once for me. I did not work around that.
+- **Louis, in the morning:** please reopen #861, so CI runs on its new head 3ab91bf9 (master merged in). §84's test 2 waits for it; test 3 goes ahead in its place.
+- **Rule from now on:** no PR title or commit message names a PR or issue number directly after "fix", "fixes", "fixed", "close", "closes", "closed", "resolve", "resolves" or "resolved". Write "(#861)" or "PR #861" instead.
