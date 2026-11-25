@@ -34,7 +34,7 @@ fn run<I: InverseBwt>(data: &[u8], s: &mut Scratch<I>) -> (Vec<u8>, Option<Error
                 if let Err(e) = mibz2::decode_block(&symbols, k, s, &mut out) {
                     return (out, Some(e));
                 }
-                syms = symbols.syms;
+                syms = symbols.syms.into_buffer();
             }
             Ok(Event::Done) => return (out, None),
             Err(e) => return (out, Some(e.kind)),
@@ -194,7 +194,7 @@ fn last_columns(z: &[u8]) -> Vec<(Vec<u8>, [u32; 256], u32)> {
         assert_eq!(n, ll.len());
         assert!((symbols.orig_ptr as usize) < n);
         v.push((ll, counts, symbols.orig_ptr));
-        syms = symbols.syms;
+        syms = symbols.syms.into_buffer();
     }
     v
 }

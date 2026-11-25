@@ -263,7 +263,7 @@ fn one_item(
                 decode_block(&b, k, sc, out)
             };
             let crc = b.crc;
-            *syms = b.syms;
+            *syms = b.syms.into_buffer();
             r.map(|_| One::Block { end, crc })
         }
     }
@@ -799,7 +799,7 @@ fn decode_scan_with(data: &[u8], threads: usize, slots: usize, k: Kernels, fault
                         });
                     let mut st = lock(state);
                     st.results.insert(index, res);
-                    st.free_syms.push(symbols.syms);
+                    st.free_syms.push(symbols.syms.into_buffer());
                     drop(st);
                     cv.notify_all();
                 }

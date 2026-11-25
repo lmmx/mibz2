@@ -612,7 +612,7 @@ fn main() {
                 crc: 0,
                 orig_ptr: 0,
                 seq_to_unseq: std::array::from_fn(|i| i as u8),
-                syms,
+                syms: syms.into(),
                 eob: 257,
                 max_len: 900_000,
             };

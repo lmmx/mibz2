@@ -47,6 +47,10 @@ pub(crate) const INPUT_QUEUE: usize = 2;
 pub const SLOTS_PER_THREAD: usize = 4;
 /// Bytes the scanner's window keeps behind it before it drops them
 pub(crate) const COMPACT: usize = 4 << 20;
+/// Spare capacity a writer's chunk reserves past its bytes (stream.rs's `LOOKAHEAD`): once
+/// the chunk is the scanner's window, the next chunk's first bytes a view reaches are copied
+/// there, the rest of it not copied
+pub(crate) const HEADROOM: usize = 2 << 20;
 
 /// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only
 macro_rules! mark {
@@ -990,50 +994,91 @@ struct ChannelSource<'a> {
     base: u64,
     released: u64,
     eof: bool,
+    /// the chunk after the window's, while the window still holds bytes before it (empty
+    /// otherwise): only those of its bytes a view reaches are copied onto the window's end,
+    /// and once nothing before it is held it becomes the window, copied no further
+    next: Vec<u8>,
+    /// the absolute offset of next[0] (the window's end when it came)
+    next_base: u64,
     shared: &'a Shared,
+}
+
+/// An input buffer the scanner is done with, for the writer's next chunk: `spare` (one kept)
+fn recycle(shared: &Shared, spent: Vec<u8>) {
+    if spent.capacity() > 0 {
+        let mut st = shared.lock();
+        if st.free_in.is_empty() {
+            st.free_in.push(spent);
+        }
+    }
 }
 
 impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
-        while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
-            mark!(InputWait);
-            match self.rx.recv() {
-                Ok(mut chunk) => {
-                    mark!(InputGot);
-                    let drop_n = (self.released - self.base) as usize;
-                    if drop_n == self.buf.len() {
-                        // (nothing held: the chunk is the window, the window's buffer spare)
-                        std::mem::swap(&mut self.buf, &mut chunk);
+        let need = from + want as u64;
+        // (`next` is taken from before the channel, so the input has ended only once it is
+        // empty)
+        while !self.eof && self.base + (self.buf.len() as u64) < need {
+            let drop_n = (self.released - self.base) as usize;
+            if !self.next.is_empty() {
+                if self.released >= self.next_base {
+                    // (nothing held before the next chunk: it is the window, the bytes
+                    // already copied from it read in place from now on; the window's buffer
+                    // spare)
+                    std::mem::swap(&mut self.buf, &mut self.next);
+                    self.base = self.next_base;
+                    recycle(self.shared, std::mem::take(&mut self.next));
+                } else {
+                    // (bytes held before it: only the bytes of it this view reaches are
+                    // copied, into the window's spare capacity, which a writer's chunk
+                    // reserves: `HEADROOM`; dropping the bytes released first where that
+                    // makes the room, or where COMPACT of them are kept)
+                    let at = (self.base + self.buf.len() as u64 - self.next_base) as usize;
+                    let upto = (need - self.next_base).min(self.next.len() as u64) as usize;
+                    let (len, cap, add) = (self.buf.len(), self.buf.capacity(), upto - at);
+                    if drop_n >= COMPACT || (len + add > cap && len - drop_n + add <= cap) {
+                        self.buf.drain(..drop_n);
                         self.base = self.released;
-                    } else {
-                        if drop_n >= COMPACT {
-                            self.buf.drain(..drop_n);
+                    }
+                    self.buf.extend_from_slice(&self.next[at..upto]);
+                    if upto == self.next.len() {
+                        recycle(self.shared, std::mem::take(&mut self.next));
+                    }
+                }
+            } else {
+                mark!(InputWait);
+                match self.rx.recv() {
+                    Ok(mut chunk) => {
+                        mark!(InputGot);
+                        if drop_n == self.buf.len() {
+                            // (nothing held: the chunk is the window, the window's buffer
+                            // spare)
+                            std::mem::swap(&mut self.buf, &mut chunk);
                             self.base = self.released;
+                            recycle(self.shared, chunk);
+                        } else if chunk.is_empty() {
+                            recycle(self.shared, chunk);
+                        } else {
+                            // (bytes held: the chunk waits as the next, not appended whole)
+                            self.next_base = self.base + self.buf.len() as u64;
+                            self.next = chunk;
                         }
-                        self.buf.extend_from_slice(&chunk);
                     }
-                    // (the chunk's buffer, done with, for the writer's next: `spare`; one kept)
-                    if chunk.capacity() > 0 {
-                        let mut st = self.shared.lock();
-                        if st.free_in.is_empty() {
-                            st.free_in.push(chunk);
-                        }
+                    Err(_) => {
+                        mark!(InputEnd);
+                        self.eof = true;
                     }
-                    mark!(
-                        Window,
-                        crate::trace::NONE,
-                        self.base + self.buf.len() as u64 - self.released,
-                        self.buf.capacity()
-                    );
                 }
-                Err(_) => {
-                    mark!(InputEnd);
-                    self.eof = true;
+                if self.shared.lock().cancelled {
+                    return Err(ErrorKind::Cancelled);
                 }
             }
-            if self.shared.lock().cancelled {
-                return Err(ErrorKind::Cancelled);
-            }
+            mark!(
+                Window,
+                crate::trace::NONE,
+                self.base + self.buf.len() as u64 - self.released,
+                self.buf.capacity()
+            );
         }
         let i = (from - self.base) as usize;
         Ok((self.buf.get(i..).unwrap_or(&[]), self.eof))
@@ -1044,6 +1089,80 @@ impl Source for ChannelSource<'_> {
     }
 }
 
+#[cfg(test)]
+mod channel_source_tests {
+    use super::*;
+
+    /// Every view is the input's bytes from `from`, at least `want` of them unless the input
+    /// has ended, and all of them to its end once it has: whatever the chunks' sizes (empty
+    /// ones too), their spare capacity, and how far each view's caller releases (the window
+    /// swapped to the next chunk, its straddling bytes copied, compacted, grown)
+    #[test]
+    fn views_are_the_input() {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rng = move |n: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % n.max(1)
+        };
+        for case in 0..60 {
+            let len = 1 + rng(if case % 4 == 0 { 7_000_000 } else { 400_000 }) as usize;
+            let data: Vec<u8> = (0..len).map(|i| (i * 31 + i / 977) as u8).collect();
+            let max_chunk = if len > 400_000 {
+                [300_000, 2_000_000, 5_000_000][case % 3]
+            } else {
+                [1, 100, 5_000, 300_000][case % 4]
+            };
+            let shared = Shared::new(4, None);
+            let (tx, rx) = channel();
+            let mut at = 0;
+            while at < len {
+                let n = (rng(max_chunk + 1) as usize).min(len - at);
+                let spare = [0, 1, 1000, HEADROOM][rng(4) as usize];
+                let mut c = Vec::with_capacity(n + spare);
+                c.extend_from_slice(&data[at..at + n]);
+                tx.send(c).unwrap();
+                at += n;
+            }
+            drop(tx);
+            let mut src = ChannelSource {
+                rx,
+                buf: Vec::new(),
+                base: 0,
+                released: 0,
+                eof: false,
+                next: Vec::new(),
+                next_base: 0,
+                shared: &shared,
+            };
+            let (mut released, mut views) = (0usize, 0);
+            loop {
+                let from = released + rng(3) as usize * rng(1_000) as usize;
+                let from = from.min(len);
+                let scale = [4, 70_000, 3_000_000][rng(3) as usize];
+                let want = 1 + rng(scale) as usize;
+                let (got, eof) = src.view(from as u64, want).unwrap();
+                let ctx = format!("case {case}: len {len} from {from} want {want}");
+                assert_eq!(got, &data[from..from + got.len()], "{ctx}");
+                assert!(eof || got.len() >= want, "{ctx}: {}", got.len());
+                if eof {
+                    assert_eq!(from + got.len(), len, "{ctx}");
+                }
+                views += 1;
+                if eof && from == len {
+                    break;
+                }
+                let step = got.len().min(want) as u64 + 1;
+                let to = from + rng(step) as usize;
+                src.release(to as u64);
+                released = to;
+                assert!(views < 1_000_000, "{ctx}: no progress");
+            }
+        }
+    }
+}
+
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     let src = ChannelSource {
         rx,
@@ -1051,6 +1170,8 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
         base: 0,
         released: 0,
         eof: false,
+        next: Vec::new(),
+        next_base: 0,
         shared,
     };
     let mut sc = Scanner::new(src);
@@ -1190,7 +1311,8 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         let wake = shared.insert_locked(&mut st, place, res);
         // (the symbols, where the block failed before its rows were known)
         if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
-            st.free_syms.push(std::mem::take(&mut symbols.syms));
+            st.free_syms
+                .push(std::mem::take(&mut symbols.syms).into_buffer());
         }
         drop(st);
         mark!(Ready, place);
@@ -1553,7 +1675,7 @@ fn finish_and_publish(shared: &Shared, b: Inverted, inverted: &[u8], k: Kernels)
         Ok(Err(kind)) => (Err(kind), false),
         Err(p) => (Err(ErrorKind::Internal(panic_message(p))), true),
     };
-    publish(shared, b.place, b.bit, res, b.symbols.syms);
+    publish(shared, b.place, b.bit, res, b.symbols.syms.into_buffer());
     panicked
 }
 
@@ -1594,7 +1716,7 @@ fn solo(shared: &Shared, f: &Front, sc: &mut Solo, s: Staged, k: Kernels) -> boo
         Ok(Err(kind)) => (Err(kind), false),
         Err(p) => (Err(ErrorKind::Internal(panic_message(p))), true),
     };
-    publish(shared, s.place, s.bit, res, s.symbols.syms);
+    publish(shared, s.place, s.bit, res, s.symbols.syms.into_buffer());
     panicked
 }
 
@@ -1649,13 +1771,13 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
         Ok(Ok(n)) if n >= min_coop(shared) => Staging::Team(s),
         Ok(Ok(_)) => Staging::Small(s),
         Ok(Err(kind)) => {
-            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            publish(shared, place, bit, Err(kind), s.symbols.syms.into_buffer());
             Staging::Failed
         }
         Err(p) => {
             *f = Front::default();
             let kind = ErrorKind::Internal(panic_message(p));
-            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            publish(shared, place, bit, Err(kind), s.symbols.syms.into_buffer());
             Staging::Failed
         }
     }
@@ -1819,7 +1941,13 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             Ok(Err(p)) => {
                 // a helper's stage panicked: block i fails, and the back set is reset
                 let kind = ErrorKind::Internal(panic_message(p));
-                publish(shared, s.place, s.bit, Err(kind), s.symbols.syms);
+                publish(
+                    shared,
+                    s.place,
+                    s.bit,
+                    Err(kind),
+                    s.symbols.syms.into_buffer(),
+                );
                 t.tt = Default::default();
                 t.seg = Default::default();
                 t.bufs = Default::default();
@@ -1835,11 +1963,23 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                 let held = [Some(s), l.next.take()];
                 for b in held.into_iter().flatten() {
                     let kind = ErrorKind::Internal(msg.clone());
-                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                    publish(
+                        shared,
+                        b.place,
+                        b.bit,
+                        Err(kind),
+                        b.symbols.syms.into_buffer(),
+                    );
                 }
                 if let Some(b) = l.inverted.take() {
                     let kind = ErrorKind::Internal(msg.clone());
-                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                    publish(
+                        shared,
+                        b.place,
+                        b.bit,
+                        Err(kind),
+                        b.symbols.syms.into_buffer(),
+                    );
                 }
                 t = Team::default();
                 continue;
@@ -2516,12 +2656,12 @@ fn prepare(shared: &Shared, hub: &Hub, o: &Outer, job: Job, mut front: Front, k:
             outer_fault(hub, OuterAt::AfterPrepared, Some(place));
         }
         Ok(Err(kind)) => {
-            publish(shared, place, bit, Err(kind), symbols.syms);
+            publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
             hub.retire(o, Some(front), None);
         }
         Err(p) => {
             let kind = ErrorKind::Internal(panic_message(p));
-            publish(shared, place, bit, Err(kind), symbols.syms);
+            publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
             hub.retire(o, Some(Front::default()), None);
         }
     }
@@ -2569,7 +2709,7 @@ fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k
     };
     // (published, not yet retired: still `o`'s, so an unwind here retires it once, and
     // `Hub::fail` never publishes it again)
-    publish(shared, place, bit, res, symbols.syms);
+    publish(shared, place, bit, res, symbols.syms.into_buffer());
     #[cfg(test)]
     outer_fault(hub, OuterAt::AfterPublish, Some(place));
     hub.retire_counted(o, None, Some(back), true);
@@ -2722,7 +2862,7 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize, k: Kernels) {
                 // once all its threads had ended)
                 tt = Default::default();
                 let kind = ErrorKind::Internal(panic_message(p));
-                publish(shared, place, bit, Err(kind), symbols.syms);
+                publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
                 hub.retire(&o, Some(front), Some(Back::default()));
             }
         }
@@ -3967,7 +4107,7 @@ mod service_tests {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq: [0; 256],
-            syms: vec![],
+            syms: Vec::new().into(),
             eob: 1,
             max_len: 100_000,
         };
@@ -4403,7 +4543,7 @@ mod front_tests {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq,
-            syms,
+            syms: syms.into(),
             eob,
             max_len,
         }

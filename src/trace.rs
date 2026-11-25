@@ -932,24 +932,24 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             name: "chunks",
             count: crate::parallel::INPUT_QUEUE + 2,
             per: "INPUT_QUEUE + 2",
-            alloc: s.chunk,
-            alloc_max: Some(s.chunk),
+            alloc: s.chunk + crate::parallel::HEADROOM,
+            alloc_max: Some(s.chunk + crate::parallel::HEADROOM),
             live: s.chunk,
             hot: 0,
             life: "per chunk",
-            note: "compressed input: queued, one held by the writer (filling it, or blocked sending it), one being appended to the window",
+            note: "compressed input, each with HEADROOM spare past its bytes: queued, one held by the writer (filling it, or blocked sending it), one next after the window's (its first bytes copied onto the window's end)",
         },
         Entry {
             owner: "input",
             name: "window",
             count: 1,
             per: "1",
-            alloc: s.chunk,
+            alloc: s.chunk + crate::parallel::HEADROOM,
             alloc_max: Some(2 * window_max - 1),
             live: LOOKAHEAD + s.chunk,
             hot: 0,
-            life: "once",
-            note: "the scanner's compressed bytes, from the block being read on (live: not yet released); up to COMPACT bytes already read are kept before it drops them, so it holds less than COMPACT + LOOKAHEAD + chunk, reserved by doubling from the first chunk",
+            life: "per chunk",
+            note: "the scanner's compressed bytes, from the block being read on (live: not yet released): the chunk the block starts in, with the next chunk's first bytes the lookahead reaches copied into its HEADROOM; past that (a block over the lookahead) up to COMPACT bytes already read are kept before it drops them, so it holds less than COMPACT + LOOKAHEAD + chunk, reserved by doubling",
         },
         Entry {
             owner: "decoder",
@@ -1070,7 +1070,7 @@ mod tests {
             decoded.push(out.len());
             tt = grown(tt, n);
             out_cap = grown(out_cap, n + pad);
-            syms = symbols.syms;
+            syms = symbols.syms.into_buffer();
         }
         assert_eq!(rows.len(), 2);
         assert!(rows[0] < rows[1] && rows[1] < 2 * rows[0] && rows[0] >= 1 << 16);
@@ -1155,7 +1155,7 @@ mod tests {
             decoded.push(out.len());
             tt = grown(tt, n);
             rle = grown(rle, n);
-            syms = symbols.syms;
+            syms = symbols.syms.into_buffer();
         }
         assert_eq!(rows.len(), 2);
         assert!(rows[0] < rows[1] && rows[1] < 2 * rows[0]);
@@ -1219,7 +1219,10 @@ mod tests {
                 out.len(),
                 bytes.len()
             );
-            assert!(matches!(scanner.next(symbols.syms).unwrap(), Event::Done));
+            assert!(matches!(
+                scanner.next(symbols.syms.into_buffer()).unwrap(),
+                Event::Done
+            ));
             let samples = scratch.allocation_history();
             let sample = samples.last().unwrap();
             let route = if run {

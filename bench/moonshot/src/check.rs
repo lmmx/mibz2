@@ -99,7 +99,7 @@ pub fn sequential<K: InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8>, Str
                     ));
                 }
                 cur = Some((stream, end, combined.rotate_left(1) ^ mine));
-                syms = symbols.syms;
+                syms = symbols.syms.into_buffer();
             }
             Event::Done => {
                 if let Some((_, last_end, c)) = cur {
@@ -489,7 +489,7 @@ pub fn read_symbols(mut d: &[u8]) -> Vec<Symbols> {
         let eob = u16::from_le_bytes(take(&mut d, 2).try_into().unwrap());
         let max_len = u64::from_le_bytes(take(&mut d, 8).try_into().unwrap()) as usize;
         let n = u64::from_le_bytes(take(&mut d, 8).try_into().unwrap()) as usize;
-        let syms = take(&mut d, 2 * n)
+        let syms: Vec<u16> = take(&mut d, 2 * n)
             .chunks_exact(2)
             .map(|c| u16::from_le_bytes([c[0], c[1]]))
             .collect();
@@ -497,7 +497,7 @@ pub fn read_symbols(mut d: &[u8]) -> Vec<Symbols> {
             crc,
             orig_ptr,
             seq_to_unseq,
-            syms,
+            syms: syms.into(),
             eob,
             max_len,
         });

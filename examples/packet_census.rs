@@ -454,7 +454,7 @@ fn census_file(data: &[u8], label: &str) {
             dec.len()
         );
         i += 1;
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
 }
 

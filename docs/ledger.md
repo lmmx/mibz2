@@ -43,8 +43,8 @@ buffers never shrink.
 | worker | `seg.starts`, `.next`, `.bufs.outer`, `counts` | t | 21.5 KB | 37.9 KB | 21.5 KB | 3 KB |
 | slot | `symbols` | s | 1,800,200 | same | 2(n + 1); the corpus's ≈ 0.2 MB | – |
 | slot | `out`, decoded bytes | s + 1 | max(n + 64, D) | 2 × that | D | – |
-| input | chunks | 4 | c | c | c | – |
-| input | the scanner's window | 1 | c | 2(4 MiB + 2 MiB + c) | 2 MiB + c | – |
+| input | chunks | 4 | c + 2 MiB | c + 2 MiB | c | – |
+| input | the scanner's window | 1 | c + 2 MiB | 2(4 MiB + 2 MiB + c) | 2 MiB + c | – |
 | decoder | block tables | 1 | ≈ 47 KB, per block | | | – |
 | decoder | thread stacks (virtual) | t + 2 | 2 MiB | | a few KB | – |
 
@@ -60,26 +60,31 @@ Where the counts and bounds come from:
   the instrument measures them.
 - **Symbols** are reserved at the format's bound (18,002 selectors × 50 symbols × 2 B),
   whatever the level. There are at most `slots` buffers: the scanner's block and the
-  blocks issued but not yet decoded, with no new buffer while the pool has one.
+  blocks issued but not yet decoded, with no new buffer while the pool has one. A buffer
+  keeps its length at its high-water mark (`block::Syms`), so a block's read zeroes only
+  the symbols no earlier block in it reached.
 - **Output buffers number at most `slots + 1`.** At most `slots` are decoding or in
   `ready`, and one more is the reader's current block. A block that decodes to more than
   n + 64 bytes doubles its buffer.
 - **The input chunks:** 2 are queued (`INPUT_QUEUE`), 1 is held by the writer (filling or
-  sending it), and 1 is being appended to the window. `BzReader`'s feeder allocates each
-  chunk afresh.
-- **The scanner's window** keeps up to `COMPACT` (4 MiB) of bytes already read before it
-  drops them. So it holds under 4 MiB + its 2 MiB lookahead + one chunk, reserved by
-  doubling.
+  sending it), and 1 is the next after the window's, its first bytes copied onto the
+  window's end. Each reserves 2 MiB (`HEADROOM`) past its bytes, for when it is the window.
+  `BzReader`'s feeder allocates each chunk afresh, or reuses one the scanner is done with.
+- **The scanner's window** is the chunk the block being read starts in, the next chunk's
+  first bytes its 2 MiB lookahead reaches copied into its headroom; the window moves to the
+  next chunk, uncopied, once no byte before it is held. Past that (a block longer than the
+  lookahead), it keeps up to `COMPACT` (4 MiB) of bytes already read before it drops them.
+  So it holds under 4 MiB + its 2 MiB lookahead + one chunk, reserved by doubling.
 
 **The ledger at -9 (full blocks, the default window 4t, `SLOTS_PER_THREAD`; 4 MiB chunks;
 `just bench-ledger --threads 1,2,4,10`):**
 
 | threads | reserved at least | at most, before the segments' ratchet | hot (model) |
 |--:|--:|--:|--:|
-| 1 | 39.1 MB | 63.0 MB | 3.6 MB |
-| 2 | 56.2 MB | 86.5 MB | 7.2 MB |
-| 4 | 90.5 MB | 133.4 MB | 14.4 MB |
-| 10 | 193.5 MB | 274.0 MB | 36.0 MB |
+| 1 | 49.6 MB | 71.4 MB | 3.6 MB |
+| 2 | 66.7 MB | 94.9 MB | 7.2 MB |
+| 4 | 101.0 MB | 141.7 MB | 14.4 MB |
+| 10 | 204.0 MB | 282.4 MB | 36.0 MB |
 
 Each slot reserves 2.7 MB: its symbols at the format's bound, and its output buffer. The
 window was 2t before #180, so the wider one adds 2.7 MB × 2t, 21.6 MB at 4 threads. A
@@ -253,8 +258,9 @@ reader can take a block before its `Ready` mark. Such a block counts as held for
   build contains no allocation-history state or recording. The CI bench's paired A/B
   remains the check for default performance.
 - **`trace` compiled in, level 0:** each mark is one relaxed atomic load. A block has two
-  more (`InvertStart`, `InvertEnd`), each input chunk one (`Window`), and the allocation
-  recorder one level check per successful inversion; it records nothing at level 0.
+  more (`InvertStart`, `InvertEnd`), each input chunk a few (`Window`: received, its first
+  bytes copied as views reach them, the window moved to it), and the allocation recorder
+  one level check per successful inversion; it records nothing at level 0.
 - **Levels 1 and 2:** each mark also costs a timestamp and a push to the thread's own
   buffer, now with two sizes (16 more bytes a mark). Reading a `Vec`'s length and
   capacity is two loads. Each successful inversion now also allocates a buffer-size

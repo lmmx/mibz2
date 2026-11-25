@@ -2080,6 +2080,6 @@ fn main() {
             }
             i += 1;
         }
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
 }

@@ -400,7 +400,7 @@ pub fn block_starts(data: &[u8]) -> Vec<u64> {
     let mut syms = Vec::new();
     while let Ok(mibz2::stream::Event::Block { bit, symbols, .. }) = sc.next(syms) {
         v.push(bit);
-        syms = symbols.syms;
+        syms = symbols.syms.into_buffer();
     }
     v
 }

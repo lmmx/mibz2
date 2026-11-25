@@ -137,7 +137,7 @@ fn synthetic(rng: &mut Rng, syms_max: u64) -> Symbols {
         crc: 0,
         orig_ptr: rng.next() as u32 & 0xff_ffff,
         seq_to_unseq,
-        syms,
+        syms: syms.into(),
         eob,
         max_len: 1 << 23,
     }
@@ -364,7 +364,7 @@ fn miri_runs_front_edges() {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq: s2u,
-            syms,
+            syms: syms.into(),
             eob: 257,
             max_len: 900_000,
         };
@@ -388,7 +388,7 @@ fn miri_runs_front_edges() {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq: s2u,
-            syms,
+            syms: syms.into(),
             eob: 257,
             max_len: 1 << 23,
         };
@@ -615,7 +615,7 @@ fn runs_takes_runs_bounds() {
         crc: 0,
         orig_ptr: 0,
         seq_to_unseq: [0; 256],
-        syms: vec![0; 10],
+        syms: vec![0; 10].into(),
         eob: 2,
         max_len: (1 << 24) - 1,
     };
@@ -636,7 +636,7 @@ fn small_block() -> Symbols {
         crc: 0,
         orig_ptr: 0,
         seq_to_unseq,
-        syms: vec![2, 0, 1, 3, 0, 2, 4],
+        syms: vec![2, 0, 1, 3, 0, 2, 4].into(),
         eob: 4,
         max_len: 1000,
     }

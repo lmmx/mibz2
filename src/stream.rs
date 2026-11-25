@@ -138,7 +138,7 @@ impl<S: Source> Scanner<S> {
                         }
                         self.lookahead = (self.lookahead * 2).max(data.len() + 1).min(MAX_ITEM);
                         syms = match item {
-                            Ok(Item::Block(b)) => b.syms,
+                            Ok(Item::Block(b)) => b.syms.into_buffer(),
                             Ok(Item::End(_)) => Vec::new(),
                             Err((_, s)) => s,
                         };

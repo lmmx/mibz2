@@ -541,7 +541,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
         if orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
-        let mut out = take(n, std::mem::take(&mut b.syms));
+        let mut out = take(n, std::mem::take(&mut b.syms).into_buffer());
         #[cfg(feature = "trace")]
         trace::mark_sized(
             trace::Kind::InvertStart,
@@ -591,7 +591,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     if orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
-    let mut out = take(n, std::mem::take(&mut b.syms));
+    let mut out = take(n, std::mem::take(&mut b.syms).into_buffer());
     out.clear();
     column(s, n, orig_ptr, crc, b.max_len, k, &mut out)?;
     Ok(out)
@@ -679,9 +679,11 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     std::thread::scope(|s| {
         s.spawn(|| {
             for c in data.chunks(4 << 20) {
-                // (a chunk the scanner is done with, where there is one)
+                // (a chunk the scanner is done with, where there is one, with `HEADROOM`
+                // spare past its bytes for the scanner's window)
                 let mut chunk = dec.spare();
                 chunk.clear();
+                chunk.reserve(c.len() + parallel::HEADROOM);
                 chunk.extend_from_slice(c);
                 if dec.write(chunk).is_err() {
                     return;
@@ -728,7 +730,7 @@ pub fn decode_with<I: bwt::InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8
                     block: Some(index),
                     bit: Some(bit),
                 })?;
-                syms = symbols.syms;
+                syms = symbols.syms.into_buffer();
             }
             stream::Event::Done => return Ok(out),
         }
@@ -796,7 +798,7 @@ pub fn decode_blocks(
                 }
                 let crc = decode_block(&b, k, &mut s, out).map_err(at)?;
                 range.blocks.push((bit, next, crc));
-                syms = b.syms;
+                syms = b.syms.into_buffer();
             }
         }
         bit = next;

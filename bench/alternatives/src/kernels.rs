@@ -60,7 +60,7 @@ fn blocks(data: &[u8], k: Kernels) -> Vec<Block> {
             orig_ptr: b.orig_ptr,
             crc: b.crc,
         });
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
     v
 }
