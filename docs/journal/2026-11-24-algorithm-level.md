@@ -1936,4 +1936,24 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
   - drops k 16's screen, which resolved nothing at 6 blocks;
   - re-runs the oracle with the four-arm binary rebuilt on this binary's layout, or drops the layout comparison.
 - **Memory contention becomes a named lead:** the decoder's working set against a shared L3. It is placed under lever 1 and lever 4b (ownership of buffers).
-- **Multi-symbol Huffman decoding is a worker lever.** This run says it lowers the knee (k 6's controllers are construction and emission) but does not raise the top speed. Above 8, only the scanner's work does.
+- **Multi-symbol Huffman decoding is a worker lever.** This run says it lowers the knee (k 6's controllers are construction and emission) but does not raise the top speed. Above 8, only the scanner's work does. *(Wrong: corrected in §75. The Huffman decode is the scanner's A3, so multi-symbol decoding is the scanner lever above the knee.)*
+
+## 75. CORRECTION to §74: multi-symbol Huffman decoding is the scanner's lever, not the workers'
+
+**What §74 said:** multi-symbol Huffman decoding is a worker lever that lowers the knee but cannot raise the top speed.
+
+**That is wrong.** The Huffman symbol decode is the scanner's activity A3 (`briefs/character.md`, the coordinate table). It is 81% of the scanner's work (§57), at about 1.5 ns a symbol.
+- Stage 2a's screen names A3 as the *only* controller at 8 and 10 workers (0.53 and 0.74).
+- So a faster Huffman decode is exactly the lever that raises the ceiling above the knee. It is the same lever as the scanner plumbing fix, and larger: record 129's −13–17% applies to A3 itself.
+- Below the knee (k 6), A3 is negligible, so the decode's speed there doesn't matter.
+
+**How it was caught:** the writer's draft of the post's stage 2 section (#855) labelled A3 "the scanner's Huffman decode". That sent me back to the coordinate table, and I found my error. §74's journal text called A3 only "the scanner's main activity" and then reasoned from the wrong owner.
+
+**What changes:**
+- **Multi-symbol (composed) Huffman decoding moves up.** It is now the first engineering lead for the top speed, ahead of the block-start index. The prototype follows the current builds, as decided in §72.
+- **Its expected effect at 8–10 workers**, by the screen's coefficients (optimistic: slowing elasticities; stage 2b's speed-up arms measure the real share):
+  - wall × (1 − c)^C, with c the cut in A3 and C = 0.53 at 8 and 0.74 at 10;
+  - a 15% cut gives 0.917 at 8 and 0.887 at 10.
+- **The LOG on #145 (7150763760) didn't make this claim.** The post's text (#855) is right.
+
+**Also recorded:** Louis's rule of 25 November, in CLAUDE.md through #855: no redirects or moved-page stubs, ever, unless he asks. The stub on #848 was added at my request: I passed the old-URL concern to the writer as an instruction. That was the miscommunication his rule names.
