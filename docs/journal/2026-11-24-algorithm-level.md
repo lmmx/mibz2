@@ -2099,3 +2099,35 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
   - This makes the combined test (#861) at 9 threads harder to pass than §77 assumed. Its registered rule stands.
 - **Placement becomes a named lever**, with its largest measured effect: the scanner on a quiet core (−4% at 8), and workers kept off siblings. Any policy must work unpinned, as a library can't own the machine. The next step is a design question for MONODROMY and the Pathfinder: what placement can a library request?
 - **The predictor** for the next held-out test is the max model, registered here before that test.
+
+## 79. The combined scanner fix (#861) on the workstation: NOT ADOPTED again at 9; faster at the default counts; held for the new production regime
+
+**The run:** `scanner-plumbing/run-20261125T033008Z`, recipe #850 at b39c2cfc, head #861 5413191e against merge-base 16aaee3b. It is evidence 33568fad, SHA-256 2eacffeb…8ef3, checked. Every phase passed. The data is in `math-targets/data/scanner-plumbing-combined/`.
+
+| threads | workers | wall head/base [95%] | step | peak RSS |
+|---|---|---|---|---|
+| 6 | 6 | 0.996 [0.988, 1.004] | INCONCLUSIVE | 0.965 |
+| 8 | 8 | 0.975 [0.942, 1.009] | INCONCLUSIVE | 0.984 |
+| **9 (judged)** | 9 | **0.973 [0.936, 1.011]** | INCONCLUSIVE | 0.977 |
+| 10 | 7 | 0.982 [0.966, 0.998] | FASTER | 0.967 |
+| 12 | 7 | 0.977 [0.961, 0.995] | FASTER | 0.974 |
+
+**The lazy diagnostic, at explicit workers** (it decides nothing):
+- 0.991 at 8;
+- **0.921 [0.884, 0.959] at 9**;
+- **0.936 [0.889, 0.984] at 10**.
+
+**The verdict under the frozen rule: NOT ADOPTED** (9 threads not FASTER). The rule stands (C2): #861, #846 and #857 do not merge on this run.
+
+**Descriptively:**
+- **The direction is the same in both runs** (§77, and this one): every count from 8 up is below 1. On production's default thread counts, 10 and 12, the fix is FASTER by about 2%, and peak memory falls 2–3.5% at every count.
+- **At explicit 9 and 10 workers the gain is 6–8%,** the size §77 predicted before stage 2b lowered it.
+- **The judged count, 9 threads, is the noisiest count** in both runs (±4–5%). This is the core-sharing noise stage 2b measured (§78).
+
+**Decision:** no third run of this registration. Repeating the same test until it passes is optional stopping. The question changes instead:
+- **#860 (the kernel choice, queued)** moves production to 8 workers from 10 threads. If it ADOPTS, the scanner fix's value has to be judged in *that* regime, where the scanner binds (8 workers, sharp maximum, §78).
+- **So the next test of the scanner fix** is registered after #860's verdict, and before its own data:
+  - #861 rebased on the new production;
+  - judged at production's default counts (10 and 12 threads), where the fix acts;
+  - its prediction taken from §78's max model.
+- **Until then, #846, #857 and #861 stay open.**

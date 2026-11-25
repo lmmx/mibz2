@@ -1,0 +1,10 @@
+phase	status	started	ended	last line
+resolve	0	2026-11-25T03:30:08Z	2026-11-25T03:30:15Z	os: Linux Mint 22.0.0 (wilma) [64-bit]
+build-base	0	2026-11-25T03:30:15Z	2026-11-25T03:30:41Z	7c82894c217343befac03b998c7a88c9c349a06c0fc4d55f2cb6da628486c225  /home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab
+build-head	0	2026-11-25T03:30:41Z	2026-11-25T03:31:07Z	a57272059c76fa16759269e6d16a3c63b8677a8001450c1a48e66999c493efa9  /home/louis/dev/mibz2/target/scanner-plumbing/build-head/target/release/examples/ab
+inputs	0	2026-11-25T03:31:07Z	2026-11-25T03:31:08Z	0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  /home/louis/dev/mibz2/target/scanner-plumbing/wikidata-x4.bz2
+machine	0	2026-11-25T03:31:08Z	2026-11-25T03:31:08Z	{"cpus":20,"cores":10,"core_cpus":["0,10","1,11","2,12","3,13","4,14","5,15","6,16","7,17","8,18","9,19"],"cpu_quota":null,"throttling":false,"psi_cpu":true,"runq":{"counts":true,"spin_threads":40,"off_cpu_s":5.838,"wait_s":5.908},"machine":{"cpufreq_driver":"intel_pstate","governor":"powersave","ep
+timed	0	2026-11-25T03:31:08Z	2026-11-25T03:37:06Z	| mibz2 | 16 | 0.216 | 0.218 | 1.698 | 1.714 | 55 MB | 0.977 [0.961, 0.994] | 0.982 [0.969, 0.995] | 0.06 | yes |
+verdict	0	2026-11-25T03:37:06Z	2026-11-25T03:37:06Z	verdict: NOT ADOPTED (9 threads not FASTER)
+lazy	0	2026-11-25T03:37:06Z	2026-11-25T03:40:40Z	| mibz2-workers-lazy | 16 | 0.199 | 0.209 | 1.986 | 2.081 | 65 MB | 0.935 [0.889, 0.984] | 0.952 [0.917, 0.988] | 0.08 | yes |
+lazy-report	0	2026-11-25T03:40:40Z	2026-11-25T03:40:40Z	     10  base 66.8 MiB, head 64.8 MiB, head - base -2.0 MiB (0.9701)
