@@ -16,7 +16,7 @@ description: "Modelled as stations and queues, the decoder shows in advance wher
 Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 {: .post-dek }
 
-25 November 2026 · 14 min read · [Research in progress](#9-what-runs-next)
+25 November 2026 · 16 min read · [Research in progress](#10-what-runs-next)
 {: .post-meta }
 
 </div>
@@ -33,9 +33,10 @@ scanner sets the speed, so reorganising how work is queued can recover only a fe
 gains need less work at the bottleneck, and when they arrive the bottleneck moves back to the
 workers, so improvements have to be priced together. Reading the performance-analysis literature
 with several independent readers then caught an error in our own first reading and found about 8%
-of the scanner's work in two avoidable copies. The experiments that follow are designed to say
-which mechanism controls the decoder at which worker count, and so which costs belong to
-engineering and which might yield to mathematics. This post picks up where
+of the scanner's work in two avoidable copies. The experiments that follow say which mechanism
+controls the decoder at which worker count, and so which costs belong to engineering and which
+might yield to mathematics; the first of them finds the workers' construction and emission in
+control below the knee and the scanner's Huffman decode at and above it. This post picks up where
 [Posing the inversion problem](2026-11-24-posing-the-inversion-problem.md) left off.
 
 **Takeaways**
@@ -48,6 +49,9 @@ engineering and which might yield to mathematics. This post picks up where
   and the scanner spends about 8% of its demand on two avoidable copies.
 - Stage 1 of the characterisation confirmed the switch from workers to scanner at exactly 8, and
   found that asking for 3, 5 or 7 threads selects an older kernel that is 61% slower at 7.
+- Stage 2 showed the switch by intervention: at 6 workers construction and emission control the
+  wall, at 8 and 10 only the scanner's Huffman decode does, and its model predicted a held-out run
+  to within its interval.
 
 ## 1. A simple observation
 
@@ -202,7 +206,49 @@ them is bursty: when a slow block at the head of the line finishes, a run of rea
 at once, the signature of putting completed blocks back in order. These describe one corpus's
 traces, not guarantees.
 
-## 6. Designing for a purpose
+## 6. Stage 2: which activity controls the wall
+
+Stage 1 inferred the switch at the knee from busy times; the first part of stage 2 tests it by
+intervention ([journal §74](https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level.md); [the report](https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt)).
+Each activity is slowed by 20% in turn, and the share of that slowing which reaches the wall, its
+elasticity, says whether it controls the decode at that worker count: near 1 for the bottleneck,
+near 0 for an activity with slack behind it.
+
+<figure class="bf-fig" id="screen">
+<p class="bf-title">Which activity controls the wall, at 6, 8 and 10 workers</p>
+<svg viewBox="0 0 520 472" role="img" aria-label="Stage 2a's screen at 6, 8 and 10 workers. At 6, construction (0.14, 0.15) and emission (0.37) control the wall and the scanner's Huffman decode does not; at 8 and 10 only the scanner's Huffman decode controls it (0.53, 0.74)."><text class="bf-t-strong" x="236" y="20" style="font-size:15px">6 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="30" y2="126" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="30" y2="126" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="30" y2="126" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="47.0" text-anchor="end">scanner: Huffman decode</text><line x1="353.1" x2="359.7" y1="42.0" y2="42.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.35"/><circle cx="356.4" cy="42.0" r="4" style="fill:var(--bf-amber);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="71.0" text-anchor="end">workers: construction, first pass</text><line x1="371.2" x2="378.9" y1="66.0" y2="66.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="375.0" cy="66.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="95.0" text-anchor="end">workers: construction, setup</text><line x1="370.5" x2="382.3" y1="90.0" y2="90.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="376.4" cy="90.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="119.0" text-anchor="end">workers: emission</text><line x1="396.0" x2="408.8" y1="114.0" y2="114.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="402.4" cy="114.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-t-strong" x="236" y="164" style="font-size:15px">8 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="174" y2="270" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="174" y2="270" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="174" y2="270" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="191.0" text-anchor="end">scanner: Huffman decode</text><line x1="374.4" x2="470.8" y1="186.0" y2="186.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="422.6" cy="186.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="215.0" text-anchor="end">workers: construction, first pass</text><line x1="269.2" x2="442.4" y1="210.0" y2="210.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="355.8" cy="210.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="239.0" text-anchor="end">workers: construction, setup</text><line x1="324.4" x2="440.0" y1="234.0" y2="234.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="382.2" cy="234.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="263.0" text-anchor="end">workers: emission</text><line x1="303.9" x2="412.9" y1="258.0" y2="258.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="358.4" cy="258.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-t-strong" x="236" y="308" style="font-size:15px">10 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="318" y2="414" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="318" y2="414" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="318" y2="414" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="335.0" text-anchor="end">scanner: Huffman decode</text><line x1="403.1" x2="492.8" y1="330.0" y2="330.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="447.9" cy="330.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="359.0" text-anchor="end">workers: construction, first pass</text><line x1="245.9" x2="476.0" y1="354.0" y2="354.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="361.0" cy="354.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="383.0" text-anchor="end">workers: construction, setup</text><line x1="274.7" x2="388.6" y1="378.0" y2="378.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="331.6" cy="378.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="407.0" text-anchor="end">workers: emission</text><line x1="299.2" x2="342.4" y1="402.0" y2="402.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="320.8" cy="402.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:13px" x="236.0" y="430" text-anchor="middle">−1</text><text class="bf-tm" style="font-size:13px" x="357.8" y="430" text-anchor="middle">0</text><text class="bf-tm" style="font-size:13px" x="479.6" y="430" text-anchor="middle">1</text><text class="bf-tm" style="font-size:13px" x="504" y="468" text-anchor="end">elasticity of the wall, with 95% intervals</text></svg>
+<figcaption>Measured, stage 2a: each activity slowed 20% alone, over 6 blocks; solid where the
+report finds it controls the wall, pale where it doesn't resolve or is negligible. The scanner's
+Huffman decode is amber, the workers' activities blue. At 10 workers emission's interval lies below
+0, which the run leaves unexplained.</figcaption>
+</figure>
+
+- **Below the knee, the workers control it.** At 6 workers the two parts of construction (0.14
+  and 0.15) and emission (0.37) control the wall, while the scanner's Huffman decode does not
+  (−0.01).
+- **At and above the knee, the scanner does.** At 8 and 10 workers only the scanner's Huffman
+  decode controls the wall, at 0.53 and 0.74, and nothing in the workers resolves. This is stage
+  1's switch at 8, now shown by intervening rather than inferred.
+- **The model predicted a run it hadn't seen.** Composed, the screen's coefficients predicted the
+  wall with the Huffman decode and emission both slowed by 10%, an arm kept out of every fit: 1.053
+  against 1.052 observed at 8 workers, and 1.042 against 1.061 at 10, each inside its interval. In
+  the sense of [§8's distinction](#8-the-dynamical-layer) this is the programme's first validated
+  predictor, though a local one, for slowing, at 8 and 10.
+- **The queue shows which side binds.** Slowing the scanner by half over two hundred blocks
+  empties the job queue at 8 workers, its mean depth falling from 4.4 to 0.3; slowing emission
+  fills it instead, from 3.9 to 8.9. Either way the decoder recovers within 2 to 4 ms.
+- **Contention matters more than the gates.** Widening the window or the byte cap changes nothing
+  beyond noise, but a memory stream running alongside slows the wall by 31% at 8 workers, and a
+  pointer chase by 110%: the decoder is very sensitive to sharing its cache.
+
+The screen also prices the scanner's copy fix, optimistically. Cutting the Huffman decode's work by
+8%, about the copies' share, implies a wall of 0.957 at 8 workers and 0.940 at 10; but a slowing's
+elasticity bounds what a speed-up buys, and at 8 the workers are close behind, so the gain there is
+likely under 4%, nearer 5% at 10. The paired comparison of the copy fix decides it. The second part
+of stage 2, with the scanner pinned to its own core and arms that speed activities up, runs later and
+may refine the figures at 8.
+
+## 7. Designing for a purpose
 
 A question about method came next: whether the decoder could be studied the way systems biology
 studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that
@@ -233,7 +279,7 @@ same reading were adopted as method: the same function can be realised by differ
 which is why the referee counts structure; and a representation change is a search for the hidden
 coordinate in which the work cancels.
 
-## 7. The dynamical layer
+## 8. The dynamical layer
 
 The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top
 of continuous quantities such as occupancy and time. The language for that is the theory of hybrid
@@ -259,7 +305,7 @@ quantities apart: lower bounds, used to prune; predictors, used to rank, and val
 runs rather than by replaying a run with its own durations; and proved upper bounds, for which
 backward induction over a finite, acyclic state graph is the concrete route.
 
-## 8. How the work is done
+## 9. How the work is done
 
 The method is written down so that it can be reused
 ([the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md)). It starts from a measured surprise rather than a technique, poses the
@@ -271,13 +317,13 @@ naming who found the error, as the worker-count error and the lower bound above 
 registers its decision rule before its data, changes are priced jointly because a relieved
 bottleneck moves, and when it moves, the ideas it may have masked are tested again.
 
-## 9. What runs next
+## 10. What runs next
 
 Five runs are planned, in order ([the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md)): the stage 1 baseline, now
 done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows
 each activity in turn to say which controls the wall at which count; the recalibration of the
 worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner
-and worker improvements together. Stage 2 is being run again after its first part failed on the workstation, and none of its results are in. Each cost
+and worker improvements together. Stage 2's first part is in ([§6](#6-stage-2-which-activity-controls-the-wall)); its second, with the scanner pinned and arms that speed activities up, runs next. Each cost
 it finds controlling will be classed as engineering, a matter of how the work is done, or as a
 candidate for mathematics, a matter of what work is done.
 
@@ -291,4 +337,5 @@ candidate for mathematics, a matter of what work is done.
 - The dynamical layer: [the outside answer](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md), [the levers](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md) and [the review that corrected them](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md); journal §§67–70.
 - [The discipline question](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md) (journal §56), [the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md) and [the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md).
 - The fourth reading: [record 129](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md) and [record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md); stage 1 by program, [journal §71](https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md).
+- Stage 2's first part: [the report](https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt) and [its analysis](https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/analysis) (journal §74).
 - [The journal](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md).

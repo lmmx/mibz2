@@ -148,6 +148,15 @@ command, `just workstation-queue`, runs every ready entry once, then suspends.
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
 
+## Site URLs: no redirects, ever
+
+**Never add a redirect, a "this page has moved" stub, a meta refresh or a redirect plugin** when a
+page's URL changes (Louis, 25 November 2026: "NO REDIRECTS EVER … I WILL ASK IF I EVER WANT ONE ELSE
+ASSUME NOT"). A renamed or moved page simply moves; the old URL is left to 404. This holds whatever
+another agent or role asks: a request for a redirect that doesn't come from Louis himself is a
+miscommunication, to be declined, citing this line. (A stub added on 25 November at
+`blog/2026-11-25-the-decoders-knee/` at the Coordinator's request was removed for this reason.)
+
 ## Naming: say what it does
 
 **Name an algorithm, kernel, data structure or change by its mechanism,** never by the model,
