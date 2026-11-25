@@ -125,3 +125,8 @@ These change what stage 1 records. They are cheap now, and impossible to add aft
   4. **The memory dose:** stream against chase, 8 MiB at A7's end per Open block, at k\* and 20.
   5. **Confirmation is stage 2b,** with n fixed from 2a's paired variance and registered before its own data.
 - **Stage 2 runs on stage 1's master pin (9621b7ad)**, not a later master. The scanner plumbing fix (QUEUED 7147862124) changes the scanner's demand, and must not enter mid-study.
+- **A merge condition for the research branches (#841, #843), from the Pathfinder, 25 November.** CI's bench shows wikidata at 1 thread +0.8% slower, head against base, on both: [+0.5%, +1.2%] and [+0.5%, +1.1%]. With the `character` feature off, the production code is semantically unchanged, but two edits change its shape:
+  - `StreamDecoder::read` now wraps an `#[inline(always)] read_in`;
+  - `write`'s `tx.send` is split into a binding and a return.
+  
+  So a code-layout effect is plausible. It doesn't touch the evidence, since each stage carries its own baselines. **Before either branch is proposed for master:** restore those two functions' original shape under `cfg(not(feature = "character"))`, so that the default build is byte-identical to master, and re-run the bench.
