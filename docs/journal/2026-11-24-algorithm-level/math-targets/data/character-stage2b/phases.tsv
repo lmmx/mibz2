@@ -1,0 +1,10 @@
+phase	status	started	ended	last line
+checks	0	2026-11-25T03:01:24Z	2026-11-25T03:01:26Z	os: Linux Mint 22.0.0 (wilma) [64-bit]
+build	0	2026-11-25T03:01:26Z	2026-11-25T03:01:53Z	3f661422af136e6a86c3b36ffd7aa8dab9d302b9ae3ada79520ee0ef64bbfdcb  /home/louis/dev/mibz2/target/release/examples/character
+inputs	0	2026-11-25T03:01:53Z	2026-11-25T03:01:54Z	0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  /home/louis/dev/mibz2/target/character-stage2b/wikidata-x4.bz2
+stage1	0	2026-11-25T03:01:54Z	2026-11-25T03:01:54Z	
+machine	0	2026-11-25T03:01:54Z	2026-11-25T03:01:54Z	
+cores	0	2026-11-25T03:01:54Z	2026-11-25T03:01:55Z	
+plan	0	2026-11-25T03:01:55Z	2026-11-25T03:01:56Z	stage 2b: anchors [8, 10], the scanner pinned to CPU 6 (core [6, 16], its sibling idle); 55 cells, traces in the first 2 blocks
+run	0	2026-11-25T03:01:56Z	2026-11-25T03:23:36Z	block 15 done, 1300 s
+report	0	2026-11-25T03:23:36Z	2026-11-25T03:23:36Z	DOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): k 8 A9: achieved +0.252 against +0.20; k 8 A10: achieved +0.143 against +0.20; k 10 A6b: achieved +0.132 against +0.20

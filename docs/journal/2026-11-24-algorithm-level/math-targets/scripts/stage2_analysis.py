@@ -9,12 +9,15 @@ placement contrasts). RUNS_JSONL and PLAN_JSON are the bundle's own. OUT_DIR rec
 - validation.tsv: the held-out arm (A3 and A7 both +10%, at k 8 and 10) against the prediction
   of the log-additive local model T/T0 = prod (1 + d_i)^C_i built from the one-at-a-time screen.
   The prediction's interval treats the two coefficients' intervals as independent normals.
-  A predictor, judged on data it was not fitted to (journal §70: lower bounds prune, validated
+  Beside it, the max model: the larger of the two coefficients alone (a sharp maximum, where
+  slowing both activities costs no more than slowing the binding one). A predictor, judged on data it was not fitted to (journal §70: lower bounds prune, validated
   predictors rank, proved upper bounds certify).
 - surface.tsv: the 3x3 surface at k* read as elasticities: the scanner's (workers undosed) and
   the workers' (scanner undosed), slowing only. Max-plus caution: these are elasticities to
   SLOWING. A speed-up of the binding activity buys at most its elasticity, and less once the
   other term binds (bottleneck migration, §61).
+- link.tsv (stage 2b only): the pinned base over the unpinned base at k 8, and A3's +20% in each
+  regime, so the pinned coefficients can be carried back to production's unpinned scanner.
 - pricing.tsv: for a cut of f in the scanner's main activity (A3), the wall implied by the
   screen's coefficient, (1 - f)^C, at k 8 and 10, as an optimistic bound under the caveat above.
 """
@@ -58,7 +61,7 @@ def paired(sec_a, arm_a, sec_b, arm_b, k):
 
 
 with open(os.path.join(out, "validation.tsv"), "w") as f:
-    f.write("k\tobserved\tobs_lo\tobs_hi\tn\tpredicted\tpred_lo\tpred_hi\tinside\n")
+    f.write("k\tobserved\tobs_lo\tobs_hi\tn\tpredicted\tpred_lo\tpred_hi\tinside\tmax_model\tmax_lo\tmax_hi\tmax_inside\n")
     for k in (8, 10):
         o, olo, ohi, n = paired("validation", "A3+A7_10", "screen", "base", k)
         if math.isnan(o):
@@ -69,7 +72,12 @@ with open(os.path.join(out, "validation.tsv"), "w") as f:
         mu, sd = (c3 + c7) * L, math.hypot(s3, s7) * L
         p, plo, phi = math.exp(mu), math.exp(mu - 1.96 * sd), math.exp(mu + 1.96 * sd)
         inside = "yes" if not math.isnan(o) and plo <= o <= phi else ("n/a" if math.isnan(o) else "no")
-        f.write(f"{k}\t{o:.4f}\t{olo:.4f}\t{ohi:.4f}\t{n}\t{p:.4f}\t{plo:.4f}\t{phi:.4f}\t{inside}\n")
+        # the max model: at a sharp maximum the larger elasticity alone carries the joint dose
+        cm, sm = max((c3, s3), (c7, s7))
+        q, qlo, qhi = math.exp(cm * L), math.exp((cm - 1.96 * sm) * L), math.exp((cm + 1.96 * sm) * L)
+        qin = "yes" if not math.isnan(o) and qlo <= o <= qhi else ("n/a" if math.isnan(o) else "no")
+        f.write(f"{k}\t{o:.4f}\t{olo:.4f}\t{ohi:.4f}\t{n}\t{p:.4f}\t{plo:.4f}\t{phi:.4f}\t{inside}"
+                f"\t{q:.4f}\t{qlo:.4f}\t{qhi:.4f}\t{qin}\n")
 
 # the surface at k*: rows scanner 0/10/20%, columns workers 0/10/20% (mean log slowdown)
 ks = plan["kstar"]
@@ -96,5 +104,15 @@ with open(os.path.join(out, "pricing.tsv"), "w") as f:
         lo = float(screen[(k, "A3")]["lo"])
         for cut in (0.05, 0.08, 0.10, 0.20):
             f.write(f"{k}\t{C:.3f}\t{lo:.3f}\t{cut}\t{(1 - cut) ** C:.4f}\t{(1 - cut) ** lo:.4f}\n")
+
+# stage 2b: the pinned scanner against production's unpinned regime (the link cells), paired by block
+if walls.get(("link", 8, "base")):
+    with open(os.path.join(out, "link.tsv"), "w") as f:
+        f.write("comparison\tratio\tlo\thi\tn\n")
+        for name, a_, b_ in (("pinned base / unpinned base, k 8", ("screen", "base"), ("link", "base")),
+                              ("unpinned A3 / unpinned base, k 8", ("link", "A3"), ("link", "base")),
+                              ("pinned A3 / pinned base, k 8", ("screen", "A3"), ("screen", "base"))):
+            r, lo, hi, n = paired(a_[0], a_[1], b_[0], b_[1], 8)
+            f.write(f"{name}\t{r:.4f}\t{lo:.4f}\t{hi:.4f}\t{n}\n")
 
 print("wrote", sorted(os.listdir(out)))
