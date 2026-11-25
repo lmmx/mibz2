@@ -602,3 +602,16 @@ Your records 103–128 already cover steps 1, 2 and 4 under other names.
 - Where a SAT encoding would turn "no survivor" into a proof within the class (Bundala et al.).
 
 Label each part proved, argued or conjectured.
+
+### #40, amended before dispatch (25 November): question 6, system identification on stage 1's traces
+
+Stage 1 has run: bundle `character/run-20261125T001135Z` on `evidence` at 870e61d7; journal §66. **If your analysis plan for #39 isn't posted yet, post it before opening this bundle.**
+
+Louis asked which dynamical-systems tools fit. ChatGPT's answer is `external/chatgpt-dynamics.md`, and the steer is the last section of `leads/structure-and-function.md`.
+
+**Question 6.** From the per-block traces (`blocks-r00..r03.tsv`: each block's issued, enqueued, got, ready, taken and consumed times, with under-lock sequence numbers, at every count):
+- Start from the max-plus recurrence of issue, worker and reader with the measured service times. What is the smallest state that predicts each block's completion time?
+- Which added variable removes the most error: the head-of-line age, a contention measure, or the scanner's instantaneous rate?
+- Stage 1 shows that occupancy alone is not sufficient above the knee. Is there a reduced coordinate with self-contained dynamics, Khammash's z = h(x)?
+
+Label each answer proved, argued or conjectured.
