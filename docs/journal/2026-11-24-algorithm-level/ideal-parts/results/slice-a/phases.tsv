@@ -1,0 +1,9 @@
+phase	status	started	ended	last line
+checks	0	2026-11-25T10:55:02Z	2026-11-25T10:55:06Z	os: Linux Mint 22.0.0 (wilma) [64-bit]
+build	0	2026-11-25T10:55:06Z	2026-11-25T10:55:34Z	3e4a8d033e124e2f42b33d4ddb7306d4b4c1be0e30efa9e64d14a59dde7dadf7  /home/louis/dev/mibz2/target/release/examples/character
+inputs	0	2026-11-25T10:55:34Z	2026-11-25T10:55:34Z	0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  /home/louis/dev/mibz2/target/ideal-parts/wikidata-x4.bz2
+machine	0	2026-11-25T10:55:34Z	2026-11-25T10:55:35Z	
+cores	0	2026-11-25T10:55:35Z	2026-11-25T10:55:36Z	
+plan	0	2026-11-25T10:55:36Z	2026-11-25T10:55:36Z	bench-ideal-parts slice A: 18 cells (4 arms x 4 counts pinned, the link at 8); the scanner pinned to CPU 3 (core [3, 13])
+run	0	2026-11-25T10:55:36Z	2026-11-25T11:02:05Z	block 11 done, 339 s
+report	0	2026-11-25T11:02:05Z	2026-11-25T11:02:05Z	the unpinned link at 8: all ideal over all real 0.8114 [0.7878, 0.8356]; pinned all real over unpinned 0.9983 [0.9668, 1.0309]
