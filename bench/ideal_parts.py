@@ -28,6 +28,7 @@ the run carries on.
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import random
@@ -37,7 +38,14 @@ import subprocess
 import tempfile
 import time
 
-ARMS = ("none", "S", "E", "SE")
+# the factors in play (slice A: the oracles that exist), each a letter of parts.md's SECMRD; the
+# arms are every subset of them ideal (the full factorial), `none` all real. A factor whose oracle
+# is integrated into the binary joins here; a fraction replaces the full set of subsets
+FACTORS = ("S", "E")
+ARMS = tuple(
+    ["none"]
+    + ["".join(c) for r in range(1, len(FACTORS) + 1) for c in itertools.combinations(FACTORS, r)]
+)
 COUNTS = (1, 6, 8, 10)
 LINK = (8, ("none", "SE"))
 TRACE_BLOCKS = 2

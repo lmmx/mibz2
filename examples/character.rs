@@ -935,25 +935,54 @@ fn prespin(ms: u64) -> Option<(u64, usize, f64)> {
 mod oracle {
     use std::sync::atomic::{AtomicU8, Ordering};
 
-    /// 0x80: in play (an `oracle` line); 1: the scan ideal; 2: emission ideal
+    /// The matrix's factors in parts.md's order, each an arm's letter and a bit: S, the
+    /// Huffman scan; E, emission; C, construction; M, MTF/RLE2; R, RLE1, CRC and output; D,
+    /// delivery. An arm is `none` or its ideal parts' letters (`SE`, `SECMRD`, ...)
+    const FACTORS: [char; 6] = ['S', 'E', 'C', 'M', 'R', 'D'];
+    /// The factors this binary's oracles supply (slice A: the scan and emission). The others
+    /// plug in here, with their record, ideal and check modes beside S's and E's below
+    const BUILT: [char; 2] = ['S', 'E'];
+
+    /// 0x80: in play (an `oracle` line); bit i: factor FACTORS[i] ideal
     static ARM: AtomicU8 = AtomicU8::new(0);
     #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
     pub const PASS_WORKERS: usize = 10;
 
     pub fn set(x: &str) {
-        let bits = match x {
-            "none" => 0,
-            "S" => 1,
-            "E" => 2,
-            "SE" => 3,
-            _ => panic!("TREAT: oracle {x}: none, S, E or SE"),
-        };
+        let mut bits = 0u8;
+        if x != "none" {
+            for c in x.chars() {
+                let i = FACTORS
+                    .iter()
+                    .position(|&f| f == c)
+                    .unwrap_or_else(|| panic!("TREAT: oracle {x}: none, or letters of SECMRD"));
+                assert!(
+                    BUILT.contains(&c),
+                    "TREAT: oracle {x}: factor {c} has no oracle in this binary (built: {BUILT:?})"
+                );
+                assert!(bits & (1 << i) == 0, "TREAT: oracle {x}: {c} twice");
+                bits |= 1 << i;
+            }
+        }
         ARM.store(0x80 | bits, Ordering::SeqCst);
     }
 
+    /// Whether factor `c` is ideal in this decode's arm
     #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
-    pub fn name() -> &'static str {
-        ["none", "S", "E", "SE"][(ARM.load(Ordering::SeqCst) & 3) as usize]
+    fn ideal(c: char) -> bool {
+        let i = FACTORS.iter().position(|&f| f == c).expect("a factor");
+        ARM.load(Ordering::SeqCst) & (1 << i) != 0
+    }
+
+    /// The arm's name: `none`, or its ideal factors' letters in FACTORS' order
+    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
+    pub fn name() -> String {
+        let n: String = FACTORS.iter().filter(|&&c| ideal(c)).collect();
+        if n.is_empty() {
+            "none".into()
+        } else {
+            n
+        }
     }
 
     fn in_play() -> bool {
@@ -1075,13 +1104,12 @@ mod oracle {
         );
         *live::REF.lock().unwrap() = Some((bytes, crc, wall, store));
         *live::DATA.lock().unwrap() = Some(data);
-        let a = super::oracle::ARM.load(Ordering::SeqCst);
-        scan::set_mode(if a & 1 != 0 {
+        scan::set_mode(if ideal('S') {
             scan::Mode::Replay
         } else {
             scan::Mode::Scan
         });
-        sup::set_mode(if a & 2 != 0 {
+        sup::set_mode(if ideal('E') {
             Mode::Supplied
         } else {
             Mode::Open
