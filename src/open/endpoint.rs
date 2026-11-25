@@ -144,8 +144,9 @@ pub(super) enum Clobber {
 }
 
 impl Endpoint {
-    /// (test only) the scratch it keeps, in bytes (its nodes and rules are in `edges`)
-    #[cfg(test)]
+    /// (test only, and `supplied-codes`' scratch record) the scratch it keeps, in bytes (its
+    /// nodes and rules are in `edges`)
+    #[cfg(any(test, feature = "supplied-codes"))]
     pub(super) fn scratch(&self) -> usize {
         4 * self.stack.capacity()
     }

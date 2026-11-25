@@ -99,6 +99,14 @@ moonshot = []
 # production path. Retain while the census's features are in use; remove at the first release
 # review after
 census = []
+# Research only: the open kernel's emitter handed the block's own dictionary word codes in
+# marked-cycle output order, read sequentially from the front and back (src/supplied_codes.rs,
+# src/open/supplied.rs), against the emitter as shipped that walks the retained cycle, for
+# examples/supplied_codes.rs and the bench-supplied-codes diagnostic
+# (docs/journal/2026-11-24-supplied-codes-registration.md). Five clock reads and a record per
+# open block; in its `open` mode the kernel is as shipped. Never on a production path. Retain
+# until that run is read; then remove
+supplied-codes = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -134,6 +142,11 @@ overflow-checks = true
 # examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+
+# bench-supplied-codes' harness needs the supplied-codes switch and records
+[[example]]
+name = "supplied_codes"
+required-features = ["supplied-codes"]
 
 # The block census needs its recorder
 [[example]]
