@@ -99,6 +99,14 @@ moonshot = []
 # production path. Retain while the census's features are in use; remove at the first release
 # review after
 census = []
+# Research only: the parallel decoder's serial scanner timed by component (its slot waits,
+# reads, input waits, hand-offs, and inside each block's read the header, bitmap, selectors,
+# tables, buffer preparation and Huffman decode) and its workers' waits for jobs
+# (src/scan_profile.rs, the hooks in src/block.rs and src/parallel.rs), for
+# examples/scan_profile.rs and the bench-scan-profile diagnostic
+# (docs/journal/2026-11-24-scan-profile-registration.md). Off at run time, each hook is one
+# relaxed atomic load. Never on a production path. Retain until that run is read; then remove
+scan-profile = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -134,6 +142,11 @@ overflow-checks = true
 # examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+
+# bench-scan-profile's harness needs the scanner's timers
+[[example]]
+name = "scan_profile"
+required-features = ["scan-profile"]
 
 # The block census needs its recorder
 [[example]]

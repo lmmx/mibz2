@@ -1940,3 +1940,103 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The parallel decoder's serial scanner profiled: work against waiting, by component, at every
+# worker count from 1 to 20 (registration
+# docs/journal/2026-11-24-scan-profile-registration.md, its classification frozen before the
+# data; the brief docs/journal/2026-11-24-algorithm-level/briefs/scanner.md at a3f7d9ed, part 1,
+# with Louis's amendments: the grid, and memory and scheduling). DIAGNOSTIC: it
+# decides nothing; it tells a cheaper or parallel scanner what it must beat. One build, this
+# checkout at the ready tag: master PIN plus the `scan-profile` research feature
+# (src/scan_profile.rs, its hooks in src/block.rs and src/parallel.rs) and its harness
+# (examples/scan_profile.rs); the src it adds to PIN is checked to be those files alone. 4 copies
+# of corpora/wikidata.bz2, production's lazy workers, unpinned. ROUNDS rounds; each decodes the
+# corpus twice at each count, the timers on and off (their overhead measured), the counts rotated
+# and the timed decode first in alternate rounds; SETTLE s before each decode. Reported by
+# bench/scan_profile.py: at each count the scanner's busy and idle time (its work; its slot and
+# input waits), the work's components (header, bitmap, selectors, tables, buffer preparation,
+# Huffman decode, the read's remainder, the hand-off), bits and symbols a second, table switches,
+# the workers' busy and idle time and rho (the scanner's rate over the workers' combined rate);
+# the measured crossover (rho falling through 1) and a pipeline model's fit (a serial stage
+# feeding k workers) with its shift point and residuals; classified at every count, judged at 10
+# workers: SCANNER-, QUEUE- or INPUT-BOUND or MIXED; and every decode's memory (peak and
+# time-averaged RSS) and scheduling (user and system CPU, page faults, context switches), each
+# decode a row of the bundle's runs.tsv (each decode in a fresh process: its memory its own).
+# About 35 minutes with the build. DRY (the
+# first positional argument: two rounds, no settle; not evidence) checks the wiring.
+#   just submit bench-scan-profile
+bench-scan-profile DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=d2705dadd09f70b6af4a0c5ab02156f60d57cba5
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 JUDGED=10
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
+    W=$PWD/target/scan-profile
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-scan-profile (docs/journal/2026-11-24-scan-profile-registration.md; diagnostic) at $(git rev-parse HEAD): the serial scanner profiled, master $PIN with the scan-profile feature, production's lazy workers at $WORKERS, unpinned, $ROUNDS rounds (timers on and off), settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-scan-profile: DRY RUN: two rounds, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-scan-profile: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-scan-profile: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the build, checked: master's decoder at PIN, plus the research feature's files alone
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/scan_profile\.rs$|^src/block\.rs$|^src/parallel\.rs$|^src/lib\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-scan-profile: the build differs from $PIN beyond the scan-profile feature: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-scan-profile: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features scan-profile --example scan_profile --example ab --example windows
+    SC=$PWD/target/release/examples/scan_profile
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$SC" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-scan-profile: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the run: the rounds, each count's decodes with the timers on and off; the process's peak
+    # memory too, when /usr/bin/time is there
+    run=("$SC" "$W/wikidata-x$COPIES.bz2" "$WORKERS" "$ROUNDS" "$SETTLE" "$O/runs.jsonl")
+    if [ -x /usr/bin/time ]; then run=(/usr/bin/time -v -o "$O/time-v.txt" "${run[@]}"); fi
+    "${run[@]}" || echo "bench-scan-profile: the harness failed (console.log says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/scan_profile.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --workers "$WORKERS" \
+      --judged $JUDGED --rounds $ROUNDS | tee "$O/report.txt" \
+      || echo "bench-scan-profile: VOID, no classification (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
