@@ -1996,3 +1996,33 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
   - These are production defaults, so they go to the workstation A/B under PERFORMANCE-POLICY.md, judged at 5, 7 and 10 threads.
   - CI's 4-core bench can't see either change: CI runs at most 4 threads, and 4 is already lazy. So it needs the workstation, like #846.
 - **The trim interacts with the scanner work:** with the scanner faster (the plumbing fix, multi-symbol decoding), the balance moves above 8. Each change is priced at the count it will run at (§61, bottleneck migration).
+
+## 77. The scanner's symbol-buffer fix (#846) on the workstation: NOT ADOPTED, on a noisy judged count
+
+**The run:** `scanner-plumbing/run-20261125T025030Z`, recipe #850 at f5868d45, head #846 793ed644 against its merge-base. It is evidence 78a85fc4, SHA-256 f52bb59e…32a8, checked.
+- Every phase passed, and every output was byte-identical.
+- The verdict and summaries are in `math-targets/data/scanner-plumbing/`.
+
+| threads | workers | wall head/base [95%] | step | peak RSS |
+|---|---|---|---|---|
+| 6 | 6 | 1.001 [0.995, 1.007] | INCONCLUSIVE | 0.995 |
+| 8 | 8 | 0.974 [0.949, 1.000] | FASTER | 1.010 |
+| **9 (judged)** | 9 | **0.987 [0.936, 1.041]** | INCONCLUSIVE | 1.008 |
+| 10 | 7 | 0.989 [0.963, 1.015] | INCONCLUSIVE | 1.002 |
+| 12 | 7 | 0.985 [0.964, 1.006] | INCONCLUSIVE | 1.003 |
+
+**The lazy diagnostic** (explicit workers): 1.001 at 8, 0.986 at 9, 0.976 at 10. All are inconclusive, with intervals of ±4–7%.
+
+**The verdict under the frozen rule: NOT ADOPTED,** because 9 threads was not FASTER. The rule stands (C2): #846 does not merge on this run.
+
+**What the data says, descriptively:**
+- **The direction matches the prediction.** Every count from 8 up has a point estimate of 0.974–0.989, against a predicted ≈0.974 at 9. The judged count's interval is ±5%, the widest in the run.
+- **That width is the noise stage 2b was built to remove:** 2a found the scanner sharing its core about half the time above 6 workers (paired SD 8.1% at 8). At 6, below the knee, the interval is ±0.6% and centred on 1.000, as predicted.
+- **No cost:** RSS within 1%, CPU within noise.
+
+**The next test, registered now, before its data** (C1a, the house rule, same recipe):
+- **What runs:** the *combined* scanner fix, #846's symbol buffers plus #857's seam window, as one head on a branch that merges both. It runs once #857's CI is green.
+- **The rule:** identical to #850's, judged at 9 threads.
+- **Why combined:** the two fixes act on the same activity, the scanner's copying. Their predicted sum (≈0.92–0.95 at 9) clears the unpinned noise that a 2.6% effect can't.
+- **If it ADOPTS,** both merge together. If not, both are held, pending the multi-symbol Huffman decode, the larger lever on the same activity (§75).
+- **#846 stays open and unmerged until then.**
