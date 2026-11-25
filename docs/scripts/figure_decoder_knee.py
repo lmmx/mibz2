@@ -1,4 +1,4 @@
-"""Figures for "The decoder's knee", from the scanner profile.
+"""Figures for "The decoder as a queueing network", from the scanner profile.
 
     python3 docs/scripts/figure_decoder_knee.py wall|scanner
 
