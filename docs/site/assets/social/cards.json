@@ -293,6 +293,13 @@
     "section": " · Research blog",
     "title": "What else moves together: the search for a decoder below the proved floor"
   },
+  "assets/social/blog-2026-11-25-the-decoders-knee.png": {
+    "description": "A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.",
+    "foot": "lmmx.github.io/mibz2 · 25 November 2026",
+    "kind": "progress",
+    "section": " · Research blog",
+    "title": "The decoder's knee"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
