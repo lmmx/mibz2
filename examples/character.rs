@@ -39,6 +39,7 @@
 use mibz2::character::{self as ch, route, Ev, Ledger, ACTIVITIES, BUFFERS, OCCS, UNREAD};
 use std::fmt::Write as _;
 use std::io::{Read, Write as _};
+use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
 #[repr(C)]
@@ -200,6 +201,9 @@ mod pmu {
         }
         pub fn disable(&self) {
             self.each(0x2401);
+        }
+        pub fn reset(&self) {
+            self.each(0x2403);
         }
         /// Each counter's value, time enabled and time running (None where it did not open)
         pub fn read(&self) -> Vec<(&'static str, Option<[u64; 3]>)> {
@@ -798,6 +802,10 @@ fn main() {
         }
         Some("--api") if a.len() == 4 => api(&a[2], a[3].parse().expect("THREADS")),
         Some("--features") if a.len() == 4 => features(&a[2], &a[3]),
+        Some("--calibrate") if a.len() == 4 => calibrate(
+            a[2].parse().expect("ITERATIONS"),
+            a[3].parse().expect("REPEATS"),
+        ),
         _ => {
             eprintln!(
                 "usage: character --one FILE.bz2 K ON BLOCKS.tsv|- [PMU [TREAT]]\n       character --api FILE.bz2 THREADS"
@@ -810,6 +818,49 @@ fn main() {
 /// The treatments switched on (`src/character.rs`' `treat`), from TREAT: `none`, or a file of
 /// lines `pace ACTIVITY ITERATIONS`, `dose ACTIVITY BYTES stream|chase`, `ready_cap BYTES`,
 /// `scanner_cpu CPU` (stage 2's; stage 1 runs with none, the same binary)
+/// The pacing loop's calibration (`--calibrate ITERATIONS REPEATS`): the same dependent
+/// multiply-add chain as `character::treat`'s pacing (src/character.rs `spin`, its code
+/// copied: the library stays stage 1's), run ITERATIONS times, REPEATS times, each counted with
+/// cycles and reference cycles (where the PMU counts) and timed; one JSON line, each repeat's
+/// cycles, reference cycles and ns
+fn calibrate(n: u64, repeats: usize) {
+    #[inline(never)]
+    fn spin(n: u64) {
+        let mut x = std::hint::black_box(0x9E37_79B9_7F4A_7C15u64);
+        for _ in 0..n {
+            x = x
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+        }
+        std::hint::black_box(x);
+    }
+    let c = pmu::Counters::open(4);
+    let mut rows = Vec::new();
+    for _ in 0..repeats {
+        c.reset();
+        c.enable();
+        let t = Instant::now();
+        spin(n);
+        let ns = t.elapsed().as_nanos();
+        c.disable();
+        let v = c.read();
+        let get = |i: usize| {
+            v.get(i)
+                .and_then(|x| x.1)
+                .map_or("null".into(), |x| x[0].to_string())
+        };
+        rows.push(format!("[{},{},{ns}]", get(0), get(1)));
+    }
+    println!(
+        "{{\"kind\":\"calibration\",\"iterations\":{n},\"scope\":\"{}\",\"repeats\":[{}]}}",
+        c.scope,
+        rows.join(",")
+    );
+}
+
+/// The window a `--one` decode is built with (0: 4 a worker, as shipped)
+static WINDOW: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 fn treatments(spec: &str) {
     if spec == "none" {
         return;
@@ -834,6 +885,8 @@ fn treatments(spec: &str) {
             }
             ["ready_cap", b] => ch::treat::set_ready_cap(Some(b.parse().expect("ready_cap"))),
             ["scanner_cpu", c] => ch::treat::set_scanner_cpu(Some(c.parse().expect("scanner_cpu"))),
+            // (stage 2's gate contrast: the window, the harness's own; the library unchanged)
+            ["window", w] => WINDOW.store(w.parse().expect("window"), Ordering::SeqCst),
             _ => panic!("TREAT: {line}"),
         }
     }
@@ -938,7 +991,10 @@ fn api(file: &str, threads: usize) {
 
 fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let data: &'static [u8] = std::fs::read(file).expect("read the input").leak();
-    let slots = mibz2::parallel::SLOTS_PER_THREAD * k;
+    let slots = match WINDOW.load(Ordering::SeqCst) {
+        0 => mibz2::parallel::SLOTS_PER_THREAD * k,
+        w => w,
+    };
     assert!(!(on && group > 0), "the counters run with the ledgers off");
     // (every decode counts cycles and reference cycles, for its achieved frequency: group 4,
     // two fixed counters; a counter run's group in their place)
