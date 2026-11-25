@@ -535,7 +535,15 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 
 25 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0514---2026-11-25>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14>)
 
-**Changes:** eight lazy workers from 10 threads on the i9 unpinned ([\#878](<https://github.com/lmmx/mibz2/pull/878>)); lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) ([\#868](<https://github.com/lmmx/mibz2/pull/868>)).
+- Lazy workers at 5 and 7 threads on the i9 unpinned: 16% and 37% faster, with 58% and 63% less peak memory (\#868).
+- Eight lazy workers from 10 threads on the i9 unpinned: 7% faster at 10 and 12 threads (\#878).
+- Where it applies: only on the i9-10900K workstation, unpinned.
+- The paired run on CI compared v0.5.13 at 4a4a1c22 with master at bb08b983 (Benchmark run 45587502720, Intel Xeon 6973P-C, 4 CPUs on 2 physical cores, 10 rounds, bench 3.9.0).
+- Stages: one thread's total is 11.22 c/B in both builds, and no stage moved.
+- The other corpora: `records` at 1 and 2 threads and `text` at 4 were marked faster, and nothing slower.
+- Features reviewed: none was removed in this release.
+
+**Changes:** eight lazy workers from 10 threads on the i9 unpinned ([\#878](<https://github.com/lmmx/mibz2/pull/878>)); lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) ([\#868](<https://github.com/lmmx/mibz2/pull/868>)); Wikidata block structure against the Open kernel's per-block cost ([\#805](<https://github.com/lmmx/mibz2/pull/805>)).
 
 ### 0.5.13
 

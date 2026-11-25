@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9e500f891b3b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=cc2a3620add8">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=9e500f891b3b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -6725,7 +6725,16 @@ explains in its front matter (<code>releases: ["0.5.8"]</code>), and its header 
 figures behind each summary are in the CHANGELOG.</p>
 <h3 id="release-0-5-14">0.5.14<a class="headerlink" href="#release-0-5-14" title="Permanent link">&para;</a></h3>
 <p class="rn-meta">25 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0514---2026-11-25">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14">its diff</a></p>
-<p><strong>Changes:</strong> eight lazy workers from 10 threads on the i9 unpinned (<a href="https://github.com/lmmx/mibz2/pull/878">#878</a>); lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) (<a href="https://github.com/lmmx/mibz2/pull/868">#868</a>).</p>
+<ul>
+<li>Lazy workers at 5 and 7 threads on the i9 unpinned: 16% and 37% faster, with 58% and 63% less peak memory (#868).</li>
+<li>Eight lazy workers from 10 threads on the i9 unpinned: 7% faster at 10 and 12 threads (#878).</li>
+<li>Where it applies: only on the i9-10900K workstation, unpinned.</li>
+<li>The paired run on CI compared v0.5.13 at 4a4a1c22 with master at bb08b983 (Benchmark run 45587502720, Intel Xeon 6973P-C, 4 CPUs on 2 physical cores, 10 rounds, bench 3.9.0).</li>
+<li>Stages: one thread's total is 11.22 c/B in both builds, and no stage moved.</li>
+<li>The other corpora: <code>records</code> at 1 and 2 threads and <code>text</code> at 4 were marked faster, and nothing slower.</li>
+<li>Features reviewed: none was removed in this release.</li>
+</ul>
+<p><strong>Changes:</strong> eight lazy workers from 10 threads on the i9 unpinned (<a href="https://github.com/lmmx/mibz2/pull/878">#878</a>); lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) (<a href="https://github.com/lmmx/mibz2/pull/868">#868</a>); Wikidata block structure against the Open kernel's per-block cost (<a href="https://github.com/lmmx/mibz2/pull/805">#805</a>).</p>
 <h3 id="release-0-5-13">0.5.13<a class="headerlink" href="#release-0-5-13" title="Permanent link">&para;</a></h3>
 <p class="rn-meta">22 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0513---2026-11-22">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13">its diff</a></p>
 <ul>
@@ -7151,19 +7160,19 @@ figures behind each summary are in the CHANGELOG.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/bench.js?v=9e500f891b3b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/couriers.js?v=9e500f891b3b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/blog.js?v=9e500f891b3b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/frontier.js?v=9e500f891b3b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/observatory.js?v=9e500f891b3b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=cc2a3620add8"></script>
+        <script src="../../assets/javascripts/katex.js?v=9e500f891b3b"></script>
       
     
   </body>
