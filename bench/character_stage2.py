@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import re
@@ -475,6 +476,9 @@ def busy(x, role, acts):
 
 
 def interval(vals):
+    # (a dose at or below 0 leaves a coefficient NaN: the row is then unresolved, never a crash)
+    if not vals or not all(math.isfinite(v) for v in vals):
+        return float("nan"), float("nan"), float("nan")
     m = statistics.fmean(vals)
     if len(vals) < 2:
         return m, float("nan"), float("nan")
