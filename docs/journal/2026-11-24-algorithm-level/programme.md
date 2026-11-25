@@ -22,7 +22,30 @@ The reference is Raj Jain's course, *Computer Systems Performance Analysis: Tech
 | 7 | **Where new mathematics fits:** the activities with real control at the operating points that matter, and what a new device must change there (demand, dependency or representation) to move the whole decoder | (the purpose of the model) | `math-targets/targets.tsv`, to be re-ranked by step 6 | after step 6 |
 | 8 | **The mathematics itself,** aimed at step 7's targets | — | MONODROMY and Neon records; the open threads in the report §4 | continuing; the closure problem answered negatively within record 119's class |
 
+## Hybrid systems: a reading companion for structural redesign
+
+*25 November 2026.* The [hybrid-systems notes](methodology/hybrid-systems/index.md)
+separate source précis from independent decoder interpretations. Current coverage is
+explicitly partial: Chapter 1 is read; Chapters 2–9 await access to the supplied book.
+The [structural levers](methodology/hybrid-systems/applications/03-structural-levers.md)
+and [next analysis](methodology/hybrid-systems/applications/04-next-experiment.md)
+use the completed stage-1 measurements to make changes to work placement,
+representation, admission and ownership concrete.
+
+For current run status, use the [experiment programme](briefs/experiment-programme.md):
+stage 1 is done, stage 2 is being prepared, and scanner work and post-fix recalibration
+have their own baselines. This companion introduces no additional workstation grid
+or production adoption decision.
+
+The historical MVA and factorial suggestions below have been superseded by the
+[review decisions](briefs/character-review-decisions.md#0-where-all-three-agree).
+The window is an admission ceiling in a finite pipeline, not a fixed circulating
+population; exact product-form MVA is not justified for the actual system. Use MVA
+only on a documented surrogate. The hybrid notes likewise distinguish semantic
+validity, progress and robustness from a physical-time performance bound.
+
 ## Two points Jain's course adds to `briefs/character.md` (amendment, §52)
 
 1. **Operational laws are the accounting identities.** Little's law, the utilisation law and the forced-flow law are the completeness checks ChatGPT Pro proposed. Because the admission window W = 4k holds a fixed number of blocks in flight, the decoder is a **closed** queueing network, the case **mean-value analysis** solves exactly for product-form networks. MVA is the analytic companion to the discrete-event simulation: cheap, and a check on it.
 2. **Fractional factorial designs measure interactions without an exponential grid.** One-factor-at-a-time cannot see interactions (ChatGPT Pro's γ·xᵢxⱼ point), yet the four-arm result was itself an interaction. A 2^(9−4) resolution-IV design over the nine activities needs 32 runs. It estimates every main effect clear of two-factor interactions, with the interactions in aliased groups. It is proposed **at k = 8 and 10 only, in place of OAT there**, since those are the counts where control migrates. The cost: 2 anchors × 32 runs × 12 rounds = 768 observations, against OAT's 2 × 9 × 12 = 216. The Pathfinder is to judge whether the budget allows it, or whether to use a 16-run resolution-III design plus a fold-over.
+

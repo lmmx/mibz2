@@ -1,0 +1,10 @@
+chapter	title	coverage	precis	question
+1	Introduction	read_public_author_sample	precis/01-introduction.md	Which state, guard, flow and reset changes expose a useful reorganisation?
+2	The Solution Concept	pending_full_source		Which executions and terminations does the model admit?
+3	Uniform Asymptotic Stability	pending_full_source		What progress argument is useful for a finite decode?
+4	Perturbations and Generalized Solutions	pending_full_source		How do delays and threshold errors change event sequences?
+5	Set-Valued Analysis	pending_full_source		How should uncertain service and limits of traces be represented?
+6	Well-Posed Hybrid Systems	pending_full_source		What additional assumptions connect trajectory regularity to completion time?
+7	Asymptotic Stability in Depth	pending_full_source		Which robustness conclusions survive timing and parameter changes?
+8	Invariance Principles	pending_full_source		How do safety and persistent progress differ?
+9	Conical Approximation	pending_full_source		Can a local approximation predict useful interventions across switching boundaries?
