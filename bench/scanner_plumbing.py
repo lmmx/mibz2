@@ -13,6 +13,15 @@ head changed them), PERFORMANCE-POLICY rule 4's trade (reported under HELD ON ME
                     [--arm mibz2] [--judged 9] [--supporting 6,8,10,12] [--rounds 16]
                     [--corpus wikidata-x4] [--out-bytes N] [--diagnostic] [--dry]
 
+**The counts:** the defaults (judged 9; supporting 6, 8, 10 and 12) are the first registration's,
+as its run (#850 at b39c2cfc, journal §79) was judged. Journal §84's test 2 (the combined fix with
+master merged in, the spin warm-up) moves the judged counts to production's defaults, decided
+before its data: judged 10 and 12, supporting 6, 8 and 9. The recipe passes those.
+
+**The clock split** (journal §81, a registered secondary that decides nothing): where every run
+carries `cycles_per_ref` (the recipe's PRESPIN passes --machine-state), each count's clock ratio
+and its wall at a common clock, head over base, are reported beside the wall.
+
 **Arms.** The reference is ARM at the base (`ARM@build-base`, the measured head's merge-base
 with master), the candidate ARM at the head (`ARM`, this harness's own build of the head the
 recipe was given). Which head and base a run measured is the bundle's builds.txt.
@@ -181,6 +190,24 @@ def cell(got, arm, t, rounds):
     return wall, cpu, head_kb / base_kb, base_kb, head_kb
 
 
+def clock_split(got, arm, t, rounds):
+    """Journal §81's registered secondary (it decides nothing): each round's wall ratio, head over
+    base, split into the clock ratio (cycles_per_ref, cycles over reference cycles, recorded with
+    --machine-state) and the wall at a common clock (the wall times the clock: what the head
+    would take at the base's clock). (clock step, common-clock step), or None where a record
+    lacks the clock"""
+    ref = f"{arm}@build-base"
+    clock, common = [], []
+    for r in range(rounds):
+        c, b = got[(arm, t, r)], got[(ref, t, r)]
+        gc, gb = c.get("cycles_per_ref"), b.get("cycles_per_ref")
+        if not (finite_pos(gc) and finite_pos(gb)):
+            return None
+        clock.append(math.log(gc / gb))
+        common.append(math.log(c["wall"] / b["wall"]) + clock[-1])
+    return ta.step(clock), ta.step(common)
+
+
 def trade(g, hi, rss, base_kb, head_kb):
     """PERFORMANCE-POLICY rule 4's trade at a count over the gate: (holds, why)"""
     gain = 1 - g
@@ -255,6 +282,20 @@ def main(argv=None):
             f"{t:>7}  {role:<10} {plan[t][1]:>7g}  {g:.4f} [{lo:.4f}, {hi:.4f}]{'':<8} {steps[t]:<12} "
             f"{cg:.4f} [{clo:.4f}, {chi:.4f}]{'':<6} {rss:>17.4f}"
         )
+    print(
+        "the clock split (journal §81, a registered secondary; decides nothing): the clock and the "
+        "wall at a common clock, head/base [95%]:"
+    )
+    for t in threads:
+        split = clock_split(got, a.arm, t, a.rounds)
+        if split is None:
+            print(f"{t:>7}  not recorded (a run without the clock: no --machine-state, or no PMU)")
+        else:
+            (kg, klo, khi, _), (wg, wlo, whi, _) = split
+            print(
+                f"{t:>7}  clock {kg:.4f} [{klo:.4f}, {khi:.4f}]  "
+                f"wall at a common clock {wg:.4f} [{wlo:.4f}, {whi:.4f}]"
+            )
     print("peak RSS, median over the rounds (reported; decides nothing beyond the 1.10 gate):")
     for t, base_kb, head_kb, rss in mem:
         print(

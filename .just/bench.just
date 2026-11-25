@@ -1954,8 +1954,8 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # head's harness driving the run) whose build inputs may differ in src/, tests/ and examples/
 # but not in examples/ab.rs, Cargo.toml, Cargo.lock, build.rs or rust-toolchain.toml (checked).
 # Both by rustc 1.99.1. The whole Wikidata corpus, 4 copies end to end; production's decoder
-# unpinned at 6, 8, 9, 10 and 12 threads, 16 paired rounds, settle 2 s, no spinner; judged at 9,
-# the rest supporting, peak RSS gated at every count and the workers each run used reported
+# unpinned at 6, 8, 9, 10 and 12 threads, 16 paired rounds, settle 2 s, no spinner; judged at 10
+# and 12 (journal §84's test 2; the first registration's run judged 9), the rest supporting, peak RSS gated at every count and the workers each run used reported
 # (bench/scanner_plumbing.py). Then a diagnostic that decides nothing: `mibz2-workers-lazy` at 8,
 # 9 and 10 explicit workers, 16 rounds. bench-open-relay8's shape (#707), fail-soft as
 # bench-character-stage2's: each phase's status in phases.tsv, the EXIT trap always bundles.
@@ -1976,7 +1976,9 @@ bench-scanner-plumbing HEAD_REF="perf/scanner-plumbing" HEAD_SHA="" PRESPIN="" D
     # under target/*/ named *.tar.gz is its bundle (just submit counts them).
     set -uo pipefail
     HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" PRESPIN="{{PRESPIN}}" dry="{{DRY}}"
-    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=9 SUPPORTING=6,8,10,12 LAZY=8,9,10
+    # (the counts: journal §84's test 2 moved the judged counts to production's defaults, 10 and 12,
+    # before its data; the first registration's run, judged at 9, is #850 at b39c2cfc, §79)
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=10,12 SUPPORTING=6,8,9 LAZY=8,9,10
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
     [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-scanner-plumbing: HEAD_REF '$HEAD_REF' is not a branch name (nothing was run)"; exit 1; }
     [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \

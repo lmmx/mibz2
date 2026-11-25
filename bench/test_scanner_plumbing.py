@@ -35,7 +35,7 @@ def prod_workers(t):
     return t if t < 10 else 7
 
 
-def records(arm="mibz2", threads=COUNTS, step=None, mem=1.0, noise=0.01, workers=None):
+def records(arm="mibz2", threads=COUNTS, step=None, mem=1.0, noise=0.01, workers=None, clock=None):
     """A complete run: `step` maps a thread count to the head's wall over the base's (default
     level); `mem` its peak memory over the base's; `workers` maps a count to the head's workers
     (default the base's). Rounds alternate the noise above and below"""
@@ -68,6 +68,15 @@ def records(arm="mibz2", threads=COUNTS, step=None, mem=1.0, noise=0.01, workers
                         "hash": "0123456789abcdef",
                         "err": "",
                         "observed_threads": " ".join(names + ["sampler"]),
+                        **(
+                            {}
+                            if clock is None
+                            else {
+                                "cycles_per_ref": 4.9
+                                / 3.7
+                                * (clock.get(t, 1.0) if which == "head" else 1.0)
+                            }
+                        ),
                     }
                 )
     return out
@@ -280,6 +289,47 @@ class Verdict(unittest.TestCase):
                 ]
             )
         self.assertEqual(rc, 1)
+
+
+# Journal §84's test 2 (the combined fix, master merged in, the spin warm-up): the judged counts
+# moved to production's defaults, 10 and 12, the rest supporting, as the recipe passes them
+S84 = ("--judged", "10,12", "--supporting", "6,8,9")
+GOOD84 = {10: 0.97, 12: 0.97}
+
+
+class Section84(Verdict):
+    def test_adopts(self):
+        rc, out = self.run_on(records(step=GOOD84), *S84)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        row = next(ln for ln in out.splitlines() if ln.strip().startswith("10  judged"))
+        self.assertIn("FASTER", row)
+
+    def test_nine_level_is_enough(self):
+        # 9 is supporting now: level there adopts
+        rc, out = self.run_on(records(step=GOOD84), *S84)
+        row = next(ln for ln in out.splitlines() if ln.strip().startswith("9  supporting"))
+        self.assertIn("INCONCLUSIVE", row)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+
+    def test_each_judged_count_must_be_faster(self):
+        rc, out = self.run_on(records(step={10: 0.97}), *S84)
+        self.assertIn("NOT ADOPTED (10/12 threads not FASTER)", self.verdict(out))
+
+    def test_slower_at_a_supporting_count_not_adopted(self):
+        for t in (6, 8, 9):
+            rc, out = self.run_on(records(step={**GOOD84, t: 1.05}), *S84)
+            self.assertIn(f"NOT ADOPTED (SLOWER at {t} threads)", self.verdict(out))
+
+    def test_clock_split_reported_not_judged(self):
+        rc, out = self.run_on(records(step=GOOD84, clock={10: 0.98}), *S84)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        row = next(ln for ln in out.splitlines() if ln.strip().startswith("10  clock"))
+        self.assertIn("clock 0.9800", row)
+        common = float(row.split("wall at a common clock ")[1].split()[0])
+        self.assertAlmostEqual(common, 0.97 * 0.98, delta=0.0005)
+        rc, out = self.run_on(records(step=GOOD84), *S84)
+        self.assertIn("not recorded (a run without the clock", out)
 
 
 if __name__ == "__main__":
