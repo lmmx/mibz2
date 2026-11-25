@@ -992,12 +992,15 @@ mod oracle {
         let replayed = scan::take_replayed();
         let recs = sup::take();
         let open = recs.iter().filter(|x| !x.refused);
+        // (the delivery and consumption of the supplied blocks alone: an open block emitted by
+        // its walk times the walk there, which is emission's real work, never a handover)
         let h = open.fold((0u64, 0u64, 0u64, 0u64), |(c, s, d, e), x| {
+            let sup = u64::from(x.supplied);
             (
                 c + 1,
-                s + u64::from(x.supplied),
-                d + x.deliver_ns,
-                e + x.consume_ns,
+                s + sup,
+                d + sup * x.deliver_ns,
+                e + sup * x.consume_ns,
             )
         });
         *HANDOVER.lock().unwrap() = Some((replayed, h.0, h.1, h.2, h.3));

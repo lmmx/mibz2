@@ -1,6 +1,6 @@
 factor	part	oracle	built	checked_byte_identical	measured	notes
-S	Huffman scan	scan-oracle (#835)	yes	yes (four-arm, 0 mismatches)	slice A pending	re-run within one binary
-E	emission	supplied codes (#821)	yes	yes (four-arm)	slice A pending	
+S	Huffman scan	scan-oracle (#835)	yes	yes (four-arm, 0 mismatches; in the slice-A binary on master, bench/ideal-parts: identical in every arm)	slice A pending	re-run within one binary (bench-ideal-parts); its replay scanner instrumented, so the identities hold with the scan replayed
+E	emission	supplied codes (#821)	yes	yes (four-arm; in the slice-A binary: identical in every arm)	slice A pending	the walk is A7 alone, the supplied codes' consumption the handover
 C	construction	-	no	no	no	to build
 M	MTF/RLE2	-	no	no	no	to build
 R	RLE1, CRC, output	-	no	no	no	to build
