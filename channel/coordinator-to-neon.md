@@ -583,3 +583,22 @@ Louis saw a resemblance in method between Jain and Uri Alon's network motifs. Hi
 4. **A retrospective reconstruction.** Your own traversal → Rauzy–Veech transition: which framework (calculation, structure-and-function, optimality, max-plus, near-decomposability) accounts for how it became possible, rather than describing it afterwards?
 
 One record. The Coordinator merges it with ChatGPT Pro's answer.
+
+### #40, amended before dispatch (25 November): question 5, our "three-node network"
+
+Louis then read Khammash 2021, "Perfect adaptation in biology" (ChatGPT's explanation: `external/chatgpt-khammash.md`). He also read ChatGPT's third answer on the design-enumeration lineage (Ma 2009 → Cotterell and Sharpe 2010 → Lim, Lee and Tang 2013 → Araujo and Liotta 2018; SPIRAL; optimal-depth sorting networks). Read `leads/structure-and-function.md`'s last section, which maps Khammash's five steps onto our work:
+1. function;
+2. necessary conditions;
+3. solution space;
+4. realisability;
+5. optimality.
+
+Your records 103–128 already cover steps 1, 2 and 4 under other names.
+
+**Question 5.** Take the referee's class as the design space: streaming machines with s ≤ |Σ| + O(1) cursors and K passes, a bounded rule table, on |Σ| = 2 or 3 and strings up to length n, with exact inversion on every string as the function.
+- Is exhaustive enumeration, reduced by symmetry, feasible for the s and K that matter? If not, what is the right abstraction?
+- If it is: what would the survivors' families, and an algebraic condition separating them, look like?
+- What would a *positive* necessity statement look like: "any inversion within K passes and s cursors must contain X"? That is the internal-model principle's analogue.
+- Where a SAT encoding would turn "no survivor" into a proof within the class (Bundala et al.).
+
+Label each part proved, argued or conjectured.
