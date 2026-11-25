@@ -2347,3 +2347,36 @@ The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the 
 - **§84 tests 2 and 3,** the scanner fixes, are now judged in that regime.
 - **Test 3's head** (#879) has master 959496c7 merged in, at 48d9f7d9. It is queued once CI is green.
 - **Test 2** waits for PR 861 to be reopened (coordinator notes, #881).
+
+## 86. §84 test 3, the batched bit count (PR 879): NOT ADOPTED; the noise left at the knee is not the clock
+
+**The run:** `scanner-plumbing/run-20261125T064054Z`, recipe #850 at a86e5d86, PRESPIN 100. The head is PR 879 at 48d9f7d9, with master 959496c7 merged in, so production runs 8 workers from 10 threads. It is evidence a93afab5, SHA-256 32065ffe…b3d2, checked; every phase passed. The data is in `math-targets/data/batched-bits/`.
+
+| threads | workers | wall head/base [95%] | step | clock ratio |
+|---|---|---|---|---|
+| 6 | 6 | 0.998 [0.992, 1.003] | INCONCLUSIVE | 1.000 |
+| 8 | 8 | 0.995 [0.972, 1.018] | INCONCLUSIVE | 1.000 |
+| 9 | 9 | 0.978 [0.956, 1.002] | INCONCLUSIVE | 1.000 |
+| **10 (judged)** | 8 | **1.001 [0.973, 1.030]** | INCONCLUSIVE | 1.000 |
+| **12 (judged)** | 8 | **0.994 [0.976, 1.012]** | INCONCLUSIVE | 1.000 |
+
+**The lazy diagnostic,** explicit workers (it decides nothing):
+- 1.002 at 8;
+- **0.972 [0.953, 0.991] at 9, FASTER**;
+- 1.005 at 10.
+
+RSS is within 1.2% everywhere.
+
+**The verdict under §84's frozen rule: NOT ADOPTED.** PR 879 does not merge. The verdict is final for this registration.
+
+**Two findings:**
+1. **The effect is too small for this machine to resolve at the knee.** The prediction was ≤ 1.5% of wall at 8 workers. Every point estimate at 8 and above is between 0.978 and 1.001, but the intervals are ±1.8–2.9%. The direction is plausible; the gain is not shown.
+2. **The spin fixed the clock, not all the noise.**
+   - The clock ratio is 1.0000 at every count, and at 6 workers the interval is ±0.5%, as §81 predicted.
+   - But at 8 workers and above, the paired intervals stay ±2–3%. That is a paired SD of about 4–5%, roughly where 2b's pinned scanner left it (§78; the Pathfinder: clock R² only 0.37 at 8).
+   - So at the knee a second noise source dominates once the clock is controlled: most likely placement, the scanner sharing its core part of the time (§78, record 132).
+   - **Consequence for design:** tests of small scanner effects at 8 or more workers need either many more rounds (about 4× for ±1%) or the scanner pinned to a quiet core (2b's pin halved the SD).
+
+**Decision:**
+- **PR 879 is held, not rejected.** The micro-win stays a lead. A further test would be a new registration with the scanner pinned, or with 64 rounds; it is not run tonight.
+- **§84 test 2** (the combined scanner fix, a larger expected effect) still waits for PR 861 to be reopened. Its registered design has the same noise problem at 10 and 12. Before it runs, consider re-registering it with more rounds or a pinned scanner. That is a design decision, recorded here before any of its data.

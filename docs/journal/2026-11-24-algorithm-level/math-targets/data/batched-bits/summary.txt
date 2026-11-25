@@ -1,0 +1,35 @@
+
+### wikidata-x4, 6 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.243 | 0.245 | 1.688 | 1.702 | 55 MB | 1 | 1 | 0.04 | yes |
+| mibz2 | 16 | 0.243 | 0.245 | 1.684 | 1.697 | 55 MB | 0.998 [0.992, 1.003] | 0.997 [0.990, 1.003] | 0.04 | yes |
+
+### wikidata-x4, 8 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.196 | 0.200 | 1.741 | 1.795 | 60 MB | 1 | 1 | 0.04 | yes |
+| mibz2 | 16 | 0.194 | 0.199 | 1.737 | 1.798 | 60 MB | 0.995 [0.972, 1.018] | 1.003 [0.992, 1.014] | 0.04 | yes |
+
+### wikidata-x4, 9 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.197 | 0.201 | 1.880 | 1.924 | 65 MB | 1 | 1 | 0.06 | yes |
+| mibz2 | 16 | 0.193 | 0.197 | 1.872 | 1.916 | 65 MB | 0.978 [0.955, 1.002] | 1.002 [0.989, 1.015] | 0.04 | yes |
+
+### wikidata-x4, 10 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.195 | 0.200 | 1.735 | 1.798 | 60 MB | 1 | 1 | 0.06 | yes |
+| mibz2 | 16 | 0.195 | 0.200 | 1.738 | 1.796 | 60 MB | 1.001 [0.973, 1.030] | 0.997 [0.985, 1.008] | 0.06 | yes |
+
+### wikidata-x4, 12 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.199 | 0.200 | 1.783 | 1.797 | 60 MB | 1 | 1 | 0.06 | yes |
+| mibz2 | 16 | 0.197 | 0.199 | 1.781 | 1.795 | 60 MB | 0.994 [0.976, 1.012] | 0.999 [0.994, 1.004] | 0.06 | yes |
