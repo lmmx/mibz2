@@ -1940,3 +1940,218 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The kernel choice (#860): the i9's default decoder with lazy workers at every count from 4
+# threads asked, and 8 lazy workers from 10 in place of 7, against the decoder before it, on the
+# i9 (registration docs/journal/2026-11-25-kernel-choice-registration.md, frozen before the
+# data; journal 2026-11-24-algorithm-level.md §76). The head is a parameter, as
+# bench-scanner-plumbing's (#850): HEAD_REF (a branch on origin, default perf/lazy-from-four,
+# #860) and HEAD_SHA (default empty: that branch's tip when the run starts; pass the SHA to pin
+# it). The base is always the head's merge-base with origin/master. Two builds (`mibz2@build-base`
+# and `mibz2`, the head's harness driving the run) whose build inputs may differ in src/, tests/
+# and examples/ but not in examples/ab.rs, Cargo.toml, Cargo.lock, build.rs or
+# rust-toolchain.toml (checked). Both by rustc 1.99.1. Each build also gets the probe
+# bench/kernel_choice_probe.rs (copied in as an example once its checkout is checked clean),
+# which records what `BzReader::parallel(r, t)` builds there, unpinned, at each count: the
+# verdict requires the base's plan to be the old one and the head's the one #860 intends (lazy
+# at 4 to 8 threads, 8 workers at 10 and 12), and each build's timed runs to use its probe's
+# workers. The whole Wikidata corpus, 4 copies end to end; production's decoder unpinned at 3,
+# 4, 5, 7, 8, 10 and 12 threads, 16 paired rounds, settle 2 s, no spinner; judged at 5, 7 and
+# 10, the rest supporting, peak RSS gated at every count (bench/kernel_choice.py). No
+# diagnostic phase. Fail-soft as bench-scanner-plumbing's: each phase's status in phases.tsv,
+# the EXIT trap always bundles. About 15-20 minutes with the builds. Arguments are positional:
+# `just bench-kernel-choice perf/lazy-from-four <sha>`; DRY (the third: two rounds, no settle,
+# the machine and the registered plans not checked; the wiring only, never evidence) as
+# `just bench-kernel-choice perf/lazy-from-four "" 1`.
+bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" DRY="":
+    #!/usr/bin/env bash
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle. The only file this recipe leaves
+    # under target/*/ named *.tar.gz is its bundle (just submit counts them).
+    set -uo pipefail
+    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" dry="{{DRY}}"
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=3,4,5,7,8,10,12 JUDGED=5,7,10 SUPPORTING=3,4,8,12
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
+    [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-kernel-choice: HEAD_REF '$HEAD_REF' is not a branch name (nothing was run)"; exit 1; }
+    [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \
+      || { echo "bench-kernel-choice: HEAD_SHA '$HEAD_SHA' is not a full 40-character SHA or empty; DRY is the third argument (nothing was run)"; exit 1; }
+    W=$PWD/target/kernel-choice
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-kernel-choice (docs/journal/2026-11-25-kernel-choice-registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-the tip of} origin/$HEAD_REF against its merge-base with origin/master, unpinned at $THREADS threads (judged $JUDGED), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-kernel-choice: DRY RUN: two rounds, no settle, the machine and the registered plans not checked; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    X4=$W/wikidata-x$COPIES.bz2
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    PROBE=examples/kernel_choice_probe.rs
+    corpus=corpora/wikidata.bz2
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-kernel-choice: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-kernel-choice: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-kernel-choice: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-kernel-choice: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    # the head and its base, resolved and checked; builds.txt records them for the later phases
+    resolve() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-kernel-choice: the checkout has local changes"; exit 1; }
+      git fetch -q origin "+refs/heads/master:refs/remotes/origin/master"
+      git fetch -q origin "+refs/heads/$HEAD_REF:refs/remotes/origin/$HEAD_REF" \
+        || echo "bench-kernel-choice: origin has no branch $HEAD_REF (a pinned HEAD_SHA is fetched by itself)"
+      local head=$HEAD_SHA in_ref=no
+      if [ -z "$head" ]; then
+        head=$(git rev-parse --verify -q "refs/remotes/origin/$HEAD_REF^{commit}") \
+          || { echo "bench-kernel-choice: no HEAD_SHA and no origin/$HEAD_REF to take it from"; exit 1; }
+      fi
+      git cat-file -e "$head^{commit}" 2>/dev/null || git fetch -q origin "$head" || true
+      git cat-file -e "$head^{commit}" || { echo "bench-kernel-choice: $head is not on origin"; exit 1; }
+      ! git merge-base --is-ancestor "$head" "refs/remotes/origin/$HEAD_REF" 2>/dev/null || in_ref=yes
+      local master base
+      master=$(git rev-parse refs/remotes/origin/master)
+      base=$(git merge-base "$head" "$master") \
+        || { echo "bench-kernel-choice: $head has no merge-base with master"; exit 1; }
+      [ "$base" != "$head" ] || { echo "bench-kernel-choice: $head is already on master (it is its own merge-base)"; exit 1; }
+      # the contrast, checked: the decoder's source and tests may differ; the harness and the build may not
+      local changed beyond
+      changed=$(git diff --name-only "$base" "$head" -- src Cargo.toml Cargo.lock build.rs rust-toolchain.toml examples tests)
+      [ -n "$changed" ] || { echo "bench-kernel-choice: the builds' source does not differ"; exit 1; }
+      beyond=$(printf '%s\n' "$changed" | grep -E '^(Cargo\.toml|Cargo\.lock|build\.rs|rust-toolchain\.toml|examples/ab\.rs|examples/kernel_choice_probe\.rs)$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-kernel-choice: the builds differ in the harness or the build: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$base" "$head" -- src examples tests > "$O/src-head-against-base.diff"
+      git log --format='%H %s' "$base..$head" > "$O/head-commits.txt"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'base %s\nhead %s\nhead_ref %s\nhead_sha_given %s\nhead_in_ref %s\nmaster %s\n' \
+        "$base" "$head" "$HEAD_REF" "${HEAD_SHA:-none}" "$in_ref" "$master" > "$O/builds.txt"
+      cat "$O/builds.txt"
+      echo "the head's commits over its base:"
+      cat "$O/head-commits.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-kernel-choice: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      local b=$1 sha
+      sha=$(awk -v b="$b" '$1 == b { print $2 }' "$O/builds.txt")
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      # (the probe a previous run copied in goes first: it is never one of the build's own files)
+      rm -f "$W/build-$b/$PROBE"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-kernel-choice: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-kernel-choice: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-kernel-choice: build-$b's toolchain differs"; exit 1; }
+      cp bench/kernel_choice_probe.rs "$W/build-$b/$PROBE"
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows --example kernel_choice_probe)
+      sha256sum "$W/build-$b/target/release/examples/ab" "$W/build-$b/target/release/examples/kernel_choice_probe" \
+        | tee -a "$O/binaries.sha256"
+    }
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    inputs() {
+      local want dir
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-kernel-choice: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # the machine
+    machine() {
+      "$AB" env > "$O/env.json"
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+      uname -a > "$O/uname.txt"
+      cat "$O/env.json"
+    }
+    # what each build's public API builds at each count, in the timed runs' placement (unpinned)
+    plan() {
+      : > "$O/plan.jsonl"
+      for b in base head; do
+        for t in ${THREADS//,/ }; do
+          "$W/build-$b/target/release/examples/kernel_choice_probe" "$b" "$t" >> "$O/plan.jsonl"
+        done
+      done
+      cat "$O/plan.jsonl"
+    }
+    # the judged run: unpinned (no --spread), every online CPU, no spinner; the counts and the
+    # arms interleaved within each round, the arms' order rotated
+    timed() {
+      "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
+        --settle $SETTLE "$X4"
+      "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+      date -u +%FT%TZ > "$O/timed.txt"
+    }
+    verdict() {
+      python3 bench/kernel_choice.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+        --plan "$O/plan.jsonl" --arm mibz2 --judged $JUDGED --supporting $SUPPORTING \
+        --rounds $ROUNDS --corpus wikidata-x$COPIES ${dry:+--dry} | tee "$O/verdict.txt"
+    }
+    phase resolve - resolve
+    phase build-base resolve build base
+    phase build-head resolve build head
+    phase inputs build-head inputs
+    phase machine build-head machine
+    phase plan build-base,build-head plan
+    phase timed build-base,build-head,inputs,machine timed
+    phase verdict timed,plan verdict

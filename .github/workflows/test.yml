@@ -200,6 +200,12 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-kernel-choice's verdict (bench/kernel_choice.py) on synthetic runs: each verdict where
+      # the registration puts it, the registered plans checked against each build's probe and the
+      # probes against the timed runs' workers, peak RSS and rule 4's trade, the DRY label, and no
+      # verdict from incomplete or malformed records, probes or machine
+      - name: The kernel-choice verdict (synthetic runs)
+        run: python3 bench/test_kernel_choice.py
       # bench/run-queue.sh serving two scratch repositories: turns, once per commit per
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
