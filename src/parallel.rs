@@ -873,6 +873,17 @@ impl StreamDecoder {
     fn read_in(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
         self.check_cancelled(&mut r);
+        #[cfg(feature = "ideal-delivery")]
+        {
+            let mode = crate::ideal::delivery::mode();
+            if mode != crate::ideal::delivery::Mode::Real {
+                if buf.is_empty() {
+                    return Ok(0);
+                }
+                self.discard_all(&mut r, mode)?;
+                return Ok(0);
+            }
+        }
         loop {
             if let Some(e) = &r.failed {
                 return Err(e.clone());
@@ -881,6 +892,8 @@ impl StreamDecoder {
                 let n = buf.len().min(r.cur.len() - r.at);
                 buf[..n].copy_from_slice(&r.cur[r.at..r.at + n]);
                 r.at += n;
+                #[cfg(feature = "ideal-delivery")]
+                crate::ideal::delivery::count_copied(n as u64);
                 return Ok(n);
             }
             if r.done || buf.is_empty() {
@@ -899,6 +912,15 @@ impl StreamDecoder {
     pub fn read_block(&self, spent: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
         self.check_cancelled(&mut r);
+        #[cfg(feature = "ideal-delivery")]
+        {
+            let mode = crate::ideal::delivery::mode();
+            if mode != crate::ideal::delivery::Mode::Real {
+                self.recycle(spent);
+                self.discard_all(&mut r, mode)?;
+                return Ok(None);
+            }
+        }
         let mut spent = Some(spent);
         loop {
             if let Some(e) = &r.failed {
@@ -921,6 +943,25 @@ impl StreamDecoder {
                 return Ok(None);
             }
             self.advance(&mut r, spent.take().unwrap_or_default());
+        }
+    }
+
+    /// (research only, `ideal-delivery`) Factor D's reader mode: takes every decoded block in
+    /// order, recycles its buffer and discards it without copying to the caller.
+    #[cfg(feature = "ideal-delivery")]
+    fn discard_all(&self, r: &mut Reader, mode: crate::ideal::delivery::Mode) -> Result<(), Error> {
+        loop {
+            if let Some(e) = &r.failed {
+                return Err(e.clone());
+            }
+            if r.at < r.cur.len() {
+                crate::ideal::delivery::record_discarded(&r.cur[r.at..], mode);
+                r.at = r.cur.len();
+            }
+            if r.done {
+                return Ok(());
+            }
+            self.advance(r, Vec::new());
         }
     }
 
@@ -1327,6 +1368,12 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         // them after), in the same lock as its output buffer is taken: from the pool for a
         // block of `POOLED_FROM` rows or more, its own for a smaller one
         let res = catch_unwind(AssertUnwindSafe(|| {
+            #[cfg(any(
+                feature = "ideal-construction",
+                feature = "ideal-mtf",
+                feature = "ideal-rle1",
+            ))]
+            let _ideal_block = crate::ideal::enter_block(place);
             super::decode_owned(&mut symbols, k, &mut scratch, |n, syms| {
                 ch!(begin Pool);
                 let mut st = shared.lock();

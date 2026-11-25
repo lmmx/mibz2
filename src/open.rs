@@ -637,12 +637,106 @@ impl Kernel {
         #[cfg(not(feature = "supplied-codes"))]
         {
             let (stats, mark, bits) =
-                self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+                self.construct_for::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
             ch!(begin A7);
             self.walk(n, stats.retained, mark, bits, out);
             ch!(end A7);
             Some(stats)
         }
+    }
+
+    /// The construction emission is handed: `construct_capped`, or under `ideal-construction`
+    /// its oracle's hand-over point (`construct_or_replay`)
+    #[inline(always)]
+    pub(crate) fn construct_for<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+        cap: Cap,
+        out: &mut Vec<u8>,
+    ) -> Option<(Counts, u32, u32)> {
+        #[cfg(feature = "ideal-construction")]
+        {
+            self.construct_or_replay::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
+        #[cfg(not(feature = "ideal-construction"))]
+        {
+            self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
+    }
+
+    /// (research only, `ideal-construction`) Factor C's hand-over point: in `Real`, runs
+    /// `construct_capped`; in `Record`, runs it and stores Open's built structures (or refusal);
+    /// in `Replay`, skips `construct_capped`, copies the recorded structures into `self`, and
+    /// hands them to `walk`. Upstream MTF/RLE2 still ran; `records` is discarded here.
+    #[cfg(feature = "ideal-construction")]
+    fn construct_or_replay<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+        cap: Cap,
+        out: &mut Vec<u8>,
+    ) -> Option<(Counts, u32, u32)> {
+        use crate::ideal::{construction as ic, Mode};
+        let mode = ic::mode();
+        if mode == Mode::Replay {
+            std::hint::black_box(records);
+            if let Some(idx) = crate::ideal::current_block() {
+                // (`character`: the replay's copy is C's handover, apart from A6a to A6c)
+                ch!(begin HandC);
+                let replayed = ic::replay(
+                    idx,
+                    n,
+                    &mut self.predecessor,
+                    &mut self.edges,
+                    &mut self.extra,
+                    &mut self.spelling,
+                    &mut self.inline16,
+                    &mut self.lens,
+                    begin_inline,
+                );
+                ch!(end HandC);
+                match replayed {
+                    ic::Replay::Built { m, mark, bits } => {
+                        let stats = Counts {
+                            n: n as usize,
+                            retained: m,
+                            ..Counts::default()
+                        };
+                        return Some((stats, mark, bits));
+                    }
+                    ic::Replay::Refused => return None,
+                    ic::Replay::Miss => {}
+                }
+            }
+        }
+        ic::count_constructed();
+        let res = self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out);
+        if mode == Mode::Record {
+            if let Some(idx) = crate::ideal::current_block() {
+                match &res {
+                    Some((stats, mark, bits)) => ic::record_built(
+                        idx,
+                        n,
+                        stats.retained as u32,
+                        *mark,
+                        *bits,
+                        self.predecessor,
+                        &self.edges[..stats.retained],
+                        &self.extra,
+                        &self.spelling,
+                        &self.inline16[256..],
+                        &self.lens[256..],
+                    ),
+                    None => ic::record_refused(idx),
+                }
+            }
+        }
+        res
     }
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`

@@ -155,6 +155,21 @@ impl Runs {
             Buffer::of("runs.one", &self.one),
         ]
     }
+
+    /// (research only, `ideal-mtf`) The run-records representation of L produced by `front`
+    #[cfg(feature = "ideal-mtf")]
+    pub(crate) fn snapshot(&self) -> (&[u16], &[u32; 256], &[u32; 256]) {
+        (&self.runs, &self.counts, &self.per)
+    }
+
+    /// (research only, `ideal-mtf`) Hand over recorded run records into `self` (one copy)
+    #[cfg(feature = "ideal-mtf")]
+    pub(crate) fn load_snapshot(&mut self, runs: &[u16], counts: &[u32; 256], per: &[u32; 256]) {
+        self.runs.clear();
+        self.runs.extend_from_slice(runs);
+        self.counts = *counts;
+        self.per = *per;
+    }
 }
 
 #[cfg(test)]

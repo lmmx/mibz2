@@ -54,3 +54,16 @@
 
    For R the handover is large: about 55% of the real stage's time on the build VM, a one-copy handover of about 210 MB from a 200 MiB store. So R's measured room understates the ideal, and its net figure is the one to read alongside.
 7. **Store memory:** each oracle's store is recorded and held in every arm of a run that includes it, as for S (clarification 4). The stores on wikidata ×4 are C 114 MiB, M 32 MiB and R 200 MiB, about 495 MiB with S's 149 MiB. Peak RSS is compared within the binary only.
+
+## The full matrix's fraction, decided 25 November 2026 before its data (the Pathfinder's question)
+
+8. **The arms: the half-fraction I = +SECMRD, augmented with the 12 odd arms.** That is 44 arms a count:
+   - the 32 with an even number of ideal parts (all real, all ideal, the 15 pairs and the 15 quads);
+   - the 6 singles;
+   - the 6 five-part arms.
+   - **Why:** the room ("P alone ideal over all real"), the share of the floor ("all but P ideal over all ideal") and MASKED's "P with Q ideal" are defined on odd arms, which the plain fraction lacks. Predicting them from the model would assume three-factor and higher interactions are zero. Slice A measured two-factor interactions of −0.017 to −0.028 (q), so that assumption is not safe.
+   - **How each part of the analysis is read:**
+     - **main effects and two-factor interactions:** Jain's sign table on the 32 fraction arms (resolution VI, as `design.md` says);
+     - **room, floor share and MASKED's condition:** read directly from the measured arms;
+     - **the 12 added arms are never fitted** into the effects.
+   - **Size:** 44 arms × 4 counts × 12 blocks, with traces in 2, and the unpinned link at 8. That is about 60–75 minutes on the i9.

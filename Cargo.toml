@@ -121,6 +121,27 @@ scan-oracle = ["supplied-codes"]
 # each hook is one relaxed atomic load. Never on a production path. Retain while the
 # character study's stages run; remove at the first release review after
 character = []
+# Research only: the ideal-parts matrix's construction oracle (C, target T2;
+# src/ideal/construction.rs, hook in src/open.rs): records each Open block's built structures
+# outside the clock and replays them straight to emission (MTF/RLE2 still runs). Never on a
+# production path. Retain until the ideal-parts matrix is analysed; then remove
+ideal-construction = []
+# Research only: the ideal-parts matrix's MTF/RLE2 oracle (M, target T3; src/ideal/mtf.rs,
+# hook in src/lib.rs): records each block's L (run records or column) outside the clock and
+# replays it straight to construction, skipping MTF/RLE2. Never on a production path. Retain
+# until the ideal-parts matrix is analysed; then remove
+ideal-mtf = []
+# Research only: the ideal-parts matrix's RLE1, CRC and output oracle (R, target T6;
+# src/ideal/rle1.rs, hook in src/lib.rs): records each block's final decoded bytes outside
+# the clock and replays them to the in-order reader, skipping RLE1 expansion and the block
+# CRC while emission still runs. Never on a production path. Retain until the ideal-parts
+# matrix is analysed; then remove
+ideal-rle1 = []
+# Research only: the ideal-parts matrix's delivery reader mode (D; src/ideal/delivery.rs,
+# hook in src/parallel.rs): takes each decoded block in order and discards it without copying
+# to the caller, measuring the in-order reader and copy cost. Never on a production path.
+# Retain until the ideal-parts matrix is analysed; then remove
+ideal-delivery = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
