@@ -63,3 +63,28 @@ All are under `docs/journal/2026-11-24-algorithm-level/` on `docs/journal-algori
 - The 0.109 s "machine bound" is a *conditional scenario*, not a bound. Don't print it as a ceiling.
 - Every number is traced to its file; anything that can't be traced is flagged in the PR.
 - Follow `write-blog-post`, then `publish-page`. Publish when fact-checked and rendered; the Researcher's two review rounds then run on the live post.
+
+## Added 25 November (overnight): the latest records
+
+Louis asked for the writer to be pointed at these now. MONODROMY's course-mining record is still to come and will be added when it lands. Read them in this order:
+1. **Stage 1's results:** journal §66 and `math-targets/data/character-stage1/report.txt`.
+   - The two-station model held exactly, and the switch from workers to scanner comes at 8.
+   - Concurrent-state evidence shows the scanner limits above the knee.
+   - The reader is not a co-bottleneck.
+   - New finding: the public API runs the older eager kernel when asked for 3, 5 or 7 threads (61% slower at 7).
+   - Caveat: the run flagged itself PERTURBED at 10 and 20 workers.
+2. **The independent readings, and how they corrected each other:** §§61–62 (ChatGPT and Neon on the course mining: the default-count error; the scanner's plumbing; bottleneck migration).
+3. **The design thread:** Louis's Alon question and the turn to design for a purpose: §§64–65, `leads/structure-and-function.md`, `external/chatgpt-alon-motifs.md`, `external/chatgpt-khammash.md`.
+   - Alon's motifs, then Ma et al.'s exhaustive enumeration, then Araujo and Liotta's basis for the solution space, then Khammash's "function, necessary conditions, solution space, realisability, optimality".
+   - This is the deepening at the level of method, and the best material for the post's middle.
+4. **The dynamical layer:** §67 and `external/chatgpt-dynamics.md`: hybrid systems, "digital on analogue".
+5. **The hybrid-systems book:** §§68–70, `reading/hybrid-dynamical-systems/relevance/levers.md`.
+   - The five levers are the plain-language takeaway.
+   - **§70 is a correction to tell plainly:** the Coordinator first called the bottleneck bound a completion-time certificate. ChatGPT showed it is only a lower bound, with a three-line counterexample (a 1 s scan, a 1 s decode and a 1 s delivery in series: the bound says 1 s, the truth is 3 s).
+   - That correction is a good example of the process: independent review catching an error before it guided the experiments.
+6. **The process itself:** `process/protocol.md`. Update it if the post needs it; the reviews and corrections above are instances of its steps 5–7.
+
+**Care points, added:**
+- The certificate claim is withdrawn: don't print it.
+- Stage 2 is running overnight; its results are not in yet.
+- The scanner fix's gain at 8 workers is uncertain: about 6% (Neon, on the scan profile) or nearly nothing (ChatGPT, on stage 1's instrumented numbers). Run 2 decides.
