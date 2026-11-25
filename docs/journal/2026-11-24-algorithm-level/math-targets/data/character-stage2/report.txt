@@ -1,0 +1,111 @@
+# bench-character-stage2 (stage 2a; diagnostic: decides nothing)
+
+## The recipe's phases
+
+checks       ok               2026-11-25T02:02:24Z .. 2026-11-25T02:02:26Z
+build        ok               2026-11-25T02:02:26Z .. 2026-11-25T02:02:26Z
+four-arm     ok               2026-11-25T02:02:26Z .. 2026-11-25T02:02:40Z
+inputs       ok               2026-11-25T02:02:40Z .. 2026-11-25T02:02:41Z
+stage1       ok               2026-11-25T02:02:41Z .. 2026-11-25T02:02:41Z
+machine      ok               2026-11-25T02:02:41Z .. 2026-11-25T02:02:41Z
+plan         ok               2026-11-25T02:02:41Z .. 2026-11-25T02:02:42Z
+run          ok               2026-11-25T02:02:42Z .. 2026-11-25T02:22:16Z
+oracle       ok               2026-11-25T02:22:16Z .. 2026-11-25T02:23:06Z
+report       FAILED (exit 1)  2026-11-25T02:23:06Z .. 2026-11-25T02:23:06Z  AttributeError: 'float' object has no attribute 'numerator'
+
+k* 8, the step 16, anchors [6, 8, 10, 16]; 0.502 cycles a pacing iteration; 6 blocks
+
+## The screen: each coordinate's coefficient (+20%, one at a time; C = mean log(T/T0) / log(1 + achieved dose))
+
+k   coordinate  dose target/achieved   C      95% interval        label
+6   A2          +0.20/+0.202            -0.026  [-0.061, +0.008]   NEGLIGIBLE
+6   A3          +0.20/+0.196            -0.012  [-0.039, +0.015]   NEGLIGIBLE
+6   A5          +0.20/+0.207            +0.071  [+0.023, +0.119]   UNRESOLVED
+6   A6a         +0.20/+0.200            +0.141  [+0.110, +0.173]   CONTROLS
+6   A6b         +0.20/+0.197            +0.153  [+0.104, +0.201]   CONTROLS
+6   A6c         +0.20/+0.196            +0.107  [+0.068, +0.147]   UNRESOLVED
+6   A7          +0.20/+0.201            +0.366  [+0.313, +0.419]   CONTROLS
+6   A9          +0.20/+0.205            +0.040  [-0.001, +0.080]   NEGLIGIBLE
+6   A10         +0.20/+0.193            -0.019  [-0.066, +0.028]   NEGLIGIBLE
+8   A2          +0.20/+0.277            +0.026  [-0.406, +0.458]   UNRESOLVED DOSE-MISSED
+8   A3          +0.20/+0.239            +0.532  [+0.136, +0.927]   CONTROLS
+8   A5          +0.20/+0.208            -0.096  [-0.495, +0.303]   UNRESOLVED
+8   A6a         +0.20/+0.180            -0.016  [-0.727, +0.695]   UNRESOLVED
+8   A6b         +0.20/+0.181            +0.200  [-0.274, +0.675]   UNRESOLVED
+8   A6c         +0.20/+0.185            +0.114  [-0.506, +0.734]   UNRESOLVED
+8   A7          +0.20/+0.206            +0.005  [-0.442, +0.453]   UNRESOLVED
+8   A9          +0.20/+0.202            -0.079  [-0.680, +0.522]   UNRESOLVED
+8   A10         +0.20/+0.284            -0.062  [-0.194, +0.070]   UNRESOLVED DOSE-MISSED
+10  A2          +0.20/+0.202            +0.038  [-0.339, +0.415]   UNRESOLVED
+10  A3          +0.20/+0.197            +0.740  [+0.372, +1.108]   CONTROLS
+10  A5          +0.20/+0.196            +0.015  [-0.346, +0.375]   UNRESOLVED
+10  A6a         +0.20/+0.138            +0.026  [-0.919, +0.970]   UNRESOLVED DOSE-MISSED
+10  A6b         +0.20/+0.177            -0.215  [-0.683, +0.253]   UNRESOLVED
+10  A6c         +0.20/+0.192            +0.216  [-0.333, +0.766]   UNRESOLVED
+10  A7          +0.20/+0.159            -0.304  [-0.481, -0.126]   UNRESOLVED
+10  A9          +0.20/+0.192            -0.029  [-0.378, +0.320]   UNRESOLVED
+10  A10         +0.20/+0.206            -0.301  [-0.615, +0.012]   UNRESOLVED
+16  A2          +0.20/+0.331            +0.242  [-0.183, +0.667]   UNRESOLVED DOSE-MISSED
+16  A3          +0.20/+0.280            +0.236  [-0.172, +0.645]   UNRESOLVED DOSE-MISSED
+16  A5          +0.20/+0.231            +0.031  [-0.512, +0.574]   UNRESOLVED
+16  A6a         +0.20/+0.203            -0.078  [-0.632, +0.476]   UNRESOLVED
+16  A6b         +0.20/+0.204            +0.007  [-0.647, +0.660]   UNRESOLVED
+16  A6c         +0.20/+0.181            +0.071  [-0.734, +0.877]   UNRESOLVED
+16  A7          +0.20/+0.256            +0.067  [-0.359, +0.493]   UNRESOLVED DOSE-MISSED
+16  A9          +0.20/-0.219            +nan  [+nan, +nan]   UNRESOLVED DOSE-MISSED
+16  A10         +0.20/-0.016            +nan  [+nan, +nan]   UNRESOLVED DOSE-MISSED
+
+the controllers, by anchor: 6: ['A6a', 'A6b', 'A7']; 8: ['A3']; 10: ['A3']; 16: []
+
+## The surface at k* (mean log slowdown against (0, 0), over blocks)
+
+scanner  0%: +0.0000  +0.0479  +0.1171
+scanner 10%: +0.0827  +0.0971  +0.1360
+scanner 20%: +0.1703  +0.1564  +0.1541
+the knee's roundness: 0.536 [0.458, 0.674] (1 additive, about 0.5 a sharp max)
+
+## The contrasts (each arm's wall over its section's reference, paired by block)
+
+gates     k 8   W4k_cap64   over W4k_cap12  0.9751 [0.9219, 1.0313]   waits window/cap/both [68, 0, 0]
+gates     k 8   W8k_cap12   over W4k_cap12  0.9738 [0.9079, 1.0445]   waits window/cap/both [2, 0, 0]
+gates     k 8   W8k_cap64   over W4k_cap12  1.0029 [0.9357, 1.0749]   waits window/cap/both [5, 0, 0]
+memory    k 8   stream      over none       1.3132 [1.2336, 1.3980] CHANGED
+memory    k 8   chase       over none       2.1013 [1.9374, 2.2791] CHANGED
+memory    k 20  stream      over none       1.3918 [1.3385, 1.4472] CHANGED
+memory    k 20  chase       over none       1.3419 [1.2886, 1.3974] CHANGED
+placement k 4   siblings    over distinct   1.1481 [1.1085, 1.1891] CHANGED
+
+## The oracle arms (the four-arm binary at k*, its rounds paired; ratios against its own A)
+
+B/A 0.9667 [0.9310, 1.0038] over 8 rounds
+C/A 0.8741 [0.8600, 0.8884] over 8 rounds
+D/A 0.7471 [0.7321, 0.7624] over 8 rounds
+the layout check: the four-arm binary's A against this binary's baseline at k*: +10.90%  (over 3%: the oracle ratios VOID)
+
+## Validation (held out from every fit)
+
+k 8   A3+A7_10   1.0519 [0.9632, 1.1488]
+k 10  A3+A7_10   1.0606 [1.0411, 1.0805]
+k 8   permuted   1.0489 [0.9746, 1.1288]
+k 20  permuted   1.0151 [0.9399, 1.0964]
+
+## The ledgers' cost (the base's trace over its timed decode, paired by block)
+
+k 6   on/off 1.0009 [0.9959, 1.0059] over 12 pairs
+k 8   on/off 0.9658 [0.9296, 1.0034] over 12 pairs
+k 10  on/off 1.0527 [0.9874, 1.1223] over 12 pairs  PERTURBED (the traces; the walls are the ledgers off)
+k 16  on/off 0.9648 [0.8997, 1.0345] over 12 pairs
+
+## The pulses (places 600..800 dosed; medians over their decodes). The effect is the arm's
+rate during the pulse over its base's at the same places in the same block (the places'
+blocks differ, so a rate over another window's is no baseline)
+
+k   arm   effect (rate/base's)  during/before  after/before  recovery ms  queue depth before→during  queue empty after (ms)
+8   base                     -          1.141         1.001          2.1       4.46→5.57                0.1
+8   A3                   0.693          0.827         0.971          3.2       4.44→0.32                0.0
+8   A7                   0.815          0.998         1.015          2.2       3.93→8.92                0.1
+10  base                     -          1.172         0.998          3.0       1.38→2.01                0.1
+10  A3                   0.758          0.777         0.945          4.1       1.92→0.20                0.0
+10  A7                   0.900          0.999         1.033          1.8       2.11→5.91                0.1
+
+DOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): k 8 A2: achieved +0.277 against +0.20; k 8 A10: achieved +0.284 against +0.20; k 10 A6a: achieved +0.138 against +0.20; k 16 A2: achieved +0.331 against +0.20; k 16 A3: achieved +0.280 against +0.20; k 16 A7: achieved +0.256 against +0.20; k 16 A9: achieved -0.219 against +0.20; k 16 A10: achieved -0.016 against +0.20

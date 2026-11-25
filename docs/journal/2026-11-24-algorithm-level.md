@@ -1865,3 +1865,75 @@ The memory growth and the onebyte loss come from the input-window fix's 2 MiB he
 - **The input-window fix is being redesigned without headroom,** through a reused seam buffer, as a new PR.
 
 **Decision:** #846 cannot merge on CI, since it shows no primary gain there. That was expected: the fix saves scanner time, and the scanner limits only above about 8 workers, which CI's 4-core runner can't reach. The workstation A/B, `bench-scanner-plumbing` (in preparation), decides it at 6–12 threads under the house rule. **No release overnight** (Louis).
+
+## 74. Stage 2a: which activity controls the wall, at each count
+
+**The run:** `character-stage2/run-20261125T020224Z`, at 1901c3bb (#843). It is evidence 54896f60 on the `evidence` branch, SHA-256 64162665…0973, checked.
+- **Every phase passed except the report.** The run took 19.5 min and the oracle 50 s; the oracle's check found 0 mismatches over 932 supplied blocks.
+- **The report crashed** on a NaN coefficient: at k 16, A9's and A10's achieved doses were ≤ 0, so `interval()` was given NaNs and `statistics.stdev` raised.
+- **I re-ran the report here** from the bundle's own `runs.jsonl` and `plan.json`, with one fix: `interval()` returns NaN for any non-finite input. The diff is in the LOG on #145 and goes to the Pathfinder for stage 2b. No data was re-collected or altered.
+- **Where things are:** the report, `stage2.tsv` and `phases.tsv` are in `math-targets/data/character-stage2/`. The analysis program is `math-targets/scripts/stage2_analysis.py`, and its outputs are in `data/character-stage2/analysis/`.
+
+**The screen** (+20% on one activity at a time; C is the elasticity of the wall, mean log(T/T0) / log(1 + achieved dose), over 6 blocks):
+
+| k | controls (interval above 0.10) | negligible | the rest |
+|---|---|---|---|
+| 6 | construction A6a 0.14, A6b 0.15; emission A7 0.37 | the scanner (A2, A3), the reader (A10), A9 | A5, A6c unresolved |
+| 8 | the scanner's main activity A3: 0.53 [0.14, 0.93] | none | all unresolved, with wide intervals |
+| 10 | A3: 0.74 [0.37, 1.11] | none | A7 −0.30 (interval below 0: speeding the scanner's competitor? unexplained) |
+| 16 | nothing resolved | none | four doses missed by over 25%; A9 and A10 got doses ≤ 0 |
+
+- **Below the knee** (k 6), the workers' construction and emission set the wall, and the scanner doesn't matter.
+- **At and above it** (8, 10), the scanner's main activity does, and nothing in the workers resolves.
+- **This is stage 1's switch at 8,** now shown by intervention rather than by inference from busy times.
+
+**The surface at k\* = 8** (both surfaces dosed together, 0/10/20%; `analysis/surface.tsv`):
+- the scanner's elasticity, workers undosed: 0.87 at +10%, 0.93 at +20%;
+- the workers' elasticity, scanner undosed: 0.50 and 0.64;
+- the knee's roundness is 0.54 [0.46, 0.67], about the 0.5 a sharp maximum gives;
+- with both dosed, the slowdown is no more than the scanner's alone (0.154 against 0.170 at 20/20). That is the max-plus shape: k 8 sits at the balance point, with the scanner just binding.
+
+**The held-out test** (the combined arm, A3 and A7 both +10%, never used in a fit; `analysis/validation.tsv`). The screen's coefficients, composed log-additively, predicted:
+
+| k | predicted | observed |
+|---|---|---|
+| 8 | 1.053 [0.994, 1.114] | 1.052 [0.963, 1.149] |
+| 10 | 1.042 [1.003, 1.084] | 1.061 [1.041, 1.081] |
+
+Both are inside their intervals. This is the first validated predictor of the programme, in §70's sense: a local one, for slowing, at 8 and 10.
+
+**The pulses** (A3 or A7 +50% over places 600–800):
+- **Slowing the scanner starves the workers.** At 8, the reader's rate falls to 0.69 of base, and the job queue empties: mean depth 4.4 before, 0.3 during.
+- **Slowing emission fills the queue instead:** 3.9 to 8.9, with the rate at 0.82.
+- **Recovery takes 2–4 ms.** The same holds at 10. This is the dynamical signature of a scanner-bound pipeline.
+
+**The contrasts:**
+- **Gates:** widening the window (4k to 8k) or the byte cap (12 to 64 MiB) at 8 changes nothing beyond noise (0.97–1.00, intervals across 1). This confirms §66: the gates rarely bind.
+- **Memory interference is large:**
+  - a co-running 2 MiB stream slows the wall 31% at 8 and 39% at 20;
+  - a pointer chase slows it 110% at 8 and 34% at 20.
+  
+  The decoder is very sensitive to cache contention: a robustness finding, and a lever 1 target (`levers.md`).
+- **Placement:** at 4 workers, putting them on SMT siblings rather than distinct cores costs 15% [11, 19]%.
+- **Ledgers' cost:** within noise at 6, 8 and 16; PERTURBED at 10 (1.053), as in stage 1. The walls are from ledger-off decodes throughout.
+
+**The oracle arms are VOID for comparison with this binary.**
+- The four-arm binary's arm A runs 10.9% off this binary's baseline at k\*, past the 3% layout check.
+- Within the four-arm binary, D/A is 0.747 [0.732, 0.762], replicating the four-arm test's 0.741, and C/A is 0.874.
+- Those ratios stand only as internal to that binary.
+
+**What it prices** (`analysis/pricing.tsv`). Cutting the scanner's main activity by 8% (about the plumbing fix's share, §57) implies a wall of:
+- 0.957 at 8 (0.989 at the coefficient's lower bound);
+- 0.940 at 10 (0.970 at the lower bound).
+
+This is an *optimistic* reading: the screen measured slowing, and a speed-up of the binding activity buys at most its elasticity, less once the workers bind (bottleneck migration, §61). At 8 the workers are close behind (the surface), so the plumbing fix's gain there is likely under 4%. At 10 it is likely nearer 5%.
+- **On the disagreement in the writer brief** (Neon's 6% at 8 against ChatGPT's nearly nothing), this sits in between, with 10 the better count to see it.
+- **`bench-scanner-plumbing` (#850) decides it.**
+
+**Decisions:**
+- **The report fix goes to the Pathfinder,** for stage 2b's head.
+- **Stage 2b,** as the Pathfinder sizes it from this run:
+  - drops k 16's screen, which resolved nothing at 6 blocks;
+  - re-runs the oracle with the four-arm binary rebuilt on this binary's layout, or drops the layout comparison.
+- **Memory contention becomes a named lead:** the decoder's working set against a shared L3. It is placed under lever 1 and lever 4b (ownership of buffers).
+- **Multi-symbol Huffman decoding is a worker lever.** This run says it lowers the knee (k 6's controllers are construction and emission) but does not raise the top speed. Above 8, only the scanner's work does.
