@@ -123,3 +123,7 @@
 - ChatGPT's two answers recorded verbatim (`external/chatgpt-alon-motifs.md`). The steer is `leads/structure-and-function.md` (journal §64): optimality over recurrence; algebra of programming for the transformations; the scanner as composable FSM transition functions (the self-synchronisation length to measure first); a finite obligations × placements design space (Ma et al. style); max-plus for the pipeline; retrospective reconstruction as the test.
 - MONODROMY's channel #40 is queued. The ChatGPT Pro prompt is `briefs/chatgpt-structure-prompt.md`.
 - The stage 1 ready tag is set at 94cb742d.
+
+## 25 Nov — the design-space lineage and Khammash
+- Recorded verbatim: ChatGPT's third Alon answer and its Khammash explanation (`external/chatgpt-khammash.md`). Journal §65.
+- Steer: Khammash's five steps match our programme. We already have the function, the necessary conditions and realisability. What's missing is the solution space and its basis, so the proposal is to enumerate the referee's class (small cursor machines on tiny alphabets, exact on all short strings), in the manner of Ma, Araujo–Liotta and Bundala. Channel #40 gained question 5.

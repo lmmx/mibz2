@@ -1661,3 +1661,17 @@ Louis saw a resemblance in method between Jain's courses and Uri Alon's network 
 - **Judging the methodology:** a retrospective reconstruction of two known breakthroughs (Rauzy–Veech; page-dewarp) and a generative test. A framework is judged by what it generates.
 
 MONODROMY takes it as channel #40, queued after #39. ChatGPT Pro's prompt is `briefs/chatgpt-structure-prompt.md`.
+
+## 65. The design-space lineage and Khammash: necessity first
+
+Two more ChatGPT answers are recorded verbatim:
+- the design-enumeration lineage (`external/chatgpt-alon-motifs.md`, third section): Ma et al. 2009, Cotterell and Sharpe 2010, Lim, Lee and Tang 2013, Araujo and Liotta 2018, SPIRAL, optimal-depth sorting networks;
+- an explanation of Khammash 2021, "Perfect adaptation in biology" (`external/chatgpt-khammash.md`), which Louis is reading.
+
+Khammash's programme is to specify the function, derive necessary conditions, characterise the solution space, check realisability and establish optimality. It maps onto ours (`leads/structure-and-function.md`, last section):
+- **What we have, under other names:** the referee (the function); G1, record 118 and record 119 (necessary conditions); "G1 is not a machine bound" with the four-arm and profile ceilings (realisability); the performance work (optimality).
+- **What we lack:** the solution space, enumerated and then given a basis, and a necessity statement in positive form (the internal-model analogue).
+- **The proposal:** enumerate the referee's own class (small cursor machines, K passes, exact inversion on all short strings over tiny alphabets), reduced by symmetry. Cluster the survivors, look for the condition that separates them, and use SAT for "no survivor" proofs within the class. Feasibility is MONODROMY's first question.
+- **Two ideas adopted as method:** "same function, different structure" (Khammash's Figure 3), which is why the referee counts structure; and "the hidden coordinate" (Figure 5: Z, log Z, Z₁ − Z₂), which states representation change as a search for the coordinate in which the work cancels.
+
+Channel #40 was amended before dispatch with this as question 5.

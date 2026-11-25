@@ -410,3 +410,255 @@ Perhaps those needn’t be separate endeavours.
 Perhaps, by studying the relationship between mathematical representation, computational organisation and functional optimality, we can develop a methodology in which the characterisation of a system actively informs the discovery of fundamentally different algorithms.
 
 I don’t think we’ve established that such a methodology exists in a useful form yet. But I think that is a considerably more interesting research question than whether computer programs have analogues of biological network motifs.
+
+## Louis's third message to ChatGPT, and its third answer, verbatim
+
+Louis's message:
+
+> oh this is a fascinating pick… what is this school of design? they exhaustively tested all topologies… yeah see this is the kind of work i loved 📄 Ma et al. (2009) Defining Network Topologies that Can Achieve Biochemical Adaptation https://www.cell.com/fulltext/S0092-8674(09)00712-0
+
+ChatGPT's answer, as pasted (links lost as "⁠￼"; the symbols dropped from "a correctness condition , and a cost function" are kept as they came):
+
+Yes — and I think we’ve found something much closer to the intellectual tradition you’ve been looking for.
+
+The particular school of thought behind Ma et al. is function-oriented design-space exploration, sometimes described in systems biology as inverse network design, network enumeration, or the structure–function mapping of biological circuits.
+
+It is not simply network-motif analysis, and it is not conventional optimisation. Its ambition is to establish the space of possible mechanisms capable of achieving a specified function, and then discover the mathematical principles that distinguish successful mechanisms from unsuccessful ones.
+
+I’ve also found something particularly exciting: two of the authors of the 2009 paper subsequently wrote a methodological manifesto about precisely this approach. And there is a later mathematical paper that attempts to move beyond exhaustive enumeration towards a complete characterisation of the solution space.
+
+1. The intellectual school, in its own words
+
+The paper I would read immediately after Ma et al. is:
+
+Wendell A. Lim, Connie M. Lee and Chao Tang (2013)
+
+Design Principles of Regulatory Networks: Searching for the Molecular Algorithms of the Cell⁠￼ — Molecular Cell.
+
+Even the title is remarkably pertinent to our discussion. They explicitly distinguish two approaches to discovering design principles:
+
+Evolutionary search	Network enumeration
+Start with existing or random structures	Define the space of possible structures
+Mutate and select	Enumerate and evaluate
+Follow trajectories of increasing fitness	Explore independently of evolutionary history
+Can become trapped in local optima	Can reveal disconnected families of solutions
+Finds accessible improvements	Investigates what is possible
+
+The authors explicitly describe enumeration as providing a path-independent view of the design landscape. It can uncover viable structures that would be difficult to reach through successive improvements. pmc.ncbi.nlm.nih.gov +1
+
+This is almost exactly your objection to the evolutionary approach we’ve been taking with mibz2 — the kitchen sink, successive improvements, salami-slicing, and the difficulty of making a genuine structural transition.
+
+They have independently articulated the methodological distinction we’ve been wrestling with.
+
+2. What Ma et al. actually did
+
+Their approach is considerably more sophisticated than simply brute-forcing networks.
+
+Ma et al. (2009) — the progression from possibilities to principles
+
+19,683
+
+Possible signed three-node topologies
+
+9 potential directed links, each positive, negative or absent: 3⁹
+
+16,038
+
+Eligible network topologies
+
+At least one causal path from input to output
+
+160,380,000
+
+Circuit configurations evaluated
+
+10,000 kinetic parameter sets per topology, sampled by Latin hypercube sampling
+
+395
+
+Topologies meeting their robustness criterion
+
+Approximately 2.46% of eligible architectures
+
+Negative feedback
+
+With a buffering node
+
+Incoherent feedforward
+
+With a proportioner node
+
+Two underlying mechanistic families explain all 395 selected topologies. The diagrams are schematic examples.
+
+pmc.ncbi.nlm.nih.gov +2
+
+The achievement isn’t the 160 million simulations. It is the reduction from 160 million configurations to two mathematically intelligible mechanisms.
+
+And notice that they did not require a structure to work under one particularly favourable choice of parameters. They looked for structures that retained the desired function across a sufficiently large region of parameter space.
+
+That is a very interesting analogue for us: not an algorithm that happens to perform well on six selected blocks, but one whose mathematical organisation produces good performance across a meaningful family of inputs.
+
+There is a qualification: their enumeration was exhaustive over the specified discrete topologies, not over continuous parameter space. Their robustness findings are relative to their model, sampling distribution and acceptance criteria.
+
+3. There is an entire lineage of this work
+
+It turns out that the 2009 paper sits within a rather substantial research programme.
+
+2006
+
+Ma, Lai, Ouyang and Tang
+
+Robustness and Modular Design of the Drosophila Segment Polarity Network⁠￼
+
+Enumerated over 14 million topologies within a restricted design space. Found that the successful networks could be understood as combinations of three modules corresponding to three functional subproblems. pmc.ncbi.nlm.nih.gov
+
+2006
+
+Ciliberti-era network designability research — especially the following study
+
+Highly Designable Phenotypes and Mutational Buffers Emerge from a Systematic Mapping Between Network Topology and Dynamic Output⁠￼
+
+Exhaustive mapping of small networks to their dynamical behaviours. Distinguishes essential connections from variable connections and examines why certain behaviours admit many structural realizations. pmc.ncbi.nlm.nih.gov
+
+2009
+
+Ma et al.
+
+Defining Network Topologies that Can Achieve Biochemical Adaptation⁠￼
+
+Function-first enumeration followed by mathematical classification of the successful mechanisms.
+
+2010
+
+Cotterell and Sharpe
+
+An Atlas of Gene Regulatory Networks Reveals Multiple Three-Gene Mechanisms for Interpreting Morphogen Gradients⁠￼
+
+Constructs an atlas of the design space, discovering distinct mechanistic families in separate regions. Particularly interesting for identifying alternative mechanisms rather than a single winning architecture. pmc.ncbi.nlm.nih.gov
+
+2013
+
+Lim, Lee and Tang
+
+Searching for the Molecular Algorithms of the Cell⁠￼
+
+The methodological synthesis. This is where I would go to understand the philosophy of the entire programme.
+
+2018
+
+Araujo and Liotta
+
+The Topological Requirements for Robust Perfect Adaptation in Networks of Any Size⁠￼
+
+Develops an algebraic characterisation of the adaptation problem for networks of arbitrary size, identifying two classes of modules and rules for composing them. nature.com
+
+4. The 2018 paper might be even more important
+
+Araujo and Liotta do something that I think you will particularly appreciate.
+
+Ma et al. established their classification by examining a finite space of small networks. Araujo and Liotta instead derive an algebraic condition for adaptation, in terms of a Jacobian determinant, and use it to characterise the permissible structures.
+
+They call the resulting modules a topological basis for the solution to the adaptation problem. nature.com
+
+There is a beautiful progression here:
+
+2002 — Alon
+
+Discover recurring motifs in existing networks.
+
+2009 — Ma et al.
+
+Enumerate possible structures for a specified function.
+
+2010 — Cotterell and Sharpe
+
+Map the landscape of alternative mechanisms.
+
+2018 — Araujo and Liotta
+
+Derive a mathematical basis for the solution space.
+
+That last step is substantially more ambitious than optimisation. It seeks to explain the entire space of admissible mechanisms through a mathematical condition.
+
+It also brings us back to your interest in Hilbert’s 24th problem: the relationships between different solutions of the same mathematical problem.
+
+5. Is there an equivalent school in computer science?
+
+Yes, although the pieces are distributed across several research disciplines rather than being unified under one name.
+
+Discipline	Object of investigation
+Design-space exploration	Alternative computational architectures
+Enumerative program synthesis	Programs satisfying a specification
+Superoptimisation	Equivalent programs under a cost criterion
+Algorithm derivation	Mathematical transformations of specifications
+Design theory	Relationships between structure, function and constraints
+Computer-assisted mathematics	Exhaustive classification and impossibility proofs
+
+Two examples stand out to me.
+
+SPIRAL — Püschel, Moura and colleagues
+
+SPIRAL: A Generator for Platform-Adapted Libraries of Signal Processing Algorithms⁠￼ (2004).
+
+SPIRAL defines a mathematical language capable of expressing different algorithms for a transform, generates alternative formulas, translates them into executable implementations, and searches for those best suited to a particular machine. The search operates at the level of mathematical factorisations as well as implementation decisions. journals.sagepub.com
+
+This is particularly interesting given our desire to make mathematical algorithm discovery responsive to Jain-style performance measurements.
+
+Bundala et al. — Optimal-Depth Sorting Networks
+
+Optimal-Depth Sorting Networks⁠￼ (2017).
+
+They exploit equivalences and symmetries to reduce the space of possible sorting networks, then use SAT solving to prove that better networks cannot exist within the specified class. In doing so, they resolve longstanding optimality questions from Knuth’s work. sciencedirect.com
+
+This has something of both the Mario proof project and the Ma et al. approach: structure enumeration, mathematical reduction, construction and impossibility.
+
+6. What I would love to see us develop
+
+I would provisionally call it an algorithmic design-space atlas.
+
+Not a taxonomy imposed upon existing algorithms. Not an evolutionary optimiser. Not merely a performance model.
+
+Rather, an investigation of the space of possible computational organisations that satisfy a mathematical specification, and their relationship to practical cost.
+
+Formally, imagine defining a space of admissible algorithmic structures, a correctness condition , and a cost function informed by our measured performance model.
+
+The interesting object is then:
+
+\mathcal F_\tau =
+\{a\in\mathcal A : P(a)\land C(a)\leq\tau\}
+
+The set of structures that are both correct and sufficiently inexpensive.
+
+But rather than merely asking which member is fastest, we ask: what is the structure of this set?
+
+Does it consist of distinct families? Are there isolated regions that incremental optimisation cannot reach? Do all successful constructions share some mathematical property? Can we derive that property independently of enumeration? Can we discover new families by generalising it?
+
+This would give us a relationship between the experimental and mathematical work:
+
+Jain — Establish the cost landscape
+
+Measure the decoder, its resources, its limiting mechanisms and the cost of its obligations.
+
+Ma and Tang — Explore the structural landscape
+
+Define admissible alternative mathematical organisations and investigate which satisfy the desired cost and function.
+
+Cotterell and Sharpe — Classify the solutions
+
+Identify genuinely different mechanistic families rather than superficial implementation variants.
+
+Araujo and Liotta — Explain the solution space
+
+Derive the mathematical properties underlying successful constructions and their possible generalisations.
+
+The enormous unresolved question is what constitutes the equivalent of Ma et al.’s three-node network in our problem. We need a mathematical abstraction rich enough to admit genuinely different algorithms, but sufficiently constrained to permit systematic exploration.
+
+We must not assume that an ordinary computation graph, or any of our existing representations, is the right answer to that question.
+
+That is where I would concentrate the intellectual effort.
+
+My strongest recommendation is to read the 2013 Lim, Lee and Tang paper, followed by the 2018 Araujo and Liotta paper. Together with Ma et al. (2009), they constitute a remarkably coherent methodological progression.
+
+I wouldn’t rush to apply biological network theory to mibz2. I would study how these researchers made the space of possible designs itself an object of scientific and mathematical investigation.
+
+That, I suspect, is the deeper thing that attracted you to Alon’s work in the first place.

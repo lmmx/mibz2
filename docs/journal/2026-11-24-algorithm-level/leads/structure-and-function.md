@@ -90,3 +90,38 @@ Four things it adds are adopted:
 2. ChatGPT Pro at Pro effort, independently: the same, with the page-dewarp reconstruction, since Louis holds that history. Prompt: `../briefs/chatgpt-structure-prompt.md`, updated.
 3. A full reading of the sources: Alon (book Part III; Shoval 2012; Dekel and Alon 2005), Ma et al. 2009, Bird and de Moor, Bird and Mu on the inverse BWT, Gibbons 1996, Mytkowicz et al. 2014, Baccelli et al. chapters 1–3 and 7, Simon 1962, Ragan-Kelley et al. 2012. Saved, and read in full.
 4. One cheap measurement first: the self-synchronisation length of bzip2's Huffman tables on the corpus.
+
+## After ChatGPT's third answer and the Khammash explanation (same day): necessity first
+
+The records:
+- ChatGPT's third answer (`../external/chatgpt-alon-motifs.md`, third section): the design-enumeration lineage, Ma et al. 2009 → Cotterell and Sharpe 2010 → Lim, Lee and Tang 2013 → Araujo and Liotta 2018; plus SPIRAL and optimal-depth sorting networks.
+- Its explanation of Khammash 2021 (`../external/chatgpt-khammash.md`). It is ChatGPT's reading, to be checked against the paper.
+
+**The programme Khammash states fits ours almost exactly:**
+1. specify the function;
+2. derive necessary conditions;
+3. characterise the solution space;
+4. check physical realisability;
+5. establish performance and optimality.
+
+**We have done more of this than it looks, under other names:**
+
+| Khammash's step | the biology | ours, already | what's missing |
+|---|---|---|---|
+| the function | robust perfect adaptation | exact inversion (and decoding) within a cost bound: the referee (Q, D, P, S), `../essence.md` | — |
+| necessary conditions | the determinant condition; the internal model principle (an integrator is necessary) | the lower-bound work: G1; record 118's Theorem I; record 119's closure result (composition keeps the schedule's form, not its compactness) | a necessity statement in the *positive* form: "any inversion within K passes and s cursors must contain a structure X". That is the internal-model analogue |
+| the solution space | enumeration (Ma) and then a basis (Araujo and Liotta: opposer and balancer modules, and their composition) | nothing systematic | **the enumeration, and then the basis** |
+| realisability | the stochastic setting kills the autocatalytic controller; the antithetic one survives event by event | the referee against the real machine: "G1 is not a machine lower bound"; the four-arm and profile ceilings | the same move: which abstract solutions survive the machine (cache, dependent reads, SMT) |
+| optimality | speed, noise and resource trade-offs among the admissible | the performance work (Jain, queueing, stage 1 and 2) | joining the two |
+
+**Two ideas from the Khammash explanation that apply directly:**
+- **Same function, different structure (Figure 3).** Two systems with an identical transfer function: one adapts by its form, the other by numerical cancellation, and the second breaks under a small change. For us, two decoders with identical output can have different cost structures and different robustness across inputs. That is why the referee counts structure (dependent reads, passes, state) and not only output. It is also why "works on the six admitted blocks" is a fine-tuned property until shown structural.
+- **The hidden coordinate (Figure 5).** Five physically different controllers integrate in the coordinates Z, −Z, log Z and Z₁ − Z₂. The function lives in a *function of the state*, not in any one component. That is our "representation change" (Rauzy–Veech in place of LF traversal) put as a method: search for the coordinate in which the work cancels or contracts.
+
+**The concrete proposal: our three-node network.** ChatGPT's open question is what plays the part of Ma's three-node network for us. Our candidate is the referee's own class:
+- **The space:** streaming machines with at most s ≤ |Σ| + O(1) cursors and K passes, with a bounded rule table, on a tiny alphabet (|Σ| = 2 or 3) and short strings.
+- **The function:** exact BWT inversion on *every* string up to length n. That is exhaustive correctness, the analogue of Ma's robustness across parameter sets.
+- **The method:** enumerate the rule tables, reduced by symmetry, as Bundala et al. did for sorting networks. Find which ones invert. Cluster the survivors into families (Cotterell and Sharpe). Then try to state the algebraic condition that separates them (Araujo and Liotta), and a positive necessity statement (the internal-model analogue). Where the enumeration finds no survivor within the bound, a SAT encoding can make that a proof within the class.
+- **Its status:** conjectured as fruitful. Its feasibility depends on how large the rule-table space is for s and K that matter. That is MONODROMY's first question below. If the space is too large, the abstraction is wrong, and finding the right one is the work, as ChatGPT says.
+
+**Added to MONODROMY's channel #40 (amended before dispatch):** question 5, the referee-class enumeration above: its feasibility, the right abstraction, and what a positive necessity statement would look like. Plus the Khammash table above as a frame.
