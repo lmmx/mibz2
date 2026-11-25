@@ -1055,3 +1055,12 @@
 .bf-fig svg.fx-solo { display: block; width: 100%; height: auto; margin: 0 auto; }
 .bf-fig svg.bf-step-svg.fx-solo { margin: 0 auto; }
 .bf-fig .fx-math-s { fill: var(--bf-ink); font: italic 15px KaTeX_Math, "Times New Roman", serif; }
+
+/* .bf-twostation: the bottleneck law min(k/w, 1/s) with two sliders (blog.js). Without
+   JavaScript the controls stay hidden and the figure shows the measured values. */
+.bf-twostation [hidden] { display: none !important; }
+.md-typeset .bf-twostation .bf-ts-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.2rem; margin: 0.4rem 0 0.6rem; font-size: 0.72rem; }
+.md-typeset .bf-twostation .bf-ts-controls label { display: flex; align-items: center; gap: 0.5rem; flex: 1 1 14rem; font-weight: 600; white-space: nowrap; }
+.md-typeset .bf-twostation .bf-ts-controls input[type="range"] { flex: 1 1 8rem; min-width: 6rem; accent-color: var(--bf-steel); }
+.md-typeset .bf-twostation .bf-ts-controls output { font-weight: 400; min-width: 4.5rem; font-variant-numeric: tabular-nums; }
+.md-typeset .bf-twostation .bf-ts-reset { font: inherit; padding: 0.25rem 0.7rem; border: 1px solid var(--bf-frame); border-radius: 0.4rem; background: var(--bf-surface); color: var(--bf-ink); cursor: pointer; }

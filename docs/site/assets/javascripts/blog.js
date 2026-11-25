@@ -13,6 +13,9 @@
 //   animation on request.
 // - .bf-l3fill: workers' footprints filling a shared L3, set by a slider, with each count's
 //   measurements said in words. Without JavaScript the figure shows a stepped summary.
+// - .bf-twostation: the two-station bottleneck law, min(k/w, 1/s), with two sliders for the
+//   scanner's and a worker's service times; the bound, the knee k* = w/s and the read-outs follow
+//   them, and the measured points stay put. Without JavaScript the figure shows the measured values.
 //
 // - .post-meta a and .post-card-date: the post's kind, read from its label (the text after the
 //   last "·") and set as data-kind, which blog.css colours. The labels and their kinds are
@@ -605,6 +608,51 @@
     show();
   };
 
+  // .bf-twostation: the bottleneck law min(k/w, 1/s) redrawn from two sliders (µs a block).
+  const twostation = (fig) => {
+    if (fig.dataset.ready) return;
+    fig.dataset.ready = "1";
+    const q = (sel) => fig.querySelector(sel);
+    const [x0, x1, y0, y1, ymax] = ["x0", "x1", "y0", "y1", "ymax"].map((k) => Number(fig.dataset[k]));
+    const X = (k) => x0 + (x1 - x0) * (k - 1) / 19;
+    const Y = (v) => y0 + (y1 - y0) * (1 - Math.min(v, ymax) / ymax);
+    const sIn = q(".bf-ts-s"), wIn = q(".bf-ts-w");
+    const s0 = sIn.value, w0 = wIn.value;
+    const ks = Array.from({ length: 191 }, (_, i) => 1 + i / 10);
+    const pts = (f) => ks.map((k) => `${X(k).toFixed(1)},${Y(f(k)).toFixed(1)}`).join(" ");
+    const show = () => {
+      const s = Number(sIn.value), w = Number(wIn.value);
+      const ceil = 1e6 / s, kst = w / s;
+      q(".bf-ts-work").setAttribute("points", pts((k) => (k / w) * 1e6));
+      q(".bf-ts-bound").setAttribute("points", pts((k) => Math.min(k / w, 1 / s) * 1e6));
+      const scan = q(".bf-ts-scan");
+      scan.setAttribute("y1", Y(ceil).toFixed(1));
+      scan.setAttribute("y2", Y(ceil).toFixed(1));
+      const kx = X(Math.min(kst, 20)).toFixed(1);
+      const kline = q(".bf-ts-kline");
+      kline.setAttribute("x1", kx);
+      kline.setAttribute("x2", kx);
+      kline.setAttribute("y1", Y(ceil).toFixed(1));
+      const knee = q(".bf-ts-knee");
+      knee.setAttribute("cx", kx);
+      knee.setAttribute("cy", Y(ceil).toFixed(1));
+      knee.style.opacity = kst > 20 ? 0 : 1;
+      q(".bf-ts-kstar").textContent = `knee k* = w/s = ${kst.toFixed(2)} workers`;
+      q(".bf-ts-ceil").textContent = `scanner ceiling 1/s = ${Math.round(ceil).toLocaleString("en-GB")} blocks a second`;
+      q(".bf-ts-sv").textContent = `${s.toFixed(1)} µs`;
+      q(".bf-ts-wv").textContent = `${w.toFixed(1)} µs`;
+    };
+    sIn.addEventListener("input", show);
+    wIn.addEventListener("input", show);
+    q(".bf-ts-reset").addEventListener("click", () => {
+      sIn.value = s0;
+      wIn.value = w0;
+      show();
+    });
+    q(".bf-ts-controls").hidden = false;
+    show();
+  };
+
   // a copy of KINDS in docs/scripts/social_cards.py; check_site.py fails if they differ
   const KINDS = {
     "Research result": "result",
@@ -631,6 +679,7 @@
     document.querySelectorAll(".bf-anim-controls").forEach(animated);
     document.querySelectorAll(".bf-stepper").forEach(stepper);
     document.querySelectorAll(".bf-l3fill").forEach(l3fill);
+    document.querySelectorAll(".bf-twostation").forEach(twostation);
   };
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
   else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
