@@ -117,4 +117,4 @@
 ## 25 Nov — the programme, the protocol, MONODROMY's pass
 - Louis: records first, MONODROMY's pass, then the actual experiment, the writer fed by file pointers, and the process recorded for reuse.
 - Report: `reports/2026-11-25-course-mining.md`. Experiment: `briefs/experiment-programme.md`. Protocol: `process/protocol.md`. Writer brief (to send after MONODROMY): `briefs/writer-deepening.md`. Journal §63.
-- MONODROMY's channel #39 is dispatched (#346 7148095764), and its session woken: `session_0187sPR723oFTKXtty6qzCWK`, a new session; the PROTOCOL.md list is stale.
+- MONODROMY's channel #39 is dispatched (#346 7148095764), and its session woken: `session_0187sPR723oFTKXtty6qzCWK` (PROTOCOL.md §1a already lists it).
