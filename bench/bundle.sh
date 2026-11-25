@@ -2,7 +2,8 @@
 # One file to upload from a workstation run: DIR packed as DIR.tar.gz beside it, symbolic
 # links (a shared corpus) and files over 50 MB left out, then its path and size printed.
 # Every recipe that asks the user to upload results ends with it (CLAUDE.md, "Workstation
-# recipes").
+# recipes"). Under `just submit` (SUBMIT_BUNDLES set) it also appends the bundle's path to that
+# file, which is how `just submit` knows which bundle the recipe made.
 # It first records the toolchain the checkout selects (the one the recipe's builds used, from
 # rust-toolchain.toml unless the recipe named another) in DIR/toolchain.txt, unless the recipe
 # wrote one: `rustc -vV`, `cargo -V` and how rustup chose it. Best effort: a missing tool is
@@ -19,5 +20,8 @@ fi
 ( cd "$(dirname "$dir")" && find "$(basename "$dir")" -type f -size -50M -print0 \
   | tar --null -czf "$out.tmp" -T - )
 mv "$out.tmp" "$out"
+# (under `just submit`: the bundle's path for it to submit, so nothing else under target/ is
+# ever taken for one, such as a tarball a recipe fetched)
+[ -z "${SUBMIT_BUNDLES:-}" ] || realpath "$out" >> "$SUBMIT_BUNDLES"
 echo
 echo "Upload this one file: $(realpath "$out") ($(du -h "$out" | cut -f1))"
