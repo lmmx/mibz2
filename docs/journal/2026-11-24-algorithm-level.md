@@ -1649,3 +1649,15 @@ Louis asked for four things: durable records behind every reply; MONODROMY's pas
 - **A rule on rejected ideas:** once the scanner's ceiling moves, re-qualify, in one batch, the rejected ideas whose evidence fits masking. That means a gain below the knee but none above it, or worker demand saved without a wall gain.
 - **The protocol:** `process/protocol.md`, the twelve steps as run, the records each leaves, and rules for reuse.
 - **The writer's brief:** `briefs/writer-deepening.md`, the deepening told from the beginning, by pointers to files. Sent once MONODROMY's record lands.
+
+## 64. Louis's Alon question: structure and function, aimed at optimality
+
+Louis saw a resemblance in method between Jain's courses and Uri Alon's network motifs. He framed it as "not universal motifs but optimal for our algorithmic purpose", and said other thinkers may fit better. Both of ChatGPT's answers are recorded verbatim (`external/chatgpt-alon-motifs.md`); the second withdrew the first's motif catalogue as trivialising. The Coordinator's steer is `leads/structure-and-function.md`:
+- **Alon's value to us is his optimality work** (Part III; Dekel and Alon 2005; Shoval et al. 2012), not recurrence. The generative method of Ma et al. (2009) fits best: from the behaviour wanted, through a space of structures, to a principle.
+- **The transformations already have a home:** the algebra of programming. Contraction along composition is close to fusion; enrichment is close to tupling ("banana split"); "serial into collective" is the homomorphism theorems (Gibbons 1996). Prior work, cited as such.
+- **A concrete lead at the bottleneck:** the scanner as a finite-state machine whose chunk transition functions compose associatively. Data-parallel FSMs and self-synchronising Huffman decoding are prior art. bzip2's selector count is the obstruction, and the self-synchronisation length is the first, cheap measurement.
+- **A finite design space for a generative test:** the scanner–worker boundary's obligations × placements, scored by the referee.
+- **Max-plus algebra** (Baccelli et al. 1992) as the exact form of the pipeline's timing, against MVA on a surrogate.
+- **Judging the methodology:** a retrospective reconstruction of two known breakthroughs (Rauzy–Veech; page-dewarp) and a generative test. A framework is judged by what it generates.
+
+MONODROMY takes it as channel #40, queued after #39. ChatGPT Pro's prompt is `briefs/chatgpt-structure-prompt.md`.

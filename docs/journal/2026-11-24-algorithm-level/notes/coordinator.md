@@ -118,3 +118,8 @@
 - Louis: records first, MONODROMY's pass, then the actual experiment, the writer fed by file pointers, and the process recorded for reuse.
 - Report: `reports/2026-11-25-course-mining.md`. Experiment: `briefs/experiment-programme.md`. Protocol: `process/protocol.md`. Writer brief (to send after MONODROMY): `briefs/writer-deepening.md`. Journal §63.
 - MONODROMY's channel #39 is dispatched (#346 7148095764), and its session woken: `session_0187sPR723oFTKXtty6qzCWK` (PROTOCOL.md §1a already lists it).
+
+## 25 Nov — Alon, structure and function
+- ChatGPT's two answers recorded verbatim (`external/chatgpt-alon-motifs.md`). The steer is `leads/structure-and-function.md` (journal §64): optimality over recurrence; algebra of programming for the transformations; the scanner as composable FSM transition functions (the self-synchronisation length to measure first); a finite obligations × placements design space (Ma et al. style); max-plus for the pipeline; retrospective reconstruction as the test.
+- MONODROMY's channel #40 is queued. The ChatGPT Pro prompt is `briefs/chatgpt-structure-prompt.md`.
+- The stage 1 ready tag is set at 94cb742d.
