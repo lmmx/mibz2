@@ -125,3 +125,19 @@ The records:
 - **Its status:** conjectured as fruitful. Its feasibility depends on how large the rule-table space is for s and K that matter. That is MONODROMY's first question below. If the space is too large, the abstraction is wrong, and finding the right one is the work, as ChatGPT says.
 
 **Added to MONODROMY's channel #40 (amended before dispatch):** question 5, the referee-class enumeration above: its feasibility, the right abstraction, and what a positive necessity statement would look like. Plus the Khammash table above as a frame.
+
+## The dynamical layer (25 November, after `../external/chatgpt-dynamics.md` and stage 1's data)
+
+ChatGPT proposes a third stage between the performance analysis and the design-space work: **dynamical characterisation**. It names hybrid dynamical systems (Goebel, Sanfelice and Teel) as the language: discrete events with continuous quantities, the "digital on analogue" Louis described. Alongside it: system identification (Ljung), max-plus algebra (Baccelli et al.), model reduction ("find z = h(x) with self-contained dynamics", the Khammash move), and Hellerstein et al., *Feedback Control of Computing Systems* (2004), as a textbook to mine like Jain's.
+
+**What stage 1 already gives this layer, measured:**
+- **The conservation laws hold exactly, event by event.** In all 840 grid decodes, each buffer's occupancy equals enqueues less dequeues, and its occupancy integral equals its blocks' summed residence (Little's law). ChatGPT's A − B, B − C and A − C identities are these, and they are now verified rather than assumed (§66).
+- **The trajectories exist.** Every block's issued, enqueued, got, ready, taken and consumed times, with under-lock sequence numbers that give a valid linear order, at every count, for four rounds (`blocks-r00..r03.tsv` in the bundle). Queue-occupancy trajectories, starvation episodes and head-of-line episodes can all be rebuilt exactly. That is the "properly synchronised event traces" ChatGPT asks for.
+- **A first model-reduction fact:** occupancy alone is *not* a sufficient coordinate. Above the knee, mean admitted blocks sit at about 20 whatever the window (32–80), while worker starvation goes from 4% to 56%. What changes is the scanner's per-block service and the workers' contention, so the state needs at least the scanner's rate and a contention measure.
+
+**Adopted:**
+1. **Time-localised (pulse) interventions in stage 2.** Apply the pacing dose only over a contiguous range of blocks (say blocks 600–800 of 1724) at k\* and at 10, for the scanner and for emission (A7), and measure from the traces: the queue's depletion, when starvation begins, the reader's rate, and recovery. That gives the time-dependent response matrix G_ij(t, τ) as finite responses. The pacing hook already runs per block, so this is a block-range condition, not new instrumentation. Proposed to the Pathfinder as stage 2's sixth choice.
+2. **System identification on stage 1's traces before stage 2's data.** Fit the smallest state that predicts each block's completion time from the previous state, starting from the max-plus recurrence (issue, worker, reader) with the measured service times. Then ask which added variable (head-of-line age, contention, the scanner's instantaneous rate) removes the most error. This goes to MONODROMY as question 6 of #40 (amended before dispatch).
+3. **Hellerstein et al. (2004)** goes on the reading list with the others, to be read in full.
+
+**Not adopted now:** SINDy on the raw traces (the switching makes smooth regressions misleading); chaos, bifurcation and Koopman methods (no evidence yet that they're needed). Optimal control of the worker count is the conventional application, and it stays in run 4.

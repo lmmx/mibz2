@@ -1675,3 +1675,61 @@ Khammash's programme is to specify the function, derive necessary conditions, ch
 - **Two ideas adopted as method:** "same function, different structure" (Khammash's Figure 3), which is why the referee counts structure; and "the hidden coordinate" (Figure 5: Z, log Z, Z₁ − Z₂), which states representation change as a search for the coordinate in which the work cancels.
 
 Channel #40 was amended before dispatch with this as question 5.
+
+## 66. Stage 1's data: the character across 1–20 workers
+
+**The bundle.**
+- **Run:** `character/run-20261125T001135Z`, on `evidence` at 870e61d7, SHA-256 bb72107b…2204, checked. #145 comment 7148523492.
+- **What ran:** `bench-character` at #841's head 94cb742d on the i9: 840 grid decodes, 108 cost-check decodes, 30 counter decodes, 15 memory-controller decodes and 60 public-API decodes. It took about 15 minutes.
+- **Stored:** the report and the summary TSVs are copied to `math-targets/data/character-stage1/`. The per-thread rows (`threads.tsv`, 3.8 MB) and the per-block event traces (`blocks-r00..r03.tsv`, about 7.9 MB each) stay in the bundle.
+- **Status:** a diagnostic; it decides nothing.
+
+**Validity.** Every one of the nine operational-law identities held in all 840 grid decodes: threads, partitioned timelines, flow, the under-lock linear order, forced flow, conservation, admission, Little's law (exact) and utilisation.
+
+**Classification: PERTURBED.** The ledgers' on/off cost check is not clean at 10 and 20 workers:
+- 1.0398 [0.9914, 1.0905] at 10;
+- 1.0159 [0.9850, 1.0479] at 20;
+- 1.0042 [0.9985, 1.0098] at 1.
+
+The intervals include 1 but are wide (6 pairs), so the instrument's cost isn't shown to be small at high counts. Consequences:
+- timings *from the ledgers* at 10 or more workers carry a possible inflation of up to about 9%;
+- shares within a decode, the counts and the identities are unaffected;
+- stage 2 should judge walls with the ledgers off.
+
+**What it found (measured, one corpus):**
+1. **The two-station model holds.** The limit moves from the workers to the scanner exactly at 8 (k_balance = 8, round-bootstrap interval [8, 8]). The near-optimal set is {8}, with a best wall of 0.1944 s. Efficiency against the per-resource bound is 0.976–0.996 up to 7 workers and 0.936–0.968 above.
+2. **The scanner limits above the knee, now shown by concurrent states** as the design review required. The workers' idle time while the scanner is *active* rises from 0.035 of their time at 8 to 0.124 at 10 and 0.551 at 20. Their idle time while it waits for input or admission stays under 0.01.
+3. **The reader is not a co-bottleneck, measured directly.** Its demand is 0.017–0.035 ms a block against the scanner's 0.099–0.130, at most about a third. Its copy-out time does double from 1 to 15 workers (0.031 → 0.057 s), which is memory contention. This settles the doubt raised in §61.
+4. **Contention inflates service per visit.**
+   - The scanner's Huffman decode (A3) costs 84 µs a block at 1 worker, 89 at 3–12, and 105–107 at 16 and above.
+   - Worker emission (A7) costs 526 µs at 1, 592 at 8, 673 at 10, and peaks at 816 at 14.
+   - Construction (A6a) rises from 215 to 353 µs.
+   - Memory-controller reads per decode go 219 MiB → 807 (k = 8) → 1562 (10) → 1957 (16). That is about 8 GB/s at 10, far below DRAM's bandwidth, so this is an LLC-capacity effect rather than a bandwidth limit (argued).
+   - IPC falls from 2.40 to 1.56 at 16.
+5. **The scanner's slowdown at 16 and above is not frequency.** Its achieved MHz is 4900 at 16–18. It sat on one CPU 100% of the time at every count, while workers spread over all 20 logical CPUs from 17. So SMT sharing or cache interference is left (argued), which stage 2's placement contrast decides.
+6. **Admission rarely binds above the knee.** Waits held by the window fall from 935 at 1 to about 10 at 9–14 and 0 at 16 and above. Waits held by the byte cap are 0–2. Ready bytes average at most 2.3 MB, peaking at 13.4 MB. Mean admitted blocks are about 20 at every count from 8 up, whatever the window (32–80).
+7. **The routes confirm Neon's reading (§62):** 3648 + 80 Open rows (932 a copy) against 2400 "skipped" (n ≈ 30) and 768 "column" (n ≈ 8). So the 792 non-Open blocks *are* the tiny ones. Proved by route now, not argued.
+8. **The public API, and a new finding.**
+   - Asking for 10–20 threads builds 7 lazy workers with a 28-slot window: 0.209–0.223 s.
+   - Asking for 8 or 9 builds 8 or 9 lazy workers: 0.1924 and 0.1902 s, 9–10% faster.
+   - **Asking for 3, 5 or 7 builds *eager* workers**, because `Plan::lazy` starts at `LAZY_FROM_THREADS = 8` and the measured cells cover only 4, 6 and 10 or more. At 7 that is 0.337 s and 140 MB, against 0.209 s and 54 MB for 7 lazy workers: 61% slower and 2.6× the memory. At 5 it is 0.344 s and 130 MB, against 0.284 s for lazy (the stage-1 grid).
+   - On other machines, where no measured cell applies, every count below 8 is eager.
+   - The lazy kernel is better from about 4 workers up on this corpus; eager is still better at 1–2.
+
+   This is a production default, so it needs an adoption registration with a recalibration across corpora. It goes into the programme's run 4 with the 7-against-8 question.
+
+**Next:**
+- stage 2's anchors, from its frozen rules (the Pathfinder);
+- MONODROMY's analysis, once its plan (channel #39, part 2) is posted, written before it opens the bundle;
+- the eager-below-8 finding, added to run 4.
+
+## 67. The dynamical layer
+
+Louis asked which dynamical-systems tools the programme should reach for, given its "digital on analogue" character. ChatGPT's answer is recorded verbatim (`external/chatgpt-dynamics.md`): hybrid dynamical systems, system identification, max-plus algebra, model reduction, and Hellerstein et al. on control of computing systems. The Coordinator's steer is the last section of `leads/structure-and-function.md`:
+- stage 1 already verified the conservation laws exactly, and recorded synchronised per-block traces;
+- occupancy alone is shown not to be a sufficient state above the knee;
+- pulse interventions are added to stage 2's draft;
+- system identification on stage 1's traces goes to MONODROMY (#40, question 6);
+- Hellerstein et al. joins the reading list.
+
+A third stage is added to the programme's method: performance analysis, then dynamical characterisation, then design-space exploration.
