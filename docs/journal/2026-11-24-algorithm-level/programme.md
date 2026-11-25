@@ -22,6 +22,10 @@ The reference is Raj Jain's course, *Computer Systems Performance Analysis: Tech
 | 7 | **Where new mathematics fits:** the activities with real control at the operating points that matter, and what a new device must change there (demand, dependency or representation) to move the whole decoder | (the purpose of the model) | `math-targets/targets.tsv`, to be re-ranked by step 6 | after step 6 |
 | 8 | **The mathematics itself,** aimed at step 7's targets | — | MONODROMY and Neon records; the open threads in the report §4 | continuing; the closure problem answered negatively within record 119's class |
 
+## The ideal-parts matrix: the current task (25 November)
+
+**The current task is [`ideal-parts/`](ideal-parts/README.md):** measure the decoder with each part made ideal, alone and in combination (Jain's factorial design over oracles), to find each part's room. It fills steps 2 and 5's missing ceilings (T2, T3 and T6), and it is characterisation only.
+
 ## Hybrid systems: a reading companion for structural redesign
 
 *25 November 2026.* The [hybrid-systems notes](methodology/hybrid-systems/index.md)

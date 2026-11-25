@@ -2380,3 +2380,15 @@ RSS is within 1.2% everywhere.
 **Decision:**
 - **PR 879 is held, not rejected.** The micro-win stays a lead. A further test would be a new registration with the scanner pinned, or with 64 rounds; it is not run tonight.
 - **§84 test 2** (the combined scanner fix, a larger expected effect) still waits for PR 861 to be reopened. Its registered design has the same noise problem at 10 and 12. Before it runs, consider re-registering it with more rounds or a pinned scanner. That is a design decision, recorded here before any of its data.
+
+## 87. The ideal-parts matrix: the task, set up as its own subproject
+
+Louis, 25 November, on reading the overnight summary: the point of the experiments was to characterise the system's shape, with each part as a toy problem with ideal behaviour, and then hand it to Antigravity to look for new mathematics. It was not to build engineering features.
+
+**The overnight work drifted.** I kept the workstation fed with what was ready, which was fixes with PRs. It found two real gains (#868, #878, now released), but it did not run the ideal-part arms. Those are programme run 5, the joint frontier, and the missing T2, T3 and T6 ceilings. Stage 2a's oracle comparison was VOID, and stage 2b dropped it.
+
+**The task, now stated where it can't be missed:** `ideal-parts/README.md`.
+- **What it is:** a factorial over the decoder's parts, each real or ideal (its output supplied), at 1, 6, 8 and 10 workers. Slice A first: the two oracles that exist, the scanner's output and emission's codes, in one binary. Then the full 2^(6−1) design.
+- **Where it comes from:** Jain's experimental design applied to the four-arm oracle idea (§44). It fills the measurements behind the hybrid-systems frame (an ideal part is lever 1 at its limit).
+- **The rule:** frozen before any data (`ideal-parts/registration.md`).
+- **Antigravity's first pass** (`ideal-parts/antigravity/prompt-1.md`) asks for mathematics per part, and for registered predictions of each part's room.
