@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.">
+        <meta name="description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-843/blog/2026-11-25-the-decoders-knee/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-843/blog/2026-11-25-the-decoder-as-a-queueing-network/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -35,7 +35,7 @@
     
     
       
-        <title>The decoder's knee - mibz2</title>
+        <title>The decoder as a queueing network - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8e245c500e27">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=190e857eeef7">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=8e245c500e27">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -91,19 +91,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The decoder's knee">
-  <meta property="og:description" content="A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/blog/2026-11-25-the-decoders-knee/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/assets/social/blog-2026-11-25-the-decoders-knee.png">
+  <meta property="og:title" content="The decoder as a queueing network">
+  <meta property="og:description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/blog/2026-11-25-the-decoder-as-a-queueing-network/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The decoder's knee">
+  <meta property="og:image:alt" content="The decoder as a queueing network">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The decoder's knee">
-  <meta name="twitter:description" content="A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/assets/social/blog-2026-11-25-the-decoders-knee.png">
-  <meta name="twitter:image:alt" content="The decoder's knee">
+  <meta name="twitter:title" content="The decoder as a queueing network">
+  <meta name="twitter:description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-843/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network.png">
+  <meta name="twitter:image:alt" content="The decoder as a queueing network">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The decoder's knee
+              The decoder as a queueing network
             
           </span>
         </div>
@@ -1219,7 +1219,7 @@
   <span class="md-ellipsis">
     
   
-  The decoder's knee
+  The decoder as a queueing network
 
     
   </span>
@@ -1236,7 +1236,7 @@
   <span class="md-ellipsis">
     
   
-  The decoder's knee
+  The decoder as a queueing network
 
     
   </span>
@@ -1306,10 +1306,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-designing-for-a-purpose" class="md-nav__link">
+  <a href="#5-the-fourth-reading-and-a-design-space" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Designing for a purpose
+        5. The fourth reading, and a design space
       </span>
     </span>
   </a>
@@ -1317,10 +1317,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-the-dynamical-layer" class="md-nav__link">
+  <a href="#6-stage-2-which-activity-controls-the-wall" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. The dynamical layer
+        6. Stage 2: which activity controls the wall
       </span>
     </span>
   </a>
@@ -1328,10 +1328,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-how-the-work-is-done" class="md-nav__link">
+  <a href="#7-designing-for-a-purpose" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. How the work is done
+        7. Designing for a purpose
       </span>
     </span>
   </a>
@@ -1339,10 +1339,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-what-runs-next" class="md-nav__link">
+  <a href="#8-the-dynamical-layer" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. What runs next
+        8. The dynamical layer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-the-work-is-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. How the work is done
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-what-runs-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. What runs next
       </span>
     </span>
   </a>
@@ -3168,10 +3190,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-designing-for-a-purpose" class="md-nav__link">
+  <a href="#5-the-fourth-reading-and-a-design-space" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Designing for a purpose
+        5. The fourth reading, and a design space
       </span>
     </span>
   </a>
@@ -3179,10 +3201,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-the-dynamical-layer" class="md-nav__link">
+  <a href="#6-stage-2-which-activity-controls-the-wall" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. The dynamical layer
+        6. Stage 2: which activity controls the wall
       </span>
     </span>
   </a>
@@ -3190,10 +3212,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-how-the-work-is-done" class="md-nav__link">
+  <a href="#7-designing-for-a-purpose" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. How the work is done
+        7. Designing for a purpose
       </span>
     </span>
   </a>
@@ -3201,10 +3223,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-what-runs-next" class="md-nav__link">
+  <a href="#8-the-dynamical-layer" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. What runs next
+        8. The dynamical layer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-the-work-is-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. How the work is done
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-what-runs-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. What runs next
       </span>
     </span>
   </a>
@@ -3233,7 +3277,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-25-the-decoders-knee.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-25-the-decoder-as-a-queueing-network.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -3244,9 +3288,9 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-decoders-knee">The decoder's knee<a class="headerlink" href="#the-decoders-knee" title="Permanent link">&para;</a></h1>
-<p class="post-dek">A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.</p>
-<p class="post-meta">25 November 2026 · 12 min read · <a href="#8-what-runs-next">Research in progress</a></p>
+<h1 id="the-decoder-as-a-queueing-network">The decoder as a queueing network<a class="headerlink" href="#the-decoder-as-a-queueing-network" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.</p>
+<p class="post-meta">25 November 2026 · 16 min read · <a href="#10-what-runs-next">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -3258,9 +3302,10 @@ scanner sets the speed, so reorganising how work is queued can recover only a fe
 gains need less work at the bottleneck, and when they arrive the bottleneck moves back to the
 workers, so improvements have to be priced together. Reading the performance-analysis literature
 with several independent readers then caught an error in our own first reading and found about 8%
-of the scanner's work in two avoidable copies. The experiments that follow are designed to say
-which mechanism controls the decoder at which worker count, and so which costs belong to
-engineering and which might yield to mathematics. This post picks up where
+of the scanner's work in two avoidable copies. The experiments that follow say which mechanism
+controls the decoder at which worker count, and so which costs belong to engineering and which
+might yield to mathematics; the first of them finds the workers' construction and emission in
+control below the knee and the scanner's Huffman decode at and above it. This post picks up where
 <a href="../2026-11-24-posing-the-inversion-problem/">Posing the inversion problem</a> left off.</p>
 <p><strong>Takeaways</strong></p>
 <ul>
@@ -3272,6 +3317,9 @@ engineering and which might yield to mathematics. This post picks up where
   and the scanner spends about 8% of its demand on two avoidable copies.</li>
 <li>Stage 1 of the characterisation confirmed the switch from workers to scanner at exactly 8, and
   found that asking for 3, 5 or 7 threads selects an older kernel that is 61% slower at 7.</li>
+<li>Stage 2 showed the switch by intervention: at 6 workers construction and emission control the
+  wall, at 8 and 10 only the scanner's Huffman decode does, and its model predicted a held-out run
+  to within its interval.</li>
 </ul>
 <h2 id="1-a-simple-observation">1. A simple observation<a class="headerlink" href="#1-a-simple-observation" title="Permanent link">&para;</a></h2>
 <p>The four-arm test supplied each of the decoder's two stages for free, outside the clock. At ten
@@ -3321,8 +3369,7 @@ or 3% on the plateau. The large gains lie in less work at the bottleneck, or mor
 <h2 id="3-reading-the-field-four-times-over">3. Reading the field, four times over<a class="headerlink" href="#3-reading-the-field-four-times-over" title="Permanent link">&para;</a></h2>
 <p>Three performance-analysis courses were read in full, with their sources saved, and then mined for
 opportunities against these measurements by four readers, each writing an answer before seeing the
-others (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md">the summary</a>). Three of those readings are in; the fourth, aimed at where
-mathematics rather than engineering fits, is still to come.</p>
+others (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md">the summary</a>). The fourth, aimed at where mathematics rather than engineering fits, is the subject of §5.</p>
 <table>
 <thead>
 <tr>
@@ -3342,6 +3389,10 @@ mathematics rather than engineering fits, is still to come.</p>
 <tr>
 <td><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md">A second agent</a></td>
 <td>two avoidable copies in the scanner, about 8% of its demand; the same worker-count error</td>
+</tr>
+<tr>
+<td><a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">The fourth reading</a></td>
+<td>the scan as a chain at its latency floor; a design space for the scanner–worker boundary; construction as the largest worker target</td>
 </tr>
 </tbody>
 </table>
@@ -3392,7 +3443,79 @@ decode, Little's law exactly. What it found:</p>
 <p>The run flagged its own instrument as perturbing at 10 and 20 workers: the cost check's intervals
 include 1 but are wide, so timings from the ledgers at high counts may be inflated by up to about
 9%, while shares, counts and the identities are unaffected.</p>
-<h2 id="5-designing-for-a-purpose">5. Designing for a purpose<a class="headerlink" href="#5-designing-for-a-purpose" title="Permanent link">&para;</a></h2>
+<h2 id="5-the-fourth-reading-and-a-design-space">5. The fourth reading, and a design space<a class="headerlink" href="#5-the-fourth-reading-and-a-design-space" title="Permanent link">&para;</a></h2>
+<p>The fourth reading registered its plan for analysing stages 1 and 2 before stage 1 ran, and then
+asked what the measurements imply about the scanner itself (<a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">record 129</a>). At 1.41 to
+1.51 ns a symbol, the Huffman scan takes about 7 cycles a symbol, one first-level cache load's
+latency: the scan is a single dependent chain running at its latency floor. The lever is
+therefore fewer lookups a symbol, decoding several symbols with each lookup. A 10-bit window bounds
+that at about 2.6 symbols a lookup, and the reading conjectures 13 to 17% off the best wall; the
+cheapest test is to count cycles a symbol on the scanner at one worker, where about 7 cycles and no
+cache misses would confirm the floor.</p>
+<p>A companion record enumerated the ways the scanner's obligations could be divided between the
+scanner and the workers, and scored each placement with the two-station law
+(<a href="https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md">record 130</a>). Three placements lead, all conjectured: an index of block starts, so that
+each worker scans its own block, at −15%; decoding several symbols a lookup, still serially, at
+−17%; and both together at −19%. Its separating principle is to keep an obligation on a serial path
+only if its state has no small summary, and to cut the path wherever the format resets that state.
+One placement it rules out: decoding a single block's Huffman codes in parallel. The table is
+chosen afresh every 50 symbols by a running symbol count that nothing in the stream
+re-synchronises, so each chunk would have to carry at least 50 hypotheses, and a k-way split
+loses for every k below 50; the obstruction is proved from the format, its cost argued.</p>
+<p>The same record measured where the workers' time goes on a real block at one worker: construction
+of the inversion's structures 45%, emission 38%, move-to-front and run records 10%, and the final
+run-length expansion and checksum 6%, shares that hold at 8 and 16 workers. Construction, not
+emission, is the largest target for mathematics in the workers. Of the two leads at the scanner,
+decoding several symbols a lookup becomes an engineering prototype, and the index of block starts
+the larger structural lead.</p>
+<p>Stage 1's traces have also been analysed by program (<a href="https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md">journal §71</a>; <a href="https://github.com/lmmx/mibz2/tree/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/analysis">the outputs</a>).
+The lower bound, the busiest of the scanner, the workers and the reader, is tight below the knee,
+with the wall within 1.4% of it up to 6 workers, and loosest at the knee itself, 4 to 5% at 8 to 11
+workers, where dependencies, starvation and blocking cost most. Issuing blocks is smooth, but taking
+them is bursty: when a slow block at the head of the line finishes, a run of ready blocks is taken
+at once, the signature of putting completed blocks back in order. These describe one corpus's
+traces, not guarantees.</p>
+<h2 id="6-stage-2-which-activity-controls-the-wall">6. Stage 2: which activity controls the wall<a class="headerlink" href="#6-stage-2-which-activity-controls-the-wall" title="Permanent link">&para;</a></h2>
+<p>Stage 1 inferred the switch at the knee from busy times; the first part of stage 2 tests it by
+intervention (<a href="https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level.md">journal §74</a>; <a href="https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt">the report</a>).
+Each activity is slowed by 20% in turn, and the share of that slowing which reaches the wall, its
+elasticity, says whether it controls the decode at that worker count: near 1 for the bottleneck,
+near 0 for an activity with slack behind it.</p>
+<figure class="bf-fig" id="screen">
+<p class="bf-title">Which activity controls the wall, at 6, 8 and 10 workers</p>
+<svg viewBox="0 0 520 472" role="img" aria-label="Stage 2a's screen at 6, 8 and 10 workers. At 6, construction (0.14, 0.15) and emission (0.37) control the wall and the scanner's Huffman decode does not; at 8 and 10 only the scanner's Huffman decode controls it (0.53, 0.74)."><text class="bf-t-strong" x="236" y="20" style="font-size:15px">6 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="30" y2="126" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="30" y2="126" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="30" y2="126" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="47.0" text-anchor="end">scanner: Huffman decode</text><line x1="353.1" x2="359.7" y1="42.0" y2="42.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.35"/><circle cx="356.4" cy="42.0" r="4" style="fill:var(--bf-amber);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="71.0" text-anchor="end">workers: construction, first pass</text><line x1="371.2" x2="378.9" y1="66.0" y2="66.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="375.0" cy="66.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="95.0" text-anchor="end">workers: construction, setup</text><line x1="370.5" x2="382.3" y1="90.0" y2="90.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="376.4" cy="90.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="119.0" text-anchor="end">workers: emission</text><line x1="396.0" x2="408.8" y1="114.0" y2="114.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="402.4" cy="114.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-t-strong" x="236" y="164" style="font-size:15px">8 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="174" y2="270" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="174" y2="270" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="174" y2="270" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="191.0" text-anchor="end">scanner: Huffman decode</text><line x1="374.4" x2="470.8" y1="186.0" y2="186.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="422.6" cy="186.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="215.0" text-anchor="end">workers: construction, first pass</text><line x1="269.2" x2="442.4" y1="210.0" y2="210.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="355.8" cy="210.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="239.0" text-anchor="end">workers: construction, setup</text><line x1="324.4" x2="440.0" y1="234.0" y2="234.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="382.2" cy="234.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="263.0" text-anchor="end">workers: emission</text><line x1="303.9" x2="412.9" y1="258.0" y2="258.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="358.4" cy="258.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-t-strong" x="236" y="308" style="font-size:15px">10 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="318" y2="414" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="318" y2="414" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="318" y2="414" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="335.0" text-anchor="end">scanner: Huffman decode</text><line x1="403.1" x2="492.8" y1="330.0" y2="330.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="447.9" cy="330.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="359.0" text-anchor="end">workers: construction, first pass</text><line x1="245.9" x2="476.0" y1="354.0" y2="354.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="361.0" cy="354.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="383.0" text-anchor="end">workers: construction, setup</text><line x1="274.7" x2="388.6" y1="378.0" y2="378.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="331.6" cy="378.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="407.0" text-anchor="end">workers: emission</text><line x1="299.2" x2="342.4" y1="402.0" y2="402.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="320.8" cy="402.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:13px" x="236.0" y="430" text-anchor="middle">−1</text><text class="bf-tm" style="font-size:13px" x="357.8" y="430" text-anchor="middle">0</text><text class="bf-tm" style="font-size:13px" x="479.6" y="430" text-anchor="middle">1</text><text class="bf-tm" style="font-size:13px" x="504" y="468" text-anchor="end">elasticity of the wall, with 95% intervals</text></svg>
+<figcaption>Measured, stage 2a: each activity slowed 20% alone, over 6 blocks; solid where the
+report finds it controls the wall, pale where it doesn't resolve or is negligible. The scanner's
+Huffman decode is amber, the workers' activities blue. At 10 workers emission's interval lies below
+0, which the run leaves unexplained.</figcaption>
+</figure>
+
+<ul>
+<li><strong>Below the knee, the workers control it.</strong> At 6 workers the two parts of construction (0.14
+  and 0.15) and emission (0.37) control the wall, while the scanner's Huffman decode does not
+  (−0.01).</li>
+<li><strong>At and above the knee, the scanner does.</strong> At 8 and 10 workers only the scanner's Huffman
+  decode controls the wall, at 0.53 and 0.74, and nothing in the workers resolves. This is stage
+  1's switch at 8, now shown by intervening rather than inferred.</li>
+<li><strong>The model predicted a run it hadn't seen.</strong> Composed, the screen's coefficients predicted the
+  wall with the Huffman decode and emission both slowed by 10%, an arm kept out of every fit: 1.053
+  against 1.052 observed at 8 workers, and 1.042 against 1.061 at 10, each inside its interval. In
+  the sense of <a href="#8-the-dynamical-layer">§8's distinction</a> this is the programme's first validated
+  predictor, though a local one, for slowing, at 8 and 10.</li>
+<li><strong>The queue shows which side binds.</strong> Slowing the scanner by half over two hundred blocks
+  empties the job queue at 8 workers, its mean depth falling from 4.4 to 0.3; slowing emission
+  fills it instead, from 3.9 to 8.9. Either way the decoder recovers within 2 to 4 ms.</li>
+<li><strong>Contention matters more than the gates.</strong> Widening the window or the byte cap changes nothing
+  beyond noise, but a memory stream running alongside slows the wall by 31% at 8 workers, and a
+  pointer chase by 110%: the decoder is very sensitive to sharing its cache.</li>
+</ul>
+<p>The screen also prices the scanner's copy fix, optimistically. Cutting the Huffman decode's work by
+8%, about the copies' share, implies a wall of 0.957 at 8 workers and 0.940 at 10; but a slowing's
+elasticity bounds what a speed-up buys, and at 8 the workers are close behind, so the gain there is
+likely under 4%, nearer 5% at 10. The paired comparison of the copy fix decides it. The second part
+of stage 2, with the scanner pinned to its own core and arms that speed activities up, runs later and
+may refine the figures at 8.</p>
+<h2 id="7-designing-for-a-purpose">7. Designing for a purpose<a class="headerlink" href="#7-designing-for-a-purpose" title="Permanent link">&para;</a></h2>
 <p>A question about method came next: whether the decoder could be studied the way systems biology
 studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that
 held up was not his catalogue of recurring motifs but the line of work that asks which structures
@@ -3448,7 +3571,7 @@ use a SAT solver to prove "no survivor" within the class (<a href="https://githu
 same reading were adopted as method: the same function can be realised by different structures,
 which is why the referee counts structure; and a representation change is a search for the hidden
 coordinate in which the work cancels.</p>
-<h2 id="6-the-dynamical-layer">6. The dynamical layer<a class="headerlink" href="#6-the-dynamical-layer" title="Permanent link">&para;</a></h2>
+<h2 id="8-the-dynamical-layer">8. The dynamical layer<a class="headerlink" href="#8-the-dynamical-layer" title="Permanent link">&para;</a></h2>
 <p>The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top
 of continuous quantities such as occupancy and time. The language for that is the theory of hybrid
 dynamical systems (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md">the outside answer</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §67</a>), and Goebel, Sanfelice and
@@ -3472,7 +3595,7 @@ decode and a 1 s delivery in series has a maximum of 1 s and takes 3. The notes 
 quantities apart: lower bounds, used to prune; predictors, used to rank, and validated on held-out
 runs rather than by replaying a run with its own durations; and proved upper bounds, for which
 backward induction over a finite, acyclic state graph is the concrete route.</p>
-<h2 id="7-how-the-work-is-done">7. How the work is done<a class="headerlink" href="#7-how-the-work-is-done" title="Permanent link">&para;</a></h2>
+<h2 id="9-how-the-work-is-done">9. How the work is done<a class="headerlink" href="#9-how-the-work-is-done" title="Permanent link">&para;</a></h2>
 <p>The method is written down so that it can be reused
 (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md">the protocol</a>). It starts from a measured surprise rather than a technique, poses the
 problem and its referee before any solution, and prefers a model that predicts from little data and
@@ -3482,12 +3605,12 @@ are kept in separate files with their reasons. Wrong claims are corrected in pla
 naming who found the error, as the worker-count error and the lower bound above were. Every run
 registers its decision rule before its data, changes are priced jointly because a relieved
 bottleneck moves, and when it moves, the ideas it may have masked are tested again.</p>
-<h2 id="8-what-runs-next">8. What runs next<a class="headerlink" href="#8-what-runs-next" title="Permanent link">&para;</a></h2>
+<h2 id="10-what-runs-next">10. What runs next<a class="headerlink" href="#10-what-runs-next" title="Permanent link">&para;</a></h2>
 <p>Five runs are planned, in order (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md">the programme of experiments</a>): the stage 1 baseline, now
 done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows
 each activity in turn to say which controls the wall at which count; the recalibration of the
 worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner
-and worker improvements together. Stage 2 is running now, and none of its results are in. Each cost
+and worker improvements together. Stage 2's first part is in (<a href="#6-stage-2-which-activity-controls-the-wall">§6</a>); its second, with the scanner pinned and arms that speed activities up, runs next. Each cost
 it finds controlling will be classed as engineering, a matter of how the work is done, or as a
 candidate for mathematics, a matter of what work is done.</p>
 <hr />
@@ -3498,6 +3621,8 @@ candidate for mathematics, a matter of what work is done.</p>
 <li>The design thread: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md">structure and function</a>, with <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md">the outside answer on motifs</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md">on Khammash</a>; journal §§64–65.</li>
 <li>The dynamical layer: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md">the outside answer</a>, <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md">the levers</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md">the review that corrected them</a>; journal §§67–70.</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md">The discipline question</a> (journal §56), <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md">the protocol</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md">the programme of experiments</a>.</li>
+<li>The fourth reading: <a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">record 129</a> and <a href="https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md">record 130</a>; stage 1 by program, <a href="https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md">journal §71</a>.</li>
+<li>Stage 2's first part: <a href="https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt">the report</a> and <a href="https://github.com/lmmx/mibz2/blob/6383f54f10f4ba793270e7ed42445533bfcba719/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/analysis">its analysis</a> (journal §74).</li>
 <li><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">The journal</a>.</li>
 </ul>
 
@@ -3660,19 +3785,19 @@ candidate for mathematics, a matter of what work is done.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/bench.js?v=8e245c500e27"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=8e245c500e27"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/blog.js?v=8e245c500e27"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/frontier.js?v=8e245c500e27"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/observatory.js?v=8e245c500e27"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=190e857eeef7"></script>
+        <script src="../../assets/javascripts/katex.js?v=8e245c500e27"></script>
       
     
   </body>
