@@ -327,6 +327,119 @@ def plan(a) -> dict:
     return out
 
 
+# stage 2b (journal §74 and the registration's stage 2b section): 2a's anchors 8 and 10 alone, the
+# scanner pinned to a core of its own (its sibling idle, the other threads masked off it), 16 blocks
+# with traces in the first 2, and the speed-up arms
+B_ANCHORS = (8, 10)
+B_TRACE_BLOCKS = 2
+SPEED = (0.10, 0.20)
+
+
+def topology(lscpu_e):
+    """lscpu -e's CPUs by core: [[cpu, sibling], ...] in core order"""
+    lines = open(lscpu_e).read().splitlines()
+    head = lines[0].split()
+    cores = {}
+    for line in lines[1:]:
+        v = line.split()
+        if len(v) >= len(head) - 1 and v[0].isdigit():
+            cores.setdefault(int(v[head.index("CORE")]), []).append(int(v[head.index("CPU")]))
+    return [sorted(cs) for _, cs in sorted(cores.items())]
+
+
+def fastest(byc, cores_json):
+    """the scanner's CPU: the first CPU of the core whose pinned calibration ran fastest (the
+    median ns of its repeats; ties to the lowest core). cores.json maps a CPU to its calibration"""
+    cal = json.load(open(cores_json))
+    ns = {}
+    for cs in byc:
+        r = cal.get(str(cs[0]))
+        if r and r.get("repeats"):
+            ns[cs[0]] = med(x[2] for x in r["repeats"])
+    if not ns:
+        return byc[0][0], {}
+    best = min(sorted(ns), key=lambda c: ns[c])
+    return best, ns
+
+
+def plan2b(a) -> dict:
+    base = plan(argparse.Namespace(stage1=a.stage1, calibration=a.calibration, lscpu=a.lscpu,
+                                   lscpu_e=a.lscpu_e, out=a.out + ".2a"))  # fmt: skip
+    os.remove(a.out + ".2a")
+    coords = {k: base["coords"][k] for k in B_ANCHORS}
+    cpi = base["cycles_per_iter"]
+
+    def iters(ns, k, delta):
+        return max(0, round(delta * ns * coords[k]["ghz"] / cpi))
+
+    def paced(k, acts, delta):
+        sv = coords[k]["svc_ns"]
+        return [f"pace {c} {iters(sv[c], k, delta)}" for c in acts if delta > 0 and sv.get(c)]
+
+    byc = topology(a.lscpu_e)
+    scpu, ns = fastest(byc, a.cores)
+    score = next(cs for cs in byc if scpu in cs)
+    others = [x for cs in byc for x in cs if x not in score]
+    pin = {"treat": [f"scanner_cpu {scpu}"], "mask": others, "pinned": 1}
+
+    def pinned(cell):
+        return {**cell, "treat": cell["treat"] + pin["treat"], "mask": pin["mask"], "pinned": 1}
+
+    cells = []
+    everything = SCANNER_SURFACE + WORKER_SURFACE + ["A10"]
+    rest = WORKER_SURFACE + ["A10"]
+    for k in B_ANCHORS:
+        sv = coords[k]["svc_ns"]
+        cells.append(pinned({"section": "screen", "k": k, "arm": "base", "treat": []}))
+        for c in coords[k]["kept"]:
+            ns_c = sv["A6a"] + sv["A6b"] + sv["A6c"] if c == "A6" else sv[c]
+            act = "A6c" if c == "A6" else c
+            cells.append(pinned({"section": "screen", "k": k, "arm": c, "delta": DELTA,
+                                 "treat": [f"pace {act} {iters(ns_c, k, DELTA)}"]}))  # fmt: skip
+        for lam in SPEED:
+            n = int(round(lam * 100))
+            for arm, acts in (("scan", SCANNER_SURFACE), ("others", rest), ("all", everything)):
+                cells.append(pinned({"section": "speed", "k": k, "arm": f"{arm}{n}", "delta": lam,
+                                     "treat": paced(k, acts, lam)}))  # fmt: skip
+        cells.append(pinned({"section": "validation", "k": k, "arm": "A3+A7_10", "delta": 0.10,
+                             "treat": paced(k, ["A3", "A7"], 0.10)}))  # fmt: skip
+    # the surface at 8, pinned
+    for s_d in SURFACE:
+        for w_d in SURFACE:
+            tr = paced(8, SCANNER_SURFACE, s_d) + paced(8, WORKER_SURFACE, w_d)
+            cells.append(pinned({"section": "surface", "k": 8,
+                                 "arm": f"s{int(s_d * 100):02d}w{int(w_d * 100):02d}", "treat": tr}))  # fmt: skip
+    # the link to 2a: its base and A3 at 8, unpinned
+    cells.append({"section": "link", "k": 8, "arm": "base", "treat": []})
+    cells.append({"section": "link", "k": 8, "arm": "A3", "delta": DELTA,
+                  "treat": [f"pace A3 {iters(coords[8]['svc_ns']['A3'], 8, DELTA)}"]})  # fmt: skip
+    # the memory dose at A7's end at 8 and 20, unpinned, as 2a
+    for k in (8, 20):
+        for arm in ("none", "stream", "chase"):
+            tr = [] if arm == "none" else [f"dose A7 {DOSE_BYTES} {arm}"]
+            cells.append({"section": "memory", "k": k, "arm": arm, "treat": tr})
+    # placement at 4 (2a's masks: 7 CPUs on distinct cores against 4 cores' sibling pairs) and at 8
+    # (10 CPUs on distinct cores against 5 cores' sibling pairs)
+    for k, n_distinct, n_pairs in ((4, 7, 4), (8, 10, 5)):
+        if len(byc) >= n_distinct and all(len(c) >= 2 for c in byc[:n_pairs]):
+            distinct = [c[0] for c in byc[:n_distinct]]
+            siblings = [x for c in byc[:n_pairs] for x in c[:2]]
+            for arm, mask in (("distinct", distinct), ("siblings", siblings)):
+                cells.append(
+                    {"section": "placement", "k": k, "arm": arm, "treat": [], "mask": mask}
+                )
+    out = {"stage": "2b", "kstar": 8, "step": base["step"], "anchors": list(B_ANCHORS),
+           "cycles_per_iter": cpi, "calibration": base["calibration"], "coords": coords,
+           "scanner_cpu": scpu, "scanner_core": score, "pinned_mask": others,
+           "core_calibration_ns": ns, "trace_blocks": B_TRACE_BLOCKS, "cells": cells}  # fmt: skip
+    json.dump(out, open(a.out, "w"), indent=1)
+    print(
+        f"stage 2b: anchors {list(B_ANCHORS)}, the scanner pinned to CPU {scpu} (core {score}, its sibling idle); "
+        f"{len(cells)} cells, traces in the first {B_TRACE_BLOCKS} blocks"
+    )
+    return out
+
+
 def favoured(byc):
     """the favoured core's first CPU: the highest acpi_cppc/highest_perf, else cpuinfo_max_freq"""
     best = None
@@ -353,6 +466,15 @@ def permute_corpus(src, dst, perm):
         for c in range(len(streams) // 12):
             for i in perm:
                 f.write(streams[c * 12 + i])
+
+
+def ons(p, c, b):
+    """a cell's decodes in block b: a pulse is a trace alone; otherwise a timed decode (the ledgers
+    off) and, in the plan's first trace_blocks blocks (every block when it has none), a trace"""
+    if c.get("pulse"):
+        return (1,)
+    tb = p.get("trace_blocks")
+    return (0, 1) if tb is None or b < tb else (0,)
 
 
 def decode_once(cmd, no_turbo):
@@ -394,9 +516,7 @@ def run(a):
     for b in range(a.blocks):
         # (journal §66: every wall is a decode with the ledgers off; each cell's ledgers come from
         # a trace decode of its own, the ledgers on; a pulse is a trace alone)
-        entries = [
-            (ci, on) for ci, c in enumerate(cells) for on in ((1,) if c.get("pulse") else (0, 1))
-        ]
+        entries = [(ci, on) for ci, c in enumerate(cells) for on in ons(p, c, b)]
         random.Random(a.seed * 1000 + b).shuffle(entries)
         for o, (ci, on) in enumerate(entries):
             c = cells[ci]
@@ -590,7 +710,7 @@ def report(a) -> int:
             got.setdefault((x["cell"], x["block"], x.get("on_arm", x.get("on", 1))), []).append(x)
     for ci, c in enumerate(p["cells"]):
         for b in range(a.blocks):
-            for on in (1,) if c.get("pulse") else (0, 1):
+            for on in ons(p, c, b):
                 if len(got.get((ci, b, on), [])) != 1:
                     void.append(
                         f"cell {ci} block {b} ledgers {'on' if on else 'off'}: {len(got.get((ci, b, on), []))} decodes"
@@ -651,7 +771,7 @@ def report(a) -> int:
             ci = find("screen", k, c)
             achieved, coefs = [], []
             try:
-                for b in range(a.blocks):
+                for b in range(min(a.blocks, p.get("trace_blocks") or a.blocks)):
                     d = paced_svc(trace(ci, b), c) / paced_svc(trace(base, b), c) - 1
                     achieved.append(d)
             except Exception as e:
@@ -713,6 +833,11 @@ def report(a) -> int:
     section(validation, a, cell, find, wall)
     print("\n## The ledgers' cost (the base's trace over its timed decode, paired by block)\n")
     section(cost, a, p, find, wall, trace)
+    if any(c["section"] == "speed" for c in cell.values()):
+        print(
+            "\n## Speeding the scanner (stage 2b): every other activity paced up, against every activity\n"
+        )
+        section(speed, a, p, find, wall, rows)
     section(pulses, a, p, cell, find)
     if misses:
         print(
@@ -795,7 +920,8 @@ def surface(a, ks, s0, find, wall) -> None:
 def contrasts(a, cell, find, wall, trace, rows) -> None:
     import math
 
-    refs = {"gates": "W4k_cap12", "memory": "none", "placement": "distinct", "scanner": "unpinned"}
+    refs = {"gates": "W4k_cap12", "memory": "none", "placement": "distinct", "scanner": "unpinned",
+            "link": "base"}  # fmt: skip
     for sec, ref in refs.items():
         for k in sorted({c["k"] for c in cell.values() if c["section"] == sec}):
             r_ci = find(sec, k, ref)
@@ -875,6 +1001,56 @@ def oracles(a, ks, find, wall, failed_phases) -> None:
         )
 
 
+def speed(a, p, find, wall, rows) -> None:
+    """Stage 2b's speed-up arms. Pacing can only slow an activity, so a scanner made faster by L =
+    1 + lambda is read through homogeneity: the wall of every activity paced by L is L times the
+    base's, so the scanner alone faster by L is the arm with every other activity paced by L,
+    over the arm with every activity paced by L. Per block (paired with the pinned base):
+    - H = log(T_all / T0) / log L: the homogeneity check (1 if every activity's time is paced);
+    - e_down = log(T_scan / T0) / log L: the wall's elasticity to the scanner slowed by L;
+    - e_up = log(T_all / T_others) / log L: its elasticity to the scanner made faster by L;
+    - d = e_down - e_up: the asymmetry (0 if a speed-up reaches the wall as a slow-down does)"""
+    import math
+
+    print(
+        "k   lambda  H (homogeneity)            e_down (slower)          e_up (faster)            e_down - e_up            labels"
+    )
+    for k in p["anchors"]:
+        b0 = find("screen", k, "base")
+        for lam in (10, 20):
+            sc, ot, al = (find("speed", k, f"{arm}{lam}") for arm in ("scan", "others", "all"))
+            if None in (b0, sc, ot, al):
+                continue
+            L = math.log(1 + lam / 100)
+            try:
+                h, down, up, d = [], [], [], []
+                for b in range(a.blocks):
+                    t0, ts, to, ta = wall(b0, b), wall(sc, b), wall(ot, b), wall(al, b)
+                    h.append(math.log(ta / t0) / L)
+                    down.append(math.log(ts / t0) / L)
+                    up.append(math.log(ta / to) / L)
+                    d.append(down[-1] - up[-1])
+            except Exception as e:
+                print(f"{k:<3} {lam:>3}%    FAILED ({missing(e)})")
+                continue
+            iv = [interval(v) for v in (h, down, up, d)]
+            labels = []
+            labels.append(
+                "HOMOGENEOUS" if 0.85 <= iv[0][1] and iv[0][2] <= 1.15 else "NOT-HOMOGENEOUS"
+            )
+            if iv[3][1] > 0 or iv[3][2] < 0:
+                labels.append("ASYMMETRIC")
+            print(
+                f"{k:<3} {lam:>3}%    "
+                + "  ".join(f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]" for m, lo, hi in iv)
+                + "   "
+                + " ".join(labels)
+            )
+            for name, (m, lo, hi) in zip(("H", "e_down", "e_up", "asymmetry"), iv):
+                rows.append({"section": "speed", "k": k, "coord": f"{name}{lam}", "C": m, "lo": lo,
+                             "hi": hi, "label": " ".join(labels)})  # fmt: skip
+
+
 def validation(a, cell, find, wall) -> None:
     """held out: reported, never fitted"""
     import math
@@ -910,7 +1086,10 @@ def cost(a, p, find, wall, trace) -> None:
             for sec in ("screen", "cost"):
                 ci = find(sec, k, "base")
                 if ci is not None:
-                    r += [math.log(trace(ci, b)["wall_s"] / wall(ci, b)) for b in range(a.blocks)]
+                    r += [
+                        math.log(trace(ci, b)["wall_s"] / wall(ci, b))
+                        for b in range(min(a.blocks, p.get("trace_blocks") or a.blocks))
+                    ]
         except Exception as e:
             print(f"k {k:<3} on/off FAILED ({missing(e)})")
             continue
@@ -931,6 +1110,15 @@ def main() -> int:
     pp.add_argument("lscpu")
     pp.add_argument("lscpu_e")
     pp.add_argument("out")
+    pb = sub.add_parser("plan2b")
+    pb.add_argument("stage1")
+    pb.add_argument("calibration")
+    pb.add_argument("lscpu")
+    pb.add_argument("lscpu_e")
+    pb.add_argument(
+        "cores", help="each core's first CPU's pinned calibration (JSON: cpu -> calibration)"
+    )
+    pb.add_argument("out")
     pr = sub.add_parser("run")
     pr.add_argument("plan")
     pr.add_argument("--bin", required=True)
@@ -953,6 +1141,8 @@ def main() -> int:
     a = ap.parse_args()
     if a.cmd == "plan":
         plan(a)
+    elif a.cmd == "plan2b":
+        plan2b(a)
     elif a.cmd == "run":
         run(a)
     else:

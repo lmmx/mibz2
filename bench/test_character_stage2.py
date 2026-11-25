@@ -10,6 +10,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import tempfile
 from contextlib import redirect_stdout
@@ -95,6 +96,42 @@ def scenario(miss=False, fail=None):
     return plan, recs
 
 
+def scenario2b(homogeneous=True, trace_blocks=2, drop=None):
+    """stage 2b at 8: a wall homogeneous of degree 1 in the scanner's and the others' demands, a
+    smooth max T = (s^4 + o^4)^(1/4) with s = 1 and o = 0.8, so the scanner's elasticity to a
+    slow-down and to a speed-up differ by a known amount. Not homogeneous: every arm's time
+    beyond the base grows by half its dose only"""
+    rnd = random.Random(2)
+    cells = [{"section": "screen", "k": 8, "arm": "base", "treat": [], "pinned": 1}]
+    for lam in (10, 20):
+        for arm in ("scan", "others", "all"):
+            cells.append(
+                {"section": "speed", "k": 8, "arm": f"{arm}{lam}", "treat": [], "delta": lam / 100}
+            )
+    plan = {"kstar": 8, "step": 16, "anchors": [8], "cycles_per_iter": 0.5, "trace_blocks": trace_blocks,
+            "coords": {"8": {"kept": []}}, "cells": cells}  # fmt: skip
+    T = lambda s, o: (s**4 + o**4) ** 0.25  # noqa: E731
+    recs = []
+    for b in range(BLOCKS):
+        w0 = 0.2 * math.exp(rnd.gauss(0, 0.003))
+        for ci, c in enumerate(cells):
+            L = 1 + c.get("delta", 0)
+            s_, o_ = {"scan": (L, 0.8), "others": (1, 0.8 * L), "all": (L, 0.8 * L)}.get(
+                c["arm"][:-2] if c["arm"] != "base" else "", (1, 0.8)
+            )
+            r = T(s_, o_) / T(1, 0.8)
+            if not homogeneous and c["arm"].startswith("all"):
+                r = 1 + (L - 1) / 2
+            for on in (0, 1) if b < trace_blocks else (0,):
+                x = decode(8, w0 * r * math.exp(rnd.gauss(0, 0.002)))
+                x.update({"on": on, "on_arm": on, "cell": ci, "block": b,
+                          **{kk: v for kk, v in c.items() if kk != "treat"}})  # fmt: skip
+                recs.append(x)
+    if drop:
+        drop(recs)
+    return plan, recs
+
+
 def run_report(plan, recs, lscpu=I9, phases=None, oracle=None):
     d = tempfile.mkdtemp()
     pp, rp, lp = (os.path.join(d, n) for n in ("plan.json", "runs.jsonl", "lscpu.txt"))
@@ -115,6 +152,56 @@ def run_report(plan, recs, lscpu=I9, phases=None, oracle=None):
     with redirect_stdout(buf):
         code = s2.report(a)
     return code, buf.getvalue()
+
+
+def check_plan2b(check):
+    """plan2b on a 10-core, 20-CPU topology and a stage 1 stand-in: the scanner pinned to the
+    fastest core's first CPU, every other thread masked off that core; 8 and 10 alone; traces in
+    the first 2 blocks; the speed arms' treatments nested (all = scan + others)"""
+    d = tempfile.mkdtemp()
+    lse = os.path.join(d, "lscpu-e.txt")
+    with open(lse, "w") as f:
+        f.write("CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE MAXMHZ MINMHZ MHZ\n")
+        for c in range(20):
+            f.write(f"{c} 0 0 {c % 10} {c % 10}:{c % 10}:{c % 10}:0 yes 5300 800 4900\n")
+    cores = os.path.join(d, "cores.json")
+    json.dump(
+        {str(c): {"repeats": [[0, 0, 2000 - (500 if c == 3 else 0)]]} for c in range(10)},
+        open(cores, "w"),
+    )
+    a = argparse.Namespace(stage1="S1", calibration="CAL", lscpu="L", lscpu_e=lse, cores=cores,
+                           out=os.path.join(d, "plan.json"))  # fmt: skip
+    svc = {c: 1000.0 for c in s2.ACT}
+    fake = {"step": 16, "cycles_per_iter": 0.5, "calibration": {},
+            "coords": {k: {"kept": ["A3", "A7"], "svc_ns": svc, "ghz": 4.9} for k in (6, 8, 10, 16)}}  # fmt: skip
+    real_plan, real_remove = s2.plan, os.remove
+    s2.plan = lambda a2: (open(a2.out, "w").close(), fake)[1]
+    try:
+        with redirect_stdout(io.StringIO()):
+            p = s2.plan2b(a)
+    finally:
+        s2.plan = real_plan
+    cells = p["cells"]
+    pinned = [c for c in cells if c.get("pinned")]
+    tr = {(c["k"], c["arm"]): c["treat"] for c in cells if c["section"] == "speed"}
+    nest = all(
+        sorted(tr[(k, f"all{n}")]) == sorted(set(tr[(k, f"scan{n}")]) | set(tr[(k, f"others{n}")]))
+        for k in (8, 10) for n in (10, 20)
+    )  # fmt: skip
+    ok = (
+        p["scanner_cpu"] == 3
+        and p["anchors"] == [8, 10]
+        and p["trace_blocks"] == 2
+        and all(
+            f"scanner_cpu 3" in c["treat"] and 3 not in c["mask"] and 13 not in c["mask"]
+            for c in pinned
+        )
+        and {c["section"] for c in cells if not c.get("pinned")} == {"link", "memory", "placement"}
+        and {c["k"] for c in cells if c["section"] in ("screen", "speed")} == {8, 10}
+        and nest
+    )
+    check("2b's plan: the fastest core pinned and isolated, 8 and 10, the speed arms nested", ok,
+          (p["scanner_cpu"], p["anchors"], nest, [(c["section"], c["k"], c["arm"]) for c in cells][:8]))  # fmt: skip
 
 
 def check_driver(check):
@@ -224,6 +311,35 @@ def main():
         text[:900],
     )
     check_driver(check)
+    # stage 2b: the speed-up read through homogeneity (the smooth max's elasticities known)
+    T = lambda s, o: (s**4 + o**4) ** 0.25  # noqa: E731
+    want_down = math.log(T(1.2, 0.8) / T(1, 0.8)) / math.log(1.2)
+    want_up = -math.log(T(1 / 1.2, 0.8) / T(1, 0.8)) / math.log(1.2)
+    code, text = run_report(*scenario2b())
+    sp = [ln for ln in text.splitlines() if ln.startswith("8    20%")]
+    vals = [float(v) for v in re.findall(r"([+-]\d\.\d+) \[", sp[0])] if sp else []
+    check(
+        f"2b: H 1, e_down {want_down:.3f}, e_up {want_up:.3f}, ASYMMETRIC, traces in 2 blocks only",
+        code == 0
+        and len(vals) == 4
+        and abs(vals[0] - 1) < 0.01
+        and abs(vals[1] - want_down) < 0.02
+        and abs(vals[2] - want_up) < 0.02
+        and "HOMOGENEOUS" in sp[0]
+        and "NOT-HOMOGENEOUS" not in sp[0]
+        and "ASYMMETRIC" in sp[0],
+        (code, sp, text[:500]),
+    )
+    code, text = run_report(*scenario2b(homogeneous=False))
+    sp = [ln for ln in text.splitlines() if ln.startswith("8    20%")]
+    check(
+        "2b: an all-paced arm short of its dose is NOT-HOMOGENEOUS",
+        sp and "NOT-HOMOGENEOUS" in sp[0],
+        sp,
+    )
+    code, text = run_report(*scenario2b(drop=lambda r: r.pop(0)))  # (block 0's base timed decode)
+    check("2b: a missing timed decode VOIDs", code == 1 and "VOID" in text, text[:300])
+    check_plan2b(check)
     failed = sum(1 for x in res if not x)
     print(f"\n{len(res) - failed} of {len(res)} checks pass")
     return 1 if failed else 0

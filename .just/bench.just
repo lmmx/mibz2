@@ -2247,3 +2247,185 @@ bench-character-stage2 DRY="":
     phase run      plan,inputs            drive
     phase oracle   four-arm,plan,inputs   oracle
     phase report   plan                   report
+
+# The decoder's character, stage 2b (docs/journal/2026-11-25-character-stage2-registration.md,
+# the stage 2b section; sized from 2a's bundle, evidence 54896f60, journal section 74). DIAGNOSTIC:
+# it decides nothing. The same binary and pin as 2a. At 2a's anchors 8 and 10 alone, the scanner
+# pinned to the core whose pinned calibration ran fastest, its sibling idle and every other thread
+# masked off it: the screen (each coordinate +20%), the speed-up arms (the scanner, every other
+# activity, and every activity paced by 10% and 20%: the scanner made faster read through
+# homogeneity) and the held-out A3+A7; the surface at 8; 2a's base and A3 at 8 unpinned, as the
+# link; the memory dose and the placement contrasts (k 4 as 2a, and 8). 16 randomised blocks, the
+# traces in the first 2. About 23 minutes. DRY (one block, no settle; not evidence) checks the wiring.
+#   just submit bench-character-stage2b
+bench-character-stage2b DRY="":
+    #!/usr/bin/env bash
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle. The only file this recipe leaves
+    # under target/*/ named *.tar.gz is its bundle (just submit counts them: stage 1's bundle is
+    # fetched as stage1.tgz).
+    set -uo pipefail
+    PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
+    # stage 1's bundle (#145: evidence 870e61d7; journal section 66)
+    STAGE1_COMMIT=870e61d73090d5e683aaf2b6e8b77d7f4b446f16 STAGE1_PATH=character/run-20261125T001135Z.tar.gz STAGE1_SHA256=bb72107bd28aa82a7f0f5a467e9f424438b9eea5d583abcb3a20c37b895c2204
+    COPIES=4 BLOCKS=16 SETTLE=1 PREWARM=50 SEED=20261126
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { BLOCKS=1; SETTLE=0; PREWARM=2; }
+    W=$PWD/target/character-stage2b
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-character-stage2b (docs/journal/2026-11-25-character-stage2-registration.md, stage 2b; diagnostic) at $(git rev-parse HEAD): master $PIN with the character feature, $BLOCKS blocks (traces in the first 2), settle $SETTLE s, seed $SEED; the scanner pinned to a core of its own"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-character-stage2b: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-character-stage2b: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-character-stage2b: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-character-stage2b: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-character-stage2b: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-character-stage2b: the checkout has local changes"; exit 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "bench-character-stage2b: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+      # the pin (section 5): master's decoder at PIN, plus the character feature alone, never a later master
+      changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-character-stage2b: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-character-stage2b: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      cargo build -q --release --features character --example character --example ab --example windows
+      sha256sum "$CH" | tee "$O/binaries.sha256"
+    }
+    # the corpus, as stage 1's
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-character-stage2b: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # stage 1's bundle, from the evidence branch, checked (as stage1.tgz: never a second *.tar.gz)
+    stage1() {
+      git cat-file -e "$STAGE1_COMMIT^{commit}" 2>/dev/null || git fetch -q origin evidence
+      git show "$STAGE1_COMMIT:$STAGE1_PATH" > "$W/stage1.tgz"
+      [ "$(sha256sum "$W/stage1.tgz" | cut -d' ' -f1)" = "$STAGE1_SHA256" ] \
+        || { echo "bench-character-stage2b: stage 1's bundle is not its SHA-256"; exit 1; }
+      rm -rf "$W/stage1" && mkdir "$W/stage1" && tar -xzf "$W/stage1.tgz" -C "$W/stage1" --strip-components=1
+    }
+    # the machine (best effort: what can't be read is recorded so)
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
+    # each core's first CPU, the pacing loop pinned to it (long enough for the clock to ramp): the
+    # scanner's core is the fastest (journal §74: unpinned, the scanner sharing its core or CPU was
+    # most of 2a's noise above k 6)
+    cores() {
+      cpus=$(python3 -c "import sys; sys.path.insert(0, 'bench'); import character_stage2 as s; print(' '.join(str(c[0]) for c in s.topology('$O/lscpu-e.txt')))")
+      { echo "{"; sep=""
+        for c in $cpus; do printf '%s"%s": %s\n' "$sep" "$c" "$(taskset -c "$c" "$CH" --calibrate 200000000 5)"; sep=","; done
+        echo "}"; } > "$O/cores.json"
+      python3 -m json.tool "$O/cores.json" > /dev/null
+    }
+    # the calibration and the plan (stage 2b's cells; the doses from stage 1's bundle, as 2a's)
+    plan() {
+      "$CH" --calibrate 10000000 5 > "$O/calibration.json"
+      python3 bench/character_stage2.py plan2b "$W/stage1/runs.jsonl" "$O/calibration.json" "$O/lscpu.txt" "$O/lscpu-e.txt" "$O/cores.json" "$O/plan.json"
+    }
+    # the run (the driver records a failed decode as failed and carries on)
+    drive() {
+      python3 bench/character_stage2.py run "$O/plan.json" --bin "$CH" --corpus "$X4" \
+        --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED
+    }
+    # the report: whatever completed, failed phases and missing decodes marked FAILED; exit 1 if VOID
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 bench/character_stage2.py report "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" \
+        --out "$O" --blocks $BLOCKS --seed $SEED --phases "$O/phases.tsv" \
+        | tee "$O/report.txt"
+    }
+    phase checks   -                      checks
+    phase build    checks                 build
+    phase inputs   build                  inputs
+    phase stage1   checks                 stage1
+    phase machine  build                  machine
+    phase cores    machine                cores
+    phase plan     build,stage1,cores     plan
+    phase run      plan,inputs            drive
+    phase report   plan                   report
