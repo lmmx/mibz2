@@ -937,7 +937,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             live: s.chunk,
             hot: 0,
             life: "per chunk",
-            note: "compressed input: queued, one held by the writer (filling it, or blocked sending it), one being appended to the window",
+            note: "compressed input: queued, one held by the writer (filling it, or blocked sending it), one the next after the window's, waiting while the window holds bytes before it",
         },
         Entry {
             owner: "input",
@@ -949,7 +949,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             live: LOOKAHEAD + s.chunk,
             hot: 0,
             life: "once",
-            note: "the scanner's compressed bytes, from the block being read on (live: not yet released); up to COMPACT bytes already read are kept before it drops them, so it holds less than COMPACT + LOOKAHEAD + chunk, reserved by doubling from the first chunk",
+            note: "the scanner's compressed bytes, from the block being read on (live: not yet released): a chunk read in place, or at a chunk boundary the seam (its held bytes and those of the next chunk views reach; under two lookaheads, reserved once and reused); where views reach past the next chunk too, up to COMPACT bytes already read are kept before it drops them, so window and seam hold less than COMPACT + LOOKAHEAD + chunk, reserved by doubling",
         },
         Entry {
             owner: "decoder",
