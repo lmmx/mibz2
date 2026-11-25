@@ -1,0 +1,20 @@
+mibz2 at the head against mibz2@build-base, wikidata-x4, unpinned, 16 paired rounds, expectation lazy-four-to-seven
+threads  role       base plan    head plan    wall head/base [95%]           step         CPU head/base [95%]          peak RSS (median)
+      3  supporting 3/12 eager   3/12 eager   0.9991 [0.9808, 1.0178]         INCONCLUSIVE 0.9996 [0.9839, 1.0156]                  1.0309
+      4  supporting 4/16 lazy    4/16 lazy    0.9994 [0.9923, 1.0064]         INCONCLUSIVE 0.9996 [0.9934, 1.0058]                  1.0007
+      5  judged     5/20 eager   5/20 lazy    0.8403 [0.8310, 0.8498]         FASTER       0.8468 [0.8390, 0.8547]                  0.4210
+      7  judged     7/28 eager   7/28 lazy    0.6312 [0.6240, 0.6385]         FASTER       0.6415 [0.6350, 0.6481]                  0.3734
+      8  supporting 8/32 lazy    8/32 lazy    0.9740 [0.9440, 1.0048]         INCONCLUSIVE 0.9821 [0.9572, 1.0077]                  0.9966
+     10  supporting 7/28 lazy    7/28 lazy    0.9945 [0.9837, 1.0053]         INCONCLUSIVE 0.9949 [0.9848, 1.0051]                  1.0013
+     12  supporting 7/28 lazy    7/28 lazy    1.0022 [0.9877, 1.0168]         INCONCLUSIVE 0.9990 [0.9889, 1.0092]                  0.9989
+observed workers, median over the rounds (base, head):
+  3: 3, 3, 4: 4, 4, 5: 5, 5, 7: 7, 7, 8: 8, 8, 10: 7, 7, 12: 7, 7
+peak RSS, median over the rounds (reported; decides nothing beyond the 1.10 gate):
+      3  base 85.5 MiB, head 88.2 MiB, head - base +2.6 MiB (1.0309)
+      4  base 47.6 MiB, head 47.7 MiB, head - base +0.0 MiB (1.0007)
+      5  base 120.9 MiB, head 50.9 MiB, head - base -70.0 MiB (0.4210)
+      7  base 153.7 MiB, head 57.4 MiB, head - base -96.3 MiB (0.3734)
+      8  base 60.0 MiB, head 59.8 MiB, head - base -0.2 MiB (0.9966)
+     10  base 57.2 MiB, head 57.3 MiB, head - base +0.1 MiB (1.0013)
+     12  base 57.2 MiB, head 57.1 MiB, head - base -0.1 MiB (0.9989)
+verdict: ADOPTS
