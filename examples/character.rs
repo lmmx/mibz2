@@ -931,13 +931,17 @@ fn prespin(ms: u64) -> Option<(u64, usize, f64)> {
 /// the CRC and the output replayed (`ideal-rle1`); D, delivery discarded (`ideal-delivery`).
 /// Every arm runs the same passes, so the arms differ only in the modes of their timed decode:
 /// - **the record pass:** every part as shipped, each oracle's store recorded (all six in every
-///   arm, so every arm holds the same stores), the reference output's size and SHA-256;
+///   arm, so every arm holds the same stores), the reference output's size and digest;
 /// - **the timed decode,** the arm's parts ideal, the rest real;
 /// - **the check pass:** the arm's modes again, but emission in its check mode (every supplied
-///   block's bytes compared with the walk's) and delivery in its check mode (the blocks hashed
-///   in order); the output's size and SHA-256 against the reference.
+///   block's bytes compared with the walk's) and delivery as shipped (D's discard has no output
+///   to check; the timed decode counts its bytes); the output's size and digest against the
+///   reference.
 ///
 /// Both passes run at `oracle::PASS_WORKERS` workers, outside every clock, with the ledgers off.
+/// Their digest is SHA-256 over the output's 4 MiB chunks' SHA-256s in order and its length, the
+/// chunks hashed on threads of their own, off the reader (the serial hash of delivery's check
+/// mode was most of a process's time in the first full run).
 /// A timed decode whose ideal parts were not wholly replayed fails (its arm was not measured).
 mod oracle {
     use std::sync::atomic::{AtomicU8, Ordering};
@@ -1072,7 +1076,7 @@ mod oracle {
         }
 
         /// The arm's modes: its ideal parts replayed (D discarded), the rest real; `check`, E
-        /// in its check mode where ideal and D hashing either way
+        /// in its check mode where ideal and delivery as shipped
         fn arm_modes(check: bool) -> Modes {
             let rep = |c: char| if ideal(c) { Mode::Replay } else { Mode::Real };
             (
@@ -1089,10 +1093,10 @@ mod oracle {
                 rep('C'),
                 rep('M'),
                 rep('R'),
-                match (ideal('D'), check) {
-                    (_, true) => id::Mode::Check,
-                    (true, false) => id::Mode::Discard,
-                    (false, false) => id::Mode::Real,
+                if ideal('D') && !check {
+                    id::Mode::Discard
+                } else {
+                    id::Mode::Real
                 },
             )
         }
@@ -1112,42 +1116,175 @@ mod oracle {
             let _ = id::take_stats();
         }
 
-        /// A pass outside the clock, delivery in its check mode: (bytes, SHA-256, wall)
+        /// SHA-256 (FIPS 180-4), std only: the passes' hash of the output's chunks
+        fn sha256(data: &[u8]) -> [u8; 32] {
+            const K: [u32; 64] = [
+                0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+                0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+                0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+                0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+                0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+                0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+                0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+                0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+                0xc67178f2,
+            ];
+            let mut h: [u32; 8] = [
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+                0x5be0cd19,
+            ];
+            let mut block = |c: &[u8]| {
+                let mut w = [0u32; 64];
+                for (i, x) in c.chunks_exact(4).enumerate() {
+                    w[i] = u32::from_be_bytes([x[0], x[1], x[2], x[3]]);
+                }
+                for i in 16..64 {
+                    let s0 =
+                        w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
+                    let s1 =
+                        w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
+                    w[i] = w[i - 16]
+                        .wrapping_add(s0)
+                        .wrapping_add(w[i - 7])
+                        .wrapping_add(s1);
+                }
+                let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut hh] = h;
+                for i in 0..64 {
+                    let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+                    let ch = (e & f) ^ (!e & g);
+                    let t1 = hh
+                        .wrapping_add(s1)
+                        .wrapping_add(ch)
+                        .wrapping_add(K[i])
+                        .wrapping_add(w[i]);
+                    let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+                    let maj = (a & b) ^ (a & c) ^ (b & c);
+                    let t2 = s0.wrapping_add(maj);
+                    hh = g;
+                    g = f;
+                    f = e;
+                    e = d.wrapping_add(t1);
+                    d = c;
+                    c = b;
+                    b = a;
+                    a = t1.wrapping_add(t2);
+                }
+                for (x, y) in h.iter_mut().zip([a, b, c, d, e, f, g, hh]) {
+                    *x = x.wrapping_add(y);
+                }
+            };
+            let full = data.len() / 64 * 64;
+            for c in data[..full].chunks_exact(64) {
+                block(c);
+            }
+            let mut tail = data[full..].to_vec();
+            tail.push(0x80);
+            while tail.len() % 64 != 56 {
+                tail.push(0);
+            }
+            tail.extend_from_slice(&((data.len() as u64) * 8).to_be_bytes());
+            for c in tail.chunks_exact(64) {
+                block(c);
+            }
+            let mut out = [0u8; 32];
+            for (o, x) in out.chunks_exact_mut(4).zip(h) {
+                o.copy_from_slice(&x.to_be_bytes());
+            }
+            out
+        }
+
+        /// The passes' chunk: the output hashed in pieces of this many bytes
+        const CHUNK: usize = 4 << 20;
+
+        /// A pass outside the clock, the output read by the caller as shipped (delivery real)
+        /// and hashed off the reader: each CHUNK bytes' SHA-256 on `PASS_WORKERS` threads, the
+        /// digest the SHA-256 of their digests in order and the length. (bytes, digest, wall)
         fn pass(data: &'static [u8], m: Modes) -> (u64, String, f64) {
-            assert_eq!(m.5, id::Mode::Check, "a pass hashes its output");
+            use std::sync::mpsc;
+            assert_eq!(m.5, id::Mode::Real, "a pass reads its output as shipped");
             reset_counts();
             set_modes(m);
-            id::clear_check();
             let k = mibz2::Kernels::detect();
             let w = super::PASS_WORKERS;
             let t = std::time::Instant::now();
-            let mut r = mibz2::BzReader::parallel_workers(
-                data,
-                w,
-                mibz2::parallel::SLOTS_PER_THREAD * w,
-                k,
-                true,
-            );
-            let mut buf = vec![0u8; 4 << 20];
-            loop {
-                match r.read(&mut buf) {
-                    Ok(0) => break,
-                    Ok(_) => panic!("a pass in delivery's check mode copied to the caller"),
-                    Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-                    Err(e) => panic!("an oracle pass failed: {e}"),
+            let (tx, rx) = mpsc::sync_channel::<(usize, Vec<u8>)>(2 * w);
+            let rx = Mutex::new(rx);
+            let digests: Mutex<Vec<(usize, [u8; 32])>> = Mutex::new(Vec::new());
+            let bytes = std::thread::scope(|sc| {
+                for _ in 0..w {
+                    sc.spawn(|| loop {
+                        let got = rx.lock().unwrap().recv();
+                        let Ok((i, chunk)) = got else { break };
+                        let d = sha256(&chunk);
+                        digests.lock().unwrap().push((i, d));
+                    });
                 }
-            }
-            drop(r);
+                let mut r = mibz2::BzReader::parallel_workers(
+                    data,
+                    w,
+                    mibz2::parallel::SLOTS_PER_THREAD * w,
+                    k,
+                    true,
+                );
+                let (mut bytes, mut i) = (0u64, 0usize);
+                let mut chunk = vec![0u8; CHUNK];
+                let mut at = 0;
+                loop {
+                    match r.read(&mut chunk[at..]) {
+                        Ok(0) => break,
+                        Ok(x) => {
+                            at += x;
+                            bytes += x as u64;
+                            if at == CHUNK {
+                                tx.send((i, std::mem::replace(&mut chunk, vec![0u8; CHUNK])))
+                                    .expect("the hashers");
+                                i += 1;
+                                at = 0;
+                            }
+                        }
+                        Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                        Err(e) => panic!("an oracle pass failed: {e}"),
+                    }
+                }
+                if at > 0 {
+                    chunk.truncate(at);
+                    tx.send((i, chunk)).expect("the hashers");
+                }
+                drop(r);
+                drop(tx);
+                bytes
+            });
             let wall = t.elapsed().as_secs_f64();
             let st = id::take_stats();
-            assert_eq!(st.copied_bytes, 0, "a pass copied to the caller");
-            (st.discarded_bytes, hex(id::take_check_sha256()), wall)
+            assert_eq!(
+                (st.copied_bytes, st.discarded_bytes),
+                (bytes, 0),
+                "a pass's delivery"
+            );
+            let mut ds = digests.into_inner().unwrap();
+            ds.sort_by_key(|x| x.0);
+            assert!(ds.iter().enumerate().all(|(j, x)| x.0 == j), "a chunk lost");
+            let mut cat: Vec<u8> = ds.iter().flat_map(|x| x.1).collect();
+            cat.extend_from_slice(&bytes.to_le_bytes());
+            (bytes, hex(sha256(&cat)), wall)
         }
 
         pub fn record(data: &'static [u8]) {
             if !in_play() {
                 return;
             }
+            // (the hash itself, against FIPS 180-4's vectors: one block, and two)
+            assert_eq!(
+                hex(sha256(b"abc")),
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+            );
+            assert_eq!(
+                hex(sha256(
+                    b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+                )),
+                "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+            );
             sup::clear_store();
             scan::clear_store();
             ic::clear_store();
@@ -1161,7 +1298,7 @@ mod oracle {
                     Mode::Record,
                     Mode::Record,
                     Mode::Record,
-                    id::Mode::Check,
+                    id::Mode::Real,
                 ),
             );
             let c_open = ic::take_constructed();

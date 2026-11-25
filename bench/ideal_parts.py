@@ -162,7 +162,11 @@ def run(a):
             position += 1
             prev = c["k"]
             try:
-                r = subprocess.run(cmd, capture_output=True, text=True, env=ENV)
+                # (a child past --timeout is killed and recorded as failed: a hang fails one
+                # decode, never the run; 0, no limit, as the first full run had)
+                r = subprocess.run(
+                    cmd, capture_output=True, text=True, env=ENV, timeout=a.timeout or None
+                )
                 if r.returncode != 0 or not r.stdout.strip():
                     rec = {
                         "kind": "failed",
@@ -173,6 +177,13 @@ def run(a):
                 else:
                     rec = json.loads(r.stdout.strip().splitlines()[-1])
                     rec.update(extra)
+            except subprocess.TimeoutExpired as e:
+                rec = {
+                    "kind": "failed",
+                    "timeout": True,
+                    "stderr": f"killed after {e.timeout} s",
+                    **extra,
+                }
             except Exception as e:
                 rec = {"kind": "failed", "stderr": f"{type(e).__name__}: {e}", **extra}
             if rec["kind"] == "failed":
@@ -202,6 +213,7 @@ def main() -> int:
     pr.add_argument("--settle", type=float, default=0.0)
     pr.add_argument("--prewarm", type=float, default=50.0)
     pr.add_argument("--seed", type=int, default=20261125)
+    pr.add_argument("--timeout", type=float, default=0.0, help="each decode's limit, s (0: none)")
     a = ap.parse_args()
     if a.cmd == "plan":
         plan(a)
