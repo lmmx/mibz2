@@ -139,3 +139,38 @@ All from the same ledgers as stage 1.
 - **The verdict:** the report voided the run on the machine alone.
 
 Since the preflight, the report's pulse table gained the paired effect above (the scorer alone).
+
+## The first attempt, and the recipe made to fail soft (25 November, before any data)
+
+**The first attempt submitted nothing.** `just submit bench-character-stage2` ran on the i9 at 5931d711 from 01:16:25Z to 01:37:37Z and exited 1, with no bundle posted (#145 comment 7149767176).
+- **The cause, from the code:** the recipe fetched stage 1's bundle to `target/character-stage2/stage1.tar.gz`. `just submit` counts the new `target/*/*.tar.gz` a recipe leaves, found two (that file and the run's bundle), refused both and exited 1.
+- **The DRY couldn't catch it:** it ran the recipe bare, not under `just submit`.
+- **The run's own bundle probably sits on the workstation,** under `target/character-stage2/`. Nobody has seen its data.
+- **Which run counts:** the re-run at the new head is this registration's evidence. If the first bundle is recovered, it is archived as a replicate under that label and never substituted.
+
+**The fix.** Stage 1's bundle is now fetched as `stage1.tgz`, so the recipe's bundle is the only `*.tar.gz` it leaves.
+
+**Fail soft.** The design is unchanged: the cells, the doses, the rule and the pin are as frozen.
+- **The recipe's phases:** checks, build, four-arm, inputs, stage1, machine, plan, run, oracle and report.
+  - Each runs in a subshell of its own, with `set -e` inside it.
+  - Each records its exit status and last line in `phases.tsv`.
+  - A phase whose prerequisite failed is SKIPPED, and the next phase runs.
+- **The EXIT trap:** it always removes the worktree and the concatenated corpus, then bundles the run directory, with the console log whole.
+- **The recipe's exit:** 1 if any phase failed, always with its bundle.
+- **The driver:** a decode that fails for any reason is recorded as failed and the run carries on. A permuted corpus that can't be made fails its own cells only.
+- **The report:**
+  - it lists the phases;
+  - a VOID run still reports what it can, for diagnosis only, and its last line names the VOID;
+  - a missing decode fails its own row;
+  - a failed oracle phase fails the oracle section.
+
+**The checks:** `bench/test_character_stage2.py`, 16/16. The new checks:
+- a VOID run's partial report;
+- a row failed by a missing decode;
+- failed phases and the oracle section;
+- the driver carrying on past a failing decode and an unpermutable corpus.
+
+**The DRY of the fail-soft recipe** (`just bench-character-stage2 dry`, at c101a058, on the container). It is archived as `2026-11-25-character-stage2-registration/run-20261125T015111Z.tar.gz` (sha256 2fe4ba42…365c).
+- Every phase from checks to oracle passed: 144 decodes, and the oracle arms with 0 mismatches (B/A 0.978, C/A 0.819).
+- The report was VOID on the machine alone, so the recipe exited 1, with its bundle.
+- The run left exactly one new `target/*/*.tar.gz`.
