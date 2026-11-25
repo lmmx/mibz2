@@ -2276,3 +2276,36 @@ The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the 
 - **Open design questions:**
   - placement: what a library can request (§78, record 132);
   - the clock after idle: whether a decoder should respond (§81).
+
+## 84. Three tests re-registered with the spin warm-up, before their data
+
+`ab run --prespin-ms` is on master (#874, aa041e25), and the recipes take a PRESPIN argument (#850, #862, the Pathfinder). Each test below runs with PRESPIN 100 and records the clock per decode, with the cycles × clock split as a registered secondary (§81).
+- **Sizing:** the paired SD expected with the spin is about 1% (§81: 1.1% at 10 workers).
+- **Interval width:** 16 rounds give an interval of about ±0.6%.
+- **Heads:** each head has master merged in (so it contains #868 and #874), and each base is that head's merge-base with master.
+
+**The order, and why.** On the i9 unpinned, production runs 7 workers from 10 threads, below the knee of about 7.5. There the scanner doesn't bind, so a scanner fix can't show at production's default counts until the worker trim is decided. So:
+
+**Test 1: the trim to 8 workers from 10 threads.**
+- **What it is:** #860's change (b) alone, on a fresh branch off master.
+- **The recipe:** `bench-kernel-choice` with expectation `trim-eight`. The head plan is 8/32 lazy at 10 and 12, and master's elsewhere (lazy at 4–7, from #868).
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 3, 4, 5, 7 and 8 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count.
+- **Reported, not part of the rule:** the CPU ratio. §80 saw +8% at 10. PERFORMANCE-POLICY.md weighs it at merge.
+- **Prediction (§80, unspun):** 0.979 at 10 and 0.903 at 12. With the spin, both resolve.
+
+**Test 2: the combined scanner fix** (#861, the seam window and the symbol buffers), with master merged in.
+- **The recipe:** `bench-scanner-plumbing`, PRESPIN 100.
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 6, 8 and 9 is SLOWER, and peak RSS ≤ 1.10.
+- **These judged counts replace 9:** §79 decided the judged counts move to production's defaults, decided before this data.
+- **Prediction:**
+  - at 7 workers (if test 1 fails), about 0.98 at 10 and 12, as §79 measured unspun;
+  - at 8 workers (if test 1 adopts), between that and the explicit-worker diagnostic's 0.92–0.94 (§79).
+- **It runs after test 1's verdict,** on whichever master results.
+
+**Test 3: the batched bit count** (§82's by-product), on a fresh branch off master.
+- **What it is:** each batch's consumed bits summed and subtracted once, on master's two-symbol table, with nothing else changed.
+- **The recipe and rule:** the same as test 2, with the same counts.
+- **Prediction:** about −2% of scanner time, so ≤ 1.5% of wall at 8 workers and less at 7. INCONCLUSIVE is likely at 7 workers.
+- **It runs after test 2.**
+
+**Each test is run once.** A verdict is final for its registration. Any further test is a new registration, with its reason stated.
