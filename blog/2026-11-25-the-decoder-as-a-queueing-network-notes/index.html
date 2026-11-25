@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Technical appendix to the queueing-network post: what was read, the vocabulary and shapes, the operational laws, modification analysis, load dependence, variability, the disciplines considered, product form and mean-value analysis, fluid models, the factorial design of the ideal-parts matrix, simulation validation, the design thread and a source register.">
+        <meta name="description" content="The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Technical appendix: the queueing theory behind the decoder - mibz2</title>
+        <title>Beneath the queueing network: operational laws, modification analysis and product form - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=924cbb7edcce">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=c68619c71c54">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=924cbb7edcce">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -89,21 +89,21 @@
     
     <meta name="format-detection" content="telephone=no">
   
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Technical appendix: the queueing theory behind the decoder">
-  <meta property="og:description" content="Technical appendix to the queueing-network post: what was read, the vocabulary and shapes, the operational laws, modification analysis, load dependence, variability, the disciplines considered, product form and mean-value analysis, fluid models, the factorial design of the ideal-parts matrix, simulation validation, the design thread and a source register.">
+  <meta property="og:title" content="Beneath the queueing network: operational laws, modification analysis and product form">
+  <meta property="og:description" content="The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network-notes/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network-notes.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Technical appendix: the queueing theory behind the decoder">
+  <meta property="og:image:alt" content="Beneath the queueing network: operational laws, modification analysis and product form">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Technical appendix: the queueing theory behind the decoder">
-  <meta name="twitter:description" content="Technical appendix to the queueing-network post: what was read, the vocabulary and shapes, the operational laws, modification analysis, load dependence, variability, the disciplines considered, product form and mean-value analysis, fluid models, the factorial design of the ideal-parts matrix, simulation validation, the design thread and a source register.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
-  <meta name="twitter:image:alt" content="Technical appendix: the queueing theory behind the decoder">
+  <meta name="twitter:title" content="Beneath the queueing network: operational laws, modification analysis and product form">
+  <meta name="twitter:description" content="The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network-notes.png">
+  <meta name="twitter:image:alt" content="Beneath the queueing network: operational laws, modification analysis and product form">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Technical appendix: the queueing theory behind the decoder
+              Beneath the queueing network: operational laws, modification analysis and product form
             
           </span>
         </div>
@@ -1146,8 +1146,6 @@
       
         
       
-        
-      
     
     
     
@@ -1300,7 +1298,7 @@
   <span class="md-ellipsis">
     
   
-  Technical appendix
+  Beneath it: the theory
 
     
   </span>
@@ -1317,7 +1315,7 @@
   <span class="md-ellipsis">
     
   
-  Technical appendix
+  Beneath it: the theory
 
     
   </span>
@@ -2387,15 +2385,67 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_29" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_29">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  A new way back from the BWT
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Reconstructing text from compact programs
+  The post
 
     
   </span>
@@ -2415,14 +2465,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  A new way back from the BWT
+  Companion: compact programs
 
     
   </span>
@@ -2430,6 +2480,15 @@
   
 
       </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
     </li>
   
 
@@ -2510,10 +2569,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_33" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -2531,8 +2590,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_33">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_32">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2733,10 +2792,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_38" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_37" >
         
           
-          <label class="md-nav__link" for="__nav_7_38" id="__nav_7_38_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_37" id="__nav_7_37_label" tabindex="0">
             
   
   
@@ -2754,8 +2813,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_38_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_38">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_37_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_37">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2875,10 +2934,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_39" >
         
           
-          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_39" id="__nav_7_39_label" tabindex="0">
             
   
   
@@ -2896,8 +2955,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_40">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_39_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_39">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3441,9 +3500,20 @@
   
 
 
-<p>← <a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network</a></p>
-<h1 id="technical-appendix-the-queueing-theory-behind-the-decoder">Technical appendix: the queueing theory behind the decoder<a class="headerlink" href="#technical-appendix-the-queueing-theory-behind-the-decoder" title="Permanent link">&para;</a></h1>
-<p>This appendix holds the theory and context that <a href="../2026-11-25-the-decoder-as-a-queueing-network/">the main
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a> · Companion to <a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network</a></p>
+<h1 id="beneath-the-queueing-network-operational-laws-modification-analysis-and-product-form">Beneath the queueing network: operational laws, modification analysis and product form<a class="headerlink" href="#beneath-the-queueing-network-operational-laws-modification-analysis-and-product-form" title="Permanent link">&para;</a></h1>
+<p class="post-dek">The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.</p>
+<p class="post-meta">25 November 2026 · 16 min read · <a href="#13-source-register">Research in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<div class="post-companion" data-role="companion-of">
+<p><strong>The story this companion goes beneath</strong> tells how mibz2 came to apply queueing theory to its decoder,
+and what each part of the theory did when it was tried. <a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network&nbsp;→</a></p>
+</div>
+<p>This companion holds the theory and context that <a href="../2026-11-25-the-decoder-as-a-queueing-network/">the main
 post</a> uses without stopping to develop, so that the
 post can tell the story of the mibz2 effort on its own terms. Its sections can be read in any order.
 Nothing new was measured for either page. Where a statement rests on the course material, the section
@@ -3998,19 +4068,19 @@ bounds, validated predictors and proved upper bounds apart (<a href="https://git
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/bench.js?v=924cbb7edcce"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/couriers.js?v=924cbb7edcce"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/blog.js?v=924cbb7edcce"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/frontier.js?v=924cbb7edcce"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/observatory.js?v=924cbb7edcce"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c68619c71c54"></script>
+        <script src="../../assets/javascripts/katex.js?v=924cbb7edcce"></script>
       
     
   </body>

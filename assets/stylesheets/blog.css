@@ -466,6 +466,148 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* A post and its technical companion, chained on the index: the companion's card hangs below
+   its main post's, inset and smaller, joined to it by a spine in their shared kind's colour and
+   clasped by a fleuron in the gap between them.
+     <div class="post-chain">
+     <a class="post-card" href="MAIN.md">…</a>
+     <a class="post-card" href="COMPANION.md" data-companion-of="MAIN.md">…
+       <span class="post-card-rel post-card-rel--companion">Technical companion</span></a>
+     </div>
+   check_site.py keeps the pair adjacent and their pages linked both ways (.post-companion). */
+.md-typeset .post-chain {
+  display: grid;
+  gap: 1.1rem;
+  --chain-in: 3.2rem;
+  --chain-x: 1.25rem;
+}
+.md-typeset .post-chain > .post-card[data-companion-of] {
+  position: relative;
+  margin-left: var(--chain-in);
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  padding: 0.6rem 0.8rem;
+  border-color: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 4%, transparent);
+}
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-title { font-size: 0.86rem; }
+/* the spine: from the main card's bottom edge, down and into the companion's side */
+.md-typeset .post-chain > .post-card[data-companion-of]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--chain-x) - var(--chain-in));
+  top: calc(-1.1rem - 1px);
+  bottom: 50%;
+  width: calc(var(--chain-in) - var(--chain-x) - 1px);
+  border-left: 2px solid var(--kind-line, var(--md-primary-fg-color));
+  border-bottom: 2px solid var(--kind-line, var(--md-primary-fg-color));
+  border-bottom-left-radius: 0.75rem;
+  pointer-events: none;
+}
+/* the clasp: a fleuron in a ring, astride the gap */
+.md-typeset .post-chain > .post-card[data-companion-of]::after {
+  content: "❦";
+  position: absolute;
+  left: calc(var(--chain-x) - var(--chain-in) - 0.8rem + 1px);
+  top: calc(-0.55rem - 0.8rem);
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  box-sizing: border-box;
+  border: 1.5px solid var(--kind-line, var(--md-primary-fg-color));
+  border-radius: 50%;
+  background: var(--md-default-bg-color);
+  color: var(--kind-line, var(--md-primary-fg-color));
+  font: 400 0.95rem/1 "EB Garamond", Georgia, serif;
+  pointer-events: none;
+}
+.md-typeset .post-card-rel--companion {
+  color: var(--kind-line, var(--md-default-fg-color--light));
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+.md-typeset .post-card-rel--companion::before {
+  content: "❧";
+  width: auto;
+  height: auto;
+  margin-right: 0.3rem;
+  border-radius: 0;
+  background: none;
+  transform: none;
+  font: 400 0.85rem/1 "EB Garamond", Georgia, serif;
+  font-variant: normal;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-chain { --chain-in: 2rem; --chain-x: 0.95rem; }
+  .md-typeset .post-chain > .post-card[data-companion-of] { grid-template-columns: minmax(0, 1fr); }
+  .md-typeset .post-chain > .post-card[data-companion-of] img { max-width: 62%; }
+}
+
+/* On the page: the panel right after the hero that ties a post to its companion, both ways.
+   <div class="post-companion" data-role="has-companion|companion-of" markdown> with one
+   paragraph, a bold lead and a link whose text ends in →; the whole plate is the link. The fleuron points on (❧)
+   from a main post and back (☙) from its companion; blog.js gives it the post's kind colour. */
+.md-typeset .post-companion {
+  position: relative;
+  margin: 1.1rem 0 1.6rem;
+  padding: 0.7rem 1rem 0.7rem 3.1rem;
+  border: 1px solid color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 40%, transparent);
+  border-left: 3px solid var(--kind-line, var(--md-primary-fg-color));
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 5%, transparent);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.md-typeset .post-companion:hover {
+  background: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 9%, transparent);
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+}
+.md-typeset .post-companion::before {
+  content: "❧";
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-52%);
+  color: var(--kind-line, var(--md-primary-fg-color));
+  font: 400 1.7rem/1 "EB Garamond", Georgia, serif;
+}
+.md-typeset .post-companion[data-role="companion-of"]::before { content: "☙"; }
+.md-typeset .post-companion p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+.md-typeset .post-companion strong {
+  font: 700 0.82em/1 "Cinzel", "EB Garamond", serif;
+  letter-spacing: 0.05em;
+  color: var(--kind-line, var(--md-primary-fg-color));
+}
+.md-typeset .post-companion a {
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* the whole plate takes the click */
+.md-typeset .post-companion a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.md-typeset .post-companion[data-kind="progress"] { --kind-line: #965700; }
+.md-typeset .post-companion[data-kind="result"] { --kind-line: #1b7339; }
+.md-typeset .post-companion[data-kind="synthesis"] { --kind-line: #0b6e70; }
+.md-typeset .post-companion[data-kind="question"] { --kind-line: #6a3db3; }
+.md-typeset .post-companion[data-kind="meta"] { --kind-line: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="progress"] { --kind-line: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="result"] { --kind-line: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="synthesis"] { --kind-line: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="question"] { --kind-line: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="meta"] { --kind-line: #90b5f5; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-companion { padding-left: 2.6rem; }
+  .md-typeset .post-companion::before { left: 0.6rem; font-size: 1.45rem; }
+  .md-typeset .post-companion a { white-space: normal; }
+}
 .bf-fig .bf-pill-pass { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1; }
 .bf-fig .bf-pill-pass-t { fill: var(--bf-green-ink); font-size: 11px; font-weight: 600; }
 

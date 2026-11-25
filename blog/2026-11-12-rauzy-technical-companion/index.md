@@ -1,10 +1,12 @@
-[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
+[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>) · Companion to [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>)
 
 # Reconstructing text from compact programs
 
 This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.
 
 12 November 2026 · 32 min read · [Research in progress](<#10-where-the-live-diagnostic-fits>)
+
+**The post this companion develops** introduced the interval-exchange structure and Rauzy–Veech machinery behind Cells, an experimental inverse transform. [A new way back from the BWT →](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>)
 
 [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) already introduced the interval-exchange structure and Rauzy–Veech machinery behind Cells, an experimental inverse transform. This technical companion develops the reconstruction programme in full: how compact word rules can recover the original text, what building and expanding those rules costs, and what the evidence means for a complete decoder. It preserves the 12 November report’s worked constructions, memory analysis and qualifications, keeping endpoint Cells separate from delimiter-based first-return research. The [8 November mathematical article](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>) established the underlying run translations.
 

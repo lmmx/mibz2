@@ -1,8 +1,14 @@
-← [The decoder as a queueing network](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>)
+[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>) · Companion to [The decoder as a queueing network](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>)
 
-# Technical appendix: the queueing theory behind the decoder
+# Beneath the queueing network: operational laws, modification analysis and product form
 
-This appendix holds the theory and context that [the main post](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>) uses without stopping to develop, so that the post can tell the story of the mibz2 effort on its own terms. Its sections can be read in any order. Nothing new was measured for either page. Where a statement rests on the course material, the section says which part of it; where it rests only on an outside reader's account, it says so; and the repository's own notes ([the journal](<https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md>)) are linked at the commit the post was written from.
+The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.
+
+25 November 2026 · 16 min read · [Research in progress](<#13-source-register>)
+
+**The story this companion goes beneath** tells how mibz2 came to apply queueing theory to its decoder, and what each part of the theory did when it was tried. [The decoder as a queueing network →](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>)
+
+This companion holds the theory and context that [the main post](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>) uses without stopping to develop, so that the post can tell the story of the mibz2 effort on its own terms. Its sections can be read in any order. Nothing new was measured for either page. Where a statement rests on the course material, the section says which part of it; where it rests only on an outside reader's account, it says so; and the repository's own notes ([the journal](<https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md>)) are linked at the commit the post was written from.
 
 ## 1\. What was read
 
