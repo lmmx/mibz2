@@ -153,3 +153,22 @@ two rounds, one decode an observation, no settle, 2 s of pre-warm; it is not evi
 (`target/kernel-count/run-<UTC stamp>`, made with `mkdir`), its console log inside it, every
 phase's status in `phases.tsv` (preflight, build, corpus, opt-machine, run, report), and one
 bundle, `target/kernel-count/run-<stamp>.tar.gz`, made by the EXIT trap whatever happens.
+
+## The DRY, archived (not evidence)
+
+`just bench-kernel-count 1` in the agents' container (4 vCPUs of an Intel Xeon @ 2.10GHz,
+shared, not the i9), at this branch's first commit:
+`docs/journal/2026-11-25-kernel-count-registration/run-20261125T021013Z.tar.gz` (SHA-256
+`a7077d3da53a140d5cf2a247abe9e3f86f4ea8dfa098de31638d55dd6b5110f7`).
+- **Phases:** preflight, build, corpus, opt-machine, run and report all `ok` (`phases.tsv`);
+  outcome `DRY: report status COMPLETE`; one bundle under `target/kernel-count/`.
+- **Wiring:** 29 cells × 2 rounds × 1 decode, 58 timed decodes, none failed, one output length
+  (838,800,784 bytes) and one hash. Every explicit cell's probe built as asked (k workers, window
+  4k, the kernel asked). Off the i9, the public API built eager workers at 3–7 and lazy at 8–12,
+  a window of 4 a thread, as `Plan::for_threads` plans with no measured cell; on the i9 the
+  trimmed cells will show instead.
+- **The failure path,** checked separately and not archived: with a tracked file modified, the
+  preflight failed, the build, corpus and run were recorded as skipped, the report failed for
+  want of runs.jsonl, the outcome was `INCOMPLETE: phase(s) failed: preflight, report`, the
+  bundle was still made, and the recipe exited 1.
+- Its walls are the container's (another machine, shared, 2 rounds) and mean nothing.
