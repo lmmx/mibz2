@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
+
+### <!-- 3 -->Performance
+
+- *(parallel)* eight lazy workers from 10 threads on the i9 unpinned ([#878](https://github.com/lmmx/mibz2/pull/878))
+- *(parallel)* lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) ([#868](https://github.com/lmmx/mibz2/pull/868))
+
+### <!-- 4 -->Documentation
+
+- *(team)* describe outside models' diagrams rather than commit them
+- *(changelog)* 0.5.13's release scaling and crossover on the i9 ([#775](https://github.com/lmmx/mibz2/pull/775))
+- *(changelog)* 0.5.13, its paired run, the recalibration verdict and the feature review ([#772](https://github.com/lmmx/mibz2/pull/772))
+- *(claude)* name algorithms by their mechanism, never by the model or team that made them ([#768](https://github.com/lmmx/mibz2/pull/768))
+
+### <!-- 9 -->Other
+
+- *(ab)* --prespin-ms warms every CPU before each child; cycles_per_ref per decode (bench 3.9.0) ([#874](https://github.com/lmmx/mibz2/pull/874))
+- Queueing post: stage 2a's results; remove the moved-page stub; no redirects, ever ([#855](https://github.com/lmmx/mibz2/pull/855))
+- *(queueing network)* retitle and move the URL; the fourth reading, the design space, stage 1 by program ([#848](https://github.com/lmmx/mibz2/pull/848))
+- The decoder's knee ([#845](https://github.com/lmmx/mibz2/pull/845))
+- *(posing)* restructured around the eight-step programme, with the performance-analysis methods
+- Posing the inversion problem, the evening's report ([#840](https://github.com/lmmx/mibz2/pull/840))
+- retitle the four-arm post "Masked bottlenecks in a two-stage decoder"
+- retitle the four-arm post "A masked bottleneck"
+- at ten workers the serial scanner hides the emitter's gain; both stages supplied save 26% ([#837](https://github.com/lmmx/mibz2/pull/837))
+- *(what else moves together)* an opening schematic, and blackletter that acts out its words
+- retitle the sequel "What else moves together", at a new URL, with a full writing-skills pass
+- *(sequel)* lead with changing what moves together; the cost rules referee, not the order of work
+- Halving the single-row steps, stated so it can be answered ([#834](https://github.com/lmmx/mibz2/pull/834))
+- blackletter that acts out its word; the neck-biting snake replaces the Aberdeen dragon ([#833](https://github.com/lmmx/mibz2/pull/833))
+- *(halving)* the register applied to the whole post; skill(register): shifts mined from the Murphy conversation
+- *(register)* exact words, joined sentences, a narrated opening; the halving post rewritten to it
+- *(write-blog-post)* every stepper animates its frames ([#830](https://github.com/lmmx/mibz2/pull/830))
+- *(link-and-gloss)* outside work named but not linked; the halving post's outside works linked
+- *(halving)* blackletter, one red, a gloss and fleuron links to the obscure names ([#828](https://github.com/lmmx/mibz2/pull/828))
+- *(link-and-gloss)* no reader starts in the middle; applied to the halving post
+- Halving the single-row steps: a target only a new algorithm can meet ([#820](https://github.com/lmmx/mibz2/pull/820))
+- illuminated devices for Markdown posts ([#807](https://github.com/lmmx/mibz2/pull/807))
+- *(census)* Wikidata block structure against the Open kernel's per-block cost ([#805](https://github.com/lmmx/mibz2/pull/805))
+- *(thomas-murphy)* the dek ends on the accusation
+- *(thomas-murphy)* the dek opens on the mibz2 swarm
+- *(thomas-murphy)* retitle "Playing the hand you're dealt"
+
 ## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
 
 ### <!-- 3 -->Performance
