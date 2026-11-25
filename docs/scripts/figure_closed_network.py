@@ -1,6 +1,11 @@
 """The decoder as a closed queueing network, for "Posing the inversion problem".
 
-    python3 docs/scripts/figure_closed_network.py
+    python3 docs/scripts/figure_closed_network.py [--qualified]
+
+--qualified, for "The decoder as a queueing network", replaces the note and the description's
+opening, which call the decoder a closed network, with the qualified reading: admission credit
+circulates, but the decoder is a finite pipeline with feedback-controlled admission (the course
+mining's correction, reports/2026-11-25-course-mining.md).
 
 Prints one inline SVG in the blog's figure style. The structure is the measurement plan's
 (briefs/character.md §2 at a4bef380): a feeder and a serial scanner, an admission window of
@@ -26,7 +31,7 @@ def head(o, x, y, d, colour="var(--bf-frame)"):
     o.append(f'<polygon points="{pts}" style="fill:{colour}"/>')
 
 
-def main():
+def main(qualified=False):
     W, H = 720, 300
     o = []
     y0, h = 40, 92
@@ -52,9 +57,14 @@ def main():
     head(o, 357, y0 + h + 1, "u", "var(--bf-steel)")
     o.append(f'<text class="bf-tm" x="508" y="{yb+18}" text-anchor="middle" style="font-size:11.5px;fill:var(--bf-steel)">a slot is freed only when the next block in order is taken,</text>')
     o.append(f'<text class="bf-tm" x="508" y="{yb+33}" text-anchor="middle" style="font-size:11.5px;fill:var(--bf-steel)">and finished output is capped at 12 MiB</text>')
-    o.append(f'<text class="bf-tm" x="10" y="{yb+60}" style="font-size:11.5px">A fixed population of blocks circulates, so the decoder is a closed network: one slow early block can hold slots</text>')
-    o.append(f'<text class="bf-tm" x="10" y="{yb+76}" style="font-size:11.5px">and stall the scanner, so a waiting scanner does not by itself show that the workers are too few.</text>')
-    aria = ("The decoder as a closed queueing network. A feeder passes input to a single scanner thread, which "
+    notes = (("Admission credit circulates, though each block passes through once: close to a closed network,",
+              "not one. One slow early block can hold slots and stall the scanner.") if qualified else
+             ("A fixed population of blocks circulates, so the decoder is a closed network: one slow early block can hold slots",
+              "and stall the scanner, so a waiting scanner does not by itself show that the workers are too few."))
+    for i, line in enumerate(notes):
+        o.append(f'<text class="bf-tm" x="10" y="{yb+60+16*i}" style="font-size:11.5px">{line}</text>')
+    aria = (("The decoder as a network of queues, close to a closed one. " if qualified else
+             "The decoder as a closed queueing network. ") + "A feeder passes input to a single scanner thread, which "
             "decodes headers, tables and Huffman codes. Blocks enter an admission window holding W = 4k blocks in "
             "flight, then k workers undo move-to-front and runs, invert and emit, then a consumer takes blocks in "
             "order and writes the output. A slot returns to the window only when the next block in order is taken, "
@@ -63,4 +73,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main("--qualified" in sys.argv[1:])
