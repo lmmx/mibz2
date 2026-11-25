@@ -546,12 +546,15 @@ parts this slice left real, together with the handover cost of supplying emissio
 bring their own storage and copying, upstream stages still run when only a later one is ideal, and the
 results measure room within an arrangement, not what any real algorithm will reach.
 
-One point about the full design needs settling before it runs. It is a half fraction of the 2⁶
-combinations, defined by I = SECMRD, so it contains only the arms with an even number of ideal parts.
-All-real and all-ideal are in, but every arm with a single part ideal, and every arm with all but one
-ideal, is out, while the registered room of a part is defined as that part alone ideal over all real
-([the design](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/design.md)). Those quantities need the missing arms added, or a statement that
-room will be read from main effects averaged over the other parts; slice A, a full 2², is unaffected.
+The full design had to be widened before it ran. A half fraction of the 2⁶ combinations, defined by
+I = SECMRD, contains only the arms with an even number of ideal parts, so it lacks every arm with a
+single part ideal and every arm with all but one ideal, though a part's room is defined as that part
+alone ideal over all real. Predicting those arms from the fraction's model would assume that every
+interaction of three or more parts is zero, and slice A's two-part interactions of −0.017 to −0.028
+make that unsafe. So the matrix runs the 32 fraction arms plus the 12 odd ones, 44 at each count: the
+main effects and two-part interactions come from Jain's sign table on the 32, and room, share of the
+floor and masking are read directly from the measured singles and five-part arms, which are never
+fitted into the effects ([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md)).
 
 "Ideal form" has three meanings, and the programme needs all three: a tractable model of the decoder,
 an ideal-part configuration as a counterfactual, and a realisable organisation that meets the output
