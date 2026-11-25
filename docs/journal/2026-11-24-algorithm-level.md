@@ -1957,3 +1957,42 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
 - **The LOG on #145 (7150763760) didn't make this claim.** The post's text (#855) is right.
 
 **Also recorded:** Louis's rule of 25 November, in CLAUDE.md through #855: no redirects or moved-page stubs, ever, unless he asks. The stub on #848 was added at my request: I passed the old-URL concern to the writer as an instruction. That was the miscommunication his rule names.
+
+## 76. The kernel count: lazy wins from 4 workers, the API builds eager at odd counts, and the cap of 7 costs 4–6%
+
+**The run:** `kernel-count/run-20261125T022939Z`, at 97d5cfa6 (#849), master pinned at 16aaee3b. It is evidence 15646bfc, SHA-256 735398e1…a0a5, checked.
+- 1,044 timed decodes, none failed, one output hash; status COMPLETE; DIAGNOSTIC.
+- The report and its TSVs are in `math-targets/data/kernel-count/`.
+
+**A labelling error in the report's table 1:** the column headed "RSS lazy/eager" holds the CPU ratio, and the one headed "CPU lazy/eager" holds RSS.
+- `ratios.tsv` has them right: at k 1 the CPU ratio is 1.101 (1.591 s against 1.443 s), and RSS is 34.7 MB against 46.1 MB.
+- The figures below are from `ratios.tsv` and the medians. The recipe's table is to be fixed if it is used again.
+
+**1. Lazy against eager, explicit k workers** (wall, lazy/eager, paired over 12 rounds):
+
+| k | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| wall | 1.123 | 1.046 | 1.000 | 0.922 | 0.834 | 0.737 | 0.639 | 0.546 | 0.488 |
+| RSS (median MB) | 34.7/46.1 | 39.5/63.2 | 43.3/86.8 | 47.2/95.7 | 50.7/120.6 | 54.2/134.2 | 57.2/145.4 | 59.3/165.3 | 64.6/187.2 |
+
+- **The crossover is at 3,** a tie. Eager is faster only at 1 and 2 workers (12% and 5%).
+- **Lazy uses less memory at every k:** 25% less at 1, 65% less at 9.
+- **Eager stops scaling at 6:** its wall rises from 0.334 s at 6 to 0.429 s at 9. Lazy keeps falling until 8.
+
+**2. The public API (`BzReader::parallel(r, t)`, as shipped) builds the eager kernel at 3, 5 and 7 threads,** and lazy at 4, 6, 8 and 9. Its walls match the explicit builds (ratios within 1.000 ± 0.02).
+- At 5 threads, the API is 0.349 s, against 0.289 s with lazy workers: **17% slower**.
+- At 7 threads, it is 0.345 s against 0.215 s: **38% slower**, and slower than the API at 6.
+- **At 3 threads there is no cost** (a tie).
+- **The cause is to be read from `src/parallel.rs`:** the plan below `LAZY_FROM_THREADS` = 8, and why 4 and 6 come out lazy. It looks like a configuration accident, not a design.
+
+**3. The cap:**
+- Asked for 10 to 12 threads, the API builds 7 lazy workers (the i9 trim). That is 1.044–1.066 times lazy 8's wall.
+- Explicit lazy 7 is 1.049 [1.002, 1.098] times lazy 8, and lazy 10 over lazy 7 is 0.954 [0.920, 0.989].
+- **8, 9 and 10 workers tie on wall** (0.996, 1.001 against 8). Memory and CPU rise with k: at 10, RSS is +13% and CPU +15% over 8.
+- **So 8 is the cheapest count at the top speed.** Trimming to 8 rather than 7 would gain about 4–6% at the default thread counts on the i9, for about +4% RSS and +5% CPU. This agrees with stage 1's k_balance = 8 and stage 2a's switch at 8.
+
+**Decisions:**
+- **A configuration PR follows:** lazy workers for every plan from 4 threads (the odd counts included), and the i9 trim at 8 workers, not 7.
+  - These are production defaults, so they go to the workstation A/B under PERFORMANCE-POLICY.md, judged at 5, 7 and 10 threads.
+  - CI's 4-core bench can't see either change: CI runs at most 4 threads, and 4 is already lazy. So it needs the workstation, like #846.
+- **The trim interacts with the scanner work:** with the scanner faster (the plumbing fix, multi-symbol decoding), the balance moves above 8. Each change is priced at the count it will run at (§61, bottleneck migration).
