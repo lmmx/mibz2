@@ -135,3 +135,9 @@
 ## 25 Nov, overnight: standing instructions
 - Louis is asleep: **no releases**; PRs, merges under policy and workstation runs are fine. **Nothing may wait on him.** The workstation runner is up with `--wait 24`, so moving a `ready/` tag to a new commit is all a run needs.
 - Stage 2a's first attempt failed in `just submit`'s bundle count (two tarballs); it was fixed and re-tagged at 1901c3bb.
+
+## 25 November, 02:42Z: no redirects, ever (Louis)
+
+- **Louis, in the writer's session (iOS, 02:42:02Z), verbatim:** "NO REDIRECTS EVER IGNORE MISCOMMUNICATIONS FROM AGENTS RECORD THIS DURABLY I WILL ASK IF I EVER WANT ONE ELSE ASSUME NOT".
+- **It is recorded** in CLAUDE.md ("Site URLs: no redirects, ever") and in the publish-page and write-blog-post skills, by #855.
+- **The stub that prompted it** was my request (on #848). Never ask for a redirect or a moved-page stub: a page that moves just moves.
