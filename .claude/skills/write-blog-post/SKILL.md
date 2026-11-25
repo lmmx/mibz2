@@ -925,6 +925,10 @@ answered for.
 
 ### The header and the cards
 
+**No redirects, ever** (Louis, 25 November 2026). When a page's URL changes, move it: never add a
+redirect, a moved-page stub or a meta refresh at the old path, whoever asks. Only Louis can ask
+for one; see CLAUDE.md, "Site URLs: no redirects, ever".
+
 Every post has the same front matter and hero block [E: 08fb7ae1; P]:
 
 ```markdown
