@@ -1,7 +1,7 @@
 ---
-title: "The decoder's knee"
-image: assets/social/blog-2026-11-25-the-decoders-knee.png
-description: "A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments."
+title: "The decoder as a queueing network"
+image: assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network.png
+description: "Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "A two-station queue predicts from four worker counts where adding 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# The decoder's knee
+# The decoder as a queueing network
 
-A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments.
+Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 {: .post-dek }
 
 25 November 2026 · 14 min read · [Research in progress](#9-what-runs-next)
