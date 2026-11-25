@@ -339,6 +339,17 @@ def main():
     )
     code, text = run_report(*scenario2b(drop=lambda r: r.pop(0)))  # (block 0's base timed decode)
     check("2b: a missing timed decode VOIDs", code == 1 and "VOID" in text, text[:300])
+    plan, recs = scenario2b()
+    plan["scanner_cpu"] = 3
+    trace0 = next(x for x in recs if x["on"] == 1 and x["cell"] == 0)
+    next(t for t in trace0["threads"] if t["role"] == "Scanner")["cpus"] = {"3": 5, "7": 1}
+    code, text = run_report(plan, recs)
+    pin = [ln for ln in text.splitlines() if ln.startswith("the pin:")]
+    check(
+        "2b: a pinned trace's scanner off its CPU is PIN-BROKEN (a label, not a VOID)",
+        code == 0 and pin and "PIN-BROKEN" in pin[0] and "screen base k 8 block 0" in pin[0],
+        pin,
+    )
     check_plan2b(check)
     failed = sum(1 for x in res if not x)
     print(f"\n{len(res) - failed} of {len(res)} checks pass")

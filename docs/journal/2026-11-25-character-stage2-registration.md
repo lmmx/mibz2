@@ -174,3 +174,98 @@ Since the preflight, the report's pulse table gained the paired effect above (th
 - Every phase from checks to oracle passed: 144 decodes, and the oracle arms with 0 mismatches (B/A 0.978, C/A 0.819).
 - The report was VOID on the machine alone, so the recipe exited 1, with its bundle.
 - The run left exactly one new `target/*/*.tar.gz`.
+
+## Stage 2b, registered from 2a's data (25 November, before any of 2b's)
+
+*Its recipe is `just bench-character-stage2b`, with the same binary and the same pin (9621b7ad) as 2a. It was assigned by the Coordinator's QUEUED 7150768252, after LOG 7150763760 and journal §74. A C1a diagnostic: it decides nothing.*
+
+**2a's bundle:** `character-stage2/run-20261125T020224Z.tar.gz`, evidence 54896f60, SHA-256 64162665…0973.
+- Every phase passed through the oracle: 888 decodes, none failed.
+- Its report crashed on k 16's NaN coefficients. With the `interval()` guard (442302a0) it exits 0 on the bundle's own records.
+
+**What 2a left open:**
+- **k 6 is resolved:** A6a, A6b and A7 control; the scanner is negligible.
+- **At 8 and 10, only A3 resolves:** 0.53 [0.14, 0.93] at 8 and 0.74 [0.37, 1.11] at 10.
+- **The workers' intervals are ±0.4 to ±0.9 there,** and at 16 nothing resolves.
+
+**The registered sizing rule, applied:** n = ⌈(t·s / (0.10 · log 1.2))²⌉ for each influential coordinate, with s 2a's paired log-ratio SD (unpinned).
+- **At 8:** A3 76, A6b 66, A6c 116.
+- **At 10:** A3 46, A6b 62, A6c 98, A7 8, A10 37.
+- **Every one but A7 is far past the budget,** one queue slot of about 25 minutes, or about 16 blocks of 2a's cells at 8 and 10. The rule caps them there.
+
+**Why the scanner is pinned.** 2a's noise above k 6 is the scanner sharing its core or its CPU:
+- **The paired SD of log(T/T0):** 0.7% at k 6, 8.1% at 8, 6.3% at 10, and 10.8% at 16.
+- **In 2a's base traces at 8:** the decode took 0.191 s in 11 of 12 when the scanner ran alone on its core, and 0.206 s in the one where it shared its CPU.
+- **At 10:** 0.198–0.221 s alone, and 0.230–0.259 s with its sibling busy.
+
+So 2b pins the scanner (`scanner_cpu`) to the first CPU of the core whose pinned calibration ran fastest. That's the `cores` phase: the pacing loop, 2×10⁸ iterations 5 times, pinned on each core's first CPU, the median time. The sibling is kept idle, and every other thread is masked off that core by the process's mask.
+- **Expected:** on 2a's isolated traces, the paired SD should fall towards 1%, which would put the workers' coefficients at 8 within about ±0.1 in 16 blocks.
+- **If it doesn't fall,** 16 blocks still narrow 2a's intervals by √(16/6) ≈ 1.6.
+- **What changes:** the operating point is the pinned one. The link arm ties it to 2a's.
+
+**The cells (pinned unless marked):**
+- **At 8 and 10:**
+  - the base;
+  - the screen, every kept coordinate at +20% (as 2a's, from stage 1's service and the run's calibration);
+  - the speed-up arms (below), at 10% and 20%;
+  - the held-out A3+A7 at +10%.
+- **The surface at 8:** 3×3 as 2a's.
+- **The link (unpinned):** 2a's base and A3 at 8.
+- **The memory dose (unpinned, as 2a):** at 8 and 20.
+- **Placement (unpinned):**
+  - k 4 with 2a's masks: 7 CPUs on distinct cores against 4 cores' sibling pairs;
+  - k 8: 10 distinct against 5 cores' pairs.
+
+That's 55 cells on the i9 in 16 randomised blocks, with traces in the first 2 blocks only (the achieved doses and the identities need no more; every wall is a timed decode with the ledgers off). 990 decodes, about 23 minutes after 50 s of pre-warm.
+
+**The speed-up arms.** Pacing only slows an activity. A scanner made faster by L = 1 + λ is read through homogeneity: if the wall is homogeneous of degree 1 in the activities' times, the scanner alone faster by L is the arm with every other activity paced by L, over the arm with every activity paced by L. In each block, paired against the pinned base:
+- **H** = log(T_all / T0) / log L, the check (1 if every activity's time is paced);
+- **e_down** = log(T_scan / T0) / log L, the wall's elasticity to the scanner (A2, A3, issue) slowed by L;
+- **e_up** = log(T_all / T_others) / log L, its elasticity to the scanner made faster by L;
+- **d** = e_down − e_up.
+
+"Others" are the workers' activities (A5, pool, A6a–c, A7, A8, A9, publish) and the reader's A10. "All" are those and the scanner's.
+
+**Dropped:**
+- **k 16:** nothing resolved, and four doses missed.
+- **The gates:** no effect.
+- **The pulses:** done.
+- **The cost check:** the walls are the ledgers off, and the traces serve only the doses.
+- **The oracle arms.** The four-arm binary is the pin's decoder plus 1,185 lines of feature-gated scan-oracle code in 8 files, so its A wall's +10.9% gap is that build's, not a layout effect. Porting it into this binary would break the pin. The speed-up arms take its place within one binary.
+
+**THE C1a RULE (stage 2b; it decides nothing).** Intervals are t-intervals over the 16 blocks.
+- **The screen at 8 and 10:** as 2a's (CONTROLS, NEGLIGIBLE, UNRESOLVED, DOSE-MISSED), the achieved dose from the 2 traced blocks. The anchors' controllers, in order, are the migration.
+- **The speed-up, at each k and λ:**
+  - **HOMOGENEOUS** iff H's interval lies within [0.85, 1.15]. Then e_up is read as the share of a scanner speed-up by L that reaches the wall.
+  - **NOT-HOMOGENEOUS** otherwise, and e_up isn't interpreted.
+  - **ASYMMETRIC** iff d's interval excludes 0.
+  - **The answer to "how much of a scanner speed-up survives at 8"** is e_up at k 8, λ 10%, with its interval.
+- **The surface:** its roundness, as 2a's.
+- **The contrasts:**
+  - the link's A3 over its base, and the memory and placement arms, as 2a's: **CHANGED** iff the interval excludes 1;
+  - the pinned base's wall over the unpinned link base, reported.
+- **Validation (held out):** A3+A7 at +10% at 8 and 10, observed against exp((C_A3 + C_A7)·log 1.1) from 2b's own screen.
+- **The pin:** each pinned trace's scanner must run on the plan's CPU alone. Otherwise the report labels it **PIN-BROKEN** and names the cells; that's a label, not a VOID.
+- **INCOMPLETE** if any trace fails an identity.
+- **VOID** if any of these:
+  - the machine is not the i9-10900K;
+  - a cell's timed decode (any block) or trace (blocks 0–1) is missing, duplicated or failed;
+  - an output is not 4 × 209,700,196 bytes;
+  - any decode has a major fault;
+  - stage 1's bundle is not its SHA-256.
+
+**The checks:** `bench/test_character_stage2.py`, 21/21. The 2b checks:
+- a wall homogeneous of degree 1, a smooth max with known e_down 0.776 and e_up 0.628, recovered with H = 1 and labelled ASYMMETRIC;
+- an all-paced arm short of its dose, NOT-HOMOGENEOUS;
+- a missing decode, VOID;
+- a scanner off its pin, PIN-BROKEN;
+- plan2b's pin, mask, anchors and the speed arms' nesting.
+
+**The DRY of 2b** (`just bench-character-stage2b dry` at d2ffd2c3: one block, no settle, a 2 s pre-warm; a 4-CPU container, not evidence). It is archived as `2026-11-25-character-stage2-registration/run-20261125T023531Z.tar.gz` (sha256 3e2d4340…e8f2f77d).
+- Every phase from checks to run passed, the new cores phase included.
+- The plan pinned the scanner to CPU 2. With no SMT here, there was no sibling to idle and no placement cells: 51 cells.
+- The run made 102 decodes, all byte-exact, every trace's identities holding. The scanner was on its pinned CPU alone in 43 of 43 pinned traces.
+- The report was VOID on the machine alone. The doses and the speed figures mean nothing on a 4-CPU VM running 8 and 10 workers.
+- **Since the DRY:**
+  - the driver builds the permuted corpus only for a plan that has permuted cells (2b's has none; the DRY logged its absence and carried on, as the fail-soft path should);
+  - the report gained the pin's check and its stage in its title.

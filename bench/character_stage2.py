@@ -501,7 +501,8 @@ def run(a):
     # (fail soft: a permutation that can't be made fails its own cells, never the run)
     perm_err = None
     try:
-        permute_corpus(a.corpus, perm_corpus, p["permutation"])
+        if any(c.get("corpus") == "permuted" for c in p["cells"]):
+            permute_corpus(a.corpus, perm_corpus, p["permutation"])
     except (Exception, SystemExit) as e:
         perm_err = f"the permuted corpus: {e}"
         print(f"run: {perm_err}; its cells are recorded as failed", flush=True)
@@ -720,7 +721,10 @@ def report(a) -> int:
         for x in recs
         if x["kind"] == "decode" and x.get("on") == 1 and not x.get("identities_ok")
     ]
-    print("# bench-character-stage2 (stage 2a; diagnostic: decides nothing)\n")
+    st = p.get("stage", "2a")
+    print(
+        f"# bench-character-stage{'2b' if st == '2b' else '2'} (stage {st}; diagnostic: decides nothing)\n"
+    )
     failed_phases = phases(a)
     if void:
         # (fail soft: a VOID run still reports what it can, for diagnosis only; its exit is 1)
@@ -755,6 +759,20 @@ def report(a) -> int:
     )
     if incomplete:
         print(f"INCOMPLETE: {len(incomplete)} decodes fail an identity: {incomplete[:10]}")
+    if p.get("scanner_cpu") is not None:
+        off_pin = []
+        for (ci, b, on), xs in got.items():
+            if on == 1 and cell[ci].get("pinned"):
+                sc = next((t for t in xs[0].get("threads", []) if t["role"] == "Scanner"), None)
+                if sc is not None and set(sc.get("cpus", {})) - {str(p["scanner_cpu"])}:
+                    off_pin.append(
+                        f"{cell[ci]['section']} {cell[ci]['arm']} k {cell[ci]['k']} block {b}"
+                    )
+        n_pinned = sum(1 for (ci, _, on) in got if on == 1 and cell[ci].get("pinned"))
+        print(
+            f"the pin: the scanner on CPU {p['scanner_cpu']} alone in {n_pinned - len(off_pin)} of "
+            f"{n_pinned} pinned traces" + (f"; PIN-BROKEN in {off_pin[:10]}" if off_pin else "")
+        )
     rows = []
     misses = []
     print(
