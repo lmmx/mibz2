@@ -30,6 +30,8 @@ Work in the lmmx/mibz2 repository on your branch `research/neon-movement` (fetch
 5. **One concrete proposal per top target:** the mathematical object to change, what it would replace in `src/`, the cost it would have, and the smallest measurement that would kill it fastest. Design only; no patches.
 6. **What the matrix could not see,** and the next characterisation run that would see it, if any.
 
+**Optional:** `notes-for-neon.md` beside this prompt lists leads Louis asked you to consider. Say in a line whether any bears on your answer.
+
 **Rules:**
 - every number is traced to its file;
 - conjectures are labelled as such;
