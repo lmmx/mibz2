@@ -61,3 +61,17 @@ report phase runs it, and it writes `ideal-parts.tsv` into the bundle.
 - **All six stores are recorded in every arm,** so every arm holds about 505 MiB on wikidata ×4.
 - **The check pass reruns the arm's own modes,** with emission's check mode where E is ideal and delivery's check mode always. It compares the size and SHA-256 of the blocks in order against the record pass's. Every oracle appears in arms without R, whose replay would otherwise mask what lies upstream of it.
 - **A timed decode fails in the harness** if an ideal part was not wholly replayed (S, M and R every block, C every open block, D every byte discarded and none copied) or a real part was replayed.
+
+## The full matrix's preflight (not evidence)
+
+`just bench-ideal-matrix dry` at 6426caf3, on a 4-CPU container (no PMU, not the i9): one block, a 2 s pre-warm. It is archived as `dry/matrix-run-20261125T113910Z.tar.gz` (sha256 892c9c80…6d03dfb7).
+- Every phase from checks to run passed:
+  - 178 cells, 356 decodes (the timed decode and a trace for each);
+  - every decode's ideal parts were wholly replayed (the harness fails a decode otherwise);
+  - every check pass was byte-identical to its record pass;
+  - every trace's identities held.
+- The pin held in 176 of 176 pinned traces.
+- The removed parts read at most 0.31% of their real busy time (M and R; the rest 0.00%).
+- The stores totalled 495 MiB in every arm: S and E 149, C 114, M 32, R 200.
+- The report was VOID on the machine alone. With one block there are no intervals, and the clock split is empty here (no PMU).
+- The run took 50 minutes here, about 8.5 s a decode on 4 CPUs. On the i9, slice A took 1.35 s a decode, which gives about an hour for 2,492 decodes.
