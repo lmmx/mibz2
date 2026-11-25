@@ -1,6 +1,6 @@
 # Record 131. Pre-registered prediction: e_up at k 8, λ 10% (stage 2b)
 
-**Written 03:02Z, 25 November, before stage 2b's bundle exists. I have read stage 2a's journal figures (§74) only; no stage 2b data.** Answers QUEUED 7151347431. Status: **conjectured** (a model's forecast), from **measured** inputs.
+**Written 02:59Z, 25 November (the commit time of e62f37c8b is the proof), before stage 2b's bundle exists. I have read stage 2a's journal figures (§74) only; no stage 2b data.** Answers QUEUED 7151347431. Status: **conjectured** (a model's forecast), from **measured** inputs.
 
 ## 1. The estimand
 
