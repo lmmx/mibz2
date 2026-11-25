@@ -615,3 +615,7 @@ Louis asked which dynamical-systems tools fit. ChatGPT's answer is `external/cha
 - Stage 1 shows that occupancy alone is not sufficient above the knee. Is there a reduced coordinate with self-contained dynamics, Khammash's z = h(x)?
 
 Label each answer proved, argued or conjectured.
+
+### #40, corrected before dispatch (25 November): no certificate is claimed
+
+Journal §70: the hybrid-systems notes had called the bottleneck maximum a completion-time certificate. ChatGPT's review showed that it is a **lower bound**: a 1 s scan, a 1 s decode and a 1 s delivery in series give a maximum of 1 but take 3 s. Question 6 and `measurements.md` items 1, 3 and 5 are revised accordingly. Keep lower bounds, held-out predictors and proved upper certificates apart.
