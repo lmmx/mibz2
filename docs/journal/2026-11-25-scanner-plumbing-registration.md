@@ -43,10 +43,12 @@ The rules for the head and base:
 **Each head is its own decision.** A run of another head is not a re-run. A verdict is never
 re-run to change it. A VOID run may be repeated once, with the reason logged.
 
-When this was written, `perf/scanner-plumbing` was still at #846's first head, 36084e6e. That head
-carries both fixes and the 2 MiB headroom that failed CI's policy (onebyte +8% at 4 threads; peak
-RSS +10–20%). The DRY below ran on that head, because it was the only one on origin. That checks
-the wiring only. No evidence run is registered for 36084e6e.
+#846's first head, 36084e6e, carried both fixes and a 2 MiB headroom on every chunk. It failed
+CI's policy: onebyte +8% at 4 threads, and peak RSS +10–20%. No evidence run is registered for
+it. While this was being written, #846 was split. `perf/scanner-plumbing` is now at 793ed644,
+which reverts the window change and the headroom and keeps the symbol buffers alone: that is (a).
+The DRY below resolved that head with an empty `HEAD_SHA`. `perf/scanner-window` was not yet on
+origin.
 
 ## The contrast, checked by the recipe
 
@@ -242,4 +244,41 @@ This choice is made before the data and from the code, not from a result.
 
 The recipe was run untimed in the agents' container: `just bench-scanner-plumbing
 perf/scanner-plumbing "" 1`. That is two rounds, no settle and the machine not checked. It is
-never evidence. The result is recorded below, and its bundle is archived beside this file.
+never evidence.
+
+**The bundle:**
+`docs/journal/2026-11-25-scanner-plumbing-registration/run-20261125T020953Z.tar.gz`, 20 KiB,
+SHA-256 `141323b1a98fdfe302fb470f2f4f4dd1e3dadfce9cb4c2fdfcdc413668a1ad73`.
+- **Recipe commit:** 885f7aca.
+- **The container:** a 4-vCPU Xeon, 2.10 GHz, shared with other agents.
+- **What it resolved:** head 793ed644 (#846, the symbol buffers alone), base 16aaee3b (master),
+  `head_in_ref yes`.
+- **The contrast:** 24 files (`src-changed.txt`): `src/block.rs`, `src/lib.rs`,
+  `src/parallel.rs`, `src/read.rs`, `src/stream.rs`, `src/trace.rs` and `src/run_fed.rs`, and
+  #846's call-site edits in three test modules under `src/`, six files under `tests/` and nine
+  examples (not `examples/ab.rs`). No build file changed.
+
+**What it showed:**
+- **Every phase passed** (`phases.tsv`):
+  - resolve: 1 s;
+  - the two builds: 44 s and 46 s, cold;
+  - the corpus from the bench-data branch's windows: 14 s, its SHA-256 matching;
+  - the timed run: 14 s for 20 decodes;
+  - the diagnostic: 28 s for 12 decodes.
+- **Every output** was 838,800,784 bytes with one hash, and every record complete.
+- **The checks behaved as in DRY:** the machine checks were reported as not applied (4 cores,
+  not the i9), and the verdict and the diagnostic were labelled DRY.
+- **The workers matched base to head at every count.** Off the i9 there is no trim, so the
+  plan ran 6, 8, 9, 10 and 12 workers.
+- **The DRY's figures mean nothing.** It printed "DRY verdict (not evidence): NOT ADOPTED (9
+  threads not FASTER)", with intervals as wide as [0.35, 2.65] from two rounds on a shared
+  4-vCPU box.
+- **Exactly one tarball:** the run left exactly one `target/*/*.tar.gz`, its bundle.
+
+**The fail-soft path, checked:** a run with a branch that does not exist,
+`just bench-scanner-plumbing perf/no-such-branch-xyz "" 1`:
+- resolve FAILED, and every later phase was SKIPPED;
+- the EXIT trap still bundled the run, with its console log and `phases.tsv`;
+- the recipe exited 1.
+
+That bundle was deleted and is not archived.
