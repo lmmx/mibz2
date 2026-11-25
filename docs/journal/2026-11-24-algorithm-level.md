@@ -1850,3 +1850,18 @@ The separating principle: put an obligation on a serial path only if its state h
 - multi-symbol (composed) Huffman decoding becomes an engineering lead, to be prototyped as a PR after the current builds;
 - the block-start index (pooling) is the larger structural lead, record 122 §3;
 - the SAT necessity statement goes to MONODROMY's queue.
+
+## 73. The scanner plumbing fix on CI: split, and held for the workstation
+
+**#846's first head, 36084e6e (both fixes), failed PERFORMANCE-POLICY.md on CI's bench** (4 cores):
+- wikidata at 4 threads: −3.0% (faster), the primary gain;
+- onebyte at 4 threads: +8.0% wall and +8.8% CPU, a secondary loss over 5% that is not covered by twice the primary gain;
+- peak RSS up 8–20% at 2–4 threads on several corpora (wikidata +10.6%, runs +19.9%).
+
+The memory growth and the onebyte loss come from the input-window fix's 2 MiB headroom in the feeder's chunks.
+
+**The split:**
+- **#846 now carries only the symbol-buffer fix** (793ed64). Its CI bench shows no regression and no memory growth: random −3.1% and records −2.0% at 1 thread (secondary gains), and no primary change beyond noise.
+- **The input-window fix is being redesigned without headroom,** through a reused seam buffer, as a new PR.
+
+**Decision:** #846 cannot merge on CI, since it shows no primary gain there. That was expected: the fix saves scanner time, and the scanner limits only above about 8 workers, which CI's 4-core runner can't reach. The workstation A/B, `bench-scanner-plumbing` (in preparation), decides it at 6–12 threads under the house rule. **No release overnight** (Louis).
