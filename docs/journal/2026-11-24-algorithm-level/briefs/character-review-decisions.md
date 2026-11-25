@@ -115,3 +115,13 @@ These change what stage 1 records. They are cheap now, and impossible to add aft
   - **The rule:** B and C are reported only as ratios against the four-arm binary's own A, never against #841's baseline.
   - **The check:** the two binaries' A walls are compared at the knee. A gap beyond their intervals is reported as a layout effect, and the oracle ratios still stand, being within-binary.
 - **The memory dose (stream/chase) goes behind the pacing hook at a tag's end,** not through `src/dose.rs`, whose pad fires only on blocks the Cells kernel admits. On the OpenCells path LazyCells refuses every block first, so `dose.rs` would do nothing there.
+- **Stage 2's open choices (the Pathfinder's draft, `bench/character-stage2` at b2169a0d), agreed on 25 November:**
+  1. **Rules on stage 1's bundle:**
+     - k\* is the first count where the median scanner on-CPU share passes 0.9;
+     - the step is the count above k\* + 2 with the largest rise in D_scan, if it is at least 5%, else 20;
+     - the pacing dose is δ × the per-visit service in core cycles, calibrated to loop iterations at the run's start.
+  2. **The window switch** goes in the harness only (`examples/character.rs`; src unchanged), and stage 2a carries its own baselines, compared with stage 1's as a layout check.
+  3. **Placement at k = 4** is set by the process CPU mask. The turbo factor runs only if `no_turbo` is writable. If it isn't, placement still runs, with the achieved frequency per role as a covariate, and the registration says the SMT and turbo factors are then not separated.
+  4. **The memory dose:** stream against chase, 8 MiB at A7's end per Open block, at k\* and 20.
+  5. **Confirmation is stage 2b,** with n fixed from 2a's paired variance and registered before its own data.
+- **Stage 2 runs on stage 1's master pin (9621b7ad)**, not a later master. The scanner plumbing fix (QUEUED 7147862124) changes the scanner's demand, and must not enter mid-study.
