@@ -127,3 +127,7 @@
 ## 25 Nov — the design-space lineage and Khammash
 - Recorded verbatim: ChatGPT's third Alon answer and its Khammash explanation (`external/chatgpt-khammash.md`). Journal §65.
 - Steer: Khammash's five steps match our programme. We already have the function, the necessary conditions and realisability. What's missing is the solution space and its basis, so the proposal is to enumerate the referee's class (small cursor machines on tiny alphabets, exact on all short strings), in the manner of Ma, Araujo–Liotta and Bundala. Channel #40 gained question 5.
+
+## 25 Nov — stage 1 read; the dynamical layer
+- Stage 1 (journal §66): every identity held; k_balance = 8; the scanner limits above it, shown by concurrent states; the reader is not a co-bottleneck; PERTURBED by the ledger cost at 10 and 20. New: 3, 5 and 7 threads asked run eager workers, 61% slower at 7.
+- Dynamical layer (§67): ChatGPT's answer recorded; pulse interventions sent to the Pathfinder for stage 2; system identification sent to MONODROMY (#40, question 6); Hellerstein et al. added to the reading.
