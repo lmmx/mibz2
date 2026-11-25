@@ -123,3 +123,6 @@ The condition in every case: **a change that takes the scanner's control below o
 | the min-key order | pending M-25 | M-25 |
 
 **Not to be revisited whatever moves:** lazy thin-strip removal (record 120 §3). It failed on the structure of real blocks, not on where the bottleneck sat.
+
+
+> **Corrected by record 133** (`2026-11-25-corrections-129-132.md`).

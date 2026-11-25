@@ -81,3 +81,6 @@ For the wall to reach the scanner's quiet rate, it is necessary that **(N1) the 
 ## 6. Labels
 
 Proved: §1's identity. Measured: §0, the inputs of §2. Argued: §2's gap, §4's prices, §5. Conjectured: §1's reading of p as noise, §3, N1's realisation 1.
+
+
+> **Corrected by record 133** (`2026-11-25-corrections-129-132.md`).
