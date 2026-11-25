@@ -27,10 +27,54 @@ pub struct Symbols {
     /// the bytes in use, in order: an MTF value's byte
     pub seq_to_unseq: [u8; 256],
     /// the MTF/RLE2 symbols, the last of them `eob`
-    pub syms: Vec<u16>,
+    pub syms: Syms,
     pub eob: u16,
     /// the stream's block size bound: 100,000 x its level
     pub max_len: usize,
+}
+
+/// A block's symbols, in a buffer reused from block to block: read as a slice, exactly the
+/// block's symbols (its first `n`). The buffer keeps its length past them (its high-water
+/// mark, every element written), so a later block's read zeroes only what no block has
+/// reached yet, not what this one left unused.
+#[derive(Clone, Default)]
+pub struct Syms {
+    buf: Vec<u16>,
+    n: usize,
+}
+
+impl Syms {
+    /// The buffer's capacity, in symbols
+    pub fn capacity(&self) -> usize {
+        self.buf.capacity()
+    }
+
+    /// The buffer, for a later block's read (at its high-water length, not the symbols')
+    pub fn into_buffer(self) -> Vec<u16> {
+        self.buf
+    }
+}
+
+/// (exactly these symbols)
+impl From<Vec<u16>> for Syms {
+    fn from(buf: Vec<u16>) -> Self {
+        Syms { n: buf.len(), buf }
+    }
+}
+
+impl std::ops::Deref for Syms {
+    type Target = [u16];
+    fn deref(&self) -> &[u16] {
+        &self.buf[..self.n]
+    }
+}
+
+impl<'a> IntoIterator for &'a Syms {
+    type Item = &'a u16;
+    type IntoIter = std::slice::Iter<'a, u16>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 // (a block's symbols move through by value, once a block: boxing them would allocate
@@ -265,12 +309,12 @@ pub fn read_item_with_scratch(
     if let Err(err) = res {
         fail!(err);
     }
-    syms.truncate(n);
+    // (not truncated to `n`: past it the buffer's elements stay written, for the next read)
     Ok(Item::Block(Symbols {
         crc,
         orig_ptr,
         seq_to_unseq,
-        syms,
+        syms: Syms { buf: syms, n },
         eob,
         max_len,
     }))
@@ -523,6 +567,9 @@ mod tests {
         // symbol loop, its reader's state in registers, gives the same symbols, the same
         // error and the same end bit (so the same `overran`) as the reader in memory
         let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+        // (one symbols buffer through every case, as the scanner reuses it: a block read
+        // into one an earlier, longer block left written gives exactly its own symbols)
+        let mut reuse = Vec::new();
         let mut seen = [0usize; 6]; // ok, BadHuffmanCode, SelectorOverrun, overran, other, long codes
         for case in 0..4000 {
             let alpha = 3 + rng.below(256) as usize;
@@ -610,7 +657,7 @@ mod tests {
                 data.truncate(cut as usize);
             }
             let mut a = Bits::at(&data, start);
-            let got = read_item(&mut a, 9, Vec::new());
+            let got = read_item(&mut a, 9, std::mem::take(&mut reuse));
             let mut b = Bits::at(&data, sym_start);
             let (want, syms) = symbols_in_memory(&mut b, &tables, &selectors, eob);
             let ctx = format!("case {case}: alpha {alpha} groups {n_groups} selectors {n_sel}");
@@ -618,8 +665,9 @@ mod tests {
             assert_eq!(a.overran(), b.overran(), "{ctx}");
             match (got, want) {
                 (Ok(Item::Block(x)), Ok(())) => {
-                    assert!(x.syms == syms, "{ctx}");
+                    assert!(*x.syms == syms[..], "{ctx}");
                     assert_eq!(x.eob, eob, "{ctx}");
+                    reuse = x.syms.into_buffer();
                     seen[0] += 1;
                     seen[5] += syms
                         .iter()
@@ -629,8 +677,9 @@ mod tests {
                         })
                         .count();
                 }
-                (Err((k, _)), Err(k2)) => {
+                (Err((k, s)), Err(k2)) => {
                     assert_eq!(k, k2, "{ctx}");
+                    reuse = s;
                     seen[match k {
                         ErrorKind::BadHuffmanCode => 1,
                         ErrorKind::SelectorOverrun => 2,

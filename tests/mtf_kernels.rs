@@ -106,7 +106,7 @@ fn block(rng: &mut Rng, n_in_use: usize, syms: Vec<u16>, max: usize) -> Symbols 
         crc: 0,
         orig_ptr: 0,
         seq_to_unseq,
-        syms,
+        syms: syms.into(),
         eob: n_in_use as u16 + 1,
         max_len: max,
     }
