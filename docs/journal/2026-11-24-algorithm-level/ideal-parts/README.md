@@ -33,7 +33,7 @@ A mathematical idea pays only if the part it improves has room. So before lookin
 | `design.md` | the matrix: factors, levels, counts, controls, rounds, measures, and the analysis |
 | `registration.md` | the decision rule for labelling each cell and effect, frozen before any data (RULES C1a) |
 | `status.tsv` | one row per part: oracle built or not, checked or not, measured or not |
-| `antigravity/` | the prompts given to Antigravity, and links to its answers |
+| `antigravity/` | the prompts given to Antigravity: the mathematics (`prompt-1.md`) and the oracle build (`prompt-build-oracles.md`), and links to its answers |
 | `results/` | each run's bundle reference, analysis program, tables and reading, once they exist |
 
 ## Status
@@ -42,7 +42,7 @@ A mathematical idea pays only if the part it improves has room. So before lookin
 |---|---|---|---|
 | 0 | this subproject, the design and the rule | Coordinator | written 25 November |
 | 1 | slice A: the oracles that exist (the scanner's output, emission's codes) in one binary, run at 6, 8 and 10 workers | Pathfinder | assigned |
-| 2 | the oracles that don't exist yet (construction, MTF/RLE2, RLE1/CRC/output, the reader) | Pathfinder | assigned, after slice A |
+| 2 | the oracles that don't exist yet (construction, MTF/RLE2, RLE1/CRC/output, the reader) | **Antigravity (Neon)**, `antigravity/prompt-build-oracles.md`; the Pathfinder integrates them | prompt ready |
 | 3 | the full matrix run | Pathfinder (recipe), Louis's workstation | after step 2 |
 | 4 | the analysis: main effects, interactions and the ceiling table | Coordinator, MONODROMY | after each run |
 | 5 | Antigravity, first pass: mathematics against the shape we have, gaps marked | Louis runs it | prompt ready (`antigravity/prompt-1.md`) |

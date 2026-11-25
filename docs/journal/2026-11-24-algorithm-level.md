@@ -2392,3 +2392,12 @@ Louis, 25 November, on reading the overnight summary: the point of the experimen
 - **Where it comes from:** Jain's experimental design applied to the four-arm oracle idea (§44). It fills the measurements behind the hybrid-systems frame (an ideal part is lever 1 at its limit).
 - **The rule:** frozen before any data (`ideal-parts/registration.md`).
 - **Antigravity's first pass** (`ideal-parts/antigravity/prompt-1.md`) asks for mathematics per part, and for registered predictions of each part's room.
+
+## 88. The ideal-parts matrix, slice A: emission has room below the knee, the scanner above it, and they co-limit at 8
+
+`ideal-parts/run-20261125T105502Z` (evidence 04c9ecd9, checked; valid in every check). The full write-up is `ideal-parts/results/slice-a/README.md`.
+- **1 and 6 workers:** emission ideal gives 0.827 and 0.849. The scanner ideal gives nothing.
+- **8 workers:** neither alone resolves (both about 0.96). Each gives about 0.86 with the other ideal, and the interaction q_SE = −0.028 [−0.038, −0.018]. That is masking at the balance point.
+- **10 workers:** the scanner ideal gives 0.919.
+- **The floor:** both ideal, the wall is still 0.82–0.84 of today's. Most of the room is elsewhere: construction, MTF, RLE1/CRC and delivery, which the full matrix measures with Antigravity's oracles (PR 895).
+- **Antigravity's pre-registered predictions:** 8 of 9 values hit; its two MASKED labels missed.

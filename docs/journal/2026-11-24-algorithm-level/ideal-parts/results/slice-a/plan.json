@@ -1,0 +1,577 @@
+{
+ "design": "ideal-parts slice A",
+ "arms": [
+  "none",
+  "S",
+  "E",
+  "SE"
+ ],
+ "counts": [
+  1,
+  6,
+  8,
+  10
+ ],
+ "link": {
+  "k": 8,
+  "arms": [
+   "none",
+   "SE"
+  ]
+ },
+ "scanner_cpu": 3,
+ "scanner_core": [
+  3,
+  13
+ ],
+ "pinned_mask": [
+  0,
+  10,
+  1,
+  11,
+  2,
+  12,
+  4,
+  14,
+  5,
+  15,
+  6,
+  16,
+  7,
+  17,
+  8,
+  18,
+  9,
+  19
+ ],
+ "core_calibration_ns": {
+  "0": 20439003,
+  "1": 18890164,
+  "2": 18890059,
+  "3": 18888629,
+  "4": 18889935,
+  "5": 18928848,
+  "6": 18888874,
+  "7": 18888980,
+  "8": 18891398,
+  "9": 18888693
+ },
+ "trace_blocks": 2,
+ "prespin_ms": 100,
+ "cells": [
+  {
+   "section": "pinned",
+   "k": 1,
+   "arm": "none",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle none",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 1,
+   "arm": "S",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle S",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 1,
+   "arm": "E",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle E",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 1,
+   "arm": "SE",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle SE",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 6,
+   "arm": "none",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle none",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 6,
+   "arm": "S",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle S",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 6,
+   "arm": "E",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle E",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 6,
+   "arm": "SE",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle SE",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 8,
+   "arm": "none",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle none",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 8,
+   "arm": "S",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle S",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 8,
+   "arm": "E",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle E",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 8,
+   "arm": "SE",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle SE",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 10,
+   "arm": "none",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle none",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 10,
+   "arm": "S",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle S",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 10,
+   "arm": "E",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle E",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "pinned",
+   "k": 10,
+   "arm": "SE",
+   "pinned": 1,
+   "mask": [
+    0,
+    10,
+    1,
+    11,
+    2,
+    12,
+    4,
+    14,
+    5,
+    15,
+    6,
+    16,
+    7,
+    17,
+    8,
+    18,
+    9,
+    19
+   ],
+   "treat": [
+    "oracle SE",
+    "prespin 100",
+    "scanner_cpu 3"
+   ]
+  },
+  {
+   "section": "link",
+   "k": 8,
+   "arm": "none",
+   "treat": [
+    "oracle none",
+    "prespin 100"
+   ]
+  },
+  {
+   "section": "link",
+   "k": 8,
+   "arm": "SE",
+   "treat": [
+    "oracle SE",
+    "prespin 100"
+   ]
+  }
+ ]
+}
