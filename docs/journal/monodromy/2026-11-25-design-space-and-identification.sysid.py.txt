@@ -1,0 +1,49 @@
+# Record 130, question 6: replay the max-plus recurrence on stage 1's per-block traces.
+# Usage: python3 -I sysid.py <bundle dir>
+import sys, csv, heapq, statistics as st
+D=sys.argv[1]
+def load(r):
+    rows={}
+    with open(f"{D}/blocks-r{r:02d}.tsv") as f:
+        for d in csv.DictReader(f,delimiter="\t"):
+            rows.setdefault(int(d["k"]),[]).append({a:int(b) for a,b in d.items()})
+    for k in rows: rows[k].sort(key=lambda d:d["place"])
+    return rows
+SV=["s_in_maint","s_A2","s_A3","s_issue","s_resid"]
+def replay(B,k,Wsrv,Ssrv,gate=True):
+    n=len(B); W=4*k; x=[0]*n; y=[0]*n; tk=[0]*n; cs=[0]*n
+    free=[B[0]["t_scan_start"]]*k; heapq.heapify(free); prev=B[0]["t_scan_start"]
+    for i,b in enumerate(B):
+        a=prev+b["s_in_wait"]
+        if gate and i>=W: a=max(a,tk[i-W])
+        x[i]=a+Ssrv[i]; prev=x[i]
+        g=max(x[i],heapq.heappop(free)); y[i]=g+Wsrv[i]; heapq.heappush(free,y[i])
+        tk[i]=max(y[i],cs[i-1] if i else 0); cs[i]=tk[i]+(b["t_consumed"]-b["t_taken"])
+    return x,y,tk,cs
+R0=load(0); base=R0[1]
+W1=[b["t_ready"]-b["t_got"] for b in base]; S1=[sum(b[c] for c in SV) for b in base]
+print("k  wall_ms  M0err%  ready_MAE_us | inflW inflS | M1err% (k=1 services x one factor each) | M2err% (one contention slope)")
+rows=[]
+for k in sorted(R0):
+    B=R0[k]; t0=B[0]["t_scan_start"]; wall=B[-1]["t_consumed"]-t0
+    Wk=[b["t_ready"]-b["t_got"] for b in B]; Sk=[sum(b[c] for c in SV) for b in B]
+    x,y,tk,cs=replay(B,k,Wk,Sk); e0=(cs[-1]-t0)/wall-1
+    mae=st.median(abs(y[i]-B[i]["t_ready"]) for i in range(len(B)))/1e3
+    big=[i for i,b in enumerate(B) if b["n"]>100000]
+    fW=sum(Wk[i] for i in big)/sum(W1[i] for i in big); fS=sum(Sk)/sum(S1)
+    x,y,tk,cs=replay(B,k,[w*fW for w in W1],[s*fS for s in S1]); e1=(cs[-1]-t0)/wall-1
+    rows.append((k,wall,fW,fS,B,t0))
+    print(f"{k:2d} {wall/1e6:8.1f} {100*e0:7.2f} {mae:9.1f} | {fW:5.3f} {fS:5.3f} | {100*e1:7.2f}")
+# one-parameter contention: W_i(k) = W_i(1) * (1 + a*(min(k,busy)-1)), busy from occupancy = min(k, k*) ; fit a on k<=6, test on rest
+import math
+a=st.mean((fW-1)/(k-1) for k,_,fW,_,_,_ in rows if 2<=k<=6)
+print("contention slope a per extra busy worker, fitted on k=2..6:",round(a,4))
+for k,wall,fW,fS,B,t0 in rows:
+    kstar=sum(W1)/sum(S1); busy=min(k,kstar*(1+a*(min(k,kstar)-1)))
+    f=1+a*(busy-1)
+    x,y,tk,cs=replay(B,k,[w*f for w in W1],[s*1.0 for s in S1]); e2=(cs[-1]-t0)/wall-1
+    print(f"  k={k:2d} predicted inflation {f:5.3f} measured {fW:5.3f} | wall error with k=1 scanner {100*e2:7.2f}%  | scanner inflation needed {fS:5.3f}")
+# stage shares on real blocks at k=1 and k=8
+for k in (1,8,16):
+    B=[b for b in R0[k] if b["n"]>100000]; tot=sum(b["t_ready"]-b["t_got"] for b in B)
+    print("k",k,"worker shares:",{c:round(sum(b[c] for b in B)/tot,3) for c in ["w_A5","w_pool","w_A6a","w_A6b","w_A6c","w_A7","w_A8","w_A9","w_publish","w_resid"]},"per real block ms",round(tot/len(B)/1e6,3))
