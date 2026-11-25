@@ -619,10 +619,82 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
+        #[cfg(feature = "ideal-construction")]
+        let (stats, mark, bits) =
+            self.construct_or_replay::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+        #[cfg(not(feature = "ideal-construction"))]
         let (stats, mark, bits) =
             self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
         self.walk(n, stats.retained, mark, bits, out);
         Some(stats)
+    }
+
+    /// (research only, `ideal-construction`) Factor C's hand-over point: in `Real`, runs
+    /// `construct_capped`; in `Record`, runs it and stores Open's built structures (or refusal);
+    /// in `Replay`, skips `construct_capped`, copies the recorded structures into `self`, and
+    /// hands them to `walk`. Upstream MTF/RLE2 still ran; `records` is discarded here.
+    #[cfg(feature = "ideal-construction")]
+    fn construct_or_replay<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+        cap: Cap,
+        out: &mut Vec<u8>,
+    ) -> Option<(Counts, u32, u32)> {
+        use crate::ideal::{construction as ic, Mode};
+        let mode = ic::mode();
+        if mode == Mode::Replay {
+            std::hint::black_box(records);
+            if let Some(idx) = crate::ideal::current_block() {
+                match ic::replay(
+                    idx,
+                    n,
+                    &mut self.predecessor,
+                    &mut self.edges,
+                    &mut self.extra,
+                    &mut self.spelling,
+                    &mut self.inline16,
+                    &mut self.lens,
+                    begin_inline,
+                ) {
+                    ic::Replay::Built { m, mark, bits } => {
+                        let stats = Counts {
+                            n: n as usize,
+                            retained: m,
+                            ..Counts::default()
+                        };
+                        return Some((stats, mark, bits));
+                    }
+                    ic::Replay::Refused => return None,
+                    ic::Replay::Miss => {}
+                }
+            }
+        }
+        ic::count_constructed();
+        let res = self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out);
+        if mode == Mode::Record {
+            if let Some(idx) = crate::ideal::current_block() {
+                match &res {
+                    Some((stats, mark, bits)) => ic::record_built(
+                        idx,
+                        n,
+                        stats.retained as u32,
+                        *mark,
+                        *bits,
+                        self.predecessor,
+                        &self.edges[..stats.retained],
+                        &self.extra,
+                        &self.spelling,
+                        &self.inline16[256..],
+                        &self.lens[256..],
+                    ),
+                    None => ic::record_refused(idx),
+                }
+            }
+        }
+        res
     }
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`

@@ -109,6 +109,15 @@ mod open;
 #[cfg(feature = "census")]
 #[doc(hidden)]
 pub mod census;
+// (research only: the ideal-parts matrix's oracles C, M, R and delivery mode D)
+#[cfg(any(
+    feature = "ideal-construction",
+    feature = "ideal-mtf",
+    feature = "ideal-rle1",
+    feature = "ideal-delivery",
+))]
+#[doc(hidden)]
+pub mod ideal;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]
@@ -536,8 +545,52 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
 ) -> Result<Vec<u8>, ErrorKind> {
     let (crc, orig_ptr) = (b.crc, b.orig_ptr);
-    if s.inverse.reads_runs() && runs::takes_runs(b) {
-        let n = runs::front(b, &mut s.runs, k)?;
+    #[cfg(feature = "ideal-mtf")]
+    let replayed_mtf = if ideal::mtf::mode() == ideal::Mode::Replay {
+        ideal::current_block().map(|idx| {
+            ideal::mtf::replay(
+                idx,
+                s.inverse.reads_runs(),
+                &mut s.runs,
+                &mut s.ll,
+                &mut s.counts,
+                &mut s.checkpoints,
+            )
+        })
+    } else {
+        None
+    };
+    let runs_n: Option<usize> = {
+        #[cfg(feature = "ideal-mtf")]
+        match replayed_mtf {
+            Some(ideal::mtf::Replay::Runs(n)) => Some(n),
+            Some(ideal::mtf::Replay::Column(_)) => None,
+            _ => {
+                if s.inverse.reads_runs() && runs::takes_runs(b) {
+                    ideal::mtf::count_executed();
+                    let n = runs::front(b, &mut s.runs, k)?;
+                    if orig_ptr as usize >= n {
+                        return Err(ErrorKind::BadOrigPtr);
+                    }
+                    if ideal::mtf::mode() == ideal::Mode::Record {
+                        if let Some(idx) = ideal::current_block() {
+                            ideal::mtf::record_runs(idx, n, &s.runs);
+                        }
+                    }
+                    Some(n)
+                } else {
+                    None
+                }
+            }
+        }
+        #[cfg(not(feature = "ideal-mtf"))]
+        if s.inverse.reads_runs() && runs::takes_runs(b) {
+            Some(runs::front(b, &mut s.runs, k)?)
+        } else {
+            None
+        }
+    };
+    if let Some(n) = runs_n {
         if orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
@@ -558,6 +611,25 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
                 "the run records don't tile the block".into(),
             ));
         }
+        #[cfg(feature = "ideal-rle1")]
+        if ideal::rle1::mode() == ideal::Mode::Replay {
+            if let Some(idx) = ideal::current_block() {
+                if ideal::rle1::replay_replace(idx, &mut out) {
+                    #[cfg(any(test, feature = "trace"))]
+                    {
+                        let route = if s.inverse.took_cells() {
+                            trace::OutputRoute::Cells
+                        } else {
+                            trace::OutputRoute::Runs
+                        };
+                        s.record_owned(route, n, b.max_len, k, Some(&out), false);
+                    }
+                    return Ok(out);
+                }
+            }
+        }
+        #[cfg(feature = "ideal-rle1")]
+        ideal::rle1::count_executed();
         #[cfg(any(test, feature = "trace"))]
         let ll_before = s.ll.as_ptr();
         let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
@@ -580,13 +652,43 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
                 computed,
             });
         }
+        #[cfg(feature = "ideal-rle1")]
+        if ideal::rle1::mode() == ideal::Mode::Record {
+            if let Some(idx) = ideal::current_block() {
+                ideal::rle1::record(idx, &out);
+            }
+        }
         return Ok(out);
     }
     let cooperative = s.inverse.wants_checkpoints();
-    let n = if cooperative {
-        mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
-    } else {
-        mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+    let n = {
+        #[cfg(feature = "ideal-mtf")]
+        if let Some(ideal::mtf::Replay::Column(n)) = replayed_mtf {
+            n
+        } else {
+            ideal::mtf::count_executed();
+            let n = if cooperative {
+                mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+            } else {
+                mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+            };
+            if orig_ptr as usize >= n {
+                return Err(ErrorKind::BadOrigPtr);
+            }
+            if ideal::mtf::mode() == ideal::Mode::Record {
+                if let Some(idx) = ideal::current_block() {
+                    let cps: &[[u32; 256]] = if cooperative { &s.checkpoints } else { &[] };
+                    ideal::mtf::record_column(idx, &s.ll, &s.counts, cps);
+                }
+            }
+            n
+        }
+        #[cfg(not(feature = "ideal-mtf"))]
+        if cooperative {
+            mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+        } else {
+            mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+        }
     };
     if orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
@@ -647,6 +749,16 @@ fn column<I: bwt::InverseBwt>(
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
 /// last steps): the CRC, or the error with `out` as it was
 fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result<u32, ErrorKind> {
+    #[cfg(feature = "ideal-rle1")]
+    if ideal::rle1::mode() == ideal::Mode::Replay {
+        if let Some(idx) = ideal::current_block() {
+            if ideal::rle1::replay_append(idx, inverted, out) {
+                return Ok(stored);
+            }
+        }
+    }
+    #[cfg(feature = "ideal-rle1")]
+    ideal::rle1::count_executed();
     let start = out.len();
     if let Err(kind) = rle::unrle(inverted, out, k) {
         out.truncate(start);
@@ -656,6 +768,12 @@ fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result
     if computed != stored {
         out.truncate(start);
         return Err(ErrorKind::BlockCrc { stored, computed });
+    }
+    #[cfg(feature = "ideal-rle1")]
+    if ideal::rle1::mode() == ideal::Mode::Record {
+        if let Some(idx) = ideal::current_block() {
+            ideal::rle1::record(idx, &out[start..]);
+        }
     }
     Ok(computed)
 }
