@@ -11,3 +11,5 @@
 - **A label:** scored as `registration.md` labels the measured cell.
 
 **Interactions** were given in ratio form, (S+E) / (S·E). They are converted to Jain's q for scoring, and the conversion is shown.
+
+**Optional leads for Antigravity** (not tasks): `notes-for-neon.md`.
