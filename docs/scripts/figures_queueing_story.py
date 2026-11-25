@@ -267,7 +267,8 @@ def slicea():
         gx = L + gw * i + 22
         for j, (v, c) in enumerate(((s, "amber"), (e, "blue"), (both, "green"))):
             bx = gx + j * 36
-            o.append(f'<rect x="{bx}" y="{y(1.0):.1f}" width="28" height="{y(v) - y(1.0):.1f}" style="fill:var(--bf-{c});opacity:0.8"/>')
+            top_y, bot_y = sorted((y(1.0), y(v)))  # a value above 1 (S at 1 worker, 1.001) draws upward
+            o.append(f'<rect x="{bx}" y="{top_y:.1f}" width="28" height="{bot_y - top_y:.1f}" style="fill:var(--bf-{c});opacity:0.8"/>')
             text(o, bx + 14, y(v) + 14, f"{v:.3f}".lstrip("0"), 10.5, anchor="middle")
         text(o, gx + 50, bot + 18, f"{k} worker{'s' if k > 1 else ''}", 12.5, "bf-t-strong", "middle")
     text(o, 20, 22, "Wall with a part made ideal, over everything real (pinned scanner; bars hang down from 1)", 13, "bf-t-strong")
