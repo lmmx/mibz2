@@ -1,0 +1,31 @@
+source	part	k	predicted_room	low	high	label_predicted	note
+neon-IDEAL-PARTS-1@92d37230	S	1	0.996				
+neon-IDEAL-PARTS-1@92d37230	S	6	0.982				
+neon-IDEAL-PARTS-1@92d37230	S	8	0.950	0.920	0.975		borderline
+neon-IDEAL-PARTS-1@92d37230	S	10	0.885	0.845	0.925		
+neon-IDEAL-PARTS-1@92d37230	C	1	0.570	0.545	0.600		
+neon-IDEAL-PARTS-1@92d37230	C	6	0.785	0.760	0.815		scanner-capped
+neon-IDEAL-PARTS-1@92d37230	C	8	0.973			MASKED	
+neon-IDEAL-PARTS-1@92d37230	C	10	0.980			MASKED	
+neon-IDEAL-PARTS-1@92d37230	E	1	0.830				
+neon-IDEAL-PARTS-1@92d37230	E	6	0.850				
+neon-IDEAL-PARTS-1@92d37230	E	8	0.980			MASKED	
+neon-IDEAL-PARTS-1@92d37230	E	10	0.990			MASKED	
+neon-IDEAL-PARTS-1@92d37230	M	1	0.905				
+neon-IDEAL-PARTS-1@92d37230	M	6	0.916				
+neon-IDEAL-PARTS-1@92d37230	M	8	0.983			MASKED	
+neon-IDEAL-PARTS-1@92d37230	M	10	0.992			MASKED	
+neon-IDEAL-PARTS-1@92d37230	R	1	0.942				zero-copy handover; a one-copy handover predicted about 1.025 at 6
+neon-IDEAL-PARTS-1@92d37230	R	6	0.941				
+neon-IDEAL-PARTS-1@92d37230	R	8	0.985			MASKED	
+neon-IDEAL-PARTS-1@92d37230	R	10	0.992			MASKED	
+neon-IDEAL-PARTS-1@92d37230	D	1	0.999			NO ROOM	
+neon-IDEAL-PARTS-1@92d37230	D	6	0.995			NO ROOM	
+neon-IDEAL-PARTS-1@92d37230	D	8	0.990			NO ROOM	
+neon-IDEAL-PARTS-1@92d37230	D	10	0.985			NO ROOM	
+neon-IDEAL-PARTS-1@92d37230	all	1	0.245				floor; the word-copying half of A7 left in the clock
+neon-IDEAL-PARTS-1@92d37230	all	6	0.300				
+neon-IDEAL-PARTS-1@92d37230	all	8	0.305				
+neon-IDEAL-PARTS-1@92d37230	all	10	0.330				
+neon-IDEAL-PARTS-1@92d37230	SE	8	0.810				joint S+E, interaction 0.87 at 8 (ratio form)
+neon-IDEAL-PARTS-1@92d37230	SE	10					interaction 0.91 at 10 (ratio form)
