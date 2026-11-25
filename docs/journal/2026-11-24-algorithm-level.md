@@ -2079,7 +2079,7 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
 | 10 | 10% | 0.445 | 0.555 | 0.509 | NOT-HOMOGENEOUS |
 | 10 | 20% | 0.565 | 0.727 | 0.390 | NOT-HOMOGENEOUS, ASYMMETRIC |
 
-- **Under the registered rule, e_up is not interpreted:** the wall is not homogeneous of degree 1 in the paced activities. Pacing everything by 10% slows it by about 8% at 8 workers and 4.5% at 10.
+- **Under the registered rule, e_up is not interpreted:** the wall is not homogeneous of degree 1 in the paced activities. Pacing everything by 10% slows it by about 7.8% at 8 workers and 4.3% at 10.
 - **Descriptively, as a sharp maximum predicts:** at 8, where the workers are close behind, slowing the scanner costs about 0.7–1.0 per unit, but speeding it gains about 0.13–0.18 per unit. The bottleneck migrates at once. At 10 the asymmetry is smaller.
 
 **6. Pinning the scanner is itself a lever** (`analysis/link.tsv`):
