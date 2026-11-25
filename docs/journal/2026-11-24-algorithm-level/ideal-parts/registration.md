@@ -44,8 +44,8 @@
 
 5. **Handover is charged apart from the part.** Each oracle's handover is the copy of its recorded output into the decoder. It is timed in its own ledger entry, not in the removed part's activities.
    - **The removed-part VOID** reads only the part's own work:
-     - C, construction's A5 and A6a–c;
-     - M, the MTF/RLE2 activity;
+     - C, construction's A6a, A6b and A6c;
+     - M, the MTF/RLE2 activity, A5 in the ledgers;
      - R, RLE1 and the block CRC;
      - D, the reader's copy to the caller.
 6. **The room is measured as it is, handover included,** and labelled on that. Beside it the report gives:
@@ -67,3 +67,5 @@
      - **room, floor share and MASKED's condition:** read directly from the measured arms;
      - **the 12 added arms are never fitted** into the effects.
    - **Size:** 44 arms × 4 counts × 12 blocks, with traces in 2, and the unpinned link at 8. That is about 60–75 minutes on the i9.
+
+**Correction to clarification 5, 25 November 2026, before any data.** It first read "C, construction's A5 and A6a–c". But A5 is MTF/RLE2 (M's work), which C's oracle leaves running, so taken literally every C arm would have been VOID. The Pathfinder caught it. C's work is A6a–c, and M's is A5.
