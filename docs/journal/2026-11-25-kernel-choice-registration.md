@@ -243,3 +243,70 @@ not checked. It is never evidence.
 - the recipe exited 1.
 
 That bundle was deleted and is not archived.
+
+## Second head, registered before its data (journal §80)
+
+*25 November 2026. Written and frozen before any data on the second head. The first head's run
+(#860, `perf/lazy-from-four` at 7c343200) was NOT ADOPTED: 5 at 0.845 and 7 at 0.634 FASTER,
+but 10 INCONCLUSIVE (journal §80). As "What each outcome does" provides, the Coordinator split
+#860 and registered its first change alone, a new registration, not a re-run.*
+
+**The head:** `perf/lazy-four-to-seven` at 084275e6df4dbad1f11c300d1a9360b6188fcc6b, #860
+without the trim to 8 from 10. From 10 threads unpinned it is master's: `trim_cell`'s 7 lazy
+workers with 28 (`trims_to_seven`), and `UNPINNED_FROM_TEN` is gone. It keeps
+`UNPINNED_LAZY_FROM` = 4: the plan's own workers on the lazy kernel at 4 to 7 threads asked. Its
+base is its merge-base with master, f8edc1ac, the first head's base.
+
+**The plans, as the probe must record them** (`--expect lazy-four-to-seven`,
+`HEAD_PLAN_FOUR_TO_SEVEN`): master's plan at every count but 5 and 7.
+
+| threads | base (master) | head (second) |
+|---|---|---|
+| 3 | 3 / 12 / eager | 3 / 12 / eager |
+| 4 | 4 / 16 / lazy | 4 / 16 / lazy |
+| 5 | 5 / 20 / eager | **5 / 20 / lazy** |
+| 7 | 7 / 28 / eager | **7 / 28 / lazy** |
+| 8 | 8 / 32 / lazy | 8 / 32 / lazy |
+| 10 | 7 / 28 / lazy | 7 / 28 / lazy |
+| 12 | 7 / 28 / lazy | 7 / 28 / lazy |
+
+**The recipe:** the same `just bench-kernel-choice`, the same counts, rounds, corpus, placement
+and checks, with the expectation as a parameter. EXPECT is the third positional argument
+(`lazy-from-four`, the default and the first head's, or `lazy-four-to-seven`). DRY moves to the
+fourth, because the workstation queue drops empty `args=` positions. The first head's run,
+`just bench-kernel-choice perf/lazy-from-four 7c3432002ad7d0140bf46d50cf8fa98d01e9a67c`, is
+unchanged by this: same plans, same counts, same verdict lines. The second head's is
+`just bench-kernel-choice perf/lazy-four-to-seven 084275e6df4dbad1f11c300d1a9360b6188fcc6b lazy-four-to-seven`
+(queue `args=perf/lazy-four-to-seven,084275e6df4dbad1f11c300d1a9360b6188fcc6b,lazy-four-to-seven`).
+
+**The rule.** The step is as above.
+- **ADOPTS:** all three hold:
+  - the steps at **5 and 7 threads** (judged) are both FASTER;
+  - none of **3, 4, 8, 10 and 12 threads** (supporting) is SLOWER;
+  - at each of 3, 4, 5, 7, 8, 10 and 12 threads, the median peak RSS over the rounds, head over
+    base, is at most 1.10.
+- **HELD ON MEMORY, NOT ADOPTED, VOID:** as for the first head, with these counts. The plan check
+  requires the head's probe to be the table's second column, so a run of #860's head under this
+  expectation, or of this head under the first, is VOID. `--judged` and `--supporting` other than
+  this expectation's registered counts void it as well.
+
+10 and 12 are now supporting: both builds build the same decoder there, so they are controls, as
+3, 4 and 8 are.
+
+**The prediction** (stated before the data; it is not the rule): from the first head's run, where
+5 and 7 changed in the same way:
+
+| threads | wall head/base | peak RSS head/base |
+|---|---|---|
+| 3, 4, 8 | ≈ 1.00 | ≈ 1.00 |
+| 5 | ≈ 0.845 | below 1 (§76: ≈ 0.42) |
+| 7 | ≈ 0.634 | below 1 (§76: ≈ 0.39) |
+| 10, 12 | ≈ 1.00 | ≈ 1.00 |
+
+**What each outcome does:**
+- **ADOPTS:** the split PR merges at the measured head once its CI is green. #860's trim to 8
+  stays held (journal §80).
+- **HELD ON MEMORY:** the Coordinator weighs it under rule 4 (not expected: the lazy kernel is
+  smaller at 5 and 7).
+- **NOT ADOPTED:** neither change merges; written up as a negative result.
+- **VOID:** repeated once, with the reason logged.

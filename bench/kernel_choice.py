@@ -12,8 +12,20 @@ registration names: the base the old one, the head the one the PR intends (`BASE
 must match their build's probe.
 
     kernel_choice.py RUNS.jsonl --env ENV.json --lscpu LSCPU.txt --plan PLAN.jsonl
-                    [--arm mibz2] [--judged 5,7,10] [--supporting 3,4,8,12] [--rounds 16]
+                    [--expect lazy-from-four|lazy-four-to-seven] [--arm mibz2]
+                    [--judged 5,7,10] [--supporting 3,4,8,12] [--rounds 16]
                     [--corpus wikidata-x4] [--out-bytes N] [--dry]
+
+**The expectation** (`--expect`, the recipe's EXPECT): which head was registered, so which plan
+the head must build and which counts are judged (`EXPECTATIONS`). Each is its own registration,
+frozen before its data:
+- `lazy-from-four` (the default; #860, the registration's first head): the head lazy from 4
+  threads at every count and 8 workers from 10 (`HEAD_PLAN`); judged 5, 7 and 10, supporting 3,
+  4, 8 and 12.
+- `lazy-four-to-seven` (journal §80, the registration's second head: #860 without the trim to 8
+  from 10): lazy from 4 to 7 threads, otherwise master's plan, 7 lazy workers from 10
+  (`HEAD_PLAN_FOUR_TO_SEVEN`); judged 5 and 7, supporting 3, 4, 8, 10 and 12.
+`--judged` and `--supporting`, if given, must be the expectation's registered counts.
 
 **Arms.** The reference is ARM at the base (`ARM@build-base`, the measured head's merge-base with
 master), the candidate ARM at the head (`ARM`, this harness's own build of the head).
@@ -23,8 +35,8 @@ master), the candidate ARM at the head (`ARM`, this harness's own build of the h
 else INCONCLUSIVE.
 
 **The verdict:**
-- **ADOPTS:** every judged count (5, 7, 10 threads) FASTER, no supporting count (3, 4, 8, 12)
-  SLOWER, and at every count the median over the rounds of each run's peak resident memory, head
+- **ADOPTS:** every judged count (5, 7, 10 threads; 5 and 7 for `lazy-four-to-seven`) FASTER,
+  no supporting count (3, 4, 8, 12; 3, 4, 8, 10 and 12 for `lazy-four-to-seven`) SLOWER, and at every count the median over the rounds of each run's peak resident memory, head
   over base, at most 1.10 (PERFORMANCE-POLICY rule 4's trigger).
 - **HELD ON MEMORY:** as ADOPTS, but the memory gate failed at a count; rule 4's trade reported.
 - **NOT ADOPTED:** otherwise.
@@ -33,7 +45,8 @@ else INCONCLUSIVE.
   wall, CPU and peak memory; a record pinned or beside a spinner; any key duplicated, unexpected
   or missing; the corpus not the one registered; any output size not the registered one, or the
   hashes not all one; the plan file missing, malformed, or without exactly one probe per build
-  and count; a build's probe not its registered plan (`BASE_PLAN`, `HEAD_PLAN`); a count's median
+  and count; a build's probe not its registered plan (`BASE_PLAN`, the expectation's head plan);
+  `--judged` or `--supporting` not the expectation's registered counts; a count's median
   observed workers (`mibz2-N` threads) at a build not its probe's threads.
 
 `--dry`: the recipe's untimed check off the i9. The machine's checks and the registered plans are
@@ -84,6 +97,24 @@ HEAD_PLAN = {
     10: (8, 32, True),
     12: (8, 32, True),
 }
+# The second head (journal §80): #860 without the trim to 8 from 10, so lazy at 4 to 7 threads
+# (the plan's own workers on the lazy kernel) and master's plan everywhere else, 7 lazy workers
+# with 28 from 10 threads
+HEAD_PLAN_FOUR_TO_SEVEN = {
+    3: (3, 12, False),
+    4: (4, 16, True),
+    5: (5, 20, True),
+    7: (7, 28, True),
+    8: (8, 32, True),
+    10: (7, 28, True),
+    12: (7, 28, True),
+}
+# EXPECT: (the head's registered plan, judged counts, supporting counts)
+EXPECTATIONS = {
+    "lazy-from-four": (HEAD_PLAN, (5, 7, 10), (3, 4, 8, 12)),
+    "lazy-four-to-seven": (HEAD_PLAN_FOUR_TO_SEVEN, (5, 7), (3, 4, 8, 10, 12)),
+}
+DEFAULT_EXPECT = "lazy-from-four"
 
 
 def counts(s):
@@ -219,9 +250,9 @@ def fmt(p):
     return f"{n}/{w} {'lazy' if lazy else 'eager'}"
 
 
-def plan_check(built, threads, dry, errors, notes):
+def plan_check(built, threads, dry, errors, notes, head_plan=HEAD_PLAN):
     """Each build's probe against its registered plan: an error, or with `dry` a note"""
-    for b, plan in (("base", BASE_PLAN), ("head", HEAD_PLAN)):
+    for b, plan in (("base", BASE_PLAN), ("head", head_plan)):
         for t in threads:
             want, got = plan.get(t), built[(b, t)]
             if want is None:
@@ -279,17 +310,30 @@ def main(argv=None):
     ap.add_argument("--env", required=True, help="the machine as `ab env` recorded it")
     ap.add_argument("--lscpu", required=True)
     ap.add_argument("--plan", required=True, help="each build's probe records (plan.jsonl)")
+    ap.add_argument(
+        "--expect",
+        default=DEFAULT_EXPECT,
+        choices=sorted(EXPECTATIONS),
+        help="the registered head: its plan and its judged and supporting counts",
+    )
     ap.add_argument("--arm", default="mibz2")
-    ap.add_argument("--judged", default="5,7,10")
-    ap.add_argument("--supporting", default="3,4,8,12")
+    ap.add_argument("--judged", help="the expectation's judged counts (checked)")
+    ap.add_argument("--supporting", help="the expectation's supporting counts (checked)")
     ap.add_argument("--rounds", type=int, default=16)
     ap.add_argument("--corpus", default="wikidata-x4")
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
     ap.add_argument("--dry", action="store_true", help="the untimed check: machine not applied")
     a = ap.parse_args(argv)
-    judged, supporting = counts(a.judged), counts(a.supporting)
-    threads = sorted(set(judged + supporting))
+    head_plan, reg_judged, reg_supporting = EXPECTATIONS[a.expect]
     errors, notes = [], []
+    judged = list(reg_judged) if a.judged is None else counts(a.judged)
+    supporting = list(reg_supporting) if a.supporting is None else counts(a.supporting)
+    if sorted(judged) != sorted(reg_judged) or sorted(supporting) != sorted(reg_supporting):
+        errors.append(
+            f"judged {judged} and supporting {supporting}: not {a.expect}'s registered judged "
+            f"{list(reg_judged)} and supporting {list(reg_supporting)}"
+        )
+    threads = sorted(set(judged + supporting))
     if a.rounds < 2:
         errors.append(f"--rounds {a.rounds}: at least 2")
     if set(judged) & set(supporting):
@@ -307,7 +351,7 @@ def main(argv=None):
     built = probes(a.plan, threads, errors)
     observed = {}
     if not errors:
-        plan_check(built, threads, a.dry, errors, notes)
+        plan_check(built, threads, a.dry, errors, notes, head_plan)
         observed = observed_check(got, built, a.arm, threads, a.rounds, errors)
     for e in notes:
         print(f"DRY: not applied: {e}")
@@ -321,6 +365,8 @@ def main(argv=None):
     print(
         ("DRY (untimed, not evidence): " if a.dry else "")
         + f"{a.arm} at the head against {a.arm}@build-base, {a.corpus}, unpinned, {a.rounds} paired rounds"
+        # (the default's line as the first head's run printed it)
+        + ("" if a.expect == DEFAULT_EXPECT else f", expectation {a.expect}")
     )
     print(
         f"{'threads':>7}  {'role':<10} {'base plan':<12} {'head plan':<12} "

@@ -1959,11 +1959,19 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # 4, 5, 7, 8, 10 and 12 threads, 16 paired rounds, settle 2 s, no spinner; judged at 5, 7 and
 # 10, the rest supporting, peak RSS gated at every count (bench/kernel_choice.py). No
 # diagnostic phase. Fail-soft as bench-scanner-plumbing's: each phase's status in phases.tsv,
-# the EXIT trap always bundles. About 15-20 minutes with the builds. Arguments are positional:
-# `just bench-kernel-choice perf/lazy-from-four <sha>`; DRY (the third: two rounds, no settle,
-# the machine and the registered plans not checked; the wiring only, never evidence) as
-# `just bench-kernel-choice perf/lazy-from-four "" 1`.
-bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" DRY="":
+# the EXIT trap always bundles. About 15-20 minutes with the builds. EXPECT (the third, default
+# lazy-from-four; empty is the default) names the registered head, so the head's plan and the
+# judged counts (bench/kernel_choice.py's EXPECTATIONS): lazy-from-four is #860 as above (judged
+# 5, 7 and 10; supporting 3, 4, 8 and 12); lazy-four-to-seven is journal §80's second head, #860
+# without the trim to 8 from 10 (lazy at 4 to 7 threads, otherwise master's plan, 7/28 lazy at 10
+# and 12; judged 5 and 7; supporting 3, 4, 8, 10 and 12). Arguments are positional:
+# `just bench-kernel-choice perf/lazy-from-four <sha>` (the first head, as its run was made);
+# `just bench-kernel-choice perf/lazy-four-to-seven <sha> lazy-four-to-seven` (the second; the
+# queue's args=perf/lazy-four-to-seven,<sha>,lazy-four-to-seven: the queue drops empty
+# positions, so EXPECT is before DRY). DRY (the fourth: two rounds, no settle, the machine and the
+# registered plans not checked; the wiring only, never evidence) as
+# `just bench-kernel-choice perf/lazy-from-four "" "" 1`.
+bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from-four" DRY="":
     #!/usr/bin/env bash
     # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
     # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
@@ -1971,12 +1979,20 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" DRY="":
     # failed, so a failure still shows, always with its bundle. The only file this recipe leaves
     # under target/*/ named *.tar.gz is its bundle (just submit counts them).
     set -uo pipefail
-    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" dry="{{DRY}}"
-    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=3,4,5,7,8,10,12 JUDGED=5,7,10 SUPPORTING=3,4,8,12
+    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" EXPECT="{{EXPECT}}" dry="{{DRY}}"
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=3,4,5,7,8,10,12
+    [ -n "$EXPECT" ] || EXPECT=lazy-from-four
+    # the registered head's judged and supporting counts (kernel_choice.py checks them against
+    # its EXPECTATIONS)
+    case $EXPECT in
+      lazy-from-four) JUDGED=5,7,10 SUPPORTING=3,4,8,12 ;;
+      lazy-four-to-seven) JUDGED=5,7 SUPPORTING=3,4,8,10,12 ;;
+      *) echo "bench-kernel-choice: EXPECT '$EXPECT' is not lazy-from-four or lazy-four-to-seven; DRY is the fourth argument (nothing was run)"; exit 1 ;;
+    esac
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
     [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-kernel-choice: HEAD_REF '$HEAD_REF' is not a branch name (nothing was run)"; exit 1; }
     [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \
-      || { echo "bench-kernel-choice: HEAD_SHA '$HEAD_SHA' is not a full 40-character SHA or empty; DRY is the third argument (nothing was run)"; exit 1; }
+      || { echo "bench-kernel-choice: HEAD_SHA '$HEAD_SHA' is not a full 40-character SHA or empty; EXPECT is the third argument and DRY the fourth (nothing was run)"; exit 1; }
     W=$PWD/target/kernel-choice
     mkdir -p "$W" || exit 1
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
@@ -1984,8 +2000,9 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" DRY="":
     exec 3>&1 4>&2
     exec > >(tee -a "$O/console.log") 2>&1
     TEE=$!
-    echo "bench-kernel-choice (docs/journal/2026-11-25-kernel-choice-registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-the tip of} origin/$HEAD_REF against its merge-base with origin/master, unpinned at $THREADS threads (judged $JUDGED), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    echo "bench-kernel-choice (docs/journal/2026-11-25-kernel-choice-registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-the tip of} origin/$HEAD_REF against its merge-base with origin/master, expecting $EXPECT, unpinned at $THREADS threads (judged $JUDGED), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
     date -u +%FT%TZ > "$O/started.txt"
+    printf 'expect %s\njudged %s\nsupporting %s\n' "$EXPECT" "$JUDGED" "$SUPPORTING" > "$O/expect.txt"
     [ -z "$dry" ] || echo "bench-kernel-choice: DRY RUN: two rounds, no settle, the machine and the registered plans not checked; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
     X4=$W/wikidata-x$COPIES.bz2
     AB=$W/build-head/target/release/examples/ab
@@ -2144,7 +2161,7 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" DRY="":
     }
     verdict() {
       python3 bench/kernel_choice.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
-        --plan "$O/plan.jsonl" --arm mibz2 --judged $JUDGED --supporting $SUPPORTING \
+        --plan "$O/plan.jsonl" --expect "$EXPECT" --arm mibz2 --judged $JUDGED --supporting $SUPPORTING \
         --rounds $ROUNDS --corpus wikidata-x$COPIES ${dry:+--dry} | tee "$O/verdict.txt"
     }
     phase resolve - resolve
