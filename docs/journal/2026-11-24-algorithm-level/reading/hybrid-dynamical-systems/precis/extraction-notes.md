@@ -1,29 +1,31 @@
-# Extraction notes: places to check against the book
+# Extraction notes: what has been checked, and how
 
-The précis were written from text extracted with `pdftotext -layout`. Where symbols, overbars, matrices or line breaks were lost, the readers rebuilt the content from context and flagged it. Before relying on any of these, check them against the printed page.
+The précis were written from text extracted with `pdftotext -layout`. Some symbols, overbars, matrices and line breaks were lost. Each place below is in one of four states:
+- **A. Author's erratum applied:** from the authors' published errata (https://hybrid.soe.ucsc.edu/publications/errata-book-hybrid-dynamical-systems-modeling-stability-and-robustness, read 25 November 2026).
+- **B. Verified:** against the book's own stated solutions or surrounding text.
+- **C. Book-level point:** the précis reports the book faithfully, but the printed statement looks wrong or inconsistent (raised in ChatGPT's review, `../../../external/chatgpt-hybrid-systems-review.md`). Check the page before relying on it.
+- **D. Reconstruction still unverified:** check against the rendered page.
 
-| chapter | place | problem | what the précis does |
+| state | chapter | place | the issue, and what the précis now says |
 |---|---|---|---|
-| 2 | Example 2.8, p. 31 | data and solution formulas split across lines | data rebuilt as $f=(1,1)$, $g(x)=(\tfrac34x_1,\tfrac14x_1)$ by checking against the stated solutions; the $\phi_d(1,j)$ formula omitted |
-| 2 | weak dwell time, p. 37 | subscript typo in the print ($t_{i_1}$ for $t_{i_k}$) | corrected |
-| 2 | Example 2.13, p. 38 | flow map printed as $f_q(\phi)$ | read as $f_q(z)$ |
-| 3 | Example 3.7, p. 46 | flow map on the $x_1$-axis unreadable | effect described only |
-| 3 | Example 3.13, p. 50 | squaring in the jump map on a separate line | read as the square of $\max\{0,x\}$ |
-| 3 | Examples 3.21, 3.22, p. 58 | over- and underbars lost on the constants | $\bar c$, $\underline c$ restored; $W_q$ valued in $\mathbb R$, not $\mathbb R^p$ |
-| 3 | Example 3.35, p. 65 | jump set printed as a product | read as a union on $\mathbb R$ |
-| 3 | Theorem 3.37, pp. 66–67; Lemma 3.41 | tildes displaced; proof garbled | statements rebuilt; proof not given |
-| 4 | Example 4.4, p. 75 | the staircase map exists only in the figure | described qualitatively |
-| 4 | Example 4.19, p. 87 | text says "jump set" but displays a new flow set | taken as the flow set |
-| 4 | Lemma 4.20, Theorem 4.21 proofs | variable renamed mid-proof; layout garbled | statements unaffected |
-| 5 | Example 5.13, pp. 104–105 | tangent cone may have lost $w_2 \ge 0$ | flagged |
-| 5 | (⋆⋆), p. 112; remark after Def 5.9, p. 102 | index slips | corrected |
-| 5 | Theorem 5.29(b), p. 113 | undefined symbols | read as norm blow-up at $t^*$ |
-| 6 | Example 6.4, p. 119 | flow map garbled | inferred $\dot x_1 = x_1^2$ |
-| 6 | Lemma 6.9 proof; Prop 6.26 proof; Thm 6.30 proof; Prop 6.33; Example 6.11 | lost closure bars; "forward" for "backward"; "Lemma 5.29" for Theorem 5.29; viability condition misprinted | corrected in the précis |
-| 6 | Proposition 6.35, p. 136 | inequalities lost their structure | stated in words |
-| 4, 6 | Definitions 4.13, 6.27; Example 4.14 | hats and closure bars scattered | rebuilt from context |
-| 7 | Examples 7.2, 7.6, pp. 139–143 | displays scrambled | 7.2 rebuilt from the caption; 7.6 in words |
-| 7 | Lemma 7.14, 7.20 proofs; Cor 7.33 title; §7.5 intro; Lemma 7.37 | lost primes; renamed radius; duplicated title; wrong cross-reference; undefined set | noted |
-| 8 | (8.1), (8.3), pp. 170–171 | overbars marking the second time lost | condition stated in words |
-| 8 | Theorem 8.11 proof; Proposition 8.16 | "T" for τ; ∪ possibly for ∩; proof stops short | flagged neutrally |
-| 9 | Definition 9.5, Prop 9.6; Example 9.15 | subscript rendering; broken sentence | paraphrased |
+| A | 2 | Definition 2.3, p. 27 | hybrid time domain is the union of a nondecreasing sequence of compact hybrid time domains (the printed truncation test is replaced) |
+| A | 2 | Example 2.8, p. 32 | $\phi_d(1,j) = ((3/4)^j, \tfrac14(3/4)^{j-1})$ |
+| A | 2 | p. 34, line −8 | the claim that $\phi_b$ jumps out of $D \cup \overline C$ is withdrawn; the twice-jumping solution of Example 2.9 stops at $-1 \in C$ where flow cannot continue |
+| A | 2 | p. 37, p. 38 | weak dwell-time subscript ($t_{i_k}$); "is a solution"; Fig. 2.8(a) caption "smaller than or equal to"; $f_q(z)$ for $f_q(\phi)$ |
+| A | 5 | Example 5.13, p. 104 | for $S = [a, b]$, $T_S(a) = [0,\infty)$ and $T_S(b) = (-\infty, 0]$. The sine-region wedge remains **D** |
+| A | 5 | Definition 5.9, p. 102 | the mapping is from $\mathbb R^m$ to $\mathbb R^n$ |
+| A | 6 | Example 6.20, p. 129 | $S_1$ is (strongly) forward invariant and *not* weakly backward invariant |
+| A | 6 | Prop 6.26 proof, p. 131; Prop 6.35 title, p. 136 | "backward" for "forward"; title "non-Zenoness and non-continuousness" |
+| A | 7 | Lemma 7.17, p. 148; Example 7.16; Example 7.35, p. 161 | $\mathcal A \subset U$; a corrected sentence on $\rho$; $\nabla$ placement |
+| B | 2 | Example 2.8 data | $f = (1,1)$, $g(x) = (\tfrac34x_1, \tfrac14x_1)$, checked against the stated solutions and now against the erratum's $\phi_d$ |
+| B | 6 | Example 6.4, p. 119 | the flow map is $\dot x_1 = x_3 x_1^2$ (not $x_1^2$), verified against both stated solution pieces, $(1-t)^{-1}$ with $x_3 = 1$ and $(2\varepsilon - 1 + t)^{-1}$ with $x_3 = -1$ |
+| C | 3 | Example 3.1, p. 44 | the printed target $\{0\} \times \mathbb R^{n_c} \times [0, T]$ leaves the held control free at $z = 0$; a state with $f_p(0, u) \ne 0$ leaves it before the next sample |
+| C | 3 | Example 3.23, pp. 58–59 | the printed $V = \sigma_q(W_q(z))$ vanishes at $(2, 0)$, outside the target $\{q = 1, z = 0\}$ |
+| C | 5 | Theorem 5.29(b), p. 113 | printed "not uniformly bounded"; $z_i(t) = t$ is globally unbounded, locally eventually bounded, and has no finite-time blow-up. The coherent reading is "not locally eventually bounded" |
+| D | 3 | Examples 3.7, 3.13, 3.21, 3.22, 3.35; Theorem 3.37; Lemma 3.41 | garbled displays rebuilt from context (see the précis) |
+| D | 4 | Examples 4.4, 4.15, 4.19; Lemma 4.20, Theorem 4.21 proofs; Definitions 4.13, 6.27; Example 4.14 | staircase map described qualitatively; "jump set" read as the displayed flow set; hats and bars rebuilt |
+| D | 5 | (⋆⋆), p. 112; Example 5.13's sine region | index slip corrected; possible lost $w_2 \ge 0$ |
+| D | 6 | Lemma 6.9 proof; Example 6.11; Theorem 6.30 proof; Prop 6.33 | lost closure bars; viability condition misprint; "Lemma 5.29" for Theorem 5.29; "pre-forward complete" |
+| D | 7 | Examples 7.2, 7.6; Lemmas 7.14, 7.20 proofs; Cor 7.33 title; §7.5 intro; Lemma 7.37 | displays scrambled or symbols renamed |
+| D | 8 | (8.1), (8.3); Theorem 8.11 proof; Proposition 8.16 | overbars lost; "T" for τ; ∪ possibly ∩, proof stops short |
+| D | 9 | Definition 9.5, Prop 9.6; Example 9.15 | subscript rendering; broken sentence |

@@ -1773,3 +1773,33 @@ ChatGPT did the same reading task at Louis's request, from the public Chapter 1 
 - **replay is not prediction:** the certificate must predict held-out pulses and rounds, not replay them;
 - **termination is not a time bound:** the assumptions are stated with the certificate;
 - **a re-pricing of the scanner plumbing fix on stage 1's numbers.** At 8 workers the workers are within 0.3 ms of the scanner, so a 15 ms scanner cut is almost entirely masked there (0.1941 s against 0.1944 s). At 10 workers it gives about 7.5%. That revises §62's "about 6% at 8", which used the scan profile's lower worker time. Stage 1's figures are instrumented, so run 2's paired A/B at 8, 9 and 10 decides. A joint cut, the scanner plus 20% of emission, gives 0.180 s at 8 (conditional).
+
+## 70. CORRECTION to §68: the bottleneck maximum is a lower bound, not a certificate
+
+ChatGPT reviewed the hybrid-systems notes at 771e43086. The review is recorded verbatim in `external/chatgpt-hybrid-systems-review.md`.
+
+**The main error, which was mine.** §68 and the relevance notes said that the bottleneck maximum $\max(S, W/k, R)$, read as a Lyapunov-type function, is a completion-time certificate, citing Example 7.35. **It is a lower bound.** One block with a 1 s scan, a 1 s decode and a 1 s delivery, done in series, has maximum 1 and takes 3 s. The maximum ignores dependencies, starvation, indivisible jobs and blocking. Example 7.35 also needs hypotheses (a compact flow set, the basic conditions, no complete solutions) that "always terminates" does not give: ChatGPT's two-line example terminates everywhere with no continuous bound.
+
+**Corrected** in `reading/hybrid-dynamical-systems/relevance/`:
+- **Three quantities, kept apart:** lower bounds (to prune), validated predictors (to rank; tested on held-out pulses, never by replaying a run with its own durations), and proved upper certificates.
+- **A concrete route to the third:** backward induction on a finite, acyclic state graph with bounded edge durations.
+
+**Other corrections applied:**
+- **The state table:** the `q_*` trace columns are positions in the event order, not counts.
+- **The event table** now matches the code: admission is checked before scanning, and `issued` advances after it; ownership guards are on finish and consumed; success, error, cancellation and deadlock are kept apart.
+- **Discrete guards:** the admission guard is an exact integer test under a lock, not a noisy threshold. Hysteresis is a tool for future adaptive policies only, and `LAZY_FROM_THREADS` is construction-time configuration.
+- **Levers:** the split "engineering pulls levers 1–4, mathematics 5" is dropped.
+- **`measurements.md`:**
+  - the token-bucket frontier is the right way round (burst as a function of rate);
+  - divergence between runs is a hypothesis to test by intervention;
+  - "steady regime" becomes a description of finite operating regimes, not invariance;
+  - scaling is narrowed to duration scaling in a fixed model.
+- **The précis:**
+  - the authors' published errata are applied: the hybrid time domain definition; p. 34; Example 6.20's invariance; Example 5.13; Lemma 7.17; and others;
+  - Example 6.4's flow is verified as $\dot x_1 = x_3 x_1^2$;
+  - three points about the book as printed are flagged: Examples 3.1 and 3.23, and Theorem 5.29(b);
+  - the speculative "candidate uses" sections are moved to `relevance/candidate-uses.md`, with corrections;
+  - `sections.tsv` gains 1.4.1–1.4.4;
+  - `extraction-notes.md` now marks each place as an erratum applied, verified, a point about the book, or unverified.
+
+**Downstream:** MONODROMY's queued #40 is corrected before dispatch. Its items 1, 3 and 5 now carry no claim that a certificate already exists.

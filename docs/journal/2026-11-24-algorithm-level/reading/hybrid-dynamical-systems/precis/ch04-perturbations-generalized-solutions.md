@@ -75,12 +75,6 @@ Sources: Filippov's book for discontinuous right-hand sides; Hermes and Krasovsk
 - Relies on Chapter 1 (the model $(C,F,D,G)$, bouncing ball, fireflies), Chapter 2 (hybrid time domains, Definition 2.6 of solution, Proposition 2.10 on existence, Zeno time bound (2.4), switching in Section 2.4) and Chapter 3 (Example 3.12; asymptotic stability notions).
 - Feeds Chapter 5 (graphical convergence and $(\tau,\varepsilon)$-closeness generalise Definition 4.11; Lemma 5.16 shows the regularised maps are osc and locally bounded) and Chapter 6 (the hybrid basic conditions mirror the regularisation; Corollary 6.32 completes Theorem 4.17; Theorem 6.31 shows a well-posed system's solutions equal its Hermes/Krasovskii solutions). Measurement-noise robustness and the hysteresis idea recur in the robustness chapters (7 onwards).
 
-## Candidate uses for a discrete-event computing pipeline
+## Candidate uses
 
-*Speculative; for the team lead to assess.*
-
-- The admission rule $\text{issued}-\text{taken}<W$ and the in-order reader are "thin" guards in the sense of Example 4.7: a timing perturbation at the instant a guard is reached can change whether an event fires then or later. Comparing the exact trace model with its regularised version (guards treated as closed, simultaneous events allowed in either order) could enumerate which orderings small timing jitter can produce.
-- Hermes ≈ Krasovskii suggests a test: event orders observed under jitter should all be solutions of the regularised model; an observed order outside it would indicate a modelling error or a missed causal edge in the trace.
-- Near the ~8-worker switch in the limiting resource, the effective throughput may behave like the convexified flow of Example 4.1: rapid alternation between two bottleneck regimes averaging to a rate in between. Long-run rates measured there might be predicted as convex combinations of the two regimes' rates, with the weight being the fraction of time each binds.
-- Hysteresis (Example 4.19) and side-memory (Example 4.18) suggest a design check: any scheduling decision taken at an equality boundary (e.g. exactly $W$ outstanding) is a candidate for fragility; a decision with memory or slack is robust by construction.
-- Proposition 4.10's overlap condition may be a useful lens on stalls: a state where neither "admit" nor "wait" is enabled under a small timing shift corresponds to nonexistence of a perturbed solution.
+Moved to `../relevance/candidate-uses.md` (25 November 2026), to keep the précis to the book.

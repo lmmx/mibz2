@@ -10,7 +10,7 @@ ChatGPT recommended it as the language for the decoder's "digital on analogue" d
 |---|---|
 | `sections.tsv` | every section with its printed page, and the précis file that covers it |
 | `precis/ch01-introduction.md` … `precis/ch09-conical-approximation.md` | one précis per chapter, section by section, naming each definition, theorem and example by number and printed page |
-| `precis/extraction-notes.md` | places where the extracted text was garbled or the print seems wrong; check these against the book before relying on them |
+| `precis/extraction-notes.md` | each doubtful place, marked as author's erratum applied, verified, a point about the book as printed, or still unverified |
 | `relevance/` | **separate from the précis**: the Coordinator's interpretation for our work (see `relevance/README.md`) |
 
 ## How the précis were made
@@ -20,3 +20,13 @@ The chapters were split from Louis's copy and their text extracted on the comman
 ## Where to start
 
 Chapters 1, 2 and 4, then 6 and 8; 3 and 7 for the certificates; 5 as needed; 9 last. For the purpose of this project, start with `relevance/levers.md`.
+
+## Corrections
+
+ChatGPT reviewed the collection at 771e43086 (`../../external/chatgpt-hybrid-systems-review.md`). Its corrections were applied on 25 November (journal §70):
+- the authors' errata, fetched from their site;
+- the précis fixes;
+- the speculative "candidate uses" moved out of the précis;
+- the main correction: the bottleneck maximum is a lower bound, not a completion-time certificate.
+
+ChatGPT's own parallel notes are in `../../methodology/hybrid-systems/`.

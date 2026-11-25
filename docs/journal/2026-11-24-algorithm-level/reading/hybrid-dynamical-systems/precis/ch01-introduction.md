@@ -68,12 +68,6 @@ The flow-set/flow-map/jump-set/jump-map format originates with Goebel et al. and
 - Examples recur in Chapter 3 (sample-and-hold as Example 3.1 and 3.21, bouncing ball as 3.19 and 3.25, uniting controllers as 3.23 and 3.31).
 - Forward references: Chapter 4 (robustness of the impulsive-equation models; Corollary 4.24 on approximating differential inclusions by switching), Lemma 5.26 (used in Chapter 2 for the bouncing ball), Section 8.5 (invariance principles for switching systems).
 
-## Candidate uses for a discrete-event computing pipeline
+## Candidate uses
 
-*Speculative; for the team lead to evaluate.*
-
-- The scanner–workers–reader pipeline can be written in exactly this format: continuous state is elapsed time and per-worker progress timers (flow), and each traced event (issue, enqueue, start, ready, taken, consumed) is a jump with its own guard (a subset of $D$) and reset.
-- The admission rule "issued − taken < W" is naturally a guard on the issue jump; the counts themselves are discrete modes that only change at jumps, like $q$ in Section 1.4.1.
-- Several events stamped with the same time map to consecutive jumps, as in the Newton's cradle and quantiser examples; the model has room for them without inventing artificial time offsets.
-- The hysteresis device of Example 1.7 (switching between two regimes with separated switching sets) is a template for describing which resource is the bottleneck either side of roughly 8 workers without chattering between regimes in the model.
-- The impulsive-equation discussion (1.4.3) suggests modelling fixed-schedule events with count-down timers rather than exact time sets, if the model is later used for robustness arguments.
+Moved to `../relevance/candidate-uses.md` (25 November 2026), to keep the précis to the book.
