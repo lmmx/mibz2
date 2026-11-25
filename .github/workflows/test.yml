@@ -60,6 +60,22 @@ jobs:
           git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
+      # bench-supplied-codes' arms (docs/journal/2026-11-24-supplied-codes-registration.md): arm B
+      # (the codes supplied in output order) the plain inverse's bytes on arbitrary columns, real
+      # BWTs, periodic blocks, wide codes and every cycle length; both arms and the per-block
+      # check through the lazy workers on the corpora; the harness's order balanced
+      - name: The supplied-codes arms (research feature)
+        run: |
+          cargo test --release --features supplied-codes --lib -- supplied
+          cargo test --release --features supplied-codes --test supplied_codes
+          cargo test --release --features supplied-codes --example supplied_codes
+      # bench-four-arm's arms (docs/journal/2026-11-24-four-arm-registration.md): the scanner's
+      # output recorded and replayed through the job queue, with the supplied codes, each arm's
+      # bytes the original's on the corpora and several streams; the harness's order balanced
+      - name: The four-arm oracle's arms (research feature)
+        run: |
+          cargo test --release --features scan-oracle --test four_arm
+          cargo test --release --features scan-oracle --example four_arm
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -204,6 +220,14 @@ jobs:
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
+      # bench-supplied-codes' verdict (bench/supplied_codes.py) on synthetic records: each
+      # decision where the frozen rule puts it, and no verdict from incomplete or inconsistent
+      # records
+      - name: The supplied-codes diagnostic's verdict (synthetic records)
+        run: python3 bench/test_supplied_codes.py
+      # bench-four-arm's verdict (bench/four_arm.py) on synthetic records
+      - name: The four-arm oracle's verdict (synthetic records)
+        run: python3 bench/test_four_arm.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
