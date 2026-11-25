@@ -25,7 +25,7 @@ This technical companion traces how compact word programs reconstruct text from 
 <div class="post-companion" data-role="companion-of" markdown>
 
 **The post this companion develops** introduced the interval-exchange structure and Rauzy–Veech
-machinery behind Cells, an experimental inverse transform. [A new way back from the BWT →](2026-11-10-rauzy-veech-reconstruction.md)
+machinery behind Cells, an experimental inverse transform. [A new way back from the BWT&nbsp;→](2026-11-10-rauzy-veech-reconstruction.md)
 
 </div>
 

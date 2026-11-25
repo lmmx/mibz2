@@ -63,7 +63,7 @@ structure hides it.
 
 **A technical companion** goes beneath this story: Little's law on a finite trace, the bottleneck law,
 modification analysis, load dependence, product form and the factorial design of the ideal-parts matrix.
-[Beneath the queueing network →](2026-11-25-the-decoder-as-a-queueing-network-notes.md)
+[Beneath the queueing network&nbsp;→](2026-11-25-the-decoder-as-a-queueing-network-notes.md)
 
 </div>
 

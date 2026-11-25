@@ -28,7 +28,7 @@ The theory under the story, from counting what waits and finding the bottleneck 
 <div class="post-companion" data-role="companion-of" markdown>
 
 **The story this companion goes beneath** tells how mibz2 came to apply queueing theory to its decoder,
-and what each part of the theory did when it was tried. [The decoder as a queueing network →](2026-11-25-the-decoder-as-a-queueing-network.md)
+and what each part of the theory did when it was tried. [The decoder as a queueing network&nbsp;→](2026-11-25-the-decoder-as-a-queueing-network.md)
 
 </div>
 

@@ -29,7 +29,7 @@ An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from
 
 **A technical companion** develops this post's reconstruction programme in full: how compact word
 rules recover the text, what building and expanding them costs, and what the evidence means for a
-complete decoder. [Reconstructing text from compact programs →](2026-11-12-rauzy-technical-companion.md)
+complete decoder. [Reconstructing text from compact programs&nbsp;→](2026-11-12-rauzy-technical-companion.md)
 
 </div>
 
