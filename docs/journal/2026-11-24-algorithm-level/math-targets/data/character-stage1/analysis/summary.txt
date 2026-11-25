@@ -1,0 +1,2 @@
+bundle: /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/char1/x/run-20261125T001135Z/
+per-block causal order issued<enqueued<got<ready<taken<consumed holds in decodes: k1:4, k2:4, k3:4, k4:4, k5:4, k6:4, k7:4, k8:4, k9:4, k10:4, k11:4, k12:4, k13:4, k14:4, k15:4, k16:4, k17:4, k18:4, k19:4, k20:4

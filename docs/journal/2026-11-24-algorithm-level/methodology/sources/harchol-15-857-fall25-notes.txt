@@ -1,0 +1,126 @@
+# Source text: https://www.cs.cmu.edu/~harchol/Perfclass/NotesFall25/notes.html (fetched 24 Nov 2026, HTML stripped)
+
+Mor Harchol-Balter: Class Notes 
+ Announcements
+ Mor will hold extra office hours Tuesday, Dec 2, 12-1 p.m. in GHC 7207.
+ Midterm 2 will take place on Thursday, Dec 4, from 5-7 p.m. , in our usual classroom. You will be allowed to have some extra time if needed, so please plan that into your schedule. You can bring one 4x6 index card with writing on both sides. I'll provide the index cards by December 1. The solutions to Midterm 2 will be discussed during the Dec 5th Friday class, which is optional. There is no final for the class. Midterm 2 will cover Chapters 14-33 -- but only the parts covered in class. Feel free to ask me to take pictures of my handouts if you missed class. You can also pick up old solutions from the bins outside my office door (GHC 7207).
+ Keerthana will take over my Wednesday, Nov 5th, office hours. She will hold these in my office: GHC 7207.
+ Mor will hold extra office hours Monday, Oct 27, 4:30 p.m. - 5:15 p.m. in GHC 7207.
+ Keerthana will hold another totally optional Practice Session on Transforms Friday, Oct 24, at 2 p.m. in our usual classroom for those who want more practice. 
+ Keerthana will hold a Practice Session on Transforms this Tuesday, Oct 21, from 7-9 p.m.
+ Midterm 1 will take place on Thursday, Oct 9, from 5-7 p.m., in our usual classroom. You can bring one 3x5 index card with writing on both sides. You can pick up the index card in class. 
+ Homeworks 
+ Homework 1 -- Queueing Terminology -- Due Sept 5 at 2 p.m. 
+ For problem 2.2 : you should think of T as the response time for an arbitrary job; S as the size of that job; and Slow as the slowdown of that job. You are looking for E[Slow] = E[T/S] for this arbitrary job. Specifically, T and S refer to the same job. Clearly a job's response time, T, is not independent of its size, S. 
+ Homework 2 -- Convergence, z-Transforms, Little's Law -- Due Sept 12 at 2 p.m. 
+ Homework 3 -- More Operational Laws -- Due Sept 19 at 2 p.m. 
+ Homework 4 -- DTMCs -- Due Sept 26 at 2 p.m. 
+ Homework 5 -- Ergodicity -- Due Oct 3 at 2 p.m. 
+ For problem 10.7 part f : You'll find that after you simplify the partial fraction decomposition, one of the terms will end up being 0. This will make your answer a lot nicer!
+ Homework 6 -- Poisson Process & M/M/1 -- Due Oct 8 at 2 p.m. -- Do NOT turn in 
+ Homework 7 -- M/M/k, M/M/k/k -- Due Oct 24 at 2 p.m. 
+ Homework 8 -- Capacity Provisioning, Burke's Thm -- Due Oct 31 at 2 p.m. -- Please turn this in at Keerthana's office: GHC 7004. 
+ Homework 9 -- Jackson, Classed-Jackson, and Pareto -- Due Nov 7 at 2 p.m. 
+ Homework 10 -- M/G/1 and Renewal Reward -- Due Nov 14 at 2 p.m. 
+ Homework 11 -- M/G/1 and Busy Periods -- Due Nov 21 at 2 p.m. -- please turn in at Mor's office: GHC 7207 
+ For Exercise 24.6, feel free to use a math package to make plots, so that you can see where Time in Queue is minimized. You can also use a math package to do the integration and other computations. 
+ Homework 12 -- M/G/1 Scheduling -- Due Dec 2 at 5 p.m. -- please turn in at Mor's office: GHC 7207 
+ Homeworks 
+ Homework 7 -- from M/M/1 to M/M/k -- Due Oct 27, at start of class 
+ Homework 8 -- M/M/k, Burke, and Jackson -- Due Nov 3, at start of class 
+ Homework 9 -- Classed Jackson and General Distributions -- Due Nov 10, at start of class 
+ Homework 10 -- M/G/1 and Renewal-Reward -- Due Nov 17, at start of class 
+ When doing Renewal-Reward problems, please clearly specify the relevant parameters, such as: how you're defining the renewal cycle, what is the rate at which reward is being earned, what is the total reward in each cycle, etc.
+ Homework 11 -- M/G/1 and Busy Periods -- Due Wednesday Nov 29, at start of class 
+ No late minutes on this homework -- solutions going out in Wednesday's class.
+ I apologize: We're not getting to Chpt 30 in time for this homework. Please move Exercise 30.5 to HW 12. You can still skip one problem of your choice on HW 11.
+ Exercise 27.1: Assume that E[S] = 1/mu, i.e. mu and E[S] are reciprocals.
+ Exercise 27.3: It helps to follow the same process that we used in class for deriving the Laplace transform of a busy period, where we first derive the Laplace transform of B(x) and then use that to derive the Laplace transform of B. This time, however, you are deriving the Laplace transform of B_{short}(x) and B_{short}, where the "short" indicates that only short jobs are allowed.
+ Exercise 26.5: Remember that you're using Distributional Little's Law as defined in class. This is the one that relates N_Q(z) to A_{T_Q}(z) to T_Q(s). See my lecture on Chpt 27!
+ Exercise 26.11 -- Go back and look at Exercise 25.7 and use that interpretation. This is only a few lines of argument (no math).
+ Homework 12 -- Scheduling -- Due Wednesday Dec 6, at start of class 
+ Exercise 30.3: HINT: Think about the CTMC for the M/M/1 with different scheduling policies.
+ -->
+ Here's the link to sign up for a research meeting with Mor (this is worth 5% of your grade). 
+ Here's the link to sign up for grading one homework (this is worth 5% of your grade). 
+ Class Schedule (tentative) 
+ Papers are totally optional reading. You're only responsible for the book reading.
+ Mon, Aug 25, Chpt 1: Motivating Examples on Queueing Theory. (Mor) handout for class 
+ AutoScale dynamic power management paper (TOCS 2012) -- This is the paper that talks about how setup times are much less problematic if you have a lot of servers. AutoScale was adopted by Facebook.
+ Jalani Williams PhD thesis (CMU, 2024) -- Analysis of setup times in multiserver systems.
+ Optimal power allocation in server farms (SIGMETRICS 2009) -- This is a problem that came from IBM and deals with the question of many turtles versus one fast rabbit.
+ Surprising results on task assignment/ load balancing (SIGMETRICS 2009) -- This is a paper showing that the "best" load balancing policy is not obvious and depends on the particular job size distribution in counter-intuitive ways.
+ Wed, Aug 27, Chpt 2: Queueing Theory Notation/Vocabulary. (Mor) handout for class 
+ Fri, Aug 29, Chpt 4: Simulating Random Variables. (Zhouzi) handout for class 
+ Mon, Sept 1, LABOR DAY, NO CLASS
+ Wed, Sept 3, Chpt 5: Convergence of Random Variables and Time Average versus Ensemble Average (Mor) handout for class 
+ Fri, Sept 5, Chpt 25 -- z-transforms only plus exercises on z-transforms (Keerthana) handout for class 
+ Mon, Sept 8, Chpt 6: Operational Laws, Little's Law (Mor) handout for class 
+ Optional (in case you're interested): Extra Details on Little's Law proof 
+ Closed versus open system models paper (NSDI 2006) -- This paper discusses differences on the effect of scheduling policies in closed versus open systems.
+ Wed, Sept 10, Chpt 7: Modification Analysis Intro (Mor) handout for class 
+ Fri, Sept 12, Chpt 7: Modification Analysis -- Real-world Caching application (Zhouzi) handout for class 
+ Mon, Sept 15, Chpt 8: Discrete-Time Markov Chains (Mor) handout for class 
+ Wed, Sept 17, Chpt 9: Ergodicity Theory -- Finite-state (Mor) handout for class 
+ Fri, Sept 19: NO CLASS: ENJOY A BREAK
+ Mon, Sept 22, Chpt 9: Ergodicity Theory -- Finite-state (Mor) handout for class 
+ Wed, Sept 24, Chpt 9: Ergodicity Theory -- Infinite-state DTMCs (Mor)
+ handout for class 
+ Fri, Sept 26, Chpt 11: Chpt 25: Laplace Transforms (Keerthana)
+ handout for class 
+ Mon, Sept 29, Chpt 11: Exponential Distribution leading to Poisson Process (Mor) handout for class 
+ Wed, Oct 1, Chpt 11 cont: Poisson Process (Mor) handout for class 
+ Fri, Oct 3, Chpt 12: Conversion to M/M/1 (Zhouzi) handout for class 
+ Mon, Oct 6, Chpt 13: M/M/1 (Mor) handout for class 
+ Wed, Oct 8, Chpt 14: M/M/k (Mor) handout for class 
+ THURS -- Oct 9 -- MIDTERM 1 -- at 5 p.m. in GHC 4307 (usual classroom)
+ Fri, Oct 10 -- Midterm 1 review OPTIONAL (Keerthana)
+ WEEK OF OCT 13: CMU BREAK
+ Mon, Oct 20: Chpt 15: Capacity Provisioning (Zhouzi) handout for class 
+ Wed, Oct 22, Chpt 16: Burke's Thm (Mor) handout for class 
+ Fri, Oct 24, NO CLASS: ENJOY A BREAK 
+ Mon, Oct 27, Chpt 17: Jackson Networks (Mor) handout for class 
+ Wed, Oct 29, Chpt 18: Classed Jackson Networks (Mor) handout for class 
+ Fri, Oct 31, NO CLASS: ENJOY A BREAK 
+ Mon, Nov 3, Chpt 20: Pareto Distribution (Keerthana) handout for class 
+ Wed, Nov 5, Chpt 21: Phase-type Distributions (Zhouzi)
+ handout for class 
+ Fri, Nov 7, Chpt 23: Renewal Reward and M/G/1 (Mor) handout for class 
+ Mon, Nov 10, Chpt 23 cont. and Chpt 24: Task Assignment (Mor) handout for class 
+ Wed, Nov 12, Chpt 26: M/G/1 transform (Mor) handout for class 
+ Fri, Nov 14, Chpt 27 Busy Periods (Zhouzi) handout for class 
+ Mon, Nov 17 Chpt 28, 29 : Scheduling (Mor) handout for class 
+ Wed, Nov 19 -- Chpt 29, 31: Scheduling (Mor) handout for class 
+ Fri, Nov 21 NO CLASS: ENJOY A BREAK
+ Mon Nov 24 Chpt 30: Scheduling (Mor) handout for class 
+ Wed, Nov 26: THANKSGIVING NO CLASS
+ Fri, Nov 28: THANKSGIVING NO CLASS
+ Mon, Dec 1: Chpt 32: Scheduling (Mor) handout for class 
+ Wed, Dec 3: Chpt 33: Scheduling (Mor) handout for class 
+ SOAP paper -- analyzing SERPT and Gittins 
+ Thurs, Dec 4 -- MIDTERM 2
+ Fri, Dec 5 -- Entirely Optional -- Going over exam (TAs)
+ Exploiting Process Lifetime Distributions (SIGMETRICS 1996) 
+ Borg: The Next Generation (EUROSYS 2020) 
+ Exact analysis of M/M/k/setup (QUESTA 2014) 
+ Analysis of Cycle Stealing (QUESTA 2005) 
+ Redundancy-d: The Power of d Choices for Redundancy (Operations Research 2017) 
+ Fri, Nov 3, Chpt 21: Phase-type Distributions (Jalani)
+ Mon, Nov 6, Chpt 23: Renewal Reward (Mor)
+ Wed, Nov 8, Chpt 23 cont., chpt 24: Task Assignment (Mor)
+ Fri, Nov 10, Chpt 26
+ Mon, Nov 13, Chpt 27
+ Wed, Nov 15 -- NO CLASS (Away at conference)
+ Fri, Nov 17 -- NO CLASS (Jalani and Mor are both away)
+ Mon, Nov 20 Chpt 28, 29 : Scheduling
+ Wed, Nov 22 -- NO CLASS -- THANKSGIVING
+ Fri, Nov 24 -- NO CLASS -- THANKSGIVING
+ Mon, Nov 27: Chpt 31: Scheduling (Mor)
+ Wed, Nov 29: Chpt 30: Scheduling (Mor)
+ Ziv Scully's SOAP Scheduling paper 
+ Fri, Dec 1: Chpt 30/32: Scheduling (Mor)
+ Mon, Dec 3: Chpt 32: Scheduling (Mor)
+ Wed, Dec 5: Chpt 33: Scheduling (Mor)
+ Thurs, Dec 6 -- MIDTERM 2
+ Fri, Dec 8 -- Entirely Optional -- Just a chance to go over questions related to the exam (Jalani)
+-->

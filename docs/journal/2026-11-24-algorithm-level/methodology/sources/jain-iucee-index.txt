@@ -1,0 +1,43 @@
+# Source text: https://www.cs.wustl.edu/~jain/iucee/index.html (fetched 24 Nov 2026, HTML stripped)
+
+Computer Systems Performance Analysis 
+ Computer Systems Performance Analysis:
+ Techniques for Experimental Design, Measurement, Simulation, and Modeling
+ A 5-day training course taught by Prof. Raj Jain as a part of Indo-US Collaboration in Engineering Education Leadership Workshop,
+July 5-9, 2010, Guna, MP, India.
+ ABSTRACT 
+This 5-day training is designed for faculty members teaching courses in performance analysis, measurement, experimental design, simulation, and queueing theory at a senior undergraduate or first year postgraduate level. The course is based on Raj Jain's award winning book "The Art of Computer Systems Performance Analysis: Techniques for Experimental Design, Measurement, Simulation, and Modeling." Topics covered include comparing systems using measurement, simulation, and queueing models. Common mistakes and how to avoid them, selection of techniques and metrics, art of data presentation, summarizing measured data, comparing systems using sample data, introduction to experimental design, fractional factorial designs, introduction to simulation, common mistakes in simulations, analysis of simulation results, random number generation, random variate generation, commonly used distributions, introduction to queueing theory, single queues, and queueing networks. The techniques of the course can be used to analyze and compare any type of systems including algorithms, protocols, network, or database systems. All participants will receive a copy of the textbook, a set of slides for course teaching, and a solution manual for student exercises.
+ Text Book: Raj Jain, "
+ The Art of Computer Systems Performance Analysis: Techniques for Experimental Design, Measurement, Simulation, and Modeling ," Wiley-Interscience, New York, NY, April 1991, ISBN:0471503363
+ Day 1: Module 1: Course Introduction 
+ Module 2: Common Mistakes Chapter 2 
+ Module 3: Selection of Techniques and Metrics Chapter 3 
+ Types of Workloads Chapter 4 
+ Workload Selection Chapter 5 
+ Module 4: Workload Characterization Chapter 6 
+ Day 2: Module 1: Data Presentation Chapter 10 
+ Ratio Games Chapter 11 
+ Module 2: Summarizing Measured Data Chapter 12 
+ Module 3: Comparing Systems Using Random Data Chapter 13 
+ Module 4: Simple Linear Regression Models Chapter 14 
+ Other Regression Models Chapter 15 
+ Day 3: Module 1: Experimental Designs Chapter 16 
+ 2**k Experimental Designs Chapter 17 
+ Module 2: Factorial Designs with Replication Chapter 18 
+ Module 3: Fractional Factorial Designs Chapter 19 
+ One Factor Experiments Chapter 20 
+ Module 4: Two Factor Full Factorial Design w/o Replications Chapter 21 
+ Two Factor Full Factorial Designs with Replications Chapter 22 
+ General Full Factorial Designs Chapter 23 
+ Day 4: Module 1: Introduction to Queueing Theory Chapter 30 
+ Module 2: Analysis of Single Queue Chapter 31 
+ Queueing Networks Chapter 32 
+ Module 3: Operational Laws Chapter 33 
+ Module 4: Mean-Value Analysis Chapter 34 
+ Day 5: Module 1: Introduction to Simulation Chapter 24 
+ Module 2: Analysis of Simulation Results Chapter 25 
+ Module 3: Random Number Generation Chapter 26 
+ Testing Random Number Generators Chapter 27 
+ Module 4: Random Variate Generation Chapter 28 
+ Complete List of Audio and Video Recording of Lectures by Raj Jain 
+ Back to Raj Jain's Home Page

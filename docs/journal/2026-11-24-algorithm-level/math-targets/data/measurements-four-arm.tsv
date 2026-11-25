@@ -1,0 +1,13 @@
+source	workers	arm	arm_meaning	rounds	wall_median_s	wall_mean_s	ratio_vs_A	ratio_ci_lo	ratio_ci_hi	ratio_call	peak_rss_median_kb	peak_rss_max_kb
+four-arm/run-20261124T204154Z	1	A	as shipped	20	1.3137	1.3176	1.000			baseline	402198	425848
+four-arm/run-20261124T204154Z	1	B	output-order codes supplied (emission oracle)	20	1.0916	1.0934	0.830	0.825	0.834	FASTER	402238	426728
+four-arm/run-20261124T204154Z	1	C	scanner output supplied (Huffman oracle)	20	1.3106	1.3126	0.996	0.991	1.001	INCONCLUSIVE	390912	411608
+four-arm/run-20261124T204154Z	1	D	both supplied	20	1.0854	1.0872	0.825	0.820	0.831	FASTER	390954	411516
+four-arm/run-20261124T204154Z	6	A	as shipped	20	0.2481	0.2477	1.000			baseline	411834	432384
+four-arm/run-20261124T204154Z	6	B	output-order codes supplied (emission oracle)	20	0.2107	0.2105	0.850	0.844	0.855	FASTER	405260	433244
+four-arm/run-20261124T204154Z	6	C	scanner output supplied (Huffman oracle)	20	0.2426	0.2433	0.982	0.979	0.986	FASTER	391774	418844
+four-arm/run-20261124T204154Z	6	D	both supplied	20	0.2059	0.2057	0.830	0.827	0.834	FASTER	389816	413184
+four-arm/run-20261124T204154Z	10	A	as shipped	20	0.2260	0.2234	1.000			baseline	401942	425316
+four-arm/run-20261124T204154Z	10	B	output-order codes supplied (emission oracle)	20	0.2196	0.2180	0.976	0.936	1.017	INCONCLUSIVE	402198	425976
+four-arm/run-20261124T204154Z	10	C	scanner output supplied (Huffman oracle)	20	0.1790	0.1798	0.806	0.782	0.831	FASTER	389272	411736
+four-arm/run-20261124T204154Z	10	D	both supplied	20	0.1675	0.1655	0.741	0.717	0.766	FASTER	390744	410116

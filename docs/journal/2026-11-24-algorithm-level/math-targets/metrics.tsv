@@ -1,0 +1,19 @@
+metric	unit	level	what_it_tells	status	source
+wall_median_s	s	whole decoder	end-to-end time per arm and worker count	measured	data/measurements-four-arm.tsv
+ratio_vs_A (with 95% interval)	ratio	whole decoder	paired ceiling of an oracle	measured	data/measurements-four-arm.tsv
+peak_rss_median_kb, peak_rss_max_kb	kB	process	memory high-water mark	measured	data/measurements-four-arm.tsv
+rss_mean_kb (time-averaged)	kB	process	memory pressure over the run, not just its peak	not yet	to add to the scanner profile
+cpu_user_s, cpu_sys_s	s	process	CPU spent, to tell work from waiting	not yet	time -v in the bundle; to tabulate
+page_faults (minor, major), context_switches	count	process	memory and scheduling overhead	not yet	time -v in the bundle; to tabulate
+scanner_busy_s, scanner_idle_s, per phase	s	scanner	where the serial stage spends its time	in review	#838 scan-profile
+worker_busy_s, worker_idle_s	s	workers	whether workers starve on the scanner	in review	#838 scan-profile
+rho (scanner rate / workers' rate), crossover k*	ratio, workers	pipeline	the shift point for a parallel scanner	in review	#838 scan-profile, 1-20 grid
+worker split: MTF/RLE2, construction, emission, RLE1/CRC	s	workers	ceilings for T2, T3, T6	not yet	needs a worker-split oracle
+h1, r, m16	count	block	lone rows, runs, retained rows	measured	MONODROMY records; Neon branches
+Q, D, P, S	reads, depth, passes, bytes	candidate algorithm	the referee for any mathematical candidate	per candidate	essence.md; council/comparison.md
+successor-address segments (+1)	count	retained map	closure: does compactness survive composition	measured for M-17 and CL1	external/chatgpt-closure.md; reviews/neon-movement-cycle3-critique.md
+LLC misses, memory bandwidth	count, GB/s	hardware	contention at high worker counts	not yet	MONODROMY to advise (channel #33)
+rho	ratio	whole decoder	scanner rate over the workers' combined rate; above 1 the workers bind	measured	data/measurements-scan-profile.tsv
+efficiency_vs_busiest_server	ratio	whole decoder	max(scanner work, one worker's busy) over the wall; what a queueing discipline could still recover	measured	data/measurements-scan-profile.tsv
+rss_own_peak_mb	MB	whole decoder	the decode's own peak memory, less the process base	measured	data/measurements-scan-profile.tsv
+cpu_over_wall	ratio	whole decoder	CPU time spent per wall second; rises past the knee with no gain	measured	data/measurements-scan-profile.tsv
