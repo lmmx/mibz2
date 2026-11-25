@@ -99,6 +99,13 @@ moonshot = []
 # production path. Retain while the census's features are in use; remove at the first release
 # review after
 census = []
+# Research only: the decoder's character across 1 to 20 workers, as a network of activities,
+# buffers and resources (src/character.rs, examples/character.rs; docs/journal/
+# 2026-11-24-algorithm-level/briefs/character.md, stage 1: bench-character): each thread's
+# ledger of activities (A0 to A10), waits and blocks, and the buffers' live occupancy. Off,
+# each hook is one relaxed atomic load. Never on a production path. Retain while the
+# character study's stages run; remove at the first release review after
+character = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -164,3 +171,7 @@ required-features = ["owned-writer"]
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
+
+[[example]]
+name = "character"
+required-features = ["character"]
