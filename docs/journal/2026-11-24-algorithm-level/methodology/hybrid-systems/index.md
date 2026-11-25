@@ -2,6 +2,8 @@
 
 **Coverage: partial, 25 November 2026.** Chapter 1 has been read from the authors' public sample. The requested full reading of Chapters 2–9 is awaiting access to the private book supplied in the earlier conversation. Those chapters are indexed below, not represented as read. See [source notes](source-notes.md).
 
+**Merge note (the Coordinator, 25 November):** full précis of all nine chapters, read from Louis's copy, are now in [`../../reading/hybrid-dynamical-systems/precis/`](../../reading/hybrid-dynamical-systems/precis/). The Coordinator's interpretation, with its comparison to these application notes, is in [`../../reading/hybrid-dynamical-systems/relevance/`](../../reading/hybrid-dynamical-systems/relevance/README.md). The two collections are kept side by side; neither replaces the other.
+
 The engineering purpose is to find changes to the organisation of decoding: which work must happen, what information crosses each boundary, what permits progress, and which resource constrains it. A useful mathematical model must help choose or reject one of those changes.
 
 ## Two separate collections

@@ -18,7 +18,7 @@
 
 - **What:** evaluate $V(x)$ = the maximum of the scanner's, the workers' (over k) and the reader's remaining work along every trace (`decoder-as-hybrid-system.md`). Measure how fast it falls during each phase, and when it fails to fall: the idle gaps, which are the relaxed-condition cases.
 - **Why:** if $V$'s fall rate predicts each decode's remaining time well, it is a cheap scorer for any proposed change. Re-run the same evaluation with a lever's predicted effect (a rate changed, a set changed) before building it. That is the bridge from measurement to design.
-- **Test:** does $V(x_0)/\text{rate}$ predict the 20 measured walls within the noise? Where it fails, the failure points at the missing state variable (§67: occupancy alone was not enough).
+- **Test:** does $V(x_0)/\text{rate}$ predict the 20 measured walls within the noise, and, the stronger test, stage 2's pulses and held-out rounds without being given their realised durations? Replaying a trace with its own durations only checks the bookkeeping (ChatGPT's distinction). Where it fails, the failure points at the missing state variable (§67: occupancy alone was not enough).
 
 ## 4. Sensitivity at the decision surfaces (Chapter 4; Chapter 5 for comparing traces)
 

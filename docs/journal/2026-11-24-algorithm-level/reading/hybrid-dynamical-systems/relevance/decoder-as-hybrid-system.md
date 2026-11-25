@@ -67,6 +67,8 @@ in seconds at the slowest admissible rates.
 
 So $V(x_0)$, adjusted for that idle time, bounds the decode's time from the start. This is the operational-law bound $X \le \min(1/D_\text{scan}, k/D_\text{wkr}, 1/D_\text{read})$ (§57, §66) read as a Lyapunov-type function on the hybrid system. Chapter 3's relaxed conditions (§3.3) are the tool when $V$ may rise briefly in one regime but falls overall. Our idle periods are such a case.
 
+**What a time bound needs (from ChatGPT's notes, `../../../methodology/hybrid-systems/applications/02-completion-and-model-validity.md`).** Example 7.35 is about termination. A *time* bound also needs stated assumptions: finite input; terminating per-block work; a sink that keeps consuming; fair, urgent scheduling of enabled work; and bounds on service rates. The certificate is only as good as those.
+
 **Why this matters for the work, not just as theory.** A certificate judges a *whole design* without simulating it. Change $F$, $D$ or $G$ (`levers.md`) and ask whether the certificate's rate improves. Ma et al.'s enumeration (`../../../leads/structure-and-function.md`) needs exactly such a cheap scorer, and this is one.
 
 ## What the model leaves out (so far)

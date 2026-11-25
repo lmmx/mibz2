@@ -10,13 +10,14 @@
 | **2. The flow set $C$** | where work may proceed; where a thread must wait | the window W and the byte cap close flow for the scanner; the in-order reader closes flow for out-of-order blocks | Open, thin flow sets are fragile under perturbation (Chapter 4). Closed sets that overlap $D$ are what make behaviour robust (Proposition 4.10). |
 | **3. The jump set $D$** | when an event may happen | admission's predicate; in-order taking; when lazy workers apply (`LAZY_FROM_THREADS`, §66); when a worker may take a job | Thin decision surfaces (an exact threshold) let tiny timing noise flip outcomes. Hysteresis turns them into robust regions (Examples 4.18, 4.19). |
 | **4. The jump map $G$** | what an event does | dispatch (which idle worker); routing (Open, fallback, column); teams splitting one block; size-aware dispatch | A set-valued $G$ honestly models a free choice. Choosing well within it is a *policy*, and policies are judged by the certificate, not by one trace. |
+| **4b. Ownership** (from ChatGPT's notes) | who holds which buffer, and when it is released: compute credits apart from memory reservations; taking a block apart from consuming and returning it | the byte cap gates new scanning but not live memory; worker, ready and reader buffers lie outside it | a redesign must account for every allocation owner, and keep the earliest unfinished block able to get resources |
 | **5. The state space itself** | what is represented | a parallel or speculative scanner (several scanner states at once); decoding from all start states and composing (`../../../leads/structure-and-function.md`); an intermediate object between scanner and workers; Rauzy–Veech in place of LF traversal | This is "mathematical reorganisation". The book doesn't generate it, but it gives the format any proposal must be written in, so it can be compared with the shipped design by the same certificate. |
 
 ## Placing the current leads
 
 | lead | lever | expected effect (from our records) |
 |---|---|---|
-| the scanner plumbing (input copy; symbol re-zeroing) | 1 | about 15 ms off the scanner's demand; about 6% wall at 8 workers, 8–9% at 9–10 (§62) |
+| the scanner plumbing (input copy; symbol re-zeroing) | 1 | about 15 ms off the scanner's demand. On stage 1's instrumented numbers it is almost entirely masked at 8 workers, where the workers are within 0.3 ms of the scanner, and gives about 7.5% at 10 (ChatGPT's re-pricing; §62's 6% at 8 used the scan profile). Run 2's A/B decides |
 | lazy workers below 8 threads (`LAZY_FROM_THREADS`) | 3 | 7 threads asked: 0.337 s against 0.209 s (§66) |
 | the worker count (7 against 8 or 9) | 4 (the policy chooses k) | 0.209 s against 0.190–0.192 s through the public API (§66) |
 | the scanner's placement (a favoured core, sibling idle) | 1, by reducing contention | removes the slowdown at 16 and above if it is SMT (stage 2a decides) |

@@ -1765,3 +1765,11 @@ ChatGPT's first reading is recorded verbatim (`external/chatgpt-hybrid-systems-b
   5. the steady regime;
   6. homogeneity, and the knee's geometry.
 - **Limits:** most of the book's stability theory assumes runs that never end. What transfers directly is the solution concept, perturbation and regularisation, well-posedness, and the finite-time certificate.
+
+## 69. ChatGPT's hybrid-systems notes merged; the scanner fix re-priced
+
+ChatGPT did the same reading task at Louis's request, from the public Chapter 1 sample only, and committed `docs/hybrid-systems-notes` (894b676e). It is merged into this branch at `methodology/hybrid-systems/`. Its report is recorded verbatim in `external/chatgpt-hybrid-systems-commit.md`. The two collections cross-link, and the comparison is at the end of `reading/hybrid-dynamical-systems/relevance/README.md`. Adopted from it:
+- **an ownership lever:** compute credits apart from memory reservations, and taking a buffer apart from consuming and returning it;
+- **replay is not prediction:** the certificate must predict held-out pulses and rounds, not replay them;
+- **termination is not a time bound:** the assumptions are stated with the certificate;
+- **a re-pricing of the scanner plumbing fix on stage 1's numbers.** At 8 workers the workers are within 0.3 ms of the scanner, so a 15 ms scanner cut is almost entirely masked there (0.1941 s against 0.1944 s). At 10 workers it gives about 7.5%. That revises §62's "about 6% at 8", which used the scan profile's lower worker time. Stage 1's figures are instrumented, so run 2's paired A/B at 8, 9 and 10 decides. A joint cut, the scanner plus 20% of emission, gives 0.180 s at 8 (conditional).
