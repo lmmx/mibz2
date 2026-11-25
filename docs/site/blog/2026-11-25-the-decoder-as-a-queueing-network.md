@@ -16,7 +16,7 @@ description: "Modelled as stations and queues, the decoder shows in advance wher
 Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 {: .post-dek }
 
-25 November 2026 · 26 min read · [Research in progress](#13-what-runs-next)
+25 November 2026 · 30 min read · [Research in progress](#15-what-runs-next)
 {: .post-meta }
 
 </div>
@@ -25,79 +25,150 @@ Modelled as stations and queues, the decoder shows in advance where more workers
 
 </div>
 
-Queueing theory describes a program as a network of stations through which jobs pass, and its
-simplest laws hold whatever the stations compute. mibz2's decoder is such a network: one serial
-scanner feeds parallel workers, and a consumer that writes blocks in order hands admission back to
-the scanner. Applied to it, [the bottleneck law](#2-queueing-theory-in-the-measure-needed-here) predicted from four worker counts where adding
-workers stops helping, at about 7.5 on our ten-core machine, and the measurement across every count
-from 1 to 20 puts the crossover at 7.67. The same laws said what not to try: no reordering of the
-queue can beat the busiest station's limit, and the decoder already runs within about 5% of it, so
-gains must come from less work at the bottleneck or from a different topology. Modification
-analysis, which changes one station in the model before anything is built, explains why speeding
-one stage can show nothing until another is relieved, and why improvements have to be priced
-together. The exact theory beyond the laws, product-form networks and mean-value analysis, does not
-fit a decoder with ordered output and shared caches, so bounds and a simulation driven by the
-measured trace do the predicting. Experiments that slow each station in turn then show which one
-controls the decoder at each worker count: the workers' construction and emission below the knee,
-and the scanner's Huffman decode at and above it. The point of all this is not a better thread
-pool; queueing theory locates where new mathematics in the algorithm would pay. This post picks up where
-[Posing the inversion problem](2026-11-24-posing-the-inversion-problem.md) left off.
+At ten workers, supplying mibz2's decoder with the codes its emission step would otherwise compute
+saved nothing measurable, yet the same supply saved 8% once the serial scanner had been relieved
+as well. A profile cannot explain that, because it says where time is spent, not which work
+decides when a decode finishes; queueing theory is the discipline built for the second question,
+and a month of our earlier performance work had been asking it under other names. This post
+follows the attempt to apply the theory properly, in order: what we expected it to give (a
+characterisation of the decoder as a system, predictions of what a change would buy, and a search
+for a better organisation of its work), what each part did when tried, and where it led. The
+[bottleneck law](#5-the-bottleneck-law) predicted from four worker counts where adding workers stops helping. Little's law
+decided what the instruments had to record and then audited them. Modification analysis explained
+the vanishing improvement and changed how every improvement is priced. Load dependence gave one
+name to a month of interference findings. The exact theory of product-form networks fitted a
+surrogate of the decoder rather than the decoder, so bounds, interventions and a simulation still
+to be built do the predicting. And the destination is an experiment that makes each part of the
+decoder ideal in turn, to map where new mathematics could pay, including where the present
+structure hides it.
 
 **Takeaways**
 
-- Queueing theory's operational laws use only measured quantities, with no assumptions about
-  distributions: here they predicted the knee, audited the instruments, and bounded what any
-  scheduling could gain.
-- A two-station model fitted on four worker counts predicts the knee at 7.49 workers; the
-  measured crossover is 7.67, and the decoder's best wall, 0.191 s, is at 8.
-- Above the knee the decoder runs at 0.945 or better of the busiest server's limit at every count,
-  so no queueing discipline can recover more than about 5%.
-- Independent readings corrected the first: the public API never runs 20 workers on this machine,
-  and the scanner spends about 8% of its demand on two avoidable copies.
-- Stage 1 of the characterisation confirmed the switch from workers to scanner at exactly 8, and
-  found that asking for 3, 5 or 7 threads selects an older kernel that is 61% slower at 7.
-- Stage 2 showed the switch by intervention: at 6 workers construction and emission control the
-  wall, at 8 and 10 only the scanner's Huffman decode does, and the wall behaves as the maximum of
-  the two stations, so a faster scanner gains little at 8 while workers sharing cores cost 48%.
-- Two claims were corrected: the price for decoding several symbols a lookup was for a change
-  master already had, and a third symbol gained nothing; and the first held-out prediction passed
-  only on wide intervals.
+- The first queueing law tried, the [bottleneck law](#5-the-bottleneck-law), predicted the knee at 7.49 workers from
+  measurements at one to four; the measured crossover is 7.67, and the best wall, 0.191 s, is at
+  8.
+- The theory's simplest laws held and its most elegant results did not: operational identities
+  held exactly in 840 traced decodes, while product-form models fitted only a simplified surrogate
+  of the decoder, within 1 to 4 ms.
+- An improvement's value depends on what else is improved: emission's room is 15–17% below the
+  knee, hidden at it, and appears above it mostly behind a relieved scanner. Improvements are now
+  priced in combination.
+- Where threads sit matters as much as what they compute: workers on the two hardware threads of
+  shared cores cost 48% at 8 workers, and two merged changes took 16–37% and 7% off by choosing
+  the kernel and the worker count better.
+- Even with the scanner and emission both made ideal, the decoder keeps 0.82–0.84 of its wall,
+  which is where the next measurements, and the search for new mathematics, are aimed.
 
-## 1. A simple observation
+## 1. An improvement whose value vanished
 
-The four-arm test supplied each of the decoder's two stages for free, outside the clock. At ten
-workers, supplying the codes for emission saved nothing measurable (0.976 of the shipped time),
-supplying the scanner's output saved 19% (0.806), and supplying both saved 26% (0.741): a gain
-invisible until another bottleneck was removed
-([Masked bottlenecks in a two-stage decoder](2026-11-24-the-scanner-hides-the-emitter.md)). An
-observation like that asks for a model of the decoder as a system rather than as a list of kernels,
-which is what the programme set out in the previous post is for.
+The question began with an oracle. The inversion work had a way to supply the codes that the
+emission step would otherwise compute, prepared outside the timed decode, which turns "what if
+emission's work were cheap?" into a measurement ([Masked bottlenecks in a two-stage decoder](2026-11-24-the-scanner-hides-the-emitter.md);
+[journal §44](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). With one or six workers, the supply saved 17% and 15% of the wall (0.830 and
+0.850). With ten, its effect was unresolved, 0.976 with an interval across 1. Two explanations fit
+that: the work might offer little at ten workers, or something else might be stopping the time it
+saved from reaching the end of the decode. A second oracle told them apart. It supplied the
+scanner's output instead, and then both together, with every output checked against the reference
+across twenty paired rounds.
 
-## 2. Queueing theory, in the measure needed here
+<figure class="bf-fig" id="interaction">
+<p class="bf-title">One change, two values: the four-arm oracle at 10 workers</p>
+<svg viewBox="0 0 720 352" role="img" aria-label="A square of four decoder configurations at 10 workers. Everything real takes 1.000; with emission's codes supplied 0.976, unresolved; with the scanner's output supplied 0.806; with both supplied 0.741. Supplying the codes is worth nothing along the top edge and 8% along the bottom, once the scanner has been relieved."><rect x="65.0" y="23.0" width="170" height="74" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><text class="bf-tm" x="150" y="52" text-anchor="middle" style="font-size:12.5px">everything real</text><text class="bf-t-strong" x="150" y="76" text-anchor="middle" style="font-size:15px">1.000</text><rect x="385.0" y="23.0" width="170" height="74" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"/><text class="bf-tm" x="470" y="52" text-anchor="middle" style="font-size:12.5px">emission's codes supplied</text><text class="bf-t-strong" x="470" y="76" text-anchor="middle" style="font-size:15px">0.976 [0.936, 1.017]</text><rect x="65.0" y="213.0" width="170" height="74" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><text class="bf-tm" x="150" y="242" text-anchor="middle" style="font-size:12.5px">scanner's output supplied</text><text class="bf-t-strong" x="150" y="266" text-anchor="middle" style="font-size:15px">0.806 [0.782, 0.831]</text><rect x="385.0" y="213.0" width="170" height="74" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-tm" x="470" y="242" text-anchor="middle" style="font-size:12.5px">both supplied</text><text class="bf-t-strong" x="470" y="266" text-anchor="middle" style="font-size:15px">0.741 [0.717, 0.766]</text><line x1="239.0" y1="60" x2="379.0" y2="60" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="379.0,60.0 370.0,55.0 370.0,65.0" style="fill:var(--bf-frame)"/><text class="bf-tm" x="310.0" y="50" text-anchor="middle" style="font-size:12px">supply emission's codes</text><text class="bf-t-strong" x="310.0" y="78" text-anchor="middle" style="font-size:13px;fill:var(--bf-blue)">−2.4%, unresolved</text><line x1="239.0" y1="250" x2="379.0" y2="250" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="379.0,250.0 370.0,245.0 370.0,255.0" style="fill:var(--bf-frame)"/><text class="bf-tm" x="310.0" y="240" text-anchor="middle" style="font-size:12px">supply emission's codes</text><text class="bf-t-strong" x="310.0" y="268" text-anchor="middle" style="font-size:13px;fill:var(--bf-green)">−8%</text><text class="bf-tm" x="310.0" y="284" text-anchor="middle" style="font-size:11.5px;fill:var(--bf-green)">0.920 [0.901, 0.939]</text><line x1="150" y1="101.0" x2="150" y2="207.0" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="150.0,207.0 155.0,198.0 145.0,198.0" style="fill:var(--bf-frame)"/><text class="bf-tm" x="138" y="159.0" text-anchor="end" style="font-size:12px">supply the scanner: −19%</text><line x1="470" y1="101.0" x2="470" y2="207.0" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="470.0,207.0 475.0,198.0 465.0,198.0" style="fill:var(--bf-frame)"/><text class="bf-tm" x="482" y="159.0" text-anchor="start" style="font-size:12px">−24%</text><text class="bf-tm" x="360.0" y="322" text-anchor="middle" style="font-size:12.5px">The same change, the codes supplied for emission, is worth nothing on the top edge and 8% on the bottom.</text><text class="bf-tm" x="360.0" y="340" text-anchor="middle" style="font-size:12.5px">At 1 and 6 workers, with the workers the bottleneck, it is worth 17% and 15% (0.830, 0.850).</text></svg>
+<figcaption>Measured: journal §44, wall time over everything real, 95% intervals; the oracles' preparation is outside the clock and every output matches the reference.</figcaption>
+</figure>
 
-Queueing theory describes a system as stations, each a server or a group of servers with a queue in
-front, and jobs that pass between them. The account here follows two teachers whose courses were
-read in full for this work: Raj Jain's [course](https://www.cs.wustl.edu/~jain/iucee/index.html)
-on his *The Art of Computer Systems Performance Analysis*, and Mor Harchol-Balter's
-[15-857](https://www.cs.cmu.edu/~harchol/Perfclass/class.html) and its theory companion
-[15-849b](https://www.cs.cmu.edu/~harchol/Perfclass/classtheory.html) at Carnegie Mellon, built on
-her *Performance Modeling and Design of Computer Systems* ([our reading of all three](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/methodology/performance-courses.md); [journal §53](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)).
-A job's service time at a station is how long one visit takes, and its demand there, D = V·S, is
-the number of visits it makes times the time each takes. A station's throughput X is the jobs it
-completes a second, and its utilisation U is the fraction of time it is busy.
+Once the scanner was relieved, supplying emission's codes was worth 8% (0.920 [0.901, 0.939] of
+the scanner-supplied wall). So the same computation was worth improving in one configuration and
+apparently worthless in another, and the question that follows is not where the time goes but
+which work determines when the decode finishes. The 26% with both supplied measures room under an
+experimental arrangement; finding an algorithm that obtains the supplied information cheaply is a
+separate problem, and keeping the two apart is what lets such experiments direct mathematical work.
 
-A few shapes recur. A single server has one queue and one processor. A parallel group has one queue
-feeding several identical servers, as a thread pool does. A tandem puts stages in series, as a
-pipeline does. A fork–join splits a job into parts that run in parallel and must all finish. A
-network joins any of these, with routing between them and sometimes feedback. Networks come in two
-kinds. In an open network, jobs arrive from outside at some rate and leave when they are done. In a
-closed network, a fixed population circulates, and each job that finishes is replaced by another,
-as in a batch system that keeps a set number of jobs in flight.
+## 2. Queueing questions under other names
 
-The decoder is a tandem: the scanner feeds a parallel group of k workers, and a consumer writes the
-finished blocks in order. A new block is admitted only while fewer than W = 4k are in flight, and a
-slot returns only when the consumer takes the next block in order, so admission credit circulates
-even though each block passes through once.
+None of this was new territory. For a month the decoder's performance work had been asking
+queueing questions without the vocabulary, because parallelising a program is largely a matter of
+rearranging how its work queues: which stage hands what to whom, how many jobs are in flight, and
+who waits when.
+
+<figure class="bf-fig" id="timeline">
+<p class="bf-title">Queueing questions under other names</p>
+<svg viewBox="0 0 480 574" role="img" aria-label="A timeline from 27 October to 24 November of the decoder's performance questions, each with its name in queueing theory: the serial station, the knee, load-dependent service, capacity provisioning, Little's law, waiting and utilisation, admission and head-of-line blocking, discipline and placement, tandem stations and a masked bottleneck."><text class="bf-t-strong" x="16" y="18" text-anchor="start" style="font-size:13px">Performance questions, and their names in queueing theory</text><line x1="66" x2="66" y1="30" y2="556" style="stroke:var(--bf-frame);stroke-width:2"/><text class="bf-t-strong" x="54" y="43" text-anchor="end" style="font-size:12.5px">27 Oct</text><circle cx="66" cy="39" r="5" style="fill:var(--bf-amber)"/><text class="bf-t-strong" x="80" y="43" text-anchor="start" style="font-size:13px;fill:var(--bf-amber)">serial station</text><text class="bf-tm" x="80" y="61" text-anchor="start" style="font-size:12px">on CI, 4 workers give 1.5–1.9×: the serial scan limits, not the window</text><text class="bf-t-strong" x="54" y="85" text-anchor="end" style="font-size:12.5px">28 Oct</text><circle cx="66" cy="81" r="5" style="fill:var(--bf-blue)"/><text class="bf-t-strong" x="80" y="85" text-anchor="start" style="font-size:13px;fill:var(--bf-blue)">the knee; load-dependent service</text><text class="bf-tm" x="80" y="103" text-anchor="start" style="font-size:12px">the decoder peaks at 4 workers; IPC halves as workers are added</text><text class="bf-t-strong" x="54" y="127" text-anchor="end" style="font-size:12.5px">29 Oct</text><circle cx="66" cy="123" r="5" style="fill:var(--bf-green)"/><text class="bf-t-strong" x="80" y="127" text-anchor="start" style="font-size:13px;fill:var(--bf-green)">capacity provisioning</text><text class="bf-tm" x="80" y="145" text-anchor="start" style="font-size:12px">teams of two, as many as keep the tables near 0.7 of the L3</text><text class="bf-t-strong" x="54" y="169" text-anchor="end" style="font-size:12.5px">31 Oct</text><circle cx="66" cy="165" r="5" style="fill:var(--bf-steel)"/><text class="bf-t-strong" x="80" y="169" text-anchor="start" style="font-size:13px;fill:var(--bf-steel)">Little's law</text><text class="bf-tm" x="80" y="187" text-anchor="start" style="font-size:12px">lookups in flight = latency × rate inside one worker's walk</text><text class="bf-t-strong" x="54" y="211" text-anchor="end" style="font-size:12.5px">1 Nov</text><circle cx="66" cy="207" r="5" style="fill:var(--bf-steel)"/><text class="bf-t-strong" x="80" y="211" text-anchor="start" style="font-size:13px;fill:var(--bf-steel)">waiting time and utilisation</text><text class="bf-tm" x="80" y="229" text-anchor="start" style="font-size:12px">slow job claims are mostly waiting behind busy workers</text><text class="bf-t-strong" x="54" y="253" text-anchor="end" style="font-size:12.5px">1 Nov</text><circle cx="66" cy="249" r="5" style="fill:var(--bf-blue)"/><text class="bf-t-strong" x="80" y="253" text-anchor="start" style="font-size:13px;fill:var(--bf-blue)">load-dependent service</text><text class="bf-tm" x="80" y="271" text-anchor="start" style="font-size:12px">four workers spend 32% more CPU a byte on the same instructions</text><text class="bf-t-strong" x="54" y="295" text-anchor="end" style="font-size:12.5px">5 Nov</text><circle cx="66" cy="291" r="5" style="fill:var(--bf-green)"/><text class="bf-t-strong" x="80" y="295" text-anchor="start" style="font-size:13px;fill:var(--bf-green)">admission; head-of-line blocking</text><text class="bf-tm" x="80" y="313" text-anchor="start" style="font-size:12px">the window from 2 to 4 slots a thread: 8–10% off the wall</text><text class="bf-t-strong" x="54" y="337" text-anchor="end" style="font-size:12.5px">5 Nov</text><circle cx="66" cy="333" r="5" style="fill:var(--bf-green)"/><text class="bf-t-strong" x="80" y="337" text-anchor="start" style="font-size:13px;fill:var(--bf-green)">discipline and placement</text><text class="bf-tm" x="80" y="355" text-anchor="start" style="font-size:12px">co-run placement: thread pairs, a walk token, interleaving</text><text class="bf-t-strong" x="54" y="379" text-anchor="end" style="font-size:12.5px">7 Nov</text><circle cx="66" cy="375" r="5" style="fill:var(--bf-blue)"/><text class="bf-t-strong" x="80" y="379" text-anchor="start" style="font-size:13px;fill:var(--bf-blue)">the knee; a cycle time of max(S, αP)</text><text class="bf-tm" x="80" y="397" text-anchor="start" style="font-size:12px">each block in flight slows the others; three teams beat four</text><text class="bf-t-strong" x="54" y="421" text-anchor="end" style="font-size:12.5px">9 Nov</text><circle cx="66" cy="417" r="5" style="fill:var(--bf-amber)"/><text class="bf-t-strong" x="80" y="421" text-anchor="start" style="font-size:13px;fill:var(--bf-amber)">tandem stations; bottleneck</text><text class="bf-tm" x="80" y="439" text-anchor="start" style="font-size:12px">a pit crew of service threads: the single thread became the bottleneck</text><text class="bf-t-strong" x="54" y="463" text-anchor="end" style="font-size:12.5px">17 Nov</text><circle cx="66" cy="459" r="5" style="fill:var(--bf-green)"/><text class="bf-t-strong" x="80" y="463" text-anchor="start" style="font-size:13px;fill:var(--bf-green)">capacity provisioning</text><text class="bf-tm" x="80" y="481" text-anchor="start" style="font-size:12px">seven workers of ten finish sooner</text><text class="bf-t-strong" x="54" y="505" text-anchor="end" style="font-size:12.5px">21 Nov</text><circle cx="66" cy="501" r="5" style="fill:var(--bf-blue)"/><text class="bf-t-strong" x="80" y="505" text-anchor="start" style="font-size:13px;fill:var(--bf-blue)">load-dependent service</text><text class="bf-tm" x="80" y="523" text-anchor="start" style="font-size:12px">fast alone, slow in a crowd</text><text class="bf-t-strong" x="54" y="547" text-anchor="end" style="font-size:12.5px">24 Nov</text><circle cx="66" cy="543" r="5" style="fill:var(--bf-amber)"/><text class="bf-t-strong" x="80" y="547" text-anchor="start" style="font-size:13px;fill:var(--bf-amber)">a masked bottleneck</text><text class="bf-tm" x="80" y="565" text-anchor="start" style="font-size:12px">the scanner hides the emitter</text></svg>
+<figcaption>From the journals and posts linked in this section. Colours group the names: amber the serial station and bottleneck, blue load dependence, green provisioning and admission, steel Little's law and waiting.</figcaption>
+</figure>
+
+The first knee was measured on 28 October: the whole decoder peaked at 4 threads, at 1,013 MB/s,
+and fell to 0.63 of that by 10; from 6 threads to 10 its instructions stayed constant while
+instructions per cycle halved ([journal](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-10-28-workstation-scaling.md)). Each added worker made every worker slower, which queueing theory calls a
+load-dependent service rate, and the same finding recurs as 32% more CPU a byte for four
+workers ([memory interference](2026-11-01-inverse-bwt-memory-interference.md)), as kernels that win
+alone and lose in a crowd ([fast alone, slow in a crowd](2026-11-21-fast-alone-slow-in-a-crowd.md)),
+and as the reason a lazier kernel with 28% more instructions wins from 8 threads
+([lazy letters](2026-11-16-lazy-letters.md)). Slow job claims turned out to be ordinary waiting
+behind busy workers ([block dispatch](2026-11-01-block-dispatch.md)). Little's law was already in
+use, to count the lookups in flight inside one worker's walk
+([32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md)). Widening the admission window from 2 to
+4 slots a worker took 8–10% off the wall on CI, because workers had been idle behind a block still
+decoding or not yet read ([journal](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-05-window.md)). Teams of threads, pipelined teams and a crew of
+service threads were all ways of restructuring stations
+([why mibz2 stops scaling](2026-11-07-why-mibz2-stops-scaling.md);
+[pipelined teams](2026-11-07-pipelined-teams.md); [a pit crew](2026-11-09-pit-crew-service-threads.md)),
+and in the last of them a single service thread busy 96% of the time had become the bottleneck.
+Rightsizing to seven workers of ten was capacity provisioning under load dependence
+([modelling the cache](2026-11-17-modelling-the-cache-to-rightsize-workers.md)).
+
+Underneath all of it sat one structural fact. The scanner that decodes the Huffman codes is a
+single thread working in order, because a block's end is found only by reading up to its
+end-of-block symbol, and the next block begins straight after it
+([the bit buffer](2026-11-05-huffman-bit-buffer.md)). Everything else runs in parallel behind it.
+The previous post called the scanner the doorman and the workers the assemblers; this one gives
+that picture its mathematics.
+
+## 3. What the theory was asked for
+
+The aim was set out before any reading began: a performance analysis in Jain's manner, which would
+yield a model of the program in the way systems biology models a regulatory network, which would in
+turn locate where new mathematical devices could fit ([journal §52](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). That asks three things
+of queueing theory. It should characterise the decoder as it is, as a system of stations rather than
+a list of kernels. It should predict what a change would buy before the change is built. And it
+should help search for a different organisation of the work, if a better one exists.
+
+The theory came from two teachers. Raj Jain's [course](https://www.cs.wustl.edu/~jain/iucee/index.html)
+follows his *The Art of Computer Systems Performance Analysis* (1991), and Mor Harchol-Balter's
+[15-857](https://www.cs.cmu.edu/~harchol/Perfclass/class.html) at Carnegie Mellon, with its theory
+companion [15-849b](https://www.cs.cmu.edu/~harchol/Perfclass/classtheory.html), follows her
+*Performance Modeling and Design of Computer Systems* (2013). What was read is narrower than
+reading three courses: every module's topic list, six of Jain's slide decks in full (the systematic
+approach, experimental design, fractional factorials, simulation analysis, the operational laws and
+mean-value analysis), the textbook's table of contents, the 2025 schedule with its readings, and the
+theory course's topic and book lists, all saved with notes ([what was read](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/methodology/performance-courses.md)).
+Four readers then mined that material against the decoder's measurements independently, and their
+disagreements corrected the first reading in several places that recur below
+([the summary](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md); [journal §§58–62](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
+
+## 4. The decoder, drawn as stations
+
+Queueing theory describes a system as stations, each a server or group of servers with a queue in
+front, and jobs that visit them. A job here is a block of the compressed file. Its service time at
+a station is how long one visit takes; its demand there, D = V·S, is the number of visits times
+the time each takes; a station's throughput X is the jobs it completes a second, and its
+utilisation U is the fraction of time it is busy. A handful of shapes recur, and a real system
+combines them.
+
+<figure class="bf-fig" id="shapes">
+<p class="bf-title">The shapes queues come in</p>
+<svg viewBox="0 0 720 234" role="img" aria-label="Five shapes of queueing system: a single server, a parallel group of servers sharing a queue, a tandem of stages in series, a fork and join, and a feedback loop that returns permits. The decoder combines a tandem, a parallel group and feedback."><text class="bf-t-strong" x="72" y="24" text-anchor="middle" style="font-size:13px">single server</text><text class="bf-tm" x="72" y="42" text-anchor="middle" style="font-size:11.5px">one queue, one processor</text><text class="bf-t-strong" x="216" y="24" text-anchor="middle" style="font-size:13px">parallel group</text><text class="bf-tm" x="216" y="42" text-anchor="middle" style="font-size:11.5px">one queue, k servers</text><text class="bf-t-strong" x="360" y="24" text-anchor="middle" style="font-size:13px">tandem</text><text class="bf-tm" x="360" y="42" text-anchor="middle" style="font-size:11.5px">stages in series</text><text class="bf-t-strong" x="504" y="24" text-anchor="middle" style="font-size:13px">fork and join</text><text class="bf-tm" x="504" y="42" text-anchor="middle" style="font-size:11.5px">parts that must all finish</text><text class="bf-t-strong" x="648" y="24" text-anchor="middle" style="font-size:13px">feedback</text><text class="bf-tm" x="648" y="42" text-anchor="middle" style="font-size:11.5px">progress returns permits</text><rect x="26" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="39" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="52" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="64" y1="110" x2="82" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="82.0,110.0 73.0,105.0 73.0,115.0" style="fill:var(--bf-frame)"/><circle cx="100" cy="110" r="16" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="160" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="173" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="186" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="198" y1="110" x2="222" y2="80" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,80.0 212.5,83.9 220.3,90.2" style="fill:var(--bf-frame)"/><line x1="198" y1="110" x2="222" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,110.0 213.0,105.0 213.0,115.0" style="fill:var(--bf-frame)"/><line x1="198" y1="110" x2="222" y2="140" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,140.0 220.3,129.8 212.5,136.1" style="fill:var(--bf-frame)"/><circle cx="240" cy="80" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="240" cy="110" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="240" cy="140" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="300" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="313" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="326" y1="110" x2="338" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="338.0,110.0 329.0,105.0 329.0,115.0" style="fill:var(--bf-frame)"/><circle cx="352" cy="110" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="370" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="383" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="396" y1="110" x2="404" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="404.0,110.0 395.0,105.0 395.0,115.0" style="fill:var(--bf-frame)"/><circle cx="418" cy="110" r="13" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><line x1="452" y1="110" x2="476" y2="84" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="476.0,84.0 466.2,87.2 473.6,94.0" style="fill:var(--bf-frame)"/><line x1="452" y1="110" x2="476" y2="136" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="476.0,136.0 473.6,126.0 466.2,132.8" style="fill:var(--bf-frame)"/><circle cx="490" cy="80" r="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="490" cy="140" r="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><line x1="504" y1="84" x2="528" y2="106" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="528.0,106.0 524.7,96.2 518.0,103.6" style="fill:var(--bf-frame)"/><line x1="504" y1="136" x2="528" y2="114" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="528.0,114.0 518.0,116.4 524.7,123.8" style="fill:var(--bf-frame)"/><rect x="530" y="98" width="26" height="24" rx="4" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-t-strong" x="543" y="114" text-anchor="middle" style="font-size:12px">J</text><text class="bf-t-strong" x="446" y="114" text-anchor="end" style="font-size:12px">F</text><rect x="600" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="613" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="626" y1="110" x2="640" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="640.0,110.0 631.0,105.0 631.0,115.0" style="fill:var(--bf-frame)"/><circle cx="656" cy="110" r="14" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><path d="M672,110 L700,110 L700,154 L596,154 L596,122" style="fill:none;stroke:var(--bf-green);stroke-width:1.6;stroke-dasharray:5 4"/><polygon points="596,120 591,129 601,129" style="fill:var(--bf-green)"/><text class="bf-tm" x="648" y="172" text-anchor="middle" style="font-size:11px;fill:var(--bf-green)">a permit returns</text><text class="bf-tm" x="360.0" y="204" text-anchor="middle" style="font-size:12.5px">The decoder uses three of them: a tandem (scanner, then workers), a parallel group (the workers)</text><text class="bf-tm" x="360.0" y="222" text-anchor="middle" style="font-size:12.5px">and feedback (the in-order reader returns admission). Each block goes to one worker, so it is not a fork and join.</text></svg>
+<figcaption>Schematic. Circles are servers and small boxes queued jobs.</figcaption>
+</figure>
+
+The decoder is a tandem: the scanner feeds a parallel group of k workers, each of which takes a
+whole block, and a reader hands the finished blocks to the caller in order. Its admission is
+precise in the code ([`src/parallel.rs`](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/src/parallel.rs#L399-L408)). With issued counting the blocks the
+scanner has finished and taken the blocks the reader has taken, the scanner waits while
+issued − taken has reached W = 4k, or while 12 MiB of finished output is unread and at least
+k + 2 blocks are ahead. The block it is scanning is not yet counted, and a slot frees when the
+reader takes the next block in order, before it has copied any of it out
+([taken advances](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/src/parallel.rs#L983-L986)).
 
 <figure class="bf-fig" id="network">
 <p class="bf-title">The decoder as a network of queues</p>
@@ -107,61 +178,35 @@ through once. Start-up, drain and the 12 MiB cap on finished output are where th
 from a true closed network.</figcaption>
 </figure>
 
-That makes the decoder close to a closed batch network, and this post uses that model, but only as
-an approximation. Our own course mining withdrew the claim that the decoder is a closed system: it
-is a finite pipeline with feedback-controlled admission, because a finite stream starts empty and
-drains, and the byte cap and the in-order consumer make admission depend on the state of the
-decoder ([the summary](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)).
+That makes four distinct kinds of waiting, with different remedies: the scanner waiting for an
+admission slot, a scanned block waiting for a worker, a worker waiting for a scanned block, and a
+finished block waiting behind an earlier one that is not finished. More slots can keep workers busy
+in the second and third cases; in the fourth they only hold more memory behind a straggler.
 
-<p class="il-rubric-head">Of laws that need no distributions</p>
+The return arrow is why the decoder was first described as a closed network, in which a fixed
+population of jobs circulates. That description was withdrawn
+([the summary](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)). The decoder is a finite pipeline with
+feedback-controlled admission: a finite stream starts empty and drains, W is a ceiling rather than a
+population, and the byte cap and the in-order reader make admission depend on the decoder's state.
+A closed network whose population is the admission permits is a useful surrogate, provided its
+relation to the real blocks is stated whenever it is used.
 
-Most of what follows rests on the operational laws, which relate quantities measured over an
-interval and assume nothing about how arrivals or service times are distributed (Jain, ch. 33;
-Harchol-Balter, ch. 6 and 7). Four carry the weight:
+## 5. The bottleneck law
 
-- **The utilisation law,** U = X·D: a station's busy fraction is its throughput times its demand.
-- **Little's law,** N = X·R: the mean number of jobs in a system is its throughput times the mean
-  time each spends there ([Little, 1961](https://doi.org/10.1287/opre.9.3.383)).
-- **The forced-flow law,** Xᵢ = Vᵢ·X: each station's throughput is the system's throughput times
-  the visits a job makes to that station.
-- **The bottleneck law:** no station can be busy more than all of the time, so the system's
-  throughput is at most the capacity of its busiest station over that station's demand,
-  X ≤ min cᵢ/Dᵢ, where cᵢ is the number of servers at station i.
+The operational laws relate quantities measured over an interval and assume nothing about how
+arrivals or service times are distributed (Jain, ch. 33; Harchol-Balter, ch. 6–7). The utilisation
+law, U = X·D, says a station's busy fraction is its throughput times its demand. No station can be
+busy more than all of the time, so U ≤ 1 gives the bottleneck law: the system's throughput is at
+most the capacity of its busiest station over that station's demand.
 
-Because these laws hold over any measured interval, they audit the instruments as well as describe
-the system. Stage 1 logged every block's route, stage boundaries and queue transitions, and all nine
-identities built from these laws held in every one of its 840 decodes, Little's law exactly
-([§7](#7-stage-1-the-decoder-across-twenty-counts)). A trace that broke one would have meant a
-missing or misplaced timestamp, not a surprising decoder. The laws catch errors of reasoning too:
-an early sizing of the admission window from Little's law used a block's service time where its
-residence time, waiting included, belonged, and it was withdrawn ([journal §61](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)).
-
-<p class="il-rubric-head">Of asking what if before building</p>
-
-The same laws price changes. Modification analysis (Harchol-Balter, ch. 7) changes one station's
-demand in the model and recomputes the bounds, which prices an improvement before anything is built.
-Its lesson is that a faster component need not make a faster system. The four-arm test of §1 is an
-instance: removing emission's work alone changed nothing measurable at ten workers, because the
-scanner was the bottleneck and the workers had slack, while removing the scanner's work exposed
-emission's. One of the course's 2025 recitations makes the same point with a cache, where raising the
-hit ratio can lower throughput by crowding the path that hits take ([journal §54](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)). It is also
-why a cut at the bottleneck is worth less than it looks: once the scanner is relieved enough, the
-workers bind, and the bottleneck migrates.
-
-## 3. The first model, and its first test
-
-The simplest model is a serial stage feeding k identical parallel servers, and the bottleneck law
-bounds it directly. If each block costs the scanner s and a worker w, the scanner can finish at most
-1/s blocks a second and the workers together k/w, so X(k) ≤ min(k/w, 1/s): the workers set the pace
+Applied to a scanner taking s a block and k workers each taking w, the scanner can finish at most
+1/s blocks a second and the workers together k/w, so X(k) ≤ min(k/w, 1/s). The workers set the pace
 until there are enough of them that the scanner cannot keep up, and from then on the scanner alone
-does. The crossover falls where the two limits meet, at k\* = w/s. From the measurements at one to
-four workers only, s = 106.6 µs and w = 798.3 µs a block, which puts the knee at 7.49 workers. Across all twenty counts the measured
-crossover is 7.67, and a fit of c + max(b, a/k) gives a = 1.279 s, b = 0.178 s and c = 0.032 s
-([journal §57](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md); [the data](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv)).
-
-Nothing in that prediction was fitted to the knee: it is a general law applied to two measured
-service times. The bound and the measured decoder are drawn together below; moving the sliders
-shows how each service time moves the knee.
+does; the two limits meet at k\* = w/s. From measurements at one to four workers only, s = 106.6 µs
+and w = 798.3 µs a block, which puts the knee at 7.49 workers. The measured crossing is 7.67, and
+the best wall, 0.191 s, is at 8 ([journal §57](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the data](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv)). Nothing was fitted to
+the knee: two service times measured where the workers bind located the region where the scanner
+takes over.
 
 <figure class="bf-fig bf-twostation" id="two-station" data-x0="70" data-x1="700" data-y0="24" data-y1="304" data-ymax="20000">
 <p class="bf-title">The bottleneck law, with the measured decoder</p>
@@ -170,7 +215,7 @@ shows how each service time moves the knee.
 <figcaption>The idealised bound from the operational laws, with no start-up, drain, contention or blocking, against the decoder measured on an i9-10900K (median of 20 decodes at each count). With JavaScript, the sliders set the two service times: a cheaper scanner raises the ceiling and moves the knee right, a cheaper worker steepens the rise and moves it left.</figcaption>
 </figure>
 
-In wall time, with the fitted curve, the same picture reads as follows.
+In wall time, the same picture reads as follows.
 
 <figure class="bf-fig" id="knee">
 <p class="bf-title">Wall time against workers: the knee predicted from four counts</p>
@@ -181,13 +226,6 @@ asymptote a/k on the left and the scanner's b on the right; the dashed line is t
 from counts 1 to 4 alone. The wall at one worker, 1.30 s, is off the scale.</figcaption>
 </figure>
 
-The best wall is 0.191 s, at 8 workers (4,390 MB/s of output), and from 8 to 14 workers it stays
-flat at 0.197 ± 0.005 s. At 16 and above it steps up 20%, to 0.230 s, because the scanner itself
-slows by 23% while its share of the wall stays at 0.97. The scanner's work is 81% Huffman decoding,
-at 1.41 ns a symbol at one worker and 1.51 ns from three. The second figure shows the switch from
-the scanner's side: at one worker it spends most of its time waiting for a free slot, and from 8
-workers it almost never waits.
-
 <figure class="bf-fig" id="scanner-split">
 <p class="bf-title">The scanner's time, working and waiting</p>
 <svg viewBox="0 0 720 350" role="img" aria-label="The scanner thread's time against workers. Its work stays near 0.19 s from 3 to 15 workers and rises to about 0.23 s from 16. Its waiting for a free slot falls from 1.12 s at one worker to under a millisecond at 8 and beyond."><line x1="64" x2="696" y1="239.4" y2="239.4" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="243.4" text-anchor="end" style="font-size:12px">0.2</text><line x1="64" x2="696" y1="202.9" y2="202.9" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="206.9" text-anchor="end" style="font-size:12px">0.4</text><line x1="64" x2="696" y1="166.3" y2="166.3" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="170.3" text-anchor="end" style="font-size:12px">0.6</text><line x1="64" x2="696" y1="129.7" y2="129.7" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="133.7" text-anchor="end" style="font-size:12px">0.8</text><line x1="64" x2="696" y1="93.1" y2="93.1" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="97.1" text-anchor="end" style="font-size:12px">1</text><line x1="64" x2="696" y1="56.6" y2="56.6" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="60.6" text-anchor="end" style="font-size:12px">1.2</text><line x1="64" x2="696" y1="20.0" y2="20.0" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="24.0" text-anchor="end" style="font-size:12px">1.4</text><text class="bf-tm" x="64.0" y="294" text-anchor="middle" style="font-size:12px">1</text><text class="bf-tm" x="163.8" y="294" text-anchor="middle" style="font-size:12px">4</text><text class="bf-tm" x="296.8" y="294" text-anchor="middle" style="font-size:12px">8</text><text class="bf-tm" x="429.9" y="294" text-anchor="middle" style="font-size:12px">12</text><text class="bf-tm" x="562.9" y="294" text-anchor="middle" style="font-size:12px">16</text><text class="bf-tm" x="696.0" y="294" text-anchor="middle" style="font-size:12px">20</text><text class="bf-tm" x="380" y="312" text-anchor="middle" style="font-size:12px">workers</text><text class="bf-tm" x="16" y="148" text-anchor="middle" transform="rotate(-90 16 148)" style="font-size:12px">scanner thread time (s)</text><rect x="54.2" y="244.2" width="19.6" height="31.8" style="fill:var(--bf-amber)"/><rect x="54.2" y="39.5" width="19.6" height="204.7" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="87.5" y="242.7" width="19.6" height="33.3" style="fill:var(--bf-amber)"/><rect x="87.5" y="151.6" width="19.6" height="91.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="120.7" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="120.7" y="191.4" width="19.6" height="50.5" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="154.0" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="154.0" y="212.1" width="19.6" height="30.0" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="187.3" y="242.1" width="19.6" height="33.9" style="fill:var(--bf-amber)"/><rect x="187.3" y="225.2" width="19.6" height="16.9" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="220.5" y="242.1" width="19.6" height="33.9" style="fill:var(--bf-amber)"/><rect x="220.5" y="233.5" width="19.6" height="8.6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="253.8" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="253.8" y="239.2" width="19.6" height="2.8" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="287.0" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="287.0" y="241.8" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="320.3" y="241.6" width="19.6" height="34.4" style="fill:var(--bf-amber)"/><rect x="320.3" y="240.9" width="19.6" height="0.7" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="353.6" y="241.4" width="19.6" height="34.6" style="fill:var(--bf-amber)"/><rect x="353.6" y="240.9" width="19.6" height="0.5" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="386.8" y="241.3" width="19.6" height="34.7" style="fill:var(--bf-amber)"/><rect x="386.8" y="241.0" width="19.6" height="0.3" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="420.1" y="241.2" width="19.6" height="34.8" style="fill:var(--bf-amber)"/><rect x="420.1" y="241.0" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="453.4" y="241.0" width="19.6" height="35.0" style="fill:var(--bf-amber)"/><rect x="453.4" y="240.9" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="486.6" y="241.0" width="19.6" height="35.0" style="fill:var(--bf-amber)"/><rect x="519.9" y="240.8" width="19.6" height="35.2" style="fill:var(--bf-amber)"/><rect x="553.2" y="234.0" width="19.6" height="42.0" style="fill:var(--bf-amber)"/><rect x="586.4" y="234.7" width="19.6" height="41.3" style="fill:var(--bf-amber)"/><rect x="619.7" y="234.3" width="19.6" height="41.7" style="fill:var(--bf-amber)"/><rect x="652.9" y="234.6" width="19.6" height="41.4" style="fill:var(--bf-amber)"/><rect x="686.2" y="234.8" width="19.6" height="41.2" style="fill:var(--bf-amber)"/><text class="bf-tm" x="346.7" y="162.6" style="font-size:12px">from 8 workers the scanner almost never waits:</text><text class="bf-tm" x="346.7" y="178.6" style="font-size:12px">it is the bottleneck, and only less work there helps</text><rect x="68" y="330" width="12" height="12" style="fill:var(--bf-amber)"/><text class="bf-tm" x="86" y="341" style="font-size:12px">scanner working</text><rect x="234" y="330" width="12" height="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel)"/><text class="bf-tm" x="252" y="341" style="font-size:12px">scanner waiting for a free slot</text></svg>
@@ -196,191 +234,223 @@ from 8 workers on it works without pause, so it is the bottleneck and only a lig
 the wall.</figcaption>
 </figure>
 
-## 4. What scheduling can and cannot do
+Three qualifications keep the law honest. First, a station is a resource, not a function: the
+scanner's header parsing, table building and Huffman decoding share one thread, so their demands
+add, and drawing them as separate parallel stations would invent capacity. Second, the law bounds
+throughput; it does not give a completion time. One block that takes a 1 s scan, a 1 s decode and a
+1 s delivery in series has a largest demand of 1 s and takes 3 s, so the bottleneck maximum is a
+lower bound on the wall, not a forecast of it ([journal §70](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). A global fit of
+c + max(b, a/k) to all twenty counts is accordingly less exact than the four-count prediction: its
+crossover is 7.17, its residuals run about −13 ms from 8 to 14 workers and +21 ms from 17, and its
+32 ms constant has no identified cause. Third, the textbook's knee for closed systems,
+N\* = (D + Z)/D_max, is a knee in the population of jobs, not in the number of servers; the decoder
+couples the two through W = 4k, but they are different variables.
 
-One question follows directly: could a better queueing discipline, the rule for which waiting block
-is served next, do far better? The operational laws answer it before any code is written. No
-discipline raises the ceiling, which the demands set; a discipline can only bring the decoder closer
-to it ([the discipline lead](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md)). The decoder already runs at 0.945 to 0.998 of the busiest
-server's limit at every worker count, so no reordering could recover more than about 5%, or 3% on
-the plateau. The literature gives a further reason: scheduling matters much less in closed systems
-than in open ones ([Schroeder, Wierman and Harchol-Balter, NSDI 2006](https://www.usenix.org/conference/nsdi-06/open-versus-closed-cautionary-tale)),
-and the decoder's bounded admission puts it nearer the closed kind.
+## 6. Little's law, and what the instruments must record
 
-The techniques considered, and what became of each
-([the discipline lead](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md); [the opportunities, with their corrections](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)):
+Little's law, L = X·R, says the mean number of jobs in a system is its throughput times the mean
+time each spends there ([Little, 1961](https://doi.org/10.1287/opre.9.3.383); Jain, ch. 30;
+Harchol-Balter, ch. 6). For a finite trace it is a statement about counting the same thing twice.
+
+<figure class="bf-fig" id="little">
+<p class="bf-title">Little's law as two counts of one area</p>
+<svg viewBox="0 0 720 358" role="img" aria-label="Little's law as two ways of counting the same quantity. Above, the number of jobs present over time, with the area under it shaded; below, each of five jobs' residence as a bar. The area equals the sum of the bars, so the mean number present equals throughput times mean residence. The jobs are illustrative."><polygon points="60.0,150.0 60.0,150.0 91.5,150.0 91.5,122.5 123.0,122.5 123.0,95.0 217.5,95.0 217.5,67.5 280.5,67.5 280.5,95.0 312.0,95.0 312.0,67.5 375.0,67.5 375.0,95.0 438.0,95.0 438.0,122.5 469.5,122.5 469.5,95.0 595.5,95.0 595.5,122.5 627.0,122.5 627.0,150.0 690.0,150.0 690.0,150.0" style="fill:var(--bf-blue);opacity:0.3"/><polyline points="60.0,150.0 91.5,150.0 91.5,122.5 123.0,122.5 123.0,95.0 217.5,95.0 217.5,67.5 280.5,67.5 280.5,95.0 312.0,95.0 312.0,67.5 375.0,67.5 375.0,95.0 438.0,95.0 438.0,122.5 469.5,122.5 469.5,95.0 595.5,95.0 595.5,122.5 627.0,122.5 627.0,150.0 690.0,150.0" style="fill:none;stroke:var(--bf-blue);stroke-width:2"/><line class="bf-rule" x1="60" x2="690" y1="150" y2="150"/><text class="bf-tm" x="52" y="154.0" text-anchor="end" style="font-size:11px">0</text><text class="bf-tm" x="52" y="126.5" text-anchor="end" style="font-size:11px">1</text><text class="bf-tm" x="52" y="99.0" text-anchor="end" style="font-size:11px">2</text><text class="bf-tm" x="52" y="71.5" text-anchor="end" style="font-size:11px">3</text><text class="bf-tm" x="52" y="44.0" text-anchor="end" style="font-size:11px">4</text><text class="bf-t-strong" x="20" y="24" text-anchor="start" style="font-size:13px">Count the jobs present at every instant, and add up the area under the curve ...</text><text class="bf-t-strong" x="20" y="186" text-anchor="start" style="font-size:13px">... or add up how long each job stayed. For a trace that starts and ends empty, the two totals are equal.</text><rect x="91.5" y="200" width="189.0" height="14" rx="3" style="fill:var(--bf-blue);opacity:0.55"/><text class="bf-tm" x="85.5" y="211" text-anchor="end" style="font-size:11px">job 1</text><rect x="123.0" y="220" width="252.0" height="14" rx="3" style="fill:var(--bf-blue);opacity:0.55"/><text class="bf-tm" x="117.0" y="231" text-anchor="end" style="font-size:11px">job 2</text><rect x="217.5" y="240" width="220.5" height="14" rx="3" style="fill:var(--bf-blue);opacity:0.55"/><text class="bf-tm" x="211.5" y="251" text-anchor="end" style="font-size:11px">job 3</text><rect x="312.0" y="260" width="283.5" height="14" rx="3" style="fill:var(--bf-blue);opacity:0.55"/><text class="bf-tm" x="306.0" y="271" text-anchor="end" style="font-size:11px">job 4</text><rect x="469.5" y="280" width="157.5" height="14" rx="3" style="fill:var(--bf-blue);opacity:0.55"/><text class="bf-tm" x="463.5" y="291" text-anchor="end" style="font-size:11px">job 5</text><line class="bf-rule" x1="60" x2="690" y1="304" y2="304"/><text class="bf-tm" x="375.0" y="322" text-anchor="middle" style="font-size:12px">time</text><text class="bf-tm" x="360.0" y="346" text-anchor="middle" style="font-size:12.5px">Divide both by the length of the trace: mean number present L = throughput X × mean residence R.</text></svg>
+<figcaption>Schematic, with five illustrative jobs. The finite-trace form is the one stage 1 checks: each buffer's occupancy integral against the sum of its blocks' residences.</figcaption>
+</figure>
+
+That form forces precise questions on the instruments. Which population is meant: blocks waiting for
+a worker, all blocks issued and not yet taken, or finished blocks waiting to be read? Each has its
+own residence time, and mixing one population with another's interval gives a plausible number that
+describes no queue. An early sizing of the admission window made exactly that mistake: throughput
+times the sum of the service demands suggested 8 or 9 slots, but the law needs residence time,
+waiting included, and gives a mean occupancy rather than a safe maximum, so the figure was withdrawn
+([journal §61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the correction](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)).
+
+The law also shaped the tracing that stage 1 of the characterisation used ([#841](https://github.com/lmmx/mibz2/pull/841)).
+It keeps a live occupancy integral for each of seven buffers, from admitted to consuming, rebuilds
+each block's residence from per-thread ledgers, and checks that the two agree exactly, as integers.
+A design review had warned beforehand that the decoder marks some transitions after releasing a lock
+and others under it, so sorting events by timestamp could produce an impossible queue history; every
+transition therefore takes a sequence number under one lock, with one clock read for both
+([the review](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/external/chatgpt-design-review.md); [journal §§59–60](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). Across 840 decodes, all
+nine identities built from these laws held in every one, Little's law exactly ([journal §66](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
+A trace that broke one would have meant a missing or misplaced event, not a surprising decoder. The
+identities establish consistency, not cost: the ledgers themselves perturbed the timing at 10 workers
+and above (1.040 at 10, an interval across 1 but wide), so every later comparison judged walls with
+them off.
+
+## 7. Modification analysis: asking what if before building
+
+Modification analysis changes one station's demand in the model, or the number of its servers,
+and recomputes which constraint binds (Harchol-Balter, ch. 7, "Modification Analysis: What-if for
+Closed Systems"). Jain's operational-laws deck sets the same exercise as homework: make one
+component twice as fast or twice as slow, and find which becomes the bottleneck. Its lesson is that a
+faster component need not make a faster system, and that the gain from improving one station depends
+on the others.
+
+<figure class="bf-fig" id="migration">
+<p class="bf-title">Why improvements must be priced together</p>
+<svg viewBox="0 0 720 272" role="img" aria-label="Illustrative bottleneck migration. Baseline: scanner 100, workers 95, wall about 100. Cut the scanner 20%: 80 and 95, wall 95, so only 5 of the 20 saved reach the wall. Cut the workers 20%: 100 and 76, wall still 100. Cut both: 80 and 76, wall 80."><text class="bf-t-strong" x="20" y="24" text-anchor="start" style="font-size:13px">Work a block needs from each station (illustrative numbers, not measurements)</text><text class="bf-t-strong" x="138" y="62" text-anchor="end" style="font-size:13px">baseline</text><rect x="150" y="44" width="460.0" height="14" style="fill:var(--bf-amber);opacity:0.75"/><rect x="150" y="62" width="437.0" height="14" style="fill:var(--bf-blue);opacity:0.75"/><line x1="610.0" x2="610.0" y1="40" y2="80" style="stroke:var(--bf-ink);stroke-width:2"/><text class="bf-t-strong" x="618.0" y="66" text-anchor="start" style="font-size:13px">wall ≈ 100</text><text class="bf-t-strong" x="138" y="112" text-anchor="end" style="font-size:13px">scanner −20%</text><rect x="150" y="94" width="368.0" height="14" style="fill:var(--bf-amber);opacity:0.75"/><rect x="150" y="112" width="437.0" height="14" style="fill:var(--bf-blue);opacity:0.75"/><line x1="587.0" x2="587.0" y1="90" y2="130" style="stroke:var(--bf-ink);stroke-width:2"/><text class="bf-t-strong" x="595.0" y="116" text-anchor="start" style="font-size:13px">wall ≈ 95</text><text class="bf-t-strong" x="138" y="162" text-anchor="end" style="font-size:13px">workers −20%</text><rect x="150" y="144" width="460.0" height="14" style="fill:var(--bf-amber);opacity:0.75"/><rect x="150" y="162" width="349.6" height="14" style="fill:var(--bf-blue);opacity:0.75"/><line x1="610.0" x2="610.0" y1="140" y2="180" style="stroke:var(--bf-ink);stroke-width:2"/><text class="bf-t-strong" x="618.0" y="166" text-anchor="start" style="font-size:13px">wall ≈ 100</text><text class="bf-t-strong" x="138" y="212" text-anchor="end" style="font-size:13px">both −20%</text><rect x="150" y="194" width="368.0" height="14" style="fill:var(--bf-amber);opacity:0.75"/><rect x="150" y="212" width="349.6" height="14" style="fill:var(--bf-blue);opacity:0.75"/><line x1="518.0" x2="518.0" y1="190" y2="230" style="stroke:var(--bf-ink);stroke-width:2"/><text class="bf-t-strong" x="526.0" y="216" text-anchor="start" style="font-size:13px">wall ≈ 80</text><rect x="150" y="250" width="14" height="10" style="fill:var(--bf-amber);opacity:0.75"/><text class="bf-tm" x="170" y="260" text-anchor="start" style="font-size:12px">scanner</text><rect x="250" y="250" width="14" height="10" style="fill:var(--bf-blue);opacity:0.75"/><text class="bf-tm" x="270" y="260" text-anchor="start" style="font-size:12px">workers</text><text class="bf-tm" x="350" y="260" text-anchor="start" style="font-size:12px">the wall follows the longer bar, when the stages overlap well</text></svg>
+<figcaption>Illustrative numbers, chosen to show the arithmetic, under the approximation that the wall follows the larger stage when stages overlap well.</figcaption>
+</figure>
+
+The four-arm test is that table measured. With the scanner binding, emission's cut cannot reach the
+wall; with the scanner relieved, it can. The converse also holds: a cut in the scanner's work moves
+the bottleneck back to the workers, and at 8 workers a 5% cut in the Huffman decode's demand already
+reaches the workers' limit ([journal §61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). So improvements are priced in combination, with the
+worker count retuned after each, and the research target becomes a surface over combinations rather
+than a list of functions ranked by their share of the profile. A worker-side improvement that is
+masked today is not worthless: it is a conditional opportunity, and it may also let the decoder reach
+the same wall with fewer cores. The 2025 course gave a session to the same analysis applied to a real
+caching system.
+
+## 8. Load dependence: the month's findings, named
+
+The first approximation treats s and w as constants. Real cores share caches, memory bandwidth,
+execution units and clock frequency, so a service centre's rate can depend on how many jobs are
+present; Jain's chapter on queueing networks names load-dependent centres among its types. Writing
+the bound as X(k) ≤ min(1/s(k), k/w(k)) is a reminder that adding a worker raises the pool's nominal
+capacity and can slow the station that already limits the output.
+
+The measurements show it at every scale. The scanner's work per decode stays near 0.186 s up to 8
+workers and rises 23%, to 0.229 s, at 16, and the wall steps up 20% with it ([journal §57](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
+Stage 1 measured the same inflation per visit: the Huffman decode costs 84 µs a block at one worker
+and 105–107 µs at 16 and above, and emission 526 µs at one worker and 816 µs at 14. With the scanner
+pinned to its own core, putting the workers on the two hardware threads of shared cores rather than
+on separate cores costs 22% at 4 workers and 48% at 8, a stream of memory traffic running alongside
+slows the wall by 33% at 8 workers, and a pointer chase by 113%; giving the scanner a quiet core
+alone takes the wall to 0.960 of the unpinned one ([journal §78](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). These establish the effects
+of particular placements; they do not decompose every earlier residual.
+
+This is also where the earlier placement work belongs. A design study on 5 November priced four
+ways to keep the memory-heavy inverse walk from colliding on one core: thread pairs specialised by
+stage, a token allowing one walk per core at a time, interleaving other work into the walk's stalls,
+and choosing which ready blocks run together. The first three were modelled, the token in a small
+discrete-event simulation, and nothing was timed ([the study](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-05-corun-placement.md)). Its sharpest finding was a
+shared assumption: every design treated the walk's own footprint as fixed. A kernel that crowds the
+cache less changes the demand itself rather than arranging its competitors, which is the route the
+lazy kernel later took.
+
+<p class="il-rubric-head">Of noise that came from the clock</p>
+
+Even the measuring was load-dependent. After a short idle pause the processor drops to a low clock
+and climbs back slowly: after 0.2 s idle a decode runs at 2.96 GHz and takes 45% longer, and after
+the standard 1 s pause, 40% of decodes still run low. Spinning every CPU for 100 ms before each timed
+decode removes the low state and cuts the spread of the log wall from 4.4% to 1.1%
+([journal §81](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [#874](https://github.com/lmmx/mibz2/pull/874)). That was a repair to the
+apparatus, not a faster decoder. It leaves a question for users, since a program that decodes after
+a short pause may meet the slow regime, and whether a decoder should respond is open until more
+machines are measured.
+
+## 9. What scheduling can and cannot do
+
+With demands measured, the next question was whether a different order of work, a different
+queueing discipline, could close the gap to the bound. The operational laws answer part of it before
+any code is written: no discipline raises the ceiling the demands set, and the decoder already runs
+at 0.945 to 0.998 of the busiest station's limit at every count, so reordering alone could recover
+at most about 5%, or 3% on the plateau ([journal §57](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the discipline lead](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md)). That holds
+only while the demands stay fixed. A policy that improves cache locality or keeps memory-heavy phases
+apart changes the demands themselves, and the clearest example is the twenty-worker decode, which ran
+at 0.972 of its bound and still finished 17% sooner with eight workers ([the outside reading](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md)).
 
 | Technique | What it would change | What became of it |
 |---|---|---|
-| Size-based scheduling: largest or shortest first, or assignment by size | big blocks stop becoming the straggler or the head of the line | not supported yet: the block mixture varies (C² about 0.98), but worker service per block was never measured |
+| Size-based scheduling: largest or shortest first, or assignment by size | big blocks stop becoming the straggler or the head of the line | not supported yet: worker service per block was never measured |
 | Helpers for the oldest unfinished block | shortens the block holding up in-order output | open: the helper machinery exists, and the trigger is the question |
 | Admission by work rather than by count | a few huge blocks can no longer fill the window | open |
 | Relaxed resequencing | finished blocks stop holding admission credit while they wait | limited by the output contract: a byte stream is written in order |
 | Redundancy: run a slow block twice | helps when servers' delays are independent and variable | ruled out: here they are neither, and the copy costs the scarce resource |
-| Heavy-tail and matrix-analytic models | exact models for heavy-tailed service | not needed on this corpus, which has no heavy tail; phase-type fits deferred, as simulation is cheaper |
+| Heavy-tail and matrix-analytic models | exact models for heavy-tailed service | not needed on this corpus; phase-type fits deferred, as simulation is cheaper |
 | A parallel scanner | turns the serial station into a parallel group | the only row that raises the ceiling |
 
-The last row is a different kind of change. A discipline moves the decoder closer to a fixed
-ceiling; a change of topology moves the ceiling itself, and that is where the larger gains lie.
+Variability is the other reason to keep distributions rather than means. In a single queue with
+general service times the mean wait grows with the second moment of service time, not only its mean
+(Harchol-Balter, ch. 23), so long blocks delay everything behind them. The corpus has two classes of
+block: 792 of its 1,724 are under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks
+that skip the main inversion route. Across the mixture the squared coefficient of variation of size
+is about 0.98; among the real blocks alone it is about 0.07, and their sizes are correlated along the
+stream (lag-1 r = 0.74) ([journal §§60–61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the opportunities](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)). Which of those numbers
+matters depends on the question. A paper on the 2025 reading list warns that scheduling policies
+behave very differently in closed systems than in open ones
+([Schroeder, Wierman and Harchol-Balter, NSDI 2006](https://www.usenix.org/conference/nsdi-06/open-versus-closed-cautionary-tale)),
+which argues for modelling the admission feedback faithfully, not for declaring scheduling
+unimportant.
 
-## 5. Product form, and where it stops
+The table's last row is a different kind of change. A discipline moves the decoder closer to a fixed
+ceiling; a change of topology moves the ceiling.
 
-Beyond the operational laws lies a line of exact results for networks of queues. Jackson showed in
-1957 that certain open networks have a product-form equilibrium: the joint distribution of the
-queue lengths is a product of one factor per station, as if each station were alone
-([Jackson, 1957](https://doi.org/10.1287/opre.5.4.518)). Gordon and Newell gave the same for closed
-networks of exponential servers ([1967](https://doi.org/10.1287/opre.15.2.254)). Baskett, Chandy,
-Muntz and Palacios extended product form to open, closed and mixed networks with several classes of
-job and several service disciplines, the BCMP theorem ([1975](https://doi.org/10.1145/321879.321887)).
-Reiser and Lavenberg's mean-value analysis then computed the mean queue lengths, response times and
-throughputs of closed product-form networks by a recursion over the population, without the full
-distribution ([1980](https://doi.org/10.1145/322186.322195)). MVA is the natural tool for the
-decoder's knee, since it gives the smooth curve between the bottleneck law's two asymptotes, and it
-was planned beside the simulation from the start ([journal §52](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)).
+## 10. Product form, mean-value analysis and a surrogate
 
-The design reviews found that the decoder breaks the assumptions product form needs
-([journal §59](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md); [the opportunities](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)):
+The bottleneck law gives the two asymptotes; near the knee, finite populations and variability round
+the corner, and a natural next step is a model that computes the curve. Beyond the operational laws
+lies a line of exact results. Jackson showed that certain open networks have a product-form
+equilibrium, in which the joint distribution of queue lengths is a product of one factor per station
+([1957](https://doi.org/10.1287/opre.5.4.518)); Gordon and Newell gave the same for closed networks of
+exponential servers ([1967](https://doi.org/10.1287/opre.15.2.254)); and Baskett, Chandy, Muntz and
+Palacios extended product form to open, closed and mixed networks with several classes of job and
+several service disciplines, the BCMP theorem ([1975](https://doi.org/10.1145/321879.321887);
+Harchol-Balter, ch. 22). Product form makes a network solvable; it says nothing about whether that
+network is a good design. Reiser and Lavenberg's mean-value analysis then computes the mean queue
+lengths, response times and throughput of a closed product-form network without the full
+distribution, by building up the population one job at a time: an arriving job sees the network as
+it would be with one job fewer, which gives its residence at each station, then the throughput, then
+the new mean queue lengths ([1980](https://doi.org/10.1145/322186.322195); Jain, ch. 34).
+
+It was tried. One reader computed exact mean-value analysis for a two-station closed surrogate, with
+a population of N = 4k, a scanner taking 107.9 µs a block and a pool of workers taking 815 µs each,
+whose rate grows with the blocks present up to k, and no fitted constant ([the review](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md)):
+
+| Workers | Surrogate | Measured wall |
+|---|---|---|
+| 3 | 0.4683 s | 0.4693 s |
+| 5 | 0.2811 s | 0.2840 s |
+| 7 | 0.2035 s | 0.2069 s |
+| 8 | 0.1887 s | 0.1911 s |
+
+That is within 1 to 4 ms at every count from 3 to 8, which is better than the hard-max fit and shows
+the rounded knee is largely what a closed network of this shape produces. Its limits are as clear.
+It converts a stationary throughput into a file's completion time, so start-up, drain, in-order taking
+and the byte cap are outside it, and its residual cannot all be called contention. The design reviews
+listed where the decoder departs from what product form needs:
 
 | Product form assumes | The decoder has |
 |---|---|
 | a fixed population that circulates | an admission ceiling, W = 4k, on a finite stream that fills and drains |
-| stations that release jobs independently | in-order retirement: a finished block waits for the one before it |
-| service rates that don't depend on the rest of the system | workers that slow one another and the scanner through shared caches and cores |
-| admission that doesn't depend on state | a cap on finished output that gates new scanning |
-| service times of one kind | two classes of block, 792 tiny and 932 real, whose sizes are correlated along the stream |
+| stations that release jobs independently | in-order taking: a finished block waits for the one before it |
+| service rates set by the station alone | workers that slow one another and the scanner through shared caches and cores |
+| admission that does not depend on state | a byte cap on finished output that gates new scanning |
+| one class of job | two classes of block, whose sizes are correlated along the stream |
 
-So exact MVA applies only to a documented surrogate network, with its error against a fuller model
-reported as approximation error, and the primary model is a discrete-event simulation driven by the
-measured trace of every block. The operational laws survive intact, since they assume none of this.
-The order of the reading is the useful part: the elementary laws held, the elegant exact theory did
-not, and the simulation that replaces it is checked against the laws.
+BCMP itself is broader than its reputation, admitting general service distributions under some
+disciplines and some load dependence, so none of these is a blanket disqualification; what was never
+established is a compatible representation of this decoder's particular gates, ordering and
+contention. Exact mean-value analysis is therefore applied to a documented surrogate, with its error
+reported as approximation error, and the faithful model is a discrete-event simulation driven by
+every block's measured trace ([journal §§59–60](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). That simulation has been specified, not
+built.
 
-## 6. Reading the field, four times over
+<figure class="bf-fig" id="models">
+<p class="bf-title">From laws to simulation: what each kind of model assumes</p>
+<svg viewBox="0 0 720 278" role="img" aria-label="A ladder of four kinds of model. Operational laws assume nothing about distributions and held in all 840 decodes. Product-form networks and mean-value analysis give exact means for a surrogate network, which came within 1 to 4 ms of the measured wall. A trace-driven simulation would keep the decoder's own rules; it is proposed, not built. Interventions test the predictions."><text class="bf-t-strong" x="20" y="22" text-anchor="start" style="font-size:13px">Each rung assumes more, or tests more; the measurements decide between them</text><rect x="20" y="34" width="680" height="50" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-t-strong" x="36" y="54" text-anchor="start" style="font-size:14px">operational laws</text><text class="bf-tm" x="36" y="72" text-anchor="start" style="font-size:12px">assume nothing about distributions: bounds, and identities a trace must satisfy</text><text class="bf-t-strong" x="684" y="54" text-anchor="end" style="font-size:12px;fill:var(--bf-green)">held: nine identities in 840 decodes</text><rect x="20" y="96" width="680" height="50" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><text class="bf-t-strong" x="36" y="116" text-anchor="start" style="font-size:14px">product form and MVA</text><text class="bf-tm" x="36" y="134" text-anchor="start" style="font-size:12px">assume a network the decoder only resembles: exact means for that network</text><text class="bf-t-strong" x="684" y="116" text-anchor="end" style="font-size:12px;fill:var(--bf-steel)">a surrogate within 1–4 ms of the wall at 3–8 workers</text><rect x="20" y="158" width="680" height="50" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><text class="bf-t-strong" x="36" y="178" text-anchor="start" style="font-size:14px">trace-driven simulation</text><text class="bf-tm" x="36" y="196" text-anchor="start" style="font-size:12px">keeps the decoder's own rules: the window, the byte cap, in-order taking</text><text class="bf-t-strong" x="684" y="178" text-anchor="end" style="font-size:12px;fill:var(--bf-amber)">proposed, not built</text><rect x="20" y="220" width="680" height="50" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"/><text class="bf-t-strong" x="36" y="240" text-anchor="start" style="font-size:14px">intervention</text><text class="bf-tm" x="36" y="258" text-anchor="start" style="font-size:12px">slow, pin or supply one part, and see whether the prediction moves with it</text><text class="bf-t-strong" x="684" y="240" text-anchor="end" style="font-size:12px;fill:var(--bf-blue)">stage 2 and the ideal-parts matrix</text></svg>
+<figcaption>The status column is the record's: journal §66 for the identities, the course-mining review for the surrogate, journal §§59–60 for the simulation, §§74–88 for the interventions.</figcaption>
+</figure>
 
-Three performance-analysis courses were read in full, with their sources saved, and then mined for
-opportunities against these measurements by four readers, each writing an answer before seeing the
-others ([the summary](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)). The fourth, aimed at where mathematics rather than engineering fits, is the subject of [§8](#8-the-fourth-reading-and-a-design-space).
+## 11. Testing the explanation by intervention
 
-| Reader | What it found that the others had not |
-|---|---|
-| [The first reading](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md) | right-sizing the worker count; putting the bottleneck on the fastest core; mean-value analysis in place of the hard-max fit |
-| [An outside model](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md) | the public API's actual worker count; bottleneck migration; the variability of block sizes |
-| [A second agent](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md) | two avoidable copies in the scanner, about 8% of its demand; the same worker-count error |
-| [The fourth reading](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md) | the scan as a chain at its latency floor; a design space for the scanner–worker boundary; construction as the largest worker target |
+Accounting says which resources look busy; an intervention asks whether changing one produces the
+predicted effect. Stage 1 measured the decoder at every count from 1 to 20, with every block's route,
+stage boundaries and queue transitions logged ([journal §66](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the report](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt)). The limit
+moves from the workers to the scanner at exactly 8 workers, with a bootstrap interval of [8, 8]; the
+workers' idle time while the scanner works rises from 0.035 of their time at 8 to 0.551 at 20, while
+their idle time waiting on input stays under 0.01; and the reader is no co-bottleneck, at 0.017–0.035
+ms a block against the scanner's 0.099–0.130.
 
-The disagreements were the useful part. The first reading had claimed that the Python binding's
-default of 20 workers costs 20% of the wall. Two readers, independently, found that the public API
-never runs 20 workers on this machine: a request for ten or more threads builds 7 workers with a
-28-slot window, so the live question is 7 against 8, 0.207 s against 0.191 s, about 7.6% for under
-1% more CPU ([journal §61](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)). The cap of 7 was set because workers beyond it bought nothing; it
-is a symptom of the scanner's limit rather than a reason to stop raising it.
-
-The second agent's reading found engineering that the first had missed, both confirmed in the code
-([journal §62](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)). At the boundary between the feeder's 4 MiB chunks and the scanner's 2 MiB
-look-ahead, the scanner copies the held part of its window on its own thread, about 10 ms at 8
-workers, or 5.4% of its demand. And each block's symbol buffer is zero-filled again when it is
-reused, about 5 ms more, driven by the 792 tiny blocks in the corpus. Together that is about 15 ms,
-8% of the scanner's demand, with no algorithmic risk, and it has been routed for implementation as
-an ordinary performance change.
-
-The outside reading supplied the warning that prices every such change. A cut in the scanner's
-work moves the bottleneck back to the workers: at 8 workers, a 5% cut in the scanner's Huffman
-demand already reaches the workers' limit, so scanner and worker improvements must be priced
-together, with the worker count retuned. Stage 1's figures then re-priced the copy fix itself: at 8
-workers the workers sit within 0.3 ms of the scanner, so a 15 ms cut there is almost entirely
-masked (0.1941 s against 0.1944 s), while at 10 workers it is worth about 7.5%
-([journal §69](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)). Those figures are instrumented, so a paired run at 8, 9 and 10 workers
-decides between the two estimates.
-
-## 7. Stage 1: the decoder across twenty counts
-
-The first stage of the characterisation ran 840 grid decodes across every count from 1 to 20, with
-every block's route, stage boundaries and queue transitions logged
-([journal §66](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md); [the report](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt)). All nine operational-law identities held in every
-decode, Little's law exactly. What it found:
-
-- **The two-station model holds.** The limit moves from the workers to the scanner at exactly 8
-  workers, with a bootstrap interval of [8, 8], and a best wall of 0.1944 s there.
-- **The scanner limits above the knee, by concurrent state.** The workers' idle time while the
-  scanner is working rises from 0.035 of their time at 8 workers to 0.124 at 10 and 0.551 at 20;
-  their idle time while it waits for input stays under 0.01.
-- **The reader is not a co-bottleneck:** its demand is 0.017–0.035 ms a block against the scanner's
-  0.099–0.130.
-- **Contention inflates service per visit.** The scanner's Huffman decode costs 84 µs a block at
-  one worker and 105–107 µs at 16 and above; emission rises from 526 µs at one worker to 816 at 14,
-  and the memory controller's reads per decode from 219 MiB to 1,957 at 16, which at about 8 GB/s
-  at 10 workers points to cache capacity rather than bandwidth.
-- **The public API selects an older kernel below 8.** Asking for 3, 5 or 7 threads builds the
-  eager kernel, because the lazy plan begins at 8 workers and the measured settings cover only 4,
-  6 and 10 or more. At 7 threads that is 0.337 s and 140 MB, against 0.209 s and 54 MB for seven
-  lazy workers: 61% slower, with 2.6 times the memory. It is a production default, so it goes to a
-  registered recalibration across corpora.
-
-The run flagged its own instrument as perturbing at 10 and 20 workers: the cost check's intervals
-include 1 but are wide, so timings from the ledgers at high counts may be inflated by up to about
-9%, while shares, counts and the identities are unaffected.
-
-## 8. The fourth reading, and a design space
-
-The fourth reading registered its plan for analysing stages 1 and 2 before stage 1 ran, and then
-asked what the measurements imply about the scanner itself ([record 129](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md)). At 1.41 to
-1.51 ns a symbol, the Huffman scan takes about 7 cycles a symbol, one first-level cache load's
-latency: the scan is a single dependent chain running at its latency floor. The lever is
-therefore fewer lookups a symbol, decoding several symbols with each lookup. A 10-bit window bounds
-that at about 2.6 symbols a lookup, and the reading conjectures 13 to 17% off the best wall; the
-cheapest test is to count cycles a symbol on the scanner at one worker, where about 7 cycles and no
-cache misses would confirm the floor.
-
-A companion record enumerated the ways the scanner's obligations could be divided between the
-scanner and the workers, and scored each placement with the two-station law
-([record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md)). Three placements lead, all conjectured: an index of block starts, so that
-each worker scans its own block, at −15%; decoding several symbols a lookup, still serially, at
-−17%; and both together at −19%. Its separating principle is to keep an obligation on a serial path
-only if its state has no small summary, and to cut the path wherever the format resets that state.
-One placement it rules out: decoding a single block's Huffman codes in parallel. The table is
-chosen afresh every 50 symbols by a running symbol count that nothing in the stream
-re-synchronises, so each chunk would have to carry at least 50 hypotheses, and a k-way split
-loses for every k below 50; the obstruction is proved from the format, its cost argued.
-
-The same record measured where the workers' time goes on a real block at one worker: construction
-of the inversion's structures 45%, emission 38%, move-to-front and run records 10%, and the final
-run-length expansion and checksum 6%, shares that hold at 8 and 16 workers. Construction, not
-emission, is the largest target for mathematics in the workers. Of the two leads at the scanner,
-decoding several symbols a lookup became an engineering prototype, and the index of block starts
-the larger structural lead.
-
-<p class="il-rubric-head">Of a price already paid</p>
-
-The prototype found the fourth reading's price for decoding several symbols a lookup built on a
-premise that was already out of date
-([journal §82](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)). They assumed one symbol a lookup, but master's table has held up to two
-symbols an entry since [#745](https://github.com/lmmx/mibz2/pull/745): on wikidata it takes 1.85
-symbols a lookup, 84% of them pairs, so the 13 to 17% was the price of a change already made. The
-prototype then tried a third symbol a lookup
-([#870](https://github.com/lmmx/mibz2/pull/870)). Its output was byte-identical and its lookups
-fell 12%, but its time did not: the scanner ran 0.98 to 1.01 of master's time a symbol on
-wikidata, and slower on two other corpora: a lookup already costs about twice its dependency
-chain, and the third symbol's gain was eaten by mispredictions and spills in the tail paths. It was rejected. What remains at the scanner is its copies,
-about 2% of its time from counting each batch's bits at once, a core of its own, and the
-structural answer, a scan split across cores, which removes the single serial core instead of
-speeding it.
-
-Stage 1's traces have also been analysed by program ([journal §71](https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md); [the outputs](https://github.com/lmmx/mibz2/tree/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/analysis)).
-The lower bound, the busiest of the scanner, the workers and the reader, is tight below the knee,
-with the wall within 1.4% of it up to 6 workers, and loosest at the knee itself, 4 to 5% at 8 to 11
-workers, where dependencies, starvation and blocking cost most. Issuing blocks is smooth, but taking
-them is bursty: when a slow block at the head of the line finishes, a run of ready blocks is taken
-at once, the signature of putting completed blocks back in order. These describe one corpus's
-traces, not guarantees.
-
-## 9. Stage 2: which activity controls the wall
-
-Stage 1 inferred the switch at the knee from busy times; stage 2 tests it by intervention, in two
-parts: the first unpinned ([journal §74](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md); [its report](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt)), the second
-with the scanner pinned to a core of its own ([journal §78](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md); [its report](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/report.txt)).
-Each activity is slowed by 20% in turn, and the share of that slowing which reaches the wall, its
-elasticity, says whether it controls the decode at that worker count: near 1 for the bottleneck,
-near 0 for an activity with slack behind it.
+Stage 2 slowed each activity in turn with a calibrated loop of dependent arithmetic, which adds
+occupancy without adding memory traffic, so its elasticities describe the response to that
+intervention rather than an exact scaling of the original code
+([the decisions](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/briefs/character-review-decisions.md)). Below the knee the workers'
+construction and emission controlled the wall; at 8 and 10 only the scanner's Huffman decode did,
+and with the scanner pinned its intervals narrowed two to four times ([journal §§74, 78](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
 
 <figure class="bf-fig" id="screen">
 <p class="bf-title">Which activity controls the wall, at 6, 8 and 10 workers</p>
@@ -393,52 +463,28 @@ decode is amber, the workers' activities blue. At 10 workers several worker coef
 detail.</figcaption>
 </figure>
 
-- **Below the knee, the workers control it.** At 6 workers the two parts of construction (0.14
-  and 0.15) and emission (0.37) control the wall, while the scanner's Huffman decode does not
-  (−0.01).
-- **At and above the knee, the scanner does.** At 8 and 10 workers only the scanner's Huffman
-  decode controls the wall: 0.53 and 0.74 in the first part, and 0.795 [0.681, 0.908] and 0.577
-  [0.420, 0.734] in the pinned second, whose intervals are two to four times narrower. Nothing in
-  the workers resolves. This is stage 1's switch at 8, now shown by intervening rather than
-  inferred.
-- **The wall is a maximum, not a sum.** In the first part, the screen's coefficients, composed as
-  a sum of logarithms, predicted an arm kept out of every fit, the Huffman decode and emission both
-  slowed by 10%: 1.053 against 1.052 observed at 8 workers, each inside its interval. An earlier
-  version of this post called that the programme's first validated predictor. The second part's
-  narrower intervals refute it: the sum predicts 1.101 at 8 workers against 1.069 observed, and
-  1.034 at 10 against 1.063, both outside, and the first part's pass came from its wide intervals.
-  The larger of the two coefficients alone fits all four tests, and the surface at 8 workers, both
-  stations slowed together, has a roundness of 0.500 [0.454, 0.548], the value of a sharp maximum.
-  Since that model was chosen after the failure, it is registered as the predictor for the next
-  held-out test, not counted as validated ([§11's distinction](#11-the-dynamical-layer)).
-- **A faster scanner barely helps at 8.** Slowing the scanner at 8 workers costs 0.7 to 1.0 of
-  each unit of slowing, but speeding it gains only 0.13 to 0.18, because the workers are close
-  behind and the bottleneck moves to them at once. The wall also failed the registered test of
-  scaling evenly with the paced activities, so these figures are descriptive rather than formal.
-- **The queue shows which side binds.** Slowing the scanner by half over two hundred blocks
-  empties the job queue at 8 workers, its mean depth falling from 4.4 to 0.3; slowing emission
-  fills it instead, from 3.9 to 8.9. Either way the decoder recovers within 2 to 4 ms.
-- **Where threads sit matters more than the gates.** Widening the window or the byte cap changes
-  nothing beyond noise. Putting workers on the two hardware threads of shared cores, rather than
-  on separate cores, costs 48% at 8 workers; a memory stream running alongside slows the wall by
-  31 to 33%, and a pointer chase by 110 to 113%. Pinning the scanner to a quiet core alone runs at
-  0.960 of the unpinned wall at 8 workers. With ten cores, 8 workers plus the scanner, reader and feeder already
-  make eleven threads, so some sharing is unavoidable at 8 and certain at 10.
+The sharper test was composition. Composed as a sum of logarithms, the one-at-a-time coefficients
+predicted an arm kept out of every fit, the Huffman decode and emission both slowed 10%; the first
+run's wide intervals passed it, and the pinned run's refuted it.
 
-The first part priced the scanner's copy fix optimistically: cutting the Huffman decode's work by
-8%, about the copies' share, implies a wall of 0.957 at 8 workers and 0.940 at 10. The second part
-makes that an upper bound twice over, since a faster scanner gains little at 8 and more workers,
-where it would gain, share more cores. Every scanner speed-up is therefore priced at the count it
-will run at, with the worker count retuned, and the paired comparison of the copy fix decides it.
+| Workers | Observed | Sum of logarithms | Larger coefficient alone |
+|---|---|---|---|
+| 8 | 1.069 [1.049, 1.090] | 1.101, outside | 1.079, inside |
+| 10 | 1.063 [1.031, 1.097] | 1.034, outside | 1.057, inside |
 
-<p class="il-rubric-head">Of the queue as a reservoir</p>
+A maximum fits, and the surface at 8 workers, both stations slowed together, has a roundness of
+0.500 [0.454, 0.548], the value of a sharp maximum. Because the maximum was chosen after the failure,
+it is registered as the predictor for the next held-out test rather than counted as validated. A
+second test tried to infer the gain from speeding a part by slowing everything else and rescaling,
+and its check that the wall scales evenly failed at all four cells. At a crossover the harm from
+slowing a station cannot be inverted into the gain from speeding it: at 8 workers slowing the scanner
+costs 0.7 to 1.0 of each unit, but speeding it gains only 0.13 to 0.18, because the workers are close
+behind and take over at once.
 
-The pulses read most simply in a fluid approximation, which treats a queue as a reservoir whose
-level q changes at the rate work flows in less the rate it flows out, dq/dt = λ_in − μ_out. Fluid
-models are among the theory course's techniques ([our reading](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/methodology/performance-courses.md)),
-but none has been fitted to the decoder; here the picture is a way to read the measurements. Slow
-the scanner and the inflow falls below what the workers can take, so the reservoir drains and the
-workers starve. Slow emission and the outflow falls instead, so it fills.
+The pulse experiments gave the dynamics. A fluid approximation treats a queue as a reservoir whose
+level changes at the rate work flows in less the rate it flows out, dq/dt = λ_in − μ_out, bounded
+below by an empty queue and above by the window; it appears in the theory course's topics, and no
+fluid model has been fitted to the decoder.
 
 <figure class="bf-fig" id="reservoir">
 <p class="bf-title">Which side of the queue binds</p>
@@ -450,115 +496,133 @@ those places rises from 4.5 to 5.6, so the scanner's drain is the larger departu
 within 2 to 4 ms.</figcaption>
 </figure>
 
-<p class="il-rubric-head">Of noise that came from the clock</p>
+## 12. What reached the code
 
-Part of the noise in these runs came from the machine, not the decoder
-([journal §81](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md)). The Pathfinder found the processor's clock at two levels, 4.91 GHz and a
-low level of 4.09 to 4.56 GHz, with about a quarter of decodes caught low. A direct test traced it to
-the idle pause each recipe takes before a timed decode: after 0.2 s idle a decode runs at 2.96 GHz
-and takes 45% longer, and even after the standard 1 s pause, 40% of decodes run low. Spinning every
-CPU for 100 ms before each timed decode removes the low state and cuts the spread of the log wall
-from 4.4% to 1.1%, so a test needs about sixteen times fewer rounds for the same interval. Every
-recipe at or above the knee now warms the machine this way. The finding is also a question for
-users: a program that decodes after a short pause may meet the slow regime, and whether a decoder
-should respond to it is open until more machines are measured.
+The analysis is only as good as what it changes, and the record keeps the outcomes distinct.
 
-## 10. Designing for a purpose
-
-A question about method came next: whether the decoder could be studied the way systems biology
-studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that
-held up was not his catalogue of recurring motifs but the line of work that asks which structures
-can perform a given function at all ([the lead](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md); [the outside answer](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md)).
-[Ma and colleagues](https://doi.org/10.1016/j.cell.2009.06.013){ .il-ref } enumerated every
-three-node network topology to find the few able to achieve biochemical adaptation, and
-[Araujo and Liotta](https://doi.org/10.1038/s41467-018-04151-6){ .il-ref } later gave the
-solution space a basis, showing that every network capable of robust perfect adaptation is built
-from two kinds of module.
-[Khammash](https://doi.org/10.1016/j.cels.2021.05.020){ .il-ref } states the programme in five
-steps: specify the function, derive necessary conditions, characterise the solution space, check
-realisability, and establish optimality ([an explanation](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md)). Ours maps onto it closely:
-
-| Khammash's step | Ours, already | What is missing |
+| What the model said | What was done | Outcome |
 |---|---|---|
-| The function | the referee | |
-| Necessary conditions | G1, and records 118 and 119 | a necessity statement in positive form |
-| The solution space | | an enumeration, and then a basis |
-| Realisability | the four-arm and profile ceilings | |
-| Optimality | the performance work | |
+| The threads requested, the workers built and the kernel chosen are different variables | at 5 and 7 requested threads, build the lazy kernel the larger counts already used | 0.840 and 0.631 of the wall, with 58% and 63% less memory; merged ([#868](https://github.com/lmmx/mibz2/pull/868)) |
+| The knee is near 7.5, and the cap of 7 workers sits below it | 8 workers from 10 requested threads, measured with the clock warmed | 0.929 and 0.932 at 10 and 12 threads, for 2–3% more CPU; merged ([#878](https://github.com/lmmx/mibz2/pull/878)) |
+| About 15 ms of the scanner's work, 8% of its demand, is two avoidable copies | stop re-zeroing symbol buffers, and copy less at the seam between input chunks | not adopted at the judged count, faster by about 2% at 10 and 12; open ([#846](https://github.com/lmmx/mibz2/pull/846), [#857](https://github.com/lmmx/mibz2/pull/857), [#861](https://github.com/lmmx/mibz2/pull/861)) |
+| The scan is one dependent chain, so fewer lookups a symbol should help | three symbols a lookup instead of two | lookups fell 12% and time did not; rejected ([#870](https://github.com/lmmx/mibz2/pull/870)) |
+| A smaller saving inside the same lookup loop | count each batch's bits at once | about 2% of scanner time locally, unresolved on the whole decode; held ([#879](https://github.com/lmmx/mibz2/pull/879)) |
 
-The proposal that follows is to enumerate the referee's own class of decoders (small cursor
-machines with a fixed number of passes that invert every short string over a tiny alphabet),
-reduce the list by symmetry, cluster the survivors, look for the condition that separates them, and
-use a SAT solver to prove "no survivor" within the class ([journal §65](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)). Two ideas from the
-same reading were adopted as method: the same function can be realised by different structures,
-which is why the referee counts structure; and a representation change is a search for the hidden
-coordinate in which the work cancels.
+Two details are instructive. The first readings assumed the Python binding ran 20 workers on this
+machine; two readers found it built 7, so the live question became 7 against 8, and that is the
+change that merged ([journal §61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). And the multi-symbol idea was priced against a baseline
+that no longer existed: the decoder's table had held up to two symbols an entry since a change merged
+on 22 November ([#745](https://github.com/lmmx/mibz2/pull/745)), taking 1.85 symbols a lookup on
+wikidata, so the third symbol was all that was left to test, and fewer operations of one kind did
+not lower the total demand ([journal §82](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
 
-## 11. The dynamical layer
+## 13. Towards an ideal form
 
-The reservoir is the first step from queues towards dynamics, and the theory course's fluid models
-lead to it directly. The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top
-of continuous quantities such as occupancy and time. The language for that is the theory of hybrid
-dynamical systems ([the outside answer](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md); [journal §67](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)), and Goebel, Sanfelice and
-Teel's book on it was read in full, with notes in our own words. Its plainest product is a list of
-five levers. Any reorganisation of the decoder changes one of five things
-([the levers](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md)):
+The overnight work found useful engineering, but the programme's point was to characterise the
+decoder's shape with each part treated as a toy problem with ideal behaviour, and to hand that shape
+to the search for new mathematics ([journal §87](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the matrix](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/README.md)). Three questions
+need keeping apart. A profile asks where time is spent; a slowing intervention asks which changes
+hurt completion now; an ideal-part experiment asks how much completion could improve if a computation
+became cheap, which is what keeps a masked idea visible as a target.
 
-1. how fast work runs (the flow map);
-2. where work may proceed (the flow set);
-3. when events may happen (the jump set);
-4. what events do (the jump map);
-5. what is represented (the state space).
+The ideal-parts matrix makes six parts ideal in combination: the Huffman scan (S), emission (E),
+construction of the inversion's structures (C), the move-to-front and run-length stage (M), the final
+expansion, checksum and output work (R), and delivery to the caller (D). Its first slice, the scanner
+and emission at 1, 6, 8 and 10 workers, has run ([slice A](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/slice-a/README.md)).
 
-<p class="il-rubric-head">Of a bound that was not a certificate</p>
+<figure class="bf-fig" id="slicea">
+<p class="bf-title">The ideal-parts matrix, slice A: the scanner and emission</p>
+<svg viewBox="0 0 720 304" role="img" aria-label="Ideal-parts slice A. With emission ideal the wall falls to 0.827 and 0.849 at 1 and 6 workers, where the scanner ideal does nothing; at 8 each alone is about 0.96 but both together 0.827; at 10 the scanner ideal gives 0.919 and emission 0.975. With both ideal the wall is still 0.82 to 0.84 at every count."><line class="bf-rule" x1="70" x2="700" y1="211.1" y2="211.1" opacity="0.35"/><text class="bf-tm" x="62" y="215.1111111111111" text-anchor="end" style="font-size:11.5px">0.80</text><line class="bf-rule" x1="70" x2="700" y1="172.2" y2="172.2" opacity="0.35"/><text class="bf-tm" x="62" y="176.22222222222226" text-anchor="end" style="font-size:11.5px">0.85</text><line class="bf-rule" x1="70" x2="700" y1="133.3" y2="133.3" opacity="0.35"/><text class="bf-tm" x="62" y="137.33333333333331" text-anchor="end" style="font-size:11.5px">0.90</text><line class="bf-rule" x1="70" x2="700" y1="94.4" y2="94.4" opacity="0.35"/><text class="bf-tm" x="62" y="98.44444444444449" text-anchor="end" style="font-size:11.5px">0.95</text><line class="bf-rule" x1="70" x2="700" y1="55.6" y2="55.6" opacity="0.9"/><text class="bf-tm" x="62" y="59.55555555555557" text-anchor="end" style="font-size:11.5px">1.00</text><rect x="92.0" y="55.6" width="28" height="-0.8" style="fill:var(--bf-amber);opacity:0.8"/><text class="bf-tm" x="106.0" y="68.77777777777789" text-anchor="middle" style="font-size:10.5px">1.001</text><rect x="128.0" y="55.6" width="28" height="134.6" style="fill:var(--bf-blue);opacity:0.8"/><text class="bf-tm" x="142.0" y="204.11111111111117" text-anchor="middle" style="font-size:10.5px">.827</text><rect x="164.0" y="55.6" width="28" height="140.0" style="fill:var(--bf-green);opacity:0.8"/><text class="bf-tm" x="178.0" y="209.5555555555556" text-anchor="middle" style="font-size:10.5px">.820</text><text class="bf-t-strong" x="142.0" y="268" text-anchor="middle" style="font-size:12.5px">1 worker</text><rect x="249.5" y="55.6" width="28" height="13.2" style="fill:var(--bf-amber);opacity:0.8"/><text class="bf-tm" x="263.5" y="82.7777777777778" text-anchor="middle" style="font-size:10.5px">.983</text><rect x="285.5" y="55.6" width="28" height="117.4" style="fill:var(--bf-blue);opacity:0.8"/><text class="bf-tm" x="299.5" y="187.00000000000003" text-anchor="middle" style="font-size:10.5px">.849</text><rect x="321.5" y="55.6" width="28" height="142.3" style="fill:var(--bf-green);opacity:0.8"/><text class="bf-tm" x="335.5" y="211.88888888888894" text-anchor="middle" style="font-size:10.5px">.817</text><text class="bf-t-strong" x="299.5" y="268" text-anchor="middle" style="font-size:12.5px">6 workers</text><rect x="407.0" y="55.6" width="28" height="28.0" style="fill:var(--bf-amber);opacity:0.8"/><text class="bf-tm" x="421.0" y="97.5555555555556" text-anchor="middle" style="font-size:10.5px">.964</text><rect x="443.0" y="55.6" width="28" height="31.1" style="fill:var(--bf-blue);opacity:0.8"/><text class="bf-tm" x="457.0" y="100.66666666666671" text-anchor="middle" style="font-size:10.5px">.960</text><rect x="479.0" y="55.6" width="28" height="134.6" style="fill:var(--bf-green);opacity:0.8"/><text class="bf-tm" x="493.0" y="204.11111111111117" text-anchor="middle" style="font-size:10.5px">.827</text><text class="bf-t-strong" x="457.0" y="268" text-anchor="middle" style="font-size:12.5px">8 workers</text><rect x="564.5" y="55.6" width="28" height="63.0" style="fill:var(--bf-amber);opacity:0.8"/><text class="bf-tm" x="578.5" y="132.55555555555554" text-anchor="middle" style="font-size:10.5px">.919</text><rect x="600.5" y="55.6" width="28" height="19.4" style="fill:var(--bf-blue);opacity:0.8"/><text class="bf-tm" x="614.5" y="89.00000000000003" text-anchor="middle" style="font-size:10.5px">.975</text><rect x="636.5" y="55.6" width="28" height="126.0" style="fill:var(--bf-green);opacity:0.8"/><text class="bf-tm" x="650.5" y="195.5555555555556" text-anchor="middle" style="font-size:10.5px">.838</text><text class="bf-t-strong" x="614.5" y="268" text-anchor="middle" style="font-size:12.5px">10 workers</text><text class="bf-t-strong" x="20" y="22" text-anchor="start" style="font-size:13px">Wall with a part made ideal, over everything real (pinned scanner; bars hang down from 1)</text><rect x="80" y="284" width="14" height="10" style="fill:var(--bf-amber);opacity:0.8"/><text class="bf-tm" x="100" y="294" text-anchor="start" style="font-size:12px">the scanner ideal</text><rect x="270" y="284" width="14" height="10" style="fill:var(--bf-blue);opacity:0.8"/><text class="bf-tm" x="290" y="294" text-anchor="start" style="font-size:12px">emission ideal</text><rect x="460" y="284" width="14" height="10" style="fill:var(--bf-green);opacity:0.8"/><text class="bf-tm" x="480" y="294" text-anchor="start" style="font-size:12px">both ideal: the floor</text></svg>
+<figcaption>Measured: ideal-parts slice A, scanner pinned, wall over everything real at each count; 95% intervals are in the linked results. At 8 workers each part alone is unresolved but the two together reach 0.827.</figcaption>
+</figure>
 
-One reading of the book went too far, and an independent review caught it before it guided any
-experiment ([the review](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md); [journal §70](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md)). The bottleneck maximum, the largest of the
-scanner's, the workers' and the reader's demands, is only a lower bound on the time a decode takes,
-because it ignores dependencies, starvation and blocking. One block that takes a 1 s scan, a 1 s
-decode and a 1 s delivery in series has a maximum of 1 s and takes 3. The notes now keep three
-quantities apart: lower bounds, used to prune; predictors, used to rank, and validated on held-out
-runs rather than by replaying a run with its own durations; and proved upper bounds, for which
-backward induction over a finite, acyclic state graph is the concrete route.
+Below the knee only emission has room, 15–17%. At the knee the two co-limit: each alone is about 0.96,
+unresolved, but each saves about 14% once the other is ideal, an interaction of −0.028 [−0.038,
+−0.018] on the log scale, the four-arm test's masking measured at the balance point. Above it the
+scanner has room (0.919) and emission's appears mostly behind it. And the floor is high: with both
+ideal the decoder keeps 0.82–0.84 of its wall at every count, so most of what remains lies in the four
+parts this slice left real, together with the handover cost of supplying emission's codes, 286 to
+418 ms summed over workers. An ideal part keeps an experimental definition: supplied intermediates
+bring their own storage and copying, upstream stages still run when only a later one is ideal, and the
+results measure room within an arrangement, not what any real algorithm will reach.
 
-## 12. How the work is done
+One point about the full design needs settling before it runs. It is a half fraction of the 2⁶
+combinations, defined by I = SECMRD, so it contains only the arms with an even number of ideal parts.
+All-real and all-ideal are in, but every arm with a single part ideal, and every arm with all but one
+ideal, is out, while the registered room of a part is defined as that part alone ideal over all real
+([the design](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/design.md)). Those quantities need the missing arms added, or a statement that
+room will be read from main effects averaged over the other parts; slice A, a full 2², is unaffected.
+
+"Ideal form" has three meanings, and the programme needs all three: a tractable model of the decoder,
+an ideal-part configuration as a counterfactual, and a realisable organisation that meets the output
+contract and the machine's limits. The third is where the structure itself comes into question.
+
+<figure class="bf-fig" id="organisations">
+<p class="bf-title">Where the serial boundary sits</p>
+<svg viewBox="0 0 720 252" role="img" aria-label="Two organisations of the decoder. Today: a serial Huffman scan feeds scanned blocks to parallel inversion, then in-order output. A question: find block starts first, then let workers both scan and invert in parallel, then in-order output."><text class="bf-t-strong" x="20" y="32" text-anchor="start" style="font-size:13px">Today</text><rect x="20" y="40" width="150" height="44" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><text class="bf-t-strong" x="95.0" y="67.0" text-anchor="middle" style="font-size:12.5px">serial Huffman scan</text><rect x="196" y="40" width="150" height="44" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><text class="bf-t-strong" x="271.0" y="67.0" text-anchor="middle" style="font-size:12.5px">scanned blocks</text><line x1="172" y1="62" x2="193" y2="62" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="193.0,62.0 184.0,57.0 184.0,67.0" style="fill:var(--bf-frame)"/><rect x="372" y="40" width="150" height="44" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"/><text class="bf-t-strong" x="447.0" y="67.0" text-anchor="middle" style="font-size:12.5px">parallel inversion</text><line x1="348" y1="62" x2="369" y2="62" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="369.0,62.0 360.0,57.0 360.0,67.0" style="fill:var(--bf-frame)"/><rect x="548" y="40" width="150" height="44" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-t-strong" x="623.0" y="67.0" text-anchor="middle" style="font-size:12.5px">in-order output</text><line x1="524" y1="62" x2="545" y2="62" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="545.0,62.0 536.0,57.0 536.0,67.0" style="fill:var(--bf-frame)"/><text class="bf-t-strong" x="20" y="128" text-anchor="start" style="font-size:13px">A question</text><rect x="20" y="136" width="150" height="44" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><text class="bf-t-strong" x="95.0" y="163.0" text-anchor="middle" style="font-size:12.5px">find block starts</text><rect x="196" y="136" width="150" height="44" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><text class="bf-t-strong" x="271.0" y="163.0" text-anchor="middle" style="font-size:12.5px">block queue</text><line x1="172" y1="158" x2="193" y2="158" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="193.0,158.0 184.0,153.0 184.0,163.0" style="fill:var(--bf-frame)"/><rect x="372" y="136" width="150" height="44" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"/><text class="bf-t-strong" x="447.0" y="155.5" text-anchor="middle" style="font-size:12.5px">parallel scan</text><text class="bf-t-strong" x="447.0" y="170.5" text-anchor="middle" style="font-size:12.5px">and inversion</text><line x1="348" y1="158" x2="369" y2="158" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="369.0,158.0 360.0,153.0 360.0,163.0" style="fill:var(--bf-frame)"/><rect x="548" y="136" width="150" height="44" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-t-strong" x="623.0" y="163.0" text-anchor="middle" style="font-size:12.5px">in-order output</text><line x1="524" y1="158" x2="545" y2="158" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="545.0,158.0 536.0,153.0 536.0,163.0" style="fill:var(--bf-frame)"/><text class="bf-tm" x="360.0" y="222" text-anchor="middle" style="font-size:12.5px">The second row moves the scan behind the parallel boundary. Whether it pays depends on what finding</text><text class="bf-tm" x="360.0" y="240" text-anchor="middle" style="font-size:12.5px">the starts costs, what state must be carried across, and how the new demands compete for the same cores.</text></svg>
+<figcaption>Schematic. The second row is a question for the search, with its costs unknown.</figcaption>
+</figure>
+
+The fourth reader enumerated the ways the scanner's obligations could be divided between the scanner
+and the workers and scored each with the two-station law ([record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md)). Its principle is to
+keep an obligation on a serial path only if its state has no small summary, and to cut the path
+wherever the format resets that state. Decoding a single block's codes in parallel is ruled out: the
+table is chosen afresh every 50 symbols by a running count that nothing in the stream re-synchronises,
+so each chunk would have to carry at least 50 hypotheses, an obstruction proved from the format with
+its cost argued. An index of block starts, so that each worker scans its own block, remains the larger
+structural lead. The same record measured where the workers' time goes on a real block at one worker:
+construction 45%, emission 38%, the move-to-front stage 10% and the final expansion and checksum 6%,
+which makes construction, not emission, the largest target for mathematics in the workers.
+
+Two readings give the search its language. Systems biology's question was never Alon's catalogue of
+recurring motifs but which structures can perform a given function at all:
+[Ma and colleagues](https://doi.org/10.1016/j.cell.2009.06.013){ .il-ref } enumerated every
+three-node network to find the few able to adapt,
+[Araujo and Liotta](https://doi.org/10.1038/s41467-018-04151-6){ .il-ref } gave the solution space a
+basis, and [Khammash](https://doi.org/10.1016/j.cels.2021.05.020){ .il-ref } states the programme as
+specify the function, derive necessary conditions, characterise the solutions, check realisability and
+establish optimality ([the lead](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md)). And the theory of hybrid
+dynamical systems, the natural continuation of the reservoir picture, describes a system that flows
+continuously between discrete events, which is the decoder exactly: occupancy and time flow, blocks
+are admitted and released ([the levers](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md)).
+Any reorganisation changes one of five things: how fast work runs, where work may proceed, when events
+may happen, what events do, or what is represented. Thread pairs, tokens, a parallel scan, a fused
+stage or a new representation are all instances, and the formalism organises the search; predictions
+and optimality claims still need their own evidence.
+
+## 14. How the work is done
 
 The method is written down so that it can be reused
-([the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md)). It starts from a measured surprise rather than a technique, poses the
-problem and its referee before any solution, and prefers a model that predicts from little data and
-is checked on data it did not see. Sources are read in full and saved. Several readers and
-reviewers answer independently before comparing, their answers are recorded verbatim, and decisions
-are kept in separate files with their reasons. Wrong claims are corrected in place and in public,
-naming who found the error, as the worker-count error and the lower bound above were. Every run
-registers its decision rule before its data, changes are priced jointly because a relieved
-bottleneck moves, and when it moves, the ideas it may have masked are tested again.
+([the protocol](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/process/protocol.md)). It starts from a measured surprise rather than a technique,
+poses the problem and its referee before any solution, and prefers a model that predicts from little
+data and is checked on data it did not see. Sources are saved, and several readers and reviewers
+answer independently before comparing. Every run registers its decision rule before its data. Wrong
+claims are corrected in place and in public, as the worker count, the closed-network description,
+the lower bound, the log-additive predictor and the multi-symbol price were here.
 
-## 13. What runs next
+## 15. What runs next
 
-Five runs are planned, in order ([the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md)): the stage 1 baseline, now
-done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows
-each activity in turn to say which controls the wall at which count; the recalibration of the
-worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner
-and worker improvements together. Both parts of stage 2 are in ([§9](#9-stage-2-which-activity-controls-the-wall)), and the tests they priced, the copy fix and the trim to 8 workers, are being asked again with the clock warmed first. Each cost
-it finds controlling will be classed as engineering, a matter of how the work is done, or as a
-candidate for mathematics, a matter of what work is done.
+The full ideal-parts matrix comes next, with construction, the move-to-front stage, the final work
+and delivery each given an oracle, at 1, 6, 8 and 10 workers, and its results become the map of where
+mathematics could pay: improvements useful now, improvements hidden behind another part, combinations
+that expose room, and changes that save cores or memory without moving the wall. The scanner's copy
+fixes are being asked again with the clock warmed.
 
-Seen whole, the work moves through three levels. Algorithm analysis asks how much work a
-computation needs. Queueing theory asks which of that work sets the speed of the whole. The
-structural question, what organisation of the work could remove it or its dependencies, is where
-the dynamical systems and the mathematics come in. Queueing theory is the bridge between the first
-and the third: it says where new mathematics would pay.
+Seen whole, the work moves through three levels. Algorithm analysis asks how much work a computation
+needs. Queueing theory asks which of that work sets the speed of the whole. The structural question,
+what organisation of the work could remove it or its dependencies, is where the dynamical systems and
+the mathematics come in. Queueing theory is the bridge between the first and the third: it says where
+new mathematics would pay.
+
 
 ---
 
 **Sources:**
 
-- The measurements: [the scanner profile](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv) (journal §57) and [stage 1's report](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt) (journal §66).
-- The readings: [the summary](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md), [the first reading with its corrections](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md), [the outside reading](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md) and [the second agent's](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md); journal §§61–62 and §69.
-- The design thread: [structure and function](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md), with [the outside answer on motifs](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md) and [on Khammash](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md); journal §§64–65.
-- The dynamical layer: [the outside answer](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md), [the levers](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md) and [the review that corrected them](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md); journal §§67–70.
-- Queueing theory: [the three courses, as read](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/methodology/performance-courses.md) (journal §§53–54); Jain, *The Art of Computer Systems Performance Analysis* (1991); Harchol-Balter, *Performance Modeling and Design of Computer Systems* (2013); the papers linked in §§2 and 5.
-- [The discipline question](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md) (journal §56), [the protocol](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md) and [the programme of experiments](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md).
-- The fourth reading: [record 129](https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md) and [record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md); stage 1 by program, [journal §71](https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md).
-- Stage 2: the first part's [report](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt) and [analysis](https://github.com/lmmx/mibz2/tree/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/analysis) (journal §74); the second's [report](https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/report.txt) and [analysis](https://github.com/lmmx/mibz2/tree/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/analysis) (journal §78); the clock test, journal §81; the three-symbol prototype, journal §82 and [#870](https://github.com/lmmx/mibz2/pull/870).
-- [The journal](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md).
+- The oracle and the knee: journal §§44 and 57, [the scanner profile](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv), and [Masked bottlenecks in a two-stage decoder](2026-11-24-the-scanner-hides-the-emitter.md).
+- The reading: [the courses as read](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/methodology/performance-courses.md); the readers' answers, [the summary](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md), [the opportunities with their corrections](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md) and [the discipline lead](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md); journal §§52–62.
+- The characterisation: [stage 1's report](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt) and the stage 2 reports, journal §§66, 71, 74 and 78; the clock, §81.
+- The code: [#841](https://github.com/lmmx/mibz2/pull/841), [#868](https://github.com/lmmx/mibz2/pull/868), [#870](https://github.com/lmmx/mibz2/pull/870), [#874](https://github.com/lmmx/mibz2/pull/874), [#878](https://github.com/lmmx/mibz2/pull/878), [#879](https://github.com/lmmx/mibz2/pull/879); journal §§76–86.
+- The ideal-parts matrix: [its directory](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts), journal §§87–88.
+- The design thread: [record 130](https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md), [structure and function](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md), [the hybrid-systems levers](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md).
+- [The journal](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md).
