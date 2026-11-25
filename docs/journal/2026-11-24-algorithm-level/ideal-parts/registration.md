@@ -24,3 +24,18 @@
 **INCOMPLETE** if any identity fails in a traced decode.
 
 **Reported beside the labels,** never part of them: the oracle's memory and handover cost; the clock split; the unpinned link.
+
+## Clarifications, 25 November 2026, before any data (the Pathfinder's questions on slice A, PR 889)
+
+1. **The interaction's scale:** Jain's effect coefficient on log wall, q_PQ = (y₀ − y_P − y_Q + y_PQ)/4 for a 2² (and its sign-table equivalent in the fraction).
+   - **ADDITIVE's ±0.01 applies to q_PQ.** On the difference of differences (4·q), that is ±0.04.
+   - Both are reported.
+   - **INTERACTS** iff q_PQ's interval excludes 0.
+2. **MASKED,** as written:
+   - NO ROOM alone;
+   - q_PQ's interval wholly below 0;
+   - ROOM (upper bound ≤ 0.95) with Q ideal.
+3. **The removed-part VOID.** Per count, the mean busy time of the part's work in its ideal arms' traces, over the mean in its real arms' traces, must be ≤ 5%.
+   - For S, the work is the scanner's A2 + A3.
+   - For E, it is the workers' A7, the walk.
+4. **Memory:** the oracle's store (about 149 MiB on wikidata ×4) is recorded and held in every arm, real ones included, so process history is equal. Peak RSS is compared within the binary only.
