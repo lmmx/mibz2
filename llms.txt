@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [The decoder's knee](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoders-knee/index.md>): A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.
+- [The decoder as a queueing network](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>): Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 - [Posing the inversion problem](<https://lmmx.github.io/mibz2/blog/2026-11-24-posing-the-inversion-problem/index.md>): The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits.
 - [Masked bottlenecks](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-scanner-hides-the-emitter/index.md>): Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone.
 - [What else moves together](<https://lmmx.github.io/mibz2/blog/2026-11-24-what-else-moves-together/index.md>): The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information.
