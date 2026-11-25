@@ -925,13 +925,20 @@ fn prespin(ms: u64) -> Option<(u64, usize, f64)> {
     Some((ms, n, t0.elapsed().as_secs_f64()))
 }
 
-/// The ideal-parts matrix's oracles (`scan-oracle`: S, the scan replayed; E, emission on the
-/// supplied codes), docs/journal/2026-11-24-algorithm-level/ideal-parts/. Every arm runs the
-/// same passes, so the arms differ only in the modes of their timed decode: the record pass
-/// (both stores, the reference output's size and CRC-32), the timed decode, the check pass
-/// (the scan replayed, emission in its check mode: every supplied block's bytes compared with
-/// the walk's; the output's size and CRC-32 against the reference). Both passes at
-/// `oracle::PASS_WORKERS` workers, outside every clock, the ledgers off
+/// The ideal-parts matrix's oracles, docs/journal/2026-11-24-algorithm-level/ideal-parts/: S, the
+/// scan replayed (`scan-oracle`); E, emission on the supplied codes (`supplied-codes`); C,
+/// construction replayed (`ideal-construction`); M, MTF/RLE2 replayed (`ideal-mtf`); R, RLE1,
+/// the CRC and the output replayed (`ideal-rle1`); D, delivery discarded (`ideal-delivery`).
+/// Every arm runs the same passes, so the arms differ only in the modes of their timed decode:
+/// - **the record pass:** every part as shipped, each oracle's store recorded (all six in every
+///   arm, so every arm holds the same stores), the reference output's size and SHA-256;
+/// - **the timed decode,** the arm's parts ideal, the rest real;
+/// - **the check pass:** the arm's modes again, but emission in its check mode (every supplied
+///   block's bytes compared with the walk's) and delivery in its check mode (the blocks hashed
+///   in order); the output's size and SHA-256 against the reference.
+///
+/// Both passes run at `oracle::PASS_WORKERS` workers, outside every clock, with the ledgers off.
+/// A timed decode whose ideal parts were not wholly replayed fails (its arm was not measured).
 mod oracle {
     use std::sync::atomic::{AtomicU8, Ordering};
 
@@ -939,13 +946,10 @@ mod oracle {
     /// Huffman scan; E, emission; C, construction; M, MTF/RLE2; R, RLE1, CRC and output; D,
     /// delivery. An arm is `none` or its ideal parts' letters (`SE`, `SECMRD`, ...)
     const FACTORS: [char; 6] = ['S', 'E', 'C', 'M', 'R', 'D'];
-    /// The factors this binary's oracles supply (slice A: the scan and emission). The others
-    /// plug in here, with their record, ideal and check modes beside S's and E's below
-    const BUILT: [char; 2] = ['S', 'E'];
 
     /// 0x80: in play (an `oracle` line); bit i: factor FACTORS[i] ideal
     static ARM: AtomicU8 = AtomicU8::new(0);
-    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
+    #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     pub const PASS_WORKERS: usize = 10;
 
     pub fn set(x: &str) {
@@ -956,10 +960,6 @@ mod oracle {
                     .iter()
                     .position(|&f| f == c)
                     .unwrap_or_else(|| panic!("TREAT: oracle {x}: none, or letters of SECMRD"));
-                assert!(
-                    BUILT.contains(&c),
-                    "TREAT: oracle {x}: factor {c} has no oracle in this binary (built: {BUILT:?})"
-                );
                 assert!(bits & (1 << i) == 0, "TREAT: oracle {x}: {c} twice");
                 bits |= 1 << i;
             }
@@ -968,14 +968,14 @@ mod oracle {
     }
 
     /// Whether factor `c` is ideal in this decode's arm
-    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
+    #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     fn ideal(c: char) -> bool {
         let i = FACTORS.iter().position(|&f| f == c).expect("a factor");
         ARM.load(Ordering::SeqCst) & (1 << i) != 0
     }
 
     /// The arm's name: `none`, or its ideal factors' letters in FACTORS' order
-    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
+    #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     pub fn name() -> String {
         let n: String = FACTORS.iter().filter(|&&c| ideal(c)).collect();
         if n.is_empty() {
@@ -989,70 +989,135 @@ mod oracle {
         ARM.load(Ordering::SeqCst) & 0x80 != 0
     }
 
-    #[cfg(not(feature = "scan-oracle"))]
-    pub fn record(_: &'static [u8]) {
-        assert!(!in_play(), "TREAT: oracle needs the scan-oracle feature");
-    }
-    #[cfg(not(feature = "scan-oracle"))]
-    pub fn finish(line: String) -> String {
-        line
-    }
-    #[cfg(not(feature = "scan-oracle"))]
-    pub fn take_handover() -> u64 {
-        0
+    /// The timed decode's replays, for the trace's forced flow: the open blocks emitted from
+    /// supplied codes (their walk removed), the open blocks whose construction was replayed
+    /// built and refused (A6a to A6c removed)
+    #[derive(Clone, Copy, Debug, Default)]
+    pub struct Replays {
+        pub supplied: u64,
+        pub c_built: u64,
+        pub c_refused: u64,
+        pub m: u64,
+        pub r: u64,
     }
 
-    /// The timed decode's handover: (blocks replayed, open blocks, open blocks supplied, the
-    /// supplied codes' delivery ns, their consumption ns)
-    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
-    type Handover = (u64, u64, u64, u64, u64);
-    #[cfg_attr(not(feature = "scan-oracle"), allow(dead_code))]
-    static HANDOVER: std::sync::Mutex<Option<Handover>> = std::sync::Mutex::new(None);
+    // the matrix's binary: every oracle's feature (the bench builds them all)
+    #[cfg(not(all(
+        feature = "scan-oracle",
+        feature = "ideal-construction",
+        feature = "ideal-mtf",
+        feature = "ideal-rle1",
+        feature = "ideal-delivery"
+    )))]
+    mod live {
+        pub fn record(_: &'static [u8]) {
+            assert!(
+                !super::in_play(),
+                "TREAT: oracle needs the features scan-oracle, ideal-construction, ideal-mtf, ideal-rle1 and ideal-delivery"
+            );
+        }
+        pub fn finish(line: String) -> String {
+            line
+        }
+        pub fn take_handover() -> super::Replays {
+            super::Replays::default()
+        }
+    }
 
-    /// The timed decode's handover, taken as soon as its decoder is joined; the open blocks
-    /// whose walk the supplied codes replaced (0 unless emission is ideal)
-    #[cfg(feature = "scan-oracle")]
-    pub fn take_handover() -> u64 {
+    #[cfg(all(
+        feature = "scan-oracle",
+        feature = "ideal-construction",
+        feature = "ideal-mtf",
+        feature = "ideal-rle1",
+        feature = "ideal-delivery"
+    ))]
+    mod live {
+        use super::{ideal, in_play, name, Replays};
+        use mibz2::ideal::{construction as ic, delivery as id, mtf as im, rle1 as ir, Mode};
         use mibz2::scan_oracle as scan;
         use mibz2::supplied_codes as sup;
-        if !in_play() {
-            return 0;
-        }
-        let replayed = scan::take_replayed();
-        let recs = sup::take();
-        let open = recs.iter().filter(|x| !x.refused);
-        // (the delivery and consumption of the supplied blocks alone: an open block emitted by
-        // its walk times the walk there, which is emission's real work, never a handover)
-        let h = open.fold((0u64, 0u64, 0u64, 0u64), |(c, s, d, e), x| {
-            let sup = u64::from(x.supplied);
-            (
-                c + 1,
-                s + sup,
-                d + sup * x.deliver_ns,
-                e + sup * x.consume_ns,
-            )
-        });
-        *HANDOVER.lock().unwrap() = Some((replayed, h.0, h.1, h.2, h.3));
-        h.1
-    }
-
-    #[cfg(feature = "scan-oracle")]
-    mod live {
-        use mibz2::scan_oracle as scan;
-        use mibz2::supplied_codes::{self as sup, Mode};
         use std::io::Read;
         use std::sync::Mutex;
 
-        /// (the reference: bytes, CRC-32, the record pass's wall; the stores' figures)
-        pub static REF: Mutex<Option<(u64, u32, f64, String)>> = Mutex::new(None);
-        pub static DATA: Mutex<Option<&'static [u8]>> = Mutex::new(None);
+        /// The record pass: the reference (bytes, SHA-256, wall), the stores' JSON, the blocks
+        /// (M's store, every block indexed) and C's open blocks
+        struct Ref {
+            bytes: u64,
+            sha: String,
+            wall: f64,
+            store: String,
+            blocks: u64,
+            c_open: u64,
+            data: &'static [u8],
+        }
+        static REF: Mutex<Option<Ref>> = Mutex::new(None);
+        /// the timed decode's counts, as JSON
+        static TIMED: Mutex<Option<String>> = Mutex::new(None);
 
-        pub fn pass(data: &'static [u8], s: scan::Mode, e: Mode) -> (u64, u32, f64) {
-            let _ = sup::take();
-            let _ = scan::take_replayed();
-            sup::set_mode(e);
+        fn hex(h: [u8; 32]) -> String {
+            h.iter().map(|b| format!("{b:02x}")).collect()
+        }
+
+        /// The modes of every oracle: (S, E, C, M, R, D)
+        type Modes = (scan::Mode, sup::Mode, Mode, Mode, Mode, id::Mode);
+
+        fn set_modes(m: Modes) {
+            scan::set_mode(m.0);
+            sup::set_mode(m.1);
             sup::set_condition(false);
-            scan::set_mode(s);
+            ic::set_mode(m.2);
+            im::set_mode(m.3);
+            ir::set_mode(m.4);
+            id::set_mode(m.5);
+        }
+
+        /// The arm's modes: its ideal parts replayed (D discarded), the rest real; `check`, E
+        /// in its check mode where ideal and D hashing either way
+        fn arm_modes(check: bool) -> Modes {
+            let rep = |c: char| if ideal(c) { Mode::Replay } else { Mode::Real };
+            (
+                if ideal('S') {
+                    scan::Mode::Replay
+                } else {
+                    scan::Mode::Scan
+                },
+                match (ideal('E'), check) {
+                    (true, true) => sup::Mode::Check,
+                    (true, false) => sup::Mode::Supplied,
+                    (false, _) => sup::Mode::Open,
+                },
+                rep('C'),
+                rep('M'),
+                rep('R'),
+                match (ideal('D'), check) {
+                    (_, true) => id::Mode::Check,
+                    (true, false) => id::Mode::Discard,
+                    (false, false) => id::Mode::Real,
+                },
+            )
+        }
+
+        /// Every counter zeroed
+        fn reset_counts() {
+            let _ = scan::take_replayed();
+            let _ = sup::take();
+            let _ = sup::mismatches();
+            let _ = ic::take_constructed();
+            let _ = ic::take_replayed();
+            let _ = ic::take_refused_replayed();
+            let _ = im::take_executed();
+            let _ = im::take_replayed();
+            let _ = ir::take_executed();
+            let _ = ir::take_replayed();
+            let _ = id::take_stats();
+        }
+
+        /// A pass outside the clock, delivery in its check mode: (bytes, SHA-256, wall)
+        fn pass(data: &'static [u8], m: Modes) -> (u64, String, f64) {
+            assert_eq!(m.5, id::Mode::Check, "a pass hashes its output");
+            reset_counts();
+            set_modes(m);
+            id::clear_check();
             let k = mibz2::Kernels::detect();
             let w = super::PASS_WORKERS;
             let t = std::time::Instant::now();
@@ -1064,95 +1129,196 @@ mod oracle {
                 true,
             );
             let mut buf = vec![0u8; 4 << 20];
-            let (mut bytes, mut crc) = (0u64, 0u32);
             loop {
                 match r.read(&mut buf) {
                     Ok(0) => break,
-                    Ok(x) => {
-                        bytes += x as u64;
-                        crc = mibz2::crc::update_with(crc, &buf[..x], k);
-                    }
+                    Ok(_) => panic!("a pass in delivery's check mode copied to the caller"),
                     Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
                     Err(e) => panic!("an oracle pass failed: {e}"),
                 }
             }
             drop(r);
-            (bytes, crc, t.elapsed().as_secs_f64())
+            let wall = t.elapsed().as_secs_f64();
+            let st = id::take_stats();
+            assert_eq!(st.copied_bytes, 0, "a pass copied to the caller");
+            (st.discarded_bytes, hex(id::take_check_sha256()), wall)
+        }
+
+        pub fn record(data: &'static [u8]) {
+            if !in_play() {
+                return;
+            }
+            sup::clear_store();
+            scan::clear_store();
+            ic::clear_store();
+            im::clear_store();
+            ir::clear_store();
+            let (bytes, sha, wall) = pass(
+                data,
+                (
+                    scan::Mode::Record,
+                    sup::Mode::Record,
+                    Mode::Record,
+                    Mode::Record,
+                    Mode::Record,
+                    id::Mode::Check,
+                ),
+            );
+            let c_open = ic::take_constructed();
+            let _ = sup::take();
+            let (keys, codes, code_bytes) = sup::store_size();
+            let collisions = sup::collisions();
+            let (s_blocks, s_distinct, s_bytes, s_conflicts, s_missing) = scan::store_size();
+            let c = ic::store_size();
+            let m = im::store_size();
+            let r = ir::store_size();
+            assert!(
+                collisions + s_conflicts + s_missing == 0 && keys > 0 && s_blocks > 0,
+                "S's or E's store is not usable: {collisions} collisions, {s_conflicts} conflicts, {s_missing} missing"
+            );
+            assert!(
+                c.3 == 0 && c.0 - c.4 == c_open && c_open > 0,
+                "C's store is not usable: {c:?}, {c_open} open blocks constructed"
+            );
+            assert!(
+                m.3 == 0 && m.4 == 0 && m.0 == s_blocks,
+                "M's store is not usable: {m:?}, {s_blocks} blocks"
+            );
+            assert!(
+                r.3 == 0 && r.4 == 0 && r.0 == s_blocks,
+                "R's store is not usable: {r:?}, {s_blocks} blocks"
+            );
+            let total = s_bytes + code_bytes as u64 + c.2 + m.2 + r.2;
+            let store = format!(
+                "{{\"blocks\":{s_blocks},\"distinct\":{s_distinct},\"symbol_bytes\":{s_bytes},\"code_keys\":{keys},\"codes\":{codes},\"code_bytes\":{code_bytes},\
+                 \"C\":{{\"blocks\":{},\"distinct\":{},\"bytes\":{},\"open\":{c_open}}},\
+                 \"M\":{{\"blocks\":{},\"distinct\":{},\"bytes\":{}}},\
+                 \"R\":{{\"blocks\":{},\"distinct\":{},\"bytes\":{}}},\"total_bytes\":{total}}}",
+                c.0, c.1, c.2, m.0, m.1, m.2, r.0, r.1, r.2
+            );
+            *REF.lock().unwrap() = Some(Ref {
+                bytes,
+                sha,
+                wall,
+                store,
+                blocks: s_blocks,
+                c_open,
+                data,
+            });
+            // the timed decode's modes, its counters from zero
+            reset_counts();
+            set_modes(arm_modes(false));
+        }
+
+        /// The timed decode's counts, taken as soon as its decoder is joined; it fails where an
+        /// ideal part was not wholly replayed, or a real one was
+        pub fn take_handover() -> Replays {
+            if !in_play() {
+                return Replays::default();
+            }
+            let g = REF.lock().unwrap();
+            let rf = g.as_ref().expect("the record pass");
+            let s_rep = scan::take_replayed();
+            let recs = sup::take();
+            let open = recs.iter().filter(|x| !x.refused);
+            // (the delivery and consumption of the supplied blocks alone: an open block emitted
+            // by its walk times the walk there, which is emission's real work, never a handover)
+            let (n_open, n_sup, deliver, consume) =
+                open.fold((0u64, 0u64, 0u64, 0u64), |(c, s, d, e), x| {
+                    let sup = u64::from(x.supplied);
+                    (
+                        c + 1,
+                        s + sup,
+                        d + sup * x.deliver_ns,
+                        e + sup * x.consume_ns,
+                    )
+                });
+            let (c_con, c_built, c_ref) = (
+                ic::take_constructed(),
+                ic::take_replayed(),
+                ic::take_refused_replayed(),
+            );
+            let (m_exec, m_rep) = (im::take_executed(), im::take_replayed());
+            let (r_exec, r_rep) = (ir::take_executed(), ir::take_replayed());
+            let d = id::take_stats();
+            let nb = rf.blocks;
+            let arm = name();
+            let whole = |part: char, replayed: bool, real: bool| {
+                assert!(
+                    if ideal(part) { replayed } else { real },
+                    "arm {arm}: {part} {} in the timed decode (S {s_rep}; C {c_con} constructed, {c_built} + {c_ref} replayed of {}; M {m_exec} + {m_rep}; R {r_exec} + {r_rep}; D {d:?}; {nb} blocks)",
+                    if ideal(part) { "not wholly replayed" } else { "replayed" },
+                    rf.c_open
+                )
+            };
+            whole('S', s_rep == nb, s_rep == 0);
+            whole(
+                'C',
+                c_con == 0 && c_built + c_ref == rf.c_open,
+                c_built + c_ref == 0,
+            );
+            whole('M', m_exec == 0 && m_rep == nb, m_rep == 0);
+            whole('R', r_exec == 0 && r_rep == nb, r_rep == 0);
+            whole(
+                'D',
+                d.copied_bytes == 0 && d.discarded_bytes == rf.bytes,
+                d.discarded_bytes == 0 && d.copied_bytes == rf.bytes,
+            );
+            *TIMED.lock().unwrap() = Some(format!(
+                "\"replayed\":{s_rep},\"open_blocks\":{n_open},\"supplied_blocks\":{n_sup},\"deliver_ns\":{deliver},\"consume_ns\":{consume},\
+                 \"replays\":{{\"S\":{s_rep},\"C_constructed\":{c_con},\"C_built\":{c_built},\"C_refused\":{c_ref},\"M_executed\":{m_exec},\"M_replayed\":{m_rep},\
+                 \"R_executed\":{r_exec},\"R_replayed\":{r_rep},\"D_discarded_blocks\":{},\"D_discarded_bytes\":{},\"D_copied_bytes\":{}}}",
+                d.discarded_blocks, d.discarded_bytes, d.copied_bytes
+            ));
+            Replays {
+                supplied: n_sup,
+                c_built,
+                c_refused: c_ref,
+                m: m_rep,
+                r: r_rep,
+            }
+        }
+
+        pub fn finish(line: String) -> String {
+            if !in_play() {
+                return line;
+            }
+            let timed = TIMED
+                .lock()
+                .unwrap()
+                .take()
+                .expect("the timed decode's counts");
+            let (rbytes, rsha, rwall, store, data) = {
+                let g = REF.lock().unwrap();
+                let rf = g.as_ref().expect("the record pass");
+                (rf.bytes, rf.sha.clone(), rf.wall, rf.store.clone(), rf.data)
+            };
+            let (cbytes, csha, cwall) = pass(data, arm_modes(true));
+            let creplayed = scan::take_replayed();
+            let crecs = sup::take();
+            let checked = crecs.iter().filter(|r| !r.refused && r.supplied).count();
+            let mismatches = sup::mismatches();
+            reset_counts();
+            set_modes((
+                scan::Mode::Scan,
+                sup::Mode::Open,
+                Mode::Real,
+                Mode::Real,
+                Mode::Real,
+                id::Mode::Real,
+            ));
+            let identical = cbytes == rbytes && csha == rsha && mismatches == 0;
+            let tail = format!(
+                ",\"oracle\":\"{}\",\"oracle_store\":{store},{timed},\"record_pass\":{{\"bytes\":{rbytes},\"sha256\":\"{rsha}\",\"wall_s\":{rwall:.4}}},\"check_pass\":{{\"bytes\":{cbytes},\"sha256\":\"{csha}\",\"wall_s\":{cwall:.4},\"replayed\":{creplayed},\"supplied_checked\":{checked},\"mismatches\":{mismatches},\"identical\":{identical}}}}}",
+                name()
+            );
+            // (the record's closing brace replaced by the oracle's fields and its own)
+            let body = line.strip_suffix('}').expect("a JSON object");
+            format!("{body}{tail}")
         }
     }
 
-    #[cfg(feature = "scan-oracle")]
-    pub fn record(data: &'static [u8]) {
-        use mibz2::scan_oracle as scan;
-        use mibz2::supplied_codes::{self as sup, Mode};
-        if !in_play() {
-            return;
-        }
-        sup::clear_store();
-        scan::clear_store();
-        let (bytes, crc, wall) = live::pass(data, scan::Mode::Record, Mode::Record);
-        let _ = sup::take();
-        let (keys, codes, code_bytes) = sup::store_size();
-        let collisions = sup::collisions();
-        let (blocks, distinct, sym_bytes, conflicts, missing) = scan::store_size();
-        assert!(
-            collisions + conflicts + missing == 0 && keys > 0 && blocks > 0,
-            "the oracle's stores are not usable: {collisions} collisions, {conflicts} conflicts, {missing} missing"
-        );
-        let store = format!(
-            "{{\"blocks\":{blocks},\"distinct\":{distinct},\"symbol_bytes\":{sym_bytes},\"code_keys\":{keys},\"codes\":{codes},\"code_bytes\":{code_bytes}}}"
-        );
-        *live::REF.lock().unwrap() = Some((bytes, crc, wall, store));
-        *live::DATA.lock().unwrap() = Some(data);
-        scan::set_mode(if ideal('S') {
-            scan::Mode::Replay
-        } else {
-            scan::Mode::Scan
-        });
-        sup::set_mode(if ideal('E') {
-            Mode::Supplied
-        } else {
-            Mode::Open
-        });
-        sup::set_condition(false);
-        let _ = sup::take();
-        let _ = scan::take_replayed();
-        let _ = sup::mismatches();
-    }
-
-    #[cfg(feature = "scan-oracle")]
-    pub fn finish(line: String) -> String {
-        use mibz2::scan_oracle as scan;
-        use mibz2::supplied_codes::{self as sup, Mode};
-        if !in_play() {
-            return line;
-        }
-        // (the timed decode's handover: the blocks replayed, the open blocks supplied, the
-        // supplied codes' delivery and consumption)
-        let (replayed, n_open, n_sup, deliver, consume) = HANDOVER
-            .lock()
-            .unwrap()
-            .expect("the timed decode's handover");
-        let (rbytes, rcrc, rwall, store) =
-            live::REF.lock().unwrap().clone().expect("the record pass");
-        let data = live::DATA.lock().unwrap().expect("the record pass");
-        let _ = sup::mismatches();
-        let (cbytes, ccrc, cwall) = live::pass(data, scan::Mode::Replay, Mode::Check);
-        let creplayed = scan::take_replayed();
-        let crecs = sup::take();
-        let checked = crecs.iter().filter(|r| !r.refused && r.supplied).count();
-        let mismatches = sup::mismatches();
-        sup::set_mode(Mode::Open);
-        scan::set_mode(scan::Mode::Scan);
-        let identical = cbytes == rbytes && ccrc == rcrc && mismatches == 0;
-        let tail = format!(
-            ",\"oracle\":\"{}\",\"oracle_store\":{store},\"replayed\":{replayed},\"open_blocks\":{n_open},\"supplied_blocks\":{n_sup},\"deliver_ns\":{deliver},\"consume_ns\":{consume},\"record_pass\":{{\"bytes\":{rbytes},\"crc\":\"{rcrc:08x}\",\"wall_s\":{rwall:.4}}},\"check_pass\":{{\"bytes\":{cbytes},\"crc\":\"{ccrc:08x}\",\"wall_s\":{cwall:.4},\"replayed\":{creplayed},\"supplied_checked\":{checked},\"mismatches\":{mismatches},\"identical\":{identical}}}}}",
-            name()
-        );
-        // (the record's closing brace replaced by the oracle's fields and its own)
-        let body = line.strip_suffix('}').expect("a JSON object");
-        format!("{body}{tail}")
-    }
+    pub use live::{finish, record, take_handover};
 }
 
 /// The window a `--one` decode is built with (0: 4 a worker, as shipped)
@@ -1341,7 +1507,7 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     // (the decoder's threads joined: their counts folded into the inherited counters)
     drop(r);
     // (the oracle's handover over the timed decode, taken before anything else decodes)
-    let supplied = oracle::take_handover();
+    let replays = oracle::take_handover();
     let mut line = format!(
         "{{\"kind\":\"decode\",\"k\":{k},\"on\":{},\"window\":{window},\"treat\":{},{}{}",
         u8::from(on),
@@ -1512,11 +1678,23 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let ff = [
         ("A5", visits(ch::Tag::A5), nb),
         ("pool", visits(ch::Tag::Pool), nb),
-        ("A6a", visits(ch::Tag::A6a), open + dense + refused),
-        ("A6b", visits(ch::Tag::A6b), open + dense),
-        ("A6c", visits(ch::Tag::A6c), open + dense),
-        // (the ideal-parts matrix's emission oracle: a supplied block's walk is removed)
-        ("A7", visits(ch::Tag::A7), open + dense - supplied),
+        // (the ideal-parts matrix's oracles: a replayed construction removes A6a to A6c, a
+        // supplied block's walk A7; each handover its own entry, one a replayed block)
+        (
+            "A6a",
+            visits(ch::Tag::A6a),
+            open + dense + refused - replays.c_built - replays.c_refused,
+        ),
+        ("A6b", visits(ch::Tag::A6b), open + dense - replays.c_built),
+        ("A6c", visits(ch::Tag::A6c), open + dense - replays.c_built),
+        ("A7", visits(ch::Tag::A7), open + dense - replays.supplied),
+        (
+            "hand_C",
+            visits(ch::Tag::HandC),
+            replays.c_built + replays.c_refused,
+        ),
+        ("hand_M", visits(ch::Tag::HandM), replays.m),
+        ("hand_R", visits(ch::Tag::HandR), replays.r),
         ("A8", visits(ch::Tag::A8), refused + skipped + column),
         ("A9", visits(ch::Tag::A9), nb),
         ("publish", visits(ch::Tag::Publish), nb),

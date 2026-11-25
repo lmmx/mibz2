@@ -890,7 +890,10 @@ impl StreamDecoder {
             }
             if r.at < r.cur.len() {
                 let n = buf.len().min(r.cur.len() - r.at);
+                // (`character`: the copy to the caller, delivery's own work, D's)
+                ch!(begin CopyOut);
                 buf[..n].copy_from_slice(&r.cur[r.at..r.at + n]);
+                ch!(end CopyOut);
                 r.at += n;
                 #[cfg(feature = "ideal-delivery")]
                 crate::ideal::delivery::count_copied(n as u64);
@@ -1312,7 +1315,11 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             (st.free_syms.pop().unwrap_or_default(), index)
         };
         ch!(end SlotWait);
-        let Some(symbols) = crate::scan_oracle::replay(index, syms) else {
+        // (`character`: the replay's copy is the scan's handover, its own entry)
+        ch!(begin HandS);
+        let replayed = crate::scan_oracle::replay(index, syms);
+        ch!(end HandS);
+        let Some(symbols) = replayed else {
             ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
             // the input's end: taken to its end, as the scanner reads to it
             while !eof {

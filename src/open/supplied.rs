@@ -55,7 +55,7 @@ impl Kernel {
     ) -> Option<Counts> {
         let t0 = Instant::now();
         let Some((stats, mark, bits)) =
-            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
+            self.construct_for::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
         else {
             sup::record(Rec {
                 n: n as u32,
@@ -88,8 +88,12 @@ impl Kernel {
         };
         // arm B's delivery: the lookup and the copy into `edges[..L]`, charged
         let mut cycle = 0;
+        // (`character`: the delivery and the consumption below are emission's handover, its own
+        // entry, apart from A7)
         if mode == Mode::Supplied {
+            ch!(begin HandE);
             cycle = sup::deliver(&key, &mut self.edges[..m]).unwrap_or(0);
+            ch!(end HandE);
         }
         let t2 = Instant::now();
         if cond {
@@ -107,7 +111,9 @@ impl Kernel {
             }
             Mode::Supplied => {
                 if cycle > 0 {
+                    ch!(begin HandE);
                     self.consume(n, cycle, out);
+                    ch!(end HandE);
                     supplied = true;
                 } else {
                     // nothing held: the walk as shipped (`edges` untouched), the record says so

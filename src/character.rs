@@ -85,6 +85,20 @@ pub enum Tag {
     LockState = 20,
     /// waiting to acquire the job queue's lock (`Jobs::lock`)
     LockJobs = 21,
+    // the ideal-parts matrix's handovers (registration.md, clarification 5): each oracle's copy
+    // of its recorded output into the decoder, timed apart from the part it removes
+    /// the scanner: the scan oracle's symbols handed over (`scan_oracle::replay`)
+    HandS = 22,
+    /// a worker: the supplied codes' delivery and consumption (emission's oracle)
+    HandE = 23,
+    /// a worker: the construction oracle's structures copied in (`ideal::construction`)
+    HandC = 24,
+    /// a worker: the MTF/RLE2 oracle's run records or column copied in (`ideal::mtf`)
+    HandM = 25,
+    /// a worker: the RLE1/CRC oracle's final bytes copied in (`ideal::rle1`)
+    HandR = 26,
+    /// the reader: a read call's copy to the caller (delivery's own work, D's; within A10)
+    CopyOut = 27,
     // points
     /// the scanner: a block given its place (`x`: its symbols' bytes)
     Issued = 32,
@@ -114,7 +128,7 @@ pub enum Tag {
 }
 
 /// The activities and waits, in `Tag` order (their names in the ledgers)
-pub const ACTIVITIES: [&str; 22] = [
+pub const ACTIVITIES: [&str; 28] = [
     "A0",
     "feed_wait",
     "in_wait",
@@ -137,6 +151,12 @@ pub const ACTIVITIES: [&str; 22] = [
     "read_wait",
     "lock_state",
     "lock_jobs",
+    "hand_S",
+    "hand_E",
+    "hand_C",
+    "hand_M",
+    "hand_R",
+    "copy_out",
 ];
 
 /// Whether an activity is a wait (its begin and end read the thread's CPU time)

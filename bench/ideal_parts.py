@@ -1,28 +1,31 @@
 #!/usr/bin/env python3
-"""bench-ideal-parts' planner and driver (slice A of the ideal-parts matrix:
+"""bench-ideal-parts' planner and driver (the ideal-parts matrix, all six parts:
 docs/journal/2026-11-24-algorithm-level/ideal-parts/, its design.md and its frozen
-registration.md). Characterisation: it decides nothing about production.
+registration.md, clarification 8). Characterisation: it decides nothing about production.
 
     python3 bench/ideal_parts.py plan LSCPU_E CORES.json OUT_PLAN.json
     python3 bench/ideal_parts.py run PLAN.json --bin BIN --corpus X4.bz2 --out DIR [--blocks 12]
 
-**plan:** the cells of slice A, the 2^2 of S (the Huffman scan) and E (emission), each real or
-ideal:
-- **the pinned cells:** each arm (none, S, E, SE) at 1, 6, 8 and 10 workers, the scanner pinned
-  to the first CPU of the core whose pinned calibration ran fastest (stage 2b's `cores`
-  phase), every other thread masked off that core;
+**plan:** the cells of the matrix, each of parts.md's six parts (S the Huffman scan, E emission,
+C construction, M MTF/RLE2, R RLE1/CRC/output, D delivery) real or ideal. The arms are the
+half-fraction I = +SECMRD (the 32 arms with an even number of ideal parts) augmented with the
+12 odd arms that room, the floor share and MASKED's condition are read from (the 6 singles and
+the 6 five-part arms): 44 arms.
+- **the pinned cells:** each arm at 1, 6, 8 and 10 workers, the scanner pinned to the first CPU
+  of the core whose pinned calibration ran fastest (stage 2b's `cores` phase), every other
+  thread masked off that core;
 - **the link:** all real and all ideal at 8 workers unpinned, to carry the pinned results back
   to production's regime.
 
-Every cell's treatment holds its arm (`oracle none|S|E|SE`) and the standard warm-up (`prespin
-100`). Traces (the ledgers on) run in the first TRACE_BLOCKS blocks; every wall is a decode with
-the ledgers off.
+Every cell's treatment holds its arm (`oracle none|S|...|SECMRD`) and the standard warm-up
+(`prespin 100`). Traces (the ledgers on) run in the first TRACE_BLOCKS blocks; every wall is a
+decode with the ledgers off.
 
 **run:** every cell once a block, in randomised order, each decode its own process
-(examples/character.rs `--one`, the features character and scan-oracle). In every arm the process
-runs the record pass, the pre-spin, the timed decode, then the check pass (byte identity). Each
-child's record goes to runs.jsonl with its cell; a decode that fails is recorded as failed and
-the run carries on.
+(examples/character.rs `--one`, the features character, scan-oracle and the four ideal-*). In
+every arm the process runs the record pass (all six stores), the pre-spin, the timed decode,
+then the check pass (byte identity). Each child's record goes to runs.jsonl with its cell; a
+decode that fails is recorded as failed and the run carries on.
 """
 
 from __future__ import annotations
@@ -38,16 +41,28 @@ import subprocess
 import tempfile
 import time
 
-# the factors in play (slice A: the oracles that exist), each a letter of parts.md's SECMRD; the
-# arms are every subset of them ideal (the full factorial), `none` all real. A factor whose oracle
-# is integrated into the binary joins here; a fraction replaces the full set of subsets
-FACTORS = ("S", "E")
-ARMS = tuple(
-    ["none"]
-    + ["".join(c) for r in range(1, len(FACTORS) + 1) for c in itertools.combinations(FACTORS, r)]
-)
+# the factors, parts.md's SECMRD, each a letter; an arm is `none` or its ideal parts' letters
+# in this order
+FACTORS = ("S", "E", "C", "M", "R", "D")
+
+
+def arm_name(parts) -> str:
+    n = "".join(f for f in FACTORS if f in parts)
+    return n or "none"
+
+
+def subsets(sizes):
+    return [arm_name(c) for r in sizes for c in itertools.combinations(FACTORS, r)]
+
+
+# the half-fraction I = +SECMRD: every arm with an even number of ideal parts (32), resolution
+# VI; then the 12 odd arms measured beside it (registration.md, clarification 8), never fitted
+FRACTION = tuple(subsets(range(0, len(FACTORS) + 1, 2)))
+AUGMENT = tuple(subsets((1, len(FACTORS) - 1)))
+ARMS = FRACTION + AUGMENT
+ALL = arm_name(FACTORS)
 COUNTS = (1, 6, 8, 10)
-LINK = (8, ("none", "SE"))
+LINK = (8, ("none", ALL))
 TRACE_BLOCKS = 2
 PRESPIN_MS = 100
 ENV = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
@@ -98,12 +113,13 @@ def plan(a) -> dict:
     for arm in arms:
         cells.append({"section": "link", "k": k, "arm": arm,
                       "treat": [f"oracle {arm}", f"prespin {PRESPIN_MS}"]})  # fmt: skip
-    out = {"design": "ideal-parts slice A", "arms": list(ARMS), "counts": list(COUNTS),
+    out = {"design": "ideal-parts: I = +SECMRD augmented with the odd arms", "factors": list(FACTORS),
+           "arms": list(ARMS), "fraction": list(FRACTION), "augment": list(AUGMENT), "counts": list(COUNTS),
            "link": {"k": k, "arms": list(arms)}, "scanner_cpu": scpu, "scanner_core": score,
            "pinned_mask": others, "core_calibration_ns": ns, "trace_blocks": TRACE_BLOCKS,
            "prespin_ms": PRESPIN_MS, "cells": cells}  # fmt: skip
     json.dump(out, open(a.out, "w"), indent=1)
-    print(f"bench-ideal-parts slice A: {len(cells)} cells ({len(ARMS)} arms x {len(COUNTS)} counts "
+    print(f"bench-ideal-parts: {len(cells)} cells ({len(ARMS)} arms x {len(COUNTS)} counts "
           f"pinned, the link at {k}); the scanner pinned to CPU {scpu} (core {score})")  # fmt: skip
     return out
 
