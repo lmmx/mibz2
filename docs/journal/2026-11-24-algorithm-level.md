@@ -2309,3 +2309,41 @@ The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the 
 - **It runs after test 2.**
 
 **Each test is run once.** A verdict is final for its registration. Any further test is a new registration, with its reason stated.
+
+## 85. §84 test 1, eight workers from 10 threads (#878): ADOPTS with the spin warm-up, and merged
+
+**The first attempt** (`kernel-choice/run-20261125T055310Z`, evidence fb6ab984) failed in resolve after 22 s. That was a recipe bug, class A.
+- **The bug:** the PRESPIN guard piped `git show` into `grep -q` under `set -o pipefail`. grep quit at its first match, `git show` took SIGPIPE, and the guard refused a head that had the option.
+- **The fix:** the Pathfinder fixed it (`git grep -q`), with a test that reproduces the failure. The recipe went to 55a4a81d (#862) and a86e5d86 (#850).
+- **No data was taken,** so the registration stood.
+
+**The run:** `kernel-choice/run-20261125T061204Z`, recipe #862 at 55a4a81d, expectation `trim-eight`, PRESPIN 100. The head is #878 at cf61f483, against merge-base aa041e25 (master with #868 and #874). It is evidence 5d259c88, SHA-256 dbb88594…5716, checked. Every phase passed, and each build probed its registered plan. The data is in `math-targets/data/trim-eight/`.
+
+| threads | base → head plan | wall head/base [95%] | step | CPU | peak RSS | clock ratio |
+|---|---|---|---|---|---|---|
+| 3 | 3 eager → 3 eager | 0.986 [0.966, 1.006] | INCONCLUSIVE | 0.987 | 0.972 | 1.000 |
+| 4 | 4 lazy → 4 lazy | 0.999 [0.991, 1.007] | INCONCLUSIVE | 0.999 | 0.991 | 1.000 |
+| 5 | 5 lazy → 5 lazy | 0.998 [0.994, 1.003] | INCONCLUSIVE | 0.999 | 0.997 | 1.000 |
+| 7 | 7 lazy → 7 lazy | 1.003 [0.988, 1.018] | INCONCLUSIVE | 1.002 | 1.003 | 1.000 |
+| 8 | 8 lazy → 8 lazy | 1.004 [0.972, 1.037] | INCONCLUSIVE | 1.002 | 1.005 | 1.000 |
+| **10** | 7/28 → 8/32 lazy | **0.929 [0.908, 0.951]** | FASTER | 1.022 | 1.037 | 1.000 |
+| **12** | 7/28 → 8/32 lazy | **0.932 [0.920, 0.945]** | FASTER | 1.033 | 1.046 | 1.000 |
+
+**The verdict under §84's frozen rule: ADOPTS.** 10 and 12 threads are FASTER, no supporting count is SLOWER, and peak RSS is ≤ 1.10 (1.046 at most).
+- **Weighed under PERFORMANCE-POLICY.md:** CPU +2–3% and RSS +4–5%, both secondary and within its limits, for −7% wall at the default counts.
+
+**Merged:** #878 at cf61f483, the head the bench measured, as 959496c7.
+- CI was green on all 30 runs, and head-sha passed before and after.
+- **What changes for users:** on the i9 unpinned, `parallel(r, t)` for t ≥ 10 runs 8 lazy workers, not 7. That is about −7% wall at 10 and 12 threads, which includes the Python default (20).
+- **No release yet:** it waits for the release process.
+
+**What the spin bought:**
+- **The clock was neutralised:** the clock ratio is 1.0000 at every count, so the decomposition puts the whole effect on the work, as it should for a worker-count change.
+- **The intervals narrowed:** at 10 threads the interval is ±2.2%, against ±3.6% unspun (§80), where the same change was INCONCLUSIVE at 0.979.
+- **Why the two runs differ:** the effect itself looks larger with the spin (0.929 against 0.979). An unspun run mixes in decodes at the low clock, where an extra worker matters less, since everything is slower. That reading is consistent with §81, but not tested separately.
+
+**What follows:**
+- **The production regime at 10 threads and more is now 8 workers,** at the knee, where the scanner binds (§78).
+- **§84 tests 2 and 3,** the scanner fixes, are now judged in that regime.
+- **Test 3's head** (#879) has master 959496c7 merged in, at 48d9f7d9. It is queued once CI is green.
+- **Test 2** waits for PR 861 to be reopened (coordinator notes, #881).
