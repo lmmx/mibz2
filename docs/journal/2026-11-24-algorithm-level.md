@@ -2026,3 +2026,76 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
 - **Why combined:** the two fixes act on the same activity, the scanner's copying. Their predicted sum (≈0.92–0.95 at 9) clears the unpinned noise that a 2.6% effect can't.
 - **If it ADOPTS,** both merge together. If not, both are held, pending the multi-symbol Huffman decode, the larger lever on the same activity (§75).
 - **#846 stays open and unmerged until then.**
+
+## 78. Stage 2b: the scanner pinned. A3 controls at 8 and 10; the wall is a sharp maximum, not a sum; a faster scanner barely helps at 8; core sharing is the largest cost above the knee
+
+**The run:** `character-stage2b/run-20261125T030124Z`, at #843's 8423a82b. It is evidence a4f0dcef, SHA-256 59bacb7b…d87c, checked.
+- Every phase passed, and the report exited 0.
+- The scanner ran alone on its pinned CPU (6, sibling 16 idle) in 86 of 86 pinned traces.
+- 16 blocks.
+- **Where things are:** the report, `stage2.tsv`, `cores.json` and the analysis (`stage2_analysis.py`, extended with `link.tsv` and a max-model column) are in `math-targets/data/character-stage2b/`.
+
+**1. The screen, pinned.** The intervals are 2–4× narrower than 2a's.
+
+| k | A3 (Huffman decode) | A7 (emission) | everything else |
+|---|---|---|---|
+| 8 | **0.795 [0.681, 0.908] CONTROLS** | 0.215 [0.066, 0.363] | within ±0.15, unresolved |
+| 10 | **0.577 [0.420, 0.734] CONTROLS** | −0.224 [−0.414, −0.034] | unresolved; several negative |
+
+- **The Huffman decode alone controls the wall at both counts.**
+- **The negative worker coefficients at 10** (A7, A9 and A6b below 0) mean that slowing a worker activity *speeds* the wall. This is consistent with contention: slower workers press less on the shared cores and caches that the scanner also uses (see 4). It is unexplained in detail.
+
+**2. The surface at 8:**
+- **Roundness 0.500 [0.454, 0.548]:** the sharp maximum, now resolved.
+- **The scanner's elasticity:** 1.05–1.08, workers undosed.
+- **The workers':** 0.64–0.69, scanner undosed.
+- **With both dosed 20%,** the slowdown (0.162) is *less* than the scanner's alone (0.198).
+
+**3. The held-out arm (A3+A7 at +10%): log-additivity fails, a maximum fits** (`analysis/validation.tsv`):
+
+| k | observed | log-additive prediction | max prediction |
+|---|---|---|---|
+| 8 | 1.069 [1.049, 1.090] | 1.101 [1.082, 1.121], **outside** | 1.079 [1.067, 1.090], inside |
+| 10 | 1.063 [1.031, 1.097] | 1.034 [1.010, 1.059], **outside** | 1.057 [1.041, 1.072], inside |
+
+- **What this corrects:** §74 called the log-additive model "the first validated predictor". 2b's precision refutes it. 2a's pass came from wide intervals.
+- **The max model** (the larger coefficient alone) is inside in all four tests, 2a and 2b. But it was chosen *after* seeing this failure, so it is a hypothesis for the next held-out test, not a validated predictor.
+- **What supports it beforehand:** the surfaces' roundness of 0.5, measured on other cells, before this comparison.
+
+**4. Placement and memory: the largest effects in the run.**
+- **Workers on SMT siblings rather than distinct cores:** +22% [17, 28]% at 4 workers, and **+48% [45, 51]% at 8**.
+- **Memory pressure, as in 2a:**
+  - a 2 MiB stream: +33% at 8, +38% at 20;
+  - a pointer chase: +113% at 8, +31% at 20.
+- **What follows:** above the knee, *where threads sit* costs as much as any activity's work. The i9 has 10 cores. 8 workers plus the scanner, reader and feeder is 11 threads, so some sharing is unavoidable at 8, and certain at 10.
+- **This is the likeliest reading of H < 1** (5): pacing every activity doesn't scale contention.
+
+**5. Speeding the scanner** (homogeneity; registered rule: e_up is interpreted only if H's interval is within [0.85, 1.15]):
+
+| k | λ | H | e_down | e_up | label |
+|---|---|---|---|---|---|
+| 8 | 10% | 0.788 [0.594, 0.983] | 0.716 | 0.134 [−0.105, 0.373] | NOT-HOMOGENEOUS, ASYMMETRIC |
+| 8 | 20% | 0.850 [0.723, 0.978] | 0.971 | 0.181 [0.117, 0.245] | NOT-HOMOGENEOUS, ASYMMETRIC |
+| 10 | 10% | 0.445 | 0.555 | 0.509 | NOT-HOMOGENEOUS |
+| 10 | 20% | 0.565 | 0.727 | 0.390 | NOT-HOMOGENEOUS, ASYMMETRIC |
+
+- **Under the registered rule, e_up is not interpreted:** the wall is not homogeneous of degree 1 in the paced activities. Pacing everything by 10% slows it by about 7.8% at 8 workers and 4.3% at 10.
+- **Descriptively, as a sharp maximum predicts:** at 8, where the workers are close behind, slowing the scanner costs about 0.7–1.0 per unit, but speeding it gains about 0.13–0.18 per unit. The bottleneck migrates at once. At 10 the asymmetry is smaller.
+
+**6. Pinning the scanner is itself a lever** (`analysis/link.tsv`):
+- the pinned base runs **0.960 [0.931, 0.990]** of the unpinned base at 8;
+- A3's +20% costs 1.141 unpinned against 1.178 pinned. Production's unpinned scanner is a little less sensitive, as expected when part of its time is lost to sharing.
+
+**7. MONODROMY's pre-registered prediction** (record 131, committed at 02:59:18Z, before this run started at 03:01:24Z), scored by its own rules:
+- **NOT-HOMOGENEOUS:** it gave this about 1 in 3. With it, only e_oth and e_down are scored.
+- **e_oth** = H − e_up = 0.654, against 0.65 [0.50, 0.78]: **hit**.
+- **e_down** = 0.716, against 0.79 [0.66, 0.90]: **hit**.
+- **Not scored, for the record:** e_up was 0.134, inside its 0.12–0.48 at the low edge; H was 0.788, just below its 0.80–1.02; d was 0.58, above its 0.25.
+- **Its assumptions:** it took pinning as 3% faster, and the measurement is 4.0%. Its soft-max exponent (p ≈ 21, near a sharp maximum) agrees with the roundness of 0.500.
+
+**What changes:**
+- **Every scanner speed-up is priced at the count it will run at, with the workers retuned.** At 8 workers, a faster Huffman decode gains little (e_up ≈ 0.15). The gain appears only with more workers, and more workers mean more core sharing (+48% for siblings).
+  - So the multi-symbol decode's value depends on cutting core sharing too: fewer, faster workers, or the scanner given a quiet core.
+  - This makes the combined test (#861) at 9 threads harder to pass than §77 assumed. Its registered rule stands.
+- **Placement becomes a named lever**, with its largest measured effect: the scanner on a quiet core (−4% at 8), and workers kept off siblings. Any policy must work unpinned, as a library can't own the machine. The next step is a design question for MONODROMY and the Pathfinder: what placement can a library request?
+- **The predictor** for the next held-out test is the max model, registered here before that test.
