@@ -2429,3 +2429,169 @@ bench-character-stage2b DRY="":
     phase plan     build,stage1,cores     plan
     phase run      plan,inputs            drive
     phase report   plan                   report
+
+# The clock's mechanism (a diagnostic; decides nothing). Stage 2b's decodes at 10 workers ran at
+# one of two clocks, the low one in about a quarter, at random (#145 LOG 7152489390). The pinned
+# base at 10 (2b's pin: the fastest core, its sibling idle), the ledgers off, in 48 randomised
+# blocks of five arms: the settle before the decode 0 (back to back), 0.2, 1 (2b's, the
+# reference) and 3 s, and 1 s then a 100 ms spin on every CPU. Each decode's clock from its PMU
+# group 0; LOW iff under 4.50 GHz. It separates journal 2026-10-28 section 4's idle-gap slow runs
+# into clock and cycles. About 7 minutes. DRY (two blocks, no settle; not evidence) checks the wiring.
+#   just submit bench-clock-mechanism
+bench-clock-mechanism DRY="":
+    #!/usr/bin/env bash
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle.
+    set -uo pipefail
+    PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
+    COPIES=4 BLOCKS=48 SCALE=1 PREWARM=50 SEED=20261127
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { BLOCKS=2; SCALE=0; PREWARM=2; }
+    W=$PWD/target/clock-mechanism
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-clock-mechanism (docs/journal/2026-11-25-character-stage2-registration.md, the clock's mechanism; diagnostic) at $(git rev-parse HEAD): master $PIN with the character feature, $BLOCKS blocks of 5 arms at k 10, the scanner pinned, seed $SEED"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-clock-mechanism: DRY RUN: two blocks, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-clock-mechanism: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-clock-mechanism: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-clock-mechanism: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-clock-mechanism: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-clock-mechanism: the checkout has local changes"; exit 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "bench-clock-mechanism: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+      # the pin (section 5): master's decoder at PIN, plus the character feature alone, never a later master
+      changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-clock-mechanism: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-clock-mechanism: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      cargo build -q --release --features character --example character --example ab --example windows
+      sha256sum "$CH" | tee "$O/binaries.sha256"
+    }
+    # the corpus, as stage 1's
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-clock-mechanism: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # the machine (best effort: what can't be read is recorded so)
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
+    # each core's first CPU, the pacing loop pinned to it (long enough for the clock to ramp): the
+    # scanner's core is the fastest (journal §74: unpinned, the scanner sharing its core or CPU was
+    # most of 2a's noise above k 6)
+    cores() {
+      cpus=$(python3 -c "import sys; sys.path.insert(0, 'bench'); import character_stage2 as s; print(' '.join(str(c[0]) for c in s.topology('$O/lscpu-e.txt')))")
+      { echo "{"; sep=""
+        for c in $cpus; do printf '%s"%s": %s\n' "$sep" "$c" "$(taskset -c "$c" "$CH" --calibrate 200000000 5)"; sep=","; done
+        echo "}"; } > "$O/cores.json"
+      python3 -m json.tool "$O/cores.json" > /dev/null
+    }
+    # the plan: 2b's pin (the fastest core), the four arms, the spin sized from the calibration
+    plan() {
+      python3 bench/clock_mechanism.py plan "$O/lscpu-e.txt" "$O/cores.json" "$O/plan.json"
+    }
+    # the run (the driver records a failed decode as failed and carries on)
+    drive() {
+      python3 bench/clock_mechanism.py run "$O/plan.json" --bin "$CH" --corpus "$X4" \
+        --out "$O" --blocks $BLOCKS --settle-scale $SCALE --prewarm $PREWARM --seed $SEED
+    }
+    # the report: whatever completed, failed phases and missing decodes marked FAILED; exit 1 if VOID
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 bench/clock_mechanism.py report "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" \
+        --out "$O" --blocks $BLOCKS \
+        | tee "$O/report.txt"
+    }
+    phase checks   -                      checks
+    phase build    checks                 build
+    phase inputs   build                  inputs
+    phase machine  build                  machine
+    phase cores    machine                cores
+    phase plan     cores                  plan
+    phase run      plan,inputs            drive
+    phase report   plan                   report
