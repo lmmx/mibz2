@@ -2131,3 +2131,38 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
   - judged at production's default counts (10 and 12 threads), where the fix acts;
   - its prediction taken from §78's max model.
 - **Until then, #846, #857 and #861 stay open.**
+
+## 80. The kernel choice (#860) on the workstation: NOT ADOPTED on 10 threads; lazy at 5 and 7 is −16% and −37% with 60% less memory; split and re-registered
+
+**The run:** `kernel-choice/run-20261125T034713Z`, recipe #862 at 139e90ec, head #860 7c343200 against merge-base f8edc1ac. It is evidence b6ab31a6, SHA-256 6f569ccc…8baf, checked.
+- Every phase passed.
+- Each build's probe showed exactly its registered plan, and the timed runs used the probed worker counts.
+- The data is in `math-targets/data/kernel-choice/`.
+
+| threads | base plan | head plan | wall head/base [95%] | step | CPU | peak RSS |
+|---|---|---|---|---|---|---|
+| 3 | 3 eager | 3 eager | 0.999 [0.984, 1.014] | INCONCLUSIVE | 1.000 | 0.982 |
+| 4 | 4 lazy | 4 lazy | 1.001 [0.995, 1.007] | INCONCLUSIVE | 1.001 | 1.001 |
+| **5 (judged)** | 5 eager | 5 lazy | **0.845 [0.838, 0.852]** | FASTER | 0.849 | **0.418** |
+| **7 (judged)** | 7 eager | 7 lazy | **0.634 [0.630, 0.638]** | FASTER | 0.642 | **0.388** |
+| 8 | 8 lazy | 8 lazy | 0.996 [0.968, 1.024] | INCONCLUSIVE | 1.000 | 0.968 |
+| **10 (judged)** | 7 lazy | 8 lazy | **0.979 [0.944, 1.016]** | INCONCLUSIVE | 1.079 | 1.053 |
+| 12 | 7 lazy | 8 lazy | 0.903 [0.875, 0.931] | FASTER | 1.017 | 1.046 |
+
+**The verdict under the frozen rule: NOT ADOPTED,** since 10 threads was not FASTER. #860 does not merge.
+
+**The two changes, as the data separates them:**
+- **Lazy at 4–7 threads** acts only at 5 and 7 (4 and 6 were lazy already).
+  - The gain is −15.5% and −36.6%, with 58–61% less peak memory and 15–36% less CPU, exactly as §76 predicted (0.834, 0.639).
+  - The trim never acts at those counts, so these two rows measure this change alone.
+  - The counts where neither change acts (3, 4 and 8) are 1.000 ± 0.03, as they should be.
+- **The trim to 8 workers from 10 threads** acts at 10 and 12.
+  - At 10 it is inconclusive, at a CPU cost of +8%. At 12 it is FASTER (−10%).
+  - It is the change the rule could not confirm.
+
+**Decision: split, and test the lazy part afresh.** Adopting it on these rows would select after the data, which C2 forbids even when the rows are unambiguous. So it gets its own registration, written here before its data:
+- **The head:** #860 without the trim. At 4–7 threads unpinned it runs the plan's own workers on the lazy kernel; from 10 threads, 7 lazy as on master.
+- **The recipe:** `bench-kernel-choice` (#862), with the expected head plan as a parameter. The plan check stays: the run is VOID unless each build probes its registered plan (head: lazy at 4–7, 7/28 at 10 and 12).
+- **The rule (the house rule):** ADOPTS iff 5 and 7 threads are FASTER, none of 3, 4, 8, 10 and 12 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count. HELD ON MEMORY, NOT ADOPTED and VOID as in #862's registration.
+- **The prediction:** ≈0.845 at 5 and ≈0.634 at 7; ≈1.00 elsewhere, where the builds are identical.
+- **The trim to 8 is held,** to be re-asked together with the scanner fix (§79). Both act above the knee, and both are priced by §78's max model.
