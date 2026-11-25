@@ -1,0 +1,12 @@
+# bench-clock-mechanism (a diagnostic: decides nothing)
+
+k 10, the scanner pinned to CPU 5; LOW iff G < 4.50 GHz; 48 blocks
+
+arm    n   low share [95%]        vs S1 [95%]              label    G median  wall median  SD log wall  paired SD vs S1  wall / S1 [95%]
+S0     48  0.00 [0.00, 0.07]   -0.40 [-0.54, -0.25]      CONTROL    4.91      0.195        0.0088       0.0437           0.9428 [0.9312, 0.9545]
+S0.2   48  0.90 [0.78, 0.95]   +0.50 [+0.32, +0.64]      WORSE      2.96      0.320        0.1561       0.1677           1.4497 [1.3825, 1.5201]
+S1     48  0.40 [0.27, 0.54]   +0.00 [+nan, +nan]      (ref)      4.56      0.206        0.0437       nan           -
+S3     48  0.12 [0.06, 0.25]   -0.27 [-0.43, -0.10]      CONTROL    4.91      0.197        0.0355       0.0520           0.9703 [0.9562, 0.9847]
+SPIN   48  0.00 [0.00, 0.07]   -0.40 [-0.54, -0.25]      CONTROL    4.91      0.196        0.0112       0.0426           0.9493 [0.9379, 0.9608]
+
+(CONTROL: the arm's low-clock share's difference from S1 has its 95% interval wholly below 0; WORSE: wholly above; NO-EFFECT: wholly within +-0.10; else UNRESOLVED)

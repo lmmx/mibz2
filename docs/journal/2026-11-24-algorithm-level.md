@@ -2166,3 +2166,44 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
 - **The rule (the house rule):** ADOPTS iff 5 and 7 threads are FASTER, none of 3, 4, 8, 10 and 12 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count. HELD ON MEMORY, NOT ADOPTED and VOID as in #862's registration.
 - **The prediction:** ≈0.845 at 5 and ≈0.634 at 7; ≈1.00 elsewhere, where the builds are identical.
 - **The trim to 8 is held,** to be re-asked together with the scanner fix (§79). Both act above the knee, and both are priced by §78's max model.
+
+## 81. The workstation's noise is the CPU clock after idle: a 100 ms spin removes it
+
+**Where it began.** The Pathfinder re-read stage 2b and found a residual noise that pinning didn't explain (paired SD 4.4% at 8 workers, 6.4% at 10). Its frequency analysis (LOG 7152489390, `bench/character_freq.py` on #843) found the clock has two levels. The clock is PMU cycles over reference cycles, per decode.
+- **The levels:** 4.91 GHz, and a low level of 4.09–4.56 GHz.
+- **How often:** about a quarter of decodes run low, scattered at random. There is no throttling.
+- **How much it explains:** R² 0.96 of 2b's paired noise at 10, and 0.37 at 8.
+- **Prior art:** journal 2026-10-28 §4 (`bench-regimes`) had already seen slow runs follow a 0.15 s idle gap, with the mechanism left open.
+
+**The test:** `clock-mechanism/run-20261125T042759Z`, #843 at 1dfb11c8. It is evidence a1f1ddf8, SHA-256 bca16eb6…a756, checked; every phase passed.
+- **The setup:** the pinned base at 10 workers, 48 randomised blocks.
+- **The C1a rule,** posted before the data (REVIEW 7152567425): an arm is a CONTROL iff its low-clock share minus the 1 s settle's has a Newcombe 95% interval wholly below 0. LOW is a clock under 4.50 GHz.
+
+| arm | before each decode | low share [95%] | vs S1 | label | clock median | wall / S1 [95%] | SD of log wall |
+|---|---|---|---|---|---|---|---|
+| S0 | nothing (back to back) | 0.00 [0.00, 0.07] | −0.40 | CONTROL | 4.91 | **0.943 [0.931, 0.955]** | **0.9%** |
+| S0.2 | 0.2 s idle | 0.90 [0.78, 0.95] | +0.50 | WORSE | **2.96** | **1.450 [1.383, 1.520]** | 15.6% |
+| S1 | 1 s idle (every recipe's settle) | 0.40 [0.27, 0.54] | ref | | 4.56 | 1 | 4.4% |
+| S3 | 3 s idle | 0.12 [0.06, 0.25] | −0.27 | CONTROL | 4.91 | 0.970 [0.956, 0.985] | 3.6% |
+| SPIN | 1 s idle, then 100 ms of spin on every CPU | 0.00 [0.00, 0.07] | −0.40 | CONTROL | 4.91 | **0.949 [0.938, 0.961]** | **1.1%** |
+
+**What it means for measurement:**
+- **Most of tonight's noise above the knee came from the settle itself.** A short idle drops the cores to a low P-state (the powersave governor under HWP), and they climb back slowly. After 0.2 s idle, a decode runs at 2.96 GHz and takes 45% longer. After 1 s, 40% of decodes are still caught.
+- **This is why the scanner fix's judged count kept coming out ±4–5% wide** (§§77, 79). Those recipes settled 2 s unpinned.
+- **A 100 ms spin before each timed decode removes the low state entirely,** and cuts the SD of log wall from 4.4% to 1.1%. A test then needs about 16 times fewer rounds for the same interval.
+- **Decision (standard from now on):**
+  - Every workstation recipe at or above the knee warms each timed decode with a 100 ms spin on every CPU, or runs decodes back to back.
+  - It reports the clock (cycles over ref-cycles) per decode.
+  - It splits each effect into a cycles ratio and a clock ratio as a registered secondary (the Pathfinder's proposal). The wall stays primary.
+
+**What it means for the product (a question, not a finding):**
+- A real program that decodes after a short pause (0.1–0.5 s) may see the S0.2 regime. That is +45% on this machine, with this governor, at 10 workers.
+- That is not the decoder's doing. But it may matter more to users than any change measured tonight, and it varies by machine and governor.
+- Whether and how a decoder should respond (a ramp-up of its own, or simply documenting it) is a design question. It goes to MONODROMY and the Researcher. Nothing is to be built without measurement on more machines.
+
+**The tests that now need re-asking with the spin** (registered when their recipes are updated, before their data):
+- the combined scanner fix (§79);
+- the trim to 8 (§80);
+- the multi-symbol Huffman decode, when ready.
+
+**The H < 1 puzzle (§78):** the Pathfinder showed the paced arms shift the clock (+3–6% at 10). That accounts for part of the shortfall (all20's H to ≈0.73 of the observed 0.57). MONODROMY's conjecture, record 132, is that a paced spinning thread yields its core's sibling. Both mechanisms may act. With the spin warm-up removing the low state, a re-run of the speed-up arms separates them (MONODROMY's M-39: H ≥ 0.9 at 6 workers predicted).
