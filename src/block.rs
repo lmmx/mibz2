@@ -5,7 +5,7 @@
 //! the same way, in the same terms, so a stream libbzip2 refuses is refused here too.
 
 use super::bits::Bits;
-use super::huff::{Huff, GROUP, MAX_ALPHA};
+use super::huff::{Huff, GROUP, G_OUT, MAX_ALPHA};
 use super::ErrorKind;
 use std::cell::RefCell;
 
@@ -217,7 +217,7 @@ pub fn read_item_with_scratch(
         syms.clear();
         syms.reserve(MAX_SYMS);
     }
-    let max_out = (sel_cap * GROUP + 66).min(MAX_SYMS);
+    let max_out = (sel_cap * GROUP + G_OUT).min(MAX_SYMS);
     if syms.len() < max_out {
         syms.resize(max_out, 0);
     }
@@ -225,7 +225,7 @@ pub fn read_item_with_scratch(
     let sel_buf = &scratch.selectors[..sel_cap];
     let mut n = 0usize;
     let mut sel = 0usize;
-    let mut tail_buf = [0u16; 66];
+    let mut tail_buf = [0u16; G_OUT];
 
     let res = loop {
         if sel >= sel_cap {
@@ -233,10 +233,10 @@ pub fn read_item_with_scratch(
         }
         let t = &scratch.tables[sel_buf[sel] as usize];
         sel += 1;
-        let use_tail = n + 66 > max_out;
+        let use_tail = n + G_OUT > max_out;
         let g_res = {
-            let g_out: &mut [u16; 66] = if !use_tail {
-                (&mut out[n..n + 66]).try_into().unwrap()
+            let g_out: &mut [u16; G_OUT] = if !use_tail {
+                (&mut out[n..n + G_OUT]).try_into().unwrap()
             } else {
                 &mut tail_buf
             };
@@ -279,7 +279,7 @@ pub fn read_item_with_scratch(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::huff::{BAD, CNT_SH, EOB_FAST, LEN1, LUT_BITS, SUB_PTR, SYM1, SYM2};
+    use crate::huff::{BAD, CNT_SH, EOB_FAST, LUT_BITS, SUB_PTR, SYM1, SYM2, SYM3, SYM_MASK};
 
     /// A small xorshift, for the test's code lengths and bits
     struct Rng(u64);
@@ -353,17 +353,24 @@ mod tests {
         s
     }
 
-    /// The table's way: a pair taken where two or more symbols are still wanted
+    /// A fast entry's symbols, in order
+    fn entry_syms(e: u64) -> Vec<u16> {
+        [SYM1, SYM2, SYM3][..(e >> CNT_SH) as usize]
+            .iter()
+            .map(|&sh| (e >> sh & SYM_MASK) as u16)
+            .collect()
+    }
+
+    /// The table's way: an entry's two or three symbols taken where that many are still
+    /// wanted
     fn by_table(h: &Huff, br: &mut Bits, want: usize, out: &mut Vec<u16>) -> Option<ErrorKind> {
         while out.len() < want {
-            if want - out.len() >= 2 {
-                let e = h.lut[br.peek(LUT_BITS) as usize];
-                if e >> CNT_SH == 2 {
-                    br.skip_short(e & 31);
-                    out.push((e >> SYM1 & 0x1ff) as u16);
-                    out.push((e >> SYM2 & 0x1ff) as u16);
-                    continue;
-                }
+            let e = h.lut[br.peek(LUT_BITS) as usize];
+            let c = (e >> CNT_SH) as usize;
+            if c >= 2 && want - out.len() >= c {
+                br.skip_short((e & 63) as u32);
+                out.extend(entry_syms(e));
+                continue;
             }
             match decode(h, br) {
                 Ok(s) => out.push(s),
@@ -412,15 +419,16 @@ mod tests {
                     let zvec = (w as u32 >> (LUT_BITS - zn)) as i32;
                     if zvec <= h.limit[zn as usize] {
                         break match h.symbol(zn, zvec) {
-                            Some(s) if s == eob => EOB_FAST | zn,
-                            Some(s) => (s as u32) << SYM1 | 1 << CNT_SH | zn << LEN1 | zn,
+                            Some(s) if s == eob => EOB_FAST | zn as u64,
+                            Some(s) => (s as u64) << SYM1 | 1 << CNT_SH | zn as u64,
                             None => BAD,
                         };
                     }
                     zn += 1;
                 };
                 let first = if (e >> CNT_SH) != 0 {
-                    e & (0x1ff << SYM1) | 1 << CNT_SH | e & (31 << LEN1) | e >> LEN1 & 31
+                    let s1 = e >> SYM1 & SYM_MASK;
+                    s1 << SYM1 | 1 << CNT_SH | h.len_of[s1 as usize] as u64
                 } else if (e & SUB_PTR) != 0 {
                     0
                 } else if e == BAD && lens.iter().copied().max().unwrap_or(0) as u32 <= LUT_BITS {
@@ -434,8 +442,27 @@ mod tests {
                     e
                 };
                 assert_eq!(first, want, "case {case}: entry {w}");
-                // a pair never begins with the block's end
-                assert!(e >> CNT_SH != 2 || (e >> SYM1 & 0x1ff) as u16 != eob);
+                if (e >> CNT_SH) == 0 {
+                    continue;
+                }
+                // a fast entry's symbols are the codes its bits begin with, bit by bit,
+                // and as many of them (up to three) as fit, the block's end never among
+                // them
+                let bytes = [(w >> 2) as u8, (w << 6) as u8, 0, 0, 0, 0, 0, 0];
+                let mut br = Bits::at(&bytes, 0);
+                let mut got = Vec::new();
+                while got.len() < 3 {
+                    let at = br.bit_pos();
+                    match by_bits(&h, &mut br) {
+                        Ok(s) if br.bit_pos() <= LUT_BITS as u64 && s != eob => got.push(s),
+                        _ => {
+                            br = Bits::at(&bytes, at);
+                            break;
+                        }
+                    }
+                }
+                assert_eq!(entry_syms(e), got, "case {case}: entry {w:#x} {e:#x}");
+                assert_eq!(br.bit_pos(), e & 63, "case {case}: entry {w}");
             }
         }
     }
@@ -460,10 +487,9 @@ mod tests {
         }
     }
 
-    /// A block's symbols read as they were before the symbol loop held the reader's state
-    /// in registers: a table lookup at a time on the reader itself, a pair where two or
-    /// more of the group are still wanted, a code longer than the table's bits decoded
-    /// bit by bit (libbzip2's loop), each group's end checked for an overrun
+    /// A block's symbols read as libbzip2 reads them: each code bit by bit
+    /// (`GET_MTF_VAL`), the table for each group of 50 its selector's, each group's end
+    /// checked for an overrun
     fn symbols_in_memory(
         br: &mut Bits,
         tables: &[Huff],
@@ -477,32 +503,10 @@ mod tests {
                 break Err(ErrorKind::SelectorOverrun);
             };
             let t = &tables[g as usize];
-            let mut left = GROUP;
-            while left > 0 {
-                let e = t.lut[br.peek(LUT_BITS) as usize];
-                let c = (e >> CNT_SH) as usize;
-                if c == 2 && left >= 2 {
-                    br.skip_short(e & 31);
-                    out.extend([(e >> SYM1 & 0x1ff) as u16, (e >> SYM2 & 0x1ff) as u16]);
-                    left -= 2;
-                } else if c != 0 {
-                    br.skip_short(e >> LEN1 & 31);
-                    out.push((e >> SYM1 & 0x1ff) as u16);
-                    left -= 1;
-                } else if (e & EOB_FAST) != 0 {
-                    br.skip_short(e & 63);
-                    out.push(eob);
-                    break 'groups Ok(());
-                } else if (e & BAD) != 0 {
-                    break 'groups Err(ErrorKind::BadHuffmanCode);
-                } else {
-                    let s = t.decode_slow(br);
-                    br.refill();
-                    match s {
-                        Ok(s) => out.push(s),
-                        Err(k) => break 'groups Err(k),
-                    }
-                    left -= 1;
+            for _ in 0..GROUP {
+                match t.decode_slow(br) {
+                    Ok(s) => out.push(s),
+                    Err(k) => break 'groups Err(k),
                 }
                 if out.last() == Some(&eob) {
                     break 'groups Ok(());

@@ -95,15 +95,6 @@ impl Reg {
         self.live -= n;
     }
 
-    /// Consume `e & 63` bits (`1..=10`) directly from a root LUT entry `e` whose bits
-    /// `4..5` are guaranteed zero (`x86_64` `shlq %cl` masks shift count by `63` in hardware).
-    #[inline(always)]
-    pub(crate) fn skip_short_shl(&mut self, e: u32) {
-        debug_assert!((e & 63) <= 10 && (e & 63) <= self.live);
-        self.buf = self.buf.wrapping_shl(e);
-        self.live -= e & 63;
-    }
-
     /// Consume `n` bits (at most those peeked)
     #[inline(always)]
     pub(crate) fn skip(&mut self, n: u32) {

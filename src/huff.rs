@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
-//! L1d-resident canonical Huffman decode table (`4 KiB` 10-bit root LUT + `2 KiB` `O(1)`
-//! `SubLut` for `11..=20`-bit codes + Canonical Template-Clone 2-symbol pair builder +
-//! `264 B` group-window decoder).
+//! L1d-resident canonical Huffman decode table (`8 KiB` 10-bit root LUT + `2 KiB` `O(1)`
+//! `SubLut` for `11..=20`-bit codes + Canonical Template-Clone builder of entries of up to
+//! three symbols + `264 B` group-window decoder).
 
 use super::bits::{Bits, Reg};
 use super::ErrorKind;
@@ -15,33 +15,49 @@ const LUT_LEN: usize = 1 << LUT_BITS;
 const SUB_CAP: usize = 1024;
 const SUB_BAD_U16: u16 = 0xffff;
 
-/// Root LUT entry layout (`C36a`/`C37`):
-/// - bits `30..31` (`CNT_SH`): symbol count (`1` or `2` for non-EOB fast entries; `0` for `EOB_FAST` / `SUB_PTR` / `BAD` / slow)
+/// Root LUT entry layout (`u64`). A fast entry (count `1..=3`) holds the symbols of that
+/// many whole codes that the entry's prefix begins with, all within its `LUT_BITS` bits:
+/// - bits `62..63` (`CNT_SH`): symbol count (`1..=3` for fast entries; `0` for `EOB_FAST` / `SUB_PTR` / `BAD` / slow)
+/// - bits `8..23` (`SYM1`), `24..39` (`SYM2`), `40..55` (`SYM3`): the symbols, a 16-bit lane
+///   each, so that `e >> SYM1` stores them into the output as they are, in one store
+/// - bits `0..5`: total bits consumed (`1..=10`, bits `4..5 == 0` so `wrapping_shl(e)` needs no `& 31` mask)
+///
+/// A slow entry (count `0`):
 /// - bit `29` (`EOB_FAST`): `<= 10`-bit EOB sentinel (low 6 bits = `zn`)
 /// - bit `28` (`BAD`): invalid/oversubscribed prefix
 /// - bit `27` (`SUB_PTR`): 2nd-level `SubLut` pointer (`d_w` in `16..19`, `sub_off` in `0..15`)
-/// - bits `20..28` (`SYM2`): 2nd symbol (`0..258`)
-/// - bits `11..19` (`SYM1`): 1st symbol (`0..258`)
-/// - bits `6..10` (`LEN1`): 1st symbol bit length (`1..=10`)
-/// - bits `0..5`: total bits consumed (`1..=10`, bits `4..5 == 0` so `wrapping_shl(e)` needs no `& 31` mask)
-pub(crate) const SUB_PTR: u32 = 1 << 27;
-pub(crate) const BAD: u32 = 1 << 28;
-pub(crate) const EOB_FAST: u32 = 1 << 29;
-pub(crate) const LEN1: u32 = 6;
-pub(crate) const SYM1: u32 = 11;
-pub(crate) const SYM2: u32 = 20;
-pub(crate) const CNT_SH: u32 = 30;
+/// - none of these: decoded bit by bit (`decode_slow`)
+///
+/// The symbols' own lengths are `Huff::len_of`'s, for a group's last step, which may take
+/// fewer of an entry's symbols than it holds.
+pub(crate) const SUB_PTR: u64 = 1 << 27;
+pub(crate) const BAD: u64 = 1 << 28;
+pub(crate) const EOB_FAST: u64 = 1 << 29;
+pub(crate) const SYM1: u32 = 8;
+pub(crate) const SYM2: u32 = 24;
+pub(crate) const SYM3: u32 = 40;
+pub(crate) const SYM_MASK: u64 = 0xffff;
+pub(crate) const CNT_SH: u32 = 62;
+/// A group's output buffer: a group's 50 symbols, and room for an entry's store (four
+/// lanes) at any `k & 63`
+pub(crate) const G_OUT: usize = 68;
 const STEPS: usize = 5;
 
 pub(crate) struct Huff {
-    pub(crate) lut: [u32; LUT_LEN],
+    pub(crate) lut: [u64; LUT_LEN],
     sub_lut: [u16; SUB_CAP],
     pub(crate) limit: [i32; MAX_CODE_LEN],
     pub(crate) base: [i32; MAX_CODE_LEN],
     pub(crate) perm: [u16; MAX_ALPHA],
     pub(crate) min_len: u32,
+    /// each symbol's code length (room for any 9-bit index, so that a slow entry's bits
+    /// read as a symbol index the builder then rejects)
+    pub(crate) len_of: [u8; 512],
     alpha: i32,
     eob: u16,
+    /// the main loop's bound: it runs a batch of `STEPS` whole entries only while at least
+    /// this many of the group's symbols are left (`STEPS` times the most an entry holds)
+    batch_left: usize,
 }
 
 impl Default for Huff {
@@ -53,8 +69,10 @@ impl Default for Huff {
             base: [0; MAX_CODE_LEN],
             perm: [0; MAX_ALPHA],
             min_len: 1,
+            len_of: [0; 512],
             alpha: 0,
             eob: 0,
+            batch_left: STEPS,
         }
     }
 }
@@ -70,6 +88,7 @@ impl Huff {
     pub(crate) fn build_into(&mut self, lens: &[u8]) {
         let alpha = lens.len();
         let eob = (alpha - 1) as u16;
+        self.len_of[..alpha].copy_from_slice(lens);
         let mut counts = [0i32; MAX_CODE_LEN];
         let mut min_l = 23usize;
         let mut max_l = 0usize;
@@ -127,8 +146,8 @@ impl Huff {
             let sh = LUT_BITS - zn;
             for p in a..=hi {
                 let e = match self.symbol(zn, p as i32) {
-                    Some(s) if s == eob => EOB_FAST | zn,
-                    Some(s) => (1u32 << CNT_SH) | ((s as u32) << SYM1) | (zn << LEN1) | zn,
+                    Some(s) if s == eob => EOB_FAST | zn as u64,
+                    Some(s) => (1u64 << CNT_SH) | ((s as u64) << SYM1) | zn as u64,
                     None => BAD,
                 };
                 let end_idx = ((p + 1) << sh) as usize;
@@ -168,7 +187,8 @@ impl Huff {
                 for (w, &d_b) in d_arr[filled_to..max_root_w].iter().enumerate() {
                     let d_w = d_b as u32;
                     if d_w != 0 && sub_used + (1usize << d_w) <= SUB_CAP {
-                        self.lut[filled_to + w] = SUB_PTR | (d_w << 16) | (sub_used as u32);
+                        self.lut[filled_to + w] =
+                            SUB_PTR | ((d_w as u64) << 16) | (sub_used as u64);
                         sub_used += 1usize << d_w;
                     }
                 }
@@ -184,7 +204,7 @@ impl Huff {
                             if (e_root & SUB_PTR) == 0 {
                                 continue;
                             }
-                            let d_w = (e_root >> 16) & 15;
+                            let d_w = ((e_root >> 16) & 15) as u32;
                             let sub_off = (e_root & 0xffff) as usize;
                             let idx_sym = (p as i32) - self.base[zn as usize];
                             let se = if (0..self.alpha).contains(&idx_sym) {
@@ -202,7 +222,14 @@ impl Huff {
             }
         }
 
+        // Entries of two and three symbols. Every entry whose first code is `zn` bits long
+        // has the same continuation, the codes the remaining `LUT_BITS - zn` bits begin
+        // with, so it is worked out for the first such entry (the template) and copied to
+        // the others with their own first symbol. An entry's first symbol is the same
+        // whatever it has become, so the continuations read it from any entry.
         let mask = LUT_LEN - 1;
+        let len_of = &self.len_of;
+        let mut most = 1u64;
         for zn in min_len..=max_pair_l1 {
             let (lo_p, hi_p) = zn_ranges[zn as usize];
             if lo_p > hi_p {
@@ -213,14 +240,14 @@ impl Huff {
             if u_lim == 0 {
                 continue;
             }
-            let mut tpl: Option<(usize, u32)> = None;
+            let mut tpl: Option<(usize, u64)> = None;
             for p in lo_p..=hi_p {
                 let off_p = (p as usize) << sh;
                 let e0 = self.lut[off_p];
                 if (e0 >> CNT_SH) == 0 {
                     continue;
                 }
-                let s1 = (e0 >> SYM1) & 0x1ff;
+                let s1 = (e0 >> SYM1) & SYM_MASK;
                 if let Some((off0, s0)) = tpl {
                     let delta = s1.wrapping_sub(s0) << SYM1;
                     for u in 0..u_lim {
@@ -228,23 +255,35 @@ impl Huff {
                     }
                 } else {
                     for u in 0..u_lim {
-                        let w = off_p + u;
-                        let e = self.lut[w];
-                        let e2 = self.lut[(u << zn) & mask];
-                        let l2 = ((e2 >> LEN1) & 31) as usize;
-                        if (e2 >> CNT_SH) == 0 || (zn as usize) + l2 > LUT_BITS as usize {
+                        let x = (u << zn) & mask;
+                        let e2 = self.lut[x];
+                        if (e2 >> CNT_SH) == 0 {
                             continue;
                         }
-                        self.lut[w] = (2u32 << CNT_SH)
-                            | (((e2 >> SYM1) & 0x1ff) << SYM2)
-                            | (e & (0x1ff << SYM1))
-                            | (zn << LEN1)
-                            | (zn + l2 as u32);
+                        let s2 = (e2 >> SYM1) & SYM_MASK;
+                        let t2 = zn as u64 + len_of[s2 as usize] as u64;
+                        if t2 > LUT_BITS as u64 {
+                            continue;
+                        }
+                        let pair = (s1 << SYM1) | (s2 << SYM2);
+                        let e3 = self.lut[(u << t2) & mask];
+                        let s3 = (e3 >> SYM1) & SYM_MASK;
+                        self.lut[off_p + u] = match t2 + len_of[s3 as usize & 0x1ff] as u64 {
+                            t3 if (e3 >> CNT_SH) != 0 && t3 <= LUT_BITS as u64 => {
+                                (3u64 << CNT_SH) | pair | (s3 << SYM3) | t3
+                            }
+                            _ => (2u64 << CNT_SH) | pair | t2,
+                        };
                     }
                     tpl = Some((off_p, s1));
+                    // (the entries copied from the template hold as many symbols as it)
+                    for &e in &self.lut[off_p..off_p + u_lim] {
+                        most = most.max(e >> CNT_SH);
+                    }
                 }
             }
         }
+        self.batch_left = most as usize * STEPS;
     }
 
     #[inline(always)]
@@ -253,39 +292,25 @@ impl Huff {
         (0..self.alpha).contains(&i).then(|| self.perm[i as usize])
     }
 
-    #[inline(always)]
-    fn decode_one_win(
-        &self,
-        r: &mut Reg,
-        win: &[u8; 264],
-        full_data: &[u8],
-        base_pos: usize,
-    ) -> Result<u16, ErrorKind> {
-        if r.live < LUT_BITS {
-            r.refill_win(win);
-        }
-        let e = self.lut[r.peek_live(LUT_BITS) as usize];
-        if (e >> CNT_SH) != 0 {
-            r.skip_short((e >> LEN1) & 31);
-            return Ok(((e >> SYM1) & 0x1ff) as u16);
-        }
-        let (s, after) = self.decode_entry_slow_win(e, *r, win, full_data, base_pos);
-        *r = after;
-        s
-    }
-
-    #[inline(always)]
+    /// One symbol (the tests' reference for a table's single steps)
+    #[cfg(test)]
     pub(crate) fn decode(&self, r: &mut Reg, data: &[u8]) -> Result<u16, ErrorKind> {
         let e = self.lut[r.peek(data, LUT_BITS) as usize];
         if (e >> CNT_SH) != 0 {
-            r.skip_short((e >> LEN1) & 31);
-            return Ok(((e >> SYM1) & 0x1ff) as u16);
+            let s = ((e >> SYM1) & SYM_MASK) as u16;
+            r.skip_short(self.len_of[s as usize] as u32);
+            return Ok(s);
         }
         let (s, after) = self.decode_entry_slow(e, *r, data);
         *r = after;
         s
     }
 
+    /// A group's 50 symbols (fewer if it holds the block's end) into `g_out`, through a
+    /// 264-byte window of the input at `base_pos`. The steps take a whole entry (up to
+    /// three symbols) in batches of five while a batch cannot pass the group's end
+    /// (`batch_left`), then one at a time, as many of an entry's symbols as the group
+    /// still wants, so no code past the group's end is ever read with this group's table.
     #[inline(always)]
     pub(crate) fn decode_group_win(
         &self,
@@ -293,22 +318,37 @@ impl Huff {
         g_in: &[u8; 264],
         data: &[u8],
         base_pos: usize,
-        g_out: &mut [u16; 66],
+        g_out: &mut [u16; G_OUT],
     ) -> Result<(usize, bool), ErrorKind> {
         let eob = self.eob;
         let mut k = 0usize;
         macro_rules! step_win {
-            () => {{
+            ($clamp:expr, $acc:ident) => {{
                 let e = self.lut[r.peek_live(LUT_BITS) as usize];
                 let c = (e >> CNT_SH) as usize;
                 if c != 0 {
-                    r.skip_short_shl(e);
                     let idx = k & 63;
-                    let dst = &mut g_out[idx..idx + 2];
-                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
-                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
-                    k += c;
+                    let v = e >> SYM1;
+                    g_out[idx..idx + 4].copy_from_slice(&[
+                        v as u16,
+                        (v >> 16) as u16,
+                        (v >> 32) as u16,
+                        (v >> 48) as u16,
+                    ]);
+                    if $clamp && k + c > GROUP {
+                        r.live -= $acc & 63;
+                        $acc = 0;
+                        k += self.take_some(r, e, GROUP - k);
+                    } else {
+                        // (the bits consumed are summed in `$acc` and taken from `live`
+                        // once a batch, keeping the mask off the shift's chain)
+                        r.buf = r.buf.wrapping_shl(e as u32);
+                        $acc = $acc.wrapping_add(e as u32);
+                        k += c;
+                    }
                 } else {
+                    r.live -= $acc & 63;
+                    $acc = 0;
                     let (s, after) = self.decode_entry_slow_win(e, *r, g_in, data, base_pos);
                     *r = after;
                     let s = match s {
@@ -330,68 +370,80 @@ impl Huff {
         r.pos = 0;
         r.refill_win(g_in);
         loop {
+            let mut acc = 0u32;
             for _ in 0..STEPS {
-                step_win!();
+                step_win!(false, acc);
             }
-            if k > GROUP - 2 * STEPS {
+            r.live -= acc & 63;
+            if k + self.batch_left > GROUP {
                 break;
             }
             r.refill_win(g_in);
         }
-        if k <= GROUP - 2 {
+        while k < GROUP {
             r.refill_win(g_in);
-            for _ in 0..4 {
-                if k > GROUP - 2 {
+            let mut acc = 0u32;
+            for _ in 0..STEPS {
+                if k >= GROUP {
                     break;
                 }
-                step_win!();
+                step_win!(true, acc);
             }
-            if k <= GROUP - 2 {
-                r.refill_win(g_in);
-                while k <= GROUP - 2 {
-                    step_win!();
-                }
-            }
-        }
-        if k == GROUP - 1 {
-            let s = match self.decode_one_win(r, g_in, data, base_pos) {
-                Ok(s) => s,
-                Err(err) => {
-                    r.pos += base_pos;
-                    return Err(err);
-                }
-            };
-            g_out[GROUP - 1] = s;
-            if s == eob {
-                r.pos += base_pos;
-                return Ok((GROUP, true));
-            }
+            r.live -= acc & 63;
         }
         r.pos += base_pos;
         Ok((GROUP, false))
     }
 
+    /// The first `n` (fewer than its count) of fast entry `e`'s symbols taken: their bits
+    /// consumed. Returns `n`.
+    #[inline(always)]
+    fn take_some(&self, r: &mut Reg, e: u64, n: usize) -> usize {
+        let mut bits = self.len_of[((e >> SYM1) & SYM_MASK) as usize] as u32;
+        if n == 2 {
+            bits += self.len_of[((e >> SYM2) & SYM_MASK) as usize] as u32;
+        }
+        r.skip_short(bits);
+        n
+    }
+
+    /// `decode_group_win` near the input's end, on the input itself
     #[inline(always)]
     pub(crate) fn decode_group_slice(
         &self,
         r: &mut Reg,
         data: &[u8],
-        g_out: &mut [u16; 66],
+        g_out: &mut [u16; G_OUT],
     ) -> Result<(usize, bool), ErrorKind> {
         let eob = self.eob;
         let mut k = 0usize;
         macro_rules! step_slice {
-            () => {{
+            ($clamp:expr, $acc:ident) => {{
                 let e = self.lut[r.peek_live(LUT_BITS) as usize];
                 let c = (e >> CNT_SH) as usize;
                 if c != 0 {
-                    r.skip_short_shl(e);
                     let idx = k & 63;
-                    let dst = &mut g_out[idx..idx + 2];
-                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
-                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
-                    k += c;
+                    let v = e >> SYM1;
+                    g_out[idx..idx + 4].copy_from_slice(&[
+                        v as u16,
+                        (v >> 16) as u16,
+                        (v >> 32) as u16,
+                        (v >> 48) as u16,
+                    ]);
+                    if $clamp && k + c > GROUP {
+                        r.live -= $acc & 63;
+                        $acc = 0;
+                        k += self.take_some(r, e, GROUP - k);
+                    } else {
+                        // (the bits consumed are summed in `$acc` and taken from `live`
+                        // once a batch, keeping the mask off the shift's chain)
+                        r.buf = r.buf.wrapping_shl(e as u32);
+                        $acc = $acc.wrapping_add(e as u32);
+                        k += c;
+                    }
                 } else {
+                    r.live -= $acc & 63;
+                    $acc = 0;
                     let (s, after) = self.decode_entry_slow(e, *r, data);
                     *r = after;
                     let s = s?;
@@ -405,35 +457,26 @@ impl Huff {
         }
         r.refill(data);
         loop {
+            let mut acc = 0u32;
             for _ in 0..STEPS {
-                step_slice!();
+                step_slice!(false, acc);
             }
-            if k > GROUP - 2 * STEPS {
+            r.live -= acc & 63;
+            if k + self.batch_left > GROUP {
                 break;
             }
             r.refill(data);
         }
-        if k <= GROUP - 2 {
+        while k < GROUP {
             r.refill(data);
-            for _ in 0..4 {
-                if k > GROUP - 2 {
+            let mut acc = 0u32;
+            for _ in 0..STEPS {
+                if k >= GROUP {
                     break;
                 }
-                step_slice!();
+                step_slice!(true, acc);
             }
-            if k <= GROUP - 2 {
-                r.refill(data);
-                while k <= GROUP - 2 {
-                    step_slice!();
-                }
-            }
-        }
-        if k == GROUP - 1 {
-            let s = self.decode(r, data)?;
-            g_out[GROUP - 1] = s;
-            if s == eob {
-                return Ok((GROUP, true));
-            }
+            r.live -= acc & 63;
         }
         if r.pos > data.len() && r.overran(data) {
             Err(ErrorKind::Truncated)
@@ -446,7 +489,7 @@ impl Huff {
     #[inline(never)]
     fn decode_entry_slow_win(
         &self,
-        e: u32,
+        e: u64,
         mut r: Reg,
         win: &[u8; 264],
         full_data: &[u8],
@@ -457,7 +500,7 @@ impl Huff {
                 r.refill_win(win);
             }
             let sub_off = (e & 0xffff) as usize;
-            let d_w = (e >> 16) & 15;
+            let d_w = ((e >> 16) & 15) as u32;
             let idx = ((r.buf >> (54 - d_w)) as usize) & ((1usize << d_w) - 1);
             let se = self.sub_lut[sub_off + idx];
             if se != SUB_BAD_U16 {
@@ -466,7 +509,7 @@ impl Huff {
                 return (Ok(se >> 6), r);
             }
         } else if (e & EOB_FAST) != 0 {
-            r.skip_short(e & 63);
+            r.skip_short((e & 63) as u32);
             return (Ok(self.eob), r);
         } else if (e & BAD) != 0 {
             return (Err(ErrorKind::BadHuffmanCode), r);
@@ -483,11 +526,11 @@ impl Huff {
 
     #[cold]
     #[inline(never)]
-    fn decode_entry_slow(&self, e: u32, mut r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
+    fn decode_entry_slow(&self, e: u64, mut r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
         if (e & SUB_PTR) != 0 {
             let _ = r.peek(data, 20);
             let sub_off = (e & 0xffff) as usize;
-            let d_w = (e >> 16) & 15;
+            let d_w = ((e >> 16) & 15) as u32;
             let idx = ((r.buf >> (54 - d_w)) as usize) & ((1usize << d_w) - 1);
             let se = self.sub_lut[sub_off + idx];
             if se != SUB_BAD_U16 {
@@ -496,7 +539,7 @@ impl Huff {
                 return (Ok(se >> 6), r);
             }
         } else if (e & EOB_FAST) != 0 {
-            r.skip_short(e & 63);
+            r.skip_short((e & 63) as u32);
             return (Ok(self.eob), r);
         } else if (e & BAD) != 0 {
             return (Err(ErrorKind::BadHuffmanCode), r);
