@@ -297,18 +297,28 @@ impl Huff {
     ) -> Result<(usize, bool), ErrorKind> {
         let eob = self.eob;
         let mut k = 0usize;
+        // The fast entries' bits consumed, summed over a batch and taken from `r.live` once
+        // (`Reg::shl_entry`), before each refill, slow path and return. The whole entries are
+        // added, not `e & 63`: each entry's count is in bits 0..5 (at most 10, bits 4..5 zero)
+        // and its other fields start at bit 6, so the sum's low 6 bits are the batch's bits
+        // exactly while they stay below 64. They do: between refills a batch consumes at most
+        // the bits live, at most 63 (5 steps of at most 10 bits, as before this change)
+        let mut acc: u32;
         macro_rules! step_win {
             () => {{
                 let e = self.lut[r.peek_live(LUT_BITS) as usize];
                 let c = (e >> CNT_SH) as usize;
                 if c != 0 {
-                    r.skip_short_shl(e);
+                    r.shl_entry(e);
+                    acc = acc.wrapping_add(e);
                     let idx = k & 63;
                     let dst = &mut g_out[idx..idx + 2];
                     dst[0] = ((e >> SYM1) & 0x1ff) as u16;
                     dst[1] = ((e >> SYM2) & 0x1ff) as u16;
                     k += c;
                 } else {
+                    r.live -= acc & 63;
+                    acc = 0;
                     let (s, after) = self.decode_entry_slow_win(e, *r, g_in, data, base_pos);
                     *r = after;
                     let s = match s {
@@ -330,9 +340,11 @@ impl Huff {
         r.pos = 0;
         r.refill_win(g_in);
         loop {
+            acc = 0;
             for _ in 0..STEPS {
                 step_win!();
             }
+            r.live -= acc & 63;
             if k > GROUP - 2 * STEPS {
                 break;
             }
@@ -340,17 +352,21 @@ impl Huff {
         }
         if k <= GROUP - 2 {
             r.refill_win(g_in);
+            acc = 0;
             for _ in 0..4 {
                 if k > GROUP - 2 {
                     break;
                 }
                 step_win!();
             }
+            r.live -= acc & 63;
             if k <= GROUP - 2 {
                 r.refill_win(g_in);
+                acc = 0;
                 while k <= GROUP - 2 {
                     step_win!();
                 }
+                r.live -= acc & 63;
             }
         }
         if k == GROUP - 1 {
@@ -380,18 +396,28 @@ impl Huff {
     ) -> Result<(usize, bool), ErrorKind> {
         let eob = self.eob;
         let mut k = 0usize;
+        // The fast entries' bits consumed, summed over a batch and taken from `r.live` once
+        // (`Reg::shl_entry`), before each refill, slow path and return. The whole entries are
+        // added, not `e & 63`: each entry's count is in bits 0..5 (at most 10, bits 4..5 zero)
+        // and its other fields start at bit 6, so the sum's low 6 bits are the batch's bits
+        // exactly while they stay below 64. They do: between refills a batch consumes at most
+        // the bits live, at most 63 (5 steps of at most 10 bits, as before this change)
+        let mut acc: u32;
         macro_rules! step_slice {
             () => {{
                 let e = self.lut[r.peek_live(LUT_BITS) as usize];
                 let c = (e >> CNT_SH) as usize;
                 if c != 0 {
-                    r.skip_short_shl(e);
+                    r.shl_entry(e);
+                    acc = acc.wrapping_add(e);
                     let idx = k & 63;
                     let dst = &mut g_out[idx..idx + 2];
                     dst[0] = ((e >> SYM1) & 0x1ff) as u16;
                     dst[1] = ((e >> SYM2) & 0x1ff) as u16;
                     k += c;
                 } else {
+                    r.live -= acc & 63;
+                    acc = 0;
                     let (s, after) = self.decode_entry_slow(e, *r, data);
                     *r = after;
                     let s = s?;
@@ -405,9 +431,11 @@ impl Huff {
         }
         r.refill(data);
         loop {
+            acc = 0;
             for _ in 0..STEPS {
                 step_slice!();
             }
+            r.live -= acc & 63;
             if k > GROUP - 2 * STEPS {
                 break;
             }
@@ -415,17 +443,21 @@ impl Huff {
         }
         if k <= GROUP - 2 {
             r.refill(data);
+            acc = 0;
             for _ in 0..4 {
                 if k > GROUP - 2 {
                     break;
                 }
                 step_slice!();
             }
+            r.live -= acc & 63;
             if k <= GROUP - 2 {
                 r.refill(data);
+                acc = 0;
                 while k <= GROUP - 2 {
                     step_slice!();
                 }
+                r.live -= acc & 63;
             }
         }
         if k == GROUP - 1 {
