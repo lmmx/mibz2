@@ -1046,6 +1046,14 @@ impl Source for ChannelSource<'_> {
 }
 
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    // (research only, `scan-oracle`: the bench-four-arm diagnostic's scanner, recorded or
+    // replayed, `scan_oracle.rs`; in its `scan` mode the scanner as shipped)
+    #[cfg(feature = "scan-oracle")]
+    if crate::scan_oracle::mode() == crate::scan_oracle::Mode::Replay {
+        return replay_scanner(shared, rx, jobs);
+    }
+    #[cfg(feature = "scan-oracle")]
+    let recording = crate::scan_oracle::mode() == crate::scan_oracle::Mode::Record;
     let src = ChannelSource {
         rx,
         buf: Vec::new(),
@@ -1110,6 +1118,10 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                     symbols.syms.capacity() * std::mem::size_of::<u16>()
                 );
                 debug_assert_eq!(place, index);
+                #[cfg(feature = "scan-oracle")]
+                if recording {
+                    crate::scan_oracle::record(index, &symbols);
+                }
                 if !jobs.send_job((place, bit, symbols)) {
                     return finish(None);
                 }
@@ -1121,6 +1133,71 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     }
     // (the input's receiver and the jobs' sender are dropped here: a writer's next write
     // fails, and the workers end once the jobs queued are done)
+}
+
+/// (research only, `scan-oracle`) The scanner's place taken by the recorded blocks
+/// (`scan_oracle::Mode::Replay`): each slot the scanner would fill, in the same order and under
+/// the same limit, filled with the block's recorded symbols copied into the reused buffer, and
+/// sent through the same job queue. The input is still taken from the reader as it comes and
+/// its chunks recycled, as the scanner's window does; no bit of it is read
+#[cfg(feature = "scan-oracle")]
+fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    use std::sync::mpsc::TryRecvError;
+    let finish = || {
+        let mut st = shared.lock();
+        st.end = Some(st.issued);
+        drop(st);
+        shared.cv.notify_one();
+    };
+    let recycle = |chunk: Vec<u8>| {
+        if chunk.capacity() > 0 {
+            let mut st = shared.lock();
+            if st.free_in.is_empty() {
+                st.free_in.push(chunk);
+            }
+        }
+    };
+    let mut eof = false;
+    loop {
+        while !eof {
+            match rx.try_recv() {
+                Ok(chunk) => recycle(chunk),
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => eof = true,
+            }
+        }
+        let (syms, index) = {
+            let mut st = shared.lock();
+            while !st.cancelled && shared.full(&st) {
+                st.scanner_waiting = true;
+                st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
+            }
+            st.scanner_waiting = false;
+            if st.cancelled {
+                drop(st);
+                return finish();
+            }
+            let index = st.issued;
+            (st.free_syms.pop().unwrap_or_default(), index)
+        };
+        let Some(symbols) = crate::scan_oracle::replay(index, syms) else {
+            // the input's end: taken to its end, as the scanner reads to it
+            while !eof {
+                match rx.recv() {
+                    Ok(chunk) => recycle(chunk),
+                    Err(_) => eof = true,
+                }
+            }
+            return finish();
+        };
+        let mut st = shared.lock();
+        let place = st.issued;
+        st.issued += 1;
+        drop(st);
+        if !jobs.send_job((place, 0, symbols)) {
+            return finish();
+        }
+    }
 }
 
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
