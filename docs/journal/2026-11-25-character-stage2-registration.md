@@ -15,7 +15,7 @@ Stage 1 measured the network as it is: each count's demands, waits, occupancies,
 
 **The pacing** (§2):
 - **The loop:** the binary's `pace` switch, a dependent multiply-add chain of a fixed number of iterations at an activity's end (src/character.rs `treat`). It touches no memory, so it scales occupancy, not memory demand, and the write-up says so (C).
-- **The dose's size, in core cycles:** an activity's +δ dose at count k is δ × its mean service a visit at k in stage 1 (its per-visit moments), converted to cycles at that count's achieved frequency (stage 1's cycles over reference cycles), then to iterations by the loop's own cycles per iteration. The loop is calibrated at the run's start with the hardware counters, on an idle CPU: cycles per iteration over 10⁷ iterations, five times, the median. Where no hardware counter counts, the calibration falls back to the loop's dependency chain (4 cycles: an `imul`'s latency of 3 and an `add`'s of 1), and that is recorded. The doses never come from slowed runs.
+- **The dose's size, in core cycles:** an activity's +δ dose at count k is δ × its mean exclusive service a visit at k in stage 1 (its state time over its visits), converted to cycles at that count's achieved frequency (stage 1's cycles over reference cycles), then to iterations by the loop's own cycles per iteration. The loop is calibrated at the run's start with the hardware counters (`character --calibrate`, the library's loop copied; their disassembly is the same): cycles per iteration over 10⁷ iterations, five times, the median. The compiler folds 8 iterations into one multiply-add with composed constants, still a dependent chain, so an iteration costs about half a cycle. Where no hardware counter counts, the calibration falls back to that 0.5, and that is recorded. The doses never come from slowed runs.
 - **The record:** each paced block's wall and thread-CPU time come from the ledgers. The activity's time includes its pacing, so the achieved dose is measured, not assumed.
 
 **The coordinates** (§2 step 1):
@@ -31,7 +31,7 @@ Stage 1 measured the network as it is: each count's demands, waits, occupancies,
    - **Gates:** W ∈ {4k, 8k} × the ready bytes' cap ∈ {12, 64} MiB at k\*, with the same k + 2 floor. The ledgers' admission predicates show which gate each wait met, so each arm shows which gate actually changed. *The window is a harness switch new in this binary (see "One binary" below).*
    - **Placement:** at k = 4, the decoder's threads (4 workers, the scanner, the feeder and the reader: 7) confined to 7 logical CPUs on 7 distinct cores, against 8 logical CPUs on 4 cores, both siblings each. The confinement is the process's CPU mask (`taskset`, inherited by every thread), so the library needs no placement hook. Turbo free against turbo off is crossed with it where `intel_pstate/no_turbo` is writable without a password. Where it is not, the turbo factor is skipped and recorded (the run is unattended: no sudo).
    - **The scanner's placement:** at k = 10 and at the step, the scanner pinned to a favoured core (the highest `acpi_cppc/highest_perf`, else the highest `cpuinfo_max_freq`) with its sibling outside every thread's mask; against the scanner pinned to a worker core's sibling (co-pinned); against unpinned. This takes over the pinned scanner-profile variant (QUEUED 7147262673 B).
-   - **Memory:** at k\* and 20, a memory dose at A7's end (each Open block) of 8 MiB of the worker's own scratch, streamed against chased, against none. The dose is the binary's `dose` switch: `src/dose.rs` is inert on this path. 8 MiB is about a block's working set (its rows' links and output).
+   - **Memory:** at k\* and 20, a memory dose at A7's end (each Open block) of 2 MiB of the worker's own scratch, streamed against chased, against none. The dose is the binary's `dose` switch: `src/dose.rs` is inert on this path. 2 MiB is about one core's share of the i9's 20 MiB L3, at equal bytes for both kinds. In the container's preflight, 8 MiB chased swamped the block: it decoded 4.5–6× slower.
    - **Oracles** (§5's decision): arms B (supplied codes) and C (the scanner's output replayed) at the knee, run from the four-arm binary (#835 at its tagged commit), reported only as ratios against that binary's own A. The two binaries' A walls at the knee are compared, and any gap is reported as a layout effect.
 4. **Validation** (§2 step 4): about 20% of the time on conditions excluded from every fit.
    - A combined +10% on A3 and A7 together, at k\* and k\* + 2.
@@ -75,13 +75,14 @@ All from the same ledgers as stage 1.
   The anchors' controllers, in order, are the control's migration.
 - **The surface:** the knee's roundness is the ratio of the (20, 20) cell's slowdown to the sum of the (20, 0) and (0, 20) cells' slowdowns. 1 is additive, as on a smooth max; near 0.5 is a sharp max's kink. It is reported with its block-bootstrap interval.
 - **Each mechanism contrast:** its ratio to its baseline with its interval, and **CHANGED** iff the interval excludes 1. The gate contrast also reports which predicate held each wait in each arm.
+- **DOSE-MISSED** (a label, not a VOID): a coordinate whose achieved dose (from the ledgers) misses its target by more than 25% at an anchor. Its coefficient uses the achieved dose either way.
 - **INCOMPLETE, PERTURBED and VOID** as stage 1's, applied to stage 2's arms. Also **VOID** if any of these:
-  - a treatment's achieved dose (from the ledgers) misses its target by more than 25% at an anchor;
   - the oracle binary's A differs from this binary's baseline at the knee by more than 3%. That is reported as a layout effect: it is VOID for the oracle ratios only.
 
 ## Open for the review
 
-- the dose for the memory contrast (8 MiB at A7's end);
+- the dose for the memory contrast (2 MiB at A7's end);
+- the oracle arms' wiring to the four-arm binary (its `ab` arms at its tagged commit), to be built at the freeze;
 - the step rule's 5%;
 - the placement's mask construction on the i9's topology;
 - whether the turbo factor is worth a password prompt (the run would then not be unattended).

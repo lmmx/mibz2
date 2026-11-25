@@ -46,6 +46,9 @@ SCANNER_SURFACE = ["A2", "A3", "issue"]
 WORKER_SURFACE = ["A5", "pool", "A6a", "A6b", "A6c", "A7", "A8", "A9", "publish"]
 ENV = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
 DELTA = 0.20
+# the memory dose a worker's Open block (A7's end): about one core's share of the i9's 20 MiB L3,
+# streamed or chased at equal bytes (8 MiB chased swamped the block in the container's preflight)
+DOSE_BYTES = 2 << 20
 SURFACE = [0.0, 0.10, 0.20]
 FALLBACK_CYCLES_PER_ITER = 0.5  # (8 iterations folded into one multiply-add, about 4 cycles)
 STREAM = b"BZh9\x31\x41\x59\x26\x53\x59"
@@ -204,7 +207,7 @@ def plan(a) -> dict:
     # the memory dose at A7's end, at k* and 20
     for k in sorted({kstar, 20}):
         for arm in ("none", "stream", "chase"):
-            tr = [] if arm == "none" else [f"dose A7 {8 << 20} {arm}"]
+            tr = [] if arm == "none" else [f"dose A7 {DOSE_BYTES} {arm}"]
             cells.append({"section": "memory", "k": k, "arm": arm, "treat": tr})
     # placement (masks from the topology)
     cores = {}
@@ -479,6 +482,7 @@ def report(a) -> int:
             )
             if abs(d_ach / DELTA - 1) > 0.25:
                 misses.append(f"k {k} {c}: achieved {d_ach:+.3f} against {DELTA:+.2f}")
+                label += " DOSE-MISSED"
             rows.append(
                 {
                     "section": "screen",
@@ -590,7 +594,10 @@ def report(a) -> int:
                 f"k {c['k']:<3} {c['arm']:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
             )
     if misses:
-        print("\nVOID (doses): achieved more than 25% from target: " + "; ".join(misses))
+        print(
+            "\nDOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): "
+            + "; ".join(misses)
+        )
     with open(os.path.join(a.out, "stage2.tsv"), "w") as f:
         cols = sorted({k for r in rows for k in r})
         f.write("\t".join(cols) + "\n")
