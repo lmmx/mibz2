@@ -1733,3 +1733,35 @@ Louis asked which dynamical-systems tools the programme should reach for, given 
 - Hellerstein et al. joins the reading list.
 
 A third stage is added to the programme's method: performance analysis, then dynamical characterisation, then design-space exploration.
+
+## 68. Hybrid Dynamical Systems: read, with levers
+
+Louis supplied his private copy of Goebel, Sanfelice and Teel, *Hybrid Dynamical Systems* (2012). **It is not in the repository.**
+
+**What was done.** The chapters were split and their text extracted on the command line. Each was read in full by one reader and given a précis in our own words. The notes are `reading/hybrid-dynamical-systems/`:
+- `sections.tsv`;
+- `precis/ch01…ch09`;
+- `precis/extraction-notes.md`;
+- the Coordinator's interpretation, separately, in `relevance/`.
+
+ChatGPT's first reading is recorded verbatim (`external/chatgpt-hybrid-systems-book.md`).
+
+**The interpretation** (`relevance/levers.md` first):
+- **Five levers.** The decoder is $\mathcal H = (C, F, D, G)$. Every reorganisation changes one of five things:
+  1. how fast work runs (the flow map);
+  2. where work may proceed (the flow set);
+  3. when events may happen (the jump set);
+  4. what events do (the jump map);
+  5. what is represented (the state space).
+
+  Engineering pulls 1–4, mathematics mostly 5. Each current lead is placed on one.
+- **The completion-time certificate.** The bottleneck bound, read as a Lyapunov-type function on the hybrid system, is a completion-time certificate. The book guarantees that such a function exists for systems that always terminate (Example 7.35). It is the cheap scorer a design-space enumeration needs.
+- **Fragility at thin decision surfaces** (Chapter 4: Krasovskii = Hermes; hysteresis, Examples 4.18–4.19). This is the frame for the run-to-run divergence stage 1 shows: the bimodal scanner.
+- **Six computations on the traces** (`relevance/measurements.md`), assigned to MONODROMY, the Pathfinder and the Coordinator:
+  1. the trace as a hybrid arc;
+  2. token-bucket event-rate bounds;
+  3. the certificate;
+  4. sensitivity at decision surfaces;
+  5. the steady regime;
+  6. homogeneity, and the knee's geometry.
+- **Limits:** most of the book's stability theory assumes runs that never end. What transfers directly is the solution concept, perturbation and regularisation, well-posedness, and the finite-time certificate.
