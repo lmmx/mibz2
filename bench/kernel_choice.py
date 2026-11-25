@@ -12,7 +12,7 @@ registration names: the base the old one, the head the one the PR intends (`BASE
 must match their build's probe.
 
     kernel_choice.py RUNS.jsonl --env ENV.json --lscpu LSCPU.txt --plan PLAN.jsonl
-                    [--expect lazy-from-four|lazy-four-to-seven] [--arm mibz2]
+                    [--expect lazy-from-four|lazy-four-to-seven|trim-eight] [--arm mibz2]
                     [--judged 5,7,10] [--supporting 3,4,8,12] [--rounds 16]
                     [--corpus wikidata-x4] [--out-bytes N] [--dry]
 
@@ -25,6 +25,16 @@ frozen before its data:
 - `lazy-four-to-seven` (journal §80, the registration's second head: #860 without the trim to 8
   from 10): lazy from 4 to 7 threads, otherwise master's plan, 7 lazy workers from 10
   (`HEAD_PLAN_FOUR_TO_SEVEN`); judged 5 and 7, supporting 3, 4, 8, 10 and 12.
+- `trim-eight` (journal §84's test 1, with the spin warm-up): the trim to 8 workers from 10
+  threads alone, on a branch off master after #868. The base is that master, lazy at 4 to 7
+  (`BASE_PLAN_AFTER_868`, the second head's plan). The head is 8/32 lazy at 10 and 12 threads,
+  master's plan elsewhere (`HEAD_PLAN_TRIM_EIGHT`). Judged 10 and 12; supporting 3, 4, 5, 7 and
+  8. The CPU ratio is reported (§80 saw +8% at 10), not judged.
+Each expectation names its own base plan as well as its head's.
+
+**The clock split** (journal §81, a registered secondary that decides nothing): where every run
+carries `cycles_per_ref` (the recipe's PRESPIN passes --machine-state), each count's clock ratio
+and its wall at a common clock, head over base, are reported beside the wall.
 `--judged` and `--supporting`, if given, must be the expectation's registered counts.
 
 **Arms.** The reference is ARM at the base (`ARM@build-base`, the measured head's merge-base with
@@ -35,8 +45,9 @@ master), the candidate ARM at the head (`ARM`, this harness's own build of the h
 else INCONCLUSIVE.
 
 **The verdict:**
-- **ADOPTS:** every judged count (5, 7, 10 threads; 5 and 7 for `lazy-four-to-seven`) FASTER,
-  no supporting count (3, 4, 8, 12; 3, 4, 8, 10 and 12 for `lazy-four-to-seven`) SLOWER, and at every count the median over the rounds of each run's peak resident memory, head
+- **ADOPTS:** every judged count (5, 7, 10 threads; 5 and 7 for `lazy-four-to-seven`; 10 and 12
+  for `trim-eight`) FASTER, no supporting count (3, 4, 8, 12; 3, 4, 8, 10 and 12 for
+  `lazy-four-to-seven`; 3, 4, 5, 7 and 8 for `trim-eight`) SLOWER, and at every count the median over the rounds of each run's peak resident memory, head
   over base, at most 1.10 (PERFORMANCE-POLICY rule 4's trigger).
 - **HELD ON MEMORY:** as ADOPTS, but the memory gate failed at a count; rule 4's trade reported.
 - **NOT ADOPTED:** otherwise.
@@ -45,7 +56,7 @@ else INCONCLUSIVE.
   wall, CPU and peak memory; a record pinned or beside a spinner; any key duplicated, unexpected
   or missing; the corpus not the one registered; any output size not the registered one, or the
   hashes not all one; the plan file missing, malformed, or without exactly one probe per build
-  and count; a build's probe not its registered plan (`BASE_PLAN`, the expectation's head plan);
+  and count; a build's probe not its registered plan (the expectation's base and head plans);
   `--judged` or `--supporting` not the expectation's registered counts; a count's median
   observed workers (`mibz2-N` threads) at a build not its probe's threads.
 
@@ -109,10 +120,24 @@ HEAD_PLAN_FOUR_TO_SEVEN = {
     10: (7, 28, True),
     12: (7, 28, True),
 }
-# EXPECT: (the head's registered plan, judged counts, supporting counts)
+# The third head (journal §84's test 1): the trim to 8 workers from 10 threads alone, on a branch
+# off master after #868 (56c56573), so its base is master with lazy at 4 to 7 (the second head's
+# plan, now master's), and the head that plan with 8 lazy workers with 32 from 10 threads
+BASE_PLAN_AFTER_868 = dict(HEAD_PLAN_FOUR_TO_SEVEN)
+HEAD_PLAN_TRIM_EIGHT = {
+    3: (3, 12, False),
+    4: (4, 16, True),
+    5: (5, 20, True),
+    7: (7, 28, True),
+    8: (8, 32, True),
+    10: (8, 32, True),
+    12: (8, 32, True),
+}
+# EXPECT: (the base's registered plan, the head's, judged counts, supporting counts)
 EXPECTATIONS = {
-    "lazy-from-four": (HEAD_PLAN, (5, 7, 10), (3, 4, 8, 12)),
-    "lazy-four-to-seven": (HEAD_PLAN_FOUR_TO_SEVEN, (5, 7), (3, 4, 8, 10, 12)),
+    "lazy-from-four": (BASE_PLAN, HEAD_PLAN, (5, 7, 10), (3, 4, 8, 12)),
+    "lazy-four-to-seven": (BASE_PLAN, HEAD_PLAN_FOUR_TO_SEVEN, (5, 7), (3, 4, 8, 10, 12)),
+    "trim-eight": (BASE_PLAN_AFTER_868, HEAD_PLAN_TRIM_EIGHT, (10, 12), (3, 4, 5, 7, 8)),
 }
 DEFAULT_EXPECT = "lazy-from-four"
 
@@ -250,9 +275,9 @@ def fmt(p):
     return f"{n}/{w} {'lazy' if lazy else 'eager'}"
 
 
-def plan_check(built, threads, dry, errors, notes, head_plan=HEAD_PLAN):
+def plan_check(built, threads, dry, errors, notes, head_plan=HEAD_PLAN, base_plan=BASE_PLAN):
     """Each build's probe against its registered plan: an error, or with `dry` a note"""
-    for b, plan in (("base", BASE_PLAN), ("head", head_plan)):
+    for b, plan in (("base", base_plan), ("head", head_plan)):
         for t in threads:
             want, got = plan.get(t), built[(b, t)]
             if want is None:
@@ -291,6 +316,24 @@ def cell(got, arm, t, rounds):
     return wall, cpu, head_kb / base_kb, base_kb, head_kb
 
 
+def clock_split(got, arm, t, rounds):
+    """Journal §81's registered secondary (it decides nothing): each round's wall ratio, head over
+    base, split into the clock ratio (cycles_per_ref, cycles over reference cycles, recorded with
+    --machine-state) and the wall at a common clock (the wall times the clock: what the head
+    would take at the base's clock). (clock step, common-clock step), or None where a record
+    lacks the clock"""
+    ref = f"{arm}@build-base"
+    clock, common = [], []
+    for r in range(rounds):
+        c, b = got[(arm, t, r)], got[(ref, t, r)]
+        gc, gb = c.get("cycles_per_ref"), b.get("cycles_per_ref")
+        if not (finite_pos(gc) and finite_pos(gb)):
+            return None
+        clock.append(math.log(gc / gb))
+        common.append(math.log(c["wall"] / b["wall"]) + clock[-1])
+    return ta.step(clock), ta.step(common)
+
+
 def trade(g, hi, rss, base_kb, head_kb):
     """PERFORMANCE-POLICY rule 4's trade at a count over the gate: (holds, why)"""
     gain = 1 - g
@@ -324,7 +367,7 @@ def main(argv=None):
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
     ap.add_argument("--dry", action="store_true", help="the untimed check: machine not applied")
     a = ap.parse_args(argv)
-    head_plan, reg_judged, reg_supporting = EXPECTATIONS[a.expect]
+    base_plan, head_plan, reg_judged, reg_supporting = EXPECTATIONS[a.expect]
     errors, notes = [], []
     judged = list(reg_judged) if a.judged is None else counts(a.judged)
     supporting = list(reg_supporting) if a.supporting is None else counts(a.supporting)
@@ -351,7 +394,7 @@ def main(argv=None):
     built = probes(a.plan, threads, errors)
     observed = {}
     if not errors:
-        plan_check(built, threads, a.dry, errors, notes, head_plan)
+        plan_check(built, threads, a.dry, errors, notes, head_plan, base_plan)
         observed = observed_check(got, built, a.arm, threads, a.rounds, errors)
     for e in notes:
         print(f"DRY: not applied: {e}")
@@ -386,6 +429,20 @@ def main(argv=None):
             f"{g:.4f} [{lo:.4f}, {hi:.4f}]{'':<8} {steps[t]:<12} "
             f"{cg:.4f} [{clo:.4f}, {chi:.4f}]{'':<6} {rss:>17.4f}"
         )
+    print(
+        "the clock split (journal §81, a registered secondary; decides nothing): the clock and the "
+        "wall at a common clock, head/base [95%]:"
+    )
+    for t in threads:
+        split = clock_split(got, a.arm, t, a.rounds)
+        if split is None:
+            print(f"{t:>7}  not recorded (a run without the clock: no --machine-state, or no PMU)")
+        else:
+            (cg, clo, chi, _), (wg, wlo, whi, _) = split
+            print(
+                f"{t:>7}  clock {cg:.4f} [{clo:.4f}, {chi:.4f}]  "
+                f"wall at a common clock {wg:.4f} [{wlo:.4f}, {whi:.4f}]"
+            )
     print("observed workers, median over the rounds (base, head):")
     print("  " + ", ".join(f"{t}: {b:g}, {h:g}" for t, (b, h) in observed.items()))
     print("peak RSS, median over the rounds (reported; decides nothing beyond the 1.10 gate):")

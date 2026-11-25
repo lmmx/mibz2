@@ -33,17 +33,29 @@ COUNTS = (3, 4, 5, 7, 8, 10, 12)
 GOOD = {5: 0.83, 7: 0.62, 10: 0.95, 12: 0.95}
 
 
-def records(arm="mibz2", step=None, mem=1.0, noise=0.01, workers=None, head_plan=None):
+def records(
+    arm="mibz2",
+    step=None,
+    mem=1.0,
+    noise=0.01,
+    workers=None,
+    head_plan=None,
+    base_plan=None,
+    clock=None,
+):
     """A complete run: `step` maps a count to the head's wall over the base's (default level);
     `mem` the head's peak memory over the base's; workers as each build's registered plan unless
-    `workers` maps (build, count) to another. Rounds alternate the noise above and below"""
+    `workers` maps (build, count) to another. Rounds alternate the noise above and below. `clock`,
+    if given, maps a count to the head's clock over the base's: every record then carries
+    cycles_per_ref (the base's 4.9 / 3.7)"""
     step = step or {}
     workers = workers or {}
     head_plan = head_plan or kc.HEAD_PLAN
+    base_plan = base_plan or kc.BASE_PLAN
     out = []
     for r in range(R):
         for t in COUNTS:
-            for which, plan in (("base", kc.BASE_PLAN), ("head", head_plan)):
+            for which, plan in (("base", base_plan), ("head", head_plan)):
                 wall, rss = 1.0, 500_000
                 if which == "head":
                     wall = step.get(t, 1.0) * (1 + (noise if r % 2 else -noise))
@@ -65,17 +77,27 @@ def records(arm="mibz2", step=None, mem=1.0, noise=0.01, workers=None, head_plan
                         "hash": "0123456789abcdef",
                         "err": "",
                         "observed_threads": " ".join(names + ["sampler"]),
+                        **(
+                            {}
+                            if clock is None
+                            else {
+                                "cycles_per_ref": 4.9
+                                / 3.7
+                                * (clock.get(t, 1.0) if which == "head" else 1.0)
+                            }
+                        ),
                     }
                 )
     return out
 
 
-def plan(base=None, head=None, head_plan=None):
+def plan(base=None, head=None, head_plan=None, base_plan=None):
     """The probes' records: each build's registered plan (the head's `head_plan`, by default the
     first head's), unless overridden by count"""
     out = []
     head_plan = head_plan or kc.HEAD_PLAN
-    for b, reg, over in (("base", kc.BASE_PLAN, base or {}), ("head", head_plan, head or {})):
+    base_plan = base_plan or kc.BASE_PLAN
+    for b, reg, over in (("base", base_plan, base or {}), ("head", head_plan, head or {})):
         for t in COUNTS:
             n, w, lazy = over.get(t, reg[t])
             out.append(
@@ -399,9 +421,13 @@ class FourToSeven(Harness):
         # and the first head's expectation stays what the archived run was judged by
         self.assertEqual(kc.DEFAULT_EXPECT, "lazy-from-four")
         self.assertEqual(
-            kc.EXPECTATIONS["lazy-from-four"], (kc.HEAD_PLAN, (5, 7, 10), (3, 4, 8, 12))
+            kc.EXPECTATIONS["lazy-from-four"],
+            (kc.BASE_PLAN, kc.HEAD_PLAN, (5, 7, 10), (3, 4, 8, 12)),
         )
-        self.assertEqual(kc.EXPECTATIONS["lazy-four-to-seven"][1:], ((5, 7), (3, 4, 8, 10, 12)))
+        self.assertEqual(
+            kc.EXPECTATIONS["lazy-four-to-seven"],
+            (kc.BASE_PLAN, FOUR7, (5, 7), (3, 4, 8, 10, 12)),
+        )
 
     def test_adopts(self):
         rc, out = self.run47()
@@ -495,6 +521,102 @@ class FourToSeven(Harness):
         self.assertEqual(rc, 0, out)
         self.assertIn("DRY: not applied: at 5 threads the head built 5/20 eager", out)
         self.assertIn("DRY verdict (not evidence): ADOPTS", out)
+
+
+# The third head (journal §84's test 1, `--expect trim-eight`): the trim to 8 from 10 alone, off
+# master after #868, so the base is master's lazy-at-4-to-7 plan. Predicted (§80, unspun): 0.979
+# at 10 and 0.903 at 12, level elsewhere (the same plan as the base below 10)
+TRIM8 = kc.HEAD_PLAN_TRIM_EIGHT
+BASE868 = kc.BASE_PLAN_AFTER_868
+GOOD8 = {10: 0.979, 12: 0.903}
+EXPECT8 = ("--expect", "trim-eight")
+
+
+class TrimEight(Harness):
+    """The third head: the trim to 8 workers from 10 threads alone (`--expect trim-eight`)"""
+
+    def run8(self, recs=None, *extra, probes=None, **kw):
+        recs = records(step=GOOD8, head_plan=TRIM8, base_plan=BASE868) if recs is None else recs
+        probes = plan(head_plan=TRIM8, base_plan=BASE868) if probes is None else probes
+        return self.run_on(recs, *EXPECT8, *extra, probes=probes, **kw)
+
+    def test_registered_plans(self):
+        # the base is master after #868 (the second head's plan); the head differs at 10 and 12
+        self.assertEqual(BASE868, FOUR7)
+        self.assertEqual(set(TRIM8), set(BASE868))
+        for t in TRIM8:
+            if t in (10, 12):
+                self.assertEqual(TRIM8[t], (8, 32, True), t)
+                self.assertEqual(BASE868[t], (7, 28, True), t)
+            else:
+                self.assertEqual(TRIM8[t], BASE868[t], t)
+        self.assertEqual(kc.EXPECTATIONS["trim-eight"], (BASE868, TRIM8, (10, 12), (3, 4, 5, 7, 8)))
+
+    def test_adopts(self):
+        rc, out = self.run8()
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        self.assertIn("expectation trim-eight", out)
+        row = next(ln for ln in out.splitlines() if ln.strip().startswith("10  judged"))
+        self.assertIn("7/28 lazy", row)
+        self.assertIn("8/32 lazy", row)
+
+    def test_adopts_with_the_recipes_counts(self):
+        rc, out = self.run8(None, "--judged", "10,12", "--supporting", "3,4,5,7,8")
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+
+    def test_each_judged_count_must_be_faster(self):
+        for t in (10, 12):
+            recs = records(step={**GOOD8, t: 1.0}, head_plan=TRIM8, base_plan=BASE868)
+            rc, out = self.run8(recs)
+            self.assertEqual(self.verdict(out), f"verdict: NOT ADOPTED ({t} threads not FASTER)")
+
+    def test_slower_at_a_supporting_count_not_adopted(self):
+        for t in (3, 4, 5, 7, 8):
+            recs = records(step={**GOOD8, t: 1.05}, head_plan=TRIM8, base_plan=BASE868)
+            rc, out = self.run8(recs)
+            self.assertEqual(self.verdict(out), f"verdict: NOT ADOPTED (SLOWER at {t} threads)")
+
+    def test_void_base_is_master_before_868(self):
+        # a base without #868 (eager at 5 and 7): not this registration's base
+        out = self.assert_void(
+            records(step=GOOD8, head_plan=TRIM8),
+            *EXPECT8,
+            probes=plan(head_plan=TRIM8),
+        )
+        self.assertIn("at 5 threads the base built 5/20 eager, not its registered 5/20 lazy", out)
+
+    def test_void_head_without_the_trim(self):
+        out = self.assert_void(
+            records(step=GOOD8, head_plan=BASE868, base_plan=BASE868),
+            *EXPECT8,
+            probes=plan(head_plan=BASE868, base_plan=BASE868),
+        )
+        self.assertIn("at 10 threads the head built 7/28 lazy, not its registered 8/32 lazy", out)
+
+    def test_void_counts_not_the_registered_rule(self):
+        out = self.assert_void(
+            records(step=GOOD8, head_plan=TRIM8, base_plan=BASE868),
+            *EXPECT8,
+            "--judged",
+            "10",
+            probes=plan(head_plan=TRIM8, base_plan=BASE868),
+        )
+        self.assertIn("not trim-eight's registered judged [10, 12]", out)
+
+    def test_clock_split_reported_not_judged(self):
+        # the head's clock 2% higher at 10: its wall at a common clock is the wall times 1.02
+        recs = records(step=GOOD8, head_plan=TRIM8, base_plan=BASE868, clock={10: 1.02})
+        rc, out = self.run8(recs)
+        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        row = next(ln for ln in out.splitlines() if ln.strip().startswith("10  clock"))
+        self.assertIn("clock 1.0200", row)
+        common = float(row.split("wall at a common clock ")[1].split()[0])
+        self.assertAlmostEqual(common, 0.979 * 1.02, delta=0.0005)
+        # and without the clock (no --machine-state), it says so
+        rc, out = self.run8()
+        self.assertIn("not recorded (a run without the clock", out)
 
 
 if __name__ == "__main__":
