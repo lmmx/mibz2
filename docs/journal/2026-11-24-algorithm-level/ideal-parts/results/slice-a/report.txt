@@ -1,0 +1,64 @@
+# The ideal-parts matrix, slice A (S x E): a diagnostic, deciding nothing
+
+counts [1, 6, 8, 10]; 12 blocks; traces in the first 2; the scanner pinned to CPU 3
+the pin: the scanner on CPU 3 alone in 32 of 32 pinned traces
+
+the removed parts' busy time in their ideal arms' traces, over the real arms' (VOID over 5%):
+  k 1   S: 0.00%
+  k 1   E: 0.00%
+  k 6   S: 0.00%
+  k 6   E: 0.00%
+  k 8   S: 0.00%
+  k 8   E: 0.00%
+  k 10  S: 0.00%
+  k 10  E: 0.00%
+
+## The effects (Jain's 2^2 sign table on log wall; mean over blocks, 95% t-interval)
+
+k   q_S                         q_E                         q_SE (interaction)          4 q_SE (the difference of differences)  label         variation: S / E / SE / residual
+1   -0.0020 [-0.0053, +0.0013]  -0.0972 [-0.1013, -0.0932]  -0.0023 [-0.0067, +0.0022]  -0.0091 [-0.0269, +0.0087]                 ADDITIVE      0.0% / 98.1% / 0.1% / 1.8%
+6   -0.0140 [-0.0208, -0.0072]  -0.0870 [-0.0946, -0.0795]  -0.0054 [-0.0129, +0.0020]  -0.0217 [-0.0516, +0.0082]                 UNRESOLVED    2.4% / 91.8% / 0.4% / 5.4%
+8   -0.0464 [-0.0531, -0.0397]  -0.0483 [-0.0570, -0.0397]  -0.0278 [-0.0380, -0.0176]  -0.1112 [-0.1520, -0.0704]                 INTERACTS     36.5% / 39.5% / 13.1% / 10.9%
+10  -0.0591 [-0.0640, -0.0542]  -0.0293 [-0.0364, -0.0223]  -0.0168 [-0.0231, -0.0106]  -0.0673 [-0.0923, -0.0423]                 INTERACTS     70.1% / 17.2% / 5.7% / 7.0%
+
+## The ceiling table (ratios of wall, geometric means over blocks, 95% intervals)
+
+k   part  room: alone over all real       label        with the other ideal            share of the floor (all but it ideal over all ideal)
+1   S     1.0005 [0.9870, 1.0142]   NO ROOM      0.9915 [0.9838, 0.9992]   1.0086 [1.0008, 1.0164]
+1   E     0.8270 [0.8166, 0.8375]   ROOM         0.8195 [0.8101, 0.8290]   1.2202 [1.2063, 1.2344]
+1   floor 0.8200 [0.8118, 0.8282]   (all ideal over all real: the decoder's residual)
+6   S     0.9830 [0.9593, 1.0074]   UNRESOLVED   0.9619 [0.9478, 0.9763]   1.0396 [1.0243, 1.0551]
+6   E     0.8494 [0.8281, 0.8712]   ROOM         0.8312 [0.8179, 0.8446]   1.2031 [1.1840, 1.2226]
+6   floor 0.8171 [0.8021, 0.8324]   (all ideal over all real: the decoder's residual)
+8   S     0.9635 [0.9365, 0.9912]   UNRESOLVED   0.8621 [0.8453, 0.8792]   1.1600 [1.1374, 1.1830]
+8   E     0.9598 [0.9380, 0.9820]   UNRESOLVED   0.8588 [0.8333, 0.8850]   1.1644 [1.1299, 1.2000]
+8   floor 0.8274 [0.8084, 0.8468]   (all ideal over all real: the decoder's residual)
+10  S     0.9189 [0.9004, 0.9377]   ROOM         0.8590 [0.8509, 0.8673]   1.1641 [1.1530, 1.1753]
+10  E     0.9753 [0.9649, 0.9859]   UNRESOLVED   0.9118 [0.8899, 0.9343]   1.0967 [1.0703, 1.1237]
+10  floor 0.8378 [0.8253, 0.8506]   (all ideal over all real: the decoder's residual)
+
+## Reported beside the labels (never part of them)
+
+the clock split, each arm against all real: the clock ratio; the wall at a common clock
+  k 1   S: clock 1.0017 [1.0002, 1.0031], common-clock wall 1.0022; E: clock 0.9999 [0.9977, 1.0021], common-clock wall 0.8269; SE: clock 0.9994 [0.9967, 1.0020], common-clock wall 0.8194
+  k 6   S: clock 0.9998 [0.9995, 1.0001], common-clock wall 0.9829; E: clock 1.0000 [0.9996, 1.0004], common-clock wall 0.8494; SE: clock 0.9998 [0.9995, 1.0001], common-clock wall 0.8169
+  k 8   S: clock 1.0000 [1.0000, 1.0000], common-clock wall 0.9634; E: clock 1.0001 [1.0000, 1.0003], common-clock wall 0.9599; SE: clock 1.0000 [0.9999, 1.0000], common-clock wall 0.8274
+  k 10  S: clock 0.9999 [0.9999, 1.0000], common-clock wall 0.9188; E: clock 1.0000 [0.9999, 1.0001], common-clock wall 0.9753; SE: clock 0.9999 [0.9999, 1.0000], common-clock wall 0.8378
+the oracle (medians over the timed decodes): its stores, the handover, peak RSS
+  k 1   none store 149.1 MiB, replayed 0 blocks, supplied 0, handover 0.0 ms, peak RSS 271 MiB
+  k 1   S    store 149.1 MiB, replayed 1724 blocks, supplied 0, handover 0.0 ms, peak RSS 259 MiB
+  k 1   E    store 149.1 MiB, replayed 0 blocks, supplied 932, handover 286.2 ms, peak RSS 271 MiB
+  k 1   SE   store 149.1 MiB, replayed 1724 blocks, supplied 932, handover 285.8 ms, peak RSS 258 MiB
+  k 6   none store 149.1 MiB, replayed 0 blocks, supplied 0, handover 0.0 ms, peak RSS 291 MiB
+  k 6   S    store 149.1 MiB, replayed 1724 blocks, supplied 0, handover 0.0 ms, peak RSS 277 MiB
+  k 6   E    store 149.1 MiB, replayed 0 blocks, supplied 932, handover 318.8 ms, peak RSS 287 MiB
+  k 6   SE   store 149.1 MiB, replayed 1724 blocks, supplied 932, handover 313.1 ms, peak RSS 275 MiB
+  k 8   none store 149.1 MiB, replayed 0 blocks, supplied 0, handover 0.0 ms, peak RSS 291 MiB
+  k 8   S    store 149.1 MiB, replayed 1724 blocks, supplied 0, handover 0.0 ms, peak RSS 283 MiB
+  k 8   E    store 149.1 MiB, replayed 0 blocks, supplied 932, handover 343.3 ms, peak RSS 293 MiB
+  k 8   SE   store 149.1 MiB, replayed 1724 blocks, supplied 932, handover 330.0 ms, peak RSS 286 MiB
+  k 10  none store 149.1 MiB, replayed 0 blocks, supplied 0, handover 0.0 ms, peak RSS 304 MiB
+  k 10  S    store 149.1 MiB, replayed 1724 blocks, supplied 0, handover 0.0 ms, peak RSS 293 MiB
+  k 10  E    store 149.1 MiB, replayed 0 blocks, supplied 932, handover 395.4 ms, peak RSS 298 MiB
+  k 10  SE   store 149.1 MiB, replayed 1724 blocks, supplied 932, handover 418.4 ms, peak RSS 295 MiB
+the unpinned link at 8: all ideal over all real 0.8114 [0.7878, 0.8356]; pinned all real over unpinned 0.9983 [0.9668, 1.0309]
