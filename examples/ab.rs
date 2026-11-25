@@ -50,6 +50,15 @@
 //!                      pre_busy_raw, pre_one_raw, others_busy_raw}
 //!     --hold-max-threads T
 //!                      hold only around runs of at most T threads (default: every run)
+//!     --prespin-ms MS  spin every CPU this process may use for MS ms (one thread pinned to
+//!                      each, all to a shared deadline; the held spinner's CPU left out) just
+//!                      before each child is spawned, so no decode starts from an idle machine
+//!                      (bench 3.9.0; off by default, and for workstation runs at or above the
+//!                      knee: bench-clock-mechanism found the decode at 10 workers at the low
+//!                      clock in 90% of runs after 0.2 s of idle, 40% after 1 s, and none
+//!                      after a 100 ms spin). Parent-only, never passed to the child. Recorded
+//!                      as `prespin`: {ms, cpus, pin_failed, wall_s}; with --machine-state
+//!                      each run's `cycles_per_ref` is its clock against the reference clock
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE [--hold-cpu N|auto]
@@ -644,6 +653,58 @@ fn pick_hold(cores: &[Vec<usize>], decoder: &[usize]) -> Option<(usize, bool)> {
 /// shares a CPU with the decoder's
 fn hold_overlaps(cpu: usize, siblings: &[usize], decoder: &[usize]) -> bool {
     decoder.contains(&cpu) || siblings.iter().any(|x| decoder.contains(x))
+}
+
+/// The pre-spin (bench 3.9.0, `--prespin-ms`): one thread of this process pinned to each CPU in
+/// `cpus` (the held spinner's left out: it is busy already), every one spinning until a shared
+/// deadline `ms` after the start, all joined before it returns, so the machine is warm the
+/// moment the child is spawned. bench-clock-mechanism (#145, 25 November) found the decode at
+/// 10 workers ran at the low clock in 90% of decodes after 0.2 s of idle and 40% after 1 s,
+/// and in none after this spin (and none back to back). Returns the CPUs spun on, those whose
+/// pinning failed (each then spun wherever the kernel put it), and the spin's wall in seconds.
+fn prespin(cpus: &[usize], ms: u64) -> (usize, usize, f64) {
+    let t0 = Instant::now();
+    let until = t0 + Duration::from_millis(ms);
+    let handles: Vec<_> = cpus
+        .iter()
+        .map(|&cpu| {
+            std::thread::Builder::new()
+                .name("prespin".into())
+                .spawn(move || {
+                    let pinned = cpu < 1024 && {
+                        let mut mask = [0u64; 16];
+                        mask[cpu / 64] |= 1 << (cpu % 64);
+                        // SAFETY: a cpu_set_t of 1024 bits, read by the kernel; pid 0 is the
+                        // calling thread
+                        let rc = unsafe {
+                            sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr())
+                        };
+                        rc == 0
+                    };
+                    // (a plain increment, as the held spinner's, the clock read every 4,096)
+                    let mut x = 0u64;
+                    while Instant::now() < until {
+                        for _ in 0..4096 {
+                            x = std::hint::black_box(x.wrapping_add(1));
+                        }
+                    }
+                    pinned
+                })
+        })
+        .collect();
+    let mut failed = 0;
+    let mut spun = 0;
+    for h in handles {
+        match h.map(|h| h.join()) {
+            Ok(Ok(true)) => spun += 1,
+            Ok(Ok(false)) => {
+                spun += 1;
+                failed += 1
+            }
+            _ => failed += 1,
+        }
+    }
+    (spun, failed, t0.elapsed().as_secs_f64())
 }
 
 /// The held spinner (bench 3.8.0, W1 of docs/journal/2026-11-10-next-experiments.md): one
@@ -2314,6 +2375,7 @@ fn run(args: &[String]) {
     let mut sysfs_state = false;
     let mut hold: Option<Hold> = None;
     let mut hold_max = usize::MAX;
+    let mut prespin_ms = 0u64;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -2344,6 +2406,10 @@ fn run(args: &[String]) {
             }
             "--hold-max-threads" => {
                 hold_max = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--prespin-ms" => {
+                prespin_ms = args[i + 1].parse().unwrap();
                 i += 1;
             }
             "--max-busy" => {
@@ -2445,6 +2511,23 @@ fn run(args: &[String]) {
                         cmd.env_remove(machine::ENV);
                     }
                     let state_pre = sysfs.as_ref().map(|s| s.state(&mask).json());
+                    let waited_s = waited.elapsed().as_secs_f64() - settle;
+                    // (--prespin-ms: every CPU this process may use spun until a shared
+                    // deadline, the held spinner's CPU left out, then the child spawned at
+                    // once; never passed to the child, so an ARM@EXE build runs as before)
+                    let prespun = (prespin_ms > 0).then(|| {
+                        let held_cpu = held.as_ref().map(|h| h.cpu);
+                        let all: Vec<usize> = cores
+                            .iter()
+                            .flatten()
+                            .copied()
+                            .filter(|&c| Some(c) != held_cpu)
+                            .collect();
+                        let (spun, failed, wall) = prespin(&all, prespin_ms);
+                        format!(
+                            "\"prespin\":{{\"ms\":{prespin_ms},\"cpus\":{spun},\"pin_failed\":{failed},\"wall_s\":{wall:.4}}},"
+                        )
+                    });
                     let t_spawn = machine::unix_ns();
                     let load = load1();
                     let spun0 = held.as_ref().map(Held::ticks);
@@ -2509,13 +2592,14 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{held_json}{state}{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{held_json}{}{state}{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
                         opt(throttle.map(|x| x.1 as f64 / 1000.0)),
                         opt(psi_ms),
-                        waited.elapsed().as_secs_f64() - settle,
+                        waited_s,
+                        prespun.unwrap_or_default(),
                         fields
                     );
                     eprintln!(
@@ -2762,7 +2846,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] [--prespin-ms MS] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
@@ -2806,6 +2890,10 @@ fn main() {
 ///   multiplexed. Only those two decide it: instructions' and reference cycles' validity is
 ///   their own (`perf_multiplexed`). Cycles over `eff_ghz` gives back the task clock: it is
 ///   no independent frequency correction;
+/// - `cycles_per_ref` (bench 3.9.0): cycles over reference cycles, null unless both are whole
+///   (never multiplexed). Times the reference clock's frequency, it is the counted threads'
+///   clock while they ran, independent of the task clock: the per-decode clock that the
+///   "record and decompose" standard (journal §81) reads;
 /// - every failed enable or disable is recorded (`perf_ctl_errors`, with its errno), and
 ///   that counter's value is null with the failure as its reason;
 /// - the counters are enabled, and disabled, one after another (`perf_skew_ns`: how long each
@@ -3519,6 +3607,28 @@ mod machine {
     /// counters it divides decide it: instructions' validity is its own (`perf_multiplexed`,
     /// `perf_ctl_errors`), and any use of them with cycles needs it separately. Note that
     /// this ratio isn't an independent correction: cycles over it gives back the task clock
+    /// The counted threads' clock against the reference clock (bench 3.9.0): cycles over
+    /// reference cycles, both whole (never multiplexed) and counted in the same mode. Times the
+    /// reference clock's frequency (the nominal, e.g. 3.7 GHz on the i9-10900K) it is the
+    /// clock in GHz while they ran: the per-decode clock the "record and decompose" standard
+    /// (journal §81) reads
+    pub fn cycles_per_ref(
+        cy: &Result<Reading, String>,
+        rc: &Result<Reading, String>,
+    ) -> Result<f64, String> {
+        match (cy, rc) {
+            (Err(e), _) => Err(format!("no cycles: {e}")),
+            (_, Err(e)) => Err(format!("no reference cycles: {e}")),
+            (Ok(c), Ok(r)) if !c.whole() || !r.whole() => Err(format!(
+                "multiplexed: cycles counted {:.1}% and reference cycles {:.1}% of their enabled time",
+                share(c),
+                share(r)
+            )),
+            (Ok(c), Ok(r)) if r.value > 0 => Ok(c.value as f64 / r.value as f64),
+            _ => Err("no reference cycles counted".into()),
+        }
+    }
+
     pub fn eff_ghz(
         cy: &Result<Reading, String>,
         tc: &Result<Reading, String>,
@@ -3834,6 +3944,8 @@ mod machine {
                 running.map_or("null".into(), |x| format!("{x:.6}"))
             ));
             f.push(field("eff_ghz", &eff, |x| format!("{x:.3}")));
+            let per_ref = cycles_per_ref(&cy, &rc);
+            f.push(field("cycles_per_ref", &per_ref, |x| format!("{x:.4}")));
             (got.into_iter().collect(), format!(",{}", f.join(",")))
         }
         /// `ab env`'s `perf` field: what the counters would count here
@@ -4170,6 +4282,7 @@ mod machine {
                 "ref_cycles",
                 "task_clock_s",
                 "eff_ghz",
+                "cycles_per_ref",
             ]
             .iter()
             .all(|k| f.contains(&format!("\"{k}\":null,\"{k}_why\":\"")))
@@ -4518,6 +4631,26 @@ mod machine {
     #[cfg(test)]
     mod tests {
         use super::*;
+
+        #[test]
+        fn cycles_per_ref_whole_counts_only() {
+            let r = |value, running| Reading {
+                value,
+                enabled: 1_000,
+                running,
+            };
+            assert_eq!(
+                cycles_per_ref(&Ok(r(4_910, 1_000)), &Ok(r(3_700, 1_000))),
+                Ok(4_910.0 / 3_700.0)
+            );
+            assert!(cycles_per_ref(&Ok(r(4_910, 500)), &Ok(r(3_700, 1_000)))
+                .is_err_and(|e| e.starts_with("multiplexed")));
+            assert!(cycles_per_ref(&Ok(r(4_910, 1_000)), &Ok(r(3_700, 999)))
+                .is_err_and(|e| e.starts_with("multiplexed")));
+            assert!(cycles_per_ref(&Ok(r(4_910, 1_000)), &Err("no PMU".into()))
+                .is_err_and(|e| e.contains("no reference cycles")));
+            assert!(cycles_per_ref(&Ok(r(4_910, 1_000)), &Ok(r(0, 1_000))).is_err());
+        }
 
         /// A fake tree under the test's own directory, removed when dropped
         struct Tree(PathBuf);
@@ -5506,6 +5639,30 @@ mod tests {
         assert!(hold_overlaps(19, &[9, 19], &[9]));
         assert!(hold_overlaps(3, &[], &[3]));
         assert!(!hold_overlaps(19, &[9, 19], &[0, 1, 2]));
+    }
+
+    #[test]
+    fn prespin_spins_every_cpu_until_its_deadline_and_leaves_nothing() {
+        let mine: Vec<usize> = cores().iter().flatten().copied().collect();
+        let (spun, failed, wall) = prespin(&mine, 40);
+        assert_eq!(spun, mine.len());
+        assert_eq!(
+            failed, 0,
+            "every CPU of this process's own set can be pinned to"
+        );
+        assert!(wall >= 0.040, "the spin lasts its deadline: {wall}");
+        // (its threads are joined before it returns)
+        let left = std::fs::read_dir("/proc/self/task")
+            .unwrap()
+            .flatten()
+            .filter(|e| {
+                std::fs::read_to_string(e.path().join("comm")).is_ok_and(|c| c.trim() == "prespin")
+            })
+            .count();
+        assert_eq!(left, 0);
+        // (none at all: an empty set returns at once)
+        let (spun, failed, _) = prespin(&[], 40);
+        assert_eq!((spun, failed), (0, 0));
     }
 
     /// The held spinners among this process's threads now
