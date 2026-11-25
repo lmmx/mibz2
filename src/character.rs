@@ -168,6 +168,19 @@ pub mod treat {
     pub(super) static READY_CAP: AtomicUsize = AtomicUsize::new(0);
     /// the scanner's CPU (-1: unpinned)
     pub(super) static SCANNER_CPU: AtomicI32 = AtomicI32::new(-1);
+    /// the pacing and the dose on the blocks in [RANGE_LO, RANGE_HI) alone (a pulse; the ledgers
+    /// on, which know each thread's block); `u64::MAX`: every block
+    pub(super) static RANGE_LO: AtomicU64 = AtomicU64::new(u64::MAX);
+    pub(super) static RANGE_HI: AtomicU64 = AtomicU64::new(u64::MAX);
+
+    /// The treatments on the blocks whose places are in `lo..hi` alone (a time-localised pulse):
+    /// a worker's block from its `Got`, the scanner's from its `ScanStart`. Only with the ledgers
+    /// on, which keep each thread's block
+    pub fn set_range(range: Option<(u64, u64)>) {
+        let (lo, hi) = range.unwrap_or((u64::MAX, u64::MAX));
+        RANGE_LO.store(lo, Ordering::SeqCst);
+        RANGE_HI.store(hi, Ordering::SeqCst);
+    }
 
     /// The pacing of activity `t`: `iters` iterations of a dependent multiply-add chain at each of
     /// its ends (no memory touched; a fixed count of core cycles, not a wall-clock deadline,
@@ -207,8 +220,9 @@ pub mod treat {
             .map(|(i, p)| format!("{}={}", super::ACTIVITIES[i], p.load(Ordering::Relaxed)))
             .collect();
         let dose = DOSE_AT.load(Ordering::Relaxed);
+        let lo = RANGE_LO.load(Ordering::Relaxed);
         format!(
-            "pace[{}] dose[{}] ready_cap[{}] scanner_cpu[{}]",
+            "pace[{}] dose[{}] ready_cap[{}] scanner_cpu[{}] range[{}]",
             pace.join(","),
             if dose == u64::MAX {
                 String::new()
@@ -225,7 +239,12 @@ pub mod treat {
                 )
             },
             READY_CAP.load(Ordering::Relaxed),
-            SCANNER_CPU.load(Ordering::Relaxed)
+            SCANNER_CPU.load(Ordering::Relaxed),
+            if lo == u64::MAX {
+                String::new()
+            } else {
+                format!("{lo}..{}", RANGE_HI.load(Ordering::Relaxed))
+            }
         )
     }
 }
@@ -320,6 +339,19 @@ fn dose(bytes: usize, chase: bool) {
 #[inline(never)]
 fn treat_at(t: u8) {
     let i = usize::from(t);
+    // (a pulse: this thread's block, from its ledger, inside the range, else nothing)
+    let lo = treat::RANGE_LO.load(Ordering::Relaxed);
+    if lo != u64::MAX {
+        let hi = treat::RANGE_HI.load(Ordering::Relaxed);
+        let cur = BUF
+            .try_with(|b| b.borrow().as_ref().map(|b| b.cur))
+            .ok()
+            .flatten()
+            .unwrap_or(CURRENT);
+        if cur == CURRENT || u64::from(cur) < lo || u64::from(cur) >= hi {
+            return;
+        }
+    }
     if let Some(p) = treat::PACE.get(i) {
         let n = p.load(Ordering::Relaxed);
         if n > 0 {
@@ -723,7 +755,8 @@ pub fn occ_point(changes: &[(Buffer, i64)], t: Tag, place: u64, x: u64) {
         } else {
             place as u32
         };
-        if t == Tag::Got {
+        // (a worker's block from its `Got`, the scanner's from its `ScanStart`)
+        if t == Tag::Got || t == Tag::ScanStart {
             b.cur = place;
         } else if place == CURRENT {
             place = b.cur;

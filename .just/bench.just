@@ -2054,22 +2054,24 @@ bench-character DRY="":
     bash bench/bundle.sh "$O"
 
 # The decoder's character, stage 2a (docs/journal/2026-11-25-character-stage2-registration.md,
-# DRAFT until stage 1's bundle fixes its anchors; the design briefs/character-review-decisions.md
-# section 2, with section 5's decisions). DIAGNOSTIC: it decides nothing. One binary: stage 1's
-# library (master 9621b7ad with the character feature) and its harness with the window switch.
+# frozen on stage 1's bundle; the design briefs/character-review-decisions.md
+# section 2, with section 5's decisions, and journal sections 66-67). DIAGNOSTIC: it decides
+# nothing. One binary: stage 1's library (master 9621b7ad with the character feature, plus the
+# pulses' block range) and its harness with the window switch.
 # The plan is stage 1's bundle (the evidence branch, checked by its SHA-256) put through the
 # registered rules with a calibration of the pacing loop on this machine: the anchors, the
 # coordinates kept and each dose. Then every cell in 6 randomised blocks (the screen, the
 # surface at k*, the gates, the placements, the memory dose, the held-out validation), and the
-# oracle arms from the four-arm binary at k*. About 25 minutes. DRY (the first positional
+# oracle arms from the four-arm binary at k*. Each wall a decode with the ledgers off, each cell's
+# ledgers a trace of its own; the pulses (places 600..800) traces alone. About 27 minutes. DRY (the first positional
 # argument: one block, no settle, a 2 s pre-warm; not evidence) checks the wiring.
 #   just submit bench-character-stage2
 bench-character-stage2 DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
-    # stage 1's bundle, filled at the freeze from its evidence post
-    STAGE1_COMMIT=TBD STAGE1_PATH=TBD STAGE1_SHA256=TBD
+    # stage 1's bundle (#145: evidence 870e61d7; journal section 66)
+    STAGE1_COMMIT=870e61d73090d5e683aaf2b6e8b77d7f4b446f16 STAGE1_PATH=character/run-20261125T001135Z.tar.gz STAGE1_SHA256=bb72107bd28aa82a7f0f5a467e9f424438b9eea5d583abcb3a20c37b895c2204
     FOUR_ARM=5731db1908d58fa4a51d22baf473d2f61ccd670e
     COPIES=4 BLOCKS=6 SETTLE=1 PREWARM=50 ORACLE_ROUNDS=8 SEED=20261125
     dry="{{DRY}}"
@@ -2129,7 +2131,6 @@ bench-character-stage2 DRY="":
     for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
     sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
     # stage 1's bundle, from the evidence branch, checked
-    [ "$STAGE1_COMMIT" != TBD ] || { echo "bench-character-stage2: stage 1's bundle is not filled in (the draft)"; exit 1; }
     git cat-file -e "$STAGE1_COMMIT^{commit}" 2>/dev/null || git fetch -q origin evidence
     git show "$STAGE1_COMMIT:$STAGE1_PATH" > "$W/stage1.tar.gz"
     [ "$(sha256sum "$W/stage1.tar.gz" | cut -d' ' -f1)" = "$STAGE1_SHA256" ] \

@@ -887,6 +887,11 @@ fn treatments(spec: &str) {
             ["scanner_cpu", c] => ch::treat::set_scanner_cpu(Some(c.parse().expect("scanner_cpu"))),
             // (stage 2's gate contrast: the window, the harness's own; the library unchanged)
             ["window", w] => WINDOW.store(w.parse().expect("window"), Ordering::SeqCst),
+            // (stage 2's pulses: the treatments on these places alone, the ledgers on)
+            ["range", lo, hi] => ch::treat::set_range(Some((
+                lo.parse().expect("range"),
+                hi.parse().expect("range"),
+            ))),
             _ => panic!("TREAT: {line}"),
         }
     }

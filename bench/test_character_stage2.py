@@ -77,9 +77,19 @@ def scenario(miss=False, fail=None):
                 wall = w0 * (1 + 0.5 * sd / 100) * (1 + 0.3 * wd / 100) * noise()
             if c["section"] == "gates" and c["arm"] == "W8k_cap12":
                 wall = w0 * 0.9 * noise()
-            x = decode(8, wall, svc)
-            x.update({"cell": ci, "block": b, **{kk: v for kk, v in c.items() if kk != "treat"}})
-            recs.append(x)
+            # (a timed decode, the ledgers off, and its trace, the ledgers on)
+            for on in (0, 1):
+                x = decode(8, wall * (1.02 if on else 1.0), svc)
+                x.update(
+                    {
+                        "on": on,
+                        "on_arm": on,
+                        "cell": ci,
+                        "block": b,
+                        **{kk: v for kk, v in c.items() if kk != "treat"},
+                    }
+                )
+                recs.append(x)
     if fail:
         fail(recs)
     return plan, recs
@@ -123,6 +133,12 @@ def main():
     check("an additive surface's roundness near 1", 0.9 < r < 1.1, m)
     g = [l for l in text.splitlines() if "W8k_cap12" in l]  # noqa: E741
     check("the gates: W8k 10% faster, CHANGED", g and "CHANGED" in g[0], g)
+    c = [ln for ln in text.splitlines() if ln.startswith("k 8   on/off")]
+    check(
+        "the cost check: traces 2% slower are PERTURBED, the walls the ledgers off",
+        c and "PERTURBED" in c[0],
+        c,
+    )
     code, text = run_report(*scenario(miss=True))
     check("a missed dose: DOSE-MISSED, not VOID", code == 0 and "DOSE-MISSED" in text, text[-400:])
     code, text = run_report(*scenario(), lscpu="Model name: Intel(R) Xeon(R)\n")

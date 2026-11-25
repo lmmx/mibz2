@@ -49,6 +49,11 @@ DELTA = 0.20
 # the memory dose a worker's Open block (A7's end): about one core's share of the i9's 20 MiB L3,
 # streamed or chased at equal bytes (8 MiB chased swamped the block in the container's preflight)
 DOSE_BYTES = 2 << 20
+# the pulse (journal §67), sized from stage 1's noise: the reader's rate over places 600..800
+# varied 3.4% (k 8) and 10% (k 10) between decodes; +50% on A3 (77% of the scanner's demand a
+# block at 8) cuts it by about 38%, past 9 standard errors over 6 decodes even at 10's noise
+PULSE = (600, 800)
+PULSE_DELTA = 0.50
 SURFACE = [0.0, 0.10, 0.20]
 FALLBACK_CYCLES_PER_ITER = 0.5  # (8 iterations folded into one multiply-add, about 4 cycles)
 STREAM = b"BZh9\x31\x41\x59\x26\x53\x59"
@@ -285,6 +290,30 @@ def plan(a) -> dict:
             {"section": "validation", "k": k, "arm": "permuted", "treat": [], "corpus": "permuted"}
         )
         cells.append({"section": "validation", "k": k, "arm": "base", "treat": []})
+    # the ledgers' cost (journal §66): one more base pair a block at each anchor, so 12 pairs with
+    # the screen's base
+    for k in anchors:
+        cells.append({"section": "cost", "k": k, "arm": "base", "treat": []})
+    # the pulses (journal §67): the dose on places 600..800 alone, at k* and 10, on the scanner
+    # (A3) and on emission (A7), the ledgers on (they know each thread's block), each block's row
+    # kept; a pulse base beside them
+    for k in sorted({kstar, 10}):
+        sv = coords[k]["svc_ns"] if k in coords else None
+        if sv is None:
+            continue
+        cells.append({"section": "pulse", "k": k, "arm": "base", "treat": [], "pulse": 1})
+        for c in ("A3", "A7"):
+            tr = [f"pace {c} {iters(sv[c], k, PULSE_DELTA)}", f"range {PULSE[0]} {PULSE[1]}"]
+            cells.append(
+                {
+                    "section": "pulse",
+                    "k": k,
+                    "arm": c,
+                    "treat": tr,
+                    "pulse": 1,
+                    "delta": PULSE_DELTA,
+                }
+            )
     out = {"kstar": kstar, "step": step, "anchors": anchors, "share": share, "dscan_ns": dscan, "ghz": ghz,
            "cycles_per_iter": cycles_per_iter, "calibration": cal, "coords": coords, "cells": cells,
            "permutation": random.Random(20261125).sample(range(12), 12)}  # fmt: skip
@@ -341,9 +370,13 @@ def run(a):
         )
     position, prev = 0, 0
     for b in range(a.blocks):
-        order = list(range(len(cells)))
-        random.Random(a.seed * 1000 + b).shuffle(order)
-        for o, ci in enumerate(order):
+        # (journal §66: every wall is a decode with the ledgers off; each cell's ledgers come from
+        # a trace decode of its own, the ledgers on; a pulse is a trace alone)
+        entries = [
+            (ci, on) for ci, c in enumerate(cells) for on in ((1,) if c.get("pulse") else (0, 1))
+        ]
+        random.Random(a.seed * 1000 + b).shuffle(entries)
+        for o, (ci, on) in enumerate(entries):
             c = cells[ci]
             tf = os.path.join(tmp, f"t{ci:04d}.txt")
             with open(tf, "w") as f:
@@ -351,7 +384,9 @@ def run(a):
             corpus = perm_corpus if c.get("corpus") == "permuted" else a.corpus
             # (one layout: the count two digits wide, the same block file, the treatment's file
             # named t0000..)
-            cmd = [a.bin, "--one", corpus, f"{c['k']:02d}", "1", tb, "0", tf]
+            if os.path.exists(tb):
+                os.remove(tb)
+            cmd = [a.bin, "--one", corpus, f"{c['k']:02d}", str(on), tb, "0", tf]
             if c.get("mask"):
                 cmd = ["taskset", "-c", ",".join(map(str, c["mask"]))] + cmd
             time.sleep(a.settle)
@@ -367,6 +402,7 @@ def run(a):
                     with open(NO_TURBO, "w") as f:
                         f.write(turbo_was)
             extra = {
+                "on_arm": on,
                 "cell": ci,
                 "block": b,
                 "order": o,
@@ -383,6 +419,8 @@ def run(a):
                 rec.update(extra)
             runs.write(json.dumps(rec, separators=(",", ":")) + "\n")
             runs.flush()
+            if c.get("pulse") and os.path.exists(tb):
+                shutil.copy(tb, os.path.join(a.out, f"pulse-c{ci:03d}-b{b:02d}.tsv"))
         print(f"block {b} done, {time.time() - t0:.0f} s", flush=True)
     shutil.rmtree(tmp, ignore_errors=True)
 
@@ -418,6 +456,72 @@ def interval(vals):
     return m, m - hw, m + hw
 
 
+def pulses(a, p, cell, find) -> None:
+    """Journal §67: each pulse decode's block rows (places 600..800 dosed): the reader's rate
+    before (400..600), during and after (800..1000); the time from place 800 taken until a
+    50-block window's rate is back within 5% of the rate before; the job queue's mean depth
+    during the pulse against before; and when the workers first find the queue empty after the
+    pulse's start (the scanner beginning place 600)"""
+    import csv
+    import glob
+
+    files = sorted(glob.glob(os.path.join(a.out, "pulse-c*-b*.tsv")))
+    if not files:
+        return
+    cols = ("place route n r syms_bytes out_bytes worker cpu_scan cpu_work t_issued t_enqueued t_got "
+            "t_ready t_taken t_scan_start t_consumed").split()  # fmt: skip
+    lo, hi = PULSE
+    out: dict = {}
+    for f in files:
+        ci = int(re.search(r"pulse-c(\d+)-b", f).group(1))
+        rows = {
+            int(r[0]): dict(zip(cols, map(int, r[: len(cols)])))
+            for r in csv.reader(open(f), delimiter="\t")
+        }
+        if hi + 200 not in rows:
+            continue
+        t = lambda q, key="t_taken": rows[q][key]  # noqa: E731
+        rate = lambda x, y: (y - x) / ((t(y) - t(x)) / 1e9)  # noqa: E731
+        before, during, after = rate(lo - 200, lo), rate(lo, hi), rate(hi, hi + 200)
+        rec = None
+        for q in range(hi, max(rows) - 50):
+            if rate(q, q + 50) >= 0.95 * before:
+                rec = (t(q) - t(hi)) / 1e6
+                break
+
+        def depth(t0, t1):
+            # the job queue's mean depth over [t0, t1): its blocks' enqueued..got intervals
+            tot = sum(max(0, min(r["t_got"], t1) - max(r["t_enqueued"], t0)) for r in rows.values())
+            return tot / (t1 - t0)
+
+        start = t(lo, "t_scan_start")
+        d_before = depth(t(lo - 200, "t_scan_start"), start)
+        d_during = depth(start, t(hi, "t_scan_start"))
+        # the queue's first empty moment after the pulse starts (a worker finds it empty)
+        ev = sorted(
+            [(r["t_enqueued"], 1) for r in rows.values()]
+            + [(r["t_got"], -1) for r in rows.values()]
+        )
+        n, empty = 0, None
+        for tt, dlt in ev:
+            n += dlt
+            if tt >= start and n == 0 and empty is None:
+                empty = (tt - start) / 1e6
+        out.setdefault(ci, []).append(
+            (during / before, after / before, rec, d_before, d_during, empty)
+        )
+    print("\n## The pulses (places 600..800 dosed; medians over their decodes)\n")
+    print(
+        "k   arm   rate during/before  after/before  recovery ms  queue depth before→during  queue empty after (ms)"
+    )
+    for ci, v in sorted(out.items()):
+        c = cell[ci]
+        g = lambda i: med(x[i] for x in v if x[i] is not None)  # noqa: E731
+        print(
+            f"{c['k']:<3} {c['arm']:<5} {g(0):>18.3f} {g(1):>13.3f} {g(2):>12.1f} {g(3):>10.2f}→{g(4):<12.2f} {g(5):>10.1f}"
+        )
+
+
 def report(a) -> int:
     import math
 
@@ -436,15 +540,18 @@ def report(a) -> int:
     got = {}
     for x in recs:
         if x["kind"] == "decode":
-            got.setdefault((x["cell"], x["block"]), []).append(x)
-    for ci in range(len(p["cells"])):
+            got.setdefault((x["cell"], x["block"], x.get("on_arm", x.get("on", 1))), []).append(x)
+    for ci, c in enumerate(p["cells"]):
         for b in range(a.blocks):
-            if len(got.get((ci, b), [])) != 1:
-                void.append(f"cell {ci} block {b}: {len(got.get((ci, b), []))} decodes")
+            for on in (1,) if c.get("pulse") else (0, 1):
+                if len(got.get((ci, b, on), [])) != 1:
+                    void.append(
+                        f"cell {ci} block {b} ledgers {'on' if on else 'off'}: {len(got.get((ci, b, on), []))} decodes"
+                    )
     incomplete = [
         f"{x['section']} {x['arm']} k {x['k']} block {x['block']}"
         for x in recs
-        if x["kind"] == "decode" and not x.get("identities_ok")
+        if x["kind"] == "decode" and x.get("on") == 1 and not x.get("identities_ok")
     ]
     if void:
         print(f"VOID ({len(void)} problems); no report")
@@ -453,6 +560,13 @@ def report(a) -> int:
         return 1
     dec = {k: v[0] for k, v in got.items()}
     cell = {i: c for i, c in enumerate(p["cells"])}
+
+    # (journal §66: every wall from a decode with the ledgers off; the ledgers from its trace)
+    def wall(ci, b):
+        return dec[(ci, b, 0)]["wall_s"]
+
+    def trace(ci, b):
+        return dec[(ci, b, 1)]
 
     def find(section, k, arm):
         return next(
@@ -486,14 +600,12 @@ def report(a) -> int:
             ci = find("screen", k, c)
             achieved, coefs = [], []
             for b in range(a.blocks):
-                x, x0 = dec[(ci, b)], dec[(base, b)]
-                d = paced_svc(x, c) / paced_svc(x0, c) - 1
+                d = paced_svc(trace(ci, b), c) / paced_svc(trace(base, b), c) - 1
                 achieved.append(d)
             d_ach = med(achieved)
             for b in range(a.blocks):
-                x, x0 = dec[(ci, b)], dec[(base, b)]
                 coefs.append(
-                    math.log(x["wall_s"] / x0["wall_s"]) / math.log(1 + d_ach)
+                    math.log(wall(ci, b) / wall(base, b)) / math.log(1 + d_ach)
                     if d_ach > 0
                     else float("nan")
                 )
@@ -541,10 +653,7 @@ def report(a) -> int:
             line = []
             for wd in (0, 10, 20):
                 ci = find("surface", ks, f"s{sd:02d}w{wd:02d}")
-                v = [
-                    math.log(dec[(ci, b)]["wall_s"] / dec[(s0, b)]["wall_s"])
-                    for b in range(a.blocks)
-                ]
+                v = [math.log(wall(ci, b) / wall(s0, b)) for b in range(a.blocks)]
                 slow[(sd, wd)] = v
                 line.append(f"{statistics.fmean(v):+.4f}")
             print(f"scanner {sd:>2}%: " + "  ".join(line))
@@ -573,16 +682,13 @@ def report(a) -> int:
             for ci, c in cell.items():
                 if c["section"] != section or c["k"] != k or ci == r_ci:
                     continue
-                v = [
-                    math.log(dec[(ci, b)]["wall_s"] / dec[(r_ci, b)]["wall_s"])
-                    for b in range(a.blocks)
-                ]
+                v = [math.log(wall(ci, b) / wall(r_ci, b)) for b in range(a.blocks)]
                 m, lo, hi = interval(v)
                 tag = "CHANGED" if lo > 0 or hi < 0 else ""
                 extra = ""
                 if section == "gates":
                     w = [
-                        dec[(ci, b)].get("admission", {}).get("waits", [0, 0, 0])
+                        trace(ci, b).get("admission", {}).get("waits", [0, 0, 0])
                         for b in range(a.blocks)
                     ]
                     extra = f"  waits window/cap/both {[sum(x[i] for x in w) for i in range(3)]}"
@@ -624,7 +730,7 @@ def report(a) -> int:
         a_walls = [w[0] for (r, x), w in o.items() if x == "A"]
         base = find("screen", ks, "base")
         if a_walls and base is not None:
-            ours = statistics.median(dec[(base, b)]["wall_s"] for b in range(a.blocks))
+            ours = statistics.median(wall(base, b) for b in range(a.blocks))
             gap = statistics.median(a_walls) / ours - 1
             print(
                 f"the layout check: the four-arm binary's A against this binary's baseline at k*: {gap:+.2%}"
@@ -641,13 +747,30 @@ def report(a) -> int:
             )
             if ref is None:
                 continue
-            v = [
-                math.log(dec[(ci, b)]["wall_s"] / dec[(ref, b)]["wall_s"]) for b in range(a.blocks)
-            ]
+            v = [math.log(wall(ci, b) / wall(ref, b)) for b in range(a.blocks)]
             m, lo, hi = interval(v)
             print(
                 f"k {c['k']:<3} {c['arm']:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
             )
+    # the ledgers' cost (journal §66): each anchor's base pairs, the ledgers on over off, 12 a
+    # count with the cost section's
+    print("\n## The ledgers' cost (the base's trace over its timed decode, paired by block)\n")
+    perturbed = []
+    for k in p["anchors"]:
+        r = []
+        for sec in ("screen", "cost"):
+            ci = find(sec, k, "base")
+            if ci is not None:
+                r += [math.log(trace(ci, b)["wall_s"] / wall(ci, b)) for b in range(a.blocks)]
+        if len(r) > 1:
+            m, lo, hi = interval(r)
+            flag = math.exp(m) > 1.01 or math.exp(lo) > 1.005
+            if flag:
+                perturbed.append(k)
+            print(
+                f"k {k:<3} on/off {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(r)} pairs{'  PERTURBED (the traces; the walls are the ledgers off)' if flag else ''}"
+            )
+    pulses(a, p, cell, find)
     if misses:
         print(
             "\nDOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): "

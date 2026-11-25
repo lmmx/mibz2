@@ -1,6 +1,6 @@
-# bench-character-stage2: the decoder's character, stage 2 (DRAFT registration)
+# bench-character-stage2: the decoder's character, stage 2 (registration)
 
-*DRAFT. It freezes only once stage 1's bundle (bench-character, #841 at 94cb742d, tag ready/bench-character) has landed. That bundle fixes every quantity below that is written as a rule. Design: `docs/journal/2026-11-24-algorithm-level/briefs/character-review-decisions.md` §2 (3d273257, with §5's oracle decision) on `docs/journal-algorithm-level`, from the brief `briefs/character.md` §5–§7b. Assigned to the Pathfinder by the Coordinator, 25 November. A C1a diagnostic with its rule posted on #145 before its data; it decides nothing. One review round by the Researcher.*
+*Registered before any data, frozen once stage 1's bundle fixed its anchors: bench-character, #841 at 94cb742d, `character/run-20261125T001135Z.tar.gz` on the evidence branch at 870e61d7 (SHA-256 bb72107b…2204; journal §66). Design: `docs/journal/2026-11-24-algorithm-level/briefs/character-review-decisions.md` §2 (3d273257, with §5's decisions) on `docs/journal-algorithm-level`, from the brief `briefs/character.md` §5–§7b, and the Coordinator's additions of 25 November (journal §66–§67). Assigned to the Pathfinder by the Coordinator. A C1a diagnostic with its rule posted on #145 before its data; it decides nothing. One review round by the Researcher.*
 
 ## The pin
 
@@ -9,6 +9,17 @@ Stage 2 runs on stage 1's base: master at 9621b7ad (bench-character's pin, #841 
 ## What stage 2 asks
 
 Stage 1 measured the network as it is: each count's demands, waits, occupancies, limits, k_balance, and the workers' idle time while the scanner is active. Stage 2 intervenes, to find which activities *control* throughput at the counts where control changes hands, and through which mechanism. It also measures the knee's shape, which the simulation and the fluid model need. All of it is a means to the models (brief §7): the trace-driven simulation, and the documented surrogate for mean-value analysis. Both are fitted on stage 1's per-block service vectors and judged on conditions held out here.
+
+## Stage 1's bundle applied: the anchors (fixed)
+
+The rules below were drafted before stage 1's data (b2169a0d, agreed by the Coordinator) and applied to its bundle as written:
+- **k\* = 8.** The scanner's whole-decode on-CPU share (its `schedstat` run time over the wall) is 0.893 at 7 and 0.967 at 8. The stage-1 report's `u_scan` passes 0.9 at 7 (0.902), but it is a different measure: the steady phase's share from the ledgers, which leaves out the start-up and drain. The registered rule governs, and it agrees with k_balance = 8 [8, 8], with the limit's move from WORKER- to SCANNER-LIMITED at 8, and with the near-optimal set {8}.
+- **The step = 16.** The largest rise in the scanner's demand a block above k\* + 2: +7.8%, from 121.9 to 131.4 µs (the rule needs 5%).
+- **The anchors: 6, 8, 10 and 16.** 10 is also the bridge to the four-arm test.
+- **The coordinates:** all nine kept at every anchor (A2, A3, A5, A6a, A6b, A6c, A7, A9, A10). A6 is split into its parts, since each passes 5% of the workers' time. A8 is under 3% everywhere and is dropped.
+- **The achieved frequency:** 4.91 GHz at every anchor (stage 1's cycles over reference cycles; 5.28 at 1 worker).
+
+The run recomputes the plan on the i9 from the same bundle, checked by its SHA-256, with the pacing loop's calibration taken there. The anchors and coordinates depend on the bundle alone, so they are as above; the doses in iterations follow from the calibration.
 
 ## Decided before the data, from §2 (rules applied to stage 1's bundle)
 
@@ -27,6 +38,13 @@ Stage 1 measured the network as it is: each count's demands, waits, occupancies,
 - **A6:** paced as one at A6c's end, its dose δ × (A6a + A6b + A6c). It is split into its three parts only if each part exceeds 5% of the workers' time at that anchor (M).
 - **Drops:** a coordinate is dropped at an anchor where it is under 3% of its thread's stage-1 time. The exception is A10, which is kept if the reader's waits exceed 2% (N). A coordinate with no visits (a route the corpus never takes) is dropped.
 
+## Walls and traces apart (journal §66)
+
+Stage 1 classified itself PERTURBED: the ledgers' on/off cost was 1.040 [0.991, 1.091] at 10 and 1.016 [0.985, 1.048] at 20, over only 6 pairs. So stage 2 keeps them apart:
+- **Walls:** every wall it judges is a decode with the ledgers off.
+- **Traces:** each cell has, in each block, a trace decode of its own with the ledgers on, and the achieved doses and the full response matrix come from the traces.
+- **The cost check:** one more base pair a block at each anchor makes it 12 on/off pairs a count, under stage 1's bound (PERTURBED iff the geometric mean exceeds 1.01, or its 95% interval lies wholly above 1.005). PERTURBED there applies to the traces' responses, not to the walls.
+
 ## The steps (stage 2a, one run)
 
 1. **The screen** (§2 step 1). At each anchor, a fresh baseline and each kept coordinate at +20%, one at a time. Six randomised blocks: in each, every (anchor, arm) once, in a drawn order. An observation is one decode in its own process, with the ledgers on, so each arm's queues and other stages' service times are measured.
@@ -37,7 +55,15 @@ Stage 1 measured the network as it is: each count's demands, waits, occupancies,
    - **The scanner's placement:** at k = 10 and at the step, the scanner pinned to a favoured core (the highest `acpi_cppc/highest_perf`, else the highest `cpuinfo_max_freq`) with its sibling outside every thread's mask; against the scanner pinned to a worker core's sibling (co-pinned); against unpinned. This takes over the pinned scanner-profile variant (QUEUED 7147262673 B).
    - **Memory:** at k\* and 20, a memory dose at A7's end (each Open block) of 2 MiB of the worker's own scratch, streamed against chased, against none. The dose is the binary's `dose` switch: `src/dose.rs` is inert on this path. 2 MiB is about one core's share of the i9's 20 MiB L3, at equal bytes for both kinds. In the container's preflight, 8 MiB chased swamped the block: it decoded 4.5–6× slower.
    - **Oracles** (§5's decision): arms B (supplied codes) and C (the scanner's output replayed) at the knee, run from the four-arm binary (#835 at its tagged commit), reported only as ratios against that binary's own A. The two binaries' A walls at the knee are compared, and any gap is reported as a layout effect.
-4. **Validation** (§2 step 4): about 20% of the time on conditions excluded from every fit.
+4. **The pulses** (journal §67): the dose on places 600–800 alone (of 1,724), at k\* = 8 and at 10, on the scanner (A3) and on emission (A7), beside a pulse base.
+   - **The switch:** the binary's `range` switch. Its pacing hook reads each thread's current block from the ledger (a worker's from `Got`, the scanner's from `ScanStart`), so the pulses run with the ledgers on, each block's row kept. This is the one change to the library in this binary.
+   - **The dose:** +50%, sized from stage 1's noise. Over places 600–800 the reader's rate varied 3.4% (k = 8) and 10% (k = 10) between decodes. A3 is 77% of the scanner's demand a block at 8, so +50% on it should cut the rate there by about 38%, more than 9 standard errors over 6 decodes even at 10's noise. The 600 blocks before the pulse are its lead-in to the steady state.
+   - **Reported from the traces:**
+     - the reader's rate during and after the pulse, over its rate before (places 400–600);
+     - the recovery time: from place 800 taken to the first 50-block window back within 5% of the rate before;
+     - the job queue's mean depth before and during;
+     - when the workers first find the queue empty after the pulse's start.
+5. **Validation** (§2 step 4): about 20% of the time on conditions excluded from every fit.
    - A combined +10% on A3 and A7 together, at k\* and k\* + 2.
    - The window permutation: the corpus's 12 streams (one a window) in one fixed permutation drawn from the seed, at k\* and 20. The 12 streams are split at their byte-aligned stream headers and the decode's CRCs check the result.
 
@@ -49,7 +75,7 @@ The screen's paired variance fixes the confirmation's sample sizes once (C, M). 
 
 ## One binary
 
-All of stage 2a's arms run one binary: stage 1's library (src unchanged from 94cb742d) with one more harness switch, the window, in examples/character.rs. Stage 2a carries its own baselines at every anchor. The stage-1 and stage-2 baselines at k\* are compared, and any gap is reported as a layout or day effect, not a treatment's. The oracle arms run from the four-arm binary, as decided.
+All of stage 2a's arms run one binary: stage 1's library with two additions. The harness gains the window switch (examples/character.rs), and the library's pacing hook gains the pulses' block range (src/character.rs `treat`: a range check, and the scanner's block taken from its `ScanStart`). Stage 2a carries its own baselines at every anchor. The stage-1 and stage-2 baselines at k\* are compared, and any gap is reported as a layout or day effect, not a treatment's. The oracle arms run from the four-arm binary, as decided.
 
 ## The estimands, kept apart (C)
 
@@ -82,6 +108,13 @@ All from the same ledgers as stage 1.
 - **DOSE-MISSED** (a label, not a VOID): a coordinate whose achieved dose (from the ledgers) misses its target by more than 25% at an anchor. Its coefficient uses the achieved dose either way.
 - **INCOMPLETE, PERTURBED and VOID** as stage 1's, applied to stage 2's arms. Also **VOID** if any of these:
   - the oracle binary's A differs from this binary's baseline at the knee by more than 3%. That is reported as a layout effect: it is VOID for the oracle ratios only.
+
+## The run
+
+- **Cells:** 77 at the anchors above. The screen has 40: four anchors, a base and nine coordinates each. The surface 9, the gates 4, the placements 2 (4 where turbo can be switched), the scanner's placements 6 (on the i9's favoured core), memory 6, validation 6, the cost check 4 and the pulses 6.
+- **Blocks:** 6 randomised. In each, every cell's timed decode and its trace (a pulse's trace alone), in a drawn order, after 1 s of settle each: about 900 decodes.
+- **Before and after:** 50 s of discarded pre-warm first. The oracle arms at k\* run after: the four-arm binary, 8 rounds.
+- **The time:** about 27 minutes on the i9 with both builds.
 
 ## Open for the review
 
