@@ -1,0 +1,9 @@
+phase	status	started	ended	last line
+checks	0	2026-11-25T04:27:59Z	2026-11-25T04:28:01Z	os: Linux Mint 22.0.0 (wilma) [64-bit]
+build	0	2026-11-25T04:28:01Z	2026-11-25T04:28:28Z	3f661422af136e6a86c3b36ffd7aa8dab9d302b9ae3ada79520ee0ef64bbfdcb  /home/louis/dev/mibz2/target/release/examples/character
+inputs	0	2026-11-25T04:28:28Z	2026-11-25T04:28:28Z	0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  /home/louis/dev/mibz2/target/clock-mechanism/wikidata-x4.bz2
+machine	0	2026-11-25T04:28:28Z	2026-11-25T04:28:29Z	
+cores	0	2026-11-25T04:28:29Z	2026-11-25T04:28:30Z	
+plan	0	2026-11-25T04:28:30Z	2026-11-25T04:28:30Z	bench-clock-mechanism: k 10, the scanner pinned to CPU 5 (core [5, 15]); arms ['S0', 'S0.2', 'S1', 'S3', 'SPIN']; the spin 1058858727 iterations a CPU (about 100 ms)
+run	0	2026-11-25T04:28:30Z	2026-11-25T04:34:41Z	block 47 done, 321 s
+report	0	2026-11-25T04:34:41Z	2026-11-25T04:34:41Z	(CONTROL: the arm's low-clock share's difference from S1 has its 95% interval wholly below 0; WORSE: wholly above; NO-EFFECT: wholly within +-0.10; else UNRESOLVED)

@@ -224,6 +224,9 @@ jobs:
           tool: just@1.38.0
       - name: One-core i9 recipe (untimed)
         run: ONECORE_REQUIRE_JUST=1 python3 bench/test_onecore_recipe.py
+      # `just submit` takes the bundle bench/bundle.sh made, never another tarball under target/
+      - name: just submit's bundle (stand-ins, untimed)
+        run: python3 bench/test_submit_recipe.py
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
       - name: The target-gated noninferiority judge and its verdict gate (untimed; scipy for the power check where installed)

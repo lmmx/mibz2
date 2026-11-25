@@ -1,0 +1,14 @@
+{"kind":"built","build":"base","asked":3,"threads":3,"window":12,"lazy":false,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":4,"threads":4,"window":16,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":5,"threads":5,"window":20,"lazy":false,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":7,"threads":7,"window":28,"lazy":false,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":8,"threads":8,"window":32,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":10,"threads":7,"window":28,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"base","asked":12,"threads":7,"window":28,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":3,"threads":3,"window":12,"lazy":false,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":4,"threads":4,"window":16,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":5,"threads":5,"window":20,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":7,"threads":7,"window":28,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":8,"threads":8,"window":32,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":10,"threads":8,"window":32,"lazy":true,"service":false,"pipelined":false}
+{"kind":"built","build":"head","asked":12,"threads":8,"window":32,"lazy":true,"service":false,"pipelined":false}

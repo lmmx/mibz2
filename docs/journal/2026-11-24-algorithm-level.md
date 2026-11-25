@@ -1817,3 +1817,495 @@ ChatGPT reviewed the hybrid-systems notes at 771e43086. The review is recorded v
 - **The causal order** issued < enqueued < got < ready < taken < consumed holds per block in all 80 traced decodes.
 
 These are descriptions of one corpus's traces, not guarantees. The burst frontier is not a window size without a service curve.
+
+## 72. MONODROMY's records 129 and 130: the fourth reading, the analysis plan, and the design space
+
+MONODROMY answered channel #39 (record 129, M-36) and #40 (record 130, M-37), on `claude/sharp-meitner-cx0v78`: `docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md` and `2026-11-25-design-space-and-identification.md`. Record 129's analysis plan was committed at 00:08 UTC, before stage 1 ran at 00:11. Record 130 opened stage 1's bundle only for its question 6.
+
+**Record 129, the fourth course mining.**
+- **The scan is a dependent chain at its latency floor:**
+  - 1.41–1.51 ns a symbol is about 7 cycles, one first-level cache load's latency a symbol;
+  - the lever is fewer *lookups* a symbol: compose the decode step, several symbols a lookup;
+  - floor: lookups ≥ bits/b, which at b = 10 is about 2.6 symbols a lookup;
+  - predicted 13–17% off the best wall (conjectured);
+  - the cheapest test is cycles a symbol on the scanner at k = 1.
+- **Under pooling,** where each worker scans its own block, every target's elasticity becomes its share of total demand. Worker mathematics then pays at every count.
+- **The saturation law inside a worker** turns L\* = (ℓ + c)/c into the exchange rate between dependent depth and dependent reads.
+- **A registered analysis plan for stages 1 and 2,** with rules for "points to mathematics" against "points to engineering", and a revisit list: ideas rejected while the scanner masked them, to re-qualify once the scanner's share of control falls below one half.
+
+**Record 130, the design space** (scanner–worker obligations × placements, scored by the two-station law):
+- an index of block starts, with each worker scanning its own block, gives −15%;
+- composed symbol decoding gives −17%;
+- both together give −19% (all conjectured).
+
+The separating principle: put an obligation on a serial path only if its state has no small transformer, and cut the path wherever the format resets that state.
+- **Within-block parallel Huffman decoding is ruled out.** The symbol count (it selects the table every 50 symbols) never re-synchronises, so a chunk carries at least 50 hypotheses, and a k-way decode loses for every k under 50 (argued; the obstruction is proved from the format).
+- **The laws:** fusion removes intermediate objects; tupling *is* enrichment along composition; the third homomorphism theorem is the existence of chunk summaries (MTF/RLE2, CRC). The parse and the walk are dependent chains whose only contraction is composition, at an exponential table cost.
+- **Max-plus:** the pipeline's recurrence, given each block's realised service times, reproduces stage 1's walls within 0.2% up to 7 workers and 1.3% above. That is a check of the bookkeeping, not a prediction (§70's distinction).
+- **Identification:** two scalars per count, worker inflation and scanner inflation, explain the walls (0.3–2.5% above the knee). Inflation follows threads present, not threads busy. The conjectured reduced coordinate is the chance a thread shares a core; stage 2's placement contrast tests it.
+- **The targets:** construction is 45% of a real block's worker time at one worker, emission 38%, MTF and runs 10%, RLE1 and CRC 6%. Construction is the largest mathematical target.
+- **The referee's class:** exhaustive enumeration is infeasible (about 10⁵⁰ tables). A SAT encoding could settle a positive necessity statement in a bounded class: "any inversion within K sweeps and s cursors makes at least h₁ − c addressed accesses". Either answer is new.
+
+**Decisions:**
+- multi-symbol (composed) Huffman decoding becomes an engineering lead, to be prototyped as a PR after the current builds;
+- the block-start index (pooling) is the larger structural lead, record 122 §3;
+- the SAT necessity statement goes to MONODROMY's queue.
+
+## 73. The scanner plumbing fix on CI: split, and held for the workstation
+
+**#846's first head, 36084e6e (both fixes), failed PERFORMANCE-POLICY.md on CI's bench** (4 cores):
+- wikidata at 4 threads: −3.0% (faster), the primary gain;
+- onebyte at 4 threads: +8.0% wall and +8.8% CPU, a secondary loss over 5% that is not covered by twice the primary gain;
+- peak RSS up 8–20% at 2–4 threads on several corpora (wikidata +10.6%, runs +19.9%).
+
+The memory growth and the onebyte loss come from the input-window fix's 2 MiB headroom in the feeder's chunks.
+
+**The split:**
+- **#846 now carries only the symbol-buffer fix** (793ed64). Its CI bench shows no regression and no memory growth: random −3.1% and records −2.0% at 1 thread (secondary gains), and no primary change beyond noise.
+- **The input-window fix is being redesigned without headroom,** through a reused seam buffer, as a new PR.
+
+**Decision:** #846 cannot merge on CI, since it shows no primary gain there. That was expected: the fix saves scanner time, and the scanner limits only above about 8 workers, which CI's 4-core runner can't reach. The workstation A/B, `bench-scanner-plumbing` (in preparation), decides it at 6–12 threads under the house rule. **No release overnight** (Louis).
+
+## 74. Stage 2a: which activity controls the wall, at each count
+
+**The run:** `character-stage2/run-20261125T020224Z`, at 1901c3bb (#843). It is evidence 54896f60 on the `evidence` branch, SHA-256 64162665…0973, checked.
+- **Every phase passed except the report.** The run took 19.5 min and the oracle 50 s; the oracle's check found 0 mismatches over 932 supplied blocks.
+- **The report crashed** on a NaN coefficient: at k 16, A9's and A10's achieved doses were ≤ 0, so `interval()` was given NaNs and `statistics.stdev` raised.
+- **I re-ran the report here** from the bundle's own `runs.jsonl` and `plan.json`, with one fix: `interval()` returns NaN for any non-finite input. The diff is in the LOG on #145 and goes to the Pathfinder for stage 2b. No data was re-collected or altered.
+- **Where things are:** the report, `stage2.tsv` and `phases.tsv` are in `math-targets/data/character-stage2/`. The analysis program is `math-targets/scripts/stage2_analysis.py`, and its outputs are in `data/character-stage2/analysis/`.
+
+**The screen** (+20% on one activity at a time; C is the elasticity of the wall, mean log(T/T0) / log(1 + achieved dose), over 6 blocks):
+
+| k | controls (interval above 0.10) | negligible | the rest |
+|---|---|---|---|
+| 6 | construction A6a 0.14, A6b 0.15; emission A7 0.37 | the scanner (A2, A3), the reader (A10), A9 | A5, A6c unresolved |
+| 8 | the scanner's main activity A3: 0.53 [0.14, 0.93] | none | all unresolved, with wide intervals |
+| 10 | A3: 0.74 [0.37, 1.11] | none | A7 −0.30 (interval below 0: speeding the scanner's competitor? unexplained) |
+| 16 | nothing resolved | none | four doses missed by over 25%; A9 and A10 got doses ≤ 0 |
+
+- **Below the knee** (k 6), the workers' construction and emission set the wall, and the scanner doesn't matter.
+- **At and above it** (8, 10), the scanner's main activity does, and nothing in the workers resolves.
+- **This is stage 1's switch at 8,** now shown by intervention rather than by inference from busy times.
+
+**The surface at k\* = 8** (both surfaces dosed together, 0/10/20%; `analysis/surface.tsv`):
+- the scanner's elasticity, workers undosed: 0.87 at +10%, 0.93 at +20%;
+- the workers' elasticity, scanner undosed: 0.50 and 0.64;
+- the knee's roundness is 0.54 [0.46, 0.67], about the 0.5 a sharp maximum gives;
+- with both dosed, the slowdown is no more than the scanner's alone (0.154 against 0.170 at 20/20). That is the max-plus shape: k 8 sits at the balance point, with the scanner just binding.
+
+**The held-out test** (the combined arm, A3 and A7 both +10%, never used in a fit; `analysis/validation.tsv`). The screen's coefficients, composed log-additively, predicted:
+
+| k | predicted | observed |
+|---|---|---|
+| 8 | 1.053 [0.994, 1.114] | 1.052 [0.963, 1.149] |
+| 10 | 1.042 [1.003, 1.084] | 1.061 [1.041, 1.081] |
+
+Both are inside their intervals. This is the first validated predictor of the programme, in §70's sense: a local one, for slowing, at 8 and 10.
+
+**The pulses** (A3 or A7 +50% over places 600–800):
+- **Slowing the scanner starves the workers.** At 8, the reader's rate falls to 0.69 of base, and the job queue empties: mean depth 4.4 before, 0.3 during.
+- **Slowing emission fills the queue instead:** 3.9 to 8.9, with the rate at 0.82.
+- **Recovery takes 2–4 ms.** The same holds at 10. This is the dynamical signature of a scanner-bound pipeline.
+
+**The contrasts:**
+- **Gates:** widening the window (4k to 8k) or the byte cap (12 to 64 MiB) at 8 changes nothing beyond noise (0.97–1.00, intervals across 1). This confirms §66: the gates rarely bind.
+- **Memory interference is large:**
+  - a co-running 2 MiB stream slows the wall 31% at 8 and 39% at 20;
+  - a pointer chase slows it 110% at 8 and 34% at 20.
+  
+  The decoder is very sensitive to cache contention: a robustness finding, and a lever 1 target (`levers.md`).
+- **Placement:** at 4 workers, putting them on SMT siblings rather than distinct cores costs 15% [11, 19]%.
+- **Ledgers' cost:** within noise at 6, 8 and 16; PERTURBED at 10 (1.053), as in stage 1. The walls are from ledger-off decodes throughout.
+
+**The oracle arms are VOID for comparison with this binary.**
+- The four-arm binary's arm A runs 10.9% off this binary's baseline at k\*, past the 3% layout check.
+- Within the four-arm binary, D/A is 0.747 [0.732, 0.762], replicating the four-arm test's 0.741, and C/A is 0.874.
+- Those ratios stand only as internal to that binary.
+
+**What it prices** (`analysis/pricing.tsv`). Cutting the scanner's main activity by 8% (about the plumbing fix's share, §57) implies a wall of:
+- 0.957 at 8 (0.989 at the coefficient's lower bound);
+- 0.940 at 10 (0.970 at the lower bound).
+
+This is an *optimistic* reading: the screen measured slowing, and a speed-up of the binding activity buys at most its elasticity, less once the workers bind (bottleneck migration, §61). At 8 the workers are close behind (the surface), so the plumbing fix's gain there is likely under 4%. At 10 it is likely nearer 5%.
+- **On the disagreement in the writer brief** (Neon's 6% at 8 against ChatGPT's nearly nothing), this sits in between, with 10 the better count to see it.
+- **`bench-scanner-plumbing` (#850) decides it.**
+
+**Decisions:**
+- **The report fix goes to the Pathfinder,** for stage 2b's head.
+- **Stage 2b,** as the Pathfinder sizes it from this run:
+  - drops k 16's screen, which resolved nothing at 6 blocks;
+  - re-runs the oracle with the four-arm binary rebuilt on this binary's layout, or drops the layout comparison.
+- **Memory contention becomes a named lead:** the decoder's working set against a shared L3. It is placed under lever 1 and lever 4b (ownership of buffers).
+- **Multi-symbol Huffman decoding is a worker lever.** This run says it lowers the knee (k 6's controllers are construction and emission) but does not raise the top speed. Above 8, only the scanner's work does. *(Wrong: corrected in §75. The Huffman decode is the scanner's A3, so multi-symbol decoding is the scanner lever above the knee.)*
+
+## 75. CORRECTION to §74: multi-symbol Huffman decoding is the scanner's lever, not the workers'
+
+**What §74 said:** multi-symbol Huffman decoding is a worker lever that lowers the knee but cannot raise the top speed.
+
+**That is wrong.** The Huffman symbol decode is the scanner's activity A3 (`briefs/character.md`, the coordinate table). It is 81% of the scanner's work (§57), at about 1.5 ns a symbol.
+- Stage 2a's screen names A3 as the *only* controller at 8 and 10 workers (0.53 and 0.74).
+- So a faster Huffman decode is exactly the lever that raises the ceiling above the knee. It is the same lever as the scanner plumbing fix, and larger: record 129's −13–17% applies to A3 itself.
+- Below the knee (k 6), A3 is negligible, so the decode's speed there doesn't matter.
+
+**How it was caught:** the writer's draft of the post's stage 2 section (#855) labelled A3 "the scanner's Huffman decode". That sent me back to the coordinate table, and I found my error. §74's journal text called A3 only "the scanner's main activity" and then reasoned from the wrong owner.
+
+**What changes:**
+- **Multi-symbol (composed) Huffman decoding moves up.** It is now the first engineering lead for the top speed, ahead of the block-start index. The prototype follows the current builds, as decided in §72.
+- **Its expected effect at 8–10 workers**, by the screen's coefficients (optimistic: slowing elasticities; stage 2b's speed-up arms measure the real share):
+  - wall × (1 − c)^C, with c the cut in A3 and C = 0.53 at 8 and 0.74 at 10;
+  - a 15% cut gives 0.917 at 8 and 0.887 at 10.
+- **The LOG on #145 (7150763760) didn't make this claim.** The post's text (#855) is right.
+
+**Also recorded:** Louis's rule of 25 November, in CLAUDE.md through #855: no redirects or moved-page stubs, ever, unless he asks. The stub on #848 was added at my request: I passed the old-URL concern to the writer as an instruction. That was the miscommunication his rule names.
+
+## 76. The kernel count: lazy wins from 4 workers, the API builds eager at odd counts, and the cap of 7 costs 4–6%
+
+**The run:** `kernel-count/run-20261125T022939Z`, at 97d5cfa6 (#849), master pinned at 16aaee3b. It is evidence 15646bfc, SHA-256 735398e1…a0a5, checked.
+- 1,044 timed decodes, none failed, one output hash; status COMPLETE; DIAGNOSTIC.
+- The report and its TSVs are in `math-targets/data/kernel-count/`.
+
+**A labelling error in the report's table 1:** the column headed "RSS lazy/eager" holds the CPU ratio, and the one headed "CPU lazy/eager" holds RSS.
+- `ratios.tsv` has them right: at k 1 the CPU ratio is 1.101 (1.591 s against 1.443 s), and RSS is 34.7 MB against 46.1 MB.
+- The figures below are from `ratios.tsv` and the medians. The recipe's table is to be fixed if it is used again.
+
+**1. Lazy against eager, explicit k workers** (wall, lazy/eager, paired over 12 rounds):
+
+| k | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| wall | 1.123 | 1.046 | 1.000 | 0.922 | 0.834 | 0.737 | 0.639 | 0.546 | 0.488 |
+| RSS (median MB) | 34.7/46.1 | 39.5/63.2 | 43.3/86.8 | 47.2/95.7 | 50.7/120.6 | 54.2/134.2 | 57.2/145.4 | 59.3/165.3 | 64.6/187.2 |
+
+- **The crossover is at 3,** a tie. Eager is faster only at 1 and 2 workers (12% and 5%).
+- **Lazy uses less memory at every k:** 25% less at 1, 65% less at 9.
+- **Eager stops scaling at 6:** its wall rises from 0.334 s at 6 to 0.429 s at 9. Lazy keeps falling until 8.
+
+**2. The public API (`BzReader::parallel(r, t)`, as shipped) builds the eager kernel at 3, 5 and 7 threads,** and lazy at 4, 6, 8 and 9. Its walls match the explicit builds (ratios within 1.000 ± 0.02).
+- At 5 threads, the API is 0.349 s, against 0.289 s with lazy workers: **17% slower**.
+- At 7 threads, it is 0.345 s against 0.215 s: **38% slower**, and slower than the API at 6.
+- **At 3 threads there is no cost** (a tie).
+- **The cause is to be read from `src/parallel.rs`:** the plan below `LAZY_FROM_THREADS` = 8, and why 4 and 6 come out lazy. It looks like a configuration accident, not a design.
+
+**3. The cap:**
+- Asked for 10 to 12 threads, the API builds 7 lazy workers (the i9 trim). That is 1.044–1.066 times lazy 8's wall.
+- Explicit lazy 7 is 1.049 [1.002, 1.098] times lazy 8, and lazy 10 over lazy 7 is 0.954 [0.920, 0.989].
+- **8, 9 and 10 workers tie on wall** (0.996, 1.001 against 8). Memory and CPU rise with k: at 10, RSS is +13% and CPU +15% over 8.
+- **So 8 is the cheapest count at the top speed.** Trimming to 8 rather than 7 would gain about 4–6% at the default thread counts on the i9, for about +4% RSS and +5% CPU. This agrees with stage 1's k_balance = 8 and stage 2a's switch at 8.
+
+**Decisions:**
+- **A configuration PR follows:** lazy workers for every plan from 4 threads (the odd counts included), and the i9 trim at 8 workers, not 7.
+  - These are production defaults, so they go to the workstation A/B under PERFORMANCE-POLICY.md, judged at 5, 7 and 10 threads.
+  - CI's 4-core bench can't see either change: CI runs at most 4 threads, and 4 is already lazy. So it needs the workstation, like #846.
+- **The trim interacts with the scanner work:** with the scanner faster (the plumbing fix, multi-symbol decoding), the balance moves above 8. Each change is priced at the count it will run at (§61, bottleneck migration).
+
+## 77. The scanner's symbol-buffer fix (#846) on the workstation: NOT ADOPTED, on a noisy judged count
+
+**The run:** `scanner-plumbing/run-20261125T025030Z`, recipe #850 at f5868d45, head #846 793ed644 against its merge-base. It is evidence 78a85fc4, SHA-256 f52bb59e…32a8, checked.
+- Every phase passed, and every output was byte-identical.
+- The verdict and summaries are in `math-targets/data/scanner-plumbing/`.
+
+| threads | workers | wall head/base [95%] | step | peak RSS |
+|---|---|---|---|---|
+| 6 | 6 | 1.001 [0.995, 1.007] | INCONCLUSIVE | 0.995 |
+| 8 | 8 | 0.974 [0.949, 1.000] | FASTER | 1.010 |
+| **9 (judged)** | 9 | **0.987 [0.936, 1.041]** | INCONCLUSIVE | 1.008 |
+| 10 | 7 | 0.989 [0.963, 1.015] | INCONCLUSIVE | 1.002 |
+| 12 | 7 | 0.985 [0.964, 1.006] | INCONCLUSIVE | 1.003 |
+
+**The lazy diagnostic** (explicit workers): 1.001 at 8, 0.986 at 9, 0.976 at 10. All are inconclusive, with intervals of ±4–7%.
+
+**The verdict under the frozen rule: NOT ADOPTED,** because 9 threads was not FASTER. The rule stands (C2): #846 does not merge on this run.
+
+**What the data says, descriptively:**
+- **The direction matches the prediction.** Every count from 8 up has a point estimate of 0.974–0.989, against a predicted ≈0.974 at 9. The judged count's interval is ±5%, the widest in the run.
+- **That width is the noise stage 2b was built to remove:** 2a found the scanner sharing its core about half the time above 6 workers (paired SD 8.1% at 8). At 6, below the knee, the interval is ±0.6% and centred on 1.000, as predicted.
+- **No cost:** RSS within 1%, CPU within noise.
+
+**The next test, registered now, before its data** (C1a, the house rule, same recipe):
+- **What runs:** the *combined* scanner fix, #846's symbol buffers plus #857's seam window, as one head on a branch that merges both. It runs once #857's CI is green.
+- **The rule:** identical to #850's, judged at 9 threads.
+- **Why combined:** the two fixes act on the same activity, the scanner's copying. Their predicted sum (≈0.92–0.95 at 9) clears the unpinned noise that a 2.6% effect can't.
+- **If it ADOPTS,** both merge together. If not, both are held, pending the multi-symbol Huffman decode, the larger lever on the same activity (§75).
+- **#846 stays open and unmerged until then.**
+
+## 78. Stage 2b: the scanner pinned. A3 controls at 8 and 10; the wall is a sharp maximum, not a sum; a faster scanner barely helps at 8; core sharing is the largest cost above the knee
+
+**The run:** `character-stage2b/run-20261125T030124Z`, at #843's 8423a82b. It is evidence a4f0dcef, SHA-256 59bacb7b…d87c, checked.
+- Every phase passed, and the report exited 0.
+- The scanner ran alone on its pinned CPU (6, sibling 16 idle) in 86 of 86 pinned traces.
+- 16 blocks.
+- **Where things are:** the report, `stage2.tsv`, `cores.json` and the analysis (`stage2_analysis.py`, extended with `link.tsv` and a max-model column) are in `math-targets/data/character-stage2b/`.
+
+**1. The screen, pinned.** The intervals are 2–4× narrower than 2a's.
+
+| k | A3 (Huffman decode) | A7 (emission) | everything else |
+|---|---|---|---|
+| 8 | **0.795 [0.681, 0.908] CONTROLS** | 0.215 [0.066, 0.363] | within ±0.15, unresolved |
+| 10 | **0.577 [0.420, 0.734] CONTROLS** | −0.224 [−0.414, −0.034] | unresolved; several negative |
+
+- **The Huffman decode alone controls the wall at both counts.**
+- **The negative worker coefficients at 10** (A7, A9 and A6b below 0) mean that slowing a worker activity *speeds* the wall. This is consistent with contention: slower workers press less on the shared cores and caches that the scanner also uses (see 4). It is unexplained in detail.
+
+**2. The surface at 8:**
+- **Roundness 0.500 [0.454, 0.548]:** the sharp maximum, now resolved.
+- **The scanner's elasticity:** 1.05–1.08, workers undosed.
+- **The workers':** 0.64–0.69, scanner undosed.
+- **With both dosed 20%,** the slowdown (0.162) is *less* than the scanner's alone (0.198).
+
+**3. The held-out arm (A3+A7 at +10%): log-additivity fails, a maximum fits** (`analysis/validation.tsv`):
+
+| k | observed | log-additive prediction | max prediction |
+|---|---|---|---|
+| 8 | 1.069 [1.049, 1.090] | 1.101 [1.082, 1.121], **outside** | 1.079 [1.067, 1.090], inside |
+| 10 | 1.063 [1.031, 1.097] | 1.034 [1.010, 1.059], **outside** | 1.057 [1.041, 1.072], inside |
+
+- **What this corrects:** §74 called the log-additive model "the first validated predictor". 2b's precision refutes it. 2a's pass came from wide intervals.
+- **The max model** (the larger coefficient alone) is inside in all four tests, 2a and 2b. But it was chosen *after* seeing this failure, so it is a hypothesis for the next held-out test, not a validated predictor.
+- **What supports it beforehand:** the surfaces' roundness of 0.5, measured on other cells, before this comparison.
+
+**4. Placement and memory: the largest effects in the run.**
+- **Workers on SMT siblings rather than distinct cores:** +22% [17, 28]% at 4 workers, and **+48% [45, 51]% at 8**.
+- **Memory pressure, as in 2a:**
+  - a 2 MiB stream: +33% at 8, +38% at 20;
+  - a pointer chase: +113% at 8, +31% at 20.
+- **What follows:** above the knee, *where threads sit* costs as much as any activity's work. The i9 has 10 cores. 8 workers plus the scanner, reader and feeder is 11 threads, so some sharing is unavoidable at 8, and certain at 10.
+- **This is the likeliest reading of H < 1** (5): pacing every activity doesn't scale contention.
+
+**5. Speeding the scanner** (homogeneity; registered rule: e_up is interpreted only if H's interval is within [0.85, 1.15]):
+
+| k | λ | H | e_down | e_up | label |
+|---|---|---|---|---|---|
+| 8 | 10% | 0.788 [0.594, 0.983] | 0.716 | 0.134 [−0.105, 0.373] | NOT-HOMOGENEOUS, ASYMMETRIC |
+| 8 | 20% | 0.850 [0.723, 0.978] | 0.971 | 0.181 [0.117, 0.245] | NOT-HOMOGENEOUS, ASYMMETRIC |
+| 10 | 10% | 0.445 | 0.555 | 0.509 | NOT-HOMOGENEOUS |
+| 10 | 20% | 0.565 | 0.727 | 0.390 | NOT-HOMOGENEOUS, ASYMMETRIC |
+
+- **Under the registered rule, e_up is not interpreted:** the wall is not homogeneous of degree 1 in the paced activities. Pacing everything by 10% slows it by about 7.8% at 8 workers and 4.3% at 10.
+- **Descriptively, as a sharp maximum predicts:** at 8, where the workers are close behind, slowing the scanner costs about 0.7–1.0 per unit, but speeding it gains about 0.13–0.18 per unit. The bottleneck migrates at once. At 10 the asymmetry is smaller.
+
+**6. Pinning the scanner is itself a lever** (`analysis/link.tsv`):
+- the pinned base runs **0.960 [0.931, 0.990]** of the unpinned base at 8;
+- A3's +20% costs 1.141 unpinned against 1.178 pinned. Production's unpinned scanner is a little less sensitive, as expected when part of its time is lost to sharing.
+
+**7. MONODROMY's pre-registered prediction** (record 131, committed at 02:59:18Z, before this run started at 03:01:24Z), scored by its own rules:
+- **NOT-HOMOGENEOUS:** it gave this about 1 in 3. With it, only e_oth and e_down are scored.
+- **e_oth** = H − e_up = 0.654, against 0.65 [0.50, 0.78]: **hit**.
+- **e_down** = 0.716, against 0.79 [0.66, 0.90]: **hit**.
+- **Not scored, for the record:** e_up was 0.134, inside its 0.12–0.48 at the low edge; H was 0.788, just below its 0.80–1.02; d was 0.58, above its 0.25.
+- **Its assumptions:** it took pinning as 3% faster, and the measurement is 4.0%. Its soft-max exponent (p ≈ 21, near a sharp maximum) agrees with the roundness of 0.500.
+
+**What changes:**
+- **Every scanner speed-up is priced at the count it will run at, with the workers retuned.** At 8 workers, a faster Huffman decode gains little (e_up ≈ 0.15). The gain appears only with more workers, and more workers mean more core sharing (+48% for siblings).
+  - So the multi-symbol decode's value depends on cutting core sharing too: fewer, faster workers, or the scanner given a quiet core.
+  - This makes the combined test (#861) at 9 threads harder to pass than §77 assumed. Its registered rule stands.
+- **Placement becomes a named lever**, with its largest measured effect: the scanner on a quiet core (−4% at 8), and workers kept off siblings. Any policy must work unpinned, as a library can't own the machine. The next step is a design question for MONODROMY and the Pathfinder: what placement can a library request?
+- **The predictor** for the next held-out test is the max model, registered here before that test.
+
+## 79. The combined scanner fix (#861) on the workstation: NOT ADOPTED again at 9; faster at the default counts; held for the new production regime
+
+**The run:** `scanner-plumbing/run-20261125T033008Z`, recipe #850 at b39c2cfc, head #861 5413191e against merge-base 16aaee3b. It is evidence 33568fad, SHA-256 2eacffeb…8ef3, checked. Every phase passed. The data is in `math-targets/data/scanner-plumbing-combined/`.
+
+| threads | workers | wall head/base [95%] | step | peak RSS |
+|---|---|---|---|---|
+| 6 | 6 | 0.996 [0.988, 1.004] | INCONCLUSIVE | 0.965 |
+| 8 | 8 | 0.975 [0.942, 1.009] | INCONCLUSIVE | 0.984 |
+| **9 (judged)** | 9 | **0.973 [0.936, 1.011]** | INCONCLUSIVE | 0.977 |
+| 10 | 7 | 0.982 [0.966, 0.998] | FASTER | 0.967 |
+| 12 | 7 | 0.977 [0.961, 0.995] | FASTER | 0.974 |
+
+**The lazy diagnostic, at explicit workers** (it decides nothing):
+- 0.991 at 8;
+- **0.921 [0.884, 0.959] at 9**;
+- **0.936 [0.889, 0.984] at 10**.
+
+**The verdict under the frozen rule: NOT ADOPTED** (9 threads not FASTER). The rule stands (C2): #861, #846 and #857 do not merge on this run.
+
+**Descriptively:**
+- **The direction is the same in both runs** (§77, and this one): every count from 8 up is below 1. On production's default thread counts, 10 and 12, the fix is FASTER by about 2%, and peak memory falls 2–3.5% at every count.
+- **At explicit 9 and 10 workers the gain is 6–8%,** the size §77 predicted before stage 2b lowered it.
+- **The judged count, 9 threads, is the noisiest count** in both runs (±4–5%). This is the core-sharing noise stage 2b measured (§78).
+
+**Decision:** no third run of this registration. Repeating the same test until it passes is optional stopping. The question changes instead:
+- **#860 (the kernel choice, queued)** moves production to 8 workers from 10 threads. If it ADOPTS, the scanner fix's value has to be judged in *that* regime, where the scanner binds (8 workers, sharp maximum, §78).
+- **So the next test of the scanner fix** is registered after #860's verdict, and before its own data:
+  - #861 rebased on the new production;
+  - judged at production's default counts (10 and 12 threads), where the fix acts;
+  - its prediction taken from §78's max model.
+- **Until then, #846, #857 and #861 stay open.**
+
+## 80. The kernel choice (#860) on the workstation: NOT ADOPTED on 10 threads; lazy at 5 and 7 is −16% and −37% with 60% less memory; split and re-registered
+
+**The run:** `kernel-choice/run-20261125T034713Z`, recipe #862 at 139e90ec, head #860 7c343200 against merge-base f8edc1ac. It is evidence b6ab31a6, SHA-256 6f569ccc…8baf, checked.
+- Every phase passed.
+- Each build's probe showed exactly its registered plan, and the timed runs used the probed worker counts.
+- The data is in `math-targets/data/kernel-choice/`.
+
+| threads | base plan | head plan | wall head/base [95%] | step | CPU | peak RSS |
+|---|---|---|---|---|---|---|
+| 3 | 3 eager | 3 eager | 0.999 [0.984, 1.014] | INCONCLUSIVE | 1.000 | 0.982 |
+| 4 | 4 lazy | 4 lazy | 1.001 [0.995, 1.007] | INCONCLUSIVE | 1.001 | 1.001 |
+| **5 (judged)** | 5 eager | 5 lazy | **0.845 [0.838, 0.852]** | FASTER | 0.849 | **0.418** |
+| **7 (judged)** | 7 eager | 7 lazy | **0.634 [0.630, 0.638]** | FASTER | 0.642 | **0.388** |
+| 8 | 8 lazy | 8 lazy | 0.996 [0.968, 1.024] | INCONCLUSIVE | 1.000 | 0.968 |
+| **10 (judged)** | 7 lazy | 8 lazy | **0.979 [0.944, 1.016]** | INCONCLUSIVE | 1.079 | 1.053 |
+| 12 | 7 lazy | 8 lazy | 0.903 [0.875, 0.931] | FASTER | 1.017 | 1.046 |
+
+**The verdict under the frozen rule: NOT ADOPTED,** since 10 threads was not FASTER. #860 does not merge.
+
+**The two changes, as the data separates them:**
+- **Lazy at 4–7 threads** acts only at 5 and 7 (4 and 6 were lazy already).
+  - The gain is −15.5% and −36.6%, with 58–61% less peak memory and 15–36% less CPU, exactly as §76 predicted (0.834, 0.639).
+  - The trim never acts at those counts, so these two rows measure this change alone.
+  - The counts where neither change acts (3, 4 and 8) are 1.000 ± 0.03, as they should be.
+- **The trim to 8 workers from 10 threads** acts at 10 and 12.
+  - At 10 it is inconclusive, at a CPU cost of +8%. At 12 it is FASTER (−10%).
+  - It is the change the rule could not confirm.
+
+**Decision: split, and test the lazy part afresh.** Adopting it on these rows would select after the data, which C2 forbids even when the rows are unambiguous. So it gets its own registration, written here before its data:
+- **The head:** #860 without the trim. At 4–7 threads unpinned it runs the plan's own workers on the lazy kernel; from 10 threads, 7 lazy as on master.
+- **The recipe:** `bench-kernel-choice` (#862), with the expected head plan as a parameter. The plan check stays: the run is VOID unless each build probes its registered plan (head: lazy at 4–7, 7/28 at 10 and 12).
+- **The rule (the house rule):** ADOPTS iff 5 and 7 threads are FASTER, none of 3, 4, 8, 10 and 12 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count. HELD ON MEMORY, NOT ADOPTED and VOID as in #862's registration.
+- **The prediction:** ≈0.845 at 5 and ≈0.634 at 7; ≈1.00 elsewhere, where the builds are identical.
+- **The trim to 8 is held,** to be re-asked together with the scanner fix (§79). Both act above the knee, and both are priced by §78's max model.
+
+## 81. The workstation's noise is the CPU clock after idle: a 100 ms spin removes it
+
+**Where it began.** The Pathfinder re-read stage 2b and found a residual noise that pinning didn't explain (paired SD 4.4% at 8 workers, 6.4% at 10). Its frequency analysis (LOG 7152489390, `bench/character_freq.py` on #843) found the clock has two levels. The clock is PMU cycles over reference cycles, per decode.
+- **The levels:** 4.91 GHz, and a low level of 4.09–4.56 GHz.
+- **How often:** about a quarter of decodes run low, scattered at random. There is no throttling.
+- **How much it explains:** R² 0.96 of 2b's paired noise at 10, and 0.37 at 8.
+- **Prior art:** journal 2026-10-28 §4 (`bench-regimes`) had already seen slow runs follow a 0.15 s idle gap, with the mechanism left open.
+
+**The test:** `clock-mechanism/run-20261125T042759Z`, #843 at 1dfb11c8. It is evidence a1f1ddf8, SHA-256 bca16eb6…a756, checked; every phase passed.
+- **The setup:** the pinned base at 10 workers, 48 randomised blocks.
+- **The C1a rule,** posted before the data (REVIEW 7152567425): an arm is a CONTROL iff its low-clock share minus the 1 s settle's has a Newcombe 95% interval wholly below 0. LOW is a clock under 4.50 GHz.
+
+| arm | before each decode | low share [95%] | vs S1 | label | clock median | wall / S1 [95%] | SD of log wall |
+|---|---|---|---|---|---|---|---|
+| S0 | nothing (back to back) | 0.00 [0.00, 0.07] | −0.40 | CONTROL | 4.91 | **0.943 [0.931, 0.955]** | **0.9%** |
+| S0.2 | 0.2 s idle | 0.90 [0.78, 0.95] | +0.50 | WORSE | **2.96** | **1.450 [1.383, 1.520]** | 15.6% |
+| S1 | 1 s idle (every recipe's settle) | 0.40 [0.27, 0.54] | ref | | 4.56 | 1 | 4.4% |
+| S3 | 3 s idle | 0.12 [0.06, 0.25] | −0.27 | CONTROL | 4.91 | 0.970 [0.956, 0.985] | 3.6% |
+| SPIN | 1 s idle, then 100 ms of spin on every CPU | 0.00 [0.00, 0.07] | −0.40 | CONTROL | 4.91 | **0.949 [0.938, 0.961]** | **1.1%** |
+
+**What it means for measurement:**
+- **Most of tonight's noise above the knee came from the settle itself.** A short idle drops the cores to a low P-state (the powersave governor under HWP), and they climb back slowly. After 0.2 s idle, a decode runs at 2.96 GHz and takes 45% longer. After 1 s, 40% of decodes are still caught.
+- **This is why the scanner fix's judged count kept coming out ±4–5% wide** (§§77, 79). Those recipes settled 2 s unpinned.
+- **A 100 ms spin before each timed decode removes the low state entirely,** and cuts the SD of log wall from 4.4% to 1.1%. A test then needs about 16 times fewer rounds for the same interval.
+- **Decision (standard from now on):**
+  - Every workstation recipe at or above the knee warms each timed decode with a 100 ms spin on every CPU, or runs decodes back to back.
+  - It reports the clock (cycles over ref-cycles) per decode.
+  - It splits each effect into a cycles ratio and a clock ratio as a registered secondary (the Pathfinder's proposal). The wall stays primary.
+
+**What it means for the product (a question, not a finding):**
+- A real program that decodes after a short pause (0.1–0.5 s) may see the S0.2 regime. That is +45% on this machine, with this governor, at 10 workers.
+- That is not the decoder's doing. But it may matter more to users than any change measured tonight, and it varies by machine and governor.
+- Whether and how a decoder should respond (a ramp-up of its own, or simply documenting it) is a design question. It goes to MONODROMY and the Researcher. Nothing is to be built without measurement on more machines.
+
+**The tests that now need re-asking with the spin** (registered when their recipes are updated, before their data):
+- the combined scanner fix (§79);
+- the trim to 8 (§80);
+- the multi-symbol Huffman decode, when ready.
+
+**The H < 1 puzzle (§78):** the Pathfinder showed the paced arms shift the clock (+3–6% at 10). That accounts for part of the shortfall (all20's H to ≈0.73 of the observed 0.57). MONODROMY's conjecture, record 132, is that a paced spinning thread yields its core's sibling. Both mechanisms may act. With the spin warm-up removing the low state, a re-run of the speed-up arms separates them (MONODROMY's M-39: H ≥ 0.9 at 6 workers predicted).
+
+## 82. NEGATIVE: three symbols a lookup in the scanner's Huffman decode (#870); and a correction to §75's premise
+
+**The premise was already in master.** §75 and MONODROMY's record 129 priced multi-symbol decoding at −13–17% of scanner time, assuming one symbol a lookup. But master's root table (`src/huff.rs`, since #745) already holds up to two symbols an entry.
+- **On wikidata** it takes 1.85 symbols a lookup: 13.49 M lookups for 24.98 M symbols, of which 84% are pairs, 15% singles and 1% the slow path.
+- **What that leaves:** only the step beyond two symbols was left to test. **CORRECTION to §75:** the price of −13–17% was for a change already made.
+
+**What #870 tried:**
+- 64-bit entries holding up to three codes' symbols in 16-bit lanes, so tables grow from 4 to 8 KiB;
+- batches of five entries within the 50-symbol group, and an exact tail at the group's end;
+- one subtraction for each batch's bits.
+
+The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the scanner's symbol streams. The tests check every fast entry bit by bit, and CI is green.
+
+**The result: no gain.**
+- **Lookups:** on wikidata they fall 12%.
+- **Scanner time a symbol, new over master** (an in-process A/B, local and indicative): wikidata 0.98–1.01, text 0.97, records 1.09, random 1.04. Table construction costs 30–50% more.
+- **CI's bench** (EPYC, 10 rounds): wikidata at 1 thread +0.5% slower, and +0.2% and −0.8% at 2 and 4 threads (no change). The scanner stage is +2.4% slower; records +6.8% and random +2.4%, both slower.
+- **The likely cause:** a lookup costs about 13–15 cycles, twice its dependency chain, and the third symbol's gain is eaten by per-group mispredicts and spills in the tail paths. A simulated ceiling at 12-bit tables gives −16% of lookups, at 2–4× the table size and build cost.
+
+**Decision: REJECTED** (queue issue's "Rejected" list). #870 closes with this write-up.
+
+**A by-product kept as a lead:** the batched bit count alone, on master's two-symbol table, measured about −2% scanner time on every corpus (wikidata 0.980, records 0.986, random 0.974; local and in-process).
+- **Why it matters:** with §78's elasticity of about 0.8 at 8 workers, it is worth about −1.5% of wall there.
+- **What it waits for:** it is resolvable only with the spin warm-up (§81) at about a 1% SD. It waits for the `ab` pre-spin option, then gets a registered workstation A/B.
+
+**Where the scanner's lever now stands:** the Huffman decode is still the only controller above the knee (§78). But its arithmetic has little slack left: two symbols a lookup, at about 7 ns per pair. What remains:
+- the copies (#861, the seam window and the symbol buffers);
+- the micro-win above;
+- placement: the scanner's core kept unshared, −4% (§§78, 81);
+- the structural answer, a poolable or parallel scan (MONODROMY's T4), which removes the single serial core rather than speeding it.
+
+## 83. Lazy workers at 5 and 7 threads (#868): ADOPTS, and merged
+
+**The run:** `kernel-choice/run-20261125T044116Z`, recipe #862 at 377a3557, expectation `lazy-four-to-seven`, head #868 084275e6 against merge-base f8edc1ac. It is evidence 94728a2c, SHA-256 e0425cba…3c13, checked.
+- Every phase passed.
+- Each build probed its registered plan.
+- The data is in `math-targets/data/kernel-choice-split/`.
+
+| threads | base → head plan | wall head/base [95%] | step | CPU | peak RSS |
+|---|---|---|---|---|---|
+| 3 | 3 eager → 3 eager | 0.999 [0.981, 1.018] | INCONCLUSIVE | 1.000 | 1.031 |
+| 4 | 4 lazy → 4 lazy | 0.999 [0.992, 1.006] | INCONCLUSIVE | 1.000 | 1.001 |
+| **5** | 5 eager → 5 lazy | **0.840 [0.831, 0.850]** | FASTER | 0.847 | **0.421** |
+| **7** | 7 eager → 7 lazy | **0.631 [0.624, 0.639]** | FASTER | 0.642 | **0.373** |
+| 8 | 8 lazy → 8 lazy | 0.974 [0.944, 1.005] | INCONCLUSIVE | 0.982 | 0.997 |
+| 10 | 7 lazy → 7 lazy | 0.995 [0.984, 1.005] | INCONCLUSIVE | 0.995 | 1.001 |
+| 12 | 7 lazy → 7 lazy | 1.002 [0.988, 1.017] | INCONCLUSIVE | 0.999 | 0.999 |
+
+**The verdict under §80's frozen rule: ADOPTS.**
+- 5 and 7 threads are FASTER, none of the supporting counts is SLOWER, and peak RSS is ≤ 1.10 at every count (largest 1.031, at 3).
+- The result replicates §80's first measurement (0.845, 0.634) and §76's prediction (0.834, 0.639).
+
+**Merged:** #868 at 084275e6, the head the bench measured, as 56c56573.
+- CI was green on all 30 runs, Miri included, and head-sha passed before and after.
+- **What changes for users:** on the i9 unpinned, `BzReader::parallel(r, 5)` is 16% faster with 58% less peak memory, and `parallel(r, 7)` is 37% faster with 63% less.
+- **No release overnight** (Louis's rule). This waits for the release process.
+- **#860 is closed:** its lazy part is merged here, and its trim to 8 is re-registered separately (§80) once the `ab` pre-spin (#874) lands.
+
+**What is decided and what is open, this night:**
+- **Adopted:** lazy at 5 and 7.
+- **Held, to be re-asked with the spin warm-up (§81):**
+  - the combined scanner fix (#861);
+  - the trim to 8;
+  - the batched bit count (§82).
+- **Rejected:** three Huffman symbols a lookup (§82).
+- **Open design questions:**
+  - placement: what a library can request (§78, record 132);
+  - the clock after idle: whether a decoder should respond (§81).
+
+## 84. Three tests re-registered with the spin warm-up, before their data
+
+`ab run --prespin-ms` is on master (#874, aa041e25), and the recipes take a PRESPIN argument (#850, #862, the Pathfinder). Each test below runs with PRESPIN 100 and records the clock per decode, with the cycles × clock split as a registered secondary (§81).
+- **Sizing:** the paired SD expected with the spin is about 1% (§81: 1.1% at 10 workers).
+- **Interval width:** 16 rounds give an interval of about ±0.6%.
+- **Heads:** each head has master merged in (so it contains #868 and #874), and each base is that head's merge-base with master.
+
+**The order, and why.** On the i9 unpinned, production runs 7 workers from 10 threads, below the knee of about 7.5. There the scanner doesn't bind, so a scanner fix can't show at production's default counts until the worker trim is decided. So:
+
+**Test 1: the trim to 8 workers from 10 threads.**
+- **What it is:** #860's change (b) alone, on a fresh branch off master.
+- **The recipe:** `bench-kernel-choice` with expectation `trim-eight`. The head plan is 8/32 lazy at 10 and 12, and master's elsewhere (lazy at 4–7, from #868).
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 3, 4, 5, 7 and 8 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count.
+- **Reported, not part of the rule:** the CPU ratio. §80 saw +8% at 10. PERFORMANCE-POLICY.md weighs it at merge.
+- **Prediction (§80, unspun):** 0.979 at 10 and 0.903 at 12. With the spin, both resolve.
+
+**Test 2: the combined scanner fix** (#861, the seam window and the symbol buffers), with master merged in.
+- **The recipe:** `bench-scanner-plumbing`, PRESPIN 100.
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 6, 8 and 9 is SLOWER, and peak RSS ≤ 1.10.
+- **These judged counts replace 9:** §79 decided the judged counts move to production's defaults, decided before this data.
+- **Prediction:**
+  - at 7 workers (if test 1 fails), about 0.98 at 10 and 12, as §79 measured unspun;
+  - at 8 workers (if test 1 adopts), between that and the explicit-worker diagnostic's 0.92–0.94 (§79).
+- **It runs after test 1's verdict,** on whichever master results.
+
+**Test 3: the batched bit count** (§82's by-product), on a fresh branch off master.
+- **What it is:** each batch's consumed bits summed and subtracted once, on master's two-symbol table, with nothing else changed.
+- **The recipe and rule:** the same as test 2, with the same counts.
+- **Prediction:** about −2% of scanner time, so ≤ 1.5% of wall at 8 workers and less at 7. INCONCLUSIVE is likely at 7 workers.
+- **It runs after test 2.**
+
+**Each test is run once.** A verdict is final for its registration. Any further test is a new registration, with its reason stated.

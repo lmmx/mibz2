@@ -42,3 +42,7 @@ strict build, the site checks and a read of the Markdown don't show how it rende
 5. A new page goes to master through its PR, merged on green. Never push a new post to master
    directly; direct commits are only for amendments Louis asks for (coordinate-blog-post, "The
    PR opens first").
+
+**No redirects, ever** (Louis, 25 November 2026). When a page's URL changes, move it: never add a
+redirect, a moved-page stub or a meta refresh at the old path, whoever asks. Only Louis can ask
+for one; see CLAUDE.md, "Site URLs: no redirects, ever".

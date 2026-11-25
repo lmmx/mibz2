@@ -1,0 +1,3 @@
+expect lazy-four-to-seven
+judged 5,7
+supporting 3,4,8,10,12

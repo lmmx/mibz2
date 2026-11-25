@@ -1,0 +1,14 @@
+mibz2 at the head against mibz2@build-base, wikidata-x4, unpinned, 16 paired rounds
+threads  role       workers  wall head/base [95%]           step         CPU head/base [95%]          peak RSS (median)
+      6  supporting       6  1.0011 [0.9951, 1.0070]         INCONCLUSIVE 0.9997 [0.9959, 1.0035]                  0.9954
+      8  supporting       8  0.9742 [0.9494, 0.9996]         FASTER       0.9758 [0.9554, 0.9967]                  1.0102
+      9  judged           9  0.9869 [0.9358, 1.0409]         INCONCLUSIVE 1.0000 [0.9629, 1.0385]                  1.0082
+     10  supporting       7  0.9885 [0.9626, 1.0151]         INCONCLUSIVE 0.9885 [0.9658, 1.0118]                  1.0018
+     12  supporting       7  0.9849 [0.9641, 1.0061]         INCONCLUSIVE 0.9859 [0.9693, 1.0028]                  1.0031
+peak RSS, median over the rounds (reported; decides nothing beyond the 1.10 gate):
+      6  base 54.5 MiB, head 54.3 MiB, head - base -0.3 MiB (0.9954)
+      8  base 60.0 MiB, head 60.6 MiB, head - base +0.6 MiB (1.0102)
+      9  base 64.4 MiB, head 65.0 MiB, head - base +0.5 MiB (1.0082)
+     10  base 57.2 MiB, head 57.3 MiB, head - base +0.1 MiB (1.0018)
+     12  base 57.2 MiB, head 57.4 MiB, head - base +0.2 MiB (1.0031)
+verdict: NOT ADOPTED (9 threads not FASTER)

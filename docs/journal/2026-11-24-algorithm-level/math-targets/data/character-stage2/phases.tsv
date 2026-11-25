@@ -1,0 +1,11 @@
+phase	status	started	ended	last line
+checks	0	2026-11-25T02:02:24Z	2026-11-25T02:02:26Z	os: Linux Mint 22.0.0 (wilma) [64-bit]
+build	0	2026-11-25T02:02:26Z	2026-11-25T02:02:26Z	3f661422af136e6a86c3b36ffd7aa8dab9d302b9ae3ada79520ee0ef64bbfdcb  /home/louis/dev/mibz2/target/release/examples/character
+four-arm	0	2026-11-25T02:02:26Z	2026-11-25T02:02:40Z	6578300c544ecfeaa531e6fbbf60134ae79cf3de8883628a30f4695a04b264f1  /home/louis/dev/mibz2/target/character-stage2/four-arm-target/release/examples/four_arm
+inputs	0	2026-11-25T02:02:40Z	2026-11-25T02:02:41Z	0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  /home/louis/dev/mibz2/target/character-stage2/wikidata-x4.bz2
+stage1	0	2026-11-25T02:02:41Z	2026-11-25T02:02:41Z	
+machine	0	2026-11-25T02:02:41Z	2026-11-25T02:02:41Z	
+plan	0	2026-11-25T02:02:41Z	2026-11-25T02:02:42Z	  k 16: kept ['A2', 'A3', 'A5', 'A6a', 'A6b', 'A6c', 'A7', 'A9', 'A10']
+run	0	2026-11-25T02:02:42Z	2026-11-25T02:22:16Z	block 5 done, 1174 s
+oracle	0	2026-11-25T02:22:16Z	2026-11-25T02:23:06Z	round 7 check: 838800784 bytes (crc d7626c17), 1724 blocks replayed, 932 supplied blocks checked, 0 mismatches
+report	1	2026-11-25T02:23:06Z	2026-11-25T02:23:06Z	AttributeError: 'float' object has no attribute 'numerator'

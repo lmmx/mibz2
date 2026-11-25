@@ -1,0 +1,76 @@
+# bench-character-stage2b (stage 2b; diagnostic: decides nothing)
+
+## The recipe's phases
+
+checks       ok               2026-11-25T03:01:24Z .. 2026-11-25T03:01:26Z
+build        ok               2026-11-25T03:01:26Z .. 2026-11-25T03:01:53Z
+inputs       ok               2026-11-25T03:01:53Z .. 2026-11-25T03:01:54Z
+stage1       ok               2026-11-25T03:01:54Z .. 2026-11-25T03:01:54Z
+machine      ok               2026-11-25T03:01:54Z .. 2026-11-25T03:01:54Z
+cores        ok               2026-11-25T03:01:54Z .. 2026-11-25T03:01:55Z
+plan         ok               2026-11-25T03:01:55Z .. 2026-11-25T03:01:56Z
+run          ok               2026-11-25T03:01:56Z .. 2026-11-25T03:23:36Z
+
+k* 8, the step 16, anchors [8, 10]; 0.502 cycles a pacing iteration; 16 blocks
+the pin: the scanner on CPU 6 alone in 86 of 86 pinned traces
+
+## The screen: each coordinate's coefficient (+20%, one at a time; C = mean log(T/T0) / log(1 + achieved dose))
+
+k   coordinate  dose target/achieved   C      95% interval        label
+8   A2          +0.20/+0.163            +0.133  [-0.020, +0.287]   UNRESOLVED
+8   A3          +0.20/+0.229            +0.795  [+0.681, +0.908]   CONTROLS
+8   A5          +0.20/+0.180            -0.017  [-0.130, +0.096]   UNRESOLVED
+8   A6a         +0.20/+0.163            +0.042  [-0.107, +0.190]   UNRESOLVED
+8   A6b         +0.20/+0.182            -0.011  [-0.161, +0.138]   UNRESOLVED
+8   A6c         +0.20/+0.192            +0.021  [-0.088, +0.129]   UNRESOLVED
+8   A7          +0.20/+0.171            +0.215  [+0.066, +0.363]   UNRESOLVED
+8   A9          +0.20/+0.252            +0.021  [-0.087, +0.129]   UNRESOLVED DOSE-MISSED
+8   A10         +0.20/+0.143            +0.018  [-0.112, +0.149]   UNRESOLVED DOSE-MISSED
+10  A2          +0.20/+0.185            -0.035  [-0.237, +0.167]   UNRESOLVED
+10  A3          +0.20/+0.246            +0.577  [+0.420, +0.734]   CONTROLS
+10  A5          +0.20/+0.234            -0.052  [-0.217, +0.113]   UNRESOLVED
+10  A6a         +0.20/+0.182            -0.107  [-0.274, +0.061]   UNRESOLVED
+10  A6b         +0.20/+0.132            -0.205  [-0.461, +0.051]   UNRESOLVED DOSE-MISSED
+10  A6c         +0.20/+0.201            -0.106  [-0.317, +0.105]   UNRESOLVED
+10  A7          +0.20/+0.159            -0.224  [-0.414, -0.034]   UNRESOLVED
+10  A9          +0.20/+0.231            -0.163  [-0.317, -0.010]   UNRESOLVED
+10  A10         +0.20/+0.190            -0.153  [-0.349, +0.044]   UNRESOLVED
+
+the controllers, by anchor: 8: ['A3']; 10: ['A3']
+
+## The surface at k* (mean log slowdown against (0, 0), over blocks)
+
+scanner  0%: +0.0000  +0.0609  +0.1261
+scanner 10%: +0.0996  +0.0686  +0.1324
+scanner 20%: +0.1976  +0.1663  +0.1619
+the knee's roundness: 0.500 [0.454, 0.548] (1 additive, about 0.5 a sharp max)
+
+## The contrasts (each arm's wall over its section's reference, paired by block)
+
+memory    k 8   stream      over none       1.3312 [1.2995, 1.3637] CHANGED
+memory    k 8   chase       over none       2.1300 [2.0811, 2.1800] CHANGED
+memory    k 20  stream      over none       1.3824 [1.3502, 1.4154] CHANGED
+memory    k 20  chase       over none       1.3138 [1.2819, 1.3465] CHANGED
+placement k 4   siblings    over distinct   1.2202 [1.1677, 1.2750] CHANGED
+placement k 8   siblings    over distinct   1.4775 [1.4462, 1.5095] CHANGED
+link      k 8   A3          over base       1.1414 [1.1002, 1.1842] CHANGED
+
+## Validation (held out from every fit)
+
+k 8   A3+A7_10   1.0693 [1.0476, 1.0915]
+k 10  A3+A7_10   1.0633 [1.0284, 1.0993]
+
+## The ledgers' cost (the base's trace over its timed decode, paired by block)
+
+k 8   on/off 0.9898 [0.7971, 1.2293] over 2 pairs
+k 10  on/off 0.9915 [0.9089, 1.0816] over 2 pairs
+
+## Speeding the scanner (stage 2b): every other activity paced up, against every activity
+
+k   lambda  H (homogeneity)            e_down (slower)          e_up (faster)            e_down - e_up            labels
+8    10%    +0.788 [+0.594, +0.983]  +0.716 [+0.339, +1.093]  +0.134 [-0.105, +0.373]  +0.582 [+0.144, +1.020]   NOT-HOMOGENEOUS ASYMMETRIC
+8    20%    +0.850 [+0.723, +0.978]  +0.971 [+0.830, +1.112]  +0.181 [+0.117, +0.245]  +0.790 [+0.656, +0.923]   NOT-HOMOGENEOUS ASYMMETRIC
+10   10%    +0.445 [+0.150, +0.739]  +0.555 [+0.156, +0.955]  +0.509 [+0.321, +0.696]  +0.047 [-0.455, +0.548]   NOT-HOMOGENEOUS
+10   20%    +0.565 [+0.423, +0.708]  +0.727 [+0.530, +0.924]  +0.390 [+0.304, +0.475]  +0.337 [+0.115, +0.560]   NOT-HOMOGENEOUS ASYMMETRIC
+
+DOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): k 8 A9: achieved +0.252 against +0.20; k 8 A10: achieved +0.143 against +0.20; k 10 A6b: achieved +0.132 against +0.20
