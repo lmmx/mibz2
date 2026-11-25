@@ -5651,15 +5651,19 @@ mod tests {
             "every CPU of this process's own set can be pinned to"
         );
         assert!(wall >= 0.040, "the spin lasts its deadline: {wall}");
-        // (its threads are joined before it returns)
-        let left = std::fs::read_dir("/proc/self/task")
-            .unwrap()
-            .flatten()
-            .filter(|e| {
-                std::fs::read_to_string(e.path().join("comm")).is_ok_and(|c| c.trim() == "prespin")
-            })
-            .count();
-        assert_eq!(left, 0);
+        // (its threads are joined before it returns; a joined thread's /proc entry can outlast
+        // the join briefly, so `soon`, as the held spinner's test)
+        let left = || {
+            std::fs::read_dir("/proc/self/task")
+                .unwrap()
+                .flatten()
+                .filter(|e| {
+                    std::fs::read_to_string(e.path().join("comm"))
+                        .is_ok_and(|c| c.trim() == "prespin")
+                })
+                .count()
+        };
+        assert!(soon(|| left() == 0), "{} prespin threads left", left());
         // (none at all: an empty set returns at once)
         let (spun, failed, _) = prespin(&[], 40);
         assert_eq!((spun, failed), (0, 0));
