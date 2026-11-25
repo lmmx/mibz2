@@ -533,3 +533,29 @@ Read `briefs/character-design-review.md` (a4bef380a on `docs/journal-algorithm-l
 5. what to cut.
 
 Answer short, with labels, and name exact changes to the brief. MONODROMY: in a record. One round; the Coordinator merges.
+
+## 2026-11-25 #39 — the course mining's final pass (MONODROMY)
+
+The last of four independent readings. All the files are under `docs/journal/2026-11-24-algorithm-level/` on `docs/journal-algorithm-level`, at 298cabeca or later.
+
+**The question.** With the scanner profile's measurements as inputs, which tools in the three performance courses give this decoder a concrete opportunity, and which do the measurements rule out? The courses are Jain's, and Harchol-Balter's 15-857 and 15-849b, with their reading lists. Above all: where does a *mathematical* device fit, rather than an engineering fix?
+
+**Read first:**
+- the journal `../2026-11-24-algorithm-level.md` §57 (the profile) and §60 (the design decisions);
+- `math-targets/data/measurements-scan-profile.tsv`, `scan-profile-report.txt` and `scan-profile-runs.tsv`. The per-block records are on `evidence`, `scan-profile/run-20261124T223748Z`, `runs.jsonl`;
+- `methodology/performance-courses.md` and `methodology/sources/`.
+
+**Write your own answer before reading the other three.** Then read:
+- `leads/course-opportunities.md` (the Coordinator's, with its corrections at the top);
+- `external/chatgpt-course-mining.md` (ChatGPT Pro);
+- `reviews/neon-course-mining.md` (Neon).
+
+Say where you agree, where you disagree (with the arithmetic), and what all three missed.
+
+**For each opportunity:** the tool, with its chapter or paper; how it maps onto the decoder; a predicted size from the measured numbers, labelled proved, argued or conjectured; the cheapest measurement that confirms or kills it; and whether it changes a default.
+
+**Your particular lens:** the targets T1–T6 and the referee (records 103–128). The others found plumbing (the scanner's input copy, the symbol buffer's re-zeroing), placement and worker count. Which of the courses' tools say something about the *algorithms*: the Huffman scan's 1.5 ns a symbol, the workers' inversion, the joint scanner–worker frontier, and the bottleneck migration ChatGPT priced? Say where the composition ideas (contraction and enrichment along composition, `essence.md`) meet a queueing quantity.
+
+**The second part: a draft analysis plan for stage 1 and stage 2's data.** Registered before the data. Stage 1 (#841) is about to run; stage 2 is `briefs/character-review-decisions.md` §2. What you will compute from each, which result would point at a mathematical target and which at engineering, and what would make you revisit an idea earlier tests rejected, now that the bottleneck may move.
+
+One record. The Coordinator merges the four readings.
