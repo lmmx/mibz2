@@ -1817,3 +1817,36 @@ ChatGPT reviewed the hybrid-systems notes at 771e43086. The review is recorded v
 - **The causal order** issued < enqueued < got < ready < taken < consumed holds per block in all 80 traced decodes.
 
 These are descriptions of one corpus's traces, not guarantees. The burst frontier is not a window size without a service curve.
+
+## 72. MONODROMY's records 129 and 130: the fourth reading, the analysis plan, and the design space
+
+MONODROMY answered channel #39 (record 129, M-36) and #40 (record 130, M-37), on `claude/sharp-meitner-cx0v78`: `docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md` and `2026-11-25-design-space-and-identification.md`. Record 129's analysis plan was committed at 00:08 UTC, before stage 1 ran at 00:11. Record 130 opened stage 1's bundle only for its question 6.
+
+**Record 129, the fourth course mining.**
+- **The scan is a dependent chain at its latency floor:**
+  - 1.41–1.51 ns a symbol is about 7 cycles, one first-level cache load's latency a symbol;
+  - the lever is fewer *lookups* a symbol: compose the decode step, several symbols a lookup;
+  - floor: lookups ≥ bits/b, which at b = 10 is about 2.6 symbols a lookup;
+  - predicted 13–17% off the best wall (conjectured);
+  - the cheapest test is cycles a symbol on the scanner at k = 1.
+- **Under pooling,** where each worker scans its own block, every target's elasticity becomes its share of total demand. Worker mathematics then pays at every count.
+- **The saturation law inside a worker** turns L\* = (ℓ + c)/c into the exchange rate between dependent depth and dependent reads.
+- **A registered analysis plan for stages 1 and 2,** with rules for "points to mathematics" against "points to engineering", and a revisit list: ideas rejected while the scanner masked them, to re-qualify once the scanner's share of control falls below one half.
+
+**Record 130, the design space** (scanner–worker obligations × placements, scored by the two-station law):
+- an index of block starts, with each worker scanning its own block, gives −15%;
+- composed symbol decoding gives −17%;
+- both together give −19% (all conjectured).
+
+The separating principle: put an obligation on a serial path only if its state has no small transformer, and cut the path wherever the format resets that state.
+- **Within-block parallel Huffman decoding is ruled out.** The symbol count (it selects the table every 50 symbols) never re-synchronises, so a chunk carries at least 50 hypotheses, and a k-way decode loses for every k under 50 (argued; the obstruction is proved from the format).
+- **The laws:** fusion removes intermediate objects; tupling *is* enrichment along composition; the third homomorphism theorem is the existence of chunk summaries (MTF/RLE2, CRC). The parse and the walk are dependent chains whose only contraction is composition, at an exponential table cost.
+- **Max-plus:** the pipeline's recurrence, given each block's realised service times, reproduces stage 1's walls within 0.2% up to 7 workers and 1.3% above. That is a check of the bookkeeping, not a prediction (§70's distinction).
+- **Identification:** two scalars per count, worker inflation and scanner inflation, explain the walls (0.3–2.5% above the knee). Inflation follows threads present, not threads busy. The conjectured reduced coordinate is the chance a thread shares a core; stage 2's placement contrast tests it.
+- **The targets:** construction is 45% of a real block's worker time at one worker, emission 38%, MTF and runs 10%, RLE1 and CRC 6%. Construction is the largest mathematical target.
+- **The referee's class:** exhaustive enumeration is infeasible (about 10⁵⁰ tables). A SAT encoding could settle a positive necessity statement in a bounded class: "any inversion within K sweeps and s cursors makes at least h₁ − c addressed accesses". Either answer is new.
+
+**Decisions:**
+- multi-symbol (composed) Huffman decoding becomes an engineering lead, to be prototyped as a PR after the current builds;
+- the block-start index (pooling) is the larger structural lead, record 122 §3;
+- the SAT necessity statement goes to MONODROMY's queue.
