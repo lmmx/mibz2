@@ -59,6 +59,7 @@ Stage 1 classified itself PERTURBED: the ledgers' on/off cost was 1.040 [0.991, 
    - **The switch:** the binary's `range` switch. Its pacing hook reads each thread's current block from the ledger (a worker's from `Got`, the scanner's from `ScanStart`), so the pulses run with the ledgers on, each block's row kept. This is the one change to the library in this binary.
    - **The dose:** +50%, sized from stage 1's noise. Over places 600–800 the reader's rate varied 3.4% (k = 8) and 10% (k = 10) between decodes. A3 is 77% of the scanner's demand a block at 8, so +50% on it should cut the rate there by about 38%, more than 9 standard errors over 6 decodes even at 10's noise. The 600 blocks before the pulse are its lead-in to the steady state.
    - **Reported from the traces:**
+     - **the pulse's effect:** the arm's reader rate over places 600–800 against its pulse base's at the same places in the same block. The places' blocks differ (the corpus's second copy begins at 431), so a rate over another window is no baseline: in the preflight the undosed base's rate over 600–800 was 1.30 times its rate over 400–600;
      - the reader's rate during and after the pulse, over its rate before (places 400–600);
      - the recovery time: from place 800 taken to the first 50-block window back within 5% of the rate before;
      - the job queue's mean depth before and during;
@@ -123,3 +124,18 @@ All from the same ledgers as stage 1.
 - the step rule's 5%;
 - the placement's mask construction on the i9's topology;
 - whether the turbo factor is worth a password prompt (the run would then not be unattended).
+
+## The preflight
+
+**The DRY preflight of the recipe as frozen** (`just bench-character-stage2 1`: one block, no settle, a 2 s pre-warm, 4 oracle rounds; at 394c23e5). It ran on a 4-CPU Xeon container (meaning nothing for the i9), and is archived as `2026-11-25-character-stage2-registration/run-20261125T003609Z.tar.gz` (sha256 6960cd7a…6a86, 1.4 MB):
+- **Setup:**
+  - both builds passed: this binary at the pin, and the four-arm binary at 5731db19 in its own worktree;
+  - stage 1's bundle was fetched from the evidence branch and checked by its SHA-256;
+  - the calibration fell back to 0.5 cycles an iteration (no PMU here);
+  - the plan gave k\* 8, step 16, anchors 6, 8, 10 and 16, and 75 cells (no favoured core and no writable `no_turbo` here, so no scanner-placement or turbo cells).
+- **The decodes:** all 144 (69 timed, 75 traces) gave 4 × 209,700,196 bytes, and every trace's identities held. The six pulse traces kept their block rows.
+- **The oracle arms:** they ran at 8 with every check matching (0 mismatches). B/A 0.981, C/A 0.812, D/A 0.771 over 4 rounds. The layout check put the four-arm binary's A −0.68% from this binary's baseline.
+- **The doses missed their targets here, as expected.** The plan sizes them in cycles at the i9's 4.91 GHz with the i9's calibration, and this VM runs about 2.1 GHz on the fallback calibration, so +20% landed near +9%. On the i9 both are measured there.
+- **The verdict:** the report voided the run on the machine alone.
+
+Since the preflight, the report's pulse table gained the paired effect above (the scorer alone).

@@ -473,7 +473,8 @@ def pulses(a, p, cell, find) -> None:
     lo, hi = PULSE
     out: dict = {}
     for f in files:
-        ci = int(re.search(r"pulse-c(\d+)-b", f).group(1))
+        mm = re.search(r"pulse-c(\d+)-b(\d+)", f)
+        ci, blk = int(mm.group(1)), int(mm.group(2))
         rows = {
             int(r[0]): dict(zip(cols, map(int, r[: len(cols)])))
             for r in csv.reader(open(f), delimiter="\t")
@@ -507,18 +508,34 @@ def pulses(a, p, cell, find) -> None:
             n += dlt
             if tt >= start and n == 0 and empty is None:
                 empty = (tt - start) / 1e6
-        out.setdefault(ci, []).append(
-            (during / before, after / before, rec, d_before, d_during, empty)
+        out.setdefault(ci, {})[blk] = (
+            during / before,
+            after / before,
+            rec,
+            d_before,
+            d_during,
+            empty,
+            during,
         )
-    print("\n## The pulses (places 600..800 dosed; medians over their decodes)\n")
     print(
-        "k   arm   rate during/before  after/before  recovery ms  queue depth before→during  queue empty after (ms)"
+        "\n## The pulses (places 600..800 dosed; medians over their decodes). The effect is the arm's"
+        "\nrate during the pulse over its base's at the same places in the same block (the places'"
+        "\nblocks differ, so a rate over another window's is no baseline)\n"
+    )
+    print(
+        "k   arm   effect (rate/base's)  during/before  after/before  recovery ms  queue depth before→during  queue empty after (ms)"
     )
     for ci, v in sorted(out.items()):
         c = cell[ci]
-        g = lambda i: med(x[i] for x in v if x[i] is not None)  # noqa: E731
+        g = lambda i: med(x[i] for x in v.values() if x[i] is not None)  # noqa: E731
+        base = find("pulse", c["k"], "base")
+        eff = "-"
+        if base is not None and base != ci and base in out:
+            r = [x[6] / out[base][b][6] for b, x in v.items() if b in out[base]]
+            if r:
+                eff = f"{med(r):.3f}"
         print(
-            f"{c['k']:<3} {c['arm']:<5} {g(0):>18.3f} {g(1):>13.3f} {g(2):>12.1f} {g(3):>10.2f}→{g(4):<12.2f} {g(5):>10.1f}"
+            f"{c['k']:<3} {c['arm']:<5} {eff:>20} {g(0):>14.3f} {g(1):>13.3f} {g(2):>12.1f} {g(3):>10.2f}→{g(4):<12.2f} {g(5):>10.1f}"
         )
 
 
