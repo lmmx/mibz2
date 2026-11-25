@@ -2074,7 +2074,9 @@ bench-scanner-plumbing HEAD_REF="perf/scanner-plumbing" HEAD_SHA="" PRESPIN="" D
       [ -z "$beyond" ] \
         || { echo "bench-scanner-plumbing: the builds differ in the harness or the build: $(echo $beyond)"; exit 1; }
       if [ -n "$PRESPIN" ]; then
-        git show "$head:examples/ab.rs" | grep -q -- '"--prespin-ms"' \
+        # (git grep, never `git show | grep -q`: under pipefail, grep -q quitting at the first
+        # match leaves git show a SIGPIPE, and the pipeline fails on a head that has the option)
+        git grep -q -e '"--prespin-ms"' "$head" -- examples/ab.rs \
           || { echo "bench-scanner-plumbing: PRESPIN $PRESPIN, but the head's harness has no --prespin-ms (it predates #874: merge master into the head)"; exit 1; }
       fi
       printf '%s\n' "$changed" > "$O/src-changed.txt"
