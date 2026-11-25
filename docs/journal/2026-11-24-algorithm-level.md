@@ -1803,3 +1803,17 @@ ChatGPT reviewed the hybrid-systems notes at 771e43086. The review is recorded v
   - `extraction-notes.md` now marks each place as an erratum applied, verified, a point about the book, or unverified.
 
 **Downstream:** MONODROMY's queued #40 is corrected before dispatch. Its items 1, 3 and 5 now carry no claim that a certificate already exists.
+
+## 71. Stage 1 analysed by program: lower bound, bursts, starvation
+
+`math-targets/scripts/stage1_analysis.py` (run on the bundle, outputs in `math-targets/data/character-stage1/analysis/`). It implements `measurements.md` items 2, 3 (the lower bound) and 5. A first version had the burst recursion the wrong way round (a minimum where a maximum is needed): every burst came out as 1. It was caught by a three-event check and fixed before any result was used.
+- **The lower bound is tight below the knee, looser at it** (measured, instrumented decodes). The wall over $L = \max(S, \bar W, R)$ has a median of 1.002–1.014 up to 6 workers, 1.04–1.05 at 8–11, and 1.02 at 16–20. Dependencies, starvation and blocking cost most where the bottleneck switches.
+- **Issuing is smooth; taking is bursty: the signature of in-order resequencing.**
+  - At a rate allowance of 1.5× the mean, the scanner's issue process needs a burst of about 3 at every count.
+  - Reader takes need about 13 at 8 workers and about 25 at 10 and 20. When a slow head-of-line block finishes, a run of ready blocks is taken at once.
+  - The head-of-line wait's 99th percentile grows from about 0.05 ms (1–8 workers) to 0.12–0.23 ms (10–16).
+- **Starvation episodes** (a worker idle more than 10 µs between its block's ready and its next start): 148 a decode at 8 workers, 551 at 10, about 1530 at 16–20, with the total idle worker-time rising from 46 ms to 2.7 s.
+- **The progress rate** (blocks consumed a millisecond, in 20 windows) varies by 8–16% across the middle of a decode at every count.
+- **The causal order** issued < enqueued < got < ready < taken < consumed holds per block in all 80 traced decodes.
+
+These are descriptions of one corpus's traces, not guarantees. The burst frontier is not a window size without a service curve.
