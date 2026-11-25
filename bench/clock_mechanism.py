@@ -226,14 +226,14 @@ def report(a) -> int:
             for b in blocks
             if (arm, b) in dec and (REF, b) in dec
         ]
+        # (the walls' pairing needs no clock: reported for every arm but the reference)
+        psd, ratio = float("nan"), "-"
+        if arm != REF and len(pair) > 1:
+            psd = st.stdev(pair)
+            m, l2, h2 = interval(pair)
+            ratio = f"{math.exp(m):.4f} [{math.exp(l2):.4f}, {math.exp(h2):.4f}]"
         if arm == REF or not n or not nr:
-            dl, dh, label, psd, ratio = (
-                float("nan"),
-                float("nan"),
-                "(ref)" if arm == REF else "",
-                float("nan"),
-                "-",
-            )
+            dl, dh, label = float("nan"), float("nan"), "(ref)" if arm == REF else ""
         else:
             dl, dh = newcombe(x, n, xr, nr)
             label = (
@@ -245,9 +245,6 @@ def report(a) -> int:
                 if (dl >= -0.10 and dh <= 0.10)
                 else "UNRESOLVED"
             )
-            psd = st.stdev(pair) if len(pair) > 1 else float("nan")
-            m, l2, h2 = interval(pair)
-            ratio = f"{math.exp(m):.4f} [{math.exp(l2):.4f}, {math.exp(h2):.4f}]"
         d = x / n - xr / nr if n and nr else float("nan")
         print(f"{arm:<5} {n:>3}  {x / n if n else float('nan'):.2f} [{lo:.2f}, {hi:.2f}]   "
               f"{d:+.2f} [{dl:+.2f}, {dh:+.2f}]      {label:<10} {st.median(g) if g else float('nan'):.2f}      "
