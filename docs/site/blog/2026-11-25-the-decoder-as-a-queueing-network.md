@@ -16,7 +16,7 @@ description: "Modelled as stations and queues, the decoder shows in advance wher
 Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 {: .post-dek }
 
-25 November 2026 · 30 min read · [Research in progress](#15-what-runs-next)
+25 November 2026 · 28 min read · [Research in progress](#15-what-runs-next)
 {: .post-meta }
 
 </div>
@@ -58,6 +58,10 @@ structure hides it.
   the kernel and the worker count better.
 - Even with the scanner and emission both made ideal, the decoder keeps 0.82–0.84 of its wall,
   which is where the next measurements, and the search for new mathematics, are aimed.
+
+The theory itself, and the context it came from, is set out in a
+[technical appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md), so that this post can
+follow the mibz2 effort on its own terms.
 
 ## 1. An improvement whose value vanished
 
@@ -148,18 +152,11 @@ disagreements corrected the first reading in several places that recur below
 
 ## 4. The decoder, drawn as stations
 
-Queueing theory describes a system as stations, each a server or group of servers with a queue in
-front, and jobs that visit them. A job here is a block of the compressed file. Its service time at
-a station is how long one visit takes; its demand there, D = V·S, is the number of visits times
-the time each takes; a station's throughput X is the jobs it completes a second, and its
-utilisation U is the fraction of time it is busy. A handful of shapes recur, and a real system
-combines them.
-
-<figure class="bf-fig" id="shapes">
-<p class="bf-title">The shapes queues come in</p>
-<svg viewBox="0 0 720 234" role="img" aria-label="Five shapes of queueing system: a single server, a parallel group of servers sharing a queue, a tandem of stages in series, a fork and join, and a feedback loop that returns permits. The decoder combines a tandem, a parallel group and feedback."><text class="bf-t-strong" x="72" y="24" text-anchor="middle" style="font-size:13px">single server</text><text class="bf-tm" x="72" y="42" text-anchor="middle" style="font-size:11.5px">one queue, one processor</text><text class="bf-t-strong" x="216" y="24" text-anchor="middle" style="font-size:13px">parallel group</text><text class="bf-tm" x="216" y="42" text-anchor="middle" style="font-size:11.5px">one queue, k servers</text><text class="bf-t-strong" x="360" y="24" text-anchor="middle" style="font-size:13px">tandem</text><text class="bf-tm" x="360" y="42" text-anchor="middle" style="font-size:11.5px">stages in series</text><text class="bf-t-strong" x="504" y="24" text-anchor="middle" style="font-size:13px">fork and join</text><text class="bf-tm" x="504" y="42" text-anchor="middle" style="font-size:11.5px">parts that must all finish</text><text class="bf-t-strong" x="648" y="24" text-anchor="middle" style="font-size:13px">feedback</text><text class="bf-tm" x="648" y="42" text-anchor="middle" style="font-size:11.5px">progress returns permits</text><rect x="26" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="39" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="52" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="64" y1="110" x2="82" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="82.0,110.0 73.0,105.0 73.0,115.0" style="fill:var(--bf-frame)"/><circle cx="100" cy="110" r="16" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="160" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="173" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="186" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="198" y1="110" x2="222" y2="80" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,80.0 212.5,83.9 220.3,90.2" style="fill:var(--bf-frame)"/><line x1="198" y1="110" x2="222" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,110.0 213.0,105.0 213.0,115.0" style="fill:var(--bf-frame)"/><line x1="198" y1="110" x2="222" y2="140" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="222.0,140.0 220.3,129.8 212.5,136.1" style="fill:var(--bf-frame)"/><circle cx="240" cy="80" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="240" cy="110" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="240" cy="140" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="300" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="313" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="326" y1="110" x2="338" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="338.0,110.0 329.0,105.0 329.0,115.0" style="fill:var(--bf-frame)"/><circle cx="352" cy="110" r="13" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><rect x="370" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="383" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="396" y1="110" x2="404" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="404.0,110.0 395.0,105.0 395.0,115.0" style="fill:var(--bf-frame)"/><circle cx="418" cy="110" r="13" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"/><line x1="452" y1="110" x2="476" y2="84" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="476.0,84.0 466.2,87.2 473.6,94.0" style="fill:var(--bf-frame)"/><line x1="452" y1="110" x2="476" y2="136" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="476.0,136.0 473.6,126.0 466.2,132.8" style="fill:var(--bf-frame)"/><circle cx="490" cy="80" r="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><circle cx="490" cy="140" r="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><line x1="504" y1="84" x2="528" y2="106" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="528.0,106.0 524.7,96.2 518.0,103.6" style="fill:var(--bf-frame)"/><line x1="504" y1="136" x2="528" y2="114" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="528.0,114.0 518.0,116.4 524.7,123.8" style="fill:var(--bf-frame)"/><rect x="530" y="98" width="26" height="24" rx="4" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.5"/><text class="bf-t-strong" x="543" y="114" text-anchor="middle" style="font-size:12px">J</text><text class="bf-t-strong" x="446" y="114" text-anchor="end" style="font-size:12px">F</text><rect x="600" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><rect x="613" y="102" width="10" height="16" rx="2" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.5"/><line x1="626" y1="110" x2="640" y2="110" style="stroke:var(--bf-frame);stroke-width:1.8"/><polygon points="640.0,110.0 631.0,105.0 631.0,115.0" style="fill:var(--bf-frame)"/><circle cx="656" cy="110" r="14" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1.5"/><path d="M672,110 L700,110 L700,154 L596,154 L596,122" style="fill:none;stroke:var(--bf-green);stroke-width:1.6;stroke-dasharray:5 4"/><polygon points="596,120 591,129 601,129" style="fill:var(--bf-green)"/><text class="bf-tm" x="648" y="172" text-anchor="middle" style="font-size:11px;fill:var(--bf-green)">a permit returns</text><text class="bf-tm" x="360.0" y="204" text-anchor="middle" style="font-size:12.5px">The decoder uses three of them: a tandem (scanner, then workers), a parallel group (the workers)</text><text class="bf-tm" x="360.0" y="222" text-anchor="middle" style="font-size:12.5px">and feedback (the in-order reader returns admission). Each block goes to one worker, so it is not a fork and join.</text></svg>
-<figcaption>Schematic. Circles are servers and small boxes queued jobs.</figcaption>
-</figure>
+In queueing theory's terms a job here is a block of the compressed file, and a station is a resource
+that serves it: the scanner, the pool of workers, the reader. Each block makes a demand on each
+station, the time it needs there, and the stations' throughputs and utilisations follow from those
+demands; the vocabulary, and the shapes in which queues are combined, are set out in the
+[technical appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#2-vocabulary-and-shapes).
 
 The decoder is a tandem: the scanner feeds a parallel group of k workers, each of which takes a
 whole block, and a reader hands the finished blocks to the caller in order. Its admission is
@@ -244,7 +241,7 @@ c + max(b, a/k) to all twenty counts is accordingly less exact than the four-cou
 crossover is 7.17, its residuals run about −13 ms from 8 to 14 workers and +21 ms from 17, and its
 32 ms constant has no identified cause. Third, the textbook's knee for closed systems,
 N\* = (D + Z)/D_max, is a knee in the population of jobs, not in the number of servers; the decoder
-couples the two through W = 4k, but they are different variables.
+couples the two through W = 4k, but they are different variables ([the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#3-the-operational-laws)).
 
 ## 6. Little's law, and what the instruments must record
 
@@ -353,19 +350,15 @@ only while the demands stay fixed. A policy that improves cache locality or keep
 apart changes the demands themselves, and the clearest example is the twenty-worker decode, which ran
 at 0.972 of its bound and still finished 17% sooner with eight workers ([the outside reading](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md)).
 
-| Technique | What it would change | What became of it |
-|---|---|---|
-| Size-based scheduling: largest or shortest first, or assignment by size | big blocks stop becoming the straggler or the head of the line | not supported yet: worker service per block was never measured |
-| Helpers for the oldest unfinished block | shortens the block holding up in-order output | open: the helper machinery exists, and the trigger is the question |
-| Admission by work rather than by count | a few huge blocks can no longer fill the window | open |
-| Relaxed resequencing | finished blocks stop holding admission credit while they wait | limited by the output contract: a byte stream is written in order |
-| Redundancy: run a slow block twice | helps when servers' delays are independent and variable | ruled out: here they are neither, and the copy costs the scarce resource |
-| Heavy-tail and matrix-analytic models | exact models for heavy-tailed service | not needed on this corpus; phase-type fits deferred, as simulation is cheaper |
-| A parallel scanner | turns the serial station into a parallel group | the only row that raises the ceiling |
+The candidates were size-based scheduling, helpers for the oldest unfinished block, admission by work
+rather than by count, relaxed resequencing and redundancy; each, with where it comes from and what
+became of it, is in [the appendix's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#7-the-disciplines-considered). None was adopted, and
+only one, a parallel scanner, would raise the ceiling rather than approach it.
 
 Variability is the other reason to keep distributions rather than means. In a single queue with
 general service times the mean wait grows with the second moment of service time, not only its mean
-(Harchol-Balter, ch. 23), so long blocks delay everything behind them. The corpus has two classes of
+(Harchol-Balter, ch. 23; [the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#6-variability-and-open-against-closed)), so long blocks delay everything
+behind them. The corpus has two classes of
 block: 792 of its 1,724 are under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks
 that skip the main inversion route. Across the mixture the squared coefficient of variation of size
 is about 0.98; among the real blocks alone it is about 0.07, and their sizes are correlated along the
@@ -382,19 +375,10 @@ ceiling; a change of topology moves the ceiling.
 ## 10. Product form, mean-value analysis and a surrogate
 
 The bottleneck law gives the two asymptotes; near the knee, finite populations and variability round
-the corner, and a natural next step is a model that computes the curve. Beyond the operational laws
-lies a line of exact results. Jackson showed that certain open networks have a product-form
-equilibrium, in which the joint distribution of queue lengths is a product of one factor per station
-([1957](https://doi.org/10.1287/opre.5.4.518)); Gordon and Newell gave the same for closed networks of
-exponential servers ([1967](https://doi.org/10.1287/opre.15.2.254)); and Baskett, Chandy, Muntz and
-Palacios extended product form to open, closed and mixed networks with several classes of job and
-several service disciplines, the BCMP theorem ([1975](https://doi.org/10.1145/321879.321887);
-Harchol-Balter, ch. 22). Product form makes a network solvable; it says nothing about whether that
-network is a good design. Reiser and Lavenberg's mean-value analysis then computes the mean queue
-lengths, response times and throughput of a closed product-form network without the full
-distribution, by building up the population one job at a time: an arriving job sees the network as
-it would be with one job fewer, which gives its residence at each station, then the throughput, then
-the new mean queue lengths ([1980](https://doi.org/10.1145/322186.322195); Jain, ch. 34).
+the corner, and a natural next step is a model that computes the curve. The theory has one: product-form networks, from Jackson's open networks through Gordon and Newell's
+closed ones to the BCMP theorem, which make a network's equilibrium solvable, and Reiser and
+Lavenberg's mean-value analysis, which computes a closed network's mean queue lengths and throughput
+by adding one job at a time ([the appendix, with the papers](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
 
 It was tried. One reader computed exact mean-value analysis for a two-station closed surrogate, with
 a population of N = 4k, a scanner taking 107.9 µs a block and a pool of workers taking 815 µs each,
@@ -411,15 +395,9 @@ That is within 1 to 4 ms at every count from 3 to 8, which is better than the ha
 the rounded knee is largely what a closed network of this shape produces. Its limits are as clear.
 It converts a stationary throughput into a file's completion time, so start-up, drain, in-order taking
 and the byte cap are outside it, and its residual cannot all be called contention. The design reviews
-listed where the decoder departs from what product form needs:
-
-| Product form assumes | The decoder has |
-|---|---|
-| a fixed population that circulates | an admission ceiling, W = 4k, on a finite stream that fills and drains |
-| stations that release jobs independently | in-order taking: a finished block waits for the one before it |
-| service rates set by the station alone | workers that slow one another and the scanner through shared caches and cores |
-| admission that does not depend on state | a byte cap on finished output that gates new scanning |
-| one class of job | two classes of block, whose sizes are correlated along the stream |
+listed where the decoder departs from what product form needs: a ceiling rather than a population, a
+finite stream, in-order taking, contention between workers, a byte cap that gates scanning, and two
+classes of block ([the appendix's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
 
 BCMP itself is broader than its reputation, admitting general service distributions under some
 disciplines and some load dependence, so none of these is a blanket disqualification; what was never
@@ -546,15 +524,10 @@ parts this slice left real, together with the handover cost of supplying emissio
 bring their own storage and copying, upstream stages still run when only a later one is ideal, and the
 results measure room within an arrangement, not what any real algorithm will reach.
 
-The full design had to be widened before it ran. A half fraction of the 2⁶ combinations, defined by
-I = SECMRD, contains only the arms with an even number of ideal parts, so it lacks every arm with a
-single part ideal and every arm with all but one ideal, though a part's room is defined as that part
-alone ideal over all real. Predicting those arms from the fraction's model would assume that every
-interaction of three or more parts is zero, and slice A's two-part interactions of −0.017 to −0.028
-make that unsafe. So the matrix runs the 32 fraction arms plus the 12 odd ones, 44 at each count: the
-main effects and two-part interactions come from Jain's sign table on the 32, and room, share of the
-floor and masking are read directly from the measured singles and five-part arms, which are never
-fitted into the effects ([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md)).
+The full design had to be widened before it ran: its registered half fraction of the 64 combinations
+lacked the arms with a single part ideal, on which room is defined, so the matrix runs 44 arms at each
+count, the 32 of the fraction for the effects and the 12 odd ones for room, read directly
+([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md); [the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#10-experimental-design-and-the-ideal-parts-matrix)).
 
 "Ideal form" has three meanings, and the programme needs all three: a tractable model of the decoder,
 an ideal-part configuration as a counterfactual, and a realisable organisation that meets the output
@@ -577,21 +550,15 @@ structural lead. The same record measured where the workers' time goes on a real
 construction 45%, emission 38%, the move-to-front stage 10% and the final expansion and checksum 6%,
 which makes construction, not emission, the largest target for mathematics in the workers.
 
-Two readings give the search its language. Systems biology's question was never Alon's catalogue of
-recurring motifs but which structures can perform a given function at all:
-[Ma and colleagues](https://doi.org/10.1016/j.cell.2009.06.013){ .il-ref } enumerated every
-three-node network to find the few able to adapt,
-[Araujo and Liotta](https://doi.org/10.1038/s41467-018-04151-6){ .il-ref } gave the solution space a
-basis, and [Khammash](https://doi.org/10.1016/j.cels.2021.05.020){ .il-ref } states the programme as
-specify the function, derive necessary conditions, characterise the solutions, check realisability and
-establish optimality ([the lead](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md)). And the theory of hybrid
-dynamical systems, the natural continuation of the reservoir picture, describes a system that flows
-continuously between discrete events, which is the decoder exactly: occupancy and time flow, blocks
-are admitted and released ([the levers](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md)).
-Any reorganisation changes one of five things: how fast work runs, where work may proceed, when events
-may happen, what events do, or what is represented. Thread pairs, tokens, a parallel scan, a fused
-stage or a new representation are all instances, and the formalism organises the search; predictions
-and optimality claims still need their own evidence.
+Two readings give the search its language. Systems biology's question of which structures can perform
+a given function at all, set out as a five-step programme by
+[Khammash](https://doi.org/10.1016/j.cels.2021.05.020){ .il-ref }, frames the search for a better
+decoder as the search for a better network. And the theory of hybrid dynamical systems, the natural
+continuation of the reservoir picture, says any reorganisation changes one of five things: how fast
+work runs, where work may proceed, when events may happen, what events do, or what is represented
+([the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#12-the-design-thread)). Thread pairs, tokens, a parallel scan, a fused stage or a
+new representation are all instances; the formalism organises the search, and predictions and
+optimality claims still need their own evidence.
 
 ## 14. How the work is done
 

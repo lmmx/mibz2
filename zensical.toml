@@ -57,7 +57,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "The decoder as a queueing network" = "blog/2026-11-25-the-decoder-as-a-queueing-network.md" },
+    { "The decoder as a queueing network" = [
+      { "The story" = "blog/2026-11-25-the-decoder-as-a-queueing-network.md" },
+      { "Technical appendix" = "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" },
+    ] },
     { "Posing the inversion problem" = "blog/2026-11-24-posing-the-inversion-problem.md" },
     { "Masked bottlenecks" = "blog/2026-11-24-the-scanner-hides-the-emitter.md" },
     { "What else moves together" = "blog/2026-11-24-what-else-moves-together.md" },
@@ -284,6 +287,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
   { "blog/2026-11-25-the-decoder-as-a-queueing-network.md" = "Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next." },
+  { "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" = "Technical appendix to the queueing-network post: what was read, the vocabulary and shapes, the operational laws, modification analysis, load dependence, variability, the disciplines considered, product form and mean-value analysis, fluid models, the factorial design of the ideal-parts matrix, simulation validation, the design thread and a source register." },
   { "blog/2026-11-24-posing-the-inversion-problem.md" = "The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits." },
   { "blog/2026-11-24-the-scanner-hides-the-emitter.md" = "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone." },
   { "blog/2026-11-24-what-else-moves-together.md" = "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information." },
