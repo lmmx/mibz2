@@ -1964,7 +1964,7 @@ bench-ideal-parts DRY="":
     # failed, so a failure still shows, always with its bundle.
     set -uo pipefail
     # the base: master at v0.5.14 (7475dafd); the build is it plus the research features alone
-    PIN=7475dafd256ffb3e5d98c4cff9d82c89de19e9d7
+    PIN=7475dafd228cba42c29e169d63a15599ff50e9f3
     COPIES=4 BLOCKS=12 SETTLE=0 PREWARM=50 SEED=20261125
     dry="{{DRY}}"
     [ -z "$dry" ] || { BLOCKS=2; PREWARM=2; }
