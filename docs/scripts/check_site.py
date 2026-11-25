@@ -275,6 +275,60 @@ def check_kinds(config, problems):
             )
 
 
+def companion_panel(text, role):
+    """The body of a post's <div class="post-companion" data-role=ROLE markdown> panel, or None."""
+    m = re.search(
+        rf'<div class="post-companion" data-role="{role}" markdown>(.*?)</div>', text, re.S
+    )
+    return m.group(1) if m else None
+
+
+def check_companions(config, problems):
+    """A post and its technical companion are chained on the index and linked both ways.
+
+    On the index, a <div class="post-chain"> holds exactly the main post's card and then the
+    companion's, whose data-companion-of names the main post. The main post's
+    .post-companion panel (data-role="has-companion") links to the companion; the companion's
+    (data-role="companion-of") links back. No panel or data-companion-of appears outside a chain."""
+    blog = ROOT / config["project"]["docs_dir"] / "blog"
+    index = (blog / "index.md").read_text()
+    card = re.compile(r'<a class="post-card" href="([^"]+)"(?: data-companion-of="([^"]+)")?>')
+    chained = set()
+    for chain in re.findall(r'<div class="post-chain">(.*?)</div>', index, re.S):
+        cards = card.findall(chain)
+        if len(cards) != 2 or cards[0][1] or not cards[1][1]:
+            problems.append(
+                "blog/index.md: a post-chain must hold the main post's card, then its companion's "
+                "with data-companion-of"
+            )
+            continue
+        (main, _), (companion, of) = cards
+        if of != main:
+            problems.append(
+                f"blog/index.md: {companion}'s data-companion-of names {of}, not the card before it ({main})"
+            )
+        chained |= {main, companion}
+        for post, role, other in ((main, "has-companion", companion), (companion, "companion-of", main)):
+            path = blog / post
+            if not path.exists():
+                continue  # check_links reports the missing page
+            panel = companion_panel(path.read_text(), role)
+            if panel is None:
+                problems.append(
+                    f'blog/{post}: no <div class="post-companion" data-role="{role}" markdown> '
+                    f"panel linking to {other}"
+                )
+            elif f"]({other})" not in panel:
+                problems.append(f"blog/{post}: its post-companion panel does not link to {other}")
+    outside = re.sub(r'<div class="post-chain">.*?</div>', "", index, flags=re.S)
+    for href, of in card.findall(outside):
+        if of:
+            problems.append(f"blog/index.md: {href} has data-companion-of outside a post-chain")
+    for post in sorted(blog.glob("*.md")):
+        if post.name != "index.md" and post.name not in chained and 'class="post-companion"' in post.read_text():
+            problems.append(f"blog/{post.name}: a post-companion panel, but no post-chain on the index")
+
+
 def check_cards(config, problems):
     """Every card image exists and was drawn from the text its page has now."""
     docs = ROOT / config["project"]["docs_dir"]
@@ -369,6 +423,7 @@ def main():
     check_llms(config, site, problems)
     check_posts(config, problems)
     check_kinds(config, problems)
+    check_companions(config, problems)
     check_cards(config, problems)
     if (site / "index.html").exists():
         check_api(config, site, problems)

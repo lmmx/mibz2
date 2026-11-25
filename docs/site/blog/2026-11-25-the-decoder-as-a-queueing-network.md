@@ -59,9 +59,13 @@ structure hides it.
 - Even with the scanner and emission both made ideal, the decoder keeps 0.82–0.84 of its wall,
   which is where the next measurements, and the search for new mathematics, are aimed.
 
-The theory itself, and the context it came from, is set out in a
-[technical appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md), so that this post can
-follow the mibz2 effort on its own terms.
+<div class="post-companion" data-role="has-companion" markdown>
+
+**A technical companion** goes beneath this story: Little's law on a finite trace, the bottleneck law,
+modification analysis, load dependence, product form and the factorial design of the ideal-parts matrix.
+[Beneath the queueing network&nbsp;→](2026-11-25-the-decoder-as-a-queueing-network-notes.md)
+
+</div>
 
 ## 1. An improvement whose value vanished
 
@@ -156,7 +160,7 @@ In queueing theory's terms a job here is a block of the compressed file, and a s
 that serves it: the scanner, the pool of workers, the reader. Each block makes a demand on each
 station, the time it needs there, and the stations' throughputs and utilisations follow from those
 demands; the vocabulary, and the shapes in which queues are combined, are set out in the
-[technical appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#2-vocabulary-and-shapes).
+[companion post](2026-11-25-the-decoder-as-a-queueing-network-notes.md#2-vocabulary-and-shapes).
 
 The decoder is a tandem: the scanner feeds a parallel group of k workers, each of which takes a
 whole block, and a reader hands the finished blocks to the caller in order. Its admission is
@@ -241,7 +245,7 @@ c + max(b, a/k) to all twenty counts is accordingly less exact than the four-cou
 crossover is 7.17, its residuals run about −13 ms from 8 to 14 workers and +21 ms from 17, and its
 32 ms constant has no identified cause. Third, the textbook's knee for closed systems,
 N\* = (D + Z)/D_max, is a knee in the population of jobs, not in the number of servers; the decoder
-couples the two through W = 4k, but they are different variables ([the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#3-the-operational-laws)).
+couples the two through W = 4k, but they are different variables ([the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#3-the-operational-laws)).
 
 ## 6. Little's law, and what the instruments must record
 
@@ -352,12 +356,12 @@ at 0.972 of its bound and still finished 17% sooner with eight workers ([the out
 
 The candidates were size-based scheduling, helpers for the oldest unfinished block, admission by work
 rather than by count, relaxed resequencing and redundancy; each, with where it comes from and what
-became of it, is in [the appendix's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#7-the-disciplines-considered). None was adopted, and
+became of it, is in [the companion's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#7-the-disciplines-considered). None was adopted, and
 only one, a parallel scanner, would raise the ceiling rather than approach it.
 
 Variability is the other reason to keep distributions rather than means. In a single queue with
 general service times the mean wait grows with the second moment of service time, not only its mean
-(Harchol-Balter, ch. 23; [the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#6-variability-and-open-against-closed)), so long blocks delay everything
+(Harchol-Balter, ch. 23; [the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#6-variability-and-open-against-closed)), so long blocks delay everything
 behind them. The corpus has two classes of
 block: 792 of its 1,724 are under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks
 that skip the main inversion route. Across the mixture the squared coefficient of variation of size
@@ -378,7 +382,7 @@ The bottleneck law gives the two asymptotes; near the knee, finite populations a
 the corner, and a natural next step is a model that computes the curve. The theory has one: product-form networks, from Jackson's open networks through Gordon and Newell's
 closed ones to the BCMP theorem, which make a network's equilibrium solvable, and Reiser and
 Lavenberg's mean-value analysis, which computes a closed network's mean queue lengths and throughput
-by adding one job at a time ([the appendix, with the papers](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
+by adding one job at a time ([the companion, with the papers](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
 
 It was tried. One reader computed exact mean-value analysis for a two-station closed surrogate, with
 a population of N = 4k, a scanner taking 107.9 µs a block and a pool of workers taking 815 µs each,
@@ -397,7 +401,7 @@ It converts a stationary throughput into a file's completion time, so start-up, 
 and the byte cap are outside it, and its residual cannot all be called contention. The design reviews
 listed where the decoder departs from what product form needs: a ceiling rather than a population, a
 finite stream, in-order taking, contention between workers, a byte cap that gates scanning, and two
-classes of block ([the appendix's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
+classes of block ([the companion's table](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
 
 BCMP itself is broader than its reputation, admitting general service distributions under some
 disciplines and some load dependence, so none of these is a blanket disqualification; what was never
@@ -527,7 +531,7 @@ results measure room within an arrangement, not what any real algorithm will rea
 The full design had to be widened before it ran: its registered half fraction of the 64 combinations
 lacked the arms with a single part ideal, on which room is defined, so the matrix runs 44 arms at each
 count, the 32 of the fraction for the effects and the 12 odd ones for room, read directly
-([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md); [the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#10-experimental-design-and-the-ideal-parts-matrix)).
+([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md); [the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#10-experimental-design-and-the-ideal-parts-matrix)).
 
 "Ideal form" has three meanings, and the programme needs all three: a tractable model of the decoder,
 an ideal-part configuration as a counterfactual, and a realisable organisation that meets the output
@@ -556,7 +560,7 @@ a given function at all, set out as a five-step programme by
 decoder as the search for a better network. And the theory of hybrid dynamical systems, the natural
 continuation of the reservoir picture, says any reorganisation changes one of five things: how fast
 work runs, where work may proceed, when events may happen, what events do, or what is represented
-([the appendix](2026-11-25-the-decoder-as-a-queueing-network-notes.md#12-the-design-thread)). Thread pairs, tokens, a parallel scan, a fused stage or a
+([the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#12-the-design-thread)). Thread pairs, tokens, a parallel scan, a fused stage or a
 new representation are all instances; the formalism organises the search, and predictions and
 optimality claims still need their own evidence.
 

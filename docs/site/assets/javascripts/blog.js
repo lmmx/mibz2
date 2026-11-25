@@ -670,6 +670,9 @@
     // the post's hero, or its card on the index, takes the same colour for its bottom line
     const box = el.closest(".post-hero, .post-card");
     if (box) box.dataset.kind = KINDS[label];
+    // and so does the panel that ties the post to its companion
+    if (box && box.matches(".post-hero"))
+      document.querySelectorAll(".md-typeset .post-companion").forEach((p) => (p.dataset.kind = KINDS[label]));
   };
 
   const init = () => {
