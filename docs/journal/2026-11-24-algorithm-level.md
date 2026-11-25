@@ -2238,3 +2238,41 @@ The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the 
 - the micro-win above;
 - placement: the scanner's core kept unshared, −4% (§§78, 81);
 - the structural answer, a poolable or parallel scan (MONODROMY's T4), which removes the single serial core rather than speeding it.
+
+## 83. Lazy workers at 5 and 7 threads (#868): ADOPTS, and merged
+
+**The run:** `kernel-choice/run-20261125T044116Z`, recipe #862 at 377a3557, expectation `lazy-four-to-seven`, head #868 084275e6 against merge-base f8edc1ac. It is evidence 94728a2c, SHA-256 e0425cba…3c13, checked.
+- Every phase passed.
+- Each build probed its registered plan.
+- The data is in `math-targets/data/kernel-choice-split/`.
+
+| threads | base → head plan | wall head/base [95%] | step | CPU | peak RSS |
+|---|---|---|---|---|---|
+| 3 | 3 eager → 3 eager | 0.999 [0.981, 1.018] | INCONCLUSIVE | 1.000 | 1.031 |
+| 4 | 4 lazy → 4 lazy | 0.999 [0.992, 1.006] | INCONCLUSIVE | 1.000 | 1.001 |
+| **5** | 5 eager → 5 lazy | **0.840 [0.831, 0.850]** | FASTER | 0.847 | **0.421** |
+| **7** | 7 eager → 7 lazy | **0.631 [0.624, 0.639]** | FASTER | 0.642 | **0.373** |
+| 8 | 8 lazy → 8 lazy | 0.974 [0.944, 1.005] | INCONCLUSIVE | 0.982 | 0.997 |
+| 10 | 7 lazy → 7 lazy | 0.995 [0.984, 1.005] | INCONCLUSIVE | 0.995 | 1.001 |
+| 12 | 7 lazy → 7 lazy | 1.002 [0.988, 1.017] | INCONCLUSIVE | 0.999 | 0.999 |
+
+**The verdict under §80's frozen rule: ADOPTS.**
+- 5 and 7 threads are FASTER, none of the supporting counts is SLOWER, and peak RSS is ≤ 1.10 at every count (largest 1.031, at 3).
+- The result replicates §80's first measurement (0.845, 0.634) and §76's prediction (0.834, 0.639).
+
+**Merged:** #868 at 084275e6, the head the bench measured, as 56c56573.
+- CI was green on all 30 runs, Miri included, and head-sha passed before and after.
+- **What changes for users:** on the i9 unpinned, `BzReader::parallel(r, 5)` is 16% faster with 58% less peak memory, and `parallel(r, 7)` is 37% faster with 63% less.
+- **No release overnight** (Louis's rule). This waits for the release process.
+- **#860 is closed:** its lazy part is merged here, and its trim to 8 is re-registered separately (§80) once the `ab` pre-spin (#874) lands.
+
+**What is decided and what is open, this night:**
+- **Adopted:** lazy at 5 and 7.
+- **Held, to be re-asked with the spin warm-up (§81):**
+  - the combined scanner fix (#861);
+  - the trim to 8;
+  - the batched bit count (§82).
+- **Rejected:** three Huffman symbols a lookup (§82).
+- **Open design questions:**
+  - placement: what a library can request (§78, record 132);
+  - the clock after idle: whether a decoder should respond (§81).
