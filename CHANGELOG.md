@@ -112,6 +112,19 @@ from there to the tag commit.
 - **Still open from 0.5.13's review:** `owned-writer` has no retention note, and
   `memory-lever` and `phase-counters` are still to be checked against their removal conditions.
 
+**Release scaling (RELEASING §5):** 0.5.14 against 0.5.13 on the i9-10900K (`release-scaling/run-20261125T100401Z`, evidence 769799fe; `bench/release-scaling/2026-11-25-…-0.5.14/`).
+- **10 threads and below:** the harness pins one CPU a core, where 0.5.14's plans are unchanged. Every ratio is 1.000 ± 0.01, as expected.
+- **12, 16 and 20 threads (unpinned, 8 workers against 7):** 0.5.13/0.5.14 wall is 0.980 [0.889, 1.080], 1.071 [0.996, 1.152] and 0.999 [0.895, 1.116]. CPU is 4–10% higher in 0.5.14.
+- **Not resolved:** the harness has no pre-spin, and its decodes take about 60 ms, so it can't resolve the 7% measured with the spin on four copies (journal §85).
+- **No step clears §5b's bar.**
+
+**The team threshold (RELEASING §5a):** `crossover/run-20261125T101501Z`, evidence 115a42d5.
+- **Unmoved.** No forced arm is faster than the shipped decoder at any count from 4 to 20:
+  - one block a thread (`workers-w`): 0.983–1.143;
+  - teams of 2: 1.26–4.33;
+  - teams of 3: 1.45–2.90.
+- **Sanity:** at 5 and 7 threads, where `workers-w` runs the shipped plan, its intervals span 1.
+
 ## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
 
 ### <!-- 3 -->Performance
