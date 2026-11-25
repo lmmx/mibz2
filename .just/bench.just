@@ -2052,3 +2052,116 @@ bench-character DRY="":
     date -u +%FT%TZ > "$O/finished.txt"
     rm -f "$W/wikidata-x$COPIES.bz2"
     bash bench/bundle.sh "$O"
+
+# The decoder's character, stage 2a (docs/journal/2026-11-25-character-stage2-registration.md,
+# DRAFT until stage 1's bundle fixes its anchors; the design briefs/character-review-decisions.md
+# section 2, with section 5's decisions). DIAGNOSTIC: it decides nothing. One binary: stage 1's
+# library (master 9621b7ad with the character feature) and its harness with the window switch.
+# The plan is stage 1's bundle (the evidence branch, checked by its SHA-256) put through the
+# registered rules with a calibration of the pacing loop on this machine: the anchors, the
+# coordinates kept and each dose. Then every cell in 6 randomised blocks (the screen, the
+# surface at k*, the gates, the placements, the memory dose, the held-out validation), and the
+# oracle arms from the four-arm binary at k*. About 25 minutes. DRY (the first positional
+# argument: one block, no settle, a 2 s pre-warm; not evidence) checks the wiring.
+#   just submit bench-character-stage2
+bench-character-stage2 DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
+    # stage 1's bundle, filled at the freeze from its evidence post
+    STAGE1_COMMIT=TBD STAGE1_PATH=TBD STAGE1_SHA256=TBD
+    FOUR_ARM=5731db1908d58fa4a51d22baf473d2f61ccd670e
+    COPIES=4 BLOCKS=6 SETTLE=1 PREWARM=50 ORACLE_ROUNDS=8 SEED=20261125
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { BLOCKS=1; SETTLE=0; PREWARM=2; ORACLE_ROUNDS=4; }
+    W=$PWD/target/character-stage2
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-character-stage2 (docs/journal/2026-11-25-character-stage2-registration.md; diagnostic) at $(git rev-parse HEAD): master $PIN with the character feature, $BLOCKS blocks, settle $SETTLE s, seed $SEED; the oracle arms from the four-arm binary at $FOUR_ARM"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-character-stage2: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-character-stage2: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-character-stage2: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the pin (section 5): master's decoder at PIN, plus the character feature alone, never a later master
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-character-stage2: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-character-stage2: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features character --example character --example ab --example windows
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    # the oracle arms' binary: the four-arm recipe's, at its tagged commit, in a worktree of its own
+    git cat-file -e "$FOUR_ARM^{commit}" 2>/dev/null || git fetch -q origin bench/four-arm
+    rm -rf "$W/four-arm"
+    git worktree add -q --detach "$W/four-arm" "$FOUR_ARM"
+    (cd "$W/four-arm" && CARGO_TARGET_DIR="$W/four-arm-target" cargo build -q --release --features scan-oracle --example four_arm)
+    FA=$W/four-arm-target/release/examples/four_arm
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\nfour-arm %s\n' "$PIN" "$(git rev-parse HEAD)" "$FOUR_ARM" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$CH" "$FA" | tee "$O/binaries.sha256"
+    # the corpus, as stage 1's
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-character-stage2: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # stage 1's bundle, from the evidence branch, checked
+    [ "$STAGE1_COMMIT" != TBD ] || { echo "bench-character-stage2: stage 1's bundle is not filled in (the draft)"; exit 1; }
+    git cat-file -e "$STAGE1_COMMIT^{commit}" 2>/dev/null || git fetch -q origin evidence
+    git show "$STAGE1_COMMIT:$STAGE1_PATH" > "$W/stage1.tar.gz"
+    [ "$(sha256sum "$W/stage1.tar.gz" | cut -d' ' -f1)" = "$STAGE1_SHA256" ] \
+      || { echo "bench-character-stage2: stage 1's bundle is not its SHA-256"; exit 1; }
+    rm -rf "$W/stage1" && mkdir "$W/stage1" && tar -xzf "$W/stage1.tar.gz" -C "$W/stage1" --strip-components=1
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    for f in scaling_governor scaling_driver energy_performance_preference; do
+      echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+    done > "$O/frequency-policy.txt"
+    echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+    echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+    uname -a > "$O/uname.txt"
+    # the calibration and the plan
+    "$CH" --calibrate 10000000 5 > "$O/calibration.json"
+    python3 bench/character_stage2.py plan "$W/stage1/runs.jsonl" "$O/calibration.json" "$O/lscpu.txt" "$O/lscpu-e.txt" "$O/plan.json"
+    KSTAR=$(python3 -c "import json; print(json.load(open('$O/plan.json'))['kstar'])")
+    # the run, then the oracle arms at k*
+    python3 bench/character_stage2.py run "$O/plan.json" --bin "$CH" --corpus "$W/wikidata-x$COPIES.bz2" \
+      --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED \
+      || echo "bench-character-stage2: the driver failed (console.log says why); the bundle is kept"
+    "$FA" "$W/wikidata-x$COPIES.bz2" "$KSTAR" $ORACLE_ROUNDS $SETTLE "$O/oracle.tsv" \
+      || echo "bench-character-stage2: the oracle arms failed; the bundle is kept"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/character_stage2.py report "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" \
+      --out "$O" --blocks $BLOCKS --seed $SEED --oracle "$O/oracle.tsv" | tee "$O/report.txt" \
+      || echo "bench-character-stage2: VOID, no report (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    git worktree remove --force "$W/four-arm" || true
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"

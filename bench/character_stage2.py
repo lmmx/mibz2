@@ -52,6 +52,7 @@ DOSE_BYTES = 2 << 20
 SURFACE = [0.0, 0.10, 0.20]
 FALLBACK_CYCLES_PER_ITER = 0.5  # (8 iterations folded into one multiply-add, about 4 cycles)
 STREAM = b"BZh9\x31\x41\x59\x26\x53\x59"
+NO_TURBO = "/sys/devices/system/cpu/intel_pstate/no_turbo"
 
 
 def med(xs):
@@ -220,8 +221,22 @@ def plan(a) -> dict:
     if len(byc) >= 7 and all(len(c) >= 2 for c in byc[:4]):
         distinct = [c[0] for c in byc[:7]]
         siblings = [x for c in byc[:4] for x in c[:2]]
+        # (turbo crossed in where no_turbo is writable without a password; else the placement
+        # factor alone, the achieved frequency a covariate: SMT and turbo then not separated)
+        turbo = os.access(NO_TURBO, os.W_OK)
         for arm, mask in (("distinct", distinct), ("siblings", siblings)):
             cells.append({"section": "placement", "k": 4, "arm": arm, "treat": [], "mask": mask})
+            if turbo:
+                cells.append(
+                    {
+                        "section": "placement",
+                        "k": 4,
+                        "arm": arm + "_noturbo",
+                        "treat": [],
+                        "mask": mask,
+                        "no_turbo": 1,
+                    }
+                )
     fav = favoured(byc)
     if fav is not None:
         sib = next((c for c in byc if fav in c), [fav])
@@ -340,7 +355,17 @@ def run(a):
             if c.get("mask"):
                 cmd = ["taskset", "-c", ",".join(map(str, c["mask"]))] + cmd
             time.sleep(a.settle)
-            r = subprocess.run(cmd, capture_output=True, text=True, env=ENV)
+            turbo_was = None
+            if c.get("no_turbo"):
+                turbo_was = open(NO_TURBO).read().strip()
+                with open(NO_TURBO, "w") as f:
+                    f.write("1")
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, env=ENV)
+            finally:
+                if turbo_was is not None:
+                    with open(NO_TURBO, "w") as f:
+                        f.write(turbo_was)
             extra = {
                 "cell": ci,
                 "block": b,
@@ -575,6 +600,36 @@ def report(a) -> int:
                         "label": tag,
                     }
                 )
+    # the oracle arms (the four-arm binary's own A, B and C at the knee; §5's decision)
+    if a.oracle and os.path.exists(a.oracle):
+        print(
+            "\n## The oracle arms (the four-arm binary at k*, its rounds paired; ratios against its own A)\n"
+        )
+        o = {}
+        for line in open(a.oracle).read().splitlines()[1:]:
+            f = line.split("\t")
+            if f and f[0] == "run":
+                o.setdefault((int(f[1]), f[3]), []).append(float(f[5]))
+        for arm in ("B", "C", "D"):
+            v = [
+                math.log(o[(r, arm)][0] / o[(r, "A")][0])
+                for (r, x) in o
+                if x == arm and (r, "A") in o
+            ]
+            if v:
+                m, lo, hi = interval(v)
+                print(
+                    f"{arm}/A {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(v)} rounds"
+                )
+        a_walls = [w[0] for (r, x), w in o.items() if x == "A"]
+        base = find("screen", ks, "base")
+        if a_walls and base is not None:
+            ours = statistics.median(dec[(base, b)]["wall_s"] for b in range(a.blocks))
+            gap = statistics.median(a_walls) / ours - 1
+            print(
+                f"the layout check: the four-arm binary's A against this binary's baseline at k*: {gap:+.2%}"
+                + ("  (over 3%: the oracle ratios VOID)" if abs(gap) > 0.03 else "")
+            )
     # validation (held out: reported, never fitted)
     print("\n## Validation (held out from every fit)\n")
     for ci, c in cell.items():
@@ -632,6 +687,7 @@ def main() -> int:
     rp.add_argument("--blocks", type=int, default=6)
     rp.add_argument("--seed", type=int, default=20261125)
     rp.add_argument("--out-bytes", type=int, default=4 * 209_700_196)
+    rp.add_argument("--oracle", help="the four-arm binary's runs.tsv at k*")
     a = ap.parse_args()
     if a.cmd == "plan":
         plan(a)
