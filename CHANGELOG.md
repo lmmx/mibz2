@@ -50,6 +50,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(thomas-murphy)* the dek opens on the mibz2 swarm
 - *(thomas-murphy)* retitle "Playing the hand you're dealt"
 
+- **Lazy workers at 5 and 7 threads on the i9 unpinned: 16% and 37% faster, with 58% and 63%
+  less peak memory (#868).**
+  - **What changed:** at 5 and 7 threads, unpinned on the i9, the parallel decoder now runs the
+    plan's own workers on the lazy kernel, as it already did at 4 and 6. It ran them eager.
+  - **The run:** `kernel-choice/run-20261125T044116Z` (recipe #862 at 377a3557, head 084275e6
+    against f8edc1ac; evidence 94728a2c, sha256 e0425cba…3c13), under the rule registered in
+    journal §80, before its data. Head over base, unpinned, Wikidata ×4, 16 rounds:
+
+    | threads | wall | CPU | peak RSS |
+    |--:|---|--:|--:|
+    | 5 | **0.840** [0.831, 0.850] | 0.847 | **0.421** |
+    | 7 | **0.631** [0.624, 0.639] | 0.642 | **0.373** |
+
+    The counts where nothing changes (3, 4, 8, 10 and 12) were inconclusive, 0.974–1.002. The
+    result replicates the first measurement (§80: 0.845 and 0.634). Journal §83.
+- **Eight lazy workers from 10 threads on the i9 unpinned: 7% faster at 10 and 12 threads
+  (#878).**
+  - **What changed:** from 10 threads, unpinned on the i9, the decoder runs 8 lazy workers with
+    32 slots, not 7 with 28. That covers the Python default (20 threads).
+  - **The run:** `kernel-choice/run-20261125T061204Z` (recipe #862 at 55a4a81d, head cf61f483
+    against aa041e25, with a 100 ms spin before each decode; evidence 5d259c88, sha256
+    dbb88594…5716), under the rule registered in journal §84, before its data. Head over base,
+    unpinned, Wikidata ×4, 16 rounds:
+
+    | threads | wall | CPU | peak RSS |
+    |--:|---|--:|--:|
+    | 10 | **0.929** [0.908, 0.951] | 1.022 | 1.037 |
+    | 12 | **0.932** [0.920, 0.945] | 1.033 | 1.046 |
+
+    The counts where nothing changes (3, 4, 5, 7 and 8) were inconclusive, 0.986–1.004.
+    Journal §85.
+  - **The cost:** CPU +2.2% and +3.3%, and peak RSS +3.7% and +4.6%, weighed under
+    PERFORMANCE-POLICY.md against −7% wall at the default counts.
+
+**Where it applies:** only on the i9-10900K workstation, unpinned. Pinned runs and other
+machines keep 0.5.13's plans. Both results are from one machine, and the release scaling of
+0.5.14 against 0.5.13 is still to come (queued at 7475dafd, #886).
+
+**The paired run on CI** compared v0.5.13 at 4a4a1c22 with master at bb08b983 (Benchmark run
+[45587502720](https://github.com/lmmx/mibz2/actions/runs/45587502720), Intel Xeon 6973P-C,
+4 CPUs on 2 physical cores, 10 rounds, bench 3.9.0). Master moved only in its version numbers
+from there to the tag commit.
+- **Outputs:** the same bytes on all 420 runs.
+- **Wikidata:** no change, as expected, since neither change acts on a 4-CPU runner.
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|---|--:|
+  | 1 | −0.1% [−1.7, +1.4] | −0.1% [−1.7, +1.4] | −0.1% |
+  | 2 | +0.1% [−4.2, +4.6] | −0.9% [−5.1, +3.6] | −1.2% |
+  | 4 | −1.5% [−3.2, +0.1] | −0.6% [−2.8, +1.7] | +3.2% |
+
+- **Stages:** one thread's total is 11.22 c/B in both builds, and no stage moved.
+- **The other corpora:** `records` at 1 and 2 threads and `text` at 4 were marked faster, and
+  nothing slower. The decoder's code on the runner is unchanged, so these are chance (about
+  one run in five flags something with no real change).
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **Reviewed:** `trace`, `memory-lever`, `wait-stats`, `walk-stats`, `dose`, `phase-counters`,
+  `induction-trace`, `grammar-replay`, `owned-writer`, `moonshot` and `census` (new, #805).
+- **Still open from 0.5.13's review:** `owned-writer` has no retention note, and
+  `memory-lever` and `phase-counters` are still to be checked against their removal conditions.
+
 ## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
 
 ### <!-- 3 -->Performance
