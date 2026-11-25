@@ -1968,10 +1968,14 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # `just bench-kernel-choice perf/lazy-from-four <sha>` (the first head, as its run was made);
 # `just bench-kernel-choice perf/lazy-four-to-seven <sha> lazy-four-to-seven` (the second; the
 # queue's args=perf/lazy-four-to-seven,<sha>,lazy-four-to-seven: the queue drops empty
-# positions, so EXPECT is before DRY). DRY (the fourth: two rounds, no settle, the machine and the
+# positions, so EXPECT is before DRY). PRESPIN (the fourth; empty or 0 for none, else 10 to 1000
+# ms): the harness's pre-spin on every CPU before each decode, with --machine-state so each
+# decode's clock is recorded, the standard warm-up at or above the knee (#145, 25 November; ab
+# --prespin-ms, bench 3.9.0, #874, so the head must carry it): the queue's
+# args=perf/<head>,<sha>,<expect>,100. DRY (the fifth: two rounds, no settle, the machine and the
 # registered plans not checked; the wiring only, never evidence) as
-# `just bench-kernel-choice perf/lazy-from-four "" "" 1`.
-bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from-four" DRY="":
+# `just bench-kernel-choice perf/lazy-from-four "" "" "" 1`.
+bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from-four" PRESPIN="" DRY="":
     #!/usr/bin/env bash
     # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
     # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
@@ -1979,7 +1983,7 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
     # failed, so a failure still shows, always with its bundle. The only file this recipe leaves
     # under target/*/ named *.tar.gz is its bundle (just submit counts them).
     set -uo pipefail
-    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" EXPECT="{{EXPECT}}" dry="{{DRY}}"
+    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" EXPECT="{{EXPECT}}" PRESPIN="{{PRESPIN}}" dry="{{DRY}}"
     COPIES=4 ROUNDS=16 SETTLE=2 THREADS=3,4,5,7,8,10,12
     [ -n "$EXPECT" ] || EXPECT=lazy-from-four
     # the registered head's judged and supporting counts (kernel_choice.py checks them against
@@ -1987,12 +1991,19 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
     case $EXPECT in
       lazy-from-four) JUDGED=5,7,10 SUPPORTING=3,4,8,12 ;;
       lazy-four-to-seven) JUDGED=5,7 SUPPORTING=3,4,8,10,12 ;;
-      *) echo "bench-kernel-choice: EXPECT '$EXPECT' is not lazy-from-four or lazy-four-to-seven; DRY is the fourth argument (nothing was run)"; exit 1 ;;
+      *) echo "bench-kernel-choice: EXPECT '$EXPECT' is not lazy-from-four or lazy-four-to-seven; PRESPIN is the fourth argument and DRY the fifth (nothing was run)"; exit 1 ;;
     esac
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
     [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-kernel-choice: HEAD_REF '$HEAD_REF' is not a branch name (nothing was run)"; exit 1; }
     [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \
-      || { echo "bench-kernel-choice: HEAD_SHA '$HEAD_SHA' is not a full 40-character SHA or empty; EXPECT is the third argument and DRY the fourth (nothing was run)"; exit 1; }
+      || { echo "bench-kernel-choice: HEAD_SHA '$HEAD_SHA' is not a full 40-character SHA or empty; EXPECT is the third argument, PRESPIN the fourth and DRY the fifth (nothing was run)"; exit 1; }
+    # PRESPIN (the fourth; empty or 0 for none): ms of the harness's pre-spin on every CPU before each
+    # decode (ab --prespin-ms, bench 3.9.0, #874), with --machine-state so each decode's clock is
+    # recorded (cycles_per_ref): the standard warm-up at or above the knee (#145, 25 November)
+    [[ -z $PRESPIN || $PRESPIN == 0 || ( $PRESPIN =~ ^[0-9]+$ && $PRESPIN -ge 10 && $PRESPIN -le 1000 ) ]] \
+      || { echo "bench-kernel-choice: PRESPIN '$PRESPIN' is not empty, 0, or 10 to 1000 ms; DRY is the fifth argument (nothing was run)"; exit 1; }
+    [[ $PRESPIN != 0 ]] || PRESPIN=
+    WARM=${PRESPIN:+--prespin-ms $PRESPIN --machine-state}
     W=$PWD/target/kernel-choice
     mkdir -p "$W" || exit 1
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
@@ -2000,7 +2011,7 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
     exec 3>&1 4>&2
     exec > >(tee -a "$O/console.log") 2>&1
     TEE=$!
-    echo "bench-kernel-choice (docs/journal/2026-11-25-kernel-choice-registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-the tip of} origin/$HEAD_REF against its merge-base with origin/master, expecting $EXPECT, unpinned at $THREADS threads (judged $JUDGED), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    echo "bench-kernel-choice (docs/journal/2026-11-25-kernel-choice-registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-the tip of} origin/$HEAD_REF against its merge-base with origin/master, expecting $EXPECT, unpinned at $THREADS threads (judged $JUDGED), $ROUNDS paired rounds, settle $SETTLE s${PRESPIN:+, a ${PRESPIN} ms pre-spin on every CPU before each decode}, on $COPIES copies of corpora/wikidata.bz2"
     date -u +%FT%TZ > "$O/started.txt"
     printf 'expect %s\njudged %s\nsupporting %s\n' "$EXPECT" "$JUDGED" "$SUPPORTING" > "$O/expect.txt"
     [ -z "$dry" ] || echo "bench-kernel-choice: DRY RUN: two rounds, no settle, the machine and the registered plans not checked; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
@@ -2078,6 +2089,10 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
       beyond=$(printf '%s\n' "$changed" | grep -E '^(Cargo\.toml|Cargo\.lock|build\.rs|rust-toolchain\.toml|examples/ab\.rs|examples/kernel_choice_probe\.rs)$' || true)
       [ -z "$beyond" ] \
         || { echo "bench-kernel-choice: the builds differ in the harness or the build: $(echo $beyond)"; exit 1; }
+      if [ -n "$PRESPIN" ]; then
+        git show "$head:examples/ab.rs" | grep -q -- '"--prespin-ms"' \
+          || { echo "bench-kernel-choice: PRESPIN $PRESPIN, but the head's harness has no --prespin-ms (it predates #874: merge master into the head)"; exit 1; }
+      fi
       printf '%s\n' "$changed" > "$O/src-changed.txt"
       git diff "$base" "$head" -- src examples tests > "$O/src-head-against-base.diff"
       git log --format='%H %s' "$base..$head" > "$O/head-commits.txt"
@@ -2155,7 +2170,7 @@ bench-kernel-choice HEAD_REF="perf/lazy-from-four" HEAD_SHA="" EXPECT="lazy-from
     # arms interleaved within each round, the arms' order rotated
     timed() {
       "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
-        --settle $SETTLE "$X4"
+        --settle $SETTLE $WARM "$X4"
       "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
       date -u +%FT%TZ > "$O/timed.txt"
     }
