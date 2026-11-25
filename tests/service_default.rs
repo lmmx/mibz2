@@ -134,10 +134,10 @@ fn the_entry_points_reach_the_service_core() {
             res.unwrap_or_else(|err| panic!("{name}: {e:?}: {err}"));
             assert!(got == *data, "{name}: {e:?}: the bytes");
             // (lazy workers beat the service core at 10 threads, #145 LOG 6905312941, so
-            // it is no longer the default: lazy workers of a block each, seven of them,
-            // #515 and REVIEW 6943617731)
+            // it is no longer the default: lazy workers of a block each, eight of them
+            // unpinned from journal §76; seven before, #515 and REVIEW 6943617731)
             assert!(!b.service && !b.pipelined, "{name}: {e:?}: {b:?}");
-            assert_eq!(b.threads, 7, "{name}: {e:?}");
+            assert_eq!(b.threads, 8, "{name}: {e:?}");
             assert!(b.counts.is_none(), "{name}: {e:?}");
         }
     }
@@ -165,9 +165,9 @@ fn custom_windows_scale_to_the_teams() {
 }
 
 /// The existing plan everywhere else, by the same dispatch: 4, 5, 7 and 9 threads on the
-/// target unpinned (workers, 4, 6 and 8 included), 10, 11 and 20 (from its 10 cores: seven
-/// lazy workers, the window scaled to them, `trims_to_seven`), pinned one CPU a core on
-/// exactly the threads asked (`Machine::pinned_i9`) three and five eager workers at 4 and
+/// target unpinned (workers, 4, 6 and 8 included), 10, 11 and 20 (from its 10 cores: eight
+/// lazy workers unpinned, from journal §76, the window scaled to them, `trims_from_ten`),
+/// pinned one CPU a core on exactly the threads asked (`Machine::pinned_i9`) three and five eager workers at 4 and
 /// 6, six lazy at 8 and seven at 10, the window scaled to them (`trimmed_workers`),
 /// and never under fewer or more cores than the threads asked or two CPUs of a core, 6, 8, 10
 /// and 20 threads off it (a CPU of the same shape but another model, an unknown quota or a
@@ -209,6 +209,8 @@ fn the_existing_plan_otherwise() {
     let cases = [
         (i9.clone(), 4, false, 4, false),
         (i9.clone(), 5, false, 5, false),
+        // unpinned at 10 and more: 8 lazy workers (`UNPINNED_FROM_TEN`, journal §76; 7 before);
+        // at 5 and 7, from §76, the plan's own workers on the lazy kernel (`UNPINNED_LAZY_FROM`);
         // unpinned at 8: master's (`bench-unpinned`, LOG 6949008682); at 6, from 0.5.7, the
         // plan's six workers on the lazy kernel (`UNPINNED_AT_SIX`), and at 4, from 0.5.8, the
         // plan's four (`UNPINNED_AT_FOUR`), the same threads and window
@@ -217,9 +219,9 @@ fn the_existing_plan_otherwise() {
         (i9.clone(), 7, false, 7, false),
         (i9.clone(), 8, false, 8, false),
         (i9.clone(), 9, false, 9, false),
-        (i9.clone(), 10, false, 7, true),
-        (i9.clone(), 11, false, 7, true),
-        (i9.clone(), 20, false, 7, true),
+        (i9.clone(), 10, false, 8, true),
+        (i9.clone(), 11, false, 8, true),
+        (i9.clone(), 20, false, 8, true),
         (limited.clone(), 6, false, 6, false),
         (limited.clone(), 8, false, 8, false),
         (limited.clone(), 10, false, 10, false),
