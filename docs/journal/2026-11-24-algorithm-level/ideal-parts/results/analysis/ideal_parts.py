@@ -31,7 +31,8 @@ the arms paired within a block:
   - **MASKED** iff NO ROOM alone, the interaction's interval wholly below 0, and ROOM with the
     other part ideal;
   - **UNRESOLVED** otherwise.
-- **The interaction at k:**
+- **The interaction at k** (on Jain's q_SE, the /4 coefficient; its 4 q_SE, the difference of
+  differences, is shown beside it):
   - **INTERACTS** iff its interval (of q_SE) excludes 0;
   - **ADDITIVE** iff it lies within +-0.01;
   - **UNRESOLVED** otherwise.
@@ -241,7 +242,7 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
 
     pr("\n## The effects (Jain's 2^2 sign table on log wall; mean over blocks, 95% t-interval)\n")
     pr(
-        "k   q_S                         q_E                         q_SE (interaction)          label         variation: S / E / SE / residual"
+        "k   q_S                         q_E                         q_SE (interaction)          4 q_SE (the difference of differences)  label         variation: S / E / SE / residual"
     )
     table = {}
     for k in counts:
@@ -264,6 +265,7 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
         pr(
             f"{k:<3} "
             + "  ".join(f"{m:+.4f} [{lo:+.4f}, {hi:+.4f}]" for m, lo, hi in (iS, iE, iI))
+            + f"  {4 * iI[0]:+.4f} [{4 * iI[1]:+.4f}, {4 * iI[2]:+.4f}]{'':<15}"
             + f"  {lab:<13} "
             + " / ".join(f"{share[n]:.1%}" for n in ("S", "E", "SE", "residual"))
         )

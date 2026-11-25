@@ -10,6 +10,7 @@ import io
 import math
 import os
 import random
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -107,6 +108,15 @@ def main():
           [r for r in rows if r["k"] == 10])  # fmt: skip
     check(
         "k 10: the parts INTERACT", label(rows, 10, "interaction S.E") == "INTERACTS", text[-1500:]
+    )
+    row10 = next(
+        (ln for ln in text.splitlines() if ln.startswith("10  ") and "INTERACTS" in ln), ""
+    )
+    q = [float(v) for v in re.findall(r"([+-]\d\.\d{4}) \[", row10)]
+    check(
+        "q_SE and 4 q_SE both shown, the second four times the first",
+        len(q) == 4 and abs(q[3] - 4 * q[2]) < 1e-3,
+        row10,
     )
     check("k 6: neither part has room", label(rows, 6, "room S") == "NO ROOM" and label(rows, 6, "room E") == "NO ROOM",
           [r for r in rows if r["k"] == 6])  # fmt: skip
