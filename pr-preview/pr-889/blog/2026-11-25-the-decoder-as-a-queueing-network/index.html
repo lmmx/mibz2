@@ -1,0 +1,3850 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-889/blog/2026-11-25-the-decoder-as-a-queueing-network/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../2026-11-24-posing-the-inversion-problem/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>The decoder as a queueing network - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=4b4d79d01a80">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="The decoder as a queueing network">
+  <meta property="og:description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-889/blog/2026-11-25-the-decoder-as-a-queueing-network/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-889/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The decoder as a queueing network">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The decoder as a queueing network">
+  <meta name="twitter:description" content="Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-889/assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network.png">
+  <meta name="twitter:image:alt" content="The decoder as a queueing network">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The decoder as a queueing network
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder as a queueing network
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder as a queueing network
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-a-simple-observation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. A simple observation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-first-model-and-its-first-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The first model, and its first test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-reading-the-field-four-times-over" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Reading the field, four times over
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-stage-1-the-decoder-across-twenty-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Stage 1: the decoder across twenty counts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-fourth-reading-and-a-design-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. The fourth reading, and a design space
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-stage-2-which-activity-controls-the-wall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Stage 2: which activity controls the wall
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-designing-for-a-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Designing for a purpose
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-the-dynamical-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. The dynamical layer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-the-work-is-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. How the work is done
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-what-runs-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. What runs next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-posing-the-inversion-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Posing the inversion problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-the-scanner-hides-the-emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Masked bottlenecks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-what-else-moves-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What else moves together
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-halving-the-single-row-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Halving the single-row steps
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Playing the hand you're dealt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-two-centuries-of-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_19" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_19" id="__nav_7_19_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_19_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_19">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_21" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_21">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reconstructing text from compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_33" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_33">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_38" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_38" id="__nav_7_38_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_38_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_38">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_40">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-a-simple-observation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. A simple observation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-first-model-and-its-first-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The first model, and its first test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-reading-the-field-four-times-over" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Reading the field, four times over
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-stage-1-the-decoder-across-twenty-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Stage 1: the decoder across twenty counts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-fourth-reading-and-a-design-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. The fourth reading, and a design space
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-stage-2-which-activity-controls-the-wall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Stage 2: which activity controls the wall
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-designing-for-a-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Designing for a purpose
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-the-dynamical-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. The dynamical layer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-the-work-is-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. How the work is done
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-what-runs-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. What runs next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-25-the-decoder-as-a-queueing-network.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="the-decoder-as-a-queueing-network">The decoder as a queueing network<a class="headerlink" href="#the-decoder-as-a-queueing-network" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.</p>
+<p class="post-meta">25 November 2026 · 18 min read · <a href="#10-what-runs-next">Research in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>mibz2's decoder is one serial scanner feeding parallel workers, and the simplest model of such a
+thing, a two-station queue, turns out to describe it almost exactly. Measured at one to four
+workers, it predicts where adding workers stops helping, at about 7.5 on our ten-core machine, and
+the measurement across every count from 1 to 20 puts the crossover at 7.67. Above that point the
+scanner sets the speed, so reorganising how work is queued can recover only a few per cent; real
+gains need less work at the bottleneck, and when they arrive the bottleneck moves back to the
+workers, so improvements have to be priced together. Reading the performance-analysis literature
+with several independent readers then caught an error in our own first reading and found about 8%
+of the scanner's work in two avoidable copies. The experiments that follow say which mechanism
+controls the decoder at which worker count, and so which costs belong to engineering and which
+might yield to mathematics; the first of them finds the workers' construction and emission in
+control below the knee and the scanner's Huffman decode at and above it. This post picks up where
+<a href="../2026-11-24-posing-the-inversion-problem/">Posing the inversion problem</a> left off.</p>
+<p><strong>Takeaways</strong></p>
+<ul>
+<li>A two-station model fitted on four worker counts predicts the knee at 7.49 workers; the
+  measured crossover is 7.67, and the decoder's best wall, 0.191 s, is at 8.</li>
+<li>Above the knee the decoder runs at 0.945 or better of the busiest server's limit at every count,
+  so no queueing discipline can recover more than about 5%.</li>
+<li>Independent readings corrected the first: the public API never runs 20 workers on this machine,
+  and the scanner spends about 8% of its demand on two avoidable copies.</li>
+<li>Stage 1 of the characterisation confirmed the switch from workers to scanner at exactly 8, and
+  found that asking for 3, 5 or 7 threads selects an older kernel that is 61% slower at 7.</li>
+<li>Stage 2 showed the switch by intervention: at 6 workers construction and emission control the
+  wall, at 8 and 10 only the scanner's Huffman decode does, and the wall behaves as the maximum of
+  the two stations, so a faster scanner gains little at 8 while workers sharing cores cost 48%.</li>
+<li>Two claims were corrected: the price for decoding several symbols a lookup was for a change
+  master already had, and a third symbol gained nothing; and the first held-out prediction passed
+  only on wide intervals.</li>
+</ul>
+<h2 id="1-a-simple-observation">1. A simple observation<a class="headerlink" href="#1-a-simple-observation" title="Permanent link">&para;</a></h2>
+<p>The four-arm test supplied each of the decoder's two stages for free, outside the clock. At ten
+workers, supplying the codes for emission saved nothing measurable (0.976 of the shipped time),
+supplying the scanner's output saved 19% (0.806), and supplying both saved 26% (0.741): a gain
+invisible until another bottleneck was removed
+(<a href="../2026-11-24-the-scanner-hides-the-emitter/">Masked bottlenecks in a two-stage decoder</a>). An
+observation like that asks for a model of the decoder as a system rather than as a list of kernels,
+which is what the programme set out in the previous post is for.</p>
+<h2 id="2-the-first-model-and-its-first-test">2. The first model, and its first test<a class="headerlink" href="#2-the-first-model-and-its-first-test" title="Permanent link">&para;</a></h2>
+<p>The simplest model is a serial stage feeding k identical parallel servers. Each block costs the
+scanner s and a worker w, so the decoder's wall time is set by the workers, as a/k, until enough
+of them are running that the scanner cannot keep up, after which it is set by the scanner alone.
+The crossover falls at k = w/s. From the measurements at one to four workers only, s = 106.6 µs and
+w = 798.3 µs a block, which puts the knee at 7.49 workers. Across all twenty counts the measured
+crossover is 7.67, and a fit of c + max(b, a/k) gives a = 1.279 s, b = 0.178 s and c = 0.032 s
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §57</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv">the data</a>).</p>
+<figure class="bf-fig" id="knee">
+<p class="bf-title">Wall time against workers: the knee predicted from four counts</p>
+<svg viewBox="0 0 720 400" role="img" aria-label="Decode wall time against workers from 1 to 20 on the i9-10900K. It falls as a over k, from 1.30 s at one worker, to a best of 0.191 s at 8 workers, stays near 0.197 s from 8 to 14, and steps up to about 0.23 s from 16. The knee predicted from counts 1 to 4 alone is 7.49 workers; the measured crossover is 7.67."><line x1="64" x2="696" y1="282.3" y2="282.3" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="286.3" text-anchor="end" style="font-size:12px">0.1</text><line x1="64" x2="696" y1="238.6" y2="238.6" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="242.6" text-anchor="end" style="font-size:12px">0.2</text><line x1="64" x2="696" y1="194.9" y2="194.9" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="198.9" text-anchor="end" style="font-size:12px">0.3</text><line x1="64" x2="696" y1="151.1" y2="151.1" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="155.1" text-anchor="end" style="font-size:12px">0.4</text><line x1="64" x2="696" y1="107.4" y2="107.4" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="111.4" text-anchor="end" style="font-size:12px">0.5</text><line x1="64" x2="696" y1="63.7" y2="63.7" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="67.7" text-anchor="end" style="font-size:12px">0.6</text><line x1="64" x2="696" y1="20.0" y2="20.0" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="24.0" text-anchor="end" style="font-size:12px">0.7</text><text class="bf-tm" x="64.0" y="344" text-anchor="middle" style="font-size:12px">1</text><text class="bf-tm" x="163.8" y="344" text-anchor="middle" style="font-size:12px">4</text><text class="bf-tm" x="296.8" y="344" text-anchor="middle" style="font-size:12px">8</text><text class="bf-tm" x="429.9" y="344" text-anchor="middle" style="font-size:12px">12</text><text class="bf-tm" x="562.9" y="344" text-anchor="middle" style="font-size:12px">16</text><text class="bf-tm" x="696.0" y="344" text-anchor="middle" style="font-size:12px">20</text><text class="bf-tm" x="380" y="362" text-anchor="middle" style="font-size:12px">workers</text><text class="bf-tm" x="16" y="173" text-anchor="middle" transform="rotate(-90 16 173)" style="font-size:12px">decode wall time (s)</text><polyline points="64.0,20.0 67.3,20.0 70.7,20.0 74.0,20.0 77.3,20.0 80.6,20.0 84.0,20.0 87.3,20.0 90.6,20.0 93.9,20.0 97.3,32.5 100.6,45.8 103.9,57.9 107.2,68.9 110.6,79.1 113.9,88.4 117.2,97.0 120.5,104.9 123.9,112.3 127.2,119.2 130.5,125.6 133.9,131.7 137.2,137.3 140.5,142.6 143.8,147.6 147.2,152.3 150.5,156.7 153.8,160.9 157.1,164.9 160.5,168.7 163.8,172.2 167.1,175.6 170.4,178.9 173.8,182.0 177.1,184.9 180.4,187.8 183.7,190.5 187.1,193.1 190.4,195.5 193.7,197.9 197.1,200.2 200.4,202.4 203.7,204.5 207.0,206.5 210.4,208.5 213.7,210.4 217.0,212.2 220.3,213.9 223.7,215.6 227.0,217.2 230.3,218.8 233.6,220.4 237.0,221.8 240.3,223.3 243.6,224.7 246.9,226.0 250.3,227.3 253.6,228.6 256.9,229.8 260.3,231.0 263.6,232.1 266.9,233.3 270.2,234.2 273.6,234.2 276.9,234.2 280.2,234.2 283.5,234.2 286.9,234.2 290.2,234.2 293.5,234.2 296.8,234.2 300.2,234.2 303.5,234.2 306.8,234.2 310.1,234.2 313.5,234.2 316.8,234.2 320.1,234.2 323.5,234.2 326.8,234.2 330.1,234.2 333.4,234.2 336.8,234.2 340.1,234.2 343.4,234.2 346.7,234.2 350.1,234.2 353.4,234.2 356.7,234.2 360.0,234.2 363.4,234.2 366.7,234.2 370.0,234.2 373.3,234.2 376.7,234.2 380.0,234.2 383.3,234.2 386.7,234.2 390.0,234.2 393.3,234.2 396.6,234.2 400.0,234.2 403.3,234.2 406.6,234.2 409.9,234.2 413.3,234.2 416.6,234.2 419.9,234.2 423.2,234.2 426.6,234.2 429.9,234.2 433.2,234.2 436.5,234.2 439.9,234.2 443.2,234.2 446.5,234.2 449.9,234.2 453.2,234.2 456.5,234.2 459.8,234.2 463.2,234.2 466.5,234.2 469.8,234.2 473.1,234.2 476.5,234.2 479.8,234.2 483.1,234.2 486.4,234.2 489.8,234.2 493.1,234.2 496.4,234.2 499.7,234.2 503.1,234.2 506.4,234.2 509.7,234.2 513.1,234.2 516.4,234.2 519.7,234.2 523.0,234.2 526.4,234.2 529.7,234.2 533.0,234.2 536.3,234.2 539.7,234.2 543.0,234.2 546.3,234.2 549.6,234.2 553.0,234.2 556.3,234.2 559.6,234.2 562.9,234.2 566.3,234.2 569.6,234.2 572.9,234.2 576.3,234.2 579.6,234.2 582.9,234.2 586.2,234.2 589.6,234.2 592.9,234.2 596.2,234.2 599.5,234.2 602.9,234.2 606.2,234.2 609.5,234.2 612.8,234.2 616.2,234.2 619.5,234.2 622.8,234.2 626.1,234.2 629.5,234.2 632.8,234.2 636.1,234.2 639.5,234.2 642.8,234.2 646.1,234.2 649.4,234.2 652.8,234.2 656.1,234.2 659.4,234.2 662.7,234.2 666.1,234.2 669.4,234.2 672.7,234.2 676.0,234.2 679.4,234.2 682.7,234.2 686.0,234.2 689.3,234.2 692.7,234.2 696.0,234.2" style="fill:none;stroke:var(--bf-steel);stroke-width:2"/><line x1="279.8" x2="279.8" y1="20" y2="326" style="stroke:var(--bf-amber);stroke-width:1.5;stroke-dasharray:5 4"/><text class="bf-t-strong" x="285.8" y="36" style="font-size:12px;fill:var(--bf-amber)">knee predicted from counts 1–4: 7.49</text><text class="bf-tm" x="285.8" y="52" style="font-size:12px">measured crossover: 7.67</text><path d="M64.0,22 l-5,8 h10 z" style="fill:var(--bf-green)"/><text class="bf-tm" x="72.0" y="30" style="font-size:11px">1.30 s</text><circle cx="97.3" cy="27.5" r="4.5" style="fill:var(--bf-green)"/><circle cx="130.5" cy="120.8" r="4.5" style="fill:var(--bf-green)"/><circle cx="163.8" cy="170.8" r="4.5" style="fill:var(--bf-green)"/><circle cx="197.1" cy="201.9" r="4.5" style="fill:var(--bf-green)"/><circle cx="230.3" cy="221.9" r="4.5" style="fill:var(--bf-green)"/><circle cx="263.6" cy="235.6" r="4.5" style="fill:var(--bf-green)"/><circle cx="296.8" cy="242.5" r="4.5" style="fill:var(--bf-green)"/><circle cx="330.1" cy="239.8" r="4.5" style="fill:var(--bf-green)"/><circle cx="363.4" cy="238.0" r="4.5" style="fill:var(--bf-green)"/><circle cx="396.6" cy="240.0" r="4.5" style="fill:var(--bf-green)"/><circle cx="429.9" cy="239.7" r="4.5" style="fill:var(--bf-green)"/><circle cx="463.2" cy="240.1" r="4.5" style="fill:var(--bf-green)"/><circle cx="496.4" cy="239.5" r="4.5" style="fill:var(--bf-green)"/><circle cx="529.7" cy="233.6" r="4.5" style="fill:var(--bf-green)"/><circle cx="562.9" cy="231.4" r="4.5" style="fill:var(--bf-green)"/><circle cx="596.2" cy="224.1" r="4.5" style="fill:var(--bf-green)"/><circle cx="629.5" cy="224.1" r="4.5" style="fill:var(--bf-green)"/><circle cx="662.7" cy="224.6" r="4.5" style="fill:var(--bf-green)"/><circle cx="696.0" cy="225.3" r="4.5" style="fill:var(--bf-green)"/><text class="bf-tm" x="137.2" y="129.3" style="font-size:12px">workers bind: wall ≈ a/k</text><text class="bf-tm" x="396.6" y="212.3" style="font-size:12px">scanner binds: wall ≈ b</text><text class="bf-tm" x="549.6" y="194.9" style="font-size:12px">step at 16: the scanner slows 23%</text><circle cx="74" cy="388" r="4.5" style="fill:var(--bf-green)"/><text class="bf-tm" x="84" y="392" style="font-size:12px">measured (median of 20 decodes)</text><line x1="324" x2="354" y1="388" y2="388" style="stroke:var(--bf-steel);stroke-width:2"/><text class="bf-tm" x="362" y="392" style="font-size:12px">fitted two-station model, c + max(b, a/k)</text></svg>
+<figcaption>Measured on an i9-10900K (10 cores, 20 threads), one corpus of 1,724 blocks and 839 MB
+of output, median of 20 decodes at each count, unpinned. The fitted model (steel) has the workers'
+asymptote a/k on the left and the scanner's b on the right; the dashed line is the knee predicted
+from counts 1 to 4 alone. The wall at one worker, 1.30 s, is off the scale.</figcaption>
+</figure>
+
+<p>The best wall is 0.191 s, at 8 workers (4,390 MB/s of output), and from 8 to 14 workers it stays
+flat at 0.197 ± 0.005 s. At 16 and above it steps up 20%, to 0.230 s, because the scanner itself
+slows by 23% while its share of the wall stays at 0.97. The scanner's work is 81% Huffman decoding,
+at 1.41 ns a symbol at one worker and 1.51 ns from three. The second figure shows the switch from
+the scanner's side: at one worker it spends most of its time waiting for a free slot, and from 8
+workers it almost never waits.</p>
+<figure class="bf-fig" id="scanner-split">
+<p class="bf-title">The scanner's time, working and waiting</p>
+<svg viewBox="0 0 720 350" role="img" aria-label="The scanner thread's time against workers. Its work stays near 0.19 s from 3 to 15 workers and rises to about 0.23 s from 16. Its waiting for a free slot falls from 1.12 s at one worker to under a millisecond at 8 and beyond."><line x1="64" x2="696" y1="239.4" y2="239.4" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="243.4" text-anchor="end" style="font-size:12px">0.2</text><line x1="64" x2="696" y1="202.9" y2="202.9" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="206.9" text-anchor="end" style="font-size:12px">0.4</text><line x1="64" x2="696" y1="166.3" y2="166.3" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="170.3" text-anchor="end" style="font-size:12px">0.6</text><line x1="64" x2="696" y1="129.7" y2="129.7" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="133.7" text-anchor="end" style="font-size:12px">0.8</text><line x1="64" x2="696" y1="93.1" y2="93.1" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="97.1" text-anchor="end" style="font-size:12px">1</text><line x1="64" x2="696" y1="56.6" y2="56.6" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="60.6" text-anchor="end" style="font-size:12px">1.2</text><line x1="64" x2="696" y1="20.0" y2="20.0" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text class="bf-tm" x="56" y="24.0" text-anchor="end" style="font-size:12px">1.4</text><text class="bf-tm" x="64.0" y="294" text-anchor="middle" style="font-size:12px">1</text><text class="bf-tm" x="163.8" y="294" text-anchor="middle" style="font-size:12px">4</text><text class="bf-tm" x="296.8" y="294" text-anchor="middle" style="font-size:12px">8</text><text class="bf-tm" x="429.9" y="294" text-anchor="middle" style="font-size:12px">12</text><text class="bf-tm" x="562.9" y="294" text-anchor="middle" style="font-size:12px">16</text><text class="bf-tm" x="696.0" y="294" text-anchor="middle" style="font-size:12px">20</text><text class="bf-tm" x="380" y="312" text-anchor="middle" style="font-size:12px">workers</text><text class="bf-tm" x="16" y="148" text-anchor="middle" transform="rotate(-90 16 148)" style="font-size:12px">scanner thread time (s)</text><rect x="54.2" y="244.2" width="19.6" height="31.8" style="fill:var(--bf-amber)"/><rect x="54.2" y="39.5" width="19.6" height="204.7" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="87.5" y="242.7" width="19.6" height="33.3" style="fill:var(--bf-amber)"/><rect x="87.5" y="151.6" width="19.6" height="91.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="120.7" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="120.7" y="191.4" width="19.6" height="50.5" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="154.0" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="154.0" y="212.1" width="19.6" height="30.0" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="187.3" y="242.1" width="19.6" height="33.9" style="fill:var(--bf-amber)"/><rect x="187.3" y="225.2" width="19.6" height="16.9" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="220.5" y="242.1" width="19.6" height="33.9" style="fill:var(--bf-amber)"/><rect x="220.5" y="233.5" width="19.6" height="8.6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="253.8" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="253.8" y="239.2" width="19.6" height="2.8" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="287.0" y="242.0" width="19.6" height="34.0" style="fill:var(--bf-amber)"/><rect x="287.0" y="241.8" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="320.3" y="241.6" width="19.6" height="34.4" style="fill:var(--bf-amber)"/><rect x="320.3" y="240.9" width="19.6" height="0.7" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="353.6" y="241.4" width="19.6" height="34.6" style="fill:var(--bf-amber)"/><rect x="353.6" y="240.9" width="19.6" height="0.5" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="386.8" y="241.3" width="19.6" height="34.7" style="fill:var(--bf-amber)"/><rect x="386.8" y="241.0" width="19.6" height="0.3" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="420.1" y="241.2" width="19.6" height="34.8" style="fill:var(--bf-amber)"/><rect x="420.1" y="241.0" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="453.4" y="241.0" width="19.6" height="35.0" style="fill:var(--bf-amber)"/><rect x="453.4" y="240.9" width="19.6" height="0.1" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:0.8"/><rect x="486.6" y="241.0" width="19.6" height="35.0" style="fill:var(--bf-amber)"/><rect x="519.9" y="240.8" width="19.6" height="35.2" style="fill:var(--bf-amber)"/><rect x="553.2" y="234.0" width="19.6" height="42.0" style="fill:var(--bf-amber)"/><rect x="586.4" y="234.7" width="19.6" height="41.3" style="fill:var(--bf-amber)"/><rect x="619.7" y="234.3" width="19.6" height="41.7" style="fill:var(--bf-amber)"/><rect x="652.9" y="234.6" width="19.6" height="41.4" style="fill:var(--bf-amber)"/><rect x="686.2" y="234.8" width="19.6" height="41.2" style="fill:var(--bf-amber)"/><text class="bf-tm" x="346.7" y="162.6" style="font-size:12px">from 8 workers the scanner almost never waits:</text><text class="bf-tm" x="346.7" y="178.6" style="font-size:12px">it is the bottleneck, and only less work there helps</text><rect x="68" y="330" width="12" height="12" style="fill:var(--bf-amber)"/><text class="bf-tm" x="86" y="341" style="font-size:12px">scanner working</text><rect x="234" y="330" width="12" height="12" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel)"/><text class="bf-tm" x="252" y="341" style="font-size:12px">scanner waiting for a free slot</text></svg>
+<figcaption>Measured, same run. Below the knee the scanner waits for the workers to free a slot;
+from 8 workers on it works without pause, so it is the bottleneck and only a lighter scanner moves
+the wall.</figcaption>
+</figure>
+
+<p>One question follows directly: could a better queueing discipline, size-aware dispatch, say, or
+helpers for a slow block, do far better? The operational laws answer it before any code is written.
+No discipline raises the ceiling, which the demands set; a discipline can only bring the decoder
+closer to it (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md">the discipline lead</a>). And the decoder already runs at 0.945 to 0.998 of the
+busiest server's limit at every worker count, so no reordering could recover more than about 5%,
+or 3% on the plateau. The large gains lie in less work at the bottleneck, or more servers for it.</p>
+<h2 id="3-reading-the-field-four-times-over">3. Reading the field, four times over<a class="headerlink" href="#3-reading-the-field-four-times-over" title="Permanent link">&para;</a></h2>
+<p>Three performance-analysis courses were read in full, with their sources saved, and then mined for
+opportunities against these measurements by four readers, each writing an answer before seeing the
+others (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md">the summary</a>). The fourth, aimed at where mathematics rather than engineering fits, is the subject of §5.</p>
+<table>
+<thead>
+<tr>
+<th>Reader</th>
+<th>What it found that the others had not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md">The first reading</a></td>
+<td>right-sizing the worker count; putting the bottleneck on the fastest core; mean-value analysis in place of the hard-max fit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md">An outside model</a></td>
+<td>the public API's actual worker count; bottleneck migration; the variability of block sizes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md">A second agent</a></td>
+<td>two avoidable copies in the scanner, about 8% of its demand; the same worker-count error</td>
+</tr>
+<tr>
+<td><a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">The fourth reading</a></td>
+<td>the scan as a chain at its latency floor; a design space for the scanner–worker boundary; construction as the largest worker target</td>
+</tr>
+</tbody>
+</table>
+<p>The disagreements were the useful part. The first reading had claimed that the Python binding's
+default of 20 workers costs 20% of the wall. Two readers, independently, found that the public API
+never runs 20 workers on this machine: a request for ten or more threads builds 7 workers with a
+28-slot window, so the live question is 7 against 8, 0.207 s against 0.191 s, about 7.6% for under
+1% more CPU (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §61</a>). The cap of 7 was set because workers beyond it bought nothing; it
+is a symptom of the scanner's limit rather than a reason to stop raising it.</p>
+<p>The second agent's reading found engineering that the first had missed, both confirmed in the code
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §62</a>). At the boundary between the feeder's 4 MiB chunks and the scanner's 2 MiB
+look-ahead, the scanner copies the held part of its window on its own thread, about 10 ms at 8
+workers, or 5.4% of its demand. And each block's symbol buffer is zero-filled again when it is
+reused, about 5 ms more, driven by the 792 tiny blocks in the corpus. Together that is about 15 ms,
+8% of the scanner's demand, with no algorithmic risk, and it has been routed for implementation as
+an ordinary performance change.</p>
+<p>The outside reading supplied the warning that prices every such change. A cut in the scanner's
+work moves the bottleneck back to the workers: at 8 workers, a 5% cut in the scanner's Huffman
+demand already reaches the workers' limit, so scanner and worker improvements must be priced
+together, with the worker count retuned. Stage 1's figures then re-priced the copy fix itself: at 8
+workers the workers sit within 0.3 ms of the scanner, so a 15 ms cut there is almost entirely
+masked (0.1941 s against 0.1944 s), while at 10 workers it is worth about 7.5%
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §69</a>). Those figures are instrumented, so a paired run at 8, 9 and 10 workers
+decides between the two estimates.</p>
+<h2 id="4-stage-1-the-decoder-across-twenty-counts">4. Stage 1: the decoder across twenty counts<a class="headerlink" href="#4-stage-1-the-decoder-across-twenty-counts" title="Permanent link">&para;</a></h2>
+<p>The first stage of the characterisation ran 840 grid decodes across every count from 1 to 20, with
+every block's route, stage boundaries and queue transitions logged
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §66</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt">the report</a>). All nine operational-law identities held in every
+decode, Little's law exactly. What it found:</p>
+<ul>
+<li><strong>The two-station model holds.</strong> The limit moves from the workers to the scanner at exactly 8
+  workers, with a bootstrap interval of [8, 8], and a best wall of 0.1944 s there.</li>
+<li><strong>The scanner limits above the knee, by concurrent state.</strong> The workers' idle time while the
+  scanner is working rises from 0.035 of their time at 8 workers to 0.124 at 10 and 0.551 at 20;
+  their idle time while it waits for input stays under 0.01.</li>
+<li><strong>The reader is not a co-bottleneck:</strong> its demand is 0.017–0.035 ms a block against the scanner's
+  0.099–0.130.</li>
+<li><strong>Contention inflates service per visit.</strong> The scanner's Huffman decode costs 84 µs a block at
+  one worker and 105–107 µs at 16 and above; emission rises from 526 µs at one worker to 816 at 14,
+  and the memory controller's reads per decode from 219 MiB to 1,957 at 16, which at about 8 GB/s
+  at 10 workers points to cache capacity rather than bandwidth.</li>
+<li><strong>The public API selects an older kernel below 8.</strong> Asking for 3, 5 or 7 threads builds the
+  eager kernel, because the lazy plan begins at 8 workers and the measured settings cover only 4,
+  6 and 10 or more. At 7 threads that is 0.337 s and 140 MB, against 0.209 s and 54 MB for seven
+  lazy workers: 61% slower, with 2.6 times the memory. It is a production default, so it goes to a
+  registered recalibration across corpora.</li>
+</ul>
+<p>The run flagged its own instrument as perturbing at 10 and 20 workers: the cost check's intervals
+include 1 but are wide, so timings from the ledgers at high counts may be inflated by up to about
+9%, while shares, counts and the identities are unaffected.</p>
+<h2 id="5-the-fourth-reading-and-a-design-space">5. The fourth reading, and a design space<a class="headerlink" href="#5-the-fourth-reading-and-a-design-space" title="Permanent link">&para;</a></h2>
+<p>The fourth reading registered its plan for analysing stages 1 and 2 before stage 1 ran, and then
+asked what the measurements imply about the scanner itself (<a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">record 129</a>). At 1.41 to
+1.51 ns a symbol, the Huffman scan takes about 7 cycles a symbol, one first-level cache load's
+latency: the scan is a single dependent chain running at its latency floor. The lever is
+therefore fewer lookups a symbol, decoding several symbols with each lookup. A 10-bit window bounds
+that at about 2.6 symbols a lookup, and the reading conjectures 13 to 17% off the best wall; the
+cheapest test is to count cycles a symbol on the scanner at one worker, where about 7 cycles and no
+cache misses would confirm the floor.</p>
+<p>A companion record enumerated the ways the scanner's obligations could be divided between the
+scanner and the workers, and scored each placement with the two-station law
+(<a href="https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md">record 130</a>). Three placements lead, all conjectured: an index of block starts, so that
+each worker scans its own block, at −15%; decoding several symbols a lookup, still serially, at
+−17%; and both together at −19%. Its separating principle is to keep an obligation on a serial path
+only if its state has no small summary, and to cut the path wherever the format resets that state.
+One placement it rules out: decoding a single block's Huffman codes in parallel. The table is
+chosen afresh every 50 symbols by a running symbol count that nothing in the stream
+re-synchronises, so each chunk would have to carry at least 50 hypotheses, and a k-way split
+loses for every k below 50; the obstruction is proved from the format, its cost argued.</p>
+<p>The same record measured where the workers' time goes on a real block at one worker: construction
+of the inversion's structures 45%, emission 38%, move-to-front and run records 10%, and the final
+run-length expansion and checksum 6%, shares that hold at 8 and 16 workers. Construction, not
+emission, is the largest target for mathematics in the workers. Of the two leads at the scanner,
+decoding several symbols a lookup became an engineering prototype, and the index of block starts
+the larger structural lead.</p>
+<p class="il-rubric-head">Of a price already paid</p>
+
+<p>The prototype found the fourth reading's price for decoding several symbols a lookup built on a
+premise that was already out of date
+(<a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md">journal §82</a>). They assumed one symbol a lookup, but master's table has held up to two
+symbols an entry since <a href="https://github.com/lmmx/mibz2/pull/745">#745</a>: on wikidata it takes 1.85
+symbols a lookup, 84% of them pairs, so the 13 to 17% was the price of a change already made. The
+prototype then tried a third symbol a lookup
+(<a href="https://github.com/lmmx/mibz2/pull/870">#870</a>). Its output was byte-identical and its lookups
+fell 12%, but its time did not: the scanner ran 0.98 to 1.01 of master's time a symbol on
+wikidata, and slower on two other corpora: a lookup already costs about twice its dependency
+chain, and the third symbol's gain was eaten by mispredictions and spills in the tail paths. It was rejected. What remains at the scanner is its copies,
+about 2% of its time from counting each batch's bits at once, a core of its own, and the
+structural answer, a scan split across cores, which removes the single serial core instead of
+speeding it.</p>
+<p>Stage 1's traces have also been analysed by program (<a href="https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md">journal §71</a>; <a href="https://github.com/lmmx/mibz2/tree/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/analysis">the outputs</a>).
+The lower bound, the busiest of the scanner, the workers and the reader, is tight below the knee,
+with the wall within 1.4% of it up to 6 workers, and loosest at the knee itself, 4 to 5% at 8 to 11
+workers, where dependencies, starvation and blocking cost most. Issuing blocks is smooth, but taking
+them is bursty: when a slow block at the head of the line finishes, a run of ready blocks is taken
+at once, the signature of putting completed blocks back in order. These describe one corpus's
+traces, not guarantees.</p>
+<h2 id="6-stage-2-which-activity-controls-the-wall">6. Stage 2: which activity controls the wall<a class="headerlink" href="#6-stage-2-which-activity-controls-the-wall" title="Permanent link">&para;</a></h2>
+<p>Stage 1 inferred the switch at the knee from busy times; stage 2 tests it by intervention, in two
+parts: the first unpinned (<a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md">journal §74</a>; <a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt">its report</a>), the second
+with the scanner pinned to a core of its own (<a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md">journal §78</a>; <a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/report.txt">its report</a>).
+Each activity is slowed by 20% in turn, and the share of that slowing which reaches the wall, its
+elasticity, says whether it controls the decode at that worker count: near 1 for the bottleneck,
+near 0 for an activity with slack behind it.</p>
+<figure class="bf-fig" id="screen">
+<p class="bf-title">Which activity controls the wall, at 6, 8 and 10 workers</p>
+<svg viewBox="0 0 520 472" role="img" aria-label="Stage 2's screen at 6, 8 and 10 workers. At 6, construction (0.14, 0.15) and emission (0.37) control the wall and the scanner's Huffman decode does not; at 8 and 10 only the scanner's Huffman decode controls it (0.79, 0.58)."><text class="bf-t-strong" x="236" y="20" style="font-size:15px">6 workers</text><line class="bf-rule" x1="236.0" x2="236.0" y1="30" y2="126" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="30" y2="126" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="30" y2="126" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="47.0" text-anchor="end">scanner: Huffman decode</text><line x1="353.1" x2="359.7" y1="42.0" y2="42.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.35"/><circle cx="356.4" cy="42.0" r="4" style="fill:var(--bf-amber);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="71.0" text-anchor="end">workers: construction, first pass</text><line x1="371.2" x2="378.9" y1="66.0" y2="66.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="375.0" cy="66.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="95.0" text-anchor="end">workers: construction, setup</text><line x1="370.5" x2="382.3" y1="90.0" y2="90.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="376.4" cy="90.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="119.0" text-anchor="end">workers: emission</text><line x1="396.0" x2="408.8" y1="114.0" y2="114.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:1"/><circle cx="402.4" cy="114.0" r="5" style="fill:var(--bf-blue);opacity:1"/><text class="bf-t-strong" x="236" y="164" style="font-size:15px">8 workers (scanner pinned)</text><line class="bf-rule" x1="236.0" x2="236.0" y1="174" y2="270" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="174" y2="270" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="174" y2="270" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="191.0" text-anchor="end">scanner: Huffman decode</text><line x1="440.8" x2="468.5" y1="186.0" y2="186.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="454.6" cy="186.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="215.0" text-anchor="end">workers: construction, first pass</text><line x1="344.8" x2="381.0" y1="210.0" y2="210.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="362.9" cy="210.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="239.0" text-anchor="end">workers: construction, setup</text><line x1="338.2" x2="374.7" y1="234.0" y2="234.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="356.4" cy="234.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="263.0" text-anchor="end">workers: emission</text><line x1="365.8" x2="402.1" y1="258.0" y2="258.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="384.0" cy="258.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-t-strong" x="236" y="308" style="font-size:15px">10 workers (scanner pinned)</text><line class="bf-rule" x1="236.0" x2="236.0" y1="318" y2="414" opacity="0.35"/><line class="bf-rule" x1="357.8" x2="357.8" y1="318" y2="414" opacity="0.9"/><line class="bf-rule" x1="479.6" x2="479.6" y1="318" y2="414" opacity="0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="335.0" text-anchor="end">scanner: Huffman decode</text><line x1="409.0" x2="447.2" y1="330.0" y2="330.0" style="stroke:var(--bf-amber);stroke-width:2;opacity:1"/><circle cx="428.1" cy="330.0" r="5" style="fill:var(--bf-amber);opacity:1"/><text class="bf-tm" style="font-size:14px" x="224" y="359.0" text-anchor="end">workers: construction, first pass</text><line x1="324.5" x2="365.2" y1="354.0" y2="354.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="344.8" cy="354.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="383.0" text-anchor="end">workers: construction, setup</text><line x1="301.7" x2="364.1" y1="378.0" y2="378.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="332.9" cy="378.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:14px" x="224" y="407.0" text-anchor="end">workers: emission</text><line x1="307.4" x2="353.7" y1="402.0" y2="402.0" style="stroke:var(--bf-blue);stroke-width:2;opacity:0.35"/><circle cx="330.6" cy="402.0" r="4" style="fill:var(--bf-blue);opacity:0.35"/><text class="bf-tm" style="font-size:13px" x="236.0" y="430" text-anchor="middle">−1</text><text class="bf-tm" style="font-size:13px" x="357.8" y="430" text-anchor="middle">0</text><text class="bf-tm" style="font-size:13px" x="479.6" y="430" text-anchor="middle">1</text><text class="bf-tm" style="font-size:13px" x="504" y="468" text-anchor="end">elasticity of the wall, with 95% intervals</text></svg>
+<figcaption>Measured: each activity slowed 20% alone; 6 workers from stage 2a (6 blocks), 8 and 10
+from stage 2b with the scanner pinned to its own core (16 blocks). Solid where the report finds an
+activity controls the wall, pale where it doesn't resolve or is negligible. The scanner's Huffman
+decode is amber, the workers' activities blue. At 10 workers several worker coefficients fall below
+0, so slowing them speeds the wall, which the run reads as contention and leaves unexplained in
+detail.</figcaption>
+</figure>
+
+<ul>
+<li><strong>Below the knee, the workers control it.</strong> At 6 workers the two parts of construction (0.14
+  and 0.15) and emission (0.37) control the wall, while the scanner's Huffman decode does not
+  (−0.01).</li>
+<li><strong>At and above the knee, the scanner does.</strong> At 8 and 10 workers only the scanner's Huffman
+  decode controls the wall: 0.53 and 0.74 in the first part, and 0.795 [0.681, 0.908] and 0.577
+  [0.420, 0.734] in the pinned second, whose intervals are two to four times narrower. Nothing in
+  the workers resolves. This is stage 1's switch at 8, now shown by intervening rather than
+  inferred.</li>
+<li><strong>The wall is a maximum, not a sum.</strong> In the first part, the screen's coefficients, composed as
+  a sum of logarithms, predicted an arm kept out of every fit, the Huffman decode and emission both
+  slowed by 10%: 1.053 against 1.052 observed at 8 workers, each inside its interval. An earlier
+  version of this post called that the programme's first validated predictor. The second part's
+  narrower intervals refute it: the sum predicts 1.101 at 8 workers against 1.069 observed, and
+  1.034 at 10 against 1.063, both outside, and the first part's pass came from its wide intervals.
+  The larger of the two coefficients alone fits all four tests, and the surface at 8 workers, both
+  stations slowed together, has a roundness of 0.500 [0.454, 0.548], the value of a sharp maximum.
+  Since that model was chosen after the failure, it is registered as the predictor for the next
+  held-out test, not counted as validated (<a href="#8-the-dynamical-layer">§8's distinction</a>).</li>
+<li><strong>A faster scanner barely helps at 8.</strong> Slowing the scanner at 8 workers costs 0.7 to 1.0 of
+  each unit of slowing, but speeding it gains only 0.13 to 0.18, because the workers are close
+  behind and the bottleneck moves to them at once. The wall also failed the registered test of
+  scaling evenly with the paced activities, so these figures are descriptive rather than formal.</li>
+<li><strong>The queue shows which side binds.</strong> Slowing the scanner by half over two hundred blocks
+  empties the job queue at 8 workers, its mean depth falling from 4.4 to 0.3; slowing emission
+  fills it instead, from 3.9 to 8.9. Either way the decoder recovers within 2 to 4 ms.</li>
+<li><strong>Where threads sit matters more than the gates.</strong> Widening the window or the byte cap changes
+  nothing beyond noise. Putting workers on the two hardware threads of shared cores, rather than
+  on separate cores, costs 48% at 8 workers; a memory stream running alongside slows the wall by
+  31 to 33%, and a pointer chase by 110 to 113%. Pinning the scanner to a quiet core alone runs at
+  0.960 of the unpinned wall at 8 workers. With ten cores, 8 workers plus the scanner, reader and feeder already
+  make eleven threads, so some sharing is unavoidable at 8 and certain at 10.</li>
+</ul>
+<p>The first part priced the scanner's copy fix optimistically: cutting the Huffman decode's work by
+8%, about the copies' share, implies a wall of 0.957 at 8 workers and 0.940 at 10. The second part
+makes that an upper bound twice over, since a faster scanner gains little at 8 and more workers,
+where it would gain, share more cores. Every scanner speed-up is therefore priced at the count it
+will run at, with the worker count retuned, and the paired comparison of the copy fix decides it.</p>
+<p class="il-rubric-head">Of noise that came from the clock</p>
+
+<p>Part of the noise in these runs came from the machine, not the decoder
+(<a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level.md">journal §81</a>). The Pathfinder found the processor's clock at two levels, 4.91 GHz and a
+low level of 4.09 to 4.56 GHz, with about a quarter of decodes caught low. A direct test traced it to
+the idle pause each recipe takes before a timed decode: after 0.2 s idle a decode runs at 2.96 GHz
+and takes 45% longer, and even after the standard 1 s pause, 40% of decodes run low. Spinning every
+CPU for 100 ms before each timed decode removes the low state and cuts the spread of the log wall
+from 4.4% to 1.1%, so a test needs about sixteen times fewer rounds for the same interval. Every
+recipe at or above the knee now warms the machine this way. The finding is also a question for
+users: a program that decodes after a short pause may meet the slow regime, and whether a decoder
+should respond to it is open until more machines are measured.</p>
+<h2 id="7-designing-for-a-purpose">7. Designing for a purpose<a class="headerlink" href="#7-designing-for-a-purpose" title="Permanent link">&para;</a></h2>
+<p>A question about method came next: whether the decoder could be studied the way systems biology
+studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that
+held up was not his catalogue of recurring motifs but the line of work that asks which structures
+can perform a given function at all (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md">the lead</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md">the outside answer</a>).
+<a class="il-ref" href="https://doi.org/10.1016/j.cell.2009.06.013">Ma and colleagues</a> enumerated every
+three-node network topology to find the few able to achieve biochemical adaptation, and
+<a class="il-ref" href="https://doi.org/10.1038/s41467-018-04151-6">Araujo and Liotta</a> later gave the
+solution space a basis, showing that every network capable of robust perfect adaptation is built
+from two kinds of module.
+<a class="il-ref" href="https://doi.org/10.1016/j.cels.2021.05.020">Khammash</a> states the programme in five
+steps: specify the function, derive necessary conditions, characterise the solution space, check
+realisability, and establish optimality (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md">an explanation</a>). Ours maps onto it closely:</p>
+<table>
+<thead>
+<tr>
+<th>Khammash's step</th>
+<th>Ours, already</th>
+<th>What is missing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The function</td>
+<td>the referee</td>
+<td></td>
+</tr>
+<tr>
+<td>Necessary conditions</td>
+<td>G1, and records 118 and 119</td>
+<td>a necessity statement in positive form</td>
+</tr>
+<tr>
+<td>The solution space</td>
+<td></td>
+<td>an enumeration, and then a basis</td>
+</tr>
+<tr>
+<td>Realisability</td>
+<td>the four-arm and profile ceilings</td>
+<td></td>
+</tr>
+<tr>
+<td>Optimality</td>
+<td>the performance work</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The proposal that follows is to enumerate the referee's own class of decoders (small cursor
+machines with a fixed number of passes that invert every short string over a tiny alphabet),
+reduce the list by symmetry, cluster the survivors, look for the condition that separates them, and
+use a SAT solver to prove "no survivor" within the class (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §65</a>). Two ideas from the
+same reading were adopted as method: the same function can be realised by different structures,
+which is why the referee counts structure; and a representation change is a search for the hidden
+coordinate in which the work cancels.</p>
+<h2 id="8-the-dynamical-layer">8. The dynamical layer<a class="headerlink" href="#8-the-dynamical-layer" title="Permanent link">&para;</a></h2>
+<p>The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top
+of continuous quantities such as occupancy and time. The language for that is the theory of hybrid
+dynamical systems (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md">the outside answer</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §67</a>), and Goebel, Sanfelice and
+Teel's book on it was read in full, with notes in our own words. Its plainest product is a list of
+five levers. Any reorganisation of the decoder changes one of five things
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md">the levers</a>):</p>
+<ol>
+<li>how fast work runs (the flow map);</li>
+<li>where work may proceed (the flow set);</li>
+<li>when events may happen (the jump set);</li>
+<li>what events do (the jump map);</li>
+<li>what is represented (the state space).</li>
+</ol>
+<p class="il-rubric-head">Of a bound that was not a certificate</p>
+
+<p>One reading of the book went too far, and an independent review caught it before it guided any
+experiment (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md">the review</a>; <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">journal §70</a>). The bottleneck maximum, the largest of the
+scanner's, the workers' and the reader's demands, is only a lower bound on the time a decode takes,
+because it ignores dependencies, starvation and blocking. One block that takes a 1 s scan, a 1 s
+decode and a 1 s delivery in series has a maximum of 1 s and takes 3. The notes now keep three
+quantities apart: lower bounds, used to prune; predictors, used to rank, and validated on held-out
+runs rather than by replaying a run with its own durations; and proved upper bounds, for which
+backward induction over a finite, acyclic state graph is the concrete route.</p>
+<h2 id="9-how-the-work-is-done">9. How the work is done<a class="headerlink" href="#9-how-the-work-is-done" title="Permanent link">&para;</a></h2>
+<p>The method is written down so that it can be reused
+(<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md">the protocol</a>). It starts from a measured surprise rather than a technique, poses the
+problem and its referee before any solution, and prefers a model that predicts from little data and
+is checked on data it did not see. Sources are read in full and saved. Several readers and
+reviewers answer independently before comparing, their answers are recorded verbatim, and decisions
+are kept in separate files with their reasons. Wrong claims are corrected in place and in public,
+naming who found the error, as the worker-count error and the lower bound above were. Every run
+registers its decision rule before its data, changes are priced jointly because a relieved
+bottleneck moves, and when it moves, the ideas it may have masked are tested again.</p>
+<h2 id="10-what-runs-next">10. What runs next<a class="headerlink" href="#10-what-runs-next" title="Permanent link">&para;</a></h2>
+<p>Five runs are planned, in order (<a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md">the programme of experiments</a>): the stage 1 baseline, now
+done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows
+each activity in turn to say which controls the wall at which count; the recalibration of the
+worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner
+and worker improvements together. Both parts of stage 2 are in (<a href="#6-stage-2-which-activity-controls-the-wall">§6</a>), and the tests they priced, the copy fix and the trim to 8 workers, are being asked again with the clock warmed first. Each cost
+it finds controlling will be classed as engineering, a matter of how the work is done, or as a
+candidate for mathematics, a matter of what work is done.</p>
+<hr />
+<p><strong>Sources:</strong></p>
+<ul>
+<li>The measurements: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv">the scanner profile</a> (journal §57) and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt">stage 1's report</a> (journal §66).</li>
+<li>The readings: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md">the summary</a>, <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md">the first reading with its corrections</a>, <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md">the outside reading</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md">the second agent's</a>; journal §§61–62 and §69.</li>
+<li>The design thread: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md">structure and function</a>, with <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md">the outside answer on motifs</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md">on Khammash</a>; journal §§64–65.</li>
+<li>The dynamical layer: <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md">the outside answer</a>, <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md">the levers</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md">the review that corrected them</a>; journal §§67–70.</li>
+<li><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md">The discipline question</a> (journal §56), <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md">the protocol</a> and <a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md">the programme of experiments</a>.</li>
+<li>The fourth reading: <a href="https://github.com/lmmx/mibz2/blob/7f18ccf719a0fd7eb863f8aa519a4fb8a8f2295b/docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md">record 129</a> and <a href="https://github.com/lmmx/mibz2/blob/9c3690f299574ea5296e189c8f3d74e7dcfb19af/docs/journal/monodromy/2026-11-25-design-space-and-identification.md">record 130</a>; stage 1 by program, <a href="https://github.com/lmmx/mibz2/blob/3ad28015eb83951d79fdb13cedb4b5bc8ba1d992/docs/journal/2026-11-24-algorithm-level.md">journal §71</a>.</li>
+<li>Stage 2: the first part's <a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/report.txt">report</a> and <a href="https://github.com/lmmx/mibz2/tree/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2/analysis">analysis</a> (journal §74); the second's <a href="https://github.com/lmmx/mibz2/blob/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/report.txt">report</a> and <a href="https://github.com/lmmx/mibz2/tree/9c476fd302741471ea7eedb9b544afaf17c603c0/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage2b/analysis">analysis</a> (journal §78); the clock test, journal §81; the three-symbol prototype, journal §82 and <a href="https://github.com/lmmx/mibz2/pull/870">#870</a>.</li>
+<li><a href="https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md">The journal</a>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Blog">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Blog
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-24-posing-the-inversion-problem/" class="md-footer__link md-footer__link--next" aria-label="Next: Posing the inversion problem">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Posing the inversion problem
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=4b4d79d01a80"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=4b4d79d01a80"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=4b4d79d01a80"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=4b4d79d01a80"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=4b4d79d01a80"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=4b4d79d01a80"></script>
+      
+    
+  </body>
+</html>
