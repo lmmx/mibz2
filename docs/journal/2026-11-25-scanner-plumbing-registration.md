@@ -282,3 +282,13 @@ SHA-256 `141323b1a98fdfe302fb470f2f4f4dd1e3dadfce9cb4c2fdfcdc413668a1ad73`.
 - the recipe exited 1.
 
 That bundle was deleted and is not archived.
+
+## Second head, registered 25 November 2026 before its data: the combined scanner fix (#861)
+
+The first run (`scanner-plumbing/run-20261125T025030Z`, head #846 at 793ed644) was NOT ADOPTED: 9 threads gave 0.987 [0.936, 1.041], INCONCLUSIVE (journal §77).
+
+**The second run measures #861** (`perf/scanner-combined` at 5413191e6ae7352f05c9a445d5d586f237268359): #857's seam window with #846's symbol buffers merged in.
+- **Same recipe, rule, counts and rounds:** ADOPTS iff 9 threads is FASTER, none of 6, 8, 10 or 12 is SLOWER, and peak RSS head/base ≤ 1.10 at every count. HELD ON MEMORY, NOT ADOPTED and VOID as above.
+- **If it ADOPTS,** #861 merges and #846 and #857 close. Otherwise all three are held.
+- **The prediction:** journal §77 put it at ≈0.92–0.95 at 9 threads. Stage 2b (journal §78) has since lowered that: at 8 workers a faster scanner reaches the wall with elasticity ≈0.15, and the gain at 9 should lie between that and 2b's 0.5 at 10. The revised prediction is ≈0.96–0.99 at 9; INCONCLUSIVE is plausible.
+- **The queue entry** pins the head with `args=perf/scanner-combined,5413191e…`. The ready tag moves to this commit.
