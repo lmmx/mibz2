@@ -1597,9 +1597,9 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-848/blog/index.md>)
 
-# The decoder's knee
+# The decoder as a queueing network
 
-A two-station queue predicts from four worker counts where adding workers stops helping, and four independent readings turned that into experiments.
+Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 
 25 November 2026 · 14 min read · [Research in progress](<#9-what-runs-next>)
 
