@@ -1,0 +1,28 @@
+mibz2 at the head against mibz2@build-base, wikidata-x4, unpinned, 16 paired rounds, expectation trim-eight
+threads  role       base plan    head plan    wall head/base [95%]           step         CPU head/base [95%]          peak RSS (median)
+      3  supporting 3/12 eager   3/12 eager   0.9857 [0.9657, 1.0061]         INCONCLUSIVE 0.9874 [0.9701, 1.0050]                  0.9720
+      4  supporting 4/16 lazy    4/16 lazy    0.9991 [0.9914, 1.0069]         INCONCLUSIVE 0.9993 [0.9930, 1.0056]                  0.9908
+      5  supporting 5/20 lazy    5/20 lazy    0.9980 [0.9936, 1.0025]         INCONCLUSIVE 0.9989 [0.9955, 1.0024]                  0.9971
+      7  supporting 7/28 lazy    7/28 lazy    1.0027 [0.9880, 1.0176]         INCONCLUSIVE 1.0016 [0.9883, 1.0151]                  1.0028
+      8  supporting 8/32 lazy    8/32 lazy    1.0040 [0.9720, 1.0370]         INCONCLUSIVE 1.0016 [0.9839, 1.0195]                  1.0046
+     10  judged     7/28 lazy    8/32 lazy    0.9290 [0.9075, 0.9510]         FASTER       1.0219 [1.0112, 1.0327]                  1.0366
+     12  judged     7/28 lazy    8/32 lazy    0.9324 [0.9195, 0.9454]         FASTER       1.0327 [1.0232, 1.0423]                  1.0456
+the clock split (journal §81, a registered secondary; decides nothing): the clock and the wall at a common clock, head/base [95%]:
+      3  clock 0.9995 [0.9966, 1.0024]  wall at a common clock 0.9852 [0.9645, 1.0063]
+      4  clock 1.0000 [0.9997, 1.0003]  wall at a common clock 0.9991 [0.9912, 1.0071]
+      5  clock 1.0000 [0.9999, 1.0000]  wall at a common clock 0.9980 [0.9935, 1.0025]
+      7  clock 1.0000 [1.0000, 1.0000]  wall at a common clock 1.0027 [0.9880, 1.0176]
+      8  clock 1.0000 [1.0000, 1.0001]  wall at a common clock 1.0040 [0.9721, 1.0370]
+     10  clock 1.0000 [1.0000, 1.0001]  wall at a common clock 0.9290 [0.9075, 0.9510]
+     12  clock 1.0000 [0.9999, 1.0000]  wall at a common clock 0.9323 [0.9195, 0.9454]
+observed workers, median over the rounds (base, head):
+  3: 3, 3, 4: 4, 4, 5: 5, 5, 7: 7, 7, 8: 8, 8, 10: 7, 8, 12: 7, 8
+peak RSS, median over the rounds (reported; decides nothing beyond the 1.10 gate):
+      3  base 85.6 MiB, head 83.2 MiB, head - base -2.4 MiB (0.9720)
+      4  base 47.6 MiB, head 47.1 MiB, head - base -0.4 MiB (0.9908)
+      5  base 51.2 MiB, head 51.1 MiB, head - base -0.1 MiB (0.9971)
+      7  base 57.3 MiB, head 57.5 MiB, head - base +0.2 MiB (1.0028)
+      8  base 59.5 MiB, head 59.8 MiB, head - base +0.3 MiB (1.0046)
+     10  base 57.2 MiB, head 59.3 MiB, head - base +2.1 MiB (1.0366)
+     12  base 57.2 MiB, head 59.8 MiB, head - base +2.6 MiB (1.0456)
+verdict: ADOPTS
