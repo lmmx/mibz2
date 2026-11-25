@@ -39,3 +39,18 @@
    - For S, the work is the scanner's A2 + A3.
    - For E, it is the workers' A7, the walk.
 4. **Memory:** the oracle's store (about 149 MiB on wikidata ×4) is recorded and held in every arm, real ones included, so process history is equal. Peak RSS is compared within the binary only.
+
+## Clarification, 25 November 2026, before any data: the oracles' handover cost (Neon's PR 895)
+
+5. **Handover is charged apart from the part.** Each oracle's handover is the copy of its recorded output into the decoder. It is timed in its own ledger entry, not in the removed part's activities.
+   - **The removed-part VOID** reads only the part's own work:
+     - C, construction's A5 and A6a–c;
+     - M, the MTF/RLE2 activity;
+     - R, RLE1 and the block CRC;
+     - D, the reader's copy to the caller.
+6. **The room is measured as it is, handover included,** and labelled on that. Beside it the report gives:
+   - the handover's time per decode;
+   - the room net of handover, (wall − handover) / all real, as a reported figure only.
+
+   For R the handover is large: about 55% of the real stage's time on the build VM, a one-copy handover of about 210 MB from a 200 MiB store. So R's measured room understates the ideal, and its net figure is the one to read alongside.
+7. **Store memory:** each oracle's store is recorded and held in every arm of a run that includes it, as for S (clarification 4). The stores on wikidata ×4 are C 114 MiB, M 32 MiB and R 200 MiB, about 495 MiB with S's 149 MiB. Peak RSS is compared within the binary only.
