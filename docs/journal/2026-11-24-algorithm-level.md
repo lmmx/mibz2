@@ -1817,3 +1817,123 @@ ChatGPT reviewed the hybrid-systems notes at 771e43086. The review is recorded v
 - **The causal order** issued < enqueued < got < ready < taken < consumed holds per block in all 80 traced decodes.
 
 These are descriptions of one corpus's traces, not guarantees. The burst frontier is not a window size without a service curve.
+
+## 72. MONODROMY's records 129 and 130: the fourth reading, the analysis plan, and the design space
+
+MONODROMY answered channel #39 (record 129, M-36) and #40 (record 130, M-37), on `claude/sharp-meitner-cx0v78`: `docs/journal/monodromy/2026-11-25-course-mining-and-analysis-plan.md` and `2026-11-25-design-space-and-identification.md`. Record 129's analysis plan was committed at 00:08 UTC, before stage 1 ran at 00:11. Record 130 opened stage 1's bundle only for its question 6.
+
+**Record 129, the fourth course mining.**
+- **The scan is a dependent chain at its latency floor:**
+  - 1.41–1.51 ns a symbol is about 7 cycles, one first-level cache load's latency a symbol;
+  - the lever is fewer *lookups* a symbol: compose the decode step, several symbols a lookup;
+  - floor: lookups ≥ bits/b, which at b = 10 is about 2.6 symbols a lookup;
+  - predicted 13–17% off the best wall (conjectured);
+  - the cheapest test is cycles a symbol on the scanner at k = 1.
+- **Under pooling,** where each worker scans its own block, every target's elasticity becomes its share of total demand. Worker mathematics then pays at every count.
+- **The saturation law inside a worker** turns L\* = (ℓ + c)/c into the exchange rate between dependent depth and dependent reads.
+- **A registered analysis plan for stages 1 and 2,** with rules for "points to mathematics" against "points to engineering", and a revisit list: ideas rejected while the scanner masked them, to re-qualify once the scanner's share of control falls below one half.
+
+**Record 130, the design space** (scanner–worker obligations × placements, scored by the two-station law):
+- an index of block starts, with each worker scanning its own block, gives −15%;
+- composed symbol decoding gives −17%;
+- both together give −19% (all conjectured).
+
+The separating principle: put an obligation on a serial path only if its state has no small transformer, and cut the path wherever the format resets that state.
+- **Within-block parallel Huffman decoding is ruled out.** The symbol count (it selects the table every 50 symbols) never re-synchronises, so a chunk carries at least 50 hypotheses, and a k-way decode loses for every k under 50 (argued; the obstruction is proved from the format).
+- **The laws:** fusion removes intermediate objects; tupling *is* enrichment along composition; the third homomorphism theorem is the existence of chunk summaries (MTF/RLE2, CRC). The parse and the walk are dependent chains whose only contraction is composition, at an exponential table cost.
+- **Max-plus:** the pipeline's recurrence, given each block's realised service times, reproduces stage 1's walls within 0.2% up to 7 workers and 1.3% above. That is a check of the bookkeeping, not a prediction (§70's distinction).
+- **Identification:** two scalars per count, worker inflation and scanner inflation, explain the walls (0.3–2.5% above the knee). Inflation follows threads present, not threads busy. The conjectured reduced coordinate is the chance a thread shares a core; stage 2's placement contrast tests it.
+- **The targets:** construction is 45% of a real block's worker time at one worker, emission 38%, MTF and runs 10%, RLE1 and CRC 6%. Construction is the largest mathematical target.
+- **The referee's class:** exhaustive enumeration is infeasible (about 10⁵⁰ tables). A SAT encoding could settle a positive necessity statement in a bounded class: "any inversion within K sweeps and s cursors makes at least h₁ − c addressed accesses". Either answer is new.
+
+**Decisions:**
+- multi-symbol (composed) Huffman decoding becomes an engineering lead, to be prototyped as a PR after the current builds;
+- the block-start index (pooling) is the larger structural lead, record 122 §3;
+- the SAT necessity statement goes to MONODROMY's queue.
+
+## 73. The scanner plumbing fix on CI: split, and held for the workstation
+
+**#846's first head, 36084e6e (both fixes), failed PERFORMANCE-POLICY.md on CI's bench** (4 cores):
+- wikidata at 4 threads: −3.0% (faster), the primary gain;
+- onebyte at 4 threads: +8.0% wall and +8.8% CPU, a secondary loss over 5% that is not covered by twice the primary gain;
+- peak RSS up 8–20% at 2–4 threads on several corpora (wikidata +10.6%, runs +19.9%).
+
+The memory growth and the onebyte loss come from the input-window fix's 2 MiB headroom in the feeder's chunks.
+
+**The split:**
+- **#846 now carries only the symbol-buffer fix** (793ed64). Its CI bench shows no regression and no memory growth: random −3.1% and records −2.0% at 1 thread (secondary gains), and no primary change beyond noise.
+- **The input-window fix is being redesigned without headroom,** through a reused seam buffer, as a new PR.
+
+**Decision:** #846 cannot merge on CI, since it shows no primary gain there. That was expected: the fix saves scanner time, and the scanner limits only above about 8 workers, which CI's 4-core runner can't reach. The workstation A/B, `bench-scanner-plumbing` (in preparation), decides it at 6–12 threads under the house rule. **No release overnight** (Louis).
+
+## 74. Stage 2a: which activity controls the wall, at each count
+
+**The run:** `character-stage2/run-20261125T020224Z`, at 1901c3bb (#843). It is evidence 54896f60 on the `evidence` branch, SHA-256 64162665…0973, checked.
+- **Every phase passed except the report.** The run took 19.5 min and the oracle 50 s; the oracle's check found 0 mismatches over 932 supplied blocks.
+- **The report crashed** on a NaN coefficient: at k 16, A9's and A10's achieved doses were ≤ 0, so `interval()` was given NaNs and `statistics.stdev` raised.
+- **I re-ran the report here** from the bundle's own `runs.jsonl` and `plan.json`, with one fix: `interval()` returns NaN for any non-finite input. The diff is in the LOG on #145 and goes to the Pathfinder for stage 2b. No data was re-collected or altered.
+- **Where things are:** the report, `stage2.tsv` and `phases.tsv` are in `math-targets/data/character-stage2/`. The analysis program is `math-targets/scripts/stage2_analysis.py`, and its outputs are in `data/character-stage2/analysis/`.
+
+**The screen** (+20% on one activity at a time; C is the elasticity of the wall, mean log(T/T0) / log(1 + achieved dose), over 6 blocks):
+
+| k | controls (interval above 0.10) | negligible | the rest |
+|---|---|---|---|
+| 6 | construction A6a 0.14, A6b 0.15; emission A7 0.37 | the scanner (A2, A3), the reader (A10), A9 | A5, A6c unresolved |
+| 8 | the scanner's main activity A3: 0.53 [0.14, 0.93] | none | all unresolved, with wide intervals |
+| 10 | A3: 0.74 [0.37, 1.11] | none | A7 −0.30 (interval below 0: speeding the scanner's competitor? unexplained) |
+| 16 | nothing resolved | none | four doses missed by over 25%; A9 and A10 got doses ≤ 0 |
+
+- **Below the knee** (k 6), the workers' construction and emission set the wall, and the scanner doesn't matter.
+- **At and above it** (8, 10), the scanner's main activity does, and nothing in the workers resolves.
+- **This is stage 1's switch at 8,** now shown by intervention rather than by inference from busy times.
+
+**The surface at k\* = 8** (both surfaces dosed together, 0/10/20%; `analysis/surface.tsv`):
+- the scanner's elasticity, workers undosed: 0.87 at +10%, 0.93 at +20%;
+- the workers' elasticity, scanner undosed: 0.50 and 0.64;
+- the knee's roundness is 0.54 [0.46, 0.67], about the 0.5 a sharp maximum gives;
+- with both dosed, the slowdown is no more than the scanner's alone (0.154 against 0.170 at 20/20). That is the max-plus shape: k 8 sits at the balance point, with the scanner just binding.
+
+**The held-out test** (the combined arm, A3 and A7 both +10%, never used in a fit; `analysis/validation.tsv`). The screen's coefficients, composed log-additively, predicted:
+
+| k | predicted | observed |
+|---|---|---|
+| 8 | 1.053 [0.994, 1.114] | 1.052 [0.963, 1.149] |
+| 10 | 1.042 [1.003, 1.084] | 1.061 [1.041, 1.081] |
+
+Both are inside their intervals. This is the first validated predictor of the programme, in §70's sense: a local one, for slowing, at 8 and 10.
+
+**The pulses** (A3 or A7 +50% over places 600–800):
+- **Slowing the scanner starves the workers.** At 8, the reader's rate falls to 0.69 of base, and the job queue empties: mean depth 4.4 before, 0.3 during.
+- **Slowing emission fills the queue instead:** 3.9 to 8.9, with the rate at 0.82.
+- **Recovery takes 2–4 ms.** The same holds at 10. This is the dynamical signature of a scanner-bound pipeline.
+
+**The contrasts:**
+- **Gates:** widening the window (4k to 8k) or the byte cap (12 to 64 MiB) at 8 changes nothing beyond noise (0.97–1.00, intervals across 1). This confirms §66: the gates rarely bind.
+- **Memory interference is large:**
+  - a co-running 2 MiB stream slows the wall 31% at 8 and 39% at 20;
+  - a pointer chase slows it 110% at 8 and 34% at 20.
+  
+  The decoder is very sensitive to cache contention: a robustness finding, and a lever 1 target (`levers.md`).
+- **Placement:** at 4 workers, putting them on SMT siblings rather than distinct cores costs 15% [11, 19]%.
+- **Ledgers' cost:** within noise at 6, 8 and 16; PERTURBED at 10 (1.053), as in stage 1. The walls are from ledger-off decodes throughout.
+
+**The oracle arms are VOID for comparison with this binary.**
+- The four-arm binary's arm A runs 10.9% off this binary's baseline at k\*, past the 3% layout check.
+- Within the four-arm binary, D/A is 0.747 [0.732, 0.762], replicating the four-arm test's 0.741, and C/A is 0.874.
+- Those ratios stand only as internal to that binary.
+
+**What it prices** (`analysis/pricing.tsv`). Cutting the scanner's main activity by 8% (about the plumbing fix's share, §57) implies a wall of:
+- 0.957 at 8 (0.989 at the coefficient's lower bound);
+- 0.940 at 10 (0.970 at the lower bound).
+
+This is an *optimistic* reading: the screen measured slowing, and a speed-up of the binding activity buys at most its elasticity, less once the workers bind (bottleneck migration, §61). At 8 the workers are close behind (the surface), so the plumbing fix's gain there is likely under 4%. At 10 it is likely nearer 5%.
+- **On the disagreement in the writer brief** (Neon's 6% at 8 against ChatGPT's nearly nothing), this sits in between, with 10 the better count to see it.
+- **`bench-scanner-plumbing` (#850) decides it.**
+
+**Decisions:**
+- **The report fix goes to the Pathfinder,** for stage 2b's head.
+- **Stage 2b,** as the Pathfinder sizes it from this run:
+  - drops k 16's screen, which resolved nothing at 6 blocks;
+  - re-runs the oracle with the four-arm binary rebuilt on this binary's layout, or drops the layout comparison.
+- **Memory contention becomes a named lead:** the decoder's working set against a shared L3. It is placed under lever 1 and lever 4b (ownership of buffers).
+- **Multi-symbol Huffman decoding is a worker lever.** This run says it lowers the knee (k 6's controllers are construction and emission) but does not raise the top speed. Above 8, only the scanner's work does.

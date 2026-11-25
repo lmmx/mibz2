@@ -131,3 +131,7 @@
 ## 25 Nov — stage 1 read; the dynamical layer
 - Stage 1 (journal §66): every identity held; k_balance = 8; the scanner limits above it, shown by concurrent states; the reader is not a co-bottleneck; PERTURBED by the ledger cost at 10 and 20. New: 3, 5 and 7 threads asked run eager workers, 61% slower at 7.
 - Dynamical layer (§67): ChatGPT's answer recorded; pulse interventions sent to the Pathfinder for stage 2; system identification sent to MONODROMY (#40, question 6); Hellerstein et al. added to the reading.
+
+## 25 Nov, overnight: standing instructions
+- Louis is asleep: **no releases**; PRs, merges under policy and workstation runs are fine. **Nothing may wait on him.** The workstation runner is up with `--wait 24`, so moving a `ready/` tag to a new commit is all a run needs.
+- Stage 2a's first attempt failed in `just submit`'s bundle count (two tarballs); it was fixed and re-tagged at 1901c3bb.
