@@ -1,0 +1,49 @@
+
+### wikidata-x4, 3 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.470 | 0.492 | 1.661 | 1.730 | 87 MB | 1 | 1 | 0.04 | yes |
+| mibz2 | 16 | 0.471 | 0.493 | 1.661 | 1.731 | 86 MB | 0.999 [0.984, 1.014] | 1.000 [0.986, 1.014] | 0.04 | yes |
+
+### wikidata-x4, 4 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.368 | 0.372 | 1.703 | 1.721 | 48 MB | 1 | 1 | 0.04 | yes |
+| mibz2 | 16 | 0.368 | 0.372 | 1.703 | 1.723 | 48 MB | 1.001 [0.995, 1.007] | 1.001 [0.996, 1.007] | 0.04 | yes |
+
+### wikidata-x4, 5 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.348 | 0.354 | 1.981 | 2.013 | 122 MB | 1 | 1 | 0.08 | yes |
+| mibz2 | 16 | 0.295 | 0.297 | 1.692 | 1.704 | 51 MB | 0.845 [0.838, 0.852] | 0.849 [0.845, 0.853] | 0.03 | yes |
+
+### wikidata-x4, 7 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.344 | 0.349 | 2.673 | 2.704 | 148 MB | 1 | 1 | 0.12 | yes |
+| mibz2 | 16 | 0.219 | 0.221 | 1.721 | 1.739 | 57 MB | 0.634 [0.630, 0.638] | 0.642 [0.637, 0.647] | 0.04 | yes |
+
+### wikidata-x4, 8 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.203 | 0.215 | 1.778 | 1.881 | 62 MB | 1 | 1 | 0.07 | yes |
+| mibz2 | 16 | 0.200 | 0.215 | 1.794 | 1.888 | 60 MB | 0.995 [0.968, 1.024] | 0.999 [0.974, 1.026] | 0.07 | yes |
+
+### wikidata-x4, 10 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.218 | 0.222 | 1.714 | 1.743 | 57 MB | 1 | 1 | 0.06 | yes |
+| mibz2 | 16 | 0.204 | 0.215 | 1.762 | 1.896 | 60 MB | 0.979 [0.944, 1.016] | 1.079 [1.054, 1.103] | 0.07 | yes |
+
+### wikidata-x4, 12 threads (839 MB out; ratios: arm / mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2@/home/louis/dev/mibz2/target/kernel-choice/build-base/target/release/examples/ab | 16 | 0.219 | 0.223 | 1.726 | 1.756 | 57 MB | 1 | 1 | 0.09 | yes |
+| mibz2 | 16 | 0.202 | 0.205 | 1.756 | 1.802 | 60 MB | 0.903 [0.875, 0.931] | 1.017 [0.988, 1.047] | 0.05 | yes |
