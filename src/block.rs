@@ -89,8 +89,10 @@ pub fn read_item_with_scratch(
             return Err(($k, syms))
         };
     }
+    ch!(begin A2);
     let magic = (br.bits(24) as u64) << 24 | br.bits(24) as u64;
     if magic == END_MAGIC {
+        ch!(end A2);
         return Ok(Item::End(br.bits(32)));
     }
     if magic != BLOCK_MAGIC {
@@ -212,6 +214,8 @@ pub fn read_item_with_scratch(
         }
     }
 
+    ch!(end A2);
+    ch!(begin A3);
     let eob = (alpha - 1) as u16;
     if syms.capacity() < MAX_SYMS {
         syms.clear();
@@ -262,6 +266,7 @@ pub fn read_item_with_scratch(
     };
 
     br.set(r);
+    ch!(end A3);
     if let Err(err) = res {
         fail!(err);
     }

@@ -97,15 +97,23 @@ impl Kernel {
         }
         let t3 = Instant::now();
         let mut supplied = false;
+        // (`character`: the walk is A7, emission's real work; the supplied codes' consumption
+        // is the oracle's handover, left out of A7, so emission ideal shows A7 removed)
         match mode {
-            Mode::Open => self.walk(n, m, mark, bits, out),
+            Mode::Open => {
+                ch!(begin A7);
+                self.walk(n, m, mark, bits, out);
+                ch!(end A7);
+            }
             Mode::Supplied => {
                 if cycle > 0 {
                     self.consume(n, cycle, out);
                     supplied = true;
                 } else {
                     // nothing held: the walk as shipped (`edges` untouched), the record says so
+                    ch!(begin A7);
                     self.walk(n, m, mark, bits, out);
+                    ch!(end A7);
                 }
             }
             Mode::Record => {

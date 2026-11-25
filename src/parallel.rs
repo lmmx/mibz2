@@ -201,12 +201,18 @@ struct JobQueue {
 
 impl Jobs {
     fn lock(&self) -> std::sync::MutexGuard<'_, JobQueue> {
-        self.q.lock().unwrap_or_else(|e| e.into_inner())
+        ch!(begin LockJobs);
+        let q = self.q.lock().unwrap_or_else(|e| e.into_inner());
+        ch!(end LockJobs);
+        q
     }
 
     fn push(&self, job: Job) {
         let mut q = self.lock();
+        #[cfg(feature = "character")]
+        let place = job.0;
         q.q.push_back(job);
+        ch!(occ Enqueued, place, 0; Queued 1);
         let wake = q.waiting > 0;
         drop(q);
         if wake {
@@ -219,6 +225,7 @@ impl Jobs {
         let mut q = self.lock();
         loop {
             if let Some(j) = q.q.pop_front() {
+                ch!(occ Got, j.0, 0; Queued -1, Executing 1);
                 return Some(j);
             }
             if q.closed {
@@ -371,7 +378,10 @@ impl Shared {
     fn lock(&self) -> std::sync::MutexGuard<'_, State> {
         // (a panic while holding the lock is caught where it happens; the state is
         // consistent at every unlock, so a poisoned lock is still usable)
-        self.state.lock().unwrap_or_else(|e| e.into_inner())
+        ch!(begin LockState);
+        let st = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        ch!(end LockState);
+        st
     }
 
     /// The decode cancelled (under the lock held as `st`): the ready blocks dropped
@@ -393,6 +403,7 @@ impl Shared {
         if st.cancelled {
             return false;
         }
+        ch!(occ Ready, place, Ready::size(&res); Executing -1, Ready 1, ReadyBytes Ready::size(&res));
         st.ready.insert(place, res);
         st.reader_waiting && place == st.taken
     }
@@ -434,6 +445,9 @@ struct Reader {
     at: usize,
     failed: Option<Error>,
     done: bool,
+    /// (research, `character`) the blocks read to their end
+    #[cfg(feature = "character")]
+    consumed: u64,
 }
 
 impl StreamDecoder {
@@ -671,7 +685,13 @@ impl StreamDecoder {
         slots: usize,
         k: Kernels,
     ) -> StreamDecoder {
-        Self::with_inverse_capped::<I>(threads, slots, k, READY_BYTES)
+        // (research, `character`: the ready bytes' cap switched at run time, for stage 2's gate
+        // contrast; unset, `READY_BYTES`)
+        #[cfg(feature = "character")]
+        let cap = crate::character::ready_cap().unwrap_or(READY_BYTES);
+        #[cfg(not(feature = "character"))]
+        let cap = READY_BYTES;
+        Self::with_inverse_capped::<I>(threads, slots, k, cap)
     }
 
     /// `with_inverse`, with `cap` decoded bytes ready (unread) in place of `READY_BYTES`
@@ -817,7 +837,10 @@ impl StreamDecoder {
         if data.is_empty() {
             return Ok(());
         }
-        tx.send(data).map_err(|_| Stopped)
+        ch!(begin FeedWait);
+        let sent = tx.send(data).map_err(|_| Stopped);
+        ch!(end FeedWait);
+        sent
     }
 
     /// The input's end
@@ -839,6 +862,15 @@ impl StreamDecoder {
     /// some are decoded. Err once the stream is found bad (the same error every time
     /// after), or after `cancel`.
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
+        ch!(begin Read);
+        let res = self.read_in(buf);
+        ch!(end Read);
+        res
+    }
+
+    /// `read`'s body (apart from the `character` feature's ledger)
+    #[inline(always)]
+    fn read_in(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
         self.check_cancelled(&mut r);
         loop {
@@ -927,6 +959,12 @@ impl StreamDecoder {
     /// end or the error: `r.cur`'s buffer and `extra` go to the pool
     fn advance(&self, r: &mut Reader, extra: Vec<u8>) {
         let mut st = self.shared.lock();
+        // (the reader's block read to its end: it held it from its `Taken` to here)
+        #[cfg(feature = "character")]
+        if r.consumed < st.taken {
+            ch!(occ Consumed, r.consumed, 0; Consuming -1);
+            r.consumed += 1;
+        }
         for spent in [std::mem::take(&mut r.cur), extra] {
             if spent.capacity() >= POOLED_FROM && st.free_out.len() < self.shared.slots as usize {
                 st.free_out.push(spent);
@@ -941,6 +979,7 @@ impl StreamDecoder {
             }
             let taken = st.taken;
             if let Some(res) = st.ready.remove(&taken) {
+                ch!(occ Taken, taken, 0; Ready -1, ReadyBytes -(Ready::size(&res) as i64), Admitted -1, Consuming 1);
                 st.taken += 1;
                 st.reader_waiting = false;
                 let wake = st.scanner_waiting;
@@ -962,7 +1001,9 @@ impl StreamDecoder {
                 break;
             }
             st.reader_waiting = true;
+            ch!(begin ReadWait);
             st = self.shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+            ch!(end ReadWait);
         }
         st.reader_waiting = false;
     }
@@ -998,9 +1039,13 @@ impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
             mark!(InputWait);
-            match self.rx.recv() {
+            ch!(begin InWait);
+            let got = self.rx.recv();
+            ch!(end InWait);
+            match got {
                 Ok(mut chunk) => {
                     mark!(InputGot);
+                    ch!(begin InMaint);
                     let drop_n = (self.released - self.base) as usize;
                     if drop_n == self.buf.len() {
                         // (nothing held: the chunk is the window, the window's buffer spare)
@@ -1020,6 +1065,7 @@ impl Source for ChannelSource<'_> {
                             st.free_in.push(chunk);
                         }
                     }
+                    ch!(end InMaint);
                     mark!(
                         Window,
                         crate::trace::NONE,
@@ -1046,6 +1092,9 @@ impl Source for ChannelSource<'_> {
 }
 
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    // (research, `character`: the scanner pinned to a CPU, switched at run time; unset, none)
+    #[cfg(feature = "character")]
+    crate::character::place_scanner();
     // (research only, `scan-oracle`: the bench-four-arm diagnostic's scanner, recorded or
     // replayed, `scan_oracle.rs`; in its `scan` mode the scanner as shipped)
     #[cfg(feature = "scan-oracle")]
@@ -1080,8 +1129,20 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     loop {
         // a slot first, and a symbols buffer to reuse
         mark!(SlotWait);
+        ch!(begin SlotWait);
         let syms = {
             let mut st = shared.lock();
+            #[cfg(feature = "character")]
+            if !st.cancelled && shared.full(&st) {
+                // (both predicates, and their operands: the window's, the ready bytes' cap's)
+                let ahead = st.issued - st.taken;
+                let window = ahead >= shared.slots;
+                let cap = shared
+                    .cap
+                    .is_some_and(|c| st.ready.bytes >= c.bytes && ahead >= c.floor);
+                // (at the head of the line, the block the reader waits for: `taken`)
+                ch!(point Bound, st.taken, crate::character::bound::pack(window, cap, ahead, st.ready.bytes as u64));
+            }
             while !st.cancelled && shared.full(&st) {
                 #[cfg(test)]
                 {
@@ -1093,10 +1154,14 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             st.scanner_waiting = false;
             if st.cancelled {
                 drop(st);
+                ch!(end SlotWait);
                 return finish(None);
             }
+            // (admitted: the block it reads next is outside issued − taken until issued)
+            ch!(occ ScanStart, st.issued, 0; Scanning 1);
             st.free_syms.pop().unwrap_or_default()
         };
+        ch!(end SlotWait);
         mark!(SlotGot);
         let next = catch_unwind(AssertUnwindSafe(|| sc.next(syms)))
             .unwrap_or_else(|p| Err(Error::new(ErrorKind::Internal(panic_message(p)))));
@@ -1107,9 +1172,11 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 symbols,
                 ..
             }) => {
+                ch!(begin Issue);
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
+                ch!(occ Issued, place, std::mem::size_of_val(&symbols.syms[..]); Admitted 1, Scanning -1);
                 drop(st);
                 mark!(
                     Issued,
@@ -1123,12 +1190,20 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                     crate::scan_oracle::record(index, &symbols);
                 }
                 if !jobs.send_job((place, bit, symbols)) {
+                    ch!(end Issue);
                     return finish(None);
                 }
+                ch!(end Issue);
                 mark!(Enqueued, place);
             }
-            Ok(Event::Done) => return finish(None),
-            Err(e) => return finish(Some(e)),
+            Ok(Event::Done) => {
+                ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
+                return finish(None);
+            }
+            Err(e) => {
+                ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
+                return finish(Some(e));
+            }
         }
     }
     // (the input's receiver and the jobs' sender are dropped here: a writer's next write
@@ -1166,8 +1241,21 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 Err(TryRecvError::Disconnected) => eof = true,
             }
         }
+        // (`character`: the scanner's own transitions, as `scanner` makes them, so the
+        // ledgers' flow and occupancy identities hold with the scan replayed; its reading, A2
+        // and A3, is what the replay removes)
+        ch!(begin SlotWait);
         let (syms, index) = {
             let mut st = shared.lock();
+            #[cfg(feature = "character")]
+            if !st.cancelled && shared.full(&st) {
+                let ahead = st.issued - st.taken;
+                let window = ahead >= shared.slots;
+                let cap = shared
+                    .cap
+                    .is_some_and(|c| st.ready.bytes >= c.bytes && ahead >= c.floor);
+                ch!(point Bound, st.taken, crate::character::bound::pack(window, cap, ahead, st.ready.bytes as u64));
+            }
             while !st.cancelled && shared.full(&st) {
                 st.scanner_waiting = true;
                 st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
@@ -1175,12 +1263,16 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             st.scanner_waiting = false;
             if st.cancelled {
                 drop(st);
+                ch!(end SlotWait);
                 return finish();
             }
+            ch!(occ ScanStart, st.issued, 0; Scanning 1);
             let index = st.issued;
             (st.free_syms.pop().unwrap_or_default(), index)
         };
+        ch!(end SlotWait);
         let Some(symbols) = crate::scan_oracle::replay(index, syms) else {
+            ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
             // the input's end: taken to its end, as the scanner reads to it
             while !eof {
                 match rx.recv() {
@@ -1190,13 +1282,17 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             }
             return finish();
         };
+        ch!(begin Issue);
         let mut st = shared.lock();
         let place = st.issued;
         st.issued += 1;
+        ch!(occ Issued, place, std::mem::size_of_val(&symbols.syms[..]); Admitted 1, Scanning -1);
         drop(st);
         if !jobs.send_job((place, 0, symbols)) {
+            ch!(end Issue);
             return finish();
         }
+        ch!(end Issue);
     }
 }
 
@@ -1206,7 +1302,9 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
     loop {
         mark!(JobLock);
         mark!(JobRecv);
+        ch!(begin JobWait);
         let job = jobs.recv();
+        ch!(end JobWait);
         let Some((place, bit, mut symbols)) = job else {
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
@@ -1230,17 +1328,21 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         // block of `POOLED_FROM` rows or more, its own for a smaller one
         let res = catch_unwind(AssertUnwindSafe(|| {
             super::decode_owned(&mut symbols, k, &mut scratch, |n, syms| {
+                ch!(begin Pool);
                 let mut st = shared.lock();
                 if syms.capacity() > 0 && st.free_syms.len() < slots {
                     st.free_syms.push(syms);
                 }
-                if n >= POOLED_FROM {
+                let out = if n >= POOLED_FROM {
                     st.free_out
                         .pop()
                         .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
                 } else {
                     Vec::new()
-                }
+                };
+                drop(st);
+                ch!(end Pool);
+                out
             })
         }));
         #[cfg(feature = "phase-counters")]
@@ -1264,6 +1366,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
             block: Some(place),
             bit: Some(bit),
         });
+        ch!(begin Publish);
         let mut st = shared.lock();
         let wake = shared.insert_locked(&mut st, place, res);
         // (the symbols, where the block failed before its rows were known)
@@ -1271,6 +1374,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
             st.free_syms.push(std::mem::take(&mut symbols.syms));
         }
         drop(st);
+        ch!(end Publish);
         mark!(Ready, place);
         if wake {
             shared.cv.notify_one();

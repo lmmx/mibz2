@@ -77,10 +77,40 @@
 //! - a block whose **compressed form passes 64 MiB** is an error (a real block is at most
 //!   about 4.2 MB; only a code-length table padded with no-op steps could be longer).
 
+/// (research, `character`) an activity begun or ended on this thread, or a point
+/// (src/character.rs), with the `character` feature only
+macro_rules! ch {
+    (begin $t:ident) => {
+        #[cfg(feature = "character")]
+        crate::character::begin(crate::character::Tag::$t);
+    };
+    (end $t:ident) => {
+        #[cfg(feature = "character")]
+        crate::character::end(crate::character::Tag::$t);
+    };
+    (point $t:ident, $place:expr, $x:expr) => {
+        #[cfg(feature = "character")]
+        crate::character::point(crate::character::Tag::$t, $place as u64, $x as u64);
+    };
+    (occ $t:ident, $place:expr, $x:expr; $($b:ident $d:expr),+) => {
+        #[cfg(feature = "character")]
+        crate::character::occ_point(
+            &[$((crate::character::Buffer::$b, $d as i64)),+],
+            crate::character::Tag::$t,
+            $place as u64,
+            $x as u64,
+        );
+    };
+}
+
 pub mod bits;
 pub mod block;
 pub mod bwt;
 mod cells;
+// (research only, `character`: the decoder's character, its activities' ledgers)
+#[cfg(feature = "character")]
+#[doc(hidden)]
+pub mod character;
 // (research only: the grammar replay harness, with `grammar-replay`)
 #[cfg(feature = "grammar-replay")]
 #[doc(hidden)]
@@ -546,8 +576,10 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
 ) -> Result<Vec<u8>, ErrorKind> {
     let (crc, orig_ptr) = (b.crc, b.orig_ptr);
+    ch!(begin A5);
     if s.inverse.reads_runs() && runs::takes_runs(b) {
         let n = runs::front(b, &mut s.runs, k)?;
+        ch!(end A5);
         if orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
@@ -570,7 +602,9 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
         }
         #[cfg(any(test, feature = "trace"))]
         let ll_before = s.ll.as_ptr();
+        ch!(begin A9);
         let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+        ch!(end A9);
         // (the footprint ledger's sample, after the RLE1, so that it sees the buffers the
         // block leaves: its own, and `ll` if its inverted bytes were staged there)
         #[cfg(any(test, feature = "trace"))]
@@ -598,6 +632,8 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     } else {
         mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
     };
+    ch!(end A5);
+    ch!(point Route, u64::MAX, character::route::pack(character::route::COLUMN, n, 0));
     if orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
@@ -627,6 +663,7 @@ fn column<I: bwt::InverseBwt>(
         trace::UNREAD,
     );
     // in place where the kernel can (its output over `ll`), else into `rle`
+    ch!(begin A8);
     let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, orig_ptr);
     if cooperative {
         let cps = &s.checkpoints;
@@ -650,8 +687,12 @@ fn column<I: bwt::InverseBwt>(
     );
     #[cfg(not(any(test, feature = "trace")))]
     let _ = n;
+    ch!(end A8);
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
-    finish(inverted, crc, k, out)
+    ch!(begin A9);
+    let res = finish(inverted, crc, k, out);
+    ch!(end A9);
+    res
 }
 
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
