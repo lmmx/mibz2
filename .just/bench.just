@@ -2068,7 +2068,13 @@ bench-character DRY="":
 #   just submit bench-character-stage2
 bench-character-stage2 DRY="":
     #!/usr/bin/env bash
-    set -euo pipefail
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle. The only file this recipe leaves
+    # under target/*/ named *.tar.gz is its bundle (just submit counts them: stage 1's bundle is
+    # fetched as stage1.tgz).
+    set -uo pipefail
     PIN=9621b7ad1bad30857d1216432e0117aa8d2c5a32
     # stage 1's bundle (#145: evidence 870e61d7; journal section 66)
     STAGE1_COMMIT=870e61d73090d5e683aaf2b6e8b77d7f4b446f16 STAGE1_PATH=character/run-20261125T001135Z.tar.gz STAGE1_SHA256=bb72107bd28aa82a7f0f5a467e9f424438b9eea5d583abcb3a20c37b895c2204
@@ -2077,92 +2083,167 @@ bench-character-stage2 DRY="":
     dry="{{DRY}}"
     [ -z "$dry" ] || { BLOCKS=1; SETTLE=0; PREWARM=2; ORACLE_ROUNDS=4; }
     W=$PWD/target/character-stage2
-    mkdir -p "$W"
+    mkdir -p "$W" || exit 1
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
-    mkdir "$O"
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
     exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
     echo "bench-character-stage2 (docs/journal/2026-11-25-character-stage2-registration.md; diagnostic) at $(git rev-parse HEAD): master $PIN with the character feature, $BLOCKS blocks, settle $SETTLE s, seed $SEED; the oracle arms from the four-arm binary at $FOUR_ARM"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$dry" ] || echo "bench-character-stage2: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
-    [ -z "$(git status --porcelain --untracked-files=no)" ] \
-      || { echo "bench-character-stage2: the checkout has local changes"; exit 1; }
-    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
-    git merge-base --is-ancestor "$PIN" HEAD \
-      || { echo "bench-character-stage2: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
-    # the pin (section 5): master's decoder at PIN, plus the character feature alone, never a later master
-    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
-    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
-    [ -z "$beyond" ] \
-      || { echo "bench-character-stage2: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
-    printf '%s\n' "$changed" > "$O/src-changed.txt"
-    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
-    export RUSTUP_TOOLCHAIN=1.99.1
-    rustc -V | grep -q '^rustc 1\.99\.1 ' \
-      || { echo "bench-character-stage2: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
-    cargo build -q --release --features character --example character --example ab --example windows
     CH=$PWD/target/release/examples/character
     AB=$PWD/target/release/examples/ab
-    # the oracle arms' binary: the four-arm recipe's, at its tagged commit, in a worktree of its own
-    git cat-file -e "$FOUR_ARM^{commit}" 2>/dev/null || git fetch -q origin bench/four-arm
-    rm -rf "$W/four-arm"
-    git worktree add -q --detach "$W/four-arm" "$FOUR_ARM"
-    (cd "$W/four-arm" && CARGO_TARGET_DIR="$W/four-arm-target" cargo build -q --release --features scan-oracle --example four_arm)
     FA=$W/four-arm-target/release/examples/four_arm
-    git rev-parse HEAD > "$O/commit.txt"
-    printf 'pin %s\nhead %s\nfour-arm %s\n' "$PIN" "$(git rev-parse HEAD)" "$FOUR_ARM" > "$O/builds.txt"
-    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
-    sha256sum "$CH" "$FA" | tee "$O/binaries.sha256"
-    # the corpus, as stage 1's
-    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    X4=$W/wikidata-x$COPIES.bz2
     corpus=corpora/wikidata.bz2
-    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
-      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
-      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
-        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
-          && git archive origin/bench-data "$dir" | tar -x || true
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      git worktree remove --force "$W/four-arm" 2>/dev/null || true
+      git worktree prune || true
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-character-stage2: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
       fi
-      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-      mkdir -p corpora
-      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
-    fi
-    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
-      || { echo "bench-character-stage2: $corpus is not bench/wikidata.json's $want"; exit 1; }
-    : > "$W/wikidata-x$COPIES.bz2"
-    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
-    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
-    # stage 1's bundle, from the evidence branch, checked
-    git cat-file -e "$STAGE1_COMMIT^{commit}" 2>/dev/null || git fetch -q origin evidence
-    git show "$STAGE1_COMMIT:$STAGE1_PATH" > "$W/stage1.tar.gz"
-    [ "$(sha256sum "$W/stage1.tar.gz" | cut -d' ' -f1)" = "$STAGE1_SHA256" ] \
-      || { echo "bench-character-stage2: stage 1's bundle is not its SHA-256"; exit 1; }
-    rm -rf "$W/stage1" && mkdir "$W/stage1" && tar -xzf "$W/stage1.tar.gz" -C "$W/stage1" --strip-components=1
-    # the machine
-    "$AB" env > "$O/env.json"
-    lscpu > "$O/lscpu.txt"
-    lscpu -e > "$O/lscpu-e.txt" || true
-    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
-    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
-    for f in scaling_governor scaling_driver energy_performance_preference; do
-      echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
-    done > "$O/frequency-policy.txt"
-    echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
-    echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
-    uname -a > "$O/uname.txt"
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-character-stage2: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-character-stage2: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-character-stage2: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-character-stage2: the checkout has local changes"; exit 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "bench-character-stage2: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+      # the pin (section 5): master's decoder at PIN, plus the character feature alone, never a later master
+      changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|lib|parallel|read|block|open)\.rs$|^$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-character-stage2: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'pin %s\nhead %s\nfour-arm %s\n' "$PIN" "$(git rev-parse HEAD)" "$FOUR_ARM" > "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-character-stage2: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      cargo build -q --release --features character --example character --example ab --example windows
+      sha256sum "$CH" | tee "$O/binaries.sha256"
+    }
+    # the oracle arms' binary: the four-arm recipe's, at its tagged commit, in a worktree of its own
+    four_arm() {
+      git cat-file -e "$FOUR_ARM^{commit}" 2>/dev/null || git fetch -q origin bench/four-arm
+      git worktree remove --force "$W/four-arm" 2>/dev/null || true
+      rm -rf "$W/four-arm"
+      git worktree prune
+      git worktree add -q --detach "$W/four-arm" "$FOUR_ARM"
+      (cd "$W/four-arm" && CARGO_TARGET_DIR="$W/four-arm-target" cargo build -q --release --features scan-oracle --example four_arm)
+      sha256sum "$FA" | tee -a "$O/binaries.sha256"
+    }
+    # the corpus, as stage 1's
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-character-stage2: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # stage 1's bundle, from the evidence branch, checked (as stage1.tgz: never a second *.tar.gz)
+    stage1() {
+      git cat-file -e "$STAGE1_COMMIT^{commit}" 2>/dev/null || git fetch -q origin evidence
+      git show "$STAGE1_COMMIT:$STAGE1_PATH" > "$W/stage1.tgz"
+      [ "$(sha256sum "$W/stage1.tgz" | cut -d' ' -f1)" = "$STAGE1_SHA256" ] \
+        || { echo "bench-character-stage2: stage 1's bundle is not its SHA-256"; exit 1; }
+      rm -rf "$W/stage1" && mkdir "$W/stage1" && tar -xzf "$W/stage1.tgz" -C "$W/stage1" --strip-components=1
+    }
+    # the machine (best effort: what can't be read is recorded so)
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
     # the calibration and the plan
-    "$CH" --calibrate 10000000 5 > "$O/calibration.json"
-    python3 bench/character_stage2.py plan "$W/stage1/runs.jsonl" "$O/calibration.json" "$O/lscpu.txt" "$O/lscpu-e.txt" "$O/plan.json"
-    KSTAR=$(python3 -c "import json; print(json.load(open('$O/plan.json'))['kstar'])")
-    # the run, then the oracle arms at k*
-    python3 bench/character_stage2.py run "$O/plan.json" --bin "$CH" --corpus "$W/wikidata-x$COPIES.bz2" \
-      --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED \
-      || echo "bench-character-stage2: the driver failed (console.log says why); the bundle is kept"
-    "$FA" "$W/wikidata-x$COPIES.bz2" "$KSTAR" $ORACLE_ROUNDS $SETTLE "$O/oracle.tsv" \
-      || echo "bench-character-stage2: the oracle arms failed; the bundle is kept"
-    date -u +%FT%TZ > "$O/timed.txt"
-    python3 bench/character_stage2.py report "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" \
-      --out "$O" --blocks $BLOCKS --seed $SEED --oracle "$O/oracle.tsv" | tee "$O/report.txt" \
-      || echo "bench-character-stage2: VOID, no report (report.txt says why); the bundle is kept"
-    date -u +%FT%TZ > "$O/finished.txt"
-    git worktree remove --force "$W/four-arm" || true
-    rm -f "$W/wikidata-x$COPIES.bz2"
-    bash bench/bundle.sh "$O"
+    plan() {
+      "$CH" --calibrate 10000000 5 > "$O/calibration.json"
+      python3 bench/character_stage2.py plan "$W/stage1/runs.jsonl" "$O/calibration.json" "$O/lscpu.txt" "$O/lscpu-e.txt" "$O/plan.json"
+    }
+    # the run (the driver records a failed decode as failed and carries on)
+    drive() {
+      python3 bench/character_stage2.py run "$O/plan.json" --bin "$CH" --corpus "$X4" \
+        --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED
+    }
+    # the oracle arms at k*
+    oracle() {
+      KSTAR=$(python3 -c "import json; print(json.load(open('$O/plan.json'))['kstar'])")
+      "$FA" "$X4" "$KSTAR" $ORACLE_ROUNDS $SETTLE "$O/oracle.tsv"
+    }
+    # the report: whatever completed, failed phases and missing decodes marked FAILED; exit 1 if VOID
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 bench/character_stage2.py report "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" \
+        --out "$O" --blocks $BLOCKS --seed $SEED --oracle "$O/oracle.tsv" --phases "$O/phases.tsv" \
+        | tee "$O/report.txt"
+    }
+    phase checks   -                      checks
+    phase build    checks                 build
+    phase four-arm checks                 four_arm
+    phase inputs   build                  inputs
+    phase stage1   checks                 stage1
+    phase machine  build                  machine
+    phase plan     build,stage1,machine   plan
+    phase run      plan,inputs            drive
+    phase oracle   four-arm,plan,inputs   oracle
+    phase report   plan                   report

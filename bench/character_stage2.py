@@ -354,13 +354,34 @@ def permute_corpus(src, dst, perm):
                 f.write(streams[c * 12 + i])
 
 
+def decode_once(cmd, no_turbo):
+    """one decode's process; with no_turbo, turbo off for it and restored after"""
+    turbo_was = None
+    if no_turbo:
+        turbo_was = open(NO_TURBO).read().strip()
+        with open(NO_TURBO, "w") as f:
+            f.write("1")
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, env=ENV)
+    finally:
+        if turbo_was is not None:
+            with open(NO_TURBO, "w") as f:
+                f.write(turbo_was)
+
+
 def run(a):
     p = json.load(open(a.plan))
     runs = open(os.path.join(a.out, "runs.jsonl"), "a")
     tmp = tempfile.mkdtemp(prefix="stage2-")
     tb = os.path.join(tmp, "b.tsv")
     perm_corpus = os.path.join(tmp, "permuted.bz2")
-    permute_corpus(a.corpus, perm_corpus, p["permutation"])
+    # (fail soft: a permutation that can't be made fails its own cells, never the run)
+    perm_err = None
+    try:
+        permute_corpus(a.corpus, perm_corpus, p["permutation"])
+    except (Exception, SystemExit) as e:
+        perm_err = f"the permuted corpus: {e}"
+        print(f"run: {perm_err}; its cells are recorded as failed", flush=True)
     cells = p["cells"]
     t0 = time.time()
     t_warm = time.time()
@@ -390,17 +411,6 @@ def run(a):
             if c.get("mask"):
                 cmd = ["taskset", "-c", ",".join(map(str, c["mask"]))] + cmd
             time.sleep(a.settle)
-            turbo_was = None
-            if c.get("no_turbo"):
-                turbo_was = open(NO_TURBO).read().strip()
-                with open(NO_TURBO, "w") as f:
-                    f.write("1")
-            try:
-                r = subprocess.run(cmd, capture_output=True, text=True, env=ENV)
-            finally:
-                if turbo_was is not None:
-                    with open(NO_TURBO, "w") as f:
-                        f.write(turbo_was)
             extra = {
                 "on_arm": on,
                 "cell": ci,
@@ -412,14 +422,30 @@ def run(a):
             }
             position += 1
             prev = c["k"]
-            if r.returncode != 0 or not r.stdout.strip():
-                rec = {"kind": "failed", "stderr": r.stderr[-2000:], **extra}
-            else:
-                rec = json.loads(r.stdout.strip().splitlines()[-1])
-                rec.update(extra)
+            # (fail soft: whatever goes wrong with one decode is recorded as its failure, and the
+            # run carries on to the next)
+            try:
+                if c.get("corpus") == "permuted" and perm_err:
+                    raise RuntimeError(perm_err)
+                r = decode_once(cmd, c.get("no_turbo"))
+                if r.returncode != 0 or not r.stdout.strip():
+                    rec = {
+                        "kind": "failed",
+                        "rc": r.returncode,
+                        "stderr": r.stderr[-2000:],
+                        **extra,
+                    }
+                else:
+                    rec = json.loads(r.stdout.strip().splitlines()[-1])
+                    rec.update(extra)
+            except Exception as e:
+                rec = {"kind": "failed", "stderr": f"{type(e).__name__}: {e}", **extra}
+            if rec["kind"] == "failed":
+                print(f"run: cell {ci} ({c['section']} {c['arm']} k {c['k']}) block {b} failed: "
+                      f"{rec['stderr'][-300:]}", flush=True)  # fmt: skip
             runs.write(json.dumps(rec, separators=(",", ":")) + "\n")
             runs.flush()
-            if c.get("pulse") and os.path.exists(tb):
+            if c.get("pulse") and rec["kind"] != "failed" and os.path.exists(tb):
                 shutil.copy(tb, os.path.join(a.out, f"pulse-c{ci:03d}-b{b:02d}.tsv"))
         print(f"block {b} done, {time.time() - t0:.0f} s", flush=True)
     shutil.rmtree(tmp, ignore_errors=True)
@@ -570,11 +596,16 @@ def report(a) -> int:
         for x in recs
         if x["kind"] == "decode" and x.get("on") == 1 and not x.get("identities_ok")
     ]
+    print("# bench-character-stage2 (stage 2a; diagnostic: decides nothing)\n")
+    failed_phases = phases(a)
     if void:
-        print(f"VOID ({len(void)} problems); no report")
+        # (fail soft: a VOID run still reports what it can, for diagnosis only; its exit is 1)
+        print(f"VOID ({len(void)} problems): the figures below are for diagnosis only")
         for v in void[:30]:
             print(f"  {v}")
-        return 1
+        if len(void) > 30:
+            print(f"  ... and {len(void) - 30} more")
+        print()
     dec = {k: v[0] for k, v in got.items()}
     cell = {i: c for i, c in enumerate(p["cells"])}
 
@@ -595,7 +626,6 @@ def report(a) -> int:
             None,
         )
 
-    print("# bench-character-stage2 (stage 2a; diagnostic: decides nothing)\n")
     print(
         f"k* {p['kstar']}, the step {p['step']}, anchors {p['anchors']}; {p['cycles_per_iter']:.3f} cycles a pacing iteration; {a.blocks} blocks"
     )
@@ -616,9 +646,13 @@ def report(a) -> int:
         ):
             ci = find("screen", k, c)
             achieved, coefs = [], []
-            for b in range(a.blocks):
-                d = paced_svc(trace(ci, b), c) / paced_svc(trace(base, b), c) - 1
-                achieved.append(d)
+            try:
+                for b in range(a.blocks):
+                    d = paced_svc(trace(ci, b), c) / paced_svc(trace(base, b), c) - 1
+                    achieved.append(d)
+            except Exception as e:
+                print(f"{k:<3} {c:<11} FAILED ({missing(e)})")
+                continue
             d_ach = med(achieved)
             for b in range(a.blocks):
                 coefs.append(
@@ -665,129 +699,17 @@ def report(a) -> int:
     s0 = find("surface", ks, "s00w00")
     if s0 is not None:
         print("\n## The surface at k* (mean log slowdown against (0, 0), over blocks)\n")
-        slow = {}
-        for sd in (0, 10, 20):
-            line = []
-            for wd in (0, 10, 20):
-                ci = find("surface", ks, f"s{sd:02d}w{wd:02d}")
-                v = [math.log(wall(ci, b) / wall(s0, b)) for b in range(a.blocks)]
-                slow[(sd, wd)] = v
-                line.append(f"{statistics.fmean(v):+.4f}")
-            print(f"scanner {sd:>2}%: " + "  ".join(line))
-        rnd = random.Random(a.seed)
+        section(surface, a, ks, s0, find, wall)
 
-        def roundness(idx):
-            s = lambda key: statistics.fmean(slow[key][i] for i in idx)  # noqa: E731
-            den = s((20, 0)) + s((0, 20))
-            return s((20, 20)) / den if den else float("nan")
-
-        r0 = roundness(range(a.blocks))
-        boot = sorted(
-            roundness([rnd.randrange(a.blocks) for _ in range(a.blocks)]) for _ in range(2000)
-        )
-        print(
-            f"the knee's roundness: {r0:.3f} [{boot[50]:.3f}, {boot[1949]:.3f}] (1 additive, about 0.5 a sharp max)"
-        )
     # the contrasts
     print("\n## The contrasts (each arm's wall over its section's reference, paired by block)\n")
-    refs = {"gates": "W4k_cap12", "memory": "none", "placement": "distinct", "scanner": "unpinned"}
-    for section, ref in refs.items():
-        for k in sorted({c["k"] for c in cell.values() if c["section"] == section}):
-            r_ci = find(section, k, ref)
-            if r_ci is None:
-                continue
-            for ci, c in cell.items():
-                if c["section"] != section or c["k"] != k or ci == r_ci:
-                    continue
-                v = [math.log(wall(ci, b) / wall(r_ci, b)) for b in range(a.blocks)]
-                m, lo, hi = interval(v)
-                tag = "CHANGED" if lo > 0 or hi < 0 else ""
-                extra = ""
-                if section == "gates":
-                    w = [
-                        trace(ci, b).get("admission", {}).get("waits", [0, 0, 0])
-                        for b in range(a.blocks)
-                    ]
-                    extra = f"  waits window/cap/both {[sum(x[i] for x in w) for i in range(3)]}"
-                print(
-                    f"{section:<9} k {k:<3} {c['arm']:<11} over {ref:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] {tag}{extra}"
-                )
-                rows.append(
-                    {
-                        "section": section,
-                        "k": k,
-                        "coord": c["arm"],
-                        "ratio": math.exp(m),
-                        "lo": math.exp(lo),
-                        "hi": math.exp(hi),
-                        "label": tag,
-                    }
-                )
-    # the oracle arms (the four-arm binary's own A, B and C at the knee; §5's decision)
-    if a.oracle and os.path.exists(a.oracle):
-        print(
-            "\n## The oracle arms (the four-arm binary at k*, its rounds paired; ratios against its own A)\n"
-        )
-        o = {}
-        for line in open(a.oracle).read().splitlines()[1:]:
-            f = line.split("\t")
-            if f and f[0] == "run":
-                o.setdefault((int(f[1]), f[3]), []).append(float(f[5]))
-        for arm in ("B", "C", "D"):
-            v = [
-                math.log(o[(r, arm)][0] / o[(r, "A")][0])
-                for (r, x) in o
-                if x == arm and (r, "A") in o
-            ]
-            if v:
-                m, lo, hi = interval(v)
-                print(
-                    f"{arm}/A {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(v)} rounds"
-                )
-        a_walls = [w[0] for (r, x), w in o.items() if x == "A"]
-        base = find("screen", ks, "base")
-        if a_walls and base is not None:
-            ours = statistics.median(wall(base, b) for b in range(a.blocks))
-            gap = statistics.median(a_walls) / ours - 1
-            print(
-                f"the layout check: the four-arm binary's A against this binary's baseline at k*: {gap:+.2%}"
-                + ("  (over 3%: the oracle ratios VOID)" if abs(gap) > 0.03 else "")
-            )
-    # validation (held out: reported, never fitted)
+    contrasts(a, cell, find, wall, trace, rows)
+    section(oracles, a, ks, find, wall, failed_phases)
     print("\n## Validation (held out from every fit)\n")
-    for ci, c in cell.items():
-        if c["section"] == "validation" and c["arm"] != "base":
-            ref = (
-                find("screen", c["k"], "base")
-                if c["arm"] != "permuted"
-                else find("validation", c["k"], "base")
-            )
-            if ref is None:
-                continue
-            v = [math.log(wall(ci, b) / wall(ref, b)) for b in range(a.blocks)]
-            m, lo, hi = interval(v)
-            print(
-                f"k {c['k']:<3} {c['arm']:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
-            )
-    # the ledgers' cost (journal §66): each anchor's base pairs, the ledgers on over off, 12 a
-    # count with the cost section's
+    section(validation, a, cell, find, wall)
     print("\n## The ledgers' cost (the base's trace over its timed decode, paired by block)\n")
-    perturbed = []
-    for k in p["anchors"]:
-        r = []
-        for sec in ("screen", "cost"):
-            ci = find(sec, k, "base")
-            if ci is not None:
-                r += [math.log(trace(ci, b)["wall_s"] / wall(ci, b)) for b in range(a.blocks)]
-        if len(r) > 1:
-            m, lo, hi = interval(r)
-            flag = math.exp(m) > 1.01 or math.exp(lo) > 1.005
-            if flag:
-                perturbed.append(k)
-            print(
-                f"k {k:<3} on/off {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(r)} pairs{'  PERTURBED (the traces; the walls are the ledgers off)' if flag else ''}"
-            )
-    pulses(a, p, cell, find)
+    section(cost, a, p, find, wall, trace)
+    section(pulses, a, p, cell, find)
     if misses:
         print(
             "\nDOSE-MISSED (achieved more than 25% from target; the coefficient uses the achieved dose): "
@@ -798,7 +720,198 @@ def report(a) -> int:
         f.write("\t".join(cols) + "\n")
         for r in rows:
             f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
-    return 0
+    return 1 if void else 0
+
+
+def missing(e) -> str:
+    """a failed row's reason: a missing decode is named by its (cell, block, ledgers) key"""
+    if isinstance(e, KeyError):
+        return f"no decode {e.args[0]}" if e.args else "a decode missing"
+    return f"{type(e).__name__}: {e}"
+
+
+def section(fn, *args) -> None:
+    """fail soft: a section that can't be computed is printed as FAILED, and the report goes on"""
+    try:
+        fn(*args)
+    except Exception as e:
+        print(f"{fn.__name__}: FAILED ({missing(e)})")
+
+
+def phases(a) -> set:
+    """the recipe's phases (phases.tsv) at the report's head; the failed or skipped ones returned"""
+    if not getattr(a, "phases", None) or not os.path.exists(a.phases):
+        return set()
+    bad = set()
+    lines = open(a.phases).read().splitlines()[1:]
+    print("## The recipe's phases\n")
+    for line in lines:
+        f = (line.split("\t") + [""] * 5)[:5]
+        ok = f[1] == "0"
+        if not ok:
+            bad.add(f[0])
+        state = "ok" if ok else "SKIPPED" if f[1] == "SKIPPED" else f"FAILED (exit {f[1]})"
+        print(f"{f[0]:<12} {state:<16} {f[2]} .. {f[3]}" + ("" if ok else f"  {f[4]}"))
+    print()
+    return bad
+
+
+def surface(a, ks, s0, find, wall) -> None:
+    import math
+
+    slow = {}
+    for sd in (0, 10, 20):
+        line = []
+        for wd in (0, 10, 20):
+            ci = find("surface", ks, f"s{sd:02d}w{wd:02d}")
+            v = [math.log(wall(ci, b) / wall(s0, b)) for b in range(a.blocks)]
+            slow[(sd, wd)] = v
+            line.append(f"{statistics.fmean(v):+.4f}")
+        print(f"scanner {sd:>2}%: " + "  ".join(line))
+    rnd = random.Random(a.seed)
+
+    def roundness(idx):
+        s = lambda key: statistics.fmean(slow[key][i] for i in idx)  # noqa: E731
+        den = s((20, 0)) + s((0, 20))
+        return s((20, 20)) / den if den else float("nan")
+
+    r0 = roundness(range(a.blocks))
+    boot = sorted(
+        roundness([rnd.randrange(a.blocks) for _ in range(a.blocks)]) for _ in range(2000)
+    )
+    print(
+        f"the knee's roundness: {r0:.3f} [{boot[50]:.3f}, {boot[1949]:.3f}] (1 additive, about 0.5 a sharp max)"
+    )
+
+
+def contrasts(a, cell, find, wall, trace, rows) -> None:
+    import math
+
+    refs = {"gates": "W4k_cap12", "memory": "none", "placement": "distinct", "scanner": "unpinned"}
+    for sec, ref in refs.items():
+        for k in sorted({c["k"] for c in cell.values() if c["section"] == sec}):
+            r_ci = find(sec, k, ref)
+            if r_ci is None:
+                continue
+            for ci, c in cell.items():
+                if c["section"] != sec or c["k"] != k or ci == r_ci:
+                    continue
+                try:
+                    v = [math.log(wall(ci, b) / wall(r_ci, b)) for b in range(a.blocks)]
+                    m, lo, hi = interval(v)
+                    extra = ""
+                    if sec == "gates":
+                        w = [
+                            trace(ci, b).get("admission", {}).get("waits", [0, 0, 0])
+                            for b in range(a.blocks)
+                        ]
+                        extra = (
+                            f"  waits window/cap/both {[sum(x[i] for x in w) for i in range(3)]}"
+                        )
+                except Exception as e:
+                    print(f"{sec:<9} k {k:<3} {c['arm']:<11} FAILED ({missing(e)})")
+                    continue
+                tag = "CHANGED" if lo > 0 or hi < 0 else ""
+                print(
+                    f"{sec:<9} k {k:<3} {c['arm']:<11} over {ref:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] {tag}{extra}"
+                )
+                rows.append(
+                    {
+                        "section": sec,
+                        "k": k,
+                        "coord": c["arm"],
+                        "ratio": math.exp(m),
+                        "lo": math.exp(lo),
+                        "hi": math.exp(hi),
+                        "label": tag,
+                    }
+                )
+
+
+def oracles(a, ks, find, wall, failed_phases) -> None:
+    """the oracle arms (the four-arm binary's own A, B and C at the knee; §5's decision)"""
+    import math
+
+    if not a.oracle:
+        return
+    print(
+        "\n## The oracle arms (the four-arm binary at k*, its rounds paired; ratios against its own A)\n"
+    )
+    bad = failed_phases & {"four-arm", "oracle"}
+    if bad or not os.path.exists(a.oracle):
+        why = f"the phase {', '.join(sorted(bad))} failed" if bad else f"no {a.oracle}"
+        print(f"FAILED ({why})")
+        return
+    o = {}
+    for line in open(a.oracle).read().splitlines()[1:]:
+        f = line.split("\t")
+        if f and f[0] == "run":
+            o.setdefault((int(f[1]), f[3]), []).append(float(f[5]))
+    for arm in ("B", "C", "D"):
+        v = [
+            math.log(o[(r, arm)][0] / o[(r, "A")][0]) for (r, x) in o if x == arm and (r, "A") in o
+        ]
+        if v:
+            m, lo, hi = interval(v)
+            print(
+                f"{arm}/A {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(v)} rounds"
+            )
+    a_walls = [w[0] for (r, x), w in o.items() if x == "A"]
+    base = find("screen", ks, "base")
+    if a_walls and base is not None:
+        ours = statistics.median(wall(base, b) for b in range(a.blocks))
+        gap = statistics.median(a_walls) / ours - 1
+        print(
+            f"the layout check: the four-arm binary's A against this binary's baseline at k*: {gap:+.2%}"
+            + ("  (over 3%: the oracle ratios VOID)" if abs(gap) > 0.03 else "")
+        )
+
+
+def validation(a, cell, find, wall) -> None:
+    """held out: reported, never fitted"""
+    import math
+
+    for ci, c in cell.items():
+        if c["section"] == "validation" and c["arm"] != "base":
+            ref = (
+                find("screen", c["k"], "base")
+                if c["arm"] != "permuted"
+                else find("validation", c["k"], "base")
+            )
+            if ref is None:
+                continue
+            try:
+                v = [math.log(wall(ci, b) / wall(ref, b)) for b in range(a.blocks)]
+                m, lo, hi = interval(v)
+            except Exception as e:
+                print(f"k {c['k']:<3} {c['arm']:<10} FAILED ({missing(e)})")
+                continue
+            print(
+                f"k {c['k']:<3} {c['arm']:<10} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
+            )
+
+
+def cost(a, p, find, wall, trace) -> None:
+    """the ledgers' cost (journal §66): each anchor's base pairs, the ledgers on over off, 12 a
+    count with the cost section's"""
+    import math
+
+    for k in p["anchors"]:
+        r = []
+        try:
+            for sec in ("screen", "cost"):
+                ci = find(sec, k, "base")
+                if ci is not None:
+                    r += [math.log(trace(ci, b)["wall_s"] / wall(ci, b)) for b in range(a.blocks)]
+        except Exception as e:
+            print(f"k {k:<3} on/off FAILED ({missing(e)})")
+            continue
+        if len(r) > 1:
+            m, lo, hi = interval(r)
+            flag = math.exp(m) > 1.01 or math.exp(lo) > 1.005
+            print(
+                f"k {k:<3} on/off {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] over {len(r)} pairs{'  PERTURBED (the traces; the walls are the ledgers off)' if flag else ''}"
+            )
 
 
 def main() -> int:
@@ -828,6 +941,7 @@ def main() -> int:
     rp.add_argument("--seed", type=int, default=20261125)
     rp.add_argument("--out-bytes", type=int, default=4 * 209_700_196)
     rp.add_argument("--oracle", help="the four-arm binary's runs.tsv at k*")
+    rp.add_argument("--phases", help="the recipe's phases.tsv: each phase's exit status")
     a = ap.parse_args()
     if a.cmd == "plan":
         plan(a)

@@ -95,21 +95,62 @@ def scenario(miss=False, fail=None):
     return plan, recs
 
 
-def run_report(plan, recs, lscpu=I9):
+def run_report(plan, recs, lscpu=I9, phases=None, oracle=None):
     d = tempfile.mkdtemp()
     pp, rp, lp = (os.path.join(d, n) for n in ("plan.json", "runs.jsonl", "lscpu.txt"))
+    ph = None
+    if phases is not None:
+        ph = os.path.join(d, "phases.tsv")
+        open(ph, "w").write("phase\tstatus\tstarted\tended\tlast line\n" + phases)
     json.dump(plan, open(pp, "w"))
     with open(rp, "w") as f:
         for x in recs:
             f.write(json.dumps(x) + "\n")
     open(lp, "w").write(lscpu)
     a = argparse.Namespace(
-        plan=pp, runs=rp, lscpu=lp, out=d, blocks=BLOCKS, seed=1, out_bytes=OUT, oracle=None
-    )
+        plan=pp, runs=rp, lscpu=lp, out=d, blocks=BLOCKS, seed=1, out_bytes=OUT, oracle=oracle,
+        phases=ph,
+    )  # fmt: skip
     buf = io.StringIO()
     with redirect_stdout(buf):
         code = s2.report(a)
     return code, buf.getvalue()
+
+
+def check_driver(check):
+    """the driver fails soft: a decode that fails, and cells whose permuted corpus can't be made,
+    are recorded as failed and the run carries on to the next decode"""
+    d = tempfile.mkdtemp()
+    fake = os.path.join(d, "fake.sh")
+    # (k 3 fails; every other decode prints a record)
+    open(fake, "w").write(
+        '#!/bin/sh\n[ "$3" = 03 ] && { echo boom >&2; exit 2; }\n'
+        'echo \'{"kind":"decode","k":\'"${3#0}"\'}\'\n'
+    )
+    os.chmod(fake, 0o755)
+    corpus = os.path.join(d, "c.bz2")
+    open(corpus, "wb").write(s2.STREAM + b"x" * 10)  # (one stream: no 12 windows to permute)
+    cells = [
+        {"section": "screen", "k": 2, "arm": "base", "treat": []},
+        {"section": "screen", "k": 3, "arm": "base", "treat": []},
+        {"section": "validation", "k": 2, "arm": "permuted", "corpus": "permuted", "treat": []},
+    ]
+    plan = os.path.join(d, "plan.json")
+    json.dump({"cells": cells, "permutation": list(range(12))}, open(plan, "w"))
+    a = argparse.Namespace(plan=plan, bin=fake, corpus=corpus, out=d, blocks=2, settle=0,
+                           prewarm=0, seed=1)  # fmt: skip
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf):
+            s2.run(a)
+        ok = True
+    except BaseException as e:  # noqa: BLE001
+        ok, buf = False, io.StringIO(repr(e))
+    recs = [json.loads(x) for x in open(os.path.join(d, "runs.jsonl"))]
+    kinds = sorted((x["k"], x.get("arm"), x["kind"]) for x in recs)
+    want = sorted([(2, "base", "decode"), (3, "base", "failed"), (2, "permuted", "failed")] * 4)
+    check("fail soft: the driver records failed decodes and carries on", ok and kinds == want,
+          (buf.getvalue()[-300:], kinds))  # fmt: skip
 
 
 def main():
@@ -155,6 +196,30 @@ def main():
         )
     )
     check("VOID: a failed decode", code == 1 and "failed" in text)
+    # fail soft: a VOID run still reports what it can, and a missing decode fails its row only
+    code, text = run_report(*scenario(fail=lambda r: r.pop(3)))  # (block 0, the A3 arm's decode)
+    check(
+        "fail soft: VOID, yet the report goes on",
+        code == 1 and "diagnosis only" in text and "roundness" in text and "W8k_cap12" in text,
+        text[:600],
+    )
+    check(
+        "fail soft: the row missing a decode is FAILED, the others computed",
+        "FAILED" in line("A3") and "NEGLIGIBLE" in line("A9"),
+        [line("A3"), line("A9")],
+    )
+    ph = "build\t0\tt0\tt1\t\nfour-arm\t101\tt0\tt1\terror: could not compile\noracle\tSKIPPED\tt1\tt1\tneeds four-arm\n"
+    code, text = run_report(*scenario(), phases=ph, oracle="/nonexistent/oracle.tsv")
+    check(
+        "fail soft: failed phases listed, the oracle section FAILED, the rest reported",
+        code == 0
+        and "four-arm     FAILED (exit 101)" in text
+        and "oracle       SKIPPED" in text
+        and "FAILED (the phase four-arm, oracle failed)" in text
+        and "CONTROLS" in line("A3"),
+        text[:900],
+    )
+    check_driver(check)
     failed = sum(1 for x in res if not x)
     print(f"\n{len(res) - failed} of {len(res)} checks pass")
     return 1 if failed else 0
