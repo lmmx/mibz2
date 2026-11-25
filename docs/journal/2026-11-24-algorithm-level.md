@@ -2207,3 +2207,34 @@ This is an *optimistic* reading: the screen measured slowing, and a speed-up of 
 - the multi-symbol Huffman decode, when ready.
 
 **The H < 1 puzzle (§78):** the Pathfinder showed the paced arms shift the clock (+3–6% at 10). That accounts for part of the shortfall (all20's H to ≈0.73 of the observed 0.57). MONODROMY's conjecture, record 132, is that a paced spinning thread yields its core's sibling. Both mechanisms may act. With the spin warm-up removing the low state, a re-run of the speed-up arms separates them (MONODROMY's M-39: H ≥ 0.9 at 6 workers predicted).
+
+## 82. NEGATIVE: three symbols a lookup in the scanner's Huffman decode (#870); and a correction to §75's premise
+
+**The premise was already in master.** §75 and MONODROMY's record 129 priced multi-symbol decoding at −13–17% of scanner time, assuming one symbol a lookup. But master's root table (`src/huff.rs`, since #745) already holds up to two symbols an entry.
+- **On wikidata** it takes 1.85 symbols a lookup: 13.49 M lookups for 24.98 M symbols, of which 84% are pairs, 15% singles and 1% the slow path.
+- **What that leaves:** only the step beyond two symbols was left to test. **CORRECTION to §75:** the price of −13–17% was for a change already made.
+
+**What #870 tried:**
+- 64-bit entries holding up to three codes' symbols in 16-bit lanes, so tables grow from 4 to 8 KiB;
+- batches of five entries within the 50-symbol group, and an exact tail at the group's end;
+- one subtraction for each batch's bits.
+
+The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the scanner's symbol streams. The tests check every fast entry bit by bit, and CI is green.
+
+**The result: no gain.**
+- **Lookups:** on wikidata they fall 12%.
+- **Scanner time a symbol, new over master** (an in-process A/B, local and indicative): wikidata 0.98–1.01, text 0.97, records 1.09, random 1.04. Table construction costs 30–50% more.
+- **CI's bench** (EPYC, 10 rounds): wikidata at 1 thread +0.5% slower, and +0.2% and −0.8% at 2 and 4 threads (no change). The scanner stage is +2.4% slower; records +6.8% and random +2.4%, both slower.
+- **The likely cause:** a lookup costs about 13–15 cycles, twice its dependency chain, and the third symbol's gain is eaten by per-group mispredicts and spills in the tail paths. A simulated ceiling at 12-bit tables gives −16% of lookups, at 2–4× the table size and build cost.
+
+**Decision: REJECTED** (queue issue's "Rejected" list). #870 closes with this write-up.
+
+**A by-product kept as a lead:** the batched bit count alone, on master's two-symbol table, measured about −2% scanner time on every corpus (wikidata 0.980, records 0.986, random 0.974; local and in-process).
+- **Why it matters:** with §78's elasticity of about 0.8 at 8 workers, it is worth about −1.5% of wall there.
+- **What it waits for:** it is resolvable only with the spin warm-up (§81) at about a 1% SD. It waits for the `ab` pre-spin option, then gets a registered workstation A/B.
+
+**Where the scanner's lever now stands:** the Huffman decode is still the only controller above the knee (§78). But its arithmetic has little slack left: two symbols a lookup, at about 7 ns per pair. What remains:
+- the copies (#861, the seam window and the symbol buffers);
+- the micro-win above;
+- placement: the scanner's core kept unshared, −4% (§§78, 81);
+- the structural answer, a poolable or parallel scan (MONODROMY's T4), which removes the single serial core rather than speeding it.
