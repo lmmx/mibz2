@@ -2,7 +2,7 @@
 
     python3 docs/scripts/figures_queueing_story.py NAME
 
-NAME is one of: interaction, timeline, shapes, little, migration, models, slicea, organisations.
+NAME is one of: interaction, timeline, shapes, little, migration, models, slicea, matrix, organisations.
 Each prints one inline SVG in the blog's figure style (classes bf-tm, bf-t-strong, bf-rule; colours
 from the --bf-* tokens, so both themes work). Sources, per figure:
 
@@ -14,6 +14,8 @@ from the --bf-* tokens, so both themes work). Sources, per figure:
 - models: journal §§52, 59-61; reviews/neon-course-mining.md (the surrogate within 1-4 ms at 3-8
   workers); the simulator is proposed, not built.
 - slicea: ideal-parts/results/slice-a/README.md (run-20261125T105502Z), the ceiling table.
+- matrix: ideal-parts/results/full/README.md (run-20261125T125334Z), §1 (each part alone ideal,
+  over all real; bold where the registered label is ROOM) and §2 (S and C with the other ideal).
 """
 import sys
 
@@ -280,6 +282,66 @@ def slicea():
                "workers, where the scanner ideal does nothing; at 8 each alone is about 0.96 but both together 0.827; "
                "at 10 the scanner ideal gives 0.919 and emission 0.975. With both ideal the wall is still 0.82 to 0.84 "
                "at every count.")
+
+
+MATRIX = {  # part: ratios at 1, 6, 8, 10 workers; ROOM flags (full/README.md §1)
+    "S  the scan": ((1.010, 0.974, 0.968, 0.919), (0, 0, 0, 1)),
+    "E  emission": ((0.835, 0.851, 0.965, 0.978), (1, 1, 0, 0)),
+    "C  construction": ((0.579, 0.754, 0.944, 0.947), (1, 1, 0, 0)),
+    "M  MTF and runs": ((0.925, 0.916, 0.976, 0.979), (1, 1, 0, 0)),
+    "R  RLE1, CRC, output": ((0.983, 0.996, 1.009, 1.021), (0, 0, 0, 0)),
+    "D  delivery": ((1.011, 0.989, 0.992, 0.994), (0, 0, 0, 0)),
+}
+MASK = [  # workers, C alone, C with S ideal, S alone, S with C ideal (§2)
+    (6, 0.754, 0.605, 0.974, 0.781),
+    (8, 0.944, 0.661, 0.968, 0.679),
+    (10, 0.947, 0.825, 0.919, 0.801),
+]
+
+
+def matrix():
+    o = []
+    text(o, 20, 22, "Each part alone ideal, wall over everything real (bold: registered ROOM)", 13, "bf-t-strong")
+    L, top, cw, rh = 200, 52, 118, 30
+    for j, k in enumerate((1, 6, 8, 10)):
+        text(o, L + cw * j + cw / 2, top - 10, f"{k} worker{'s' if k > 1 else ''}", 12.5, "bf-t-strong", "middle")
+    for i, (name, (vals, room)) in enumerate(MATRIX.items()):
+        y = top + rh * i
+        text(o, L - 12, y + 19, name, 12.5, anchor="end")
+        for j, v in enumerate(vals):
+            x = L + cw * j
+            depth = max(0.0, min(1.0, (1 - v) / 0.45))
+            o.append(f'<rect x="{x + 3}" y="{y + 2}" width="{cw - 6}" height="{rh - 4}" rx="4" '
+                     f'style="fill:var(--bf-green);opacity:{0.06 + 0.6 * depth:.2f}"/>')
+            text(o, x + cw / 2, y + 19, f"{v:.3f}", 13 if room[j] else 12,
+                 "bf-t-strong" if room[j] else "bf-tm", "middle")
+    y0 = top + rh * len(MATRIX) + 40
+    text(o, 20, y0 - 14, "The scanner and construction mask each other: each alone, and with the other ideal", 13, "bf-t-strong")
+    lo, hi = 0.55, 1.0
+    X0, X1 = 200, 690
+    x = lambda v: X0 + (X1 - X0) * (v - lo) / (hi - lo)
+    for v in (0.6, 0.7, 0.8, 0.9, 1.0):
+        o.append(f'<line class="bf-rule" x1="{x(v):.1f}" x2="{x(v):.1f}" y1="{y0}" y2="{y0 + 3 * 52 - 8}" opacity="{0.9 if v == 1.0 else 0.3}"/>')
+        text(o, x(v), y0 + 3 * 52 + 6, f"{v:.1f}", 11.5, anchor="middle")
+    for i, (k, c, cs, s, sc) in enumerate(MASK):
+        y = y0 + 52 * i
+        text(o, X0 - 12, y + 14, f"{k} workers: construction", 12, anchor="end")
+        text(o, X0 - 12, y + 32, "the scan", 12, anchor="end")
+        for yy, alone, other, col in ((y + 10, c, cs, "blue"), (y + 28, s, sc, "amber")):
+            o.append(f'<line x1="{x(alone):.1f}" x2="{x(other):.1f}" y1="{yy}" y2="{yy}" style="stroke:var(--bf-{col});stroke-width:2"/>')
+            o.append(f'<circle cx="{x(alone):.1f}" cy="{yy}" r="4.5" style="fill:none;stroke:var(--bf-{col});stroke-width:2"/>')
+            o.append(f'<circle cx="{x(other):.1f}" cy="{yy}" r="5" style="fill:var(--bf-{col})"/>')
+            text(o, x(other) - 9, yy + 4, f"{other:.3f}", 11, anchor="end")
+    yl = y0 + 3 * 52 + 26
+    o.append(f'<circle cx="{X0 + 6}" cy="{yl - 4}" r="4.5" style="fill:none;stroke:var(--bf-ink);stroke-width:2"/>')
+    text(o, X0 + 16, yl, "alone", 12)
+    o.append(f'<circle cx="{X0 + 76}" cy="{yl - 4}" r="5" style="fill:var(--bf-ink)"/>')
+    text(o, X0 + 86, yl, "with the other part ideal too", 12)
+    return svg(yl + 12, o, "The full ideal-parts matrix. Each part alone ideal, over everything real: construction "
+               "0.579 at 1 worker and 0.754 at 6; emission 0.835 and 0.851; MTF and runs about 0.92; the scan 0.919 "
+               "at 10 workers; the final work and delivery near 1. Below, the scan and construction mask each other: "
+               "at 8 workers construction alone is 0.944 but 0.661 with the scan ideal, and the scan alone 0.968 but "
+               "0.679 with construction ideal.")
 
 
 def organisations():

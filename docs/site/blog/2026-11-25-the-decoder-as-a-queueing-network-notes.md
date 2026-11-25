@@ -295,9 +295,19 @@ five-part arms, 44 at each count: the sign table on the 32 gives the effects, an
 and masking are read directly from the measured odd arms, which are never fitted into the effects
 ([clarification 8](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md); [the design](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/design.md)).
 
+**The full matrix.** The 44 arms ran at 1, 6, 8 and 10 workers ([the results](https://github.com/lmmx/mibz2/blob/caf59b0268eec8db2f7e7ccb569de745c4e08d3f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md)). On log wall,
+the allocation of variation over the 32 fraction arms gives construction 80% at one worker and 46% at
+six, the scanner 46% at eight and 53% at ten, and the two-part interactions 18–22% from six workers
+up; the three-part interactions, aliased in pairs, take 2–6%. The largest interaction is the scanner
+with construction, q_SC = −0.110 [−0.112, −0.108] at six workers and −0.071 at eight, where 4q, the
+difference of differences, is −0.44 and −0.28. No part earns the MASKED label, because each
+masked-looking part keeps more than ±2% of room alone, which leaves it UNRESOLVED rather than NO ROOM;
+in substance, construction at eight and ten and the scanner at six and eight are masked behind each
+other.
+
 **What ideal means.** An ideal part is an oracle: its output is prepared outside the timed decode and
 supplied. That brings its own costs, such as the handover of supplied codes, 286 to 418 ms summed over
-workers in slice A; upstream stages still run when only a later one is ideal; and the results measure
+workers in slice A, and in the full matrix enough that the all-ideal floor is mostly handover; upstream stages still run when only a later one is ideal; and the results measure
 room within an arrangement, not what a real algorithm will reach.
 
 ## 11. Simulation: verification and validation
