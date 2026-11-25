@@ -228,6 +228,9 @@ jobs:
       # contrast CHANGED, and each VOID
       - name: The character study's stage 2 report (synthetic records)
         run: python3 bench/test_character_stage2.py
+      # bench/character_freq.py: the clock's share of the character study's paired noise
+      - name: The character study's clock analysis
+        run: python3 bench/test_character_freq.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

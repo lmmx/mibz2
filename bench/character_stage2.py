@@ -846,6 +846,7 @@ def report(a) -> int:
     # the contrasts
     print("\n## The contrasts (each arm's wall over its section's reference, paired by block)\n")
     contrasts(a, cell, find, wall, trace, rows)
+    section(pin_gain, a, find, wall, rows)
     section(oracles, a, ks, find, wall, failed_phases)
     print("\n## Validation (held out from every fit)\n")
     section(validation, a, cell, find, wall)
@@ -978,6 +979,23 @@ def contrasts(a, cell, find, wall, trace, rows) -> None:
                         "label": tag,
                     }
                 )
+
+
+def pin_gain(a, find, wall, rows) -> None:
+    """stage 2b: the pinned base's wall over the unpinned link base's, at 8 (registered: reported)"""
+    import math
+
+    pb, ub = find("screen", 8, "base"), find("link", 8, "base")
+    if pb is None or ub is None:
+        return
+    v = [math.log(wall(pb, b) / wall(ub, b)) for b in range(a.blocks)]
+    m, lo, hi = interval(v)
+    print(
+        f"pinned     k 8   base        over unpinned  {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
+        + (" CHANGED" if lo > 0 or hi < 0 else "")
+    )
+    rows.append({"section": "pinned", "k": 8, "coord": "base", "ratio": math.exp(m), "lo": math.exp(lo),
+                 "hi": math.exp(hi)})  # fmt: skip
 
 
 def oracles(a, ks, find, wall, failed_phases) -> None:
