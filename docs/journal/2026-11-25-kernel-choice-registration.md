@@ -202,3 +202,44 @@ from the code and §76.
 - **The parameterised head:** the recipe checks the contrast's files and each build's plan, but
   not what a head's diff does inside `src/`. The Coordinator reads `src-head-against-base.diff`
   in the bundle against #860 before accepting a verdict for it.
+
+## The DRY
+
+The recipe was run untimed in the agents' container: `just bench-kernel-choice
+perf/lazy-from-four "" 1`. That is two rounds, no settle, and the machine and the registered plans
+not checked. It is never evidence.
+
+**The bundle:** `docs/journal/2026-11-25-kernel-choice-registration/run-20261125T030747Z.tar.gz`,
+20 KiB, SHA-256 `636640b3e1bc180ac851e8d646101cef9c6d75c6ae00664236b725477cc635c6`.
+- **Recipe commit:** 5a5a3cd7.
+- **The container:** a 4-vCPU Xeon, 2.10 GHz, shared with other agents.
+- **What it resolved:** head 7c343200 (#860), base f8edc1ac (master), `head_in_ref yes`.
+- **The contrast:** `src/parallel.rs` and `tests/service_default.rs`. No build file changed.
+
+**What it showed:**
+- **Every phase passed** (`phases.tsv`):
+  - resolve: 1 s;
+  - the two builds: 44 s and 46 s, cold;
+  - the corpus from the bench-data branch's windows: 14 s, its SHA-256 matching;
+  - the probes: under 1 s;
+  - the timed run: 21 s for 28 decodes.
+- **Every output** was 838,800,784 bytes with one hash, and every record complete.
+- **The checks behaved as in DRY:**
+  - the machine checks were reported as not applied (4 cores, not the i9);
+  - so were the registered plans. Off the i9 neither build has a cell, so both built the plan's
+    own workers (eager below 8, lazy from 8, the window as asked) at every count, identically.
+    That is #860 staying inactive off the i9, as it should.
+  - the probe-against-timed check was applied and held: each build's observed workers were its
+    probe's at every count.
+- **The DRY's figures mean nothing.** It printed "DRY verdict (not evidence): NOT ADOPTED (5, 7,
+  10 threads not FASTER)": off the i9 the two builds are the same decoder, and two rounds on a
+  shared box give intervals as wide as [0.42, 2.20].
+- **Exactly one tarball:** the run left exactly one `target/*/*.tar.gz`, its bundle.
+
+**The fail-soft path, checked:** a run with a branch that does not exist,
+`just bench-kernel-choice perf/no-such-branch-xyz "" 1`:
+- resolve FAILED, and every later phase was SKIPPED;
+- the EXIT trap still bundled the run;
+- the recipe exited 1.
+
+That bundle was deleted and is not archived.
