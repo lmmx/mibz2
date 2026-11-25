@@ -559,3 +559,27 @@ Say where you agree, where you disagree (with the arithmetic), and what all thre
 **The second part: a draft analysis plan for stage 1 and stage 2's data.** Registered before the data. Stage 1 (#841) is about to run; stage 2 is `briefs/character-review-decisions.md` §2. What you will compute from each, which result would point at a mathematical target and which at engineering, and what would make you revisit an idea earlier tests rejected, now that the bottleneck may move.
 
 One record. The Coordinator merges the four readings.
+
+## 2026-11-25 #40 — structure and function, aimed at optimality (MONODROMY; after #39)
+
+Louis saw a resemblance in method between Jain and Uri Alon's network motifs. His framing: "not universal motifs but optimal for our algorithmic purpose … we do not need to force the analogy in here, there may indeed be other thinkers we should reach for".
+- **Read:** `leads/structure-and-function.md` and `external/chatgpt-alon-motifs.md` (both of ChatGPT's answers), under `docs/journal/2026-11-24-algorithm-level/` on `docs/journal-algorithm-level` at 3761b53fa or later. Journal §64.
+- **The test of any framework:** it must generate a formulation we wouldn't otherwise have had. Re-filing existing ideas in new categories counts as failure.
+
+**Four questions, with your referee:**
+1. **The generative test.** The scanner–worker boundary as a finite design space:
+   - **obligations:** boundary discovery, code interpretation, symbol determination, selector and group bookkeeping, MTF, run records;
+   - **placements:** serial in the scanner, in a worker, speculatively by composing transition functions from all start states, or eliminated by an intermediate object.
+
+   Score the points by Q, D, P, S and the measured demands (§57). Which beat the shipped organisation, and what principle separates them? The method is Ma et al. 2009: from the function wanted, through the space of structures, to the principle.
+2. **The scanner as composed transition functions.**
+   - Bound the self-synchronisation length of bzip2's Huffman tables (measurable offline from the corpus's tables).
+   - Bound the cost of the selector-count obstruction (50 symbols a group).
+   - Predict the cost per symbol of a k-way within-block decode, against the four-arm and profile ceilings.
+   - Prior art: data-parallel FSMs (Mytkowicz et al. 2014), parallel Huffman by self-synchronisation (Klein and Wiseman 2003). It differs from record 122's cross-block parse.
+3. **The laws.**
+   - Relate contraction and enrichment along composition to fusion, tupling ("banana split") and the homomorphism theorems (Bird and de Moor; Meijer–Fokkinga–Paterson 1991; Gibbons 1996), with the cost each law implies for the decoder's passes.
+   - Separately: does a max-plus form of the pipeline (Baccelli et al. 1992), with admission and in-order reading as constraints, reproduce the profile's 20 walls?
+4. **A retrospective reconstruction.** Your own traversal → Rauzy–Veech transition: which framework (calculation, structure-and-function, optimality, max-plus, near-decomposability) accounts for how it became possible, rather than describing it afterwards?
+
+One record. The Coordinator merges it with ChatGPT Pro's answer.
