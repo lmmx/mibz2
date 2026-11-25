@@ -1597,6 +1597,118 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
+# The decoder's knee
+
+A two-station queue predicts from four worker counts where adding workers stops helping, and three independent readings turned that into experiments.
+
+25 November 2026 · 12 min read · [Research in progress](<#8-what-runs-next>)
+
+mibz2's decoder is one serial scanner feeding parallel workers, and the simplest model of such a thing, a two-station queue, turns out to describe it almost exactly. Measured at one to four workers, it predicts where adding workers stops helping, at about 7.5 on our ten-core machine, and the measurement across every count from 1 to 20 puts the crossover at 7.67. Above that point the scanner sets the speed, so reorganising how work is queued can recover only a few per cent; real gains need less work at the bottleneck, and when they arrive the bottleneck moves back to the workers, so improvements have to be priced together. Reading the performance-analysis literature with several independent readers then caught an error in our own first reading and found about 8% of the scanner's work in two avoidable copies. The experiments that follow are designed to say which mechanism controls the decoder at which worker count, and so which costs belong to engineering and which might yield to mathematics. This post picks up where [Posing the inversion problem](<https://lmmx.github.io/mibz2/blog/2026-11-24-posing-the-inversion-problem/index.md>) left off.
+
+**Takeaways**
+
+- A two-station model fitted on four worker counts predicts the knee at 7.49 workers; the measured crossover is 7.67, and the decoder's best wall, 0.191 s, is at 8.
+- Above the knee the decoder runs at 0.945 or better of the busiest server's limit at every count, so no queueing discipline can recover more than about 5%.
+- Independent readings corrected the first: the public API never runs 20 workers on this machine, and the scanner spends about 8% of its demand on two avoidable copies.
+- Stage 1 of the characterisation confirmed the switch from workers to scanner at exactly 8, and found that asking for 3, 5 or 7 threads selects an older kernel that is 61% slower at 7.
+
+## 1\. A simple observation
+
+The four-arm test supplied each of the decoder's two stages for free, outside the clock. At ten workers, supplying the codes for emission saved nothing measurable (0.976 of the shipped time), supplying the scanner's output saved 19% (0.806), and supplying both saved 26% (0.741): a gain invisible until another bottleneck was removed ([Masked bottlenecks in a two-stage decoder](<https://lmmx.github.io/mibz2/blog/2026-11-24-the-scanner-hides-the-emitter/index.md>)). An observation like that asks for a model of the decoder as a system rather than as a list of kernels, which is what the programme set out in the previous post is for.
+
+## 2\. The first model, and its first test
+
+The simplest model is a serial stage feeding k identical parallel servers. Each block costs the scanner s and a worker w, so the decoder's wall time is set by the workers, as a/k, until enough of them are running that the scanner cannot keep up, after which it is set by the scanner alone. The crossover falls at k = w/s. From the measurements at one to four workers only, s = 106.6 µs and w = 798.3 µs a block, which puts the knee at 7.49 workers. Across all twenty counts the measured crossover is 7.67, and a fit of c + max(b, a/k) gives a = 1.279 s, b = 0.178 s and c = 0.032 s ([journal §57](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>); [the data](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv>)).
+
+Wall time against workers: the knee predicted from four counts
+
+Measured on an i9-10900K (10 cores, 20 threads), one corpus of 1,724 blocks and 839 MB of output, median of 20 decodes at each count, unpinned. The fitted model (steel) has the workers' asymptote a/k on the left and the scanner's b on the right; the dashed line is the knee predicted from counts 1 to 4 alone. The wall at one worker, 1.30 s, is off the scale.
+
+The best wall is 0.191 s, at 8 workers (4,390 MB/s of output), and from 8 to 14 workers it stays flat at 0.197 ± 0.005 s. At 16 and above it steps up 20%, to 0.230 s, because the scanner itself slows by 23% while its share of the wall stays at 0.97. The scanner's work is 81% Huffman decoding, at 1.41 ns a symbol at one worker and 1.51 ns from three. The second figure shows the switch from the scanner's side: at one worker it spends most of its time waiting for a free slot, and from 8 workers it almost never waits.
+
+The scanner's time, working and waiting
+
+Measured, same run. Below the knee the scanner waits for the workers to free a slot; from 8 workers on it works without pause, so it is the bottleneck and only a lighter scanner moves the wall.
+
+One question follows directly: could a better queueing discipline, size-aware dispatch, say, or helpers for a slow block, do far better? The operational laws answer it before any code is written. No discipline raises the ceiling, which the demands set; a discipline can only bring the decoder closer to it ([the discipline lead](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md>)). And the decoder already runs at 0.945 to 0.998 of the busiest server's limit at every worker count, so no reordering could recover more than about 5%, or 3% on the plateau. The large gains lie in less work at the bottleneck, or more servers for it.
+
+## 3\. Reading the field, four times over
+
+Three performance-analysis courses were read in full, with their sources saved, and then mined for opportunities against these measurements by four readers, each writing an answer before seeing the others ([the summary](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md>)). Three of those readings are in; the fourth, aimed at where mathematics rather than engineering fits, is still to come.
+
+| Reader | What it found that the others had not |
+| --- | --- |
+| [The first reading](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md>) | right-sizing the worker count; putting the bottleneck on the fastest core; mean-value analysis in place of the hard-max fit |
+| [An outside model](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md>) | the public API's actual worker count; bottleneck migration; the variability of block sizes |
+| [A second agent](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md>) | two avoidable copies in the scanner, about 8% of its demand; the same worker-count error |
+
+The disagreements were the useful part. The first reading had claimed that the Python binding's default of 20 workers costs 20% of the wall. Two readers, independently, found that the public API never runs 20 workers on this machine: a request for ten or more threads builds 7 workers with a 28-slot window, so the live question is 7 against 8, 0.207 s against 0.191 s, about 7.6% for under 1% more CPU ([journal §61](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)). The cap of 7 was set because workers beyond it bought nothing; it is a symptom of the scanner's limit rather than a reason to stop raising it.
+
+The second agent's reading found engineering that the first had missed, both confirmed in the code ([journal §62](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)). At the boundary between the feeder's 4 MiB chunks and the scanner's 2 MiB look-ahead, the scanner copies the held part of its window on its own thread, about 10 ms at 8 workers, or 5.4% of its demand. And each block's symbol buffer is zero-filled again when it is reused, about 5 ms more, driven by the 792 tiny blocks in the corpus. Together that is about 15 ms, 8% of the scanner's demand, with no algorithmic risk, and it has been routed for implementation as an ordinary performance change.
+
+The outside reading supplied the warning that prices every such change. A cut in the scanner's work moves the bottleneck back to the workers: at 8 workers, a 5% cut in the scanner's Huffman demand already reaches the workers' limit, so scanner and worker improvements must be priced together, with the worker count retuned. Stage 1's figures then re-priced the copy fix itself: at 8 workers the workers sit within 0.3 ms of the scanner, so a 15 ms cut there is almost entirely masked (0.1941 s against 0.1944 s), while at 10 workers it is worth about 7.5% ([journal §69](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)). Those figures are instrumented, so a paired run at 8, 9 and 10 workers decides between the two estimates.
+
+## 4\. Stage 1: the decoder across twenty counts
+
+The first stage of the characterisation ran 840 grid decodes across every count from 1 to 20, with every block's route, stage boundaries and queue transitions logged ([journal §66](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>); [the report](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>)). All nine operational-law identities held in every decode, Little's law exactly. What it found:
+
+- **The two-station model holds.** The limit moves from the workers to the scanner at exactly 8 workers, with a bootstrap interval of \[8, 8\], and a best wall of 0.1944 s there.
+- **The scanner limits above the knee, by concurrent state.** The workers' idle time while the scanner is working rises from 0.035 of their time at 8 workers to 0.124 at 10 and 0.551 at 20; their idle time while it waits for input stays under 0.01.
+- **The reader is not a co-bottleneck:** its demand is 0.017–0.035 ms a block against the scanner's 0.099–0.130.
+- **Contention inflates service per visit.** The scanner's Huffman decode costs 84 µs a block at one worker and 105–107 µs at 16 and above; emission rises from 526 µs at one worker to 816 at 14, and the memory controller's reads per decode from 219 MiB to 1,957 at 16, which at about 8 GB/s at 10 workers points to cache capacity rather than bandwidth.
+- **The public API selects an older kernel below 8.** Asking for 3, 5 or 7 threads builds the eager kernel, because the lazy plan begins at 8 workers and the measured settings cover only 4, 6 and 10 or more. At 7 threads that is 0.337 s and 140 MB, against 0.209 s and 54 MB for seven lazy workers: 61% slower, with 2.6 times the memory. It is a production default, so it goes to a registered recalibration across corpora.
+
+The run flagged its own instrument as perturbing at 10 and 20 workers: the cost check's intervals include 1 but are wide, so timings from the ledgers at high counts may be inflated by up to about 9%, while shares, counts and the identities are unaffected.
+
+## 5\. Designing for a purpose
+
+A question about method came next: whether the decoder could be studied the way systems biology studies a regulatory network, with Uri Alon's network motifs as the obvious model. The answer that held up was not his catalogue of recurring motifs but the line of work that asks which structures can perform a given function at all ([the lead](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md>); [the outside answer](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md>)). [Ma and colleagues](<https://doi.org/10.1016/j.cell.2009.06.013>) enumerated every three-node network topology to find the few able to achieve biochemical adaptation, and [Araujo and Liotta](<https://doi.org/10.1038/s41467-018-04151-6>) later gave the solution space a basis, showing that every network capable of robust perfect adaptation is built from two kinds of module. [Khammash](<https://doi.org/10.1016/j.cels.2021.05.020>) states the programme in five steps: specify the function, derive necessary conditions, characterise the solution space, check realisability, and establish optimality ([an explanation](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md>)). Ours maps onto it closely:
+
+| Khammash's step | Ours, already | What is missing |
+| --- | --- | --- |
+| The function | the referee |  |
+| Necessary conditions | G1, and records 118 and 119 | a necessity statement in positive form |
+| The solution space |  | an enumeration, and then a basis |
+| Realisability | the four-arm and profile ceilings |  |
+| Optimality | the performance work |  |
+
+The proposal that follows is to enumerate the referee's own class of decoders (small cursor machines with a fixed number of passes that invert every short string over a tiny alphabet), reduce the list by symmetry, cluster the survivors, look for the condition that separates them, and use a SAT solver to prove "no survivor" within the class ([journal §65](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)). Two ideas from the same reading were adopted as method: the same function can be realised by different structures, which is why the referee counts structure; and a representation change is a search for the hidden coordinate in which the work cancels.
+
+## 6\. The dynamical layer
+
+The decoder is "digital on analogue": discrete events, a block admitted or a buffer released, on top of continuous quantities such as occupancy and time. The language for that is the theory of hybrid dynamical systems ([the outside answer](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md>); [journal §67](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)), and Goebel, Sanfelice and Teel's book on it was read in full, with notes in our own words. Its plainest product is a list of five levers. Any reorganisation of the decoder changes one of five things ([the levers](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md>)):
+
+1. how fast work runs (the flow map);
+2. where work may proceed (the flow set);
+3. when events may happen (the jump set);
+4. what events do (the jump map);
+5. what is represented (the state space).
+
+Of a bound that was not a certificate
+
+One reading of the book went too far, and an independent review caught it before it guided any experiment ([the review](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md>); [journal §70](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>)). The bottleneck maximum, the largest of the scanner's, the workers' and the reader's demands, is only a lower bound on the time a decode takes, because it ignores dependencies, starvation and blocking. One block that takes a 1 s scan, a 1 s decode and a 1 s delivery in series has a maximum of 1 s and takes 3. The notes now keep three quantities apart: lower bounds, used to prune; predictors, used to rank, and validated on held-out runs rather than by replaying a run with its own durations; and proved upper bounds, for which backward induction over a finite, acyclic state graph is the concrete route.
+
+## 7\. How the work is done
+
+The method is written down so that it can be reused ([the protocol](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md>)). It starts from a measured surprise rather than a technique, poses the problem and its referee before any solution, and prefers a model that predicts from little data and is checked on data it did not see. Sources are read in full and saved. Several readers and reviewers answer independently before comparing, their answers are recorded verbatim, and decisions are kept in separate files with their reasons. Wrong claims are corrected in place and in public, naming who found the error, as the worker-count error and the lower bound above were. Every run registers its decision rule before its data, changes are priced jointly because a relieved bottleneck moves, and when it moves, the ideas it may have masked are tested again.
+
+## 8\. What runs next
+
+Five runs are planned, in order ([the programme of experiments](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md>)): the stage 1 baseline, now done; the scanner's copy fix, as a paired comparison at 8, 9 and 10 workers; stage 2, which slows each activity in turn to say which controls the wall at which count; the recalibration of the worker count, including 7 against 8 and the kernel chosen below 8; and the joint frontier of scanner and worker improvements together. Stage 2 is running now, and none of its results are in. Each cost it finds controlling will be classed as engineering, a matter of how the work is done, or as a candidate for mathematics, a matter of what work is done.
+
+---
+
+**Sources:**
+
+- The measurements: [the scanner profile](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv>) (journal §57) and [stage 1's report](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>) (journal §66).
+- The readings: [the summary](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md>), [the first reading with its corrections](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md>), [the outside reading](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-course-mining.md>) and [the second agent's](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md>); journal §§61–62 and §69.
+- The design thread: [structure and function](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/structure-and-function.md>), with [the outside answer on motifs](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-alon-motifs.md>) and [on Khammash](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-khammash.md>); journal §§64–65.
+- The dynamical layer: [the outside answer](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-dynamics.md>), [the levers](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md>) and [the review that corrected them](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/external/chatgpt-hybrid-systems-review.md>); journal §§67–70.
+- [The discipline question](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/leads/queueing-discipline.md>) (journal §56), [the protocol](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/process/protocol.md>) and [the programme of experiments](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/briefs/experiment-programme.md>).
+- [The journal](<https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level.md>).
+
+[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
+
 # Posing the inversion problem
 
 The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits.
