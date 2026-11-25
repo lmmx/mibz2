@@ -2,7 +2,7 @@
 //! thread or block-parallel; and `scan`, the blocks of a .bz2 in memory without decoding
 //! them past their Huffman symbols (for a caller that splits the work itself).
 
-use crate::parallel::{Plan, HEADROOM, SLOTS_PER_THREAD};
+use crate::parallel::{Plan, SLOTS_PER_THREAD};
 use crate::stream::{Event, Scanner, SliceSource, Source};
 use crate::{decode_block, Error, ErrorKind, Kernels, Scratch, StreamDecoder};
 use std::io::{self, BufRead, Read};
@@ -252,12 +252,10 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 loop {
                     // (a chunk the scanner is done with, where there is one: its bytes are
                     // overwritten, so it is not zeroed again unless it grows; else a new one,
-                    // zeroed by the allocator, so that a short input touches only its pages;
-                    // with `HEADROOM` spare past it, for the scanner's window)
+                    // zeroed by the allocator, so that a short input touches only its pages)
                     let mut buf = d.spare();
-                    if buf.capacity() < CHUNK + HEADROOM {
-                        buf = vec![0u8; CHUNK + HEADROOM];
-                        buf.truncate(CHUNK);
+                    if buf.capacity() < CHUNK {
+                        buf = vec![0u8; CHUNK];
                     }
                     buf.resize(CHUNK, 0);
                     let n = match read_full(&mut r, &mut buf) {

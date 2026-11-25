@@ -679,11 +679,9 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     std::thread::scope(|s| {
         s.spawn(|| {
             for c in data.chunks(4 << 20) {
-                // (a chunk the scanner is done with, where there is one, with `HEADROOM`
-                // spare past its bytes for the scanner's window)
+                // (a chunk the scanner is done with, where there is one)
                 let mut chunk = dec.spare();
                 chunk.clear();
-                chunk.reserve(c.len() + parallel::HEADROOM);
                 chunk.extend_from_slice(c);
                 if dec.write(chunk).is_err() {
                     return;

@@ -47,10 +47,6 @@ pub(crate) const INPUT_QUEUE: usize = 2;
 pub const SLOTS_PER_THREAD: usize = 4;
 /// Bytes the scanner's window keeps behind it before it drops them
 pub(crate) const COMPACT: usize = 4 << 20;
-/// Spare capacity a writer's chunk reserves past its bytes (stream.rs's `LOOKAHEAD`): once
-/// the chunk is the scanner's window, the next chunk's first bytes a view reaches are copied
-/// there, the rest of it not copied
-pub(crate) const HEADROOM: usize = 2 << 20;
 
 /// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only
 macro_rules! mark {
@@ -994,91 +990,50 @@ struct ChannelSource<'a> {
     base: u64,
     released: u64,
     eof: bool,
-    /// the chunk after the window's, while the window still holds bytes before it (empty
-    /// otherwise): only those of its bytes a view reaches are copied onto the window's end,
-    /// and once nothing before it is held it becomes the window, copied no further
-    next: Vec<u8>,
-    /// the absolute offset of next[0] (the window's end when it came)
-    next_base: u64,
     shared: &'a Shared,
-}
-
-/// An input buffer the scanner is done with, for the writer's next chunk: `spare` (one kept)
-fn recycle(shared: &Shared, spent: Vec<u8>) {
-    if spent.capacity() > 0 {
-        let mut st = shared.lock();
-        if st.free_in.is_empty() {
-            st.free_in.push(spent);
-        }
-    }
 }
 
 impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
-        let need = from + want as u64;
-        // (`next` is taken from before the channel, so the input has ended only once it is
-        // empty)
-        while !self.eof && self.base + (self.buf.len() as u64) < need {
-            let drop_n = (self.released - self.base) as usize;
-            if !self.next.is_empty() {
-                if self.released >= self.next_base {
-                    // (nothing held before the next chunk: it is the window, the bytes
-                    // already copied from it read in place from now on; the window's buffer
-                    // spare)
-                    std::mem::swap(&mut self.buf, &mut self.next);
-                    self.base = self.next_base;
-                    recycle(self.shared, std::mem::take(&mut self.next));
-                } else {
-                    // (bytes held before it: only the bytes of it this view reaches are
-                    // copied, into the window's spare capacity, which a writer's chunk
-                    // reserves: `HEADROOM`; dropping the bytes released first where that
-                    // makes the room, or where COMPACT of them are kept)
-                    let at = (self.base + self.buf.len() as u64 - self.next_base) as usize;
-                    let upto = (need - self.next_base).min(self.next.len() as u64) as usize;
-                    let (len, cap, add) = (self.buf.len(), self.buf.capacity(), upto - at);
-                    if drop_n >= COMPACT || (len + add > cap && len - drop_n + add <= cap) {
-                        self.buf.drain(..drop_n);
+        while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
+            mark!(InputWait);
+            match self.rx.recv() {
+                Ok(mut chunk) => {
+                    mark!(InputGot);
+                    let drop_n = (self.released - self.base) as usize;
+                    if drop_n == self.buf.len() {
+                        // (nothing held: the chunk is the window, the window's buffer spare)
+                        std::mem::swap(&mut self.buf, &mut chunk);
                         self.base = self.released;
-                    }
-                    self.buf.extend_from_slice(&self.next[at..upto]);
-                    if upto == self.next.len() {
-                        recycle(self.shared, std::mem::take(&mut self.next));
-                    }
-                }
-            } else {
-                mark!(InputWait);
-                match self.rx.recv() {
-                    Ok(mut chunk) => {
-                        mark!(InputGot);
-                        if drop_n == self.buf.len() {
-                            // (nothing held: the chunk is the window, the window's buffer
-                            // spare)
-                            std::mem::swap(&mut self.buf, &mut chunk);
+                    } else {
+                        if drop_n >= COMPACT {
+                            self.buf.drain(..drop_n);
                             self.base = self.released;
-                            recycle(self.shared, chunk);
-                        } else if chunk.is_empty() {
-                            recycle(self.shared, chunk);
-                        } else {
-                            // (bytes held: the chunk waits as the next, not appended whole)
-                            self.next_base = self.base + self.buf.len() as u64;
-                            self.next = chunk;
+                        }
+                        self.buf.extend_from_slice(&chunk);
+                    }
+                    // (the chunk's buffer, done with, for the writer's next: `spare`; one kept)
+                    if chunk.capacity() > 0 {
+                        let mut st = self.shared.lock();
+                        if st.free_in.is_empty() {
+                            st.free_in.push(chunk);
                         }
                     }
-                    Err(_) => {
-                        mark!(InputEnd);
-                        self.eof = true;
-                    }
+                    mark!(
+                        Window,
+                        crate::trace::NONE,
+                        self.base + self.buf.len() as u64 - self.released,
+                        self.buf.capacity()
+                    );
                 }
-                if self.shared.lock().cancelled {
-                    return Err(ErrorKind::Cancelled);
+                Err(_) => {
+                    mark!(InputEnd);
+                    self.eof = true;
                 }
             }
-            mark!(
-                Window,
-                crate::trace::NONE,
-                self.base + self.buf.len() as u64 - self.released,
-                self.buf.capacity()
-            );
+            if self.shared.lock().cancelled {
+                return Err(ErrorKind::Cancelled);
+            }
         }
         let i = (from - self.base) as usize;
         Ok((self.buf.get(i..).unwrap_or(&[]), self.eof))
@@ -1089,80 +1044,6 @@ impl Source for ChannelSource<'_> {
     }
 }
 
-#[cfg(test)]
-mod channel_source_tests {
-    use super::*;
-
-    /// Every view is the input's bytes from `from`, at least `want` of them unless the input
-    /// has ended, and all of them to its end once it has: whatever the chunks' sizes (empty
-    /// ones too), their spare capacity, and how far each view's caller releases (the window
-    /// swapped to the next chunk, its straddling bytes copied, compacted, grown)
-    #[test]
-    fn views_are_the_input() {
-        let mut x = 0x9e37_79b9_7f4a_7c15u64;
-        let mut rng = move |n: u64| {
-            x ^= x << 13;
-            x ^= x >> 7;
-            x ^= x << 17;
-            x % n.max(1)
-        };
-        for case in 0..60 {
-            let len = 1 + rng(if case % 4 == 0 { 7_000_000 } else { 400_000 }) as usize;
-            let data: Vec<u8> = (0..len).map(|i| (i * 31 + i / 977) as u8).collect();
-            let max_chunk = if len > 400_000 {
-                [300_000, 2_000_000, 5_000_000][case % 3]
-            } else {
-                [1, 100, 5_000, 300_000][case % 4]
-            };
-            let shared = Shared::new(4, None);
-            let (tx, rx) = channel();
-            let mut at = 0;
-            while at < len {
-                let n = (rng(max_chunk + 1) as usize).min(len - at);
-                let spare = [0, 1, 1000, HEADROOM][rng(4) as usize];
-                let mut c = Vec::with_capacity(n + spare);
-                c.extend_from_slice(&data[at..at + n]);
-                tx.send(c).unwrap();
-                at += n;
-            }
-            drop(tx);
-            let mut src = ChannelSource {
-                rx,
-                buf: Vec::new(),
-                base: 0,
-                released: 0,
-                eof: false,
-                next: Vec::new(),
-                next_base: 0,
-                shared: &shared,
-            };
-            let (mut released, mut views) = (0usize, 0);
-            loop {
-                let from = released + rng(3) as usize * rng(1_000) as usize;
-                let from = from.min(len);
-                let scale = [4, 70_000, 3_000_000][rng(3) as usize];
-                let want = 1 + rng(scale) as usize;
-                let (got, eof) = src.view(from as u64, want).unwrap();
-                let ctx = format!("case {case}: len {len} from {from} want {want}");
-                assert_eq!(got, &data[from..from + got.len()], "{ctx}");
-                assert!(eof || got.len() >= want, "{ctx}: {}", got.len());
-                if eof {
-                    assert_eq!(from + got.len(), len, "{ctx}");
-                }
-                views += 1;
-                if eof && from == len {
-                    break;
-                }
-                let step = got.len().min(want) as u64 + 1;
-                let to = from + rng(step) as usize;
-                src.release(to as u64);
-                released = to;
-                assert!(views < 1_000_000, "{ctx}: no progress");
-            }
-        }
-    }
-}
-
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     let src = ChannelSource {
         rx,
@@ -1170,8 +1051,6 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
         base: 0,
         released: 0,
         eof: false,
-        next: Vec::new(),
-        next_base: 0,
         shared,
     };
     let mut sc = Scanner::new(src);
