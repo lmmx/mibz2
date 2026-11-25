@@ -1632,3 +1632,20 @@ Neon's other points are added to the lead's corrections:
 - the scanner's high-count slowdown is a bimodal mixture across runs from 10 workers on;
 - favoured-core pinning likely gives 0–2% at 8 workers;
 - the head-of-line waits sit exactly 4k blocks behind dense blocks, and block sizes are autocorrelated along the stream.
+
+## 63. The experiment programme, the protocol, and the last reading commissioned
+
+Louis asked for four things: durable records behind every reply; MONODROMY's pass at the course mining; the actual experiment; and the process recorded at the meta level, so it can be reused.
+- **The report** pointing to the four readings: `reports/2026-11-25-course-mining.md`.
+- **MONODROMY's final pass:** channel #39 (e87e43c9e), #346 comment 7148095764, session woken. It is the fourth independent reading, with its lens on where mathematics, not engineering, fits. It also drafts an analysis plan for stage 1's and stage 2's data, registered before the data. Its stale QUEUED 7128837429 (the main-theorem challenge, never dispatched) is withdrawn as superseded.
+- **The experiment:** `briefs/experiment-programme.md`. It runs from the four-arm surprise ("0.9 and 0.9 make 0.8") to five runs in order:
+  1. stage 1, the baseline;
+  2. the scanner plumbing fix;
+  3. stage 2, the mechanisms;
+  4. the worker-count recalibration;
+  5. the joint frontier.
+
+  MONODROMY analyses runs 1, 3 and 5. Each controlling cost is classified as engineering or mathematics.
+- **A rule on rejected ideas:** once the scanner's ceiling moves, re-qualify, in one batch, the rejected ideas whose evidence fits masking. That means a gain below the knee but none above it, or worker demand saved without a wall gain.
+- **The protocol:** `process/protocol.md`, the twelve steps as run, the records each leaves, and rules for reuse.
+- **The writer's brief:** `briefs/writer-deepening.md`, the deepening told from the beginning, by pointers to files. Sent once MONODROMY's record lands.

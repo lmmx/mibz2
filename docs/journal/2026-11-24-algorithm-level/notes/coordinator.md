@@ -113,3 +113,8 @@
 - My "the default 20 workers costs 20%" was wrong: the public API builds 7 lazy workers (28 slots) on this i9 from 10 threads asked. The live default question is 7 against 8 (−7.6% wall in the profile), to be tested through the public API.
 - The 0.109 s scenario is conditional, not a bound; the reader is disfavoured, not excluded; bottleneck migration caps a scanner-only gain at 8 workers at about 4%; joint scanner-and-worker improvements are the frontier.
 - Louis: the 7 cap is temporary, a symptom of the scanner limit; ideas that raise the ceiling are not abandoned.
+
+## 25 Nov — the programme, the protocol, MONODROMY's pass
+- Louis: records first, MONODROMY's pass, then the actual experiment, the writer fed by file pointers, and the process recorded for reuse.
+- Report: `reports/2026-11-25-course-mining.md`. Experiment: `briefs/experiment-programme.md`. Protocol: `process/protocol.md`. Writer brief (to send after MONODROMY): `briefs/writer-deepening.md`. Journal §63.
+- MONODROMY's channel #39 is dispatched (#346 7148095764), and its session woken: `session_0187sPR723oFTKXtty6qzCWK`, a new session; the PROTOCOL.md list is stale.
