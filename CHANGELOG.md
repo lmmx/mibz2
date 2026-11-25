@@ -7,6 +7,124 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
+
+### <!-- 3 -->Performance
+
+- *(parallel)* eight lazy workers from 10 threads on the i9 unpinned ([#878](https://github.com/lmmx/mibz2/pull/878))
+- *(parallel)* lazy workers at 5 and 7 threads on the i9 unpinned (the plan's own workers) ([#868](https://github.com/lmmx/mibz2/pull/868))
+
+### <!-- 4 -->Documentation
+
+- *(team)* describe outside models' diagrams rather than commit them
+- *(changelog)* 0.5.13's release scaling and crossover on the i9 ([#775](https://github.com/lmmx/mibz2/pull/775))
+- *(changelog)* 0.5.13, its paired run, the recalibration verdict and the feature review ([#772](https://github.com/lmmx/mibz2/pull/772))
+- *(claude)* name algorithms by their mechanism, never by the model or team that made them ([#768](https://github.com/lmmx/mibz2/pull/768))
+
+### <!-- 9 -->Other
+
+- *(ab)* --prespin-ms warms every CPU before each child; cycles_per_ref per decode (bench 3.9.0) ([#874](https://github.com/lmmx/mibz2/pull/874))
+- Queueing post: stage 2a's results; remove the moved-page stub; no redirects, ever ([#855](https://github.com/lmmx/mibz2/pull/855))
+- *(queueing network)* retitle and move the URL; the fourth reading, the design space, stage 1 by program ([#848](https://github.com/lmmx/mibz2/pull/848))
+- The decoder's knee ([#845](https://github.com/lmmx/mibz2/pull/845))
+- *(posing)* restructured around the eight-step programme, with the performance-analysis methods
+- Posing the inversion problem, the evening's report ([#840](https://github.com/lmmx/mibz2/pull/840))
+- retitle the four-arm post "Masked bottlenecks in a two-stage decoder"
+- retitle the four-arm post "A masked bottleneck"
+- at ten workers the serial scanner hides the emitter's gain; both stages supplied save 26% ([#837](https://github.com/lmmx/mibz2/pull/837))
+- *(what else moves together)* an opening schematic, and blackletter that acts out its words
+- retitle the sequel "What else moves together", at a new URL, with a full writing-skills pass
+- *(sequel)* lead with changing what moves together; the cost rules referee, not the order of work
+- Halving the single-row steps, stated so it can be answered ([#834](https://github.com/lmmx/mibz2/pull/834))
+- blackletter that acts out its word; the neck-biting snake replaces the Aberdeen dragon ([#833](https://github.com/lmmx/mibz2/pull/833))
+- *(halving)* the register applied to the whole post; skill(register): shifts mined from the Murphy conversation
+- *(register)* exact words, joined sentences, a narrated opening; the halving post rewritten to it
+- *(write-blog-post)* every stepper animates its frames ([#830](https://github.com/lmmx/mibz2/pull/830))
+- *(link-and-gloss)* outside work named but not linked; the halving post's outside works linked
+- *(halving)* blackletter, one red, a gloss and fleuron links to the obscure names ([#828](https://github.com/lmmx/mibz2/pull/828))
+- *(link-and-gloss)* no reader starts in the middle; applied to the halving post
+- Halving the single-row steps: a target only a new algorithm can meet ([#820](https://github.com/lmmx/mibz2/pull/820))
+- illuminated devices for Markdown posts ([#807](https://github.com/lmmx/mibz2/pull/807))
+- *(census)* Wikidata block structure against the Open kernel's per-block cost ([#805](https://github.com/lmmx/mibz2/pull/805))
+- *(thomas-murphy)* the dek ends on the accusation
+- *(thomas-murphy)* the dek opens on the mibz2 swarm
+- *(thomas-murphy)* retitle "Playing the hand you're dealt"
+
+- **Lazy workers at 5 and 7 threads on the i9 unpinned: 16% and 37% faster, with 58% and 63%
+  less peak memory (#868).**
+  - **What changed:** at 5 and 7 threads, unpinned on the i9, the parallel decoder now runs the
+    plan's own workers on the lazy kernel, as it already did at 4 and 6. It ran them eager.
+  - **The run:** `kernel-choice/run-20261125T044116Z` (recipe #862 at 377a3557, head 084275e6
+    against f8edc1ac; evidence 94728a2c, sha256 e0425cba…3c13), under the rule registered in
+    journal §80, before its data. Head over base, unpinned, Wikidata ×4, 16 rounds:
+
+    | threads | wall | CPU | peak RSS |
+    |--:|---|--:|--:|
+    | 5 | **0.840** [0.831, 0.850] | 0.847 | **0.421** |
+    | 7 | **0.631** [0.624, 0.639] | 0.642 | **0.373** |
+
+    The counts where nothing changes (3, 4, 8, 10 and 12) were inconclusive, 0.974–1.002. The
+    result replicates the first measurement (§80: 0.845 and 0.634). Journal §83.
+- **Eight lazy workers from 10 threads on the i9 unpinned: 7% faster at 10 and 12 threads
+  (#878).**
+  - **What changed:** from 10 threads, unpinned on the i9, the decoder runs 8 lazy workers with
+    32 slots, not 7 with 28. That covers the Python default (20 threads).
+  - **The run:** `kernel-choice/run-20261125T061204Z` (recipe #862 at 55a4a81d, head cf61f483
+    against aa041e25, with a 100 ms spin before each decode; evidence 5d259c88, sha256
+    dbb88594…5716), under the rule registered in journal §84, before its data. Head over base,
+    unpinned, Wikidata ×4, 16 rounds:
+
+    | threads | wall | CPU | peak RSS |
+    |--:|---|--:|--:|
+    | 10 | **0.929** [0.908, 0.951] | 1.022 | 1.037 |
+    | 12 | **0.932** [0.920, 0.945] | 1.033 | 1.046 |
+
+    The counts where nothing changes (3, 4, 5, 7 and 8) were inconclusive, 0.986–1.004.
+    Journal §85.
+  - **The cost:** CPU +2.2% and +3.3%, and peak RSS +3.7% and +4.6%, weighed under
+    PERFORMANCE-POLICY.md against −7% wall at the default counts.
+
+**Where it applies:** only on the i9-10900K workstation, unpinned. Pinned runs and other
+machines keep 0.5.13's plans. Both results are from one machine, and the release scaling of
+0.5.14 against 0.5.13 is still to come (queued at 7475dafd, #886).
+
+**The paired run on CI** compared v0.5.13 at 4a4a1c22 with master at bb08b983 (Benchmark run
+[45587502720](https://github.com/lmmx/mibz2/actions/runs/45587502720), Intel Xeon 6973P-C,
+4 CPUs on 2 physical cores, 10 rounds, bench 3.9.0). Master moved only in its version numbers
+from there to the tag commit.
+- **Outputs:** the same bytes on all 420 runs.
+- **Wikidata:** no change, as expected, since neither change acts on a 4-CPU runner.
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|---|--:|
+  | 1 | −0.1% [−1.7, +1.4] | −0.1% [−1.7, +1.4] | −0.1% |
+  | 2 | +0.1% [−4.2, +4.6] | −0.9% [−5.1, +3.6] | −1.2% |
+  | 4 | −1.5% [−3.2, +0.1] | −0.6% [−2.8, +1.7] | +3.2% |
+
+- **Stages:** one thread's total is 11.22 c/B in both builds, and no stage moved.
+- **The other corpora:** `records` at 1 and 2 threads and `text` at 4 were marked faster, and
+  nothing slower. The decoder's code on the runner is unchanged, so these are chance (about
+  one run in five flags something with no real change).
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **Reviewed:** `trace`, `memory-lever`, `wait-stats`, `walk-stats`, `dose`, `phase-counters`,
+  `induction-trace`, `grammar-replay`, `owned-writer`, `moonshot` and `census` (new, #805).
+- **Still open from 0.5.13's review:** `owned-writer` has no retention note, and
+  `memory-lever` and `phase-counters` are still to be checked against their removal conditions.
+
+**Release scaling (RELEASING §5):** 0.5.14 against 0.5.13 on the i9-10900K (`release-scaling/run-20261125T100401Z`, evidence 769799fe; `bench/release-scaling/2026-11-25-…-0.5.14/`).
+- **10 threads and below:** the harness pins one CPU a core, where 0.5.14's plans are unchanged. Every ratio is 1.000 ± 0.01, as expected.
+- **12, 16 and 20 threads (unpinned, 8 workers against 7):** 0.5.13/0.5.14 wall is 0.980 [0.889, 1.080], 1.071 [0.996, 1.152] and 0.999 [0.895, 1.116]. CPU is 4–10% higher in 0.5.14.
+- **Not resolved:** the harness has no pre-spin, and its decodes take about 60 ms, so it can't resolve the 7% measured with the spin on four copies (journal §85).
+- **No step clears §5b's bar.**
+
+**The team threshold (RELEASING §5a):** `crossover/run-20261125T101501Z`, evidence 115a42d5.
+- **Unmoved.** No forced arm is faster than the shipped decoder at any count from 4 to 20:
+  - one block a thread (`workers-w`): 0.983–1.143;
+  - teams of 2: 1.26–4.33;
+  - teams of 3: 1.45–2.90.
+- **Sanity:** at 5 and 7 threads, where `workers-w` runs the shipped plan, its intervals span 1.
+
 ## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
 
 ### <!-- 3 -->Performance

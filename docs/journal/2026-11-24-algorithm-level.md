@@ -2238,3 +2238,157 @@ The output is byte-identical on seven corpora at 1, 4 and 8 threads, as are the 
 - the micro-win above;
 - placement: the scanner's core kept unshared, −4% (§§78, 81);
 - the structural answer, a poolable or parallel scan (MONODROMY's T4), which removes the single serial core rather than speeding it.
+
+## 83. Lazy workers at 5 and 7 threads (#868): ADOPTS, and merged
+
+**The run:** `kernel-choice/run-20261125T044116Z`, recipe #862 at 377a3557, expectation `lazy-four-to-seven`, head #868 084275e6 against merge-base f8edc1ac. It is evidence 94728a2c, SHA-256 e0425cba…3c13, checked.
+- Every phase passed.
+- Each build probed its registered plan.
+- The data is in `math-targets/data/kernel-choice-split/`.
+
+| threads | base → head plan | wall head/base [95%] | step | CPU | peak RSS |
+|---|---|---|---|---|---|
+| 3 | 3 eager → 3 eager | 0.999 [0.981, 1.018] | INCONCLUSIVE | 1.000 | 1.031 |
+| 4 | 4 lazy → 4 lazy | 0.999 [0.992, 1.006] | INCONCLUSIVE | 1.000 | 1.001 |
+| **5** | 5 eager → 5 lazy | **0.840 [0.831, 0.850]** | FASTER | 0.847 | **0.421** |
+| **7** | 7 eager → 7 lazy | **0.631 [0.624, 0.639]** | FASTER | 0.642 | **0.373** |
+| 8 | 8 lazy → 8 lazy | 0.974 [0.944, 1.005] | INCONCLUSIVE | 0.982 | 0.997 |
+| 10 | 7 lazy → 7 lazy | 0.995 [0.984, 1.005] | INCONCLUSIVE | 0.995 | 1.001 |
+| 12 | 7 lazy → 7 lazy | 1.002 [0.988, 1.017] | INCONCLUSIVE | 0.999 | 0.999 |
+
+**The verdict under §80's frozen rule: ADOPTS.**
+- 5 and 7 threads are FASTER, none of the supporting counts is SLOWER, and peak RSS is ≤ 1.10 at every count (largest 1.031, at 3).
+- The result replicates §80's first measurement (0.845, 0.634) and §76's prediction (0.834, 0.639).
+
+**Merged:** #868 at 084275e6, the head the bench measured, as 56c56573.
+- CI was green on all 30 runs, Miri included, and head-sha passed before and after.
+- **What changes for users:** on the i9 unpinned, `BzReader::parallel(r, 5)` is 16% faster with 58% less peak memory, and `parallel(r, 7)` is 37% faster with 63% less.
+- **No release overnight** (Louis's rule). This waits for the release process.
+- **#860 is closed:** its lazy part is merged here, and its trim to 8 is re-registered separately (§80) once the `ab` pre-spin (#874) lands.
+
+**What is decided and what is open, this night:**
+- **Adopted:** lazy at 5 and 7.
+- **Held, to be re-asked with the spin warm-up (§81):**
+  - the combined scanner fix (#861);
+  - the trim to 8;
+  - the batched bit count (§82).
+- **Rejected:** three Huffman symbols a lookup (§82).
+- **Open design questions:**
+  - placement: what a library can request (§78, record 132);
+  - the clock after idle: whether a decoder should respond (§81).
+
+## 84. Three tests re-registered with the spin warm-up, before their data
+
+`ab run --prespin-ms` is on master (#874, aa041e25), and the recipes take a PRESPIN argument (#850, #862, the Pathfinder). Each test below runs with PRESPIN 100 and records the clock per decode, with the cycles × clock split as a registered secondary (§81).
+- **Sizing:** the paired SD expected with the spin is about 1% (§81: 1.1% at 10 workers).
+- **Interval width:** 16 rounds give an interval of about ±0.6%.
+- **Heads:** each head has master merged in (so it contains #868 and #874), and each base is that head's merge-base with master.
+
+**The order, and why.** On the i9 unpinned, production runs 7 workers from 10 threads, below the knee of about 7.5. There the scanner doesn't bind, so a scanner fix can't show at production's default counts until the worker trim is decided. So:
+
+**Test 1: the trim to 8 workers from 10 threads.**
+- **What it is:** #860's change (b) alone, on a fresh branch off master.
+- **The recipe:** `bench-kernel-choice` with expectation `trim-eight`. The head plan is 8/32 lazy at 10 and 12, and master's elsewhere (lazy at 4–7, from #868).
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 3, 4, 5, 7 and 8 is SLOWER, and median peak RSS head/base ≤ 1.10 at every count.
+- **Reported, not part of the rule:** the CPU ratio. §80 saw +8% at 10. PERFORMANCE-POLICY.md weighs it at merge.
+- **Prediction (§80, unspun):** 0.979 at 10 and 0.903 at 12. With the spin, both resolve.
+
+**Test 2: the combined scanner fix** (#861, the seam window and the symbol buffers), with master merged in.
+- **The recipe:** `bench-scanner-plumbing`, PRESPIN 100.
+- **ADOPTS iff** 10 and 12 threads are FASTER, none of 6, 8 and 9 is SLOWER, and peak RSS ≤ 1.10.
+- **These judged counts replace 9:** §79 decided the judged counts move to production's defaults, decided before this data.
+- **Prediction:**
+  - at 7 workers (if test 1 fails), about 0.98 at 10 and 12, as §79 measured unspun;
+  - at 8 workers (if test 1 adopts), between that and the explicit-worker diagnostic's 0.92–0.94 (§79).
+- **It runs after test 1's verdict,** on whichever master results.
+
+**Test 3: the batched bit count** (§82's by-product), on a fresh branch off master.
+- **What it is:** each batch's consumed bits summed and subtracted once, on master's two-symbol table, with nothing else changed.
+- **The recipe and rule:** the same as test 2, with the same counts.
+- **Prediction:** about −2% of scanner time, so ≤ 1.5% of wall at 8 workers and less at 7. INCONCLUSIVE is likely at 7 workers.
+- **It runs after test 2.**
+
+**Each test is run once.** A verdict is final for its registration. Any further test is a new registration, with its reason stated.
+
+## 85. §84 test 1, eight workers from 10 threads (#878): ADOPTS with the spin warm-up, and merged
+
+**The first attempt** (`kernel-choice/run-20261125T055310Z`, evidence fb6ab984) failed in resolve after 22 s. That was a recipe bug, class A.
+- **The bug:** the PRESPIN guard piped `git show` into `grep -q` under `set -o pipefail`. grep quit at its first match, `git show` took SIGPIPE, and the guard refused a head that had the option.
+- **The fix:** the Pathfinder fixed it (`git grep -q`), with a test that reproduces the failure. The recipe went to 55a4a81d (#862) and a86e5d86 (#850).
+- **No data was taken,** so the registration stood.
+
+**The run:** `kernel-choice/run-20261125T061204Z`, recipe #862 at 55a4a81d, expectation `trim-eight`, PRESPIN 100. The head is #878 at cf61f483, against merge-base aa041e25 (master with #868 and #874). It is evidence 5d259c88, SHA-256 dbb88594…5716, checked. Every phase passed, and each build probed its registered plan. The data is in `math-targets/data/trim-eight/`.
+
+| threads | base → head plan | wall head/base [95%] | step | CPU | peak RSS | clock ratio |
+|---|---|---|---|---|---|---|
+| 3 | 3 eager → 3 eager | 0.986 [0.966, 1.006] | INCONCLUSIVE | 0.987 | 0.972 | 1.000 |
+| 4 | 4 lazy → 4 lazy | 0.999 [0.991, 1.007] | INCONCLUSIVE | 0.999 | 0.991 | 1.000 |
+| 5 | 5 lazy → 5 lazy | 0.998 [0.994, 1.003] | INCONCLUSIVE | 0.999 | 0.997 | 1.000 |
+| 7 | 7 lazy → 7 lazy | 1.003 [0.988, 1.018] | INCONCLUSIVE | 1.002 | 1.003 | 1.000 |
+| 8 | 8 lazy → 8 lazy | 1.004 [0.972, 1.037] | INCONCLUSIVE | 1.002 | 1.005 | 1.000 |
+| **10** | 7/28 → 8/32 lazy | **0.929 [0.908, 0.951]** | FASTER | 1.022 | 1.037 | 1.000 |
+| **12** | 7/28 → 8/32 lazy | **0.932 [0.920, 0.945]** | FASTER | 1.033 | 1.046 | 1.000 |
+
+**The verdict under §84's frozen rule: ADOPTS.** 10 and 12 threads are FASTER, no supporting count is SLOWER, and peak RSS is ≤ 1.10 (1.046 at most).
+- **Weighed under PERFORMANCE-POLICY.md:** CPU +2–3% and RSS +4–5%, both secondary and within its limits, for −7% wall at the default counts.
+
+**Merged:** #878 at cf61f483, the head the bench measured, as 959496c7.
+- CI was green on all 30 runs, and head-sha passed before and after.
+- **What changes for users:** on the i9 unpinned, `parallel(r, t)` for t ≥ 10 runs 8 lazy workers, not 7. That is about −7% wall at 10 and 12 threads, which includes the Python default (20).
+- **No release yet:** it waits for the release process.
+
+**What the spin bought:**
+- **The clock was neutralised:** the clock ratio is 1.0000 at every count, so the decomposition puts the whole effect on the work, as it should for a worker-count change.
+- **The intervals narrowed:** at 10 threads the interval is ±2.2%, against ±3.6% unspun (§80), where the same change was INCONCLUSIVE at 0.979.
+- **Why the two runs differ:** the effect itself looks larger with the spin (0.929 against 0.979). An unspun run mixes in decodes at the low clock, where an extra worker matters less, since everything is slower. That reading is consistent with §81, but not tested separately.
+
+**What follows:**
+- **The production regime at 10 threads and more is now 8 workers,** at the knee, where the scanner binds (§78).
+- **§84 tests 2 and 3,** the scanner fixes, are now judged in that regime.
+- **Test 3's head** (#879) has master 959496c7 merged in, at 48d9f7d9. It is queued once CI is green.
+- **Test 2** waits for PR 861 to be reopened (coordinator notes, #881).
+
+## 86. §84 test 3, the batched bit count (PR 879): NOT ADOPTED; the noise left at the knee is not the clock
+
+**The run:** `scanner-plumbing/run-20261125T064054Z`, recipe #850 at a86e5d86, PRESPIN 100. The head is PR 879 at 48d9f7d9, with master 959496c7 merged in, so production runs 8 workers from 10 threads. It is evidence a93afab5, SHA-256 32065ffe…b3d2, checked; every phase passed. The data is in `math-targets/data/batched-bits/`.
+
+| threads | workers | wall head/base [95%] | step | clock ratio |
+|---|---|---|---|---|
+| 6 | 6 | 0.998 [0.992, 1.003] | INCONCLUSIVE | 1.000 |
+| 8 | 8 | 0.995 [0.972, 1.018] | INCONCLUSIVE | 1.000 |
+| 9 | 9 | 0.978 [0.956, 1.002] | INCONCLUSIVE | 1.000 |
+| **10 (judged)** | 8 | **1.001 [0.973, 1.030]** | INCONCLUSIVE | 1.000 |
+| **12 (judged)** | 8 | **0.994 [0.976, 1.012]** | INCONCLUSIVE | 1.000 |
+
+**The lazy diagnostic,** explicit workers (it decides nothing):
+- 1.002 at 8;
+- **0.972 [0.953, 0.991] at 9, FASTER**;
+- 1.005 at 10.
+
+RSS is within 1.2% everywhere.
+
+**The verdict under §84's frozen rule: NOT ADOPTED.** PR 879 does not merge. The verdict is final for this registration.
+
+**Two findings:**
+1. **The effect is too small for this machine to resolve at the knee.** The prediction was ≤ 1.5% of wall at 8 workers. Every point estimate at 8 and above is between 0.978 and 1.001, but the intervals are ±1.8–2.9%. The direction is plausible; the gain is not shown.
+2. **The spin fixed the clock, not all the noise.**
+   - The clock ratio is 1.0000 at every count, and at 6 workers the interval is ±0.5%, as §81 predicted.
+   - But at 8 workers and above, the paired intervals stay ±2–3%. That is a paired SD of about 4–5%, roughly where 2b's pinned scanner left it (§78; the Pathfinder: clock R² only 0.37 at 8).
+   - So at the knee a second noise source dominates once the clock is controlled: most likely placement, the scanner sharing its core part of the time (§78, record 132).
+   - **Consequence for design:** tests of small scanner effects at 8 or more workers need either many more rounds (about 4× for ±1%) or the scanner pinned to a quiet core (2b's pin halved the SD).
+
+**Decision:**
+- **PR 879 is held, not rejected.** The micro-win stays a lead. A further test would be a new registration with the scanner pinned, or with 64 rounds; it is not run tonight.
+- **§84 test 2** (the combined scanner fix, a larger expected effect) still waits for PR 861 to be reopened. Its registered design has the same noise problem at 10 and 12. Before it runs, consider re-registering it with more rounds or a pinned scanner. That is a design decision, recorded here before any of its data.
+
+## 87. The ideal-parts matrix: the task, set up as its own subproject
+
+Louis, 25 November, on reading the overnight summary: the point of the experiments was to characterise the system's shape, with each part as a toy problem with ideal behaviour, and then hand it to Antigravity to look for new mathematics. It was not to build engineering features.
+
+**The overnight work drifted.** I kept the workstation fed with what was ready, which was fixes with PRs. It found two real gains (#868, #878, now released), but it did not run the ideal-part arms. Those are programme run 5, the joint frontier, and the missing T2, T3 and T6 ceilings. Stage 2a's oracle comparison was VOID, and stage 2b dropped it.
+
+**The task, now stated where it can't be missed:** `ideal-parts/README.md`.
+- **What it is:** a factorial over the decoder's parts, each real or ideal (its output supplied), at 1, 6, 8 and 10 workers. Slice A first: the two oracles that exist, the scanner's output and emission's codes, in one binary. Then the full 2^(6−1) design.
+- **Where it comes from:** Jain's experimental design applied to the four-arm oracle idea (§44). It fills the measurements behind the hybrid-systems frame (an ideal part is lever 1 at its limit).
+- **The rule:** frozen before any data (`ideal-parts/registration.md`).
+- **Antigravity's first pass** (`ideal-parts/antigravity/prompt-1.md`) asks for mathematics per part, and for registered predictions of each part's room.

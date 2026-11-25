@@ -1,0 +1,21 @@
+
+### wikidata-x4, 8 threads (839 MB out; ratios: arm / mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.194 | 0.198 | 1.739 | 1.798 | 60 MB | 1 | 1 | 0.08 | yes |
+| mibz2-workers-lazy | 16 | 0.196 | 0.197 | 1.775 | 1.794 | 59 MB | 1.002 [0.968, 1.037] | 0.999 [0.987, 1.011] | 0.06 | yes |
+
+### wikidata-x4, 9 threads (839 MB out; ratios: arm / mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.196 | 0.204 | 1.882 | 1.949 | 65 MB | 1 | 1 | 0.08 | yes |
+| mibz2-workers-lazy | 16 | 0.190 | 0.197 | 1.819 | 1.916 | 65 MB | 0.972 [0.952, 0.991] | 0.986 [0.975, 0.996] | 0.07 | yes |
+
+### wikidata-x4, 10 threads (839 MB out; ratios: arm / mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2-workers-lazy@/home/louis/dev/mibz2/target/scanner-plumbing/build-base/target/release/examples/ab | 16 | 0.200 | 0.202 | 2.015 | 2.080 | 68 MB | 1 | 1 | 0.07 | yes |
+| mibz2-workers-lazy | 16 | 0.194 | 0.201 | 1.999 | 2.082 | 68 MB | 1.005 [0.972, 1.039] | 1.002 [0.984, 1.020] | 0.08 | yes |

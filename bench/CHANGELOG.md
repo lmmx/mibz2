@@ -35,6 +35,29 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.9.0] - 2026-11-25
+
+### Added
+
+- **`ab run --prespin-ms MS`** (`examples/ab.rs`): just before each child is spawned, every
+  CPU this process may use is spun for MS ms. Each CPU gets one thread pinned to it, all spin
+  to a shared deadline, and the held spinner's CPU is left out. The record gains
+  `prespin`: {ms, cpus, pin_failed, wall_s}.
+  - **Why:** bench-clock-mechanism (#145, 25 November) found the decode at 10 workers ran at
+    the low clock (about 4.1 against 4.9 GHz) in 90% of runs after 0.2 s of idle and 40%
+    after 1 s, and in none after a 100 ms spin on every CPU.
+  - **The standard:** the Coordinator made the spin the standard warm-up for workstation
+    recipes at or above the knee.
+  - **The default:** off. The option is parent-only and never passed to the child, so an
+    ARM@EXE build runs as before.
+- **`cycles_per_ref` in each child's counters** (with `--machine-state`): cycles over
+  reference cycles, null unless both counts are whole. Times the reference clock's frequency,
+  it is the clock while the decode's threads ran. It's the per-decode clock that the "record
+  and decompose" standard (journal §81) reads. `ab telemetry-check`'s missing-counter case
+  lists it.
+- **No figure changes meaning:** both are new fields beside the others, and neither is on by
+  default. This is a minor version.
+
 ## [3.8.2] - 2026-11-16
 
 ### Changed
