@@ -223,6 +223,11 @@ jobs:
       # limits, the ledgers' cost bound, INCOMPLETE and each VOID
       - name: The character study's report (synthetic records)
         run: python3 bench/test_character.py
+      # bench-character-stage2's report (bench/character_stage2.py, stage 2a) on synthetic records
+      # with known effects: CONTROLS, NEGLIGIBLE, DOSE-MISSED, the surface's roundness, a
+      # contrast CHANGED, and each VOID
+      - name: The character study's stage 2 report (synthetic records)
+        run: python3 bench/test_character_stage2.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
