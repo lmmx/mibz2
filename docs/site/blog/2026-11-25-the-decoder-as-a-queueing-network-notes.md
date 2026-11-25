@@ -16,7 +16,7 @@ description: "The theory under the story, from counting what waits and finding t
 The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.
 {: .post-dek }
 
-25 November 2026 · 16 min read · [Technical companion](#1-what-was-read)
+25 November 2026 · 16 min read · [Research in progress](#13-source-register)
 {: .post-meta }
 
 </div>
@@ -27,9 +27,8 @@ The theory under the story, from counting what waits and finding the bottleneck 
 
 <div class="post-companion" data-role="companion-of" markdown>
 
-**Companion to** [The decoder as a queueing network](2026-11-25-the-decoder-as-a-queueing-network.md), the story of how mibz2 came to apply queueing
-theory to its decoder and what each part of the theory did when tried. Read the story for why each
-idea here mattered; read this for the theory behind it, in any order.
+**The story this companion goes beneath** tells how mibz2 came to apply queueing theory to its decoder,
+and what each part of the theory did when it was tried. [The decoder as a queueing network →](2026-11-25-the-decoder-as-a-queueing-network.md)
 
 </div>
 

@@ -296,6 +296,7 @@
   "assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network-notes.png": {
     "description": "The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.",
     "foot": "lmmx.github.io/mibz2 · 25 November 2026",
+    "kind": "progress",
     "section": " · Research blog",
     "title": "Beneath the queueing network: operational laws, modification analysis and product form"
   },

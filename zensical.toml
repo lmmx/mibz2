@@ -93,8 +93,10 @@ nav = [
     { "The width of an induction" = "blog/2026-11-15-induction-width.md" },
     { "Removing duplicated interval lengths and text references" = "blog/2026-11-15-bottom-slots.md" },
     { "Reduce, reuse, recycle" = "blog/2026-11-15-slot-recycling.md" },
-    { "Reconstructing text from compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
-    { "A new way back from the BWT" = "blog/2026-11-10-rauzy-veech-reconstruction.md" },
+    { "A new way back from the BWT" = [
+      { "The post" = "blog/2026-11-10-rauzy-veech-reconstruction.md" },
+      { "Companion: compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
+    ] },
     { "mibz2 gets a pit crew" = "blog/2026-11-09-pit-crew-service-threads.md" },
     { "Reading the BWT's runs off the MTF codes" = "blog/2026-11-08-bwt-runs-from-mtf-codes.md" },
     { "Inverse-BWT navigation: the mathematics" = [

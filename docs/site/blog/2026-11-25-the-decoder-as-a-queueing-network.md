@@ -61,10 +61,9 @@ structure hides it.
 
 <div class="post-companion" data-role="has-companion" markdown>
 
-**Companion post:** [Beneath the queueing network: operational laws, modification analysis and product form](2026-11-25-the-decoder-as-a-queueing-network-notes.md). The theory this story uses without stopping to develop, set out on
-its own: Little's law on a finite trace, the bottleneck law and the population knee, modification
-analysis, load dependence, product form and mean-value analysis, and the factorial design behind the
-ideal-parts matrix.
+**A technical companion** goes beneath this story: Little's law on a finite trace, the bottleneck law,
+modification analysis, load dependence, product form and the factorial design of the ideal-parts matrix.
+[Beneath the queueing network →](2026-11-25-the-decoder-as-a-queueing-network-notes.md)
 
 </div>
 
