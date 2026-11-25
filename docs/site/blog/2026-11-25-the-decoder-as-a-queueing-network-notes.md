@@ -1,13 +1,39 @@
 ---
-title: "Technical appendix: the queueing theory behind the decoder"
-description: "Technical appendix to the queueing-network post: what was read, the vocabulary and shapes, the operational laws, modification analysis, load dependence, variability, the disciplines considered, product form and mean-value analysis, fluid models, the factorial design of the ideal-parts matrix, simulation validation, the design thread and a source register."
+title: "Beneath the queueing network: operational laws, modification analysis and product form"
+image: assets/social/blog-2026-11-25-the-decoder-as-a-queueing-network-notes.png
+description: "The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built."
 ---
 
-← [The decoder as a queueing network](2026-11-25-the-decoder-as-a-queueing-network.md)
+<div class="post-hero" markdown>
 
-# Technical appendix: the queueing theory behind the decoder
+<div class="post-hero-text" markdown>
 
-This appendix holds the theory and context that [the main
+[mibz2 · Research blog](index.md) · Companion to [The decoder as a queueing network](2026-11-25-the-decoder-as-a-queueing-network.md)
+{: .post-kicker }
+
+# Beneath the queueing network: operational laws, modification analysis and product form
+
+The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.
+{: .post-dek }
+
+25 November 2026 · 16 min read · [Technical companion](#1-what-was-read)
+{: .post-meta }
+
+</div>
+
+<div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
+
+</div>
+
+<div class="post-companion" data-role="companion-of" markdown>
+
+**Companion to** [The decoder as a queueing network](2026-11-25-the-decoder-as-a-queueing-network.md), the story of how mibz2 came to apply queueing
+theory to its decoder and what each part of the theory did when tried. Read the story for why each
+idea here mattered; read this for the theory behind it, in any order.
+
+</div>
+
+This companion holds the theory and context that [the main
 post](2026-11-25-the-decoder-as-a-queueing-network.md) uses without stopping to develop, so that the
 post can tell the story of the mibz2 effort on its own terms. Its sections can be read in any order.
 Nothing new was measured for either page. Where a statement rests on the course material, the section
