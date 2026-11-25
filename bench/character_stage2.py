@@ -720,7 +720,11 @@ def report(a) -> int:
         f.write("\t".join(cols) + "\n")
         for r in rows:
             f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
-    return 1 if void else 0
+    if void:
+        # (the last line names the outcome: the recipe's phases.tsv keeps it)
+        print(f"\nVOID ({len(void)} problems: {'; '.join(void[:3])})")
+        return 1
+    return 0
 
 
 def missing(e) -> str:

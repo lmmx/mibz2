@@ -200,7 +200,11 @@ def main():
     code, text = run_report(*scenario(fail=lambda r: r.pop(3)))  # (block 0, the A3 arm's decode)
     check(
         "fail soft: VOID, yet the report goes on",
-        code == 1 and "diagnosis only" in text and "roundness" in text and "W8k_cap12" in text,
+        code == 1
+        and "diagnosis only" in text
+        and "roundness" in text
+        and "W8k_cap12" in text
+        and text.strip().splitlines()[-1].startswith("VOID (1 problems: cell 1 block 0"),
         text[:600],
     )
     check(
