@@ -2443,3 +2443,14 @@ Recorded verbatim at Louis's request: `2026-11-24-algorithm-level/ideal-parts/re
   - **Memory bandwidth as a third bottleneck (§90) is a hypothesis.** The matrix can't separate it from the oracles' replay traffic, and the zero-copy run tests it.
   - **MTF/RLE2 has real room:** 7.5–8.4% below the knee.
 - **The plan changes in one way:** threads 3–5 (pooled scan, C's A5+A6a fold and A6c, forward emission) may start design work now, alongside the two closing measurements (`plan.md` §1).
+
+## 92. The zero-copy floor: plumbing is negligible, the scan alone is 179 ms at 8 workers, and two hidden costs
+
+`ideal-parts/results/floor/` (evidence cc8ba137, `zero-copy-floor/run-20261126T112751Z`, 648 decodes, all valid).
+- **The plumbing between the parts is about 5 ms at every count** (Residual B), 2.7% of the shipped wall. The prediction of 14–19 ms missed: the plumbing is smaller than predicted.
+- **With every worker-side part free, the scan alone takes 179 ms at 8 workers,** against the shipped 195. Worker-side work can buy at most 8% there until the scan leaves its serial station. The pooled scan is the first build.
+- **Hidden costs the matrix couldn't see:**
+  - emission's spelling of words into bytes, 298 ms at 1 worker (22% of the wall);
+  - delivery's serial copy-out, about 48 ms at every count, which becomes the next serial floor.
+- **Memory doesn't bind at 8–10 with the oracles' copies gone:** Residual A is flat at 40–43 ms. The third-station hypothesis (§90) isn't supported.
+- **Characterisation is closed.** The pooled-scan prototype is unblocked, and its §5 readings are set: 8 and 9 judged, the capture not uncapped.

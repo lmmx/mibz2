@@ -1,0 +1,170 @@
+k	measure	value	lo	hi	label
+1	floor	0.227672	0.224202	0.231195	
+1	residual A ms	303.935875	302.854908	305.016842	
+1	residual B ms	5.691000	5.535393	5.846607	
+1	E_consume wall ms	298.244875	297.049657	299.440093	
+1	D share ms	48.549375	46.836400	50.262350	
+6	floor	0.219625	0.209704	0.230015	
+6	residual A ms	53.978000	51.218518	56.737482	
+6	residual B ms	5.321125	5.271906	5.370344	
+6	E_consume wall ms	48.656875	45.903553	51.410197	
+6	D share ms	47.941625	47.100116	48.783134	
+7	floor	0.217420	0.212601	0.222348	
+7	residual A ms	46.650125	45.075963	48.224287	
+7	residual B ms	5.159875	4.850190	5.469560	
+7	E_consume wall ms	41.490250	39.968943	43.011557	
+7	D share ms	48.494750	47.689909	49.299591	
+8	floor	0.213273	0.201279	0.225982	
+8	residual A ms	42.375625	40.332323	44.418927	
+8	residual B ms	5.221875	4.987496	5.456254	
+8	E_consume wall ms	37.153750	35.196502	39.110998	
+8	D share ms	47.295125	46.396240	48.194010	
+9	floor	0.216809	0.205595	0.228633	
+9	residual A ms	42.854750	40.415852	45.293648	
+9	residual B ms	5.285750	5.073213	5.498287	
+9	E_consume wall ms	37.569000	35.060243	40.077757	
+9	D share ms	49.089250	47.983531	50.194969	
+10	floor	0.205411	0.191361	0.220492	
+10	residual A ms	40.545000	37.639940	43.450060	
+10	residual B ms	5.376125	5.264109	5.488141	
+10	E_consume wall ms	35.168875	32.343570	37.994180	
+10	D share ms	49.330500	46.843306	51.817694	
+1	room S against the floor	0.033613	0.032734	0.034516	ROOM
+1	room E against the floor	0.008092	0.007876	0.008313	ROOM
+1	room C against the floor	0.009322	0.009052	0.009599	ROOM
+1	room M against the floor	0.040422	0.039188	0.041696	ROOM
+1	room R against the floor	0.828649	0.817610	0.839836	ROOM
+1	room D against the floor	0.104933	0.100073	0.110029	ROOM
+6	room S against the floor	0.030066	0.029464	0.030680	ROOM
+6	room E against the floor	0.042174	0.041791	0.042560	ROOM
+6	room C against the floor	0.047959	0.046195	0.049792	ROOM
+6	room M against the floor	0.206484	0.199344	0.213880	ROOM
+6	room R against the floor	0.825758	0.786240	0.867262	ROOM
+6	room D against the floor	0.099914	0.098403	0.101449	ROOM
+7	room S against the floor	0.029046	0.027369	0.030827	ROOM
+7	room E against the floor	0.045507	0.041629	0.049746	ROOM
+7	room C against the floor	0.053331	0.049357	0.057624	ROOM
+7	room M against the floor	0.222899	0.205594	0.241662	ROOM
+7	room R against the floor	0.805553	0.798995	0.812165	ROOM
+7	room D against the floor	0.095966	0.090953	0.101255	ROOM
+8	room S against the floor	0.029306	0.027977	0.030699	ROOM
+8	room E against the floor	0.052008	0.049034	0.055163	ROOM
+8	room C against the floor	0.061022	0.059333	0.062759	ROOM
+8	room M against the floor	0.255530	0.242184	0.269610	ROOM
+8	room R against the floor	0.769475	0.720940	0.821277	ROOM
+8	room D against the floor	0.099324	0.094808	0.104056	ROOM
+9	room S against the floor	0.029707	0.028529	0.030934	ROOM
+9	room E against the floor	0.054797	0.052701	0.056977	ROOM
+9	room C against the floor	0.063093	0.061047	0.065208	ROOM
+9	room M against the floor	0.265055	0.254258	0.276311	ROOM
+9	room R against the floor	0.780446	0.730424	0.833894	ROOM
+9	room D against the floor	0.097134	0.093000	0.101451	ROOM
+10	room S against the floor	0.030113	0.029287	0.030961	ROOM
+10	room E against the floor	0.055852	0.054359	0.057385	ROOM
+10	room C against the floor	0.067956	0.065512	0.070491	ROOM
+10	room M against the floor	0.267333	0.252730	0.282779	ROOM
+10	room R against the floor	0.713143	0.662134	0.768081	ROOM
+10	room D against the floor	0.098369	0.094177	0.102748	ROOM
+1	A7 ms per worker none	545.221024	529.020791	561.421256	
+1	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+1	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+1	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+1	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+1	A7 ms per worker SCMRD	697.941487	684.776496	711.106479	
+1	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+1	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+1	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+6	A7 ms per worker none	94.647149	94.026298	95.267999	
+6	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+6	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+6	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+6	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+6	A7 ms per worker SCMRD	125.122366	123.667764	126.576968	
+6	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+6	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+6	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+7	A7 ms per worker none	81.710942	81.132547	82.289337	
+7	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+7	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+7	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+7	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+7	A7 ms per worker SCMRD	108.730227	107.394473	110.065980	
+7	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+7	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+7	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+8	A7 ms per worker none	72.374174	71.918392	72.829957	
+8	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+8	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+8	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+8	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+8	A7 ms per worker SCMRD	98.881072	92.669435	105.092709	
+8	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+8	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+8	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+9	A7 ms per worker none	66.305506	62.169162	70.441850	
+9	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+9	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+9	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+9	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+9	A7 ms per worker SCMRD	92.311348	84.782115	99.840581	
+9	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+9	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+9	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+10	A7 ms per worker none	66.189392	65.464881	66.913902	
+10	A7 ms per worker SECMRD	0.000000	0.000000	0.000000	
+10	A7 ms per worker SFCMRD	0.000000	0.000000	0.000000	
+10	A7 ms per worker SFCMR	0.000000	0.000000	0.000000	
+10	A7 ms per worker FCMRD	0.000000	0.000000	0.000000	
+10	A7 ms per worker SCMRD	90.162716	85.040850	95.284582	
+10	A7 ms per worker SFMRD	0.000000	0.000000	0.000000	
+10	A7 ms per worker SFCRD	0.000000	0.000000	0.000000	
+10	A7 ms per worker SECMD	0.000000	0.000000	0.000000	
+1	E walk against SECMRD	0.432346	0.423000	0.441900	
+6	E walk against SECMRD	0.427193	0.406647	0.448777	
+7	E walk against SECMRD	0.412090	0.398402	0.426248	
+8	E walk against SECMRD	0.421976	0.398281	0.447081	
+9	E walk against SECMRD	0.443848	0.408562	0.482181	
+10	E walk against SECMRD	0.420090	0.398016	0.443387	
+1	handover S ms per thread	0.363623	0.331338	0.395908	
+1	handover E ms per thread	0.167405	0.149092	0.185717	
+1	handover C ms per thread	0.073612	0.063671	0.083553	
+1	handover M ms per thread	0.557944	0.528361	0.587527	
+1	handover R ms per thread	0.157397	0.143031	0.171763	
+1	E_consume ledger ms per thread	299.674070	297.412800	301.935341	
+1	workers' handover ms per thread	0.956357	0.890460	1.022255	
+6	handover S ms per thread	0.297772	0.281016	0.314529	
+6	handover E ms per thread	0.032234	0.028980	0.035487	
+6	handover C ms per thread	0.011633	0.010572	0.012694	
+6	handover M ms per thread	0.110325	0.106252	0.114397	
+6	handover R ms per thread	0.035091	0.033439	0.036742	
+6	E_consume ledger ms per thread	53.983589	48.044783	59.922395	
+6	workers' handover ms per thread	0.189282	0.181576	0.196988	
+7	handover S ms per thread	0.304402	0.289163	0.319641	
+7	handover E ms per thread	0.027166	0.024168	0.030164	
+7	handover C ms per thread	0.009380	0.008793	0.009967	
+7	handover M ms per thread	0.097597	0.094205	0.100989	
+7	handover R ms per thread	0.030402	0.027820	0.032985	
+7	E_consume ledger ms per thread	44.979026	44.535470	45.422582	
+7	workers' handover ms per thread	0.164545	0.156421	0.172670	
+8	handover S ms per thread	0.325420	0.295036	0.355803	
+8	handover E ms per thread	0.025355	0.022580	0.028130	
+8	handover C ms per thread	0.008491	0.008068	0.008914	
+8	handover M ms per thread	0.092203	0.090423	0.093983	
+8	handover R ms per thread	0.028354	0.025828	0.030880	
+8	E_consume ledger ms per thread	39.813584	39.684927	39.942241	
+8	workers' handover ms per thread	0.154403	0.148290	0.160517	
+9	handover S ms per thread	0.339705	0.312117	0.367294	
+9	handover E ms per thread	0.023081	0.021545	0.024617	
+9	handover C ms per thread	0.008172	0.007364	0.008981	
+9	handover M ms per thread	0.086301	0.081283	0.091319	
+9	handover R ms per thread	0.027774	0.026368	0.029179	
+9	E_consume ledger ms per thread	36.019647	35.937473	36.101820	
+9	workers' handover ms per thread	0.145328	0.138948	0.151708	
+10	handover S ms per thread	0.343726	0.325353	0.362098	
+10	handover E ms per thread	0.023242	0.022272	0.024213	
+10	handover C ms per thread	0.007802	0.007276	0.008329	
+10	handover M ms per thread	0.085117	0.083257	0.086977	
+10	handover R ms per thread	0.025808	0.024506	0.027110	
+10	E_consume ledger ms per thread	38.085131	33.009259	43.161002	
+10	workers' handover ms per thread	0.141969	0.139080	0.144859	
+1	prediction residual B	5.691000	5.535393	5.846607	miss

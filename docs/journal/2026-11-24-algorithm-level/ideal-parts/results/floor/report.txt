@@ -1,0 +1,130 @@
+# The zero-copy floor: a diagnostic, deciding nothing
+
+counts [1, 6, 7, 8, 9, 10]; arms none, SECMRD, SFCMRD, SFCMR, FCMRD, SCMRD, SFMRD, SFCRD, SECMD; 8 blocks; traces in the first 4; the scanner pinned to CPU 6
+the pin: the scanner on CPU 6 alone in 216 of 216 pinned traces
+
+the removed parts' busy time in their ideal arms' traces, over the real arm's (VOID over 5%):
+  k 1   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.09%  R: 0.14%  D: 0.00%  E_consume: 0.00%
+  k 6   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.10%  R: 0.15%  D: 0.00%  E_consume: 0.00%
+  k 7   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.10%  R: 0.14%  D: 0.00%  E_consume: 0.00%
+  k 8   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.11%  R: 0.14%  D: 0.00%  E_consume: 0.00%
+  k 9   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.10%  R: 0.13%  D: 0.00%  E_consume: 0.00%
+  k 10  S: 0.00%  E: 0.00%  C: 0.00%  M: 0.11%  R: 0.12%  D: 0.00%  E_consume: 0.00%
+
+## The floor and its parts (95% intervals over the blocks; ms unless a ratio)
+
+k    floor (SECMRD/none)        Residual A (SECMRD)      Residual B (SFCMRD)      E_consume (A - B)        D's share (SFCMR - SFCMRD)
+1    0.2277 [0.2242, 0.2312]    303.9 [302.9, 305.0]     5.7 [5.5, 5.8]           298.2 [297.0, 299.4]     48.5 [46.8, 50.3]
+6    0.2196 [0.2097, 0.2300]    54.0 [51.2, 56.7]        5.3 [5.3, 5.4]           48.7 [45.9, 51.4]        47.9 [47.1, 48.8]
+7    0.2174 [0.2126, 0.2223]    46.7 [45.1, 48.2]        5.2 [4.9, 5.5]           41.5 [40.0, 43.0]        48.5 [47.7, 49.3]
+8    0.2133 [0.2013, 0.2260]    42.4 [40.3, 44.4]        5.2 [5.0, 5.5]           37.2 [35.2, 39.1]        47.3 [46.4, 48.2]
+9    0.2168 [0.2056, 0.2286]    42.9 [40.4, 45.3]        5.3 [5.1, 5.5]           37.6 [35.1, 40.1]        49.1 [48.0, 50.2]
+10   0.2054 [0.1914, 0.2205]    40.5 [37.6, 43.5]        5.4 [5.3, 5.5]           35.2 [32.3, 38.0]        49.3 [46.8, 51.8]
+
+## Each part's room against the zero-copy floor (SFCMRD over all but it ideal; geometric means, 95% intervals)
+
+registration.md's labels: ROOM iff the upper bound <= 0.95; NO ROOM iff within [0.98, 1.02]; else UNRESOLVED
+(MASKED needs the pairs, which this run lacks)
+
+k    S                                   E                                   C                                   M                                   R                                   D                                   
+1    0.0336 [0.0327, 0.0345] ROOM       0.0081 [0.0079, 0.0083] ROOM       0.0093 [0.0091, 0.0096] ROOM       0.0404 [0.0392, 0.0417] ROOM       0.8286 [0.8176, 0.8398] ROOM       0.1049 [0.1001, 0.1100] ROOM      
+6    0.0301 [0.0295, 0.0307] ROOM       0.0422 [0.0418, 0.0426] ROOM       0.0480 [0.0462, 0.0498] ROOM       0.2065 [0.1993, 0.2139] ROOM       0.8258 [0.7862, 0.8673] ROOM       0.0999 [0.0984, 0.1014] ROOM      
+7    0.0290 [0.0274, 0.0308] ROOM       0.0455 [0.0416, 0.0497] ROOM       0.0533 [0.0494, 0.0576] ROOM       0.2229 [0.2056, 0.2417] ROOM       0.8056 [0.7990, 0.8122] ROOM       0.0960 [0.0910, 0.1013] ROOM      
+8    0.0293 [0.0280, 0.0307] ROOM       0.0520 [0.0490, 0.0552] ROOM       0.0610 [0.0593, 0.0628] ROOM       0.2555 [0.2422, 0.2696] ROOM       0.7695 [0.7209, 0.8213] ROOM       0.0993 [0.0948, 0.1041] ROOM      
+9    0.0297 [0.0285, 0.0309] ROOM       0.0548 [0.0527, 0.0570] ROOM       0.0631 [0.0610, 0.0652] ROOM       0.2651 [0.2543, 0.2763] ROOM       0.7804 [0.7304, 0.8339] ROOM       0.0971 [0.0930, 0.1015] ROOM      
+10   0.0301 [0.0293, 0.0310] ROOM       0.0559 [0.0544, 0.0574] ROOM       0.0680 [0.0655, 0.0705] ROOM       0.2673 [0.2527, 0.2828] ROOM       0.7131 [0.6621, 0.7681] ROOM       0.0984 [0.0942, 0.1027] ROOM      
+(C's room is measured with a cold store: the zero-copy borrow leaves the walk to read C's store cold, where the copying oracle warmed it; see A7 per arm below)
+
+the walk (A7) per worker in each arm's traces, ms (C's cold-store effect shows here):
+  k 1   none 545.2; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 697.9; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+  k 6   none 94.6; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 125.1; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+  k 7   none 81.7; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 108.7; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+  k 8   none 72.4; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 98.9; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+  k 9   none 66.3; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 92.3; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+  k 10  none 66.2; SECMRD 0.0; SFCMRD 0.0; SFCMR 0.0; FCMRD 0.0; SCMRD 90.2; SFMRD 0.0; SFCRD 0.0; SECMD 0.0
+
+emission's walk against the floor, the spelling kept (SECMRD over SCMRD; reported only, no label):
+  k 1   0.4323 [0.4230, 0.4419]
+  k 6   0.4272 [0.4066, 0.4488]
+  k 7   0.4121 [0.3984, 0.4262]
+  k 8   0.4220 [0.3983, 0.4471]
+  k 9   0.4438 [0.4086, 0.4822]
+  k 10  0.4201 [0.3980, 0.4434]
+
+## The handover and the spelling in SECMRD's traces (ms; summed over the part's threads, and per thread; 95% over the traces)
+
+k 1   S 0.4 / 0.36 [0.33, 0.40]; E 0.2 / 0.17 [0.15, 0.19]; C 0.1 / 0.07 [0.06, 0.08]; M 0.6 / 0.56 [0.53, 0.59]; R 0.2 / 0.16 [0.14, 0.17]; E_consume 299.7 / 299.67 [297.41, 301.94]
+      the workers' handovers per thread 0.96 [0.89, 1.02] ms, 0.3% of Residual A
+k 6   S 0.3 / 0.30 [0.28, 0.31]; E 0.2 / 0.03 [0.03, 0.04]; C 0.1 / 0.01 [0.01, 0.01]; M 0.7 / 0.11 [0.11, 0.11]; R 0.2 / 0.04 [0.03, 0.04]; E_consume 323.9 / 53.98 [48.04, 59.92]
+      the workers' handovers per thread 0.19 [0.18, 0.20] ms, 0.4% of Residual A
+k 7   S 0.3 / 0.30 [0.29, 0.32]; E 0.2 / 0.03 [0.02, 0.03]; C 0.1 / 0.01 [0.01, 0.01]; M 0.7 / 0.10 [0.09, 0.10]; R 0.2 / 0.03 [0.03, 0.03]; E_consume 314.9 / 44.98 [44.54, 45.42]
+      the workers' handovers per thread 0.16 [0.16, 0.17] ms, 0.4% of Residual A
+k 8   S 0.3 / 0.33 [0.30, 0.36]; E 0.2 / 0.03 [0.02, 0.03]; C 0.1 / 0.01 [0.01, 0.01]; M 0.7 / 0.09 [0.09, 0.09]; R 0.2 / 0.03 [0.03, 0.03]; E_consume 318.5 / 39.81 [39.68, 39.94]
+      the workers' handovers per thread 0.15 [0.15, 0.16] ms, 0.4% of Residual A
+k 9   S 0.3 / 0.34 [0.31, 0.37]; E 0.2 / 0.02 [0.02, 0.02]; C 0.1 / 0.01 [0.01, 0.01]; M 0.8 / 0.09 [0.08, 0.09]; R 0.2 / 0.03 [0.03, 0.03]; E_consume 324.2 / 36.02 [35.94, 36.10]
+      the workers' handovers per thread 0.15 [0.14, 0.15] ms, 0.3% of Residual A
+k 10  S 0.3 / 0.34 [0.33, 0.36]; E 0.2 / 0.02 [0.02, 0.02]; C 0.1 / 0.01 [0.01, 0.01]; M 0.9 / 0.09 [0.08, 0.09]; R 0.3 / 0.03 [0.02, 0.03]; E_consume 380.9 / 38.09 [33.01, 43.16]
+      the workers' handovers per thread 0.14 [0.14, 0.14] ms, 0.4% of Residual A
+
+## The prediction, scored
+
+Antigravity's Residual B at 1 worker, 14-19 ms: measured 5.7 [5.5, 5.8] ms: MISS
+(beside it, unscored: Antigravity's Residual A of about 273, 60-62, 51-55 and 50-54 ms at 1, 6, 8 and 10 workers)
+(and reported only, not comparable to the i9: Antigravity's 2-core Xeon VM had the SFCMRD wall at 44, 28 and 21 ms at 1, 4 and 8 workers; measured here 5.7 ms at 1, 5.2 ms at 8)
+
+## Beside them (medians over the timed decodes)
+
+k 1   none 1342.7 ms, 5.29 GHz, LLC load misses 0.7 M, memory 0.2 GB/s, peak RSS 644 MiB
+      SECMRD 304.1 ms, 5.02 GHz, LLC load misses 0.6 M, memory 1.8 GB/s, peak RSS 627 MiB
+      SFCMRD 5.8 ms, 4.97 GHz, LLC load misses 0.3 M, memory 11.9 GB/s, peak RSS 630 MiB
+      SFCMR 54.7 ms, 5.14 GHz, LLC load misses 5.1 M, memory 16.9 GB/s, peak RSS 616 MiB
+      FCMRD 169.7 ms, 5.06 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 630 MiB
+      SCMRD 694.2 ms, 5.29 GHz, LLC load misses 3.4 M, memory 0.9 GB/s, peak RSS 664 MiB
+      SFMRD 609.5 ms, 5.25 GHz, LLC load misses 0.4 M, memory 0.4 GB/s, peak RSS 631 MiB
+      SFCRD 141.1 ms, 5.12 GHz, LLC load misses 0.5 M, memory 2.0 GB/s, peak RSS 627 MiB
+      SECMD 369.9 ms, 5.07 GHz, LLC load misses 0.6 M, memory 1.5 GB/s, peak RSS 631 MiB
+k 6   none 246.0 ms, 4.91 GHz, LLC load misses 1.2 M, memory 3.8 GB/s, peak RSS 661 MiB
+      SECMRD 52.8 ms, 4.90 GHz, LLC load misses 0.7 M, memory 11.2 GB/s, peak RSS 649 MiB
+      SFCMRD 5.3 ms, 4.88 GHz, LLC load misses 0.3 M, memory 12.7 GB/s, peak RSS 620 MiB
+      SFCMR 53.3 ms, 4.90 GHz, LLC load misses 5.1 M, memory 17.1 GB/s, peak RSS 614 MiB
+      FCMRD 177.0 ms, 4.96 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 644 MiB
+      SCMRD 125.8 ms, 4.91 GHz, LLC load misses 3.7 M, memory 5.9 GB/s, peak RSS 660 MiB
+      SFMRD 109.6 ms, 4.91 GHz, LLC load misses 0.4 M, memory 2.6 GB/s, peak RSS 623 MiB
+      SFCRD 25.5 ms, 4.90 GHz, LLC load misses 0.6 M, memory 12.4 GB/s, peak RSS 623 MiB
+      SECMD 65.1 ms, 4.90 GHz, LLC load misses 0.8 M, memory 10.3 GB/s, peak RSS 638 MiB
+k 7   none 213.3 ms, 4.91 GHz, LLC load misses 1.7 M, memory 5.9 GB/s, peak RSS 665 MiB
+      SECMRD 46.0 ms, 4.91 GHz, LLC load misses 0.8 M, memory 13.2 GB/s, peak RSS 624 MiB
+      SFCMRD 5.3 ms, 4.88 GHz, LLC load misses 0.3 M, memory 12.9 GB/s, peak RSS 652 MiB
+      SFCMR 53.7 ms, 4.91 GHz, LLC load misses 5.0 M, memory 17.0 GB/s, peak RSS 621 MiB
+      FCMRD 177.8 ms, 4.95 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 642 MiB
+      SCMRD 110.2 ms, 4.91 GHz, LLC load misses 3.8 M, memory 7.5 GB/s, peak RSS 646 MiB
+      SFMRD 94.6 ms, 4.91 GHz, LLC load misses 0.4 M, memory 3.4 GB/s, peak RSS 651 MiB
+      SFCRD 22.4 ms, 4.90 GHz, LLC load misses 0.6 M, memory 14.5 GB/s, peak RSS 619 MiB
+      SECMD 57.2 ms, 4.90 GHz, LLC load misses 0.9 M, memory 13.0 GB/s, peak RSS 620 MiB
+k 8   none 194.6 ms, 4.91 GHz, LLC load misses 2.3 M, memory 8.6 GB/s, peak RSS 676 MiB
+      SECMRD 40.8 ms, 4.91 GHz, LLC load misses 0.8 M, memory 15.2 GB/s, peak RSS 626 MiB
+      SFCMRD 5.3 ms, 4.87 GHz, LLC load misses 0.3 M, memory 13.1 GB/s, peak RSS 650 MiB
+      SFCMR 52.3 ms, 4.91 GHz, LLC load misses 5.1 M, memory 17.5 GB/s, peak RSS 616 MiB
+      FCMRD 179.1 ms, 4.96 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 641 MiB
+      SCMRD 98.1 ms, 4.91 GHz, LLC load misses 4.0 M, memory 9.7 GB/s, peak RSS 626 MiB
+      SFMRD 83.6 ms, 4.91 GHz, LLC load misses 0.4 M, memory 4.4 GB/s, peak RSS 658 MiB
+      SFCRD 20.1 ms, 4.90 GHz, LLC load misses 0.6 M, memory 16.6 GB/s, peak RSS 632 MiB
+      SECMD 55.0 ms, 4.91 GHz, LLC load misses 1.2 M, memory 16.5 GB/s, peak RSS 639 MiB
+k 9   none 197.6 ms, 4.91 GHz, LLC load misses 3.2 M, memory 11.6 GB/s, peak RSS 677 MiB
+      SECMRD 42.4 ms, 4.91 GHz, LLC load misses 0.9 M, memory 15.7 GB/s, peak RSS 637 MiB
+      SFCMRD 5.4 ms, 4.86 GHz, LLC load misses 0.3 M, memory 12.8 GB/s, peak RSS 622 MiB
+      SFCMR 54.0 ms, 4.91 GHz, LLC load misses 5.0 M, memory 17.1 GB/s, peak RSS 620 MiB
+      FCMRD 177.6 ms, 4.95 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 645 MiB
+      SCMRD 98.1 ms, 4.91 GHz, LLC load misses 4.6 M, memory 11.2 GB/s, peak RSS 624 MiB
+      SFMRD 82.5 ms, 4.91 GHz, LLC load misses 0.5 M, memory 5.3 GB/s, peak RSS 636 MiB
+      SFCRD 20.2 ms, 4.91 GHz, LLC load misses 0.7 M, memory 17.0 GB/s, peak RSS 623 MiB
+      SECMD 55.2 ms, 4.91 GHz, LLC load misses 1.5 M, memory 21.6 GB/s, peak RSS 665 MiB
+k 10  none 196.5 ms, 4.91 GHz, LLC load misses 4.4 M, memory 15.1 GB/s, peak RSS 674 MiB
+      SECMRD 39.7 ms, 4.91 GHz, LLC load misses 0.9 M, memory 16.6 GB/s, peak RSS 625 MiB
+      SFCMRD 5.3 ms, 4.86 GHz, LLC load misses 0.3 M, memory 12.8 GB/s, peak RSS 621 MiB
+      SFCMR 53.8 ms, 4.91 GHz, LLC load misses 5.1 M, memory 17.1 GB/s, peak RSS 621 MiB
+      FCMRD 178.7 ms, 4.97 GHz, LLC load misses 0.7 M, memory 1.1 GB/s, peak RSS 644 MiB
+      SCMRD 95.0 ms, 4.91 GHz, LLC load misses 4.9 M, memory 13.6 GB/s, peak RSS 646 MiB
+      SFMRD 80.3 ms, 4.91 GHz, LLC load misses 0.5 M, memory 6.7 GB/s, peak RSS 641 MiB
+      SFCRD 20.4 ms, 4.90 GHz, LLC load misses 0.7 M, memory 18.1 GB/s, peak RSS 635 MiB
+      SECMD 56.6 ms, 4.91 GHz, LLC load misses 1.9 M, memory 25.4 GB/s, peak RSS 627 MiB
