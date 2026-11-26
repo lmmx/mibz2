@@ -1249,10 +1249,13 @@ mod oracle {
                 } else {
                     scan::Mode::Scan
                 },
-                match (ideal('E'), check) {
-                    (true, true) => sup::Mode::Check,
-                    (true, false) => sup::Mode::Supplied,
-                    (false, _) => sup::Mode::Open,
+                match (ideal('E'), check, super::full()) {
+                    (true, true, _) => sup::Mode::Check,
+                    // (the zero-copy oracles' E_full: the chase and the word spelling both
+                    // removed, where R replays the block)
+                    (true, false, true) => sup::Mode::SuppliedFull,
+                    (true, false, false) => sup::Mode::Supplied,
+                    (false, _, _) => sup::Mode::Open,
                 },
                 rep('C'),
                 rep('M'),
@@ -1438,9 +1441,11 @@ mod oracle {
             if !in_play() {
                 return;
             }
+            // (E_full removes the spelling only where R replays the block: an F arm without R
+            // would measure nothing new)
             assert!(
-                !super::full(),
-                "TREAT: oracle {}: E_full needs the zero-copy oracles (ideal-parts/registration-floor.md), not in this binary",
+                !super::full() || ideal('R'),
+                "TREAT: oracle {}: E_full (F) needs R ideal",
                 name()
             );
             // (the hash itself, against FIPS 180-4's vectors: one block, and two)

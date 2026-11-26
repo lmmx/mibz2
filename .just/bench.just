@@ -2320,8 +2320,8 @@ bench-zero-copy-floor DRY="":
     # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
     # failed, so a failure still shows, always with its bundle.
     set -uo pipefail
-    # the base: master with Antigravity's zero-copy oracles (set at the rebase onto their merged
-    # PR); the build is it plus the research features alone
+    # the base: master 8c2b0e25; the build is it plus the research features alone: #889 and #909's
+    # matrix binary and Antigravity's zero-copy oracles (#921, on bench/ideal-matrix-next)
     PIN=8c2b0e2576f80382cee25afac69b489aa4766ed2
     COPIES=4 BLOCKS=8 SETTLE=0 PREWARM=50 SEED=20261126 TIMEOUT=120
     dry="{{DRY}}"
@@ -2392,10 +2392,10 @@ bench-zero-copy-floor DRY="":
       git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
       git merge-base --is-ancestor "$PIN" HEAD \
         || { echo "bench-zero-copy-floor: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
-      # the pin: master's decoder at PIN (its oracles, src/ideal/, unchanged), plus the research
-      # features alone (character, scan-oracle, supplied-codes), never a later master
+      # the pin: master's decoder at PIN, plus the research modules alone (character, scan-oracle,
+      # supplied-codes, the zero-copy src/ideal/ and its hooks), never a later master
       changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
-      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|lib|parallel|read|block|open|open/supplied|open/endpoint|open/outq)\.rs$|^$' || true)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|lib|parallel|read|block|open|open/supplied|open/endpoint|open/outq|mtf|runs|ideal/[a-z_]+|parallel/[a-z_]+_tests)\.rs$|^$' || true)
       [ -z "$beyond" ] \
         || { echo "bench-zero-copy-floor: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
       printf '%s\n' "$changed" > "$O/src-changed.txt"
