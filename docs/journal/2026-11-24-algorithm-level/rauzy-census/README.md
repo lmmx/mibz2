@@ -4,7 +4,7 @@ Thread 2 of [`../plan.md`](../plan.md). **Characterisation only:** no `src/` cha
 
 ## The question
 
-Construction (C) is the decoder's largest room below the knee (`../ideal-parts/results/full/README.md`). Making it free takes 42% off at 1 worker, and half the 36% at 8 workers when the scanner is free too.
+Construction (C) is the decoder's largest room below the knee (`../ideal-parts/results/full/README.md`). Making it free takes 42% off at 1 worker, and at 8 workers it is one of the complementary pair (with the scanner) behind a 36% saving that can't be split between them.
 
 One of its three sub-phases, **A6b**, eliminates thick strips by an interval-exchange induction. That is Rauzy–Veech induction, the subject of the 10 and 12 November posts.
 
