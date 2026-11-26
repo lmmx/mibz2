@@ -1,0 +1,32 @@
+id = "single-pass-rle1-crc"
+title = "Single-pass RLE1 expansion and CRC32 (A9 under LLC pressure)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+mechanisms = ["rle1-crc"]
+owned_paths = []
+needs_louis = ""
+question = """
+Primary evidence from cc8ba137 (zero-copy SECMD - SECMRD) and c71c4a56 (traced A9) shows RLE1/CRC is 66.6-74.4 ms at 1W (5.0-5.7%), 104-115 ms total CPU at 8W (7.1% of worker CPU), and explodes 2.55-2.9x at 10W (133-170 ms in none/SECMD, 191 ms in PC, 216 ms in SC, adding +286.5 MiB DRAM at 8W and +766.7 MiB DRAM + 3.19M LLC store misses at 10W) — 3.5x larger than surface.tsv's 1.7% (which was masked by 7dd7b070's copy-based R oracle).
+In src/rle.rs:103-170, unrle_in_place performs four full-buffer passes (two full-buffer writes: copy_within up by shift, then copy_within back down) whenever shift > 0.
+1. Census real blocks (wikidata, wikidata x4, ab gen): fraction with runs == 0, shift == 0, shift > 0, min_grown >= 0, reserve_exact realloc rate, and per-pass breakdown (find_runs, shift-up copy_within, expand copy_within, crc32).
+2. Measure single-write-pass designs on real blocks (backward in-place expansion when min_grown >= 0, or one-pass AVX2 unrle fused with tiled CRC32 into a swapped/recycled buffer eliminating the shift-up pass, or emission-tiled RLE1+CRC).
+"""
+why = """
+R is the only worker-side stage missing from the open claims, is comparable in 1W cost to MTF/RLE2 (5.7% vs 7.5%), and is the single worst LLC-thrashing multiplier at 8-10 workers (2.55x cycle blow-up and +767 MiB DRAM traffic at 10W).
+"""
+stop_test = """
+Frozen before data: probe ends with the census and local prototype measurements. Admit a build claim only if a single-write-pass prototype cuts A9 by at least 35% at 1W (at least ~25 ms of 74 ms, >= 1.8% of 1W wall) OR cuts total LLC store misses / DRAM traffic enough to save >= 2.0% of worker CPU at 8-10W, byte-identical to unrle_in_place + crc32 on all blocks and zero new unsafe without Miri.
+"""
+done_when = """
+A results note under docs/journal/2026-11-26-explore/ or rle1-census/, a delta, surface.tsv row R updated, and either a build claim admitted or a dead-ends.tsv row recorded.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "src/rle.rs",
+  "docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/zero-copy-floor.tsv",
+  "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/pooled-scan.tsv",
+]
+links = ["docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md"]
