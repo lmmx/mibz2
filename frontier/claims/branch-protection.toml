@@ -1,0 +1,27 @@
+id = "branch-protection"
+title = "Protect master and the instructions with GitHub's own settings"
+kind = "decision"
+zone = "striated"
+needs = ["repo-write"]
+priority = 3
+status = "open"
+owned_paths = []
+needs_louis = "repository settings and branch protection are infrastructure (RULES D)"
+question = """
+Today the protected list and the merge gates are kept by convention. GitHub branch protection could make them binding:
+- required checks (no AI attribution, check-commit, the frontier check);
+- a CODEOWNERS review for the protected paths;
+- no direct pushes to master.
+Decide what to require. Every agent merges as Louis's account, so a required review needs an account other than the author's: weigh that.
+"""
+why = """
+Gemini: vetoes should be backed by branch protection, not prose.
+"""
+stop_test = """
+Settings are infrastructure and authority: Louis decides.
+"""
+done_when = """
+Louis's decision recorded in a delta, and the settings applied.
+"""
+premises = []
+links = []

@@ -1,13 +1,10 @@
 id = "open-prs-triage"
 title = "Triage the coordinator-era open PRs"
 kind = "ops"
-zone = "smooth"
+zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 2
 status = "open"
-claimed_by = ""
-claimed_at = ""
-expires = ""
 owned_paths = []
 needs_louis = ""
 question = """

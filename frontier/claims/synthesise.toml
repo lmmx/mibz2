@@ -1,0 +1,27 @@
+id = "synthesise"
+title = "Synthesis: what recent findings mean together (recurring)"
+kind = "synthesise"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "open"
+owned_paths = []
+needs_louis = ""
+question = """
+Read the deltas since the last synthesis delta, plus surface.tsv, and look for relations no single delta states:
+- two bottlenecks with one cause;
+- a killed idea that a newer result revives;
+- several lines converging on the same mathematical object.
+Write them up. Open the claims they imply at status idea. This claim is recurring: leave it open; it is never marked done.
+"""
+why = """
+The coordinator's integrative function, as distributed work and not a role (ChatGPT's review, point 5).
+"""
+stop_test = """
+None: a synthesis is reported, not gated. Each implied claim brings its own stop test.
+"""
+done_when = """
+A delta naming the deltas read and the relations found. New claims at idea.
+"""
+premises = []
+links = []

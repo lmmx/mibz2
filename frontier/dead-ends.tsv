@@ -1,0 +1,11 @@
+claim	verdict	what it showed	evidence
+rauzy induction order	STOP	the best order cuts Open's own steps 16.7%, a 1.41% ceiling on the 1-worker wall; every alternative order is slower on the clock	docs/journal/2026-11-24-algorithm-level/rauzy-census/results/README.md (#933)
+network-calculus port	KILL	strict bounds 3.2-3.5x the wall, blind to the k=8 crossover	docs/journal/2026-11-24-algorithm-level/leads/pre-port-tests/README.md (#935)
+uiCA port	KILL	-28.8% on the Huffman loop, wrong sign on PR 870's regression (can't see the L1d spill)	docs/journal/2026-11-24-algorithm-level/leads/pre-port-tests/README.md (#935)
+surface_dynamics port	KILL	follows from the Rauzy STOP: no induction-order budget to serve	docs/journal/2026-11-24-algorithm-level/rauzy-census/results/README.md (#933)
+GRH squeeze as a template	STOP	no move maps onto a quantity mibz2 measures or computes	docs/journal/2026-11-24-algorithm-level/leads/grh-squeeze.md (#936)
+pooled scan, as built	KILL	moves ~175 ms of scan CPU onto workers that bind below the knee; capture 0.52 and 0.48 at 8 and 9	docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md (#942)
+memory as a third station at 8-10 workers	not supported	with the oracles' copies gone the floor is flat from 8 to 10	docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md (#931)
+plumbing between the parts	closed	about 5 ms at every count	docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md (#931)
+log-additive slowdown predictor	refuted	stage 2b's joint slowdown fit the max model, not the product	docs/journal/2026-11-24-algorithm-level.md section 78
+kitchen-sink non-walk replacements	lost	every full non-walk replacement lost 3.1-15x natively at n <= 900k	docs/journal/2026-11-22-neon-teamwork-paradigm.md

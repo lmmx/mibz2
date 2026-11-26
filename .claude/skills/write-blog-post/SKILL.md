@@ -361,7 +361,7 @@ of the result (two or three sentences) and the key takeaways. The opening gives 
 explanation, and the takeaways appear in the opening or section 1 at the latest, caveats
 included. They are never held back for a later section, leaving the reader unsure in between.
 Later sections show how each takeaway is known. (Louis, 9 November 2026; reviewed by
-`coordinate-blog-post`'s two rounds.)
+the blog board's review stage (`frontier/README.md`).)
 
 The opening also settles, in a sentence each, anything its own claims make the reader
 wonder about: why the mechanism costs anything, what a named sample or machine is, how its

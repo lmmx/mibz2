@@ -127,4 +127,4 @@ mannered prose and are cut.
 ## Where it sits
 
 After write-blog-post's drafting and before link-and-gloss and publish-page. A published post
-that reads bluntly is fixed as a docs commit to master (coordinate-blog-post §4).
+that reads bluntly is fixed as a docs commit to master (as a blog card's revise stage, `frontier/README.md`).

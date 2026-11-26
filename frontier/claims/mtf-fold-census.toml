@@ -1,0 +1,24 @@
+id = "mtf-fold-census"
+title = "Census for the MTF-into-construction fold (A5 + A6a)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+mechanisms = ["mtf", "construction-first-pass"]
+owned_paths = []
+needs_louis = ""
+question = """
+MTF/RLE2 emits runs capped at 127, and construction's first pass (A6a, 200 ms at 1 worker) recombines them into maximal runs. Can MTF emit maximal runs straight into construction's accumulators?
+This claim is the census only (smooth, examples/): how often the cap splits runs on real blocks, what A6a recomputes, and what a direct fold would save. Its result decides whether mtf-fold-build is admitted.
+"""
+why = """
+MTF/RLE2 has 7.5–8.4% room below the knee, and C 42% at 1 worker. Together they are the main worker-side lever once the scan has slack (pooled-scan/results).
+"""
+stop_test = """
+Ungated characterisation. If it shows room, write mtf-fold-build's registration (paired-oracle form, against S ideal at 8 workers) as part of the delta.
+"""
+done_when = """
+The census results, a delta, surface rows C-A6a and M updated, and mtf-fold-build admitted or dropped.
+"""
+links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 1"]
