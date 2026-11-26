@@ -2451,7 +2451,7 @@ bench-zero-copy-floor DRY="":
       # CAP_PERFMON; what the machine offers is recorded either way
       { echo "perf_event_paranoid: $(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unreadable)"
         ls -d /sys/bus/event_source/devices/uncore_imc* 2>/dev/null || echo "no uncore_imc PMU"
-        for d in /sys/bus/event_source/devices/uncore_imc*/events; do ls "$d" 2>/dev/null; done
+        for d in /sys/bus/event_source/devices/uncore_imc*/events; do [ -d "$d" ] && ls "$d"; done; true
       } > "$O/counters-access.txt"
       uname -a > "$O/uname.txt"
       "$AB" env > "$O/env.json"
