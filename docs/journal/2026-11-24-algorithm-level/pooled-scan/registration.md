@@ -39,7 +39,53 @@ The scan has been taken off its thread three times:
      - workers and the joiner waiting on each other below the core count;
      - the whole input read first, with 4 × threads decoded blocks in flight;
      - speculative decodes past what the chain could use.
-3. **`bench-parscan-stream` (#770):** the bounded streaming version lost badly, at about 1.54× at 10 workers (`../briefs/scanner.md`). Its cause is not recorded on master. **Before any code, the prototype reads #770's PR and bundle, and names the cause.** If this design shares it, the design is revised here before the freeze.
+3. **`bench-parscan-stream` (#770):** the bounded streaming version lost badly, at about 1.54× at 10 workers (`../briefs/scanner.md`). Its cause, read from #770's PR and its bundle (below), is:
+   - **its scan was serialised across a few threads, not spread over the workers;**
+   - **its scan work was duplicated.**
+
+### #770's cause, from its PR and bundle (added 26 November, before any code)
+
+**The design** (#770's body):
+- a lead scanner, plus one or two demand-driven helper scanners, read blocks at magic candidates;
+- the workers do the rest, as now;
+- at most workers + 4 blocks are held ahead of the reader.
+
+**The run:** `parscan-stream/run-20261123T005713Z.tar.gz` on the `evidence` branch, sha256 `e432a2ba…44340bb7`, checked here. Wikidata ×4, unpinned, 16 paired rounds against master: NOT ADOPTED.
+
+| threads | wall, head/base | CPU, head/base | peak RSS, head/base |
+|---|---|---|---|
+| 4 | 0.978 | 0.980 | 0.996 |
+| 6 | 0.977 | 0.980 | 1.005 |
+| 8 | **1.605** | 1.043 | 0.832 |
+| 10 | **1.537** | 1.093 | 0.881 |
+| 20 | 1.540 | 1.099 | 0.887 |
+
+Below 8 threads the front end isn't active (it switched on only from 8 threads on the i9), so 4 and 6 are master's code with the PR's block reader. **From 8 threads up, wall rises about 55% while CPU rises 4–10% and memory falls.** The threads mostly waited.
+
+**The per-thread CPU** (the records' `thread_cpu`, wikidata ×4, one round, seconds):
+
+| | wall | the scanner | the helpers | each worker |
+|---|---|---|---|---|
+| base, 8 threads | 0.205 | 0.17 | none | 0.18 (×8) |
+| head, 8 threads | 0.338 | 0.18 (lead) | 0.07 + 0.08 | 0.14–0.20 (×8) |
+| head, 10 threads | 0.340 | 0.20 (lead) | 0.08 + 0.08 | 0.15–0.20 (×8) |
+
+What it shows (inferred from the CPU, not a profile of waits):
+- **The scan was serialised.** The lead did as much scanning as the base's serial scanner (0.18–0.20 s against 0.17 s), and the helpers added 0.15–0.16 s on top. The head's wall, 0.34 s, is about the sum of its three scanner threads' CPU (0.33–0.36 s). The lead and helpers took turns behind one chain head rather than running side by side.
+- **The scan was duplicated.** Total scanning CPU almost doubled, against the base's 0.17 s, while the workers' CPU stayed the same. So each worker sat idle about 40% of the wall.
+- **The pipeline was starved.** Peak RSS fell (fewer blocks in flight, at most workers + 4 ahead), as it would with the workers waiting on scanned blocks.
+
+**Does this design share it?**
+- **Not the serialisation.** Here no scanner or helper stage exists: each of the k workers scans its own block, so the scan is spread over k threads. The chain's acceptance stays serial, in the in-order reader, but it reads only each block's start and end bits and CRC, not its symbols.
+- **Not the duplication.** Here each candidate is claimed by one worker and decoded once. On Wikidata every candidate is real, so no decode is wasted; the fallback reads only what no worker claimed.
+- **Not the window.** Here the window is the shipped one (slots a worker), not workers + 4.
+- **Shared: acceptance in order.** A slow block at the chain's head still holds the reader, as in the shipped decoder. The shipped window already absorbs this today, and the reported figures below watch it.
+
+**So §3 stands. Two figures are added to §4's reported list** to catch #770's failure if it recurs:
+- the scan's total CPU (every worker's A2 + A3) against the shipped scanner's;
+- each worker's idle share of the wall.
+
+A pooled scan that serialises shows K2's slowdown; these two figures say why.
 
 ## 3. The design
 
@@ -87,7 +133,8 @@ The scan has been taken off its thread three times:
 - the capture behind C, log(C/PC) ÷ log(C/SC), at each count;
 - the standalone ratio P/none at every count, and against Antigravity's figure at 10 (S alone 0.919; its prediction 172–175 ms at 8–9);
 - CPU, wasted decodes, and the scanner-to-worker queue's bytes removed;
-- the chain's fallbacks per decode.
+- the chain's fallbacks per decode;
+- the scan's total CPU (the workers' A2 + A3) against the shipped scanner's, and each worker's idle share of the wall (#770's failure, §2).
 
 **VOID:** the exactness obligations above unmet; the machine not the i9; a decode missing or failed; a check pass not byte-identical.
 
