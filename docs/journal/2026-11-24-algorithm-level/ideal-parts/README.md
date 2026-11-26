@@ -1,5 +1,7 @@
 # The ideal-parts matrix
 
+*Where this sits in the larger plan, and what comes after it: [`../plan.md`](../plan.md).*
+
 > **THE TASK: measure the decoder with each of its parts made ideal, one at a time and in combination, at the worker counts that matter, and so find how much room each part leaves.**
 >
 > - **It is characterisation.** It changes no production code and decides no production default. It adopts nothing.
