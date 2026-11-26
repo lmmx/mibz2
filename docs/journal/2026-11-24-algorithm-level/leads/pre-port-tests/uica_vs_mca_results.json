@@ -1,0 +1,154 @@
+[
+  {
+    "name": "huff_master_batch5",
+    "num_insns": 108,
+    "bytes": 433,
+    "uica_cfl_cyc": 50.25,
+    "uica_cfl_align_range": [
+      47.25,
+      50.25
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 53.01,
+    "mca_rthroughput": 18.2,
+    "mca_uops_per_iter": 109.0,
+    "uica_vs_mca_pct": -5.21,
+    "asm_file": "/tmp/mca_build/extracted_loops/huff_master_batch5_mca.s",
+    "units_per_iter": 5.0,
+    "uica_per_unit": 10.05,
+    "mca_per_unit": 10.602
+  },
+  {
+    "name": "huff_master_step1",
+    "num_insns": 19,
+    "bytes": 72,
+    "uica_cfl_cyc": 8.96,
+    "uica_cfl_align_range": [
+      8.96,
+      8.96
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 10.01,
+    "mca_rthroughput": 3.2,
+    "mca_uops_per_iter": 19.0,
+    "uica_vs_mca_pct": -10.49,
+    "asm_file": "/tmp/mca_build/extracted_loops/huff_master_step1_mca.s",
+    "units_per_iter": 1.0,
+    "uica_per_unit": 8.96,
+    "mca_per_unit": 10.01
+  },
+  {
+    "name": "huff_pr870_batch5",
+    "num_insns": 100,
+    "bytes": 402,
+    "uica_cfl_cyc": 46.25,
+    "uica_cfl_align_range": [
+      46.25,
+      46.25
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 44.018,
+    "mca_rthroughput": 16.8,
+    "mca_uops_per_iter": 101.0,
+    "uica_vs_mca_pct": 5.07,
+    "asm_file": "/tmp/mca_build/extracted_loops/huff_pr870_batch5_mca.s",
+    "units_per_iter": 5.0,
+    "uica_per_unit": 9.25,
+    "mca_per_unit": 8.804
+  },
+  {
+    "name": "huff_pr870_step1",
+    "num_insns": 16,
+    "bytes": 62,
+    "uica_cfl_cyc": 8.0,
+    "uica_cfl_align_range": [
+      8.0,
+      8.0
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 8.016,
+    "mca_rthroughput": 2.7,
+    "mca_uops_per_iter": 16.0,
+    "uica_vs_mca_pct": -0.2,
+    "asm_file": "/tmp/mca_build/extracted_loops/huff_pr870_step1_mca.s",
+    "units_per_iter": 1.0,
+    "uica_per_unit": 8.0,
+    "mca_per_unit": 8.016
+  },
+  {
+    "name": "a6b_narrow_rule",
+    "num_insns": 111,
+    "bytes": 466,
+    "uica_cfl_cyc": 35.4,
+    "uica_cfl_align_range": [
+      35.4,
+      35.4
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 21.038,
+    "mca_rthroughput": 19.0,
+    "mca_uops_per_iter": 114.0,
+    "uica_vs_mca_pct": 68.27,
+    "asm_file": "/tmp/mca_build/extracted_loops/a6b_narrow_rule_mca.s",
+    "units_per_iter": 1.0,
+    "uica_per_unit": 35.4,
+    "mca_per_unit": 21.038
+  },
+  {
+    "name": "a6b_narrow_zero",
+    "num_insns": 74,
+    "bytes": 292,
+    "uica_cfl_cyc": 23.11,
+    "uica_cfl_align_range": [
+      22.89,
+      23.11
+    ],
+    "uica_bottleneck": "unknown",
+    "mca_skylake_cyc": 13.046,
+    "mca_rthroughput": 12.7,
+    "mca_uops_per_iter": 76.0,
+    "uica_vs_mca_pct": 77.14,
+    "asm_file": "/tmp/mca_build/extracted_loops/a6b_narrow_zero_mca.s",
+    "units_per_iter": 1.0,
+    "uica_per_unit": 23.11,
+    "mca_per_unit": 13.046
+  },
+  {
+    "name": "runs_avx2_pass1_32sym",
+    "num_insns": 34,
+    "bytes": 148,
+    "uica_cfl_cyc": 9.29,
+    "uica_cfl_align_range": [
+      9.17,
+      9.29
+    ],
+    "uica_bottleneck": "Predecoder",
+    "mca_skylake_cyc": 7.282,
+    "mca_rthroughput": 6.0,
+    "mca_uops_per_iter": 34.0,
+    "uica_vs_mca_pct": 27.57,
+    "asm_file": "/tmp/mca_build/extracted_loops/runs_avx2_pass1_32sym_mca.s",
+    "units_per_iter": 32.0,
+    "uica_per_unit": 0.29,
+    "mca_per_unit": 0.228
+  },
+  {
+    "name": "runs_avx2_pass2_lit",
+    "num_insns": 25,
+    "bytes": 112,
+    "uica_cfl_cyc": 9.0,
+    "uica_cfl_align_range": [
+      9.0,
+      9.0
+    ],
+    "uica_bottleneck": "Decoder",
+    "mca_skylake_cyc": 8.704,
+    "mca_rthroughput": 5.2,
+    "mca_uops_per_iter": 31.0,
+    "uica_vs_mca_pct": 3.4,
+    "asm_file": "/tmp/mca_build/extracted_loops/runs_avx2_pass2_lit_mca.s",
+    "units_per_iter": 1.0,
+    "uica_per_unit": 9.0,
+    "mca_per_unit": 8.704
+  }
+]
