@@ -1738,8 +1738,9 @@
       "sha": "db83e59b2e3931da4623c168530d2f3e62179b28",
       "evidence_digest": "sha256:b8e8a0809710945948d2893897caf8196bfa3b50fa4ec8989430812d54746435",
       "commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c",
-      "status": "complete",
-      "disposition": "Archival claim supported; no automatic role or pin transfer."
+      "status": "finished",
+      "disposition": "Archival claim supported; no automatic role or pin transfer.",
+      "comment": 7205129833
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1853,7 +1854,8 @@
     6904474217,
     6988584322,
     6988977627,
-    7007260113
+    7007260113,
+    7205129833
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -2136,7 +2138,10 @@
     "289b06a81def4c39238bb6b2c254e3c613a24a98",
     "684915adbc331ba4bdcc7ee5951b965ed2c9e0eb",
     "092171b8e5def8f3b16b40b90aed464716e65280",
-    "44a8fe4c3fcd7a2d41a174d6ea51b74c57705fb7"
+    "44a8fe4c3fcd7a2d41a174d6ea51b74c57705fb7",
+    "c418a1a392c1d83d2fad10f646d2e84260d46e45",
+    "1dc764f32fa54a7a24e162d2a5f94db31382653c",
+    "daccebe61e18ba0f3dbb1d4a62abf91443771d71"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2252,7 +2257,8 @@
     6904418769,
     6988393925,
     6988881933,
-    7007091766
+    7007091766,
+    7205093921
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2331,10 +2337,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 7205093921,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D116",
-    "work_commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c"
+    "incoming_comment": 7205093921,
+    "review_comment_id": 7205129833
   },
   "duplicate_events": [
     {
@@ -4187,11 +4194,13 @@
     {
       "comment_id": 7205093921,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D116",
-      "progress": "Archival claim verified; no mandate transfer. Closing REVIEW pending.",
+      "progress": "Closing REVIEW exact body/destination verified; coordinator-only FROM check independently resolved. Closure lifecycle event adds no assignment.",
       "receipt_commit": "c418a1a392c1d83d2fad10f646d2e84260d46e45",
-      "work_commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c"
+      "work_commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c",
+      "review_comment_id": 7205129833,
+      "complete_cursor_commit": "daccebe61e18ba0f3dbb1d4a62abf91443771d71"
     }
   ],
   "migrated_from": {
