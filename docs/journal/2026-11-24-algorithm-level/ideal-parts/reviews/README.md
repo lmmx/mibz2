@@ -3,6 +3,7 @@
 | date | reviewer | file | what it changed |
 |---|---|---|---|
 | 26 Nov 2026 | ChatGPT, relayed by Louis | `2026-11-26-chatgpt.md` (verbatim) | the corrections below |
+| 26 Nov 2026 | ChatGPT, relayed by Louis | `2026-11-26-chatgpt-on-the-post.md` (verbatim, with its figures described for remaking) | the brief for the post's restructure |
 
 ## Corrections made from the ChatGPT review (26 November)
 
