@@ -148,6 +148,12 @@ def main():
     check("a P decode at 8 not wholly pooled: VOID", run(p, recs)[1] == "VOID")
     p, recs = records(pooled=((1, "P"), {"dispatched": 5}))
     check("P at 1 off the shipped path: VOID", run(p, recs)[1] == "VOID")
+    # one block (a DRY's): no interval, so K1 and K2 can't be decided; never a silent pass
+    p, recs = records()
+    one = [x for x in recs if x["block"] == 0]
+    buf = io.StringIO()
+    v = ps.analyse(p, one, FINDER, EXACT, I9, 1, out=buf)[1]
+    check("one block: VOID, the bounds undefined", v == "VOID" and "undefined" in buf.getvalue())
 
     # identities
     p, recs = records(fail_ids={(8, "P"): ["flow: x", "forced flow: x", "utilisation: x"]})

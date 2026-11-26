@@ -24,7 +24,8 @@ duplicated or failed; an output not the registered size, or a check pass not byt
 a pooled arm's timed decode at 2 or more workers not wholly pooled (any fallback, degrade or
 dropped candidate on wikidata x4, where every magic is real), or at 1 worker not the shipped
 path (anything dispatched), or an unpooled arm with anything dispatched; K4's pass missing,
-not pinned to its CPU, or not finding every block.
+not pinned to its CPU, or not finding every block; K1's or K2's bound undefined at a judged
+count (fewer than 2 blocks: a NaN compares false, and would pass silently).
 
 **INCOMPLETE:** a trace fails an identity that applies to it. In the pooled arms at 2 or more
 workers the block-indexed identities are exempt (§7.1): the pooled path records no block's
@@ -244,6 +245,10 @@ def analyse(p, recs, finder, exact, lscpu_text, blocks, out_bytes=OUT_BYTES, out
         shown = f"{min(cap, CAPTURE_CAP):.3f}" + (f" ({cap:.3f})" if cap > CAPTURE_CAP else "")
         k1 = pcc[2] > thr
         k2 = pn[1] > K2_MAX
+        # (a bound that is undefined, as with fewer than 2 blocks, compares false: it would pass
+        # silently, so at a judged count it is a VOID instead)
+        if k in JUDGED and not all(math.isfinite(v) for v in (pcc[2], pn[1], thr)):
+            void.append(f"k {k}: K1's or K2's bound is undefined (fewer than 2 blocks?)")
         mark = ""
         if k in JUDGED:
             mark = (

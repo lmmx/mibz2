@@ -204,6 +204,7 @@ The prototype is built (`prototype.md`, #932) and accepted as the prototype, dep
 **6. The design under test must be the one timed (a VOID).**
 - **Why it can be checked:** on wikidata ×4 every magic is real and every stream is at level 9. So a pooled decode at 2 workers or more takes every block from a worker's read.
 - **The VOID:** the run is VOID if any P or PC decode at 2 workers or more has a fallback, a degrade or a dropped candidate, or if P at 1 worker, or any unpooled arm, dispatches anything. Otherwise those walls would be the shipped path's walls labelled as the pooled scan's.
+- **A bound undefined (a VOID):** K1's or K2's bound is undefined at a judged count, as with fewer than 2 blocks. An undefined bound compares false, so the kill would pass silently; it is a VOID instead. (The DRY, with one block, showed this.)
 
 **7. Exactness on the machine (a VOID).**
 - **Before the decodes,** the recipe runs `tests/pooled_scan.rs` and the finder's unit tests on the i9. The run is VOID if they fail.
