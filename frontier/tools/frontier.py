@@ -10,6 +10,7 @@
     frontier.py take-review ID --pr N --head SHA --by AGENT   transfer submitted reservation
     frontier.py yield-review ID --session S          park an unfinished integration
     frontier.py finish-review ID --pr N --head SHA   recover/release verified merged reservation
+    frontier.py cancel-review ID --pr N --head SHA   release a verified closed-unmerged reservation
     frontier.py holds                               list the holds on origin
     frontier.py mark ID --status open|idea|done|dropped|blocked   edit a claim's state (goes in your PR)
 
@@ -420,12 +421,19 @@ def review_card(cid, number, head):
 
 def take_review(cid, number, head, by, hours):
     """Transfer a submitted claim's existing reservation, without acquiring another work slot."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", cid):
+        sys.exit("invalid claim id")
     if not by or by == "unknown" or hours <= 0:
         sys.exit("integration requires a named participant and positive lease duration")
     check_review_pr(cid, number, head)
     c = review_card(cid, number, head)
     _fetch_master(strict=True)
-    trunk = item(cid, fetch=False, required=False)
+    trunk = {}
+    for dirname in ("claims", "blog"):
+        rc, body = git("show", f"origin/master:frontier/{dirname}/{cid}.toml")
+        if rc == 0:
+            trunk = tomllib.loads(body)
+            break
     if not trunk or trunk.get("status") not in ("open", "review") or trunk.get("needs_louis"):
         sys.exit(f"{cid} is not an admitted, unreserved integration candidate")
     if c.get("needs_louis"):
@@ -471,31 +479,46 @@ def yield_review(cid, session):
     print(f"{cid}: integration yielded; any independent participant can take it")
 
 
-def finish_review(cid, number, head):
-    """Release exactly a verified merged reservation, even if its reviewer has terminated."""
+def finish_review(cid, number, head, *, cancelled=False):
+    """Release exactly a verified terminal PR reservation, even after session loss."""
     sha, lease = holds().get(cid, (None, None))
     if (
         not lease or lease.get("phase") not in ("integration", "parked")
         or lease.get("pr") != number or lease.get("pr_head") != head
     ):
         sys.exit("no matching integration reservation")
-    pr = check_review_pr(cid, number, head, merged=True)
-    merge = pr.get("merge_commit_sha")
-    if not re.fullmatch(r"[0-9a-f]{40}", merge or ""):
-        sys.exit("missing exact merge commit")
-    _fetch_master(strict=True)
-    if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
-        sys.exit("merge commit is not on origin/master")
+    if cancelled:
+        pr = read_pr(number)
+        try:
+            valid = (
+                pr["number"] == number and pr["head"]["sha"] == head
+                and pr["base"]["ref"] == "master" and claim_header(pr["body"]) == cid
+                and pr["state"] == "closed" and pr["merged"] is False
+            )
+        except (KeyError, TypeError):
+            valid = False
+        if not valid:
+            sys.exit("PR is not the exact closed-unmerged reservation")
+        terminal = "closed-unmerged"
+    else:
+        pr = check_review_pr(cid, number, head, merged=True)
+        merge = pr.get("merge_commit_sha")
+        if not re.fullmatch(r"[0-9a-f]{40}", merge or ""):
+            sys.exit("missing exact merge commit")
+        _fetch_master(strict=True)
+        if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
+            sys.exit("merge commit is not on origin/master")
+        terminal = merge
     if lease.get("released"):
-        if lease.get("merge_commit") != merge:
-            sys.exit("release record disagrees with merged PR")
+        if lease.get("terminal") != terminal:
+            sys.exit("release record disagrees with terminal PR")
         print(f"{cid}: already released for PR #{number}")
         return
-    updated = {**lease, "released": True, "merge_commit": merge}
+    updated = {**lease, "released": True, "terminal": terminal}
     ok, out = write_lease(cid, updated, sha, sha)
     if not ok:
         sys.exit(f"integration not released: {out}")
-    print(f"{cid}: merged PR #{number}; reservation released")
+    print(f"{cid}: terminal PR #{number}; reservation released")
 
 
 def review_projection(items, prs, error):
@@ -965,8 +988,8 @@ def main(argv):
         take_review(argv[2], int(opt("--pr", "0")), opt("--head"), opt("--by", "unknown"), hours)
     elif cmd == "yield-review":
         yield_review(argv[2], opt("--session"))
-    elif cmd == "finish-review":
-        finish_review(argv[2], int(opt("--pr", "0")), opt("--head"))
+    elif cmd in ("finish-review", "cancel-review"):
+        finish_review(argv[2], int(opt("--pr", "0")), opt("--head"), cancelled=cmd == "cancel-review")
     elif cmd == "verify":
         cid = argv[2]
         all_holds = holds()
