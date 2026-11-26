@@ -1,0 +1,321 @@
+[mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/index.md>)
+
+# Complementary bottlenecks: reading the ideal-parts matrix
+
+Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together.
+
+26 November 2026 · 35 min read · [Research synthesis](<#9-from-characterisation-to-construction>)
+
+A bzip2 file is decoded by undoing, block by block, a sorting of the text called the Burrows–Wheeler transform. For most of its history that undoing has been a walk: one row of the sorted table at a time, each step a lookup that depends on the one before. This month mibz2 found [a different way back](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-10-rauzy-veech-reconstruction/index.md>). Adjacent rows that hold the same byte take the same step, so a whole stretch of them can be moved at once, and the classical tool for doing that, the induction that mathematicians use to study interval exchanges, rebuilds the text from a few retained rows and the words between them. It was a mathematical invention, not a tuning, and it raised a question that tuning cannot answer: where in the decoder could another invention of that kind make a real difference?
+
+That question is harder than it sounds, because a decoder is not a list of costs. mibz2 decodes on many cores at once: one thread scans each compressed block's Huffman codes, a pool of workers rebuilds the blocks' text in parallel, and a reader hands the blocks back in order. The stages overlap, they share caches and memory, and they hold one another back. A stage that takes a large share of the running time may be worth little to improve, because another stage would take over as the limit; a stage that looks cheap may be worth a great deal once something else is relieved. Which algorithm is worth inventing therefore depends on the whole system, and we treated it as a system: in the spirit of systems biology, which studies a living system as a network of interacting parts through quantitative models fitted to measurement, and with the experimental method of Raj Jain's course on [computer systems performance analysis](<https://www.cs.wustl.edu/~jain/iucee/index.html>), which teaches how to design such interventions so that a few runs reveal how many factors combine.
+
+This post follows that work from its motivation to its result. It describes the decoder as a system of interacting stages and the levers by which such a system can be reorganised; then the experiment that measured the decoder's counterfactual limits, by replacing each stage's work in turn, and in combination, with answers recorded in advance; then what that experiment found, including a pair of stages whose value appears only together and a residue it could not remove; and finally how the results aim the mathematical search, through the principles the programme works with and four concrete algorithms, each with its forecast and the test that would reject it.
+
+**Takeaways**
+
+- Below the knee, where adding a worker still speeds the decode up, building the inversion's structures (construction) is the largest opportunity: supplying it saves 42% of a one-worker decode and 25% at six workers.
+- At eight workers the scanner and construction are complementary: supplying either alone saves 3–6%, supplying both saves 36% (195 → 125 ms). An improvement measured on its own can look worthless because the system cannot yet use it.
+- The experiment could not remove everything it meant to: the stand-in for emission still expanded every word into bytes, so the decoder's true floor is still to be measured.
+- New mathematics can make a part cheaper by doing less work (contraction) or by making existing work yield more (enrichment). Four concrete algorithms follow from the measurements; each comes with a forecast and a test that would reject it, and none is yet measured.
+
+## 1\. Where could another mathematical breakthrough matter?
+
+The programme behind this post set itself a large aim: not another few percent, but a decoder that undoes the block sort with fundamentally less work ([its statement](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/essence.md>)). The interval-exchange kernel showed that such things exist. It came from a change of viewpoint, from following one row at a time to moving whole stretches of rows that behave alike, and nothing in a profile of the old walk would have suggested it. A second invention of that kind will not be found by measuring either. But measurement can say where one would pay, and so where to look, and that is the purpose of everything in this post.
+
+The programme laid out the path as a chain of steps ([the programme](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/programme.md>)). The first fixes the ambition and its referee: what counts as a cheaper decoder, in which currency. The second characterises the system: how computation, concurrency and memory combine into elapsed time. The third is a counterfactual experiment: what would be gained if particular work became cheap. The fourth reads the results as mathematical targets: which representations, dependencies or repeated computations are expensive enough to be worth replacing. The last is invention itself: finding a computation that captures a measured opportunity and can actually be built. The first two steps are the subject of [Posing the inversion problem](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-24-posing-the-inversion-problem/index.md>) and [The decoder as a queueing network](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>); this post is about the third and fourth, and the beginning of the fifth.
+
+Three questions about a decoder's speed are easily confused, and each needs a different experiment.
+
+| Question | What answers it | What it tells you |
+| --- | --- | --- |
+| Where does the time go? | profiling, activity timings | how much work there is, and where |
+| What limits the decode now? | scaling runs, and slowing one activity at a time | which constraints bind in the present configuration |
+| What would be worth making cheaper? | making parts free, alone and together | the room an improvement could have, including room hidden behind another bottleneck |
+
+The second and third differ because the decoder overlaps its work, so slowing a stage and speeding it up are not mirror images. If the scanner and the workers could each get through a file in about 185 ms, slowing either would slow the whole decode, yet speeding either would leave the other still taking 185 ms. The [earlier experiments](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-25-the-decoder-as-a-queueing-network/#11-testing-the-explanation-by-intervention>) answered the second question. Choosing what to invent needs the third.
+
+## 2\. From an algorithm to a dynamical system
+
+The decoder's work divides into six parts, each named by a letter ([the parts](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/parts.md>)).
+
+The decoder's six parts
+
+Schematic. Each letter is one part of the experiment in §3; the dashed line is the admission credit that the in-order reader returns to the scanner.
+
+The scanner (S) reads each block's coding tables and decodes its [Huffman symbols](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-05-huffman-bit-buffer/index.md>) on a thread of its own. A worker then takes the block through four stages. The move-to-front and second run-length stages (M) turn the symbols back into the block's last column. Construction (C) builds the structures for undoing the block sort: the retained rows, the interval-exchange reductions between them, the words those reductions spell and the links that join them. Emission (E) follows those structures and expands the words into bytes, and the final run-length expansion and checksum (R) finish the block. The reader (D) delivers finished blocks to the caller in order, and as it takes each one it returns an admission slot that lets the scanner start another, so the pipeline regulates itself through a feedback loop.
+
+Described this way, the decoder is a *hybrid dynamical system*: between events, each thread makes progress at a rate set by its work and by contention for the shared caches and memory; at events, blocks are admitted, taken by a worker, finished and handed over, and each event changes which threads can proceed. The description earns its keep because it lists exactly what a redesign can change. Every proposal, whether a faster loop or a new piece of mathematics, alters one or more of the system's ingredients, and naming which tells you what risks come with it ([the levers](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md>)).
+
+| What can change | Example in mibz2 | What to watch |
+| --- | --- | --- |
+| **Flow rates:** how fast each activity runs | a faster Huffman decode; a cheaper induction | speeding one rate moves the bottleneck elsewhere |
+| **Where work may proceed,** and where a thread must wait | the admission window; the in-order reader | thin, open conditions are fragile under perturbation |
+| **When events may happen** | when a worker may take a block; when the scanner may admit one | the admission guard is an exact test, and widening it breaks the window |
+| **What an event does** | which worker takes a block; how a block is routed | a choice within the rules is a policy, judged by a guarantee, not by one trace |
+| **Who owns the information** | the buffers between scanner, workers and reader | every allocation needs an owner, and the earliest unfinished block must still get resources |
+| **The state space itself** | interval-exchange induction in place of the row walk | a new representation must be compared with the old one by the same yardstick |
+
+The last row is the one this post cares most about. The first five reorganise an existing computation: they make it faster, move it, or schedule it differently. The last changes what the computation consists of. The interval-exchange kernel was such a change, and the search this post serves is for another. The experiment described next works mostly through the first lever, by pushing chosen demands to zero, but its results can motivate a change to any of them, and the proposals in §8 pull several at once.
+
+The queueing view of the same system gives the vocabulary for its limits. The scanner is a single server; the workers form a pool; the decode's throughput is bounded by whichever saturates first. From one to four workers that bound predicted the *knee*, the worker count past which adding workers stops helping, at 7.49 workers; the measured knee was 7.67 ([the bottleneck law](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-25-the-decoder-as-a-queueing-network/#5-the-bottleneck-law>)). Eight workers, just past it, is now mibz2's default on the test machine. Below the knee the workers set the pace; above it the scanner does.
+
+## 3\. Measuring a counterfactual
+
+Profiling measures what the decoder does. To learn what it *would* do if some part became cheap, the part has to be made cheap. For each of the six parts we built an *oracle*: a stand-in that hands the decoder that part's correct output, recorded in an earlier run, so that the part's own computation is skipped while everything downstream proceeds as usual. Each part then has two settings. *Real* runs the ordinary computation; *ideal* replaces it with the oracle. When a later stage is made ideal the earlier ones still run, so that the effect of each part can be attributed to it alone.
+
+**An oracle is not free.** Copying a recorded answer into the decoder still takes time and memory bandwidth. The experiment timed each oracle's handover in its own ledger entry, so its cost could be read beside the result, and §6 returns to what that cost hid.
+
+Six parts with two settings each give \\(2^6 = 64\\) configurations. Making each part ideal on its own would have answered only half the question. The central issue is whether parts *interact*: whether construction becomes more worth improving once the scanner has been improved. An interaction is a property of combinations, and the method for measuring it is the *factorial design*, the core of Jain's experimental method and the subject of the [companion notes' tenth section](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-25-the-decoder-as-a-queueing-network-notes/#10-experimental-design-and-the-ideal-parts-matrix>). Running all 64 at each of four worker counts would have taken nearly half as long again as the design used, and a well-chosen half answers almost everything the whole would.
+
+The half is chosen by a rule called the *defining relation*, here \\(I = +SECMRD\\). Code each part as \\(-1\\) when real and \\(+1\\) when ideal; the rule keeps the configurations in which the product of all six codes is \\(+1\\), which are exactly those with an even number of parts ideal: none, two, four or all six. That gives 32 configurations, and they have a useful property. Any two parts' effects, and any two pairs' interactions, can be separated, because in the kept half no main effect or two-part interaction is confounded with another. What is confounded is less likely to matter. Each main effect shares its estimate with a five-part interaction, each two-part interaction with a four-part one, and the three-part interactions are confounded with one another in pairs: the interaction of the scanner, emission and construction cannot be told apart from that of the other three parts. A design with this property is said to have *resolution VI*.
+
+How the 64 configurations were sampled
+
+Design, not data: the experiment's registration, clarification 8. Each square is one configuration of real and ideal parts; hover for which. The half fraction keeps the even rows; the added rows are the configurations with one part ideal or one part real; the three-ideal row was not run. The fraction separates every main effect and every two-part interaction from one another; three-part interactions stay confounded in pairs.
+
+The half fraction has a gap that matters for the question at hand. It contains no configuration with exactly one part ideal, so it can estimate each part's average effect across many settings of the others, but it never directly measures the simplest counterfactual: today's decoder with one part made free. Those two quantities are different, and §4 shows how different. So, before any data was taken, the twelve configurations with one part ideal or one part real were added, making 44 at each worker count ([the registration, clarification 8](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md>)). The fraction estimates the effects and interactions; the added arms give each part's *room*, the decode time with that part alone ideal divided by the time with every part real.
+
+The worker counts were chosen to straddle the knee: one worker, which exposes nearly all of the workers' computation; six, below it; eight, at the balance point; and ten, above it. Every configuration ran the same binary, in randomised order within twelve blocks of rounds, with the scanner pinned to one core and a 100 ms spin on every core before each decode to keep the processor's clock from dropping ([the design](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/design.md>)). Every configuration also held every oracle's recorded answers in memory, the all-real baseline included, so that all of them ran with the same 495 MiB of extra data resident. The run took 2,492 decodes over four and a quarter hours. Every output was byte-identical to the shipped decoder's, the scanner's pin held in all 352 traced decodes, and the computations an oracle was meant to remove kept at most 0.19% of their usual busy time ([the results](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md>)). The findings belong to that setting: an Intel i9-10900K, a repeated Wikidata workload, and those stores, which mean that even the all-real configuration ran in a different memory environment from an ordinary decode.
+
+The registered rule labelled each part's room before the data arrived ([the rule](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md>)). A part has ROOM at a worker count if the upper end of its 95% interval is at or below 0.95, so that making it free saves at least 5% with confidence; NO ROOM if its whole interval lies within 2% of no change; and UNRESOLVED otherwise. Each room is a geometric mean of paired ratios over the twelve blocks.
+
+## 4\. A map of the remaining opportunity
+
+The whole of the experiment's first result fits in one table: each part made ideal alone, at each worker count, as the percentage by which it shortens the decode.
+
+Elapsed-time reduction when each part alone is made ideal
+
+Measured: the full matrix, scanner pinned; each cell is one minus the room, with its 95% interval beneath and the registered label where it is ROOM or NO ROOM (unmarked cells are UNRESOLVED). Positive values are faster. ¹ Emission's oracle removes the walk through construction's structures, not the expansion of words into bytes (§6), so its row understates emission's room.
+
+Several things are plain at once. Construction's opportunity is large below the knee and shrinks as workers are added: 42.1% of a one-worker decode, 24.6% at six, but only 5.6% at eight. The scanner's moves the other way, from nothing at one worker to 8.1% at ten, the only ROOM label above the knee. Emission holds a substantial opportunity below the knee, 16.5% and 14.9%, and the table understates it, for the reason §6 explains. The move-to-front and second run-length stages are smaller but real, 7.5% at one worker and 8.4% at six, and they sit directly upstream of construction. The final run-length expansion and delivery show little room of their own. The last stages are not where the next large gain will come from.
+
+The same matrix can be read a second way, and the two readings are easily confused. The factorial analysis of the 32 fraction configurations divides the variation in the logarithm of the decode time among the parts and their interactions, and on that reading construction "explains" 80% at one worker ([the report](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/report.txt>)). That is 80% of the variation across the experiment's configurations, not 80% of the running time. The activity timings put construction at 578 ms of a 1,283 ms one-worker decode, about 45% ([stage 1's report](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>)). The distinction matters most above the knee. At eight workers the scanner accounts for 46% of the variation, yet supplying it alone saves only 3.2%: in most of the fraction's configurations several workers' parts are already ideal, the workers have become cheap, and the scanner is exposed. Variation measures a part's average importance across many hypothetical decoders; room measures its value in today's.
+
+**UNRESOLVED is not "no effect".** Construction at eight workers saves 5.6%, with an interval of 4.4–6.9%. It misses the ROOM label only because the rule asked for a whole interval beyond 5%; it is a real, modest saving.
+
+What the table cannot show is how the parts depend on one another. At eight workers every part's room is small, and a reader of this table alone would conclude that the decoder has little left to give there. Two-part interactions carry about a fifth of the variation from six to ten workers, and one of them changes that conclusion entirely.
+
+## 5\. Complementary bottlenecks
+
+The interaction that dominates the experiment is between the scanner and construction. Its four configurations, as times rather than ratios:
+
+| Workers | All real (ms) | Construction supplied (ms) | Scanner supplied (ms) | Both supplied (ms) |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 1,306 | 756 | 1,319 | 751 |
+| 6 | 243 | 183 | 237 | 143 |
+| 8 | 195 | 184 | 189 | 125 |
+| 10 | 196 | 186 | 180 | 149 |
+
+At eight workers, supplying the scanner saves 6 ms and supplying construction saves 11 ms. Supplying both saves 70 ms, taking the decode from 195 ms to 125 ms: 1.56 times the throughput. The two parts are *complementary bottlenecks*: each holds the decode back as soon as the other is relieved, so neither shows its value alone. On the logarithmic scale used by the registered analysis, their interaction is \\(-0.110\\) at six workers, with an interval of \\(\[-0.112, -0.108\]\\), and \\(-0.071\\) at eight, carrying 16.9% and 13.1% of the variation; at one worker it is \\(-0.002\\), indistinguishable from nothing.
+
+The scanner and construction, alone and together
+
+Measured: each point is the decode time over the all-real time at the same worker count, on one shared logarithmic scale; hover for milliseconds. On a log scale, parallel lines mean the two parts' effects multiply independently, which is the registered analysis's sense of "no interaction". At one worker the lines are parallel; at six and eight they diverge, so each part matters far more once the other is supplied.
+
+The interaction changes what a discovery is worth. Suppose a mathematical idea made construction free. Measured in today's decoder at eight workers, it would save 5.6%, a result easily filed as disappointing. Measured in a decoder whose scanner had been relieved, the same idea would save 33.9% of the time that remained. The idea is the same in both cases; the system around it is not.
+
+How much of the decode construction can remove
+
+Measured: the share of the decode removed by supplying construction, with the ordinary scanner and with the scanner supplied. Each percentage is relative to its own starting configuration, so the walls are given beside it: at eight workers, 195 → 184 ms against 189 → 125 ms.
+
+**A disappointing whole-decoder benchmark is therefore not evidence that an algorithmic improvement lacks value.** It may be evidence that the system cannot yet exploit it. The converse is a research direction in its own right: mathematical ideas that produced excellent local results and little whole-decoder gain may deserve another look once the scanner has been restructured. Nor is the scanner–construction pair the only route. Supplying the scanner together with emission's oracle saves about 16% at eight workers with construction still real, and a change of representation could relieve several parts at once ([the results, §5](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md>)). What the experiment establishes is that at eight workers relieving the scanner and construction together exposes a far larger opportunity than either alone; it does not establish that no other combination could.
+
+A simple model makes the pattern intuitive. Suppose the scanner must do \\(S\\) milliseconds of work on a file, and the workers \\(W\\) milliseconds between them, shared among \\(k\\) workers. If the two stages overlap perfectly, the elapsed time is set by whichever is slower:
+
+\\\[ T \\approx \\max\\left(S,\\ \\frac{W}{k}\\right). \\\]
+
+If a change removes a fraction \\(a\\) of the scanner's work and \\(b\\) of the workers', the time becomes \\(\\max\\big(S(1-a),\\ W(1-b)/k\\big)\\). When the two are balanced, as they nearly are at eight workers, the reduction is simply the smaller of \\(a\\) and \\(b\\): removing scanner work alone gains nothing until the workers' share is removed too, and the other way round.
+
+Complementary bottlenecks in a two-station model
+
+Illustrative two-station model, not a fitted prediction of mibz2, with the scanner and the workers balanced at 185 ms. The shading is the model's reduction in elapsed time; its contours are L-shaped, so only the diagonal gains. The four points are the measured eight-worker configurations, with construction placed at 45% of the workers' work, its share in the activity timings.
+
+The model reproduces the shape of the measurement: the single changes gain almost nothing and the pair gains a great deal. It overstates the pair, predicting a 45% saving where 36% was measured, and that gap is informative. The model treats the scanner and the workers as independent stations, but they share the processor's caches and memory bandwidth, so reducing the workers' computation also changes how fast the scanner runs. The same coupling explains a result the model cannot: with the scanner and construction both supplied, going from eight workers to ten *slows* the decode, from 125 ms to 149 ms. A revised model in the design analysis adds memory as a third station beside the scanner and the workers, estimating that active workers slow the pinned scanner by about 6% through contention and that memory binds once the parts are made fast ([the design analysis, §§1 and 6](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)). It remains a hypothesis: this experiment cannot separate the decoder's own contention from the traffic of the oracles' stores.
+
+## 6\. What the experiment could not remove
+
+The configuration with every part ideal should reveal what remains of the decoder when all of its work has been supplied: its floor. It took 391 ms at one worker, 94 ms at six, 112 ms at eight and 142 ms at ten ([the results, §4](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md>)). Those are not floors, for two reasons, and the first concerns emission.
+
+Emission does two kinds of work. It decides which word comes next, by following the structure that construction built, and it expands each word into bytes. Its oracle supplies the words in output order, which removes the first kind of work but not the second. The decoder's activity ledger, however, charged the delivery of the supplied words and the expansion that remained to a single entry, and the experiment's first write-up read that entry as the oracle's copying cost. The design analysis, a second pass over the results, found the mistake by reading the oracle's code and divided the entry using earlier measurements of the same workload ([the design analysis, §3.1](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)); an independent review then verified the division and drew its consequences ([the review, §4](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/reviews/2026-11-26-chatgpt.md>)).
+
+| Inside emission's oracle entry, at one worker | Time (ms) |
+| --- | ---: |
+| delivering the supplied words | 25.8 |
+| expanding the words into bytes | 259.4 |
+| together | 285.2 |
+
+About nine tenths of the entry is real decoding work. So emission's 16.5% is not a ceiling on what improving emission could save, and the configuration with every part nominally ideal still did most of emission's work.
+
+The second reason is the oracles' own cost. At one worker the workers' handovers, emission's word expansion included, account for 377 ms of the all-ideal configuration's 391 ms. At eight and ten workers, many threads copy large recorded buffers at once, and the all-ideal wall *rises* from 112 ms to 142 ms while each thread's handover barely changes, which is what contention for memory bandwidth would produce. Neither effect is the decoder's.
+
+A short follow-up run is designed to separate the pieces ([the floor run](<https://github.com/lmmx/mibz2/pull/917>)). Its oracles hand over their answers without copying, and it runs two floors: one in which the words are still expanded, and one in which the expansion is removed as well, leaving only the cost of the pipeline itself: its queues, locks and thread hand-offs. The design analysis estimates that second residue by arithmetic at about 14 ms at one worker and roughly 12 to 19 ms at six to ten workers, 14–17 ms at eight ([the design analysis, §3.1](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)). That is a forecast for the run to test, not a measurement, and it is not a decompression time: a real decoder must still compute the answers the oracles supply. The run's purpose is narrow, to keep experimental copying and leftover emission work from being mistaken for a limit of the decoder, and it leaves the scanner–construction result untouched.
+
+## 7\. From measured opportunity to mathematical invention
+
+The experiment says where time could be saved. It does not say how. A part can be made cheaper by doing its present computation faster, and that is engineering; or by finding a different computation with the same result, and that is where mathematics enters. The programme works with two principles for finding such computations, and a third idea that constrains them both ([the programme's statement](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/essence.md>); [What else moves together](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-24-what-else-moves-together/index.md>)).
+
+### Contraction: changing the unit of computation
+
+The interval-exchange kernel rests on one observation. When the decoder undoes the block sort, each row of the sorted table maps to another by a rule called LF, and adjacent rows holding the same byte map to adjacent rows. So a run of equal bytes can be moved as one interval rather than row by row, and an induction that repeatedly composes these interval moves, and recurses on what is left, rebuilds the text from far fewer steps than there are rows.
+
+Contraction: one step for a run instead of one for each row
+
+Schematic, not measured counts: a ten-row last column, L = bbaaacaabb, with LF computed exactly. On the left each row has its own step; on the right each run of equal bytes maps to a contiguous interval of the sorted column in one step. The vertical bars mark the run boundaries, the rows the kernel keeps.
+
+This is *contraction along composition*: recognise that several computations are the same, perform it once, and repeat on what remains. Its two ingredients are a notion of "these move together", here adjacency with an equal byte, and a rule for composing what moves together. The question for further invention is whether a different notion exists: rows that move together up to a consistent relabelling, a repeated stretch of the *text* rather than of the rows, a recurrence among the induction's own steps, or, in the programme's broadest phrasing, transformations that are secretly the same computation expressed in different coordinates.
+
+### Closure, and the scope of the negative results
+
+Any contraction must survive its own success. After two computations are composed, the result must still be cheap to use: the description of what to read, the lookup of each row's successor and the words to be written must all stay compact. That property is *closure*, and without it the work has merely been deferred.
+
+Two negative results bound the search, and both are narrower than they first appear. The first, the floor called G1, says that rows with no neighbour holding the same byte have nothing to move together with in the sense above; but it is a floor on operations charged in a calculus of rigid interval moves, not a proved lower bound on the decoder's memory reads, and the bridge between the two is unproved ([Posing the inversion problem, §2](<https://lmmx.github.io/mibz2/pr-preview/pr-927/blog/2026-11-24-posing-the-inversion-problem/#2-steps-1-and-2-the-referee-and-the-toy-problem>)). The second answers the closure problem negatively within one class: a conservation law shows that composing the retained-row map keeps the form of its access schedule but not its compactness on high-entropy rows, which explains why one round of composition left the access pattern 21 to 24 times more fragmented ([the journal, §§42 and 48](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level.md>)). Neither result rules out a different representation. They rule out squeezing harder on the same notion of moving together, and that is why the search looks outside the existing family.
+
+### Enrichment: making existing work yield more
+
+The second principle came from automatic differentiation. A program that computes a function can be run over a richer algebra, the *dual numbers*, in which every value carries its derivative alongside it, and multiplication follows the product rule:
+
+\\\[ (a, a')\\,(b, b') = (ab,\\ a'b + ab'). \\\]
+
+The ordinary computation proceeds unchanged, and the extra information comes out with it at small cost. In an earlier project of the maintainer's, exact gradients obtained this way made the optimiser of a library that flattens photographed pages about eleven times faster on single images ([page-dewarp](<https://github.com/lmmx/page-dewarp>)), not by doing the same work faster but by making a better algorithm possible. *Enrichment along composition* asks the same of the decoder: what extra quantity could ride along an existing step at little cost, and would it make a later stage cheap or unnecessary? A sharper form of the question is which later operation is necessary only because an earlier stage failed to keep, or cannot cheaply use, information it already met.
+
+There are four natural sites. The Huffman decode sees every symbol of a block before anything else does; the move-to-front stage reconstructs every byte of the last column; the induction composes the interval moves; construction builds the retained graph that emission walks. Each could carry a rider. The test that separates a real rider from a restatement is strict: it must be cheaply acquired, and it must not simply be the answer in disguise. Carrying each row's position in the text, for example, fails, because that position is what the decode computes.
+
+Some limits are already known. The final LF targets cannot be computed before a block's last byte is seen: changing that byte shifts the targets of between 15% and 50% of the rows on every Wikidata block tested, so no part of the induction or the wiring can move ahead of the block's end into the scanner ([the design analysis, §4](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)). That is a limit on acquiring the final answer early. It is not an impossibility result for a summary gathered during the scan and finished cheaply once the block ends.
+
+### The cost of a candidate, in four currencies
+
+A candidate is judged by real machine cost, counted in four currencies with the cost of building every structure included ([the formulation](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md>)):
+
+- \\(Q\\), the unpredictable memory reads, the addressed reads whose location depends on data;
+- \\(D\\), the depth of dependent access, the longest chain of reads that must wait on one another;
+- \\(P\\), the passes over the data, at most two;
+- \\(S\\), the working state held at once.
+
+The currencies keep a candidate honest. An idea that removes reads by adding a pass, or shortens a chain by holding far more state, has moved its cost rather than removed it, and only the accounting across all four shows which. A large reduction in \\(D\\) is a real result; the programme's stated breakthrough is a reduction in \\(Q\\), fewer than one unpredictable read per row with no same-byte neighbour. The rules referee candidates once they exist. They do not generate them.
+
+### Four kinds of number
+
+The work uses numbers of four different kinds, and they must not be read as competing estimates of one quantity.
+
+| Kind | What it establishes | Example |
+| --- | --- | --- |
+| **Lower bound** | under stated assumptions, a computation cannot cost less | any order of the induction's steps takes at least 1.220 steps for each run of the original column |
+| **Oracle measurement** | an observed counterfactual, with particular work supplied | 125 ms at eight workers with the scanner and construction supplied |
+| **Predictor** | an estimate of what a concrete proposed design would cost | 130–145 ms for a pooled scan with cheaper construction; 14–17 ms for the floor run's residue |
+| **Upper bound** | under stated assumptions, completion takes no longer | none proved yet for this decoder |
+
+Lower bounds prune the space of designs, oracle measurements say where the opportunity is, predictors rank the candidates that might capture it, and upper bounds, when they exist, guarantee a result.
+
+Numbers about one decode at eight workers, by kind
+
+The same axis, different kinds of object. The lower bound is the design analysis's arithmetic for writing the output once at an assumed 40 GB/s of memory bandwidth; the oracle points are measured; the bars are forecasts, untested. The induction's 1.220 is a bound on steps, not milliseconds, so it has no place on this axis. No upper bound has been proved.
+
+## 8\. Four possible algorithms
+
+The design analysis turned the measurements into four concrete proposals, each named by its mechanism and each written with the smallest measurement that would reject it ([the design analysis, §5](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>); [the review, §6](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/reviews/2026-11-26-chatgpt.md>)). None has been built or measured, and every saving below is a forecast. They differ in which part of the decoder they touch, and the experiment's lesson is that what they touch decides what they can be worth.
+
+What each proposal touches, at one worker
+
+Measured bar: one worker's busy time at one worker, by activity, from stage 1 of the characterisation (its wall, 1,283 ms, differs slightly from the matrix's 1,306 ms). Brackets: the activities each proposal changes, with the design analysis's forecasts. The pooled scan changes the scanner's thread, which this bar does not include.
+
+### A. The induction schedule
+
+The induction is the part of construction most open to mathematics, and its cost has an exact count. For every order in which its steps can be taken,
+
+\\\[ \\text{steps} = r\_2 - 1 + U, \\\]
+
+where \\(r\_2\\) counts the distinct pairs of adjacent run letters, so that \\(r\_2 - 1\\) is a floor no order can beat, and \\(U\\) counts the extra boundaries that a particular order creates along the way ([the induction record, §5.6](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/monodromy/2026-11-10-rauzy-veech.md>)). On all 233 Wikidata blocks, the historical order, which always takes the step at the right end, needs 1.812 steps for each run of the original column. An order that takes first the steps that create no new boundary, and otherwise the largest cell, needs 1.279, and the floor is 1.220. These counts were taken on the earlier full exchange over all run letters, not on the object the present kernel builds.
+
+The better order cuts the steps by \\(1 - 1.279/1.812 \\approx 29.4\\%\\). If the whole of the induction sub-phase, 216 ms at one worker, scaled with the step count, that would save \\(216 \\times 0.294 \\approx 63.5\\) ms, 4.9% of the 1,306 ms decode. It will not all scale: setup and the dictionary of words do not depend on the order. Writing \\(f\\) for the share of the sub-phase whose cost does scale with the number of steps, and \\(c\\) for the new order's own cost,
+
+\\\[ \\text{net saving} \\approx 216\\ \\text{ms} \\times f \\times 29.4\\% - c . \\\]
+
+The programme's gate for pursuing an idea is 3% of the decode, 39.2 ms at one worker.
+
+The economics of a cheaper induction schedule
+
+Arithmetic on measured inputs: the 29.4% step cut from the induction record, the 216 ms sub-phase from stage 1 and the 1,306 ms wall. It assumes the historical cut transfers to the present kernel's object and that the reducible work scales in proportion to steps. The gate is crossed at 62%, 70% and 77% of the sub-phase for 0, 5 and 10 ms of scheduling overhead; at most 63.5 ms can be saved.
+
+So the schedule passes its gate only if at least about 62% of the sub-phase is step time that falls in proportion, before paying for the scheduling at all; with 5 ms of overhead the threshold is 70%. A short census measures that share on the object the decoder actually builds, and the idea stops if the share times the cut is under 3% ([the census](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/rauzy-census/README.md>)). A schedule with fewer steps can also lose the memory locality and the cheap sweep order of the present one, which the census's timings would show. This is the narrowest of the four proposals and its ceiling is modest, but the census that settles it is cheap.
+
+### B. The direct fold
+
+The move-to-front stage produces the block's runs capped at 127 bytes each, and construction's first pass immediately joins them back into maximal runs. Between the two sits an intermediate array, written in full and read back.
+
+The direct fold: removing an intermediate representation
+
+Design, not measured: today's three stages and the proposed two. The extra records and the traffic are the design analysis's counts on the Wikidata workload; the saving is its forecast.
+
+The fold removes the intermediate representation where the fast path allows it: the move-to-front loop emits each maximal run once, and construction accumulates it directly into the counts and queues its later phases need. Functional programmers call this [*deforestation*](<https://en.wikipedia.org/wiki/Deforestation_(computer_science)>), eliminating the intermediate data structure between two transformations. The capped runs add 3,990 to 5,284 records a block, 3.5–10.2% of the runs. Removing them saves one pass and about 360 MB of reads and writes over the workload, and 180 KB of state per worker. In the four currencies, \\(Q\\) and \\(D\\) are unchanged and \\(P\\) and \\(S\\) fall. The forecast is 110–145 ms at one worker, about 8.5–11% of the workers' time. The risk is branch misprediction in the move-to-front loop, and the rejection test is a ten-minute profile that splits construction's first pass: if pushing rows into the queues dominates it and the capping and rejoining take under 50 ms, the fold is dropped in favour of the wiring ([the design analysis, §5](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)).
+
+### C. Forward wiring with lanes
+
+Construction's last sub-phase wires the retained rows into a cycle, and emission walks that cycle to write the text. Today each link is stored as the XOR of its two neighbours, \\(\\text{link}(i) = \\text{prev}(i) \\oplus \\text{next}(i)\\), which saves memory and lets emission walk from one mark in both directions at once. But a step along an XOR link must know where it came from, so each walk is a chain of dependent reads, and wiring the links costs some 106 million scattered read-modify-writes on the Wikidata workload.
+
+The proposal stores the successor alone, \\(\\text{link}(i) = \\text{next}(i)\\), which can be written sequentially, and walks the cycle forward only, in several lanes at once. The cycle is cut at \\(K\\) anchors chosen uniformly at random; each lane walks one arc from its anchor to the next, and a lane that finishes takes the next unvisited anchor. The arcs come out in the wrong order, so a final pass stitches them together and performs the run-length expansion and checksum segment by segment.
+
+Two ends of one cycle, against forward lanes from many anchors
+
+Conceptual: one cycle of retained rows. Right, an illustrative draw of eight anchors walked by four lanes; the timeline shows each lane's arcs. With only twice as many anchors as lanes, one lane still finishes well after an even split, which is why the design takes four times as many. The expected longest arc is the order-statistics result quoted in the text.
+
+There is real mathematics in choosing \\(K\\). Uniformly placed anchors cut a cycle of length \\(m\\) into uneven arcs, and the walk is not finished until its longest arc is. In the continuous-spacing model the expected longest of \\(K\\) arcs is
+
+\\\[ \\mathbb{E}\[L\_{\\max}\] \\approx m\\,\\frac{H\_K}{K}, \\\]
+
+where \\(H\_K = 1 + \\tfrac12 + \\dots + \\tfrac1K\\) is the \\(K\\)-th harmonic number. With as many anchors as lanes, eight of each, the longest arc averages \\(0.340\\,m\\), nearly three times an even share, and the eight lanes behave like three. With four times as many anchors, \\(K = 32\\), it falls to \\(0.127\\,m\\), almost exactly the even share of \\(m/8\\). That is why the design takes many more anchors than lanes.
+
+The attraction is that one change relieves several costs. Construction's wiring becomes sequential; emission gains several independent chains of reads to overlap, which the design analysis estimates lifts the reads in flight from about two to between six and seven; the backward expansion of words disappears; and the final pass can consume the segments directly. The forecast is 280–340 ms at one worker, 21–26% of the workers' time, at the price of 1.0–1.5 MB of scratch per worker. In the four currencies, \\(D\\) falls by about a factor of three while \\(Q\\) is unchanged. The rejection test is a standalone harness on the 932 blocks of the workload that the kernel decodes: if the new path does not save at least 190 ms at one worker, it is dropped for a simpler prefetch on the present links ([the design analysis, §5](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)).
+
+This proposal crosses a stage boundary, and it illustrates the experiment's lesson in miniature: a different consumer allows a cheaper structure to be built. It also illustrates the currencies. A walk in several lanes can make the decoder much faster without reducing the number of unpredictable reads, and if it does, the research question about reads remains open. Both outcomes deserve to be recorded as what they are.
+
+### D. The pooled scan
+
+The scanner oracle deleted the Huffman work from the decode. A pooled scan would not delete it; it would change where it is done, which is a different lever and a different question. Today one thread decodes every block's Huffman codes in turn and hands the symbols to the workers through a queue. Pooled, a fast pass first finds where each block starts, by searching every bit alignment of the file for the 48-bit marker that bzip2 places at the head of each block, and each worker then scans its own block before rebuilding it.
+
+The pooled scan: the same work, redistributed
+
+Design, not measured. The pooled scan removes the serial station and the queue between it and the workers; the Huffman work itself remains, spread across the workers. A false marker inside compressed data is caught because each block must end exactly where the next begins.
+
+This is why the project is not simply looking for a faster Huffman routine: it is asking whether Huffman decoding needs to be a serial station at all. The two-station model of §5 shows why the answer interacts with construction. If a block costs \\(s\\) on the scanner and \\(w\\) on a worker, a serial scanner caps the throughput at \\(1/s\\) blocks per unit time however many workers there are, while \\(k\\) pooled workers, each doing both jobs, complete about \\(k/(s + w)\\). The knee puts \\(w\\) at about \\(7.5\\,s\\), so at eight or nine workers, where the two stations are nearly balanced, pooling alone gains little in this model. As construction gets cheaper, though, \\(w\\) shrinks and the pooled rate rises, while the serial cap does not move. The pooled scan and cheaper construction are the complementary pair of §5, made into designs.
+
+The design analysis estimates the marker search at 1–2 ms on the 47 MB file, with a false match probability around one in a million per file, and the removal of a symbols queue carrying about 400 MB of traffic. It forecasts 172–175 ms at eight or nine pooled workers on its own, 10–12% below today's 195 ms, and 130–145 ms combined with cheaper construction. The measured 125 ms with both parts supplied makes that a sensible scale to aim at, though it does not validate the forecast. The rejection tests are a five-minute timing of the marker search, which fails above 10 ms, and a minimal prototype, which fails unless it beats 195 ms by at least 7% at eight or nine workers within a bounded memory budget. The cheaper route of enriching the serial scanner with construction's work is closed: it would slow the station already on the critical path, as a fused scanner tried earlier did, and the final LF targets cannot be known before a block ends ([the design analysis, §§4–5](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>)).
+
+### The four, side by side
+
+| Proposal | Changes | Forecast saving | Extra cost | Rejected if |
+| --- | --- | --- | --- | --- |
+| **A. Induction schedule** | the order of the induction's steps | at most 63.5 ms at one worker; gate 39.2 ms | the schedule's own bookkeeping | step share × cut \< 3% of the decode |
+| **B. Direct fold** | MTF and construction's first pass | 110–145 ms at one worker | branch mispredictions in the MTF loop | queue pushes dominate the first pass, and capping and rejoining take \< 50 ms |
+| **C. Forward wiring with lanes** | wiring, emission, final expansion | 280–340 ms at one worker | 1.0–1.5 MB scratch a worker; stitching the arcs | saves \< 190 ms at one worker |
+| **D. Pooled scan** | where the Huffman scan runs | 172–175 ms at eight workers; 130–145 ms with cheaper construction | the marker search; a compressed look-ahead window | marker search \> 10 ms, or \< 7% faster than 195 ms |
+
+All four are forecasts by one analysis, with different degrees of support behind them, and the one-worker figures say nothing directly about eight workers, where the scanner limits. What the experiment adds is a way to read them together: B and C reduce the workers' demand and so lower the knee, D removes the serial limit above it, and the largest prize lies in combining a worker-side reduction with the pooled scan.
+
+## 9\. From characterisation to construction
+
+The experiment set out to say where another mathematical invention would pay, and it has. Below the knee, construction and emission hold most of the opportunity, with the move-to-front stages a real third. Above it, the scanner does, and at eight workers the scanner and construction form a complementary pair whose joint value is many times what either shows alone. The last stages hold little. The decoder's true floor is still unknown, because the experiment's emission oracle left the word expansion in place.
+
+Each measurement that remains has a single decision to make, and then it stops ([the plan](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/plan.md>)).
+
+| Question | Why its answer changes a decision |
+| --- | --- |
+| What remains once the oracles' copying and the word expansion are removed? | whether the pipeline's own overhead deserves work, and what the decoder's floor really is |
+| How much of the induction sub-phase scales with the number of steps? | whether a better induction schedule can pass its gate |
+| Does a proposed design win across the whole path it touches? | whether to develop that implementation further |
+
+The first is the zero-copy floor run, nine configurations at one, six, seven, eight, nine and ten workers, a focused follow-up rather than a second matrix. The second is the induction census. The third is each design's own rejection test, and the designs for the pooled scan, the direct fold and forward wiring can begin now, alongside the two closing measurements.
+
+What the experiment makes possible is a different kind of search. Before it, a mathematical idea was judged by whether it made one part of the decoder faster, and an idea that did so without moving the whole decode looked like a failure. Now each candidate can be aimed at a measured opportunity, priced against the part it changes, and paired with whatever companion change lets that saving reach the output. The matrix was the means. The subject is how a scientific understanding of a computational system can direct the search for cheaper algorithms, and what that search should look for next: not only faster stages, but representations in which the stages' work is shared, avoided, or never needed at all.
+
+---
+
+**Sources:**
+
+- The motivation: [the programme's statement](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/essence.md>), [the programme](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/programme.md>), [the levers](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md>), [the formulation](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/reports/2026-11-24-from-search-to-formulated-problem.md>); Raj Jain, [*Computer Systems Performance Analysis*](<https://www.cs.wustl.edu/~jain/iucee/index.html>).
+- The experiment: [the parts](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/parts.md>), [the design](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/design.md>), [the registration](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/registration.md>), [the results](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md>) and [the report](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/report.txt>); journal §89.
+- Construction's sub-phases: [stage 1's report](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>).
+- The induction counts: [the induction record, §5.6](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/monodromy/2026-11-10-rauzy-veech.md>), and [the census](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/rauzy-census/README.md>).
+- The designs, the emission accounting and the forecasts: [the design analysis](<https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md>); journal §90.
+- The independent review of the experiment, [recorded in full](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/reviews/2026-11-26-chatgpt.md>), and its review of an earlier version of this post, [recorded in full](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/ideal-parts/reviews/2026-11-26-chatgpt-on-the-post.md>); journal §91.
+- [The plan](<https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/plan.md>), and [the floor run](<https://github.com/lmmx/mibz2/pull/917>).
