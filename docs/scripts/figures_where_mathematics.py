@@ -1,4 +1,4 @@
-"""Figures for "Where mathematics can make decompression faster" (blog, 26 November 2026).
+"""Figures for "Complementary bottlenecks: reading the ideal-parts matrix" (blog, 26 November 2026).
 
     python3 docs/scripts/figures_where_mathematics.py NAME     # print one figure's <svg>
     python3 docs/scripts/figures_where_mathematics.py --inject POST.md

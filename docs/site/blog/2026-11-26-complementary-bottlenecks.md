@@ -1,6 +1,6 @@
 ---
-title: "Where mathematics can make decompression faster"
-image: assets/social/blog-2026-11-26-where-mathematics-can-make-decompression-faster.png
+title: "Complementary bottlenecks: reading the ideal-parts matrix"
+image: assets/social/blog-2026-11-26-complementary-bottlenecks.png
 description: "Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together."
 ---
 
@@ -11,7 +11,7 @@ description: "Making the parts of mibz2's decoder free in turn and in combinatio
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Where mathematics can make decompression faster
+# Complementary bottlenecks: reading the ideal-parts matrix
 
 Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together.
 {: .post-dek }

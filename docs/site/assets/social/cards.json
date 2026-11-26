@@ -307,12 +307,12 @@
     "section": " · Research blog",
     "title": "The decoder as a queueing network"
   },
-  "assets/social/blog-2026-11-26-where-mathematics-can-make-decompression-faster.png": {
+  "assets/social/blog-2026-11-26-complementary-bottlenecks.png": {
     "description": "Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together.",
     "foot": "lmmx.github.io/mibz2 · 26 November 2026",
     "kind": "synthesis",
     "section": " · Research blog",
-    "title": "Where mathematics can make decompression faster"
+    "title": "Complementary bottlenecks: reading the ideal-parts matrix"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
