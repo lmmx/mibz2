@@ -150,3 +150,70 @@ A pooled scan that serialises shows K2's slowdown; these two figures say why.
 - **Production adoption:** a separate adoption registration, after CONTINUE. It carries the brief's rule (FASTER at 10, not SLOWER at 1, 6, 8, 12, 16 and 20, text not SLOWER, peak RSS ≤ 1.10), with the gate set from data.
 - **The fusion of scan, MTF/RLE2 and construction's first pass** in the worker's L1/L2 (IDEAL-PARTS-2 §4.2). It is unlocked by this design, but it is thread 4's.
 - **Construction's A6b and A6c:** downstream of the block's end, so untouched by any scan (T5.1). They are threads 2 and 4.
+
+## 7. Clarifications, registered before any data (26 November, with the kill test's recipe)
+
+The prototype is built (`prototype.md`, #932) and accepted as the prototype, departures 1–3 included. The Coordinator asked for three clarifications before any data (12:17Z). The recipe, `bench-pooled-scan`, adds what makes them checkable. None of this relaxes §4: K1 to K4 and every VOID stand as frozen.
+
+**1. The pooled arms are exempt from the block-indexed identities.**
+- **The cause:** a pooled block is read and decoded by its worker before the chain gives it a place. The pooled path records a block's points only from ready on: the shipped insert and the shipped reader. It records nothing of the points the shipped scanner and its queue make (admitted, issued, enqueued, taken by a worker, routed). The harness counts blocks by their issue, so in a pooled trace it counts none.
+- **So these identities are exempt** in the pooled arms (`P`, `PC`) at 2 workers or more: flow, linear order, forced flow, conservation, admission, Little's law and utilisation.
+  - A P trace at 4 workers in the build container fails flow, forced flow, conservation, Little's law and utilisation.
+  - Linear order and admission pass there only because there are no blocks to check.
+  - At 1 worker, P is the shipped path, so every identity applies.
+- **What still applies, to every trace:**
+  - **the thread counts;**
+  - **the timelines:** each thread's life is partitioned exactly into its activities and waits, balanced and in order.
+- **The chain thread's own activities and waits:** for the timelines to say what the pooled threads do, the pooled path records these under their own names:
+  - `pool_find`, the finder;
+  - `pool_copy`, a candidate's bytes copied;
+  - `pool_wait`, the chain waiting for a worker's read;
+  - with `job_wait` (a worker waiting for work) and `slot_wait` (the chain waiting for room) as the shipped path records them.
+
+  These are appended to the ledger's activities (29 to 31, so the residual moves to 32). Each trace now carries the activities' names, as the floor branch's harness does, so an analysis reads a ledger by name.
+- **A failed identity:** a trace that fails an identity applying to it makes the run **INCOMPLETE**, as the floor run treats it. Its traces' figures (reported only) are withheld. The verdict, which comes from the timed walls, stands.
+- **The VOIDs:** every VOID of §4 applies to every arm.
+
+**2. K4 is measured directly, not bounded.**
+- **The pass:** `examples/pooled_scan.rs --finder` holds all of wikidata ×4 (47,419,732 bytes) in memory and runs the finder alone:
+  - on one thread, pinned (`taskset`) to the first CPU of the core whose calibration ran fastest;
+  - one untimed pass, then the standard 100 ms pre-spin;
+  - then 11 timed passes, each over the whole input.
+- **The figures:** the median, and the interval between the 2nd and 10th order statistics (at least 95% coverage for the median: 98.8%). Every pass is recorded in order.
+- **K4 kills if the median exceeds 10 ms.**
+- **The pass is VOID** if it is missing, does not have 11 passes, did not run on its CPU, or did not find every block magic the decodes count.
+- **The finder in the decode:** the chain calls the same finder piece by piece as the input arrives. Its time there is reported from the ledger (`pool_find`), beside K4.
+
+**3. Departure 2's copy is reported.**
+- **What is reported:** the chain thread's copy of the candidates' bytes (`pool_copy`, from its ledger in P's traces at each count), beside the estimate made before the data: about 5 ms (`prototype.md`).
+- **Beside it:**
+  - the bytes copied;
+  - the symbol bytes that the shipped scanner queues to the workers (none's traces), which P does not queue.
+- **Its status:** reported only.
+
+**4. The judged counts are 8 and 9.**
+- **The reading:** §5's reading of the floor run is that Residual A doesn't rise from 8 to 10 workers.
+- **The rule:** KILL if K1 or K2 holds at 8 or at 9, so both counts must pass. K3 stays as registered, at any count from 6 to 10.
+- **Reported only:** 6, 7 and 10.
+- **At 1 worker:** none and P only, the shipped path's check. There P is the shipped scanner, so the other four arms would add nothing.
+
+**5. §5's other readings.**
+- **The capture is not uncapped:** Residual B is 5.2 ms at 8 workers, 2.7% of the shipped wall, under 10%. So the capture behind C is reported capped at 1, with the raw figure beside it where it is over.
+- **This run doesn't wait:** the floor run's oracles are valid. FCMRD was 179.1 ms at 8, against 194.6 shipped.
+
+**6. The design under test must be the one timed (a VOID).**
+- **Why it can be checked:** on wikidata ×4 every magic is real and every stream is at level 9. So a pooled decode at 2 workers or more takes every block from a worker's read.
+- **The VOID:** the run is VOID if any P or PC decode at 2 workers or more has a fallback, a degrade or a dropped candidate, or if P at 1 worker, or any unpooled arm, dispatches anything. Otherwise those walls would be the shipped path's walls labelled as the pooled scan's.
+- **A bound undefined (a VOID):** K1's or K2's bound is undefined at a judged count, as with fewer than 2 blocks. An undefined bound compares false, so the kill would pass silently; it is a VOID instead. (The DRY, with one block, showed this.)
+
+**7. Exactness on the machine (a VOID).**
+- **Before the decodes,** the recipe runs `tests/pooled_scan.rs` and the finder's unit tests on the i9. The run is VOID if they fail.
+- **Miri** is not rerun there: it passed on the finder's scalar path in the build container (`prototype.md`).
+
+**8. The rest of the run, fixed here.**
+- **The design:** 12 randomised blocks, traces in the first 3, seed 20261127. Unpinned, with the 100 ms pre-spin and a 120 s limit on each decode.
+- **The code:**
+  - the planner, `bench/pooled_scan.py`, which uses `bench/ideal_parts.py`'s driver unchanged;
+  - the analysis, `analysis/pooled_scan.py`;
+  - its checks, `analysis/test_pooled_scan.py`, on synthetic runs: a CONTINUE, each of K1 to K4 alone, each VOID, and the identities' exemption both honoured and violated.
+- **The time:** about 25 to 35 minutes.
