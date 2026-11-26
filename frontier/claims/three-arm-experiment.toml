@@ -1,0 +1,25 @@
+id = "three-arm-experiment"
+title = "Test the flat mode against the old one and a restarted solo agent"
+kind = "decision"
+zone = "striated"
+needs = ["cloud-session", "i9"]
+priority = 5
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = "spending: about 20M tokens plus three i9 runs (RULES D)"
+question = """
+The rhizomatic cross-reading's §3.4: three arms at matched token spend (the orchestrated workflow, a fresh-context restarted solo agent, and the flat frontier) on real worker-side work. Frozen adoption rules. A single run per arm is a pilot, not a verdict (Paradigm 3 saw large variance).
+"""
+why = """
+It decides whether this mode stays, with evidence rather than philosophy.
+"""
+stop_test = """
+As registered in docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md §3.4, before any data.
+"""
+done_when = """
+The three arms run, scored, and a delta.
+"""
+links = ["docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md"]

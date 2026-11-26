@@ -1,0 +1,29 @@
+id = "floor-and-pooled-scan"
+title = "What every part free leaves behind, and why pooling the scan wasn't enough"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context", "web"]
+priority = 2
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+stage = "idea"
+post = ""
+drafted_by = ""
+reviewed_by = ""
+question = """
+A post on the zero-copy floor (plumbing about 5 ms; the scan alone 179 ms at 8; spelling 298 ms at 1 worker; delivery 48 ms) and the pooled scan's narrow kill (it moves the scan's work rather than removing it). It follows the complementary-bottlenecks post and its companion.
+"""
+why = """
+Results the published posts don't yet include.
+"""
+stop_test = """
+The site's rules, as above; every number traced to results/floor and pooled-scan/results.
+"""
+done_when = """
+Published.
+"""
+links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md", "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md"]

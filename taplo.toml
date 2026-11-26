@@ -1,4 +1,4 @@
-exclude = ["docs/journal/**", "research/**", "target/**"]
+exclude = ["docs/journal/**", "frontier/**", "research/**", "target/**"]
 
 [formatting]
 reorder_arrays = true

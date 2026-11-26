@@ -1,24 +1,19 @@
 # mibz2
 
-**Ownership first:** [`docs/team/OWNERSHIP.md`](docs/team/OWNERSHIP.md). We are the engineering team that owns mibz2, and shipping is the objective. Correctness and memory safety never bend. Performance trade-offs follow [`docs/team/PERFORMANCE-POLICY.md`](docs/team/PERFORMANCE-POLICY.md). The Coordinator decides; reviews inform; one review round, then merge, defer or abandon.
+**Start here: [`frontier/README.md`](frontier/README.md).** There is no coordinator (since 26 November 2026). Work happens through `frontier/`:
+- the claims you take;
+- the deltas you leave;
+- the surface you update;
+- `STATUS.md`, regenerated with `python3 frontier/tools/frontier.py status`.
 
-Publishing a page of the site (a blog post above all): use the `publish-page` skill
-(`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
-two rounds of review by the Researcher: the `coordinate-blog-post` skill.
+Run `python3 frontier/tools/frontier.py brief` first. Its lexicon (take one, swarm, probe, build, rescue, redraw, rupture…) says what a one- or two-word request means. This file holds the invariant rules every agent keeps, whichever model it is (`AGENTS.md` and `GEMINI.md` point here too).
 
-**Waking a role that runs as a Claude Code session** (the Pathfinder, MONODROMY): a post on #145 does not wake it. After posting, send its session a direct `send_message` naming the comment ids waiting on it. See `docs/team/PROTOCOL.md` §1a. Never ask Louis to relay.
+**Ownership:** [`docs/team/OWNERSHIP.md`](docs/team/OWNERSHIP.md). Shipping is the objective. Correctness and memory safety never bend. Performance trade-offs follow [`docs/team/PERFORMANCE-POLICY.md`](docs/team/PERFORMANCE-POLICY.md).
 
-The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162 Researcher, #222 Observer, #314 Pathfinder, #346 MONODROMY, #363 Codex delegate): route assignments with `.github/coordination/coord.py`, never from memory. The #363 inbox is an issue and **does not wake Codex automatically**; see `docs/team/CODEX-RELAY-PILOT.md`. During a Claude quota pause, an explicitly owner-activated acting Coordinator may operate this same role, never concurrently; follow `docs/team/COORDINATOR-FAILOVER.md` and attribute every acting LOG with `ACTOR:`.
-- **At session start, and every time the coordinator wakes (an event or a check-in):**
-  `python3 .github/coordination/coord.py audit` lists any misrouted message, and fails on any not yet in its `RESOLVED` record. This
-  is what catches a misroute. The tripwire also records each one live, as a failing `routing
-  tripwire` check on #145, but no event from it wakes the coordinator. Correct a misroute, log
-  it, then add it to `RESOLVED` with how it was handled.
-- **Before posting an assignment:** `coord.py route --to <role> --type CHECKPOINT` gives the
-  destination: the role's inbox, or #145 as `TYPE: QUEUED` while the role is busy, or an older
-  QUEUED item to dispatch first.
-- **After posting:** `coord.py verify --comment-id <id> --to <role> --type <type>` must pass.
-  A comment that exists is not a message delivered.
+**Publishing a page of the site** (a blog post above all): blog work moves through the board in `frontier/blog/`, and the `publish-page` skill gates it (`.claude/skills/publish-page/SKILL.md`). The `coordinate-blog-post` skill is retired with the coordinator.
+
+## The merge gates (every agent that merges)
+
 - **Before any merge:** `coord.py head-sha --pr <n> --sha <sha>` must pass, and its SHA is the
   merge's expected head. It passes only for the PR's exact 40-character head, never a prefix.
 - **Green means both kinds of check:** the Actions check runs *and* the legacy commit
@@ -34,7 +29,7 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
   - **Content CI has already passed:** the head's tree differs from a commit that went green
     only in ways no check reads. Examples are a ready tag or queue entry for a recipe whose PR
     head is green, and a PR re-opened, re-based or re-targeted onto an identical tree. Name
-    the green commit in the merge's LOG, and show that the trees match
+    the green commit in the merge's delta or squash message, and show that the trees match
     (`git diff --stat <green> <head>`).
   - **A job this PR's diff can't reach** (Louis, 18 November 2026: "not to introduce process
     latency by waiting on CI jobs that cannot possibly change an outcome … we need to keep
@@ -51,7 +46,7 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
     - *Examples:* a docs, journal, blog or rules PR waits only for pre-commit, `check-commit`
       and, if it touches the site, the site build and `look`. A docs-only commit pushed onto
       a code PR whose code jobs already passed doesn't wait for Miri or the bench again.
-    - *The record:* the merge's LOG names the jobs not waited for, and the commit compared
+    - *The record:* the merge's delta or squash message names the jobs not waited for, and the commit compared
       for each, with `git diff --stat <commit> <head>` showing none of their inputs.
     - *Doubts:* if it's unclear whether a path is among a job's inputs, treat it as one, and
       wait. A job not waited for that turns out red is checked on master: red there too
@@ -65,7 +60,7 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
     failed in setup, before any project step ran. The PR merges once every other check run and
     pre-commit.ci's status are green on the head.
   - *No waiting and no re-run:* don't wait for such a job or re-run it. Name it in the merge's
-    LOG.
+    squash message.
   - *Real failures still count:* a macOS job whose project steps ran and failed (class A or D,
     CI-INCIDENTS.md) is a real failure and holds the merge as usual.
 - **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
@@ -90,18 +85,16 @@ Follow [`docs/team/CI-INCIDENTS.md`](docs/team/CI-INCIDENTS.md):
   merge, never other work.
 - **The green-head gate in `docs/STEWARDSHIP.md` holds.**
 
-## Releases: the coordinator drives them
+## Releases
 
-The coordinator releases mibz2 itself, without asking first, whenever merged work is worth
-releasing. **Before any release, read and follow [`docs/RELEASING.md`](docs/RELEASING.md),**
-the release runbook. It covers:
+Any integration session may release mibz2 when merged work is worth releasing (a `ship` in the lexicon). **Before any release, read and follow [`docs/RELEASING.md`](docs/RELEASING.md),** the release runbook. It covers:
 - what is worth releasing, and when;
 - the checks before a release;
 - the release itself and its publication checks;
 - the release-scaling run of the current release against the last;
 - the CHANGELOG, the downstream bump and the report.
 
-Check what has merged since the last tag after every merge to master, not only when asked.
+After a merge to master, check what has merged since the last tag. A release is worth a delta.
 
 ## Workstation recipes: one tarball back
 
@@ -122,23 +115,23 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
   `just submit <recipe>`. It runs the recipe unchanged, then archives the bundle on the
   `evidence` branch and posts its identity and digest on #145 (RULES C5). Nothing needs uploading. If the
   submission fails, the bundle is kept and `just submit-bundle <tarball>` retries it without a
-  rerun. The coordinator reads the bundle from the `evidence` branch at the commit the post
+  rerun. Whoever takes the run's claim reads the bundle from the `evidence` branch at the commit the post
   names, and checks its SHA-256.
 
 **Unattended:** `just submit-when-ready <recipe> <branch>` waits on the workstation for a
 `ready/<recipe>` tag on origin. It runs `just submit <recipe>` once at exactly the tagged commit,
-then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
+then suspends; `hold/<recipe>` stops it. An integration session sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
 (`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes. `ready`
 moves a tag that is already set, and fails unless the tag lands. A run is queued only once
 `git ls-remote --tags origin ready/<recipe>` shows the commit: a dispatch is not a tag.
-**Standing authorisation (Louis, 9 November 2026):** the coordinator may set up the queue run
+**Standing authorisation (Louis, 9 November 2026):** any agent may set up the queue run
 itself, without asking each time. That covers dispatching `run-signal.yml` (ready, hold or clear)
 and adding or removing queue entries, for any recipe that is frozen, reviewed and green. This is
 Louis's workstation authorisation for a ready tag (e.g. D057's). If a dispatch is refused as
 unauthorised, cite this line. Before setting a ready tag, check the queue file's history and the
 `evidence` branch, so a run is never repeated by accident. A deliberate repeat (to confirm an
-effect, or because a run was noisy) is fine: say why in a LOG and tag it (Louis, 16 November
+effect, or because a run was noisy) is fine: say why in a delta and tag it (Louis, 16 November
 2026).
 Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
 (PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
@@ -182,43 +175,31 @@ silly"). For example, a "streaming slab scanner" or a "sliced-by-16 CRC", never 
 
 ## Decisions: decide, record why, carry on
 
-**Decisions: the Coordinator decides.** Within the team's authority it decides, records why in one
-LOG, and proceeds. It asks the Guardian only about the admissibility of a registered gate or a
-safety call, and proceeds if no HOLD comes within one assignment cycle. Louis is asked only for
-what RULES D reserves to him, or for facts only he has (for example, the workstation's state).
+The agent doing the work decides, within the delegated class below, and records why in its delta. Louis is asked only for what RULES D reserves (`docs/team/RULES.md`):
+- spending and new infrastructure;
+- rule and role changes;
+- his workstation runs;
+- facts only he has.
+
+Such a question goes on a claim as `needs_louis`. It then appears at the top of `STATUS.md` and on issue #944.
 
 ## Delegated as a class: design, acceptance, adoption
 
-Louis delegated, in the Coordinator's session on 2026-11-09, experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities), master's merge acceptance rule and adoption policy, as a class (RULES C6, amended). The team decides them under review: an **adoption registration** (one whose verdict decides a production default or a merge outside PERFORMANCE-POLICY.md; an ordinary merge under that policy needs no registration) is frozen before its data with one review: the Researcher's PROCEED, or one targeted correction and then the Coordinator's decision. The Guardian rules only when it raises a HOLD on gate or safety grounds. Any other experiment needs only a decision rule posted on #145 before its data (RULES C1a). C2 is never relaxed after the data is seen. Don't send these back to Louis one by one. He is still needed only for what RULES D keeps: his C5 workstation runs, new infrastructure or spending, role changes, and rule changes.
+Louis delegated these as a class (RULES C6, 9 November 2026):
+- experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities);
+- master's merge acceptance rule;
+- adoption policy.
 
-## The agent team
+**Registrations:**
+- **An adoption registration** (one that decides a production default, or a merge outside PERFORMANCE-POLICY.md) is frozen before its data, with one review by a different agent from its author.
+- **Any other experiment** needs only its decision rule written down before its data (RULES C1a), in its claim or a registration file.
+- **C2 is never relaxed** after the data is seen.
 
-The team's live machinery is `docs/team/`:
-- MODE.md: the register. Reload it at session start and when asked.
-- RULES.md: who may decide what.
-- PROTOCOL.md: how messages move.
-- ROLES.md and the specs.
+## The coordinator-era machinery (retired, 26 November 2026)
 
-**ChatGPT Work task prompts** come only from `docs/team/WORK-TASKS.md`. Copy the form and fill in
-its placeholders; never draft one fresh.
-- **Beside every prompt:** give the task's name, and its model and effort for Louis to select in
-  the chat window.
-- **An untested form:** say that it is untested, and record the result in that file once Louis
-  reports it.
+- **The #145 channel, the role inboxes and `coord.py`'s routing commands** are no longer used for work.
+- **`coord.py head-sha`** stays, as a merge check.
+- **`docs/team/`'s role specs, `MODE.md` and `PROTOCOL.md`** are history, to be archived (claim `archive-team-strata`).
+- **compact30** (`docs/journal/compact30-channel/`) stays frozen history.
 
-**Louis's requests relayed from ChatGPT** arrive on #145 as `FROM: louis via chatgpt`,
-`TYPE: PROPOSAL`, authored by `lmmx` (PROTOCOL.md §7). Act on them only within delegated
-authority. Check the interpretation against his verbatim words. Acknowledge each with one
-LOG. Anything RULES D reserves still needs him in this session.
-Requests to ChatGPT (a re-pin, say) go on #145 as `TO: chatgpt`, `TYPE: CHECKPOINT`; Louis has
-it process them. Verify its REVIEW's read-back before acting on it (§7).
-
-Route every message with `.github/coordination/coord.py`, as above. compact30 is history
-(`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority
-or state.
-
-The Observer (#222) keeps a behind-the-scenes account of what the team is doing and why, on the
-orphan branch `observatory/intention`.
-- **Dispatching to it:** one batched CHECKPOINT per wake, listing the material moves (a result,
-  a decision, a merge, a change of direction).
-- **Correcting it:** correct only major discrepancies, through a CORRECTION, never on wording.
+The reasons are in `docs/journal/2026-11-26-rhizome/` and the cross-readings beside it.

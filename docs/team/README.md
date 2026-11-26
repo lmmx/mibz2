@@ -1,5 +1,7 @@
 # The mibz2 agent team
 
+> **Superseded (26 November 2026):** the team now works through `frontier/` (start at `frontier/README.md`). These files are the coordinator era's record, kept for history until they are archived (claim `archive-team-strata`).
+
 The live machinery of the agent team that works on mibz2. Its objective is STEWARDSHIP.md's: a
 measurably faster, correct production decoder, properly released. MODE.md says the same.
 

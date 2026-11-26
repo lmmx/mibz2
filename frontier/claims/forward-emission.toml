@@ -1,0 +1,25 @@
+id = "forward-emission"
+title = "Forward links and multi-lane emission (A6c + E together)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "i9"]
+priority = 3
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = ["src/open.rs", "src/open/outq.rs"]
+needs_louis = ""
+question = """
+Replace XOR-linked two-ended traversal with forward-only links and several forward lanes from sampled anchors (more anchors than lanes, by order statistics, E[L_max] ~ m H_K / K). It should simplify A6c's wiring (161 ms) and expose memory-level parallelism in the walk. Design first, then a census of cycle lengths and anchor spacings, then a prototype.
+"""
+why = """
+E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work (unmeasured).
+"""
+stop_test = """
+A registration before data; exact bytes; the kill test against S ideal at 8 workers and at 1 worker.
+"""
+done_when = """
+The design note, the census, a registration, a prototype PR, a delta.
+"""
+links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 3"]

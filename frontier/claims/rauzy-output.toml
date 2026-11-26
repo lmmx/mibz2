@@ -1,0 +1,29 @@
+id = "rauzy-output"
+title = "The Rauzy machinery priced with what it produces: limit, words, spelling"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 1
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+Round 1 (rauzy-census/results) killed the induction order: a 1.41% ceiling. Round 1 priced the induction's cost, not its product. The induction builds the words that emission spells (298 ms at 1 worker), so the machinery's budget is about 110 ms of steps, 64 ms of dictionary and 298 ms of spelling: roughly a third of the 1-worker wall.
+1. Sweep the thin/thick limit (LIMIT 8, 12, 16, 24, 32, 64, then per-block or per-byte from A6a's counts). Measure A6a + A6b + A6c + A7 + spelling together: fewer, longer words against more induction.
+2. The words' representation: expand the straight-line program by copying earlier expansions, against word-by-word spelling. Defer or structure the dictionary's dedup.
+3. Separately, cheaper steps: are the 24.6 ns per step a dependent-load chain? Measure it, then try prefetch or interleaving, minding the i9's 256 KB L2.
+A free-steps-only bitmap rule is excluded: round 1's 1.41% ceiling caps it below the gate.
+"""
+why = """
+It reopens thread 2 on its real budget, and couples it to the spelling target (surface rows C-A6b and E-spelling).
+"""
+stop_test = """
+Frozen before data: an idea passes only if its net saving across A6a + A6b + A6c + A7 + spelling is at least 3% of the 1-worker wall (about 39 ms of 1,306), cost included, byte-identical to bwt::walk on every block. Also report each idea's effect at 8 workers, ungated.
+"""
+done_when = """
+rauzy-census/results-2/README.md (each idea: hypothesis, measurement, verdict); passing ideas become build claims; a delta; the surface updated.
+"""
+links = ["docs/journal/2026-11-24-algorithm-level/rauzy-census/results/README.md", "examples/rauzy_census.rs"]

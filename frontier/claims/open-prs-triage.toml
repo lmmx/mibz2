@@ -1,0 +1,25 @@
+id = "open-prs-triage"
+title = "Triage the coordinator-era open PRs"
+kind = "ops"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+Open PRs from before the move: #821, #841, #843 (conflicted, long frozen), #889 and #909 (the ideal-parts research branches), #917 and #932 (recipe and prototype branches with evidence pinned), #497 (an old session's branch). For each one, decide whether to merge, close with a pointer, or keep as an evidence branch. Write each decision down.
+"""
+why = """
+Stale open PRs confuse every fresh session and attract conflict notices.
+"""
+stop_test = """
+Never rewrite a branch that evidence pins (a ready tag, an evidence bundle). Closing a PR keeps its branch.
+"""
+done_when = """
+A delta listing each PR and its decision.
+"""
+links = []
