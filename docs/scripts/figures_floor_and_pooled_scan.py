@@ -12,8 +12,10 @@ The figures follow the dataviz method: colour by role from the blog.css tokens (
 
 Sources:
 - taring, reservoir: docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/
-  (README.md, report.txt, zero-copy-floor.tsv; origin/evidence cc8ba137) and first matrix
-  docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md (7dd7b070).
+  (README.md, report.txt, zero-copy-floor.tsv; origin/evidence cc8ba137), first matrix
+  docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md (7dd7b070),
+  and traced Reader::copy_out / A9 from docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md
+  (re-derived from pooled-scan bundle c71c4a56).
 - killtest, redistribution: docs/journal/2026-11-24-algorithm-level/pooled-scan/results/
   (README.md, report.txt, pooled-scan.tsv, phases.tsv; origin/evidence c71c4a56).
 """
@@ -155,7 +157,7 @@ def taring():
         tx = xa(tick)
         line(o, tx, 48, tx, 158, "var(--bf-vz-axis)" if tick == 0 else "var(--bf-vz-grid)", 1.0)
         text(o, tx, 171, f"{tick}", 9.5, "bf-tm", "middle")
-    text(o, ax1, 171, "ms", 9.5, "bf-tm", "start")
+    text(o, ax1 + 14, 171, "ms", 9.5, "bf-tm", "start")
 
     rows_a = [
         (
@@ -179,11 +181,11 @@ def taring():
         (
             110,
             "Word spelling (A-B)",
-            "E_consume inside workers",
+            "E_consume (cold upper bound)",
             37.2,
             "var(--bf-vz-4)",
             "37.2 ms",
-            "Emission word spelling (E_consume = A - B) at 8 workers: 37.2 [35.2, 39.1] ms (88% of Residual A)",
+            "Emission word spelling (E_consume = A - B) at 8 workers: 37.2 [35.2, 39.1] ms (88% of Residual A; cold-store upper bound)",
         ),
         (
             138,
@@ -212,13 +214,13 @@ def taring():
         else:
             text(o, ax0 + bw + 5, ry + 13, vtxt, 9.5, "bf-t-strong", "start")
 
-    # Bottom half of Panel A: 8 -> 9 -> 10 workers curve (memory hypothesis refuted)
-    rect(o, 14, 188, 336, 162, "var(--bf-surface)", rx=7, stroke="var(--bf-frame)", sw=1.1)
+    # Bottom half of Panel A: 8 -> 9 -> 10 workers curve (DRAM bandwidth hypothesis refuted)
+    rect(o, 14, 188, 336, 168, "var(--bf-surface)", rx=7, stroke="var(--bf-frame)", sw=1.1)
     text(o, 26, 206, "8 to 10 workers: the rising floor vanished", 10.5, "bf-t-strong")
     text(o, 26, 220, "All-ideal wall (ms); bars show 95% intervals", 9.2, "bf-tm")
 
     ix0, ix1 = 56.0, 232.0
-    iy0, iy1 = 324.0, 234.0
+    iy0, iy1 = 328.0, 236.0
     imax = 150.0
 
     def ix(k):
@@ -266,9 +268,9 @@ def taring():
             "var(--bf-vz-1)",
             title=f"Zero-copy SECMRD at {k} workers: {v:.1f} [{lo:.1f}, {hi:.1f}] ms",
         )
-    text(o, ix(10) + 7, iy(40.5) - 4, "Zero-copy (A)", 9.2, "bf-t-strong", fill="var(--bf-blue)")
-    text(o, ix(10) + 7, iy(40.5) + 8, "42.4->40.5 ms", 8.8, "bf-tm")
-    text(o, ix(10) + 7, iy(40.5) + 19, "15-17 GB/s", 8.5, "bf-tm")
+    text(o, ix(10) + 7, iy(40.5) - 13, "Zero-copy (A)", 9.2, "bf-t-strong", fill="var(--bf-blue)")
+    text(o, ix(10) + 7, iy(40.5) - 2, "42.4->40.5 ms", 8.8, "bf-tm")
+    text(o, ix(10) + 7, iy(40.5) + 9, "15-17 GB/s", 8.5, "bf-tm")
 
     # Zero-copy SFCMRD: 8W=5.2, 9W=5.3, 10W=5.4
     sfc_pts = [(8, 5.2, 5.0, 5.5), (9, 5.3, 5.1, 5.5), (10, 5.4, 5.3, 5.5)]
@@ -288,7 +290,7 @@ def taring():
     text(
         o,
         ix(10) + 7,
-        iy(5.4) + 2,
+        iy(5.4) + 5,
         "Plumbing: 5.2-5.4",
         8.8,
         "bf-t-strong",
@@ -296,7 +298,7 @@ def taring():
     )
 
     # Divider between Panel A and Panel B
-    line(o, 362, 12, 362, 356, "var(--bf-frame)", 1.0)
+    line(o, 362, 12, 362, 368, "var(--bf-frame)", 1.0)
 
     # ---- Panel B (right): Each stage alone real at 8 workers ----
     text(o, 376, 20, "B. One stage real, all else free (8 workers)", 12, "bf-t-strong")
@@ -331,30 +333,30 @@ def taring():
         ),
         (
             104,
-            "Emission (SCMRD)",
-            "walk + word spelling",
+            "Emission (SCMRD)*",
+            "walk + spelling; cold C",
             98.1,
             "var(--bf-vz-1)",
-            "98.1 ms",
-            "Emission alone real (SCMRD, walk + spelling) at 8 workers: median 98.1 ms",
+            "98.1 ms*",
+            "Emission alone real (SCMRD, walk + spelling) at 8 workers: median 98.1 ms (overstated because walk A7 reads borrowed C store cold: 98.9 vs 72.4 ms/w)",
         ),
         (
             138,
-            "Construction (SFMRD)*",
-            "cold-store caveat",
+            "Construction (SFMRD)",
+            "parallel worker stage",
             83.6,
             "var(--bf-vz-1)",
-            "83.6 ms*",
-            "Construction alone real (SFMRD) at 8 workers: median 83.6 ms (overstated because zero-copy borrow leaves walk reading cold)",
+            "83.6 ms",
+            "Construction alone real (SFMRD) at 8 workers: median 83.6 ms (A7 is 0.0 ms here)",
         ),
         (
             172,
-            "Delivery (SFCMR)",
-            "serial 839 MB copy-out",
-            52.3,
+            "Delivery (D)†",
+            "traced vs cold SFCMR",
+            34.0,
             "var(--bf-vz-4)",
-            "52.3 ms",
-            "Delivery alone real (SFCMR) at 8 workers: median 52.3 ms (47.3 ms copy-out above 5.2 ms floor; 17.5 GB/s)",
+            "34.0 ms† (52.3 cold)",
+            "Delivery real traced copy_out in none at 8 workers: 34.0 ms (dashed outline: 52.3 ms cold-store SFCMR wall artifact)",
         ),
         (
             206,
@@ -367,12 +369,12 @@ def taring():
         ),
         (
             240,
-            "RLE1 / CRC (R)",
-            "SECMD minus SECMRD",
+            "RLE1 / CRC (wall diff)",
+            "104 ms A9 worker CPU",
             14.2,
             "var(--bf-steel)",
-            "~14 ms",
-            "RLE1/CRC/output at 8 workers: SECMD 55.0 ms minus SECMRD 40.8 ms (~14 ms)",
+            "14.2 ms diff",
+            "RLE1/CRC at 8 workers: 14.2 ms wall difference (SECMD 55.0 minus SECMRD 40.8 ms), hiding 104.0 ms traced A9 worker CPU (7% of worker CPU)",
         ),
         (
             274,
@@ -388,58 +390,87 @@ def taring():
         text(o, bx0 - 8, ry + 8, lbl, 9.8, "bf-t-strong", "end")
         text(o, bx0 - 8, ry + 19, sub, 8.6, "bf-tm", "end")
         bw = xb(val) - bx0
-        bar_h(o, bx0, ry + 1, bw, 18, col, title=tip)
-        if bw > 58:
-            ink = "var(--bf-vz-2-ink)" if col == "var(--bf-vz-2)" else "var(--bf-vz-1-ink)"
-            text(o, bx0 + bw - 6, ry + 14, vtxt, 9.6, "bf-t-strong", "end", fill=ink)
+        if lbl.startswith("Delivery"):
+            # Solid bar for real traced copy_out (34.0 ms) + dashed ghost outline to cold SFCMR (52.3 ms)
+            bar_h(o, bx0, ry + 1, bw, 18, col, title=tip)
+            cold_w = xb(52.3) - xb(34.0)
+            rect(
+                o,
+                xb(34.0),
+                ry + 1,
+                cold_w,
+                18,
+                "var(--bf-vz-4)",
+                rx=2,
+                stroke="var(--bf-vz-4)",
+                sw=1.1,
+                dash="3 2",
+                opacity=0.18,
+                title="Cold-store SFCMR wall at 8W: 52.3 ms (artifact of reading 209.7 MiB oracle store from DRAM)",
+            )
+            text(o, xb(52.3) + 5, ry + 14, vtxt, 9.2, "bf-t-strong", "start")
         else:
-            text(o, bx0 + bw + 5, ry + 14, vtxt, 9.6, "bf-t-strong", "start")
+            bar_h(o, bx0, ry + 1, bw, 18, col, title=tip)
+            if bw > 58:
+                ink = "var(--bf-vz-2-ink)" if col == "var(--bf-vz-2)" else "var(--bf-vz-1-ink)"
+                text(o, bx0 + bw - 6, ry + 14, vtxt, 9.6, "bf-t-strong", "end", fill=ink)
+            else:
+                text(o, bx0 + bw + 5, ry + 14, vtxt, 9.6, "bf-t-strong", "start")
 
     text(
         o,
         376,
-        344,
-        "*Walk (A7) runs 98.9 vs 72.4 ms/worker on borrowed stores, overstating C.",
-        9.0,
+        342,
+        "*Walk (A7) reads borrowed C cold (98.9 vs 72.4 ms/w), overstating E.",
+        8.6,
+        "bf-tm",
+    )
+    text(
+        o,
+        376,
+        356,
+        "†Traced real copy_out is 34.0 ms at 8W; 52.3 ms is cold-store SFCMR.",
+        8.6,
         "bf-tm",
     )
 
     aria = (
         "Two-panel empirical chart from the zero-copy floor run at 8 workers. "
         "Panel A shows the all-ideal wall dropping from 112 ms in the first matrix to 42.4 ms with zero-copy "
-        "oracles (Residual A), splitting into 37.2 ms of emission word spelling and 5.2 ms (2.7 percent) of "
-        "pipeline plumbing (Residual B). An inset shows the 8 to 10 worker trend: the first matrix rose from "
-        "112 to 142 ms, whereas zero-copy Residual A stays flat at 42.4, 42.9, and 40.5 ms at 15 to 17 GB/s. "
-        "Panel B shows each single stage real at 8 workers against the 194.6 ms shipped wall: scan 179.1 ms "
-        "(92 percent), emission 98.1 ms, construction 83.6 ms (cold-store caveat), delivery 52.3 ms, "
-        "MTF/RLE2 20.1 ms, RLE1/CRC about 14 ms, and nothing 5.3 ms."
+        "oracles (Residual A), splitting into 37.2 ms of emission word spelling (cold-store upper bound) and "
+        "5.2 ms (2.7 percent) of pipeline plumbing (Residual B). An inset shows the 8 to 10 worker trend: the "
+        "first matrix rose from 112 to 142 ms, whereas zero-copy Residual A stays flat at 42.4, 42.9, and "
+        "40.5 ms at 15 to 17 GB/s. Panel B shows each single stage real at 8 workers against the 194.6 ms "
+        "shipped wall: scan 179.1 ms (92 percent), emission 98.1 ms (cold-store caveat on borrowed C), "
+        "construction 83.6 ms, delivery 34.0 ms traced copy_out (with 52.3 ms cold-store SFCMR ghost), "
+        "MTF/RLE2 20.1 ms, RLE1/CRC 14.2 ms wall difference hiding 104.0 ms traced A9 CPU, and nothing 5.3 ms."
     )
-    return svg(362, o, aria)
+    return svg(374, o, aria)
 
 
 def reservoir():
-    """Multi-series scaling chart (1..10W): scalable word spelling draining past flat serial ledges."""
+    """Multi-series scaling chart (1..10W): word spelling drains while traced delivery copy_out rises under L3 pressure."""
     o = []
     text(
         o,
         16,
         20,
-        "Scalable word spelling drains past three flat serial ledges (1 to 10 workers)",
-        12,
+        "Word spelling drains with workers while delivery copy-out rises under L3 pressure",
+        11.8,
         "bf-t-strong",
     )
     text(
         o,
         16,
         36,
-        "Measured wall time (ms) on wikidata x4 (i9-10900K); vertical bars show 95% intervals",
-        10,
+        "Floor wall times (ms, 95% intervals) beside traced reader copy_out (pooled-scan medians) on wikidata x4",
+        9.6,
         "bf-tm",
     )
 
     # Discrete x positions with a clean visual gap between 1W and 6W
     xs = {1: 86.0, 6: 212.0, 7: 294.0, 8: 376.0, 9: 458.0, 10: 540.0}
-    y0, y1 = 278.0, 56.0
+    y0, y1 = 286.0, 54.0
     ymax = 320.0
 
     def yv(v):
@@ -448,7 +479,7 @@ def reservoir():
     # Horizontal gridlines
     for tv in (0, 50, 100, 150, 200, 250, 300):
         ty = yv(tv)
-        line(o, 56, ty, 562, ty, "var(--bf-vz-axis)" if tv == 0 else "var(--bf-vz-grid)", 1.0)
+        line(o, 56, ty, 554, ty, "var(--bf-vz-axis)" if tv == 0 else "var(--bf-vz-grid)", 1.0)
         text(o, 48, ty + 3.5, f"{tv}", 9.8, "bf-tm", "end")
     text(o, 16, 52, "ms", 9.8, "bf-tm", "start")
 
@@ -461,7 +492,7 @@ def reservoir():
         text(o, xk, y0 + 16, f"{k}W", 10.2, "bf-t-strong" if k in (1, 8) else "bf-tm", "middle")
     text(o, 310, y0 + 32, "Worker threads (break between 1 and 6 workers)", 9.8, "bf-tm", "middle")
 
-    # Data from zero-copy-floor.tsv and report.txt
+    # Floor-run wall times / wall differences (cc8ba137)
     e_consume = [
         (1, 298.2, 297.0, 299.4),
         (6, 48.7, 45.9, 51.4),
@@ -478,14 +509,6 @@ def reservoir():
         (9, 177.6),
         (10, 178.7),
     ]
-    delivery = [
-        (1, 48.5, 46.8, 50.3),
-        (6, 47.9, 47.1, 48.8),
-        (7, 48.5, 47.7, 49.3),
-        (8, 47.3, 46.4, 48.2),
-        (9, 49.1, 48.0, 50.2),
-        (10, 49.3, 46.8, 51.8),
-    ]
     plumbing = [
         (1, 5.7, 5.5, 5.8),
         (6, 5.3, 5.3, 5.4),
@@ -493,6 +516,22 @@ def reservoir():
         (8, 5.2, 5.0, 5.5),
         (9, 5.3, 5.1, 5.5),
         (10, 5.4, 5.3, 5.5),
+    ]
+    # Real Reader::copy_out from pooled-scan traces (n=3 medians, activity time, not wall diff)
+    delivery_none = [
+        (1, 29.1),
+        (6, 27.6),
+        (7, 30.6),
+        (8, 34.0),
+        (9, 43.2),
+        (10, 43.7),
+    ]
+    delivery_sc = [
+        (6, 29.0),
+        (7, 32.5),
+        (8, 39.5),
+        (9, 54.9),
+        (10, 77.9),
     ]
 
     # Translucent "draining reservoir" fill under E_consume
@@ -502,7 +541,7 @@ def reservoir():
         f'style="fill:var(--bf-vz-1);fill-opacity:0.12"/>'
     )
 
-    # Series 1: Scan alone (FCMRD) - flat amber reef
+    # Series 1: Scan alone (FCMRD) - amber dashed reef
     scan_str = " ".join(f"{xs[k]:.1f},{yv(v):.1f}" for k, v in scan_only)
     o.append(
         f'<polyline points="{scan_str}" style="fill:none;stroke:var(--bf-vz-2);stroke-width:2.2;stroke-dasharray:6 3"/>'
@@ -532,26 +571,42 @@ def reservoir():
             yv(v),
             4.0,
             "var(--bf-vz-1)",
-            title=f"Emission word spelling (E_consume = A - B) at {k}W: {v:.1f} [{lo:.1f}, {hi:.1f}] ms",
+            title=f"Emission word spelling (E_consume = A - B) at {k}W: {v:.1f} [{lo:.1f}, {hi:.1f}] ms (cold-store upper bound)",
         )
     text(
         o,
         xs[1] + 9,
         yv(298.2) + 4,
-        "298.2 ms (22% of 1W wall)",
-        9.6,
+        "298.2 ms (cold upper bound; ~230-245 in situ)",
+        9.4,
         "bf-t-strong",
         fill="var(--bf-blue)",
     )
-    text(o, xs[8], yv(37.2) + 15, "37.2 ms", 9.2, "bf-t-strong", "middle", fill="var(--bf-blue)")
+    text(o, xs[8], yv(37.2) + 15, "37.2 ms", 9.0, "bf-t-strong", "middle", fill="var(--bf-blue)")
 
-    # Series 3: Delivery copy-out (SFCMR - SFCMRD) - flat purple ledge
-    del_str = " ".join(f"{xs[k]:.1f},{yv(v):.1f}" for k, v, _, _ in delivery)
+    # Series 3a: Real delivery copy_out in SC (fast workers) - rising purple dotted curve
+    del_sc_str = " ".join(f"{xs[k]:.1f},{yv(v):.1f}" for k, v in delivery_sc)
     o.append(
-        f'<polyline points="{del_str}" style="fill:none;stroke:var(--bf-vz-4);stroke-width:2.2;stroke-dasharray:4 2"/>'
+        f'<polyline points="{del_sc_str}" style="fill:none;stroke:var(--bf-vz-4);stroke-width:2.0;stroke-dasharray:2 2"/>'
     )
-    for k, v, lo, hi in delivery:
-        line(o, xs[k], yv(lo), xs[k], yv(hi), "var(--bf-vz-4)", 1.4)
+    for k, v in delivery_sc:
+        diamond(
+            o,
+            xs[k],
+            yv(v),
+            3.8,
+            "var(--bf-vz-4)",
+            "var(--bf-vz-4)",
+            1.4,
+            title=f"Traced delivery copy_out in SC (fast workers) at {k}W: median {v:.1f} ms (reader activity time)",
+        )
+
+    # Series 3b: Real delivery copy_out in none (shipped) - rising purple dashed curve
+    del_none_str = " ".join(f"{xs[k]:.1f},{yv(v):.1f}" for k, v in delivery_none)
+    o.append(
+        f'<polyline points="{del_none_str}" style="fill:none;stroke:var(--bf-vz-4);stroke-width:2.2;stroke-dasharray:4 2"/>'
+    )
+    for k, v in delivery_none:
         diamond(
             o,
             xs[k],
@@ -560,8 +615,9 @@ def reservoir():
             "var(--bf-surface)",
             "var(--bf-vz-4)",
             1.6,
-            title=f"Delivery serial copy-out (SFCMR - SFCMRD) at {k}W: {v:.1f} [{lo:.1f}, {hi:.1f}] ms (839 MB at ~17 GB/s)",
+            title=f"Traced delivery copy_out in none (shipped) at {k}W: median {v:.1f} ms (reader activity time)",
         )
+    text(o, xs[1] + 8, yv(29.1) - 8, "29.1 ms", 9.0, "bf-t-strong", fill="var(--bf-ultra)")
 
     # Series 4: Plumbing (SFCMRD) - flat green riverbed
     pl_str = " ".join(f"{xs[k]:.1f},{yv(v):.1f}" for k, v, _, _ in plumbing)
@@ -578,49 +634,40 @@ def reservoir():
             title=f"Pipeline plumbing (SFCMRD) at {k}W: {v:.1f} [{lo:.1f}, {hi:.1f}] ms",
         )
 
-    # Right-hand direct labels (no detached legend box)
-    lx = 556.0
-    text(o, lx, yv(178.7) - 3, "Serial scan (FCMRD)", 10.0, "bf-t-strong", fill="var(--bf-amber)")
-    text(o, lx, yv(178.7) + 10, "170-179 ms reef", 9.2, "bf-tm")
+    # Right-hand direct labels with thin leader ticks where needed (zero overlap)
+    lx = 558.0
+    text(o, lx, 153, "Serial scan (FCMRD)", 9.8, "bf-t-strong", fill="var(--bf-amber)")
+    text(o, lx, 165, "170-179 ms (wall)", 9.0, "bf-tm")
 
-    text(o, lx, yv(49.3) - 10, "Delivery copy-out (D)", 10.0, "bf-t-strong", fill="var(--bf-ultra)")
-    text(o, lx, yv(49.3) + 2, "47-49 ms flat (~17 GB/s)", 9.0, "bf-tm")
+    line(o, 545, yv(77.9), 555, 214, "var(--bf-vz-4)", 0.9)
+    text(o, lx, 211, "Delivery copy_out (SC)", 9.6, "bf-t-strong", fill="var(--bf-ultra)")
+    text(o, lx, 222, "29 -> 78 ms (traced)", 8.8, "bf-tm")
 
-    text(
-        o, lx, yv(35.2) + 8, "Word spelling (E_consume)", 10.0, "bf-t-strong", fill="var(--bf-blue)"
-    )
-    text(o, lx, yv(35.2) + 20, "298 -> 35 ms (scales)", 9.0, "bf-tm")
+    line(o, 545, yv(43.7), 555, 241, "var(--bf-vz-4)", 0.9)
+    text(o, lx, 239, "Delivery copy_out (none)", 9.6, "bf-t-strong", fill="var(--bf-ultra)")
+    text(o, lx, 250, "29 -> 44 ms (traced)", 8.8, "bf-tm")
 
-    text(o, lx, yv(5.4) + 3, "Plumbing: 5.2-5.7 ms", 9.6, "bf-t-strong", fill="var(--bf-green-ink)")
+    line(o, 545, yv(35.2), 555, 268, "var(--bf-vz-1)", 0.9)
+    text(o, lx, 267, "Word spelling (E_consume)", 9.6, "bf-t-strong", fill="var(--bf-blue)")
+    text(o, lx, 278, "298 -> 35 ms (wall diff)", 8.8, "bf-tm")
 
-    # Annotation noting crossover around 6W where spelling drops below delivery ledge
-    text(
-        o,
-        xs[6] + 10,
-        yv(105),
-        "At 6W+ spelling drops below",
-        9.2,
-        "bf-tm",
-        "start",
-    )
-    text(
-        o,
-        xs[6] + 10,
-        yv(90),
-        "delivery's 48 ms serial ledge",
-        9.2,
-        "bf-tm",
-        "start",
-    )
-    arrow(o, xs[6] + 45, yv(83), xs[6] + 4, yv(54), "var(--bf-vz-axis)", 1.1)
+    line(o, 545, yv(5.4), 555, 291, "var(--bf-vz-3)", 0.9)
+    text(o, lx, 294, "Plumbing: 5.2-5.7 ms", 9.4, "bf-t-strong", fill="var(--bf-green-ink)")
+
+    # Callout highlighting L3-eviction rise at 8-10W
+    text(o, 258, 198, "At 8-10W, 20 MiB L3 eviction pushes", 9.1, "bf-tm", "start")
+    text(o, 258, 210, "real delivery copy_out above spelling", 9.1, "bf-tm", "start")
+    arrow(o, 434, 206, xs[10] - 6, yv(77.9) - 2, "var(--bf-vz-axis)", 1.1)
 
     aria = (
         "Line chart across 1, 6, 7, 8, 9, and 10 workers showing emission word spelling draining as workers "
-        "increase, from 298.2 ms at 1 worker (22 percent of wall) down to 48.7, 41.5, 37.2, 37.6, and 35.2 ms, "
-        "against three flat serial floors: scan alone at 169.7 to 179.1 ms, delivery serial copy-out at "
-        "47.3 to 49.3 ms (839 MB at roughly 17 GB/s), and pipeline plumbing at 5.2 to 5.7 ms."
+        "increase, from 298.2 ms at 1 worker (cold-store upper bound, roughly 230 to 245 ms in situ) down to "
+        "48.7, 41.5, 37.2, 37.6, and 35.2 ms, alongside two flat floor baselines (scan alone at 169.7 to "
+        "179.1 ms and pipeline plumbing at 5.2 to 5.7 ms) and traced delivery copy_out rising under 20 MiB "
+        "L3 eviction: in none from 29.1 ms at 1 worker and 34.0 ms at 8 to 43.7 ms at 10, and with fast "
+        "workers in SC from 29.0 ms at 6 to 77.9 ms at 10."
     )
-    return svg(320, o, aria)
+    return svg(334, o, aria)
 
 
 def killtest():
@@ -953,7 +1000,13 @@ def redistribution():
     )
     text(o, xm(191.1), y_r2 + 13, "+s/8", 8.8, "bf-t-strong", "middle", fill="var(--bf-vz-2-ink)")
     text(
-        o, xm(207.7) + 6, y_r2 + 13, "207.7 ms (+5.2%)", 9.5, "bf-t-strong", fill="var(--bf-amber)"
+        o,
+        xm(207.7) + 6,
+        y_r2 + 13,
+        "207.7 ms (1.052 gm)",
+        9.2,
+        "bf-t-strong",
+        fill="var(--bf-amber)",
     )
 
     # Row 3: Behind ideal C (SC 135.3 ms vs PC 158.1 ms -> exact +22.8 ms = s/8 gap!)
@@ -976,11 +1029,11 @@ def redistribution():
         xm(158.1) - xm(135.3),
         18,
         "var(--bf-vz-2)",
-        title="PC minus SC at 8 workers: 158.1 - 135.3 = 22.8 ms (matches s/8 = 177.7/8 = 22.2 ms)",
+        title="PC minus SC at 8 workers: 158.1 - 135.3 = 22.8 ms (matches s/8 = 177.7/8 = 22.2 ms; raw capture 0.52, diagnostic ~0.73 after cold-store A7 adjustment)",
     )
     text(o, x0 + 8, y_r3 + 13, "SC ideal: 135.3 ms", 9.2, "bf-t-strong", fill="var(--bf-vz-3-ink)")
     text(o, xm(146.7), y_r3 + 13, "+22.8", 8.6, "bf-t-strong", "middle", fill="var(--bf-vz-2-ink)")
-    text(o, xm(158.1) + 6, y_r3 + 13, "PC 158.1 ms (52% capture)", 9.4, "bf-t-strong")
+    text(o, xm(158.1) + 6, y_r3 + 13, "PC 158.1 ms (0.52 raw cap)", 9.2, "bf-t-strong")
 
     # ---- Bottom section: k = 10 workers (worker slack) + proposed hybrid ----
     rect(o, 10, 206, 700, 148, "var(--bf-surface)", rx=7, stroke="var(--bf-frame)", sw=1.1)
@@ -1035,7 +1088,7 @@ def redistribution():
     text(o, xm(177.6), y_r4 + 13, "20.2% idle", 8.6, "bf-tm", "middle")
     text(o, xm(197.6) + 6, y_r4 + 13, "197.6 ms", 9.6, "bf-t-strong")
 
-    # Row 5: Full pool P (10W) = 187.2 ms (-6.4%; scan 19.3 ms/worker fits inside slack; 2.5% idle)
+    # Row 5: Full pool P (10W) = 187.2 ms median (-5.3% med; P/none geometric mean 0.936, -6.4%)
     y_r5 = 272.0
     text(o, x0 - 8, y_r5 + 9, "Full pool (P)", 9.6, "bf-t-strong", "end")
     text(o, x0 - 8, y_r5 + 20, "scan fits inside slack", 8.5, "bf-tm", "end")
@@ -1064,7 +1117,7 @@ def redistribution():
         xm(187.2) - xm(181.3),
         18,
         "var(--bf-vz-4)",
-        title="Finder/copy/idle residual (2.5% idle)",
+        title="Finder/copy/idle residual (2.5% idle; median 187.2 ms vs 197.6 ms, -5.3%; P/none geometric mean 0.936, -6.4%)",
     )
     text(
         o,
@@ -1080,8 +1133,8 @@ def redistribution():
         o,
         xm(187.2) + 6,
         y_r5 + 13,
-        "187.2 ms (-6.4%)",
-        9.5,
+        "187.2 ms (0.936 gm)",
+        9.2,
         "bf-t-strong",
         fill="var(--bf-green-ink)",
     )
@@ -1116,12 +1169,13 @@ def redistribution():
 
     aria = (
         "Capacity breakdown comparing dedicated scanning, full worker pooling, and a proposed slack-only "
-        "hybrid at 8 and 10 workers. At 8 workers, shipped workers sit only 6.5 percent idle (192.9 ms wall), "
+        "hybrid at 8 and 10 workers. At 8 workers, shipped workers sit only 6.5 percent idle (192.9 ms median), "
         "so moving 177.7 ms of scan CPU onto 8 workers adds 22.2 ms per worker and slows standalone decoding "
-        "to 207.7 ms (+5.2 percent); behind ideal construction, the same 22.8 ms separates PC (158.1 ms) "
-        "from SC (135.3 ms). At 10 workers, shipped workers sit 20.2 percent idle (197.6 ms wall), so "
-        "absorbing 19.3 ms per worker of scan work into slack speeds decoding to 187.2 ms (-6.4 percent). "
-        "A proposed slack-only hybrid keeps the serial scanner and lets idle workers scan ahead only when waiting."
+        "to 207.7 ms median (P/none geometric mean 1.052); behind ideal construction, the same 22.8 ms separates "
+        "PC (158.1 ms) from SC (135.3 ms). At 10 workers, shipped workers sit 20.2 percent idle (197.6 ms median), "
+        "so absorbing 19.3 ms per worker of scan work into slack speeds decoding to 187.2 ms median (-5.3 percent; "
+        "P/none geometric mean 0.936, -6.4 percent). A proposed slack-only hybrid keeps the serial scanner and "
+        "lets idle workers scan ahead only when waiting."
     )
     return svg(376, o, aria)
 

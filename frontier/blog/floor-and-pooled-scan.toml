@@ -4,10 +4,10 @@ kind = "blog"
 zone = "smooth"
 needs = ["long-context"]
 priority = 2
-status = "open"
+status = "done"
 owned_paths = []
 needs_louis = ""
-stage = "review"
+stage = "published"
 post = "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md"
 drafted_by = "antigravity"
 reviewed_by = "claude-code"
@@ -30,4 +30,5 @@ links = [
   "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-draft.md",
   "docs/scripts/figures_floor_and_pooled_scan.py",
   "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-review.md",
+  "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md",
 ]

@@ -57,6 +57,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "The decoder's true floor and a pooled scan" = "blog/2026-11-26-true-floor-and-pooled-scan.md" },
     { "Dropping the coordinator" = "blog/2026-11-26-dropping-the-coordinator.md" },
     { "Complementary bottlenecks" = [
       { "The experiment" = "blog/2026-11-26-complementary-bottlenecks.md" },
@@ -293,6 +294,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-26-true-floor-and-pooled-scan.md" = "Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack." },
   { "blog/2026-11-26-dropping-the-coordinator.md" = "Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier." },
   { "blog/2026-11-26-complementary-bottlenecks.md" = "Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together." },
   { "blog/2026-11-26-from-bottlenecks-to-better-algorithms.md" = "How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them." },
