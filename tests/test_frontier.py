@@ -1165,6 +1165,56 @@ class TestFrontierStress(unittest.TestCase):
         self.assertEqual(sum(results), 1)
         self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 3)
 
+    def test_ten_slot_admission_and_reuse(self):
+        """At the proposed ceiling, racing distinct IDs cannot overshoot; release reopens a slot."""
+        seed = self.sb.seed
+        config_path = seed / "frontier" / "config.toml"
+        config_path.write_text(
+            config_path.read_text().replace("max_live_holds = 3", "max_live_holds = 10")
+        )
+        for i in range(12):
+            cid = f"cap-ten-{i}"
+            (seed / "frontier" / "claims" / f"{cid}.toml").write_text(_claim_toml(cid))
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "ten-slot fixture")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("ten-author")
+        for i in range(9):
+            result = self.sb.run_frontier(author, "claim", f"cap-ten-{i}", "--by", "seed")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        mods = [_load_frontier_module(self.sb.clone(f"ten-racer-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i):
+            mod = mods[i]
+            original = mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with mock.patch.object(mod, "write_lease", side_effect=write):
+                try:
+                    mod.claim(f"cap-ten-{9 + i}", f"agent-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 10)
+        full = self.sb.run_frontier(author, "claim", "cap-ten-11", "--by", "seed")
+        self.assertNotEqual(full.returncode, 0)
+        lease = mods[0].holds()["cap-ten-0"][1]
+        release = self.sb.run_frontier(
+            author, "release", "cap-ten-0", "--session", lease["session"]
+        )
+        self.assertEqual(release.returncode, 0, release.stdout + release.stderr)
+        result = self.sb.run_frontier(author, "claim", "cap-ten-11", "--by", "seed")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 10)
+
     def test_expired_producer_cannot_revive_at_capacity(self):
         _, _, head, pr = self._submitted_review()
         mod = _load_frontier_module(self.sb.clone("reviewer"))

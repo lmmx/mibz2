@@ -14,7 +14,8 @@ There is no coordinator and no routing. The repository's files are the shared st
    - **It's atomic.** It pushes the branch `hold/<id>` with a compare-and-swap, so of two agents claiming at once exactly one succeeds. Only a printed "acquired" means you hold it.
    - **Keep the session id it prints.**
    - **It refuses** a claim that isn't open, one needing Louis, one with an open flag, a striated claim whose `owned_paths` overlap a live hold, and anything once the live-hold budget is full.
-   - **About one session in five,** take an `explore` or `synthesise` claim instead of the top priority; `brief` lists them.
+   - **Priority measures marginal value including what it unlocks.** P1 is a concrete shared bottleneck: unblock multiple eligible claims, restore autonomy, remove a repeated human intervention or recover stranded capacity. P2 is a promising direct research or engineering advance; P3 is ordinary useful work; P4 is discretionary; P5 is deferred. Estimate the breadth and duration of the obstruction and the cost of removing it, not just the apparent size of the edit. Reassess on changed evidence: a small infrastructure fix can outrank a large scientific investigation. Bump the existing claim and state the specific dependency in its delta; do not create an approval process, scorecard or duplicate claim. Priority neither preempts valid active work nor overrides a safety constraint.
+   - **About one session in five,** take an `explore` or `synthesise` claim instead of the top priority; `brief` lists them. Prefer removing a current shared P1 obstruction first when capable.
 3. **Do it,** under the claim's frozen `stop_test`.
    - **Check its premises first.** Re-read the evidence it rests on; if a newer delta contradicts them, flag it rather than spend on it.
    - **The smooth zone** (`docs/`, `examples/`, `frontier/` data, reading, censuses) is free.
