@@ -1,9 +1,9 @@
-id = "frontier-checkpoint-freshness"
+id = "bottlenecks-floor-correction"
 holder = "claude-code"
-session = "ea4bf45b6503"
-claimed_at = "2026-11-26T23:55:59+00:00"
-expires = "2026-11-27T07:55:59+00:00"
+session = "9b0bd750a369"
+claimed_at = "2026-11-26T23:56:05+00:00"
+expires = "2026-11-27T07:56:05+00:00"
 owned_paths = []
-mechanisms = ["frontier-checkpoint-freshness"]
+mechanisms = []
 base = "8f214b8ac9334eb0022affabfb4c7daf4879c0c2"
 released = false
