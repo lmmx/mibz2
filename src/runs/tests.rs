@@ -1071,7 +1071,27 @@ mod fold_tests {
         let (mut ship, mut cells) = (OpenCellsOf::<F>::default(), OpenCellsOf::<F>::default());
         let (mut r, mut scratch) = (Runs::default(), Runs::default());
         let mut got = vec![0x5a; 37];
-        let outcome = cells.fold(b, &mut scratch, &mut got, k);
+        // (on a copy: the fold hands its symbols over once it admits the block)
+        let mut bf = copy(b);
+        let mut handed = None;
+        let outcome = cells.fold(&mut bf, &mut scratch, &mut got, k, &mut |n, syms| {
+            assert!(handed.is_none(), "{what}: handed over twice");
+            handed = Some((n, syms));
+        });
+        match (outcome, handed) {
+            (Outcome::Done(n), Some((m, syms))) => {
+                assert!(
+                    n == m && syms == b.syms,
+                    "{what}, {k:?}: what was handed over"
+                );
+                assert!(bf.syms.is_empty(), "{what}, {k:?}: the symbols kept");
+            }
+            (Outcome::Done(_), None) => panic!("{what}, {k:?}: folded, nothing handed over"),
+            (_, h) => assert!(
+                h.is_none() && bf.syms == b.syms,
+                "{what}, {k:?}: handed over, not folded"
+            ),
+        }
         let shipped = front(b, &mut r, k);
         let decodes = matches!(shipped, Ok(n) if (b.orig_ptr as usize) < n);
         match outcome {

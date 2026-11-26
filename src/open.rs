@@ -869,15 +869,21 @@ impl crate::runs::fold::Sink for FoldSink<'_> {
 impl<const FORCED: bool> OpenCellsOf<FORCED> {
     /// Research only (`mtf-fold`): the block `b` (a run-route block of bound at most 900,000)
     /// inverted by the open kernel with its first pass fed straight from the MTF/RLE2 front,
-    /// its bytes into `out` (whatever it held). `Done(n)` only where the shipped path,
-    /// `runs::front` and then `invert_runs`, would have taken the open kernel to the same
-    /// bytes; otherwise `out` holds nothing of the block's, and the caller takes the shipped
-    /// path from the start.
+    /// its bytes into `buf` (the worker's scratch: whatever it held). `Done(n)` only where the
+    /// shipped path, `runs::front` and then `invert_runs`, would have taken the open kernel to
+    /// the same bytes; otherwise nothing is handed over and the caller takes the shipped path.
     ///
-    /// **Its buffer before the rows are known:** `out` is sized by the block's bound, and the
-    /// queues laid out over it (`outq::Queues`, chunks from its start); the walk sizes it to
-    /// `n` itself (`emit`). The queues' contents are the shipped pass's: only where their chunks
-    /// lie can differ, which the wiring reads through the same `Heads`.
+    /// **`admitted(n, syms)`** is called once the first pass is done and the block admitted,
+    /// before the rest of the construction and the walk: with the block's rows and its symbols'
+    /// buffer (taken from `b`, which nothing reads after). That is the point at which the
+    /// shipped path's worker hands the symbols back and takes its output buffer
+    /// (`decode_owned`'s `take`), as near as a fused pass allows.
+    ///
+    /// **Its buffer before the rows are known:** `buf` is sized by the block's bound (with
+    /// the pool's slack for the RLE1's growth), and the queues laid out over it
+    /// (`outq::Queues`, chunks from its start); the walk sizes it to `n` itself (`emit`). The
+    /// queues' contents are the shipped pass's: only where their chunks lie can differ, which
+    /// the wiring reads through the same `Heads`.
     ///
     /// **Its caps, before the admission's is known:** the retained rows at most the bound
     /// (every block within its bound has at most that many, so no admitted block meets it) and
@@ -885,13 +891,15 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
     /// two fragments of the one holding the marked row). They bound what a block past its
     /// bound can take before the front refuses it. Once `n` and the record count are known,
     /// `cap` decides as on the shipped path: a block it refuses, or one past a dense cap, is
-    /// `NotOpen`, exactly the blocks the shipped path gives to `LazyCells`.
+    /// `NotOpen`, exactly the blocks the shipped path gives to `LazyCells` (and, unforced, a
+    /// block refused by its literals alone, `runs::fold::refused`, before its runs are sent).
     pub(crate) fn fold(
         &mut self,
-        b: &crate::block::Symbols,
+        b: &mut crate::block::Symbols,
         scratch: &mut Runs,
-        out: &mut Vec<u8>,
+        buf: &mut Vec<u8>,
         k: Kernels,
+        admitted: &mut dyn FnMut(usize, Vec<u16>),
     ) -> crate::runs::fold::Outcome {
         use crate::runs::fold::{self, Outcome};
         let bound = b.max_len;
@@ -900,9 +908,14 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
         }
         let p = b.orig_ptr;
         let strips = bound / (LIMIT as usize + 1) + 2;
-        out.resize(bound + INLINE, 0);
+        // (the pool's capacity for a block of this many rows, `parallel.rs`'s worker)
+        let room = bound + bound / 16 + 64;
+        if buf.capacity() < room {
+            buf.reserve_exact(room - buf.len());
+        }
+        buf.resize(bound + INLINE, 0);
         let mut sink = FoldSink {
-            pass: self.open.begin(&mut out[..], bound as u32, strips),
+            pass: self.open.begin(&mut buf[..], bound as u32, strips),
             p,
             c: 0,
             pos: 0,
@@ -932,10 +945,11 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
         if f.m > cap.m || ns > cap.strips {
             return Outcome::NotOpen;
         }
+        admitted(n, std::mem::take(&mut b.syms));
         let (stats, mark, bits) =
             self.open
-                .finish::<true, true>(&f, ns, &[], n as u32, p, LIMIT, &out[..], &heads);
-        self.open.walk(n, stats.retained, mark, bits, out);
+                .finish::<true, true>(&f, ns, &[], n as u32, p, LIMIT, &buf[..], &heads);
+        self.open.walk(n, stats.retained, mark, bits, buf);
         #[cfg(test)]
         {
             self.opened += 1;
@@ -955,12 +969,13 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     #[cfg(feature = "mtf-fold")]
     fn fold_runs(
         &mut self,
-        b: &crate::block::Symbols,
+        b: &mut crate::block::Symbols,
         scratch: &mut Runs,
-        out: &mut Vec<u8>,
+        buf: &mut Vec<u8>,
         k: Kernels,
+        admitted: &mut dyn FnMut(usize, Vec<u16>),
     ) -> crate::runs::fold::Outcome {
-        self.fold(b, scratch, out, k)
+        self.fold(b, scratch, buf, k, admitted)
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
         if let Some(cap) = Self::cap(r.records().len(), n, p) {

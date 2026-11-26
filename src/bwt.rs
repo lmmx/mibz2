@@ -98,17 +98,20 @@ pub trait InverseBwt: Default + Send {
     }
 
     /// Research only (`mtf-fold`): the block `b` inverted straight from its symbols into
-    /// `out`, its first pass fed by the MTF/RLE2 front (`runs::fold`), or the outcome that
-    /// sends the caller the shipped way. Called only when `folds` is true.
+    /// `buf`, its first pass fed by the MTF/RLE2 front (`runs::fold`), calling
+    /// `admitted(n, syms)` once its rows are known and it is admitted; or the outcome that
+    /// sends the caller the shipped way, with nothing handed over. Called only when `folds`
+    /// is true.
     #[cfg(feature = "mtf-fold")]
     fn fold_runs(
         &mut self,
-        b: &crate::block::Symbols,
+        b: &mut crate::block::Symbols,
         scratch: &mut crate::runs::Runs,
-        out: &mut Vec<u8>,
+        buf: &mut Vec<u8>,
         k: crate::Kernels,
+        admitted: &mut dyn FnMut(usize, Vec<u16>),
     ) -> crate::runs::fold::Outcome {
-        let _ = (b, scratch, out, k);
+        let _ = (b, scratch, buf, k, admitted);
         crate::runs::fold::Outcome::Bailed
     }
 
