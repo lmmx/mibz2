@@ -2,6 +2,8 @@
 
 26 November 2026 · working title; not a published crate or decoder feature.
 
+**Owner's revised investment criterion (26 November 2026):** no standalone implementation programme solely for general-purpose compression or memory savings. First identify a concrete computational advantage for mibz2, with a credible construction-plus-consumer budget and a measured relevant improvement over matched controls. The separate decoder investigations establish that case; the standalone package then generalises the useful mathematics while preserving its independence. Until that application case exists, keep this design as an unadmitted idea, not an implementation task. The scoped #998 STOP stands; do not reinterpret a storage-only result as a decoder win.
+
 **Purpose:** reusable mathematical software for discovering, constructing, selecting and evaluating exact compressed representations of finite permutations. The library learns which representation fits the input and the operations requested, including the cost of finding and building it. The object is the permutation, not a compressed text or a particular inverse-BWT algorithm.
 
 - [Full research and application specification](DESIGN.md)

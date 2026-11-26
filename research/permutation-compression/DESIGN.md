@@ -1,5 +1,7 @@
 # Adaptive permutation compression: a reusable discovery, construction and selection library
 
+**Owner's revised investment criterion (26 November 2026):** no standalone implementation programme solely for general-purpose compression or memory savings. First identify a concrete computational advantage for mibz2, with a credible construction-plus-consumer budget and a measured relevant improvement over matched controls. The separate decoder investigations establish that case; the standalone package then generalises the useful mathematics while preserving its independence. Until that application case exists, keep this design as an unadmitted idea, not an implementation task. The scoped #998 STOP stands; do not reinterpret a storage-only result as a decoder win.
+
 ## 1. Origin and intent
 
 The maintainer wants to generalise permutation compression itself: both finding useful mathematical structure and constructing an efficient representation. Incubate independent software within this repository, release it separately when well defined, and never allow it to become intermingled with mibz2. This is analogous to incubating the standalone mibz2 crate within reshape. It also follows Vidit Nanda's approach to effective mathematical software, not a request to port Perseus or Helmer into the decoder.
@@ -8,7 +10,7 @@ The earlier [software survey](../../docs/journal/2026-11-24-algorithm-level/brie
 
 The [permutation-patterns discussion](../../docs/journal/2026-11-24-algorithm-level/permutation-patterns/chatgpt-response.md) contains the original detailed literature leads and the distinction between pattern structure and iteration. The new project is a generalisation, independent of the decoder-specific pattern and ideal-structure experiments.
 
-The maintainer explicitly wants complexity metadata to be *input to the algorithm that selects representations*, and experiments on different kinds of permutations, e.g. LF of Wikidata versus ordinary text. Abstract entirely from decompression and from Rauzy–Veech induction. A technique need not accelerate bzip2 to be useful software.
+The maintainer explicitly wants complexity metadata to be *input to the algorithm that selects representations*, and experiments on different kinds of permutations, e.g. LF of Wikidata versus ordinary text. Abstract entirely from decompression and from Rauzy–Veech induction. General usefulness is not sufficient reason for this project to fund implementation; the application must benefit first.
 
 ## 2. Mathematical object and contract
 
@@ -106,4 +108,4 @@ Potential follow-ons, each separate claim as evidence warrants: additional repre
 - permutation-patterns (#989): pattern-derived structures in retained maps and labelled decoder evaluation; keeps its own gate.
 - permutation-compression-incubation: general mathematical software on explicit permutations, arbitrary operation workloads. Neither other result is a prerequisite. Share mathematical insights and generic fixtures, not decoder harnesses, source dependencies or assumptions. Discoverable artifacts and compatible contracts, not session routing.
 
-Success is valuable mathematical software in its own terms. Any later decoder benefit is an additional application, not its definition.
+The package must be justified by concrete mibz2 computational benefit first, even though its eventual interface and benchmarks remain application-independent.
