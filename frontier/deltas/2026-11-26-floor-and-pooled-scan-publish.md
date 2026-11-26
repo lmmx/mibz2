@@ -1,0 +1,14 @@
+claim: floor-and-pooled-scan
+by: antigravity
+outcome: done
+evidence: docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-review.md (#961), docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md (#952), docs/journal/2026-11-24-algorithm-level/delivery/README.md (#966), docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md, docs/scripts/figures_floor_and_pooled_scan.py, origin/master e88ce7375206
+
+**What was asked:** revise `floor-and-pooled-scan` against all nine cold-review findings (F1–F9 in #961) and publish under #964's standing blog-publishing authority.
+**What I found:** every factual correction from #952, #954, #961 and #966 integrated cleanly without altering any frozen verdict. Delivery's flat 48 ms floor was a cold-store oracle artifact (`SFCMR` reading 209.7 MiB from DRAM); real traced `copy_out` runs 29.1 ms at 1W and 34.0 ms at 8W, climbing to 43.7/67.4/77.9 ms at 10W in `none`/`PC`/`SC` under 20 MiB L3 eviction. Emission's cold-store caveat moved from `SFMRD` (construction, where `A7 = 0.0`) to `SCMRD` (emission, `A7` 98.9 vs 72.4 ms/worker). Word spelling's 298.2 ms is qualified as a cold-store upper bound (~230–245 ms in situ), K1's ~50% capture is qualified beside cold-store `C`'s asymmetric `A7` bias (~0.73 diagnostic bound, frozen KILL kept), §5's knee derives $w/s \approx 8.3$ from this run's `S` arm (184.9 ms at 8W), RLE1/CRC's 14.2 ms wall difference is paired with its 104.0 ms traced `A9` CPU and added to §6's worker targets, and all F9 exactness items (87–98% share, geometric mean −6.4% vs median −5.3%, 8–10W idle range, #931 citation, #741 "probably", turbo clock note, 4.9 GB citation, Q7 8W slowdown, repinned `e88ce737` Sources) are applied.
+**What changed:**
+- Published `docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md` (Kind: `Research result`, dek passes `check_prose.py`, zero AI/model names) with 4 injected SVGs.
+- Updated `docs/scripts/figures_floor_and_pooled_scan.py` (redrawn `taring` Panel B and `reservoir` with real traced delivery curves and emission `*` caveat; `redistribution` distinguishes medians vs `gm`; `ruff` clean).
+- Wired post into `zensical.toml` (nav + `Optional`), `docs/site/blog/index.md`, `docs/site/assets/social/blog-2026-11-26-true-floor-and-pooled-scan.png`, and `docs/site/assets/social/cards.json`.
+- Marked `frontier/blog/floor-and-pooled-scan.toml` `stage = "published"` and `status = "done"`.
+**What's next:** follow-up small PR can fix the same F4/F9 slips (`SFMRD` vs `SCMRD`, "87–93%") in `ideal-parts/results/floor/README.md` if desired, and optionally check live rendering on GitHub Pages after deploy.
+**Caveats:** `docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-draft.md` is left intact as the reviewed #953 historical snapshot referenced by `floor-and-pooled-scan-review.md`.

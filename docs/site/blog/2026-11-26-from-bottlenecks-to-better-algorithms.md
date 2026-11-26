@@ -162,6 +162,12 @@ account for the all-ideal configuration's rise from 112 ms to 142 ms between eig
 cannot separate the decoder's own contention from the traffic of the oracles' stores, which is the next
 section's subject.
 
+Measured on 26 November, the zero-copy floor run found no sign of a memory-bandwidth third station
+between eight and ten workers. Memory traffic stayed at 13–17 GB/s, far below the machine's
+bandwidth. Without oracle copying, the all-ideal wall did not rise towards ten workers
+([§3](#3-accounting-for-the-remaining-computation);
+[the true-floor post](2026-11-26-true-floor-and-pooled-scan.md#1-how-much-of-the-first-matrixs-floor-was-the-decoders)).
+
 ## 3. Accounting for the remaining computation
 
 Every oracle hands its recorded answer to the decoder, and the handover was timed in a ledger entry of
@@ -207,6 +213,36 @@ traffic alone takes 115–145 ms. The follow-up run is built to remove it: its o
 answers without copying, and one configuration skips the expansion as well, so that Residuals A and B
 are measured rather than inferred
 ([the floor run](https://github.com/lmmx/mibz2/pull/917)).
+
+Measured on 26 November, the zero-copy floor run put both residuals beside the design analysis's
+forecasts, which stay above as registered before the data
+([the floor results](https://github.com/lmmx/mibz2/blob/311923efd5ac7b113a9f944db34f41172c096816/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md);
+[the true-floor post](2026-11-26-true-floor-and-pooled-scan.md#1-how-much-of-the-first-matrixs-floor-was-the-decoders);
+[the main post's note](2026-11-26-complementary-bottlenecks.md#6-what-the-experiment-could-not-remove)):
+
+| Per decode (ms) | 1 worker | 6 workers | 8 workers | 10 workers |
+|---|---:|---:|---:|---:|
+| Residual A, forecast | ~273 | ~60–62 | ~51–55 | ~50–54 |
+| Residual A, measured | 303.9 [302.9, 305.0] | 54.0 [51.2, 56.7] | 42.4 [40.3, 44.4] | 40.5 [37.6, 43.5] |
+| Residual B, forecast | ~14 | ~12–15 | ~14–17 | ~15–19 |
+| Residual B, measured | 5.7 [5.5, 5.8] | 5.3 [5.3, 5.4] | 5.2 [5.0, 5.5] | 5.4 [5.3, 5.5] |
+
+*Measured rows are block means with 95% intervals over eight randomised blocks, from one run on one
+machine and one workload. Forecast rows and the copying-and-contention row above remain argued.*
+
+Residual B was the run's scored prediction under the rule frozen before the data
+([the floor run](https://github.com/lmmx/mibz2/pull/917)). It measured 5.2–5.7 ms across one to ten
+workers, or 2.7% of the shipped 194.6 ms decode at eight. That misses low at every count — whether
+compared against the floor report's 14–19 ms one-worker label or the per-count forecasts above —
+and closes pipeline plumbing as a target. Residual A was reported unscored. At one worker it
+exceeds its forecast because that configuration reads the oracles' stores cold from main memory,
+adding about 55–65 ms to its 298 ms word-spelling figure
+([the cold-store reread](https://github.com/lmmx/mibz2/blob/2aaded3a3ba00f140d2621813e87a365758e975b/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md),
+[PR #952](https://github.com/lmmx/mibz2/pull/952)). From eight to ten workers Residual A stays flat
+(42.4, 42.9 and 40.5 ms), confirming that the earlier rise to 142 ms was the old oracles' copying.
+The previous table's last forecast row, for simultaneous copying and lock contention, is not
+re-derived here. The matrix and the floor run are separate runs, so subtracting across them would
+mix their noise.
 
 ## 4. Contraction, enrichment and closure
 

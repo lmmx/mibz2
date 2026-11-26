@@ -1,0 +1,33 @@
+id = "stabilise-read-block"
+title = "Public zero-copy block-lending API on StreamDecoder (Drop-recycling BlockGuard)"
+kind = "decision"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 4
+status = "idea"
+mechanisms = ["delivery"]
+owned_paths = ["src/parallel.rs", "src/lib.rs"]
+needs_louis = "Public API stability decision (delivery-copyout stop_test / RULES D): approve whether to expose StreamDecoder::read_block as a Drop-recycling BlockGuard (recommended) vs un-hiding raw read_block(spent); low priority while scan and workers bind"
+question = """
+`BzReader` already exposes public zero-copy block lending via `BufRead::fill_buf` (`src/read.rs:339-367`), and `StreamDecoder::read_block(spent)` (`src/parallel.rs:880-915`) is already `pub` but `#[doc(hidden)]`.
+The `delivery-copyout` census (`docs/journal/2026-11-24-algorithm-level/delivery/README.md`) showed that zero-copy lending cuts lightweight delivery+consumer time to 0.48x warm / 0.64x cold (-4.3% to -5.7% end-to-end on wikidata x4 at 2T), but forgetting to return `spent` to raw `read_block(spent)` causes a +76.5% page-fault regression from unrecycled per-block allocations.
+Should `StreamDecoder` expose a public `Drop`-recycling lent-block guard (e.g. `DecodedBlock<'_>: Deref<Target = [u8]>` returning its buffer to `State::free_out` on drop) or un-hide `read_block(spent)`, once scan and workers approach the ~28-34 ms L3-hot delivery floor?
+"""
+why = """
+Eliminates the final serial copy-out for push-API (`StreamDecoder`) callers without exposing the unrecycled-buffer footgun of raw `read_block(spent)`. Deferred behind `delivery-l3-working-set` and scan/worker speedups because `read_wait` is still 65-157 ms at 8-10W today.
+"""
+stop_test = """
+Requires Louis's public API approval before admission/implementation (RULES D). Once approved: zero `unsafe`, exact bytes on all unit/plateau/unwind tests, zero regression on `BzReader` `Read`/`BufRead` and `StreamDecoder::read`, and verified zero-copy recycling (peak pool allocations bounded by `slots`).
+"""
+done_when = """
+Louis's API decision recorded; if approved, implemented with plateau/unwind tests, docs, and a delta.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/delivery/README.md",
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "src/parallel.rs",
+  "src/read.rs",
+]
+links = [
+  "docs/journal/2026-11-24-algorithm-level/delivery/README.md",
+]

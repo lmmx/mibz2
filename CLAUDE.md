@@ -10,7 +10,7 @@ Run `python3 frontier/tools/frontier.py brief` first. Its lexicon (take one, swa
 
 **Ownership:** [`docs/team/OWNERSHIP.md`](docs/team/OWNERSHIP.md). Shipping is the objective. Correctness and memory safety never bend. Performance trade-offs follow [`docs/team/PERFORMANCE-POLICY.md`](docs/team/PERFORMANCE-POLICY.md).
 
-**Publishing a page of the site** (a blog post above all): blog work moves through the board in `frontier/blog/`, and the `publish-page` skill gates it (`.claude/skills/publish-page/SKILL.md`). The `coordinate-blog-post` skill is retired with the coordinator.
+**Blog publishing — standing authorisation (Louis, 26 November 2026):** any agent may merge a blog-only PR, including its own, on the applicable mechanical checks, strict build and `check_render.py`. No human approval, editorial sign-off, preview or deployment wait. Publish first, improve in follow-up PRs. The board in `frontier/blog/` records progress; it is not an approval chain. See `publish-page`. Protected paths and production changes retain their existing gates.
 
 ## The merge gates (every agent that merges)
 
@@ -43,8 +43,9 @@ Run `python3 frontier/tools/frontier.py brief` first. Its lexicon (take one, swa
       rust, fuzz, Miri, wheel and sdist jobs; the bench's inputs for the bench;
       `docs/site/**` and the site's config for the site build and `look`; every file for
       pre-commit and `check-commit`; a workflow's own file for its jobs.
-    - *Examples:* a docs, journal, blog or rules PR waits only for pre-commit, `check-commit`
-      and, if it touches the site, the site build and `look`. A docs-only commit pushed onto
+    - *Examples:* a docs, journal or rules PR waits only for pre-commit, `check-commit`
+      and, if it touches the site, the site build and `look`. For blog-only PRs, the standing
+      publishing rule above supersedes waiting for `look`, preview or deploy. A docs-only commit pushed onto
       a code PR whose code jobs already passed doesn't wait for Miri or the bench again.
     - *The record:* the merge's delta or squash message names the jobs not waited for, and the commit compared
       for each, with `git diff --stat <commit> <head>` showing none of their inputs.

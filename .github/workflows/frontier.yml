@@ -24,6 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - run: git fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -46,5 +49,5 @@ jobs:
           status=$(python3 -c "import tomllib;print(tomllib.load(open('frontier/config.toml','rb'))['status_issue'])")
           louis=$(python3 -c "import tomllib;print(tomllib.load(open('frontier/config.toml','rb'))['needs_louis_issue'])")
           gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/${status}" -F body=@frontier/STATUS.md >/dev/null
-          awk '/^## Needs Louis/{f=1} /^## In progress/{f=0} f' frontier/STATUS.md > needs.md
+          awk '/^## Needs Louis/{f=1} /^## Open flags/{f=0} f' frontier/STATUS.md > needs.md
           gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/${louis}" -F body=@needs.md >/dev/null

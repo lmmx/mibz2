@@ -4,7 +4,7 @@ kind = "probe"
 zone = "smooth"
 needs = ["shell", "rust"]
 priority = 3
-status = "idea"
+status = "open"
 mechanisms = ["rle1-crc"]
 owned_paths = []
 needs_louis = ""
@@ -13,6 +13,7 @@ Primary evidence from cc8ba137 (zero-copy SECMD - SECMRD) and c71c4a56 (traced A
 In src/rle.rs:103-170, unrle_in_place performs four full-buffer passes (two full-buffer writes: copy_within up by shift, then copy_within back down) whenever shift > 0.
 1. Census real blocks (wikidata, wikidata x4, ab gen): fraction with runs == 0, shift == 0, shift > 0, min_grown >= 0, reserve_exact realloc rate, and per-pass breakdown (find_runs, shift-up copy_within, expand copy_within, crc32).
 2. Measure single-write-pass designs on real blocks (backward in-place expansion when min_grown >= 0, or one-pass AVX2 unrle fused with tiled CRC32 into a swapped/recycled buffer eliminating the shift-up pass, or emission-tiled RLE1+CRC).
+Note (synthesis third-pass §1 and §3, before data; stop test untouched): #966's census finds shift > 0 on 59 of 431 wikidata blocks (13.7%), so the four-pass route is the minority. The other blocks with runs take three passes and one write. Removing the shift-up pass alone is under 9% of A9; the 35% 1-worker gate needs find_runs, compaction and CRC fused into one tiled pass. The 191/216 ms PC/SC A9 figures carry the C oracle's cold store; real code (none, S) is 131/128 ms at k = 10.
 """
 why = """
 R is the only worker-side stage missing from the open claims, is comparable in 1W cost to MTF/RLE2 (5.7% vs 7.5%), and is the single worst LLC-thrashing multiplier at 8-10 workers (2.55x cycle blow-up and +767 MiB DRAM traffic at 10W).
@@ -24,6 +25,7 @@ done_when = """
 A results note under docs/journal/2026-11-26-explore/ or rle1-census/, a delta, surface.tsv row R updated, and either a build claim admitted or a dead-ends.tsv row recorded.
 """
 premises = [
+  "docs/journal/2026-11-26-synthesis/third-pass.md",
   "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
   "src/rle.rs",
   "docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/zero-copy-floor.tsv",

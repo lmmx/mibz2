@@ -1,0 +1,30 @@
+id = "worker-l3-footprint"
+title = "Attributing the 8-10-worker L3 cost: per-worker live set against the ready queue"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+mechanisms = ["delivery", "rle1-crc"]
+owned_paths = []
+needs_louis = ""
+question = """
+Synthesis third-pass §1 (re-derived from c71c4a56's runs.jsonl): with construction real (the S arm), A9 at k = 10 is 127.7 ms and copy_out 47.8 ms at the same 16.3 MiB ready high-water mark where SC (cold C store) shows 213.4 and 76.7. The ready queue's time-average is 0.3-4.3 MiB, 4-17x below its high-water mark, and mostly runt blocks; the per-worker live set (out, Built, symbols, runs) is about 1.0-1.6 MiB a worker, derived from oracle store sizes, not measured.
+1. Census, per block and per stage on real blocks (wikidata, wikidata x4), the bytes each worker holds live at once: out, stage, runs, symbols, MTF output, Open's Built state, OutQ16.
+2. From the existing traces only (c71c4a56; cc8ba137 for PMU), fit none's and S's A9 and copy_out growth over k = 6 against (a) the ready high-water mark, (b) the ready time-average, (c) k times the per-worker live set plus (b). Keep oracle arms with a cold C or E store out of the fit.
+"""
+why = """
+Two idea claims (delivery-l3-working-set, single-pass-rle1-crc's 8-10W branch) rest on an L3 cliff whose large figures come from the SC and PC oracle arms. If L3 binds in real code at all, the workers' own footprint is the larger term, which would point at the fold, forward emission and RLE1 fusion as L3 levers rather than READY_BYTES.
+"""
+stop_test = """
+Frozen before data: smooth probe, no workstation run. If (c) explains none's and S's A9 + copy_out growth better than (a) (R^2 higher by >= 0.15) and (a)'s R^2 < 0.5, record that READY_BYTES is not the L3 lever: add a dead-ends.tsv row for the READY_BYTES cap and propose delivery-l3-working-set be dropped in a delta. If (a) explains it with R^2 >= 0.5, record that and leave delivery-l3-working-set as is. Otherwise report inconclusive. Never relaxes a frozen verdict (C2).
+"""
+done_when = """
+A results note under docs/journal/2026-11-26-synthesis/ or delivery-l3/, a delta, surface.tsv rows R and D updated if the attribution changes them.
+"""
+premises = [
+  "docs/journal/2026-11-26-synthesis/third-pass.md",
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-24-algorithm-level/delivery/README.md",
+]
+links = ["docs/journal/2026-11-26-synthesis/third-pass.md"]
