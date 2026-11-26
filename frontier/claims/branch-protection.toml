@@ -3,7 +3,7 @@ title = "Protect master and the instructions with GitHub's own settings"
 kind = "decision"
 zone = "striated"
 needs = ["repo-write"]
-priority = 3
+priority = 1
 status = "open"
 owned_paths = []
 needs_louis = ""
@@ -12,7 +12,7 @@ Today the protected list and the merge gates are kept by convention. GitHub bran
 - required checks (no AI attribution, check-commit, the frontier check);
 - a CODEOWNERS review for the protected paths;
 - no direct pushes to master.
-Decide what to require. Every agent merges as Louis's account, so a required review needs an account other than the author's: weigh that.
+Implement the already approved scope recorded in frontier/deltas/2026-11-26-owner-decisions.md, without a new owner decision. The frontier check becomes required only after its known failures are fixed and independently verified. No mandatory independent-account or CODEOWNERS approval while agents share the owner's identity. This is a P1 capacity-unblocking dependency; coordinate through committed evidence and the existing review, not session routing.
 """
 why = """
 Gemini: vetoes should be backed by branch protection, not prose.

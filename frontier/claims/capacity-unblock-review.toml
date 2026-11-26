@@ -1,0 +1,24 @@
+id = "capacity-unblock-review"
+title = "Unblock the swarm: independently review the admission repair and stage capacity 6 then 10"
+kind = "review"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = []
+mechanisms = []
+needs_louis = ""
+question = """
+This is a HOLD-FREE independent review, not another tooling implementation or an additional reservation. The existing P1 harden-frontier-tooling claim is at review (#974). Its author cannot provide the independent review. Before starting lower-priority research, a different capable participant should take the review from the repository, even if all three slots are occupied. Inspect current exact head, primary code, tests and flags; do not repeat the implementation. On head 92c10057c3b4d2cb1f3135ec5094f2b621ee5667, all returned Actions and pre-commit passed, including the explicit frontier regression step in run 45901759754. Recheck current head and mergeability, audit atomic distinct-ID admission and terminal recovery, and run the tests. Review/merge the protected repair under existing rules if warranted; otherwise give precise actionable defects. Independently resolve the three original flags only on evidence, and verify the already approved branch-protection scope and updated-client rollout. Do not require a free slot, a new owner message or a new coordinator. Carry forward the concrete staged 3 -> 6 -> 10 capacity plan in the delta, with the cap itself in separate protected PRs after gates.
+"""
+why = """
+The cap is the bottleneck shared by all independent research tracks. P1 work already exists but is filtered out of ordinary acquisition because it is at review, and the flags correctly prohibit changing the cap. This read-only review makes the unlock action itself discoverable at highest priority. The owner asks to consider ten; six is the already authorised first checkpoint, ten a proposed subsequent target subject to evidence, review and existing authority. No running work is pre-empted.
+"""
+stop_test = """
+Review exact current #974 head independently of its author; inspect original flags and actual predicates, verify full green suite and applicable protected gates, and record exact merge or precise unresolved blockers. Keep 3 until the existing harden-frontier-tooling conditions are met; verify rollout so old clients/direct writers cannot silently defeat the epoch, and approved applicable GitHub settings. For 6 and subsequently proposed 10, use isolated remote tests at each cap: distinct IDs contend at final slot, overlapping scopes, expired transfers, renewals, cancelled/merged PR recovery, no cap excess and no stale authority. Raise 3 to 6 in a separate reviewed config PR once original gates pass. At six collect ordinary-work evidence of a saturated admission/completion/reuse cycle without stranded slots or overlap; no paid pilot. If the ten-cap tests and six-slot evidence are satisfactory, propose the separate reviewed 6-to-10 config change, with no extra spending or permission inferred. Do not wait for an arbitrary elapsed period; decide on evidence. If blockers remain, record them and the exact next action, not a general queue of further prerequisites.
+"""
+done_when = """
+Independent exact-head review recorded, repair merged or specific reproducible defects left on its PR, the original flag disposition and rollout/branch-protection status recorded, and the next eligible protected capacity change made discoverable. Review may finish without a merge only with explicit blocker evidence; it must not imply the cap was raised. Follow-on work uses existing P1 harden-frontier-tooling/branch-protection claims, not duplicate repairs.
+"""
+premises = ["frontier/claims/harden-frontier-tooling.toml", "frontier/claims/branch-protection.toml", "frontier/deltas/2026-11-26-owner-decisions.md", "tests/test_frontier.py"]
+links = ["https://github.com/lmmx/mibz2/pull/974", "https://github.com/lmmx/mibz2/actions/runs/45901759754"]
