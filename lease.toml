@@ -1,0 +1,8 @@
+id = "selftest-race"
+holder = "agent-A"
+session = "200ffb689bda"
+claimed_at = "2026-11-26T14:18:58+00:00"
+expires = "2026-11-26T14:21:58+00:00"
+owned_paths = []
+base = "23a23cb842766d7881769fa91dc349494b5d20bd"
+released = false
