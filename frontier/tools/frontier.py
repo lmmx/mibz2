@@ -52,8 +52,12 @@ ME = {"GIT_AUTHOR_NAME": "Louis Maddox", "GIT_AUTHOR_EMAIL": "louismmx@gmail.com
 ME |= {"GIT_COMMITTER_NAME": ME["GIT_AUTHOR_NAME"], "GIT_COMMITTER_EMAIL": ME["GIT_AUTHOR_EMAIL"]}
 
 
-def config():
-    """frontier/config.toml."""
+def config(ref=None):
+    """frontier/config.toml, optionally from a git ref such as origin/master."""
+    if ref:
+        rc, body = git("show", f"{ref}:frontier/config.toml")
+        if rc == 0:
+            return tomllib.loads(body)
     with open(ROOT / "config.toml", "rb") as f:
         return tomllib.load(f)
 
@@ -74,7 +78,7 @@ def git(*args, inp=None, env=None):
 
 def overlaps(a, b):
     """Whether two repository paths contain one another, by path segment."""
-    pa, pb = pathlib.PurePosixPath(a.strip("./")), pathlib.PurePosixPath(b.strip("./"))
+    pa, pb = pathlib.PurePosixPath(a.lstrip("/")), pathlib.PurePosixPath(b.lstrip("/"))
     return pa == pb or pa in pb.parents or pb in pa.parents
 
 
@@ -94,6 +98,21 @@ def load(dirname):
     return items
 
 
+def _parse_head(lines, head):
+    """Parse `key: value` header lines from a delta or flag Markdown file."""
+    h = {}
+    for line in lines[: len(head) + 3]:
+        if ":" in line and not line.startswith("**"):
+            k, v = line.split(":", 1)
+            h[k.strip()] = v.strip()
+    if "resolved_by" not in h:
+        for line in lines:
+            if line.startswith("resolved_by:"):
+                h["resolved_by"] = line.split(":", 1)[1].strip()
+                break
+    return h
+
+
 def heads(dirname, head):
     """The `key: value` header lines of each Markdown file in a directory, newest name first."""
     out = []
@@ -101,19 +120,30 @@ def heads(dirname, head):
         if p.name == "README.md":
             continue
         lines = p.read_text().splitlines()
-        h = {}
-        for line in lines[: len(head) + 2]:
-            if ":" in line:
-                k, v = line.split(":", 1)
-                h[k.strip()] = v.strip()
-        out.append((p, lines, h))
+        out.append((p, lines, _parse_head(lines, head)))
     return out
 
 
-def holds(fetch=True):
-    """{id: (sha, lease)} for every hold on origin; empty if origin can't be reached."""
+def _fetch_master(strict=False):
+    """Fetch origin's master ref; exit on failure when strict."""
+    rc, out = git(
+        "fetch", "-q", "--no-tags", "origin", "+refs/heads/master:refs/remotes/origin/master"
+    )
+    if rc != 0 and strict:
+        sys.exit(f"cannot fetch origin/master:\n{out}")
+    return rc == 0, out
+
+
+def holds(fetch=True, strict=True):
+    """{id: (sha, lease)} for every hold on origin; fail closed on fetch error when strict."""
     if fetch:
-        git("fetch", "-q", "--prune", "origin", "+refs/heads/hold/*:refs/remotes/origin/hold/*")
+        rc, out = git(
+            "fetch", "-q", "--prune", "origin", "+refs/heads/hold/*:refs/remotes/origin/hold/*"
+        )
+        if rc != 0:
+            if strict:
+                sys.exit(f"cannot fetch holds from origin:\n{out}")
+            return {}
     rc, out = git("for-each-ref", "--format=%(objectname) %(refname)", "refs/remotes/origin/hold")
     found = {}
     for line in out.splitlines() if rc == 0 else []:
@@ -128,6 +158,21 @@ def live(lease):
     """Whether a lease is in force: not released and not expired."""
     exp = dt.datetime.fromisoformat(lease.get("expires", "1970-01-01T00:00:00+00:00"))
     return not lease.get("released") and exp > now()
+
+
+def conflicts(cid, owned_paths, mechanisms, all_holds):
+    """Return (other_id, holder, shared) for any other live hold overlapping paths or mechanisms."""
+    mechs = set(mechanisms or [])
+    paths = list(owned_paths or [])
+    found = []
+    for k, (_, v) in all_holds.items():
+        if k == cid or not live(v):
+            continue
+        same = sorted(mechs & set(v.get("mechanisms", [])))
+        clash = [a for a in paths for b in v.get("owned_paths", []) if overlaps(a, b)]
+        if same or clash:
+            found.append((k, v.get("holder"), same + clash))
+    return found
 
 
 def write_lease(cid, lease, parent, expected):
@@ -152,9 +197,10 @@ def write_lease(cid, lease, parent, expected):
     return rc == 0, out
 
 
-def item(cid, ref="origin/master"):
+def item(cid, ref="origin/master", fetch=True, required=True):
     """A claim or card as the shared state has it (origin/master), or the local file."""
-    git("fetch", "-q", "origin", "master")
+    if fetch:
+        _fetch_master(strict=False)
     for d in ("claims", "blog"):
         rc, body = git("show", f"{ref}:frontier/{d}/{cid}.toml")
         if rc == 0:
@@ -162,16 +208,46 @@ def item(cid, ref="origin/master"):
         p = ROOT / d / f"{cid}.toml"
         if p.exists():
             return tomllib.loads(p.read_text())
-    sys.exit(f"no claim or card named {cid}")
+    if required:
+        sys.exit(f"no claim or card named {cid}")
+    return {}
 
 
-def open_flags(cid=None):
-    """Open flags, optionally only those naming `cid`."""
-    return [
-        (p, h)
-        for p, _, h in heads("flags", FLAG_HEAD)
-        if h.get("status") == "open" and (cid is None or cid in h.get("flags", "").split())
+def _flag_matches(h, cid, claim_data=None):
+    """Whether flag header `h` applies to `cid` by id or by premise/owned path."""
+    targets = h.get("flags", "").split()
+    if cid in targets:
+        return True
+    if not claim_data:
+        return False
+    paths = list(claim_data.get("premises", []) or []) + list(
+        claim_data.get("owned_paths", []) or []
+    )
+    return any(overlaps(tok, p) for tok in targets for p in paths)
+
+
+def open_flags(cid=None, *, claim_data=None, fetch=False, strict=False):
+    """Open flags from origin/master merged with local flags, optionally filtered to a claim."""
+    if fetch:
+        _fetch_master(strict=strict)
+    merged = {p.name: (p, h) for p, _, h in heads("flags", FLAG_HEAD)}
+    rc, listing = git("ls-tree", "-r", "--name-only", "origin/master", "--", "frontier/flags")
+    if rc == 0:
+        for rel in listing.splitlines():
+            name = pathlib.PurePosixPath(rel).name
+            if not name.endswith(".md") or name == "README.md":
+                continue
+            rc2, body = git("show", f"origin/master:{rel}")
+            if rc2 == 0:
+                merged[name] = (ROOT / "flags" / name, _parse_head(body.splitlines(), FLAG_HEAD))
+    elif strict:
+        sys.exit(f"cannot read flags from origin/master:\n{listing}")
+    found = [
+        (p, h) for _, (p, h) in sorted(merged.items(), reverse=True) if h.get("status") == "open"
     ]
+    if cid is not None:
+        found = [(p, h) for p, h in found if _flag_matches(h, cid, claim_data)]
+    return found
 
 
 def row(c):
@@ -240,11 +316,30 @@ def render():
     return "\n".join(out + ["", f"Closed: {', '.join(done) or 'none'}.", ""])
 
 
+def _merge_base():
+    """Return (base_sha, err) for origin/master...HEAD, fetching origin/master if absent."""
+    rc, _ = git("rev-parse", "--verify", "--quiet", "refs/remotes/origin/master")
+    if rc != 0:
+        ok, out = _fetch_master(strict=False)
+        if not ok:
+            return (
+                None,
+                f"origin/master is absent and fetch failed (refusing to skip diff checks): {out}",
+            )
+    rc, base = git("merge-base", "origin/master", "HEAD")
+    if rc != 0 or not base:
+        git("fetch", "-q", "--unshallow", "origin")
+        rc, base = git("merge-base", "origin/master", "HEAD")
+    if rc != 0 or not base:
+        return None, "cannot compute merge-base with origin/master (refusing to skip diff checks)"
+    return base, None
+
+
 def check():
     """Validate the frontier's files (five checks); return 1 on any error."""
     errs, warn = [], []
     claims, cards = load("claims"), load("blog")
-    # 1. claims and cards: fields and enums
+    # 1. claims and cards: fields, enums, and premises
     for c in claims + cards:
         n = c["_path"].name
         errs += [f"{n}: missing {k}" for k in REQUIRED if k not in c]
@@ -252,6 +347,9 @@ def check():
         for key, allowed in (("kind", KINDS), ("zone", ZONES), ("status", STATES)):
             if c.get(key) not in allowed:
                 errs.append(f"{n}: {key} {c.get(key)!r} not in {sorted(allowed)}")
+        for prem in c.get("premises", []):
+            if not (REPO / prem).exists():
+                errs.append(f"{n}: premise path does not exist: {prem}")
         if c in cards and c.get("stage") not in STAGES:
             errs.append(f"{n}: stage {c.get('stage')!r} not in {STAGES}")
         late = c in cards and STAGES.index(c.get("stage", "idea")) > STAGES.index("review")
@@ -259,23 +357,76 @@ def check():
             errs.append(
                 f"{n}: past review, it needs reviewed_by, by a different agent from drafted_by"
             )
-    # 2. deltas and flags: their fixed headers, and deltas at most 40 lines
+    # 2. deltas and flags: fixed headers, 40-line cap, and independent flag resolution
     for d, head in (("deltas", DELTA_HEAD), ("flags", FLAG_HEAD)):
-        for p, lines, _ in heads(d, head):
-            if not all(any(line.startswith(h) for line in lines[: len(head) + 2]) for h in head):
+        for p, lines, h in heads(d, head):
+            if not all(any(line.startswith(k) for line in lines[: len(head) + 2]) for k in head):
                 errs.append(f"{d}/{p.name}: the first lines must be {' / '.join(head)}")
             if d == "deltas" and len(lines) > 40:
                 errs.append(f"deltas/{p.name}: {len(lines)} lines, over 40")
-    # 3. evidence is conserved: no delta changed or removed, no flag removed, against origin/master
-    rc, diff = git(
-        "diff", "--name-status", "origin/master", "--", "frontier/deltas", "frontier/flags"
-    )
-    for line in diff.splitlines() if rc == 0 else []:
-        st, path = line.split("\t", 1)
-        if path.endswith("README.md"):
-            continue
-        if st.startswith("D") or (st.startswith("M") and "/deltas/" in path):
-            errs.append(f"{path}: deltas are append-only and flags are never deleted ({st})")
+            if d == "flags":
+                st = h.get("status")
+                if st not in ("open", "resolved"):
+                    errs.append(f"flags/{p.name}: status {st!r} must be 'open' or 'resolved'")
+                elif st == "resolved":
+                    rb = h.get("resolved_by", "")
+                    if not rb or rb == h.get("by"):
+                        errs.append(
+                            f"flags/{p.name}: resolved flag needs resolved_by: by a different agent from by:"
+                        )
+    # 3. evidence is conserved: append-only deltas/flags/dead-ends and frozen stop_test vs origin/master
+    base, base_err = _merge_base()
+    if base_err:
+        errs.append(base_err)
+    else:
+        rc, diff = git(
+            "diff",
+            "--name-status",
+            "--no-renames",
+            base,
+            "--",
+            "frontier/deltas",
+            "frontier/flags",
+            "frontier/claims",
+            "frontier/blog",
+        )
+        if rc != 0:
+            errs.append(f"git diff against merge-base {base[:8]} failed: {diff}")
+        for line in diff.splitlines() if rc == 0 else []:
+            st, path = line.split("\t", 1)
+            if path.endswith("README.md"):
+                continue
+            if "/deltas/" in path or "/flags/" in path:
+                if st.startswith("D") or (st.startswith("M") and "/deltas/" in path):
+                    errs.append(
+                        f"{path}: deltas are append-only and flags are never deleted ({st})"
+                    )
+                elif "/flags/" in path and st.startswith("M"):
+                    rc_old, old_body = git("show", f"{base}:{path}")
+                    if rc_old == 0 and (REPO / path).exists():
+                        old_h = _parse_head(old_body.splitlines(), FLAG_HEAD)
+                        cur_h = _parse_head((REPO / path).read_text().splitlines(), FLAG_HEAD)
+                        if old_h.get("by") and cur_h.get("by") != old_h.get("by"):
+                            errs.append(f"{path}: flag provenance `by:` cannot be rewritten")
+            elif path.endswith(".toml") and st.startswith("M"):
+                rc_old, old_body = git("show", f"{base}:{path}")
+                if rc_old == 0 and (REPO / path).exists():
+                    old_stop = tomllib.loads(old_body).get("stop_test", "").strip()
+                    cur_stop = tomllib.loads((REPO / path).read_text()).get("stop_test", "").strip()
+                    if old_stop != cur_stop:
+                        errs.append(f"{path}: stop_test is frozen once committed (C2)")
+        rc_dead, old_dead = git("show", f"{base}:frontier/dead-ends.tsv")
+        if rc_dead == 0:
+            cur_dead = {
+                line
+                for line in (ROOT / "dead-ends.tsv").read_text().splitlines()[1:]
+                if line.strip()
+            }
+            for row_line in old_dead.splitlines()[1:]:
+                if row_line.strip() and row_line not in cur_dead:
+                    errs.append(
+                        f"frontier/dead-ends.tsv: existing verdict {row_line.split(chr(9), 1)[0]!r} was removed or rewritten"
+                    )
     # 4. the surface's shape
     rows = [r.split("\t") for r in (ROOT / "surface.tsv").read_text().splitlines()]
     errs += [f"surface.tsv: header must be {SURFACE_COLS}"] if rows[0] != SURFACE_COLS else []
@@ -291,24 +442,26 @@ def check():
         for i, r in enumerate(dead)
         if len(r) != len(DEAD_COLS)
     ]
-    # 5. the admission budget and STATUS.md's freshness (warnings)
+    # 5. the admission budget and protected files (warnings, using origin/master config)
+    base_cfg = config("origin/master") if base else config()
+    local_cfg = config()
     n_open = sum(c.get("status") == "open" for c in claims)
-    if n_open > config().get("max_open_claims", 12):
+    if n_open > base_cfg.get("max_open_claims", 12):
         warn.append(f"{n_open} open claims, over max_open_claims: leave new ones at status idea")
-    rc, touched = git("diff", "--name-only", "origin/master")
-    hit = (
-        [
-            t
-            for t in touched.splitlines()
-            if any(t.startswith(p) for p in config().get("protected", []))
-        ]
-        if rc == 0
-        else []
-    )
-    if hit:
-        warn.append(
-            f"protected files changed ({', '.join(hit)}): a different agent reviews and merges; RULES D needs Louis"
+    if base:
+        rc, touched = git("diff", "--name-only", base)
+        rc_u, untracked = git("ls-files", "--others", "--exclude-standard")
+        changed = (touched.splitlines() if rc == 0 else []) + (
+            untracked.splitlines() if rc_u == 0 else []
         )
+        protected = list(
+            dict.fromkeys(base_cfg.get("protected", []) + local_cfg.get("protected", []))
+        )
+        hit = [t for t in changed if any(overlaps(t, p) for p in protected)]
+        if hit:
+            warn.append(
+                f"protected files changed ({', '.join(hit)}): a different agent reviews and merges; RULES D needs Louis"
+            )
     for w in warn:
         print("warning:", w)
     for e in errs:
@@ -322,7 +475,8 @@ def brief(can):
     m = re.search(r"<!-- brief -->(.*?)<!-- /brief -->", (ROOT / "README.md").read_text(), re.S)
     print(m.group(1).strip())
     claims, cards = load("claims"), load("blog")
-    held = {k: v for k, (_, v) in holds().items() if live(v)}
+    held = {k: v for k, (_, v) in holds(strict=False).items() if live(v)}
+    flags = open_flags(fetch=True, strict=False)
     louis = [
         c
         for c in claims + cards
@@ -334,7 +488,7 @@ def brief(can):
     )
     print(
         "\n## Open flags\n"
-        + ("\n".join(f"- {p.name}: {h.get('flags')}" for p, h in open_flags()) or "- none")
+        + ("\n".join(f"- {p.name}: {h.get('flags')}" for p, h in flags) or "- none")
     )
     print(
         "\n## Held now (live leases on origin)\n"
@@ -361,7 +515,7 @@ def brief(can):
         and c["id"] not in held
         and not c.get("needs_louis")
         and (not can or set(c["needs"]) <= can)
-        and not open_flags(c["id"])
+        and not any(_flag_matches(h, c["id"], c) for _, h in flags)
     ]
     take.sort(key=lambda c: (c["priority"], c["id"]))
     print("\n## What you can take (highest priority first)")
@@ -383,29 +537,29 @@ def brief(can):
 
 def claim(cid, by, hours):
     """Acquire a hold on `cid`, atomically, on origin."""
-    c = item(cid)
+    _fetch_master(strict=True)
+    c = item(cid, fetch=False)
     if c.get("status") != "open":
         sys.exit(f"{cid} is {c.get('status')}, not open")
     if c.get("needs_louis"):
         sys.exit(f"{cid} needs Louis: {c['needs_louis']}")
-    if open_flags(cid):
+    if open_flags(cid, claim_data=c, fetch=False, strict=True):
         sys.exit(f"{cid} has an open flag; resolve it first")
     all_holds = holds()
-    if sum(live(v) for _, v in all_holds.values()) >= config().get("max_live_holds", 6):
+    if sum(live(v) for _, v in all_holds.values()) >= config("origin/master").get(
+        "max_live_holds", 6
+    ):
         sys.exit(
             "the live-hold budget is full (config.toml max_live_holds); take nothing, or help finish something held"
         )
     sha, lease = all_holds.get(cid, (None, None))
     if lease and live(lease):
         sys.exit(f"{cid} is held by {lease['holder']} until {lease['expires']}")
-    for k, (_, v) in all_holds.items():
-        if k == cid or not live(v):
-            continue
-        same = sorted(set(c.get("mechanisms", [])) & set(v.get("mechanisms", [])))
-        paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
-        clash = [a for a in paths for b in v.get("owned_paths", []) if overlaps(a, b)]
-        if same or clash:
-            sys.exit(f"{cid} would share {same + clash} with {k}, held by {v.get('holder')}")
+    paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+    hit = conflicts(cid, paths, c.get("mechanisms", []), all_holds)
+    if hit:
+        k, holder, shared = hit[0]
+        sys.exit(f"{cid} would share {shared} with {k}, held by {holder}")
     t = now()
     new = {
         "id": cid,
@@ -413,7 +567,7 @@ def claim(cid, by, hours):
         "session": secrets.token_hex(6),
         "claimed_at": t.isoformat(),
         "expires": (t + dt.timedelta(hours=hours)).isoformat(),
-        "owned_paths": c.get("owned_paths", []),
+        "owned_paths": paths,
         "mechanisms": c.get("mechanisms", []),
         "base": git("rev-parse", "origin/master")[1],
         "released": False,
@@ -423,11 +577,14 @@ def claim(cid, by, hours):
         sys.exit(f"not acquired (someone else moved hold/{cid} first, or the push failed):\n{out}")
     print(f"acquired {cid} until {new['expires']}; your session is {new['session']}")
     print(f"keep it: `verify`, `renew` and `release` need --session {new['session']}")
+    if c.get("premises"):
+        print(f"premises to re-read first: {', '.join(c['premises'])}")
 
 
-def mine(cid, session):
+def mine(cid, session, all_holds=None):
     """(sha, lease) if `session` holds `cid` live; exit otherwise."""
-    sha, lease = holds().get(cid, (None, None))
+    src = holds() if all_holds is None else all_holds
+    sha, lease = src.get(cid, (None, None))
     if not lease or lease.get("session") != session:
         sys.exit(f"{cid} is not held by session {session}")
     if not live(lease):
@@ -458,22 +615,40 @@ def main(argv):
     elif cmd == "claim":
         claim(argv[2], opt("--by", "unknown"), hours)
     elif cmd == "verify":
-        mine(argv[2], opt("--session"))
-        if open_flags(argv[2]):
-            sys.exit(f"{argv[2]} has an open flag")
-        print(f"{argv[2]}: held live by this session; no open flag")
+        cid = argv[2]
+        all_holds = holds()
+        _, lease = mine(cid, opt("--session"), all_holds)
+        hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
+        if hit:
+            k, holder, shared = hit[0]
+            sys.exit(f"{cid} conflicts on {shared} with live hold {k} (held by {holder})")
+        _fetch_master(strict=True)
+        c = item(cid, fetch=False, required=False)
+        claim_data = {
+            "premises": c.get("premises", []),
+            "owned_paths": list(set(c.get("owned_paths", [])) | set(lease.get("owned_paths", []))),
+        }
+        if open_flags(cid, claim_data=claim_data, fetch=False, strict=True):
+            sys.exit(f"{cid} has an open flag")
+        print(f"{cid}: held live by this session; no open flag")
     elif cmd == "renew":
         sha, lease = mine(argv[2], opt("--session"))
-        lease["expires"] = (now() + dt.timedelta(hours=hours)).isoformat()
-        ok, out = write_lease(argv[2], lease, sha, sha)
-        print(f"renewed until {lease['expires']}" if ok else f"not renewed:\n{out}")
+        updated = {**lease, "expires": (now() + dt.timedelta(hours=hours)).isoformat()}
+        ok, out = write_lease(argv[2], updated, sha, sha)
+        if not ok:
+            print(f"not renewed:\n{out}", file=sys.stderr)
+            return 1
+        print(f"renewed until {updated['expires']}")
     elif cmd == "release":
         sha, lease = holds().get(argv[2], (None, None))
         if not lease or lease.get("session") != opt("--session"):
             sys.exit(f"{argv[2]} is not held by session {opt('--session')}")
-        lease["released"] = True
-        ok, out = write_lease(argv[2], lease, sha, sha)
-        print(f"released {argv[2]}" if ok else f"not released (someone took over):\n{out}")
+        updated = {**lease, "released": True}
+        ok, out = write_lease(argv[2], updated, sha, sha)
+        if not ok:
+            print(f"not released (someone took over):\n{out}", file=sys.stderr)
+            return 1
+        print(f"released {argv[2]}")
     elif cmd == "mark":
         p = next(
             (

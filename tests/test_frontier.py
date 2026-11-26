@@ -1,10 +1,9 @@
-"""Adversarial stress tests for the frontier protocol (claim stress-test-frontier).
+"""Adversarial stress tests for the frontier protocol (claims stress-test-frontier & harden-frontier-tooling).
 
 Exercises all eight scenarios from `frontier/claims/stress-test-frontier.toml`
 against isolated temporary bare git remotes so no debris refs are pushed to the
-real `origin`. Working invariants are asserted normally; concrete protocol gaps
-discovered during the stress test are marked `unittest.expectedFailure` so the
-suite stays green while pinning exact regression targets for the fix PR.
+real `origin`. All protocol invariants and regression targets are asserted as
+hard passes.
 """
 
 from __future__ import annotations
@@ -395,9 +394,8 @@ class TestFrontierStress(unittest.TestCase):
             self.sb.run_frontier(b, "release", "c1", "--session", sess_b).returncode, 0
         )
 
-    @unittest.expectedFailure
     def test_s3_cas_failure_on_renew_and_release_must_exit_nonzero(self) -> None:
-        """FAIL (Scenario 3): `renew` and `release` exit 0 when CAS push is rejected."""
+        """`renew` and `release` exit non-zero when CAS push is rejected."""
         a = self.sb.clone("agent-a")
         b = self.sb.clone("agent-b")
 
@@ -416,19 +414,18 @@ class TestFrontierStress(unittest.TestCase):
             .isoformat(),
         }
         mod_b = _load_frontier_module(b)
+        mod_b.holds()
         ok, _ = mod_b.write_lease("c1", other_lease, stale_sha, stale_sha)
         self.assertTrue(ok)
 
         with mock.patch.object(mod, "holds", return_value=stale_holds):
             rc_renew = mod.main(["frontier.py", "renew", "c1", "--session", sess_a])
             rc_release = mod.main(["frontier.py", "release", "c1", "--session", sess_a])
-        # Desired: non-zero exit when CAS fails. Actual: both return 0.
         self.assertNotEqual(rc_renew, 0)
         self.assertNotEqual(rc_release, 0)
 
-    @unittest.expectedFailure
     def test_s3_verify_must_fail_when_origin_unreachable(self) -> None:
-        """FAIL (Scenario 3): `verify` exits 0 offline by reading stale local hold refs."""
+        """`verify` fails closed offline instead of trusting stale local hold refs."""
         a = self.sb.clone("agent-a")
         r_a = self.sb.run_frontier(a, "claim", "c1", "--by", "agent-a")
         sess_a = _extract_session(r_a.stdout)
@@ -437,7 +434,6 @@ class TestFrontierStress(unittest.TestCase):
         _git(a, "remote", "set-url", "origin", str(self.sb.tmp / "missing-remote.git"))
 
         r_offline = self.sb.run_frontier(a, "verify", "c1", "--session", sess_a)
-        # Desired: verify fails closed when origin cannot be fetched. Actual: exits 0.
         self.assertNotEqual(r_offline.returncode, 0)
 
     # ------------------------------------------------------------------
@@ -468,9 +464,8 @@ class TestFrontierStress(unittest.TestCase):
         r_c3 = self.sb.run_frontier(a, "claim", "c3", "--by", "agent-a")
         self.assertEqual(r_c3.returncode, 0, r_c3.stdout + r_c3.stderr)
 
-    @unittest.expectedFailure
     def test_s4_remote_flag_on_origin_master_must_block_unrebased_claim_and_verify(self) -> None:
-        """FAIL (Scenario 4): flags merged on `origin/master` do not block un-rebased clones."""
+        """Flags merged on `origin/master` block un-rebased `claim` and `verify`."""
         a = self.sb.clone("agent-a")
         b = self.sb.clone("agent-b")
 
@@ -495,18 +490,53 @@ class TestFrontierStress(unittest.TestCase):
         # Agent A has NOT pulled master locally, then calls verify(c1) and claim(c2)
         r_ver = self.sb.run_frontier(a, "verify", "c1", "--session", sess_c1)
         r_clm = self.sb.run_frontier(a, "claim", "c2", "--by", "agent-a")
-        # Desired: both refused because origin/master carries an open flag. Actual: both exit 0.
         self.assertNotEqual(r_ver.returncode, 0)
         self.assertNotEqual(r_clm.returncode, 0)
 
-    @unittest.expectedFailure
+    def test_s4_path_scoped_remote_flag_matches_premises_and_owned_paths(self) -> None:
+        """Path-scoped flags on `origin/master` match claim `premises` and `owned_paths`."""
+        a = self.sb.clone("agent-a")
+        b = self.sb.clone("agent-b")
+
+        r_c1 = self.sb.run_frontier(a, "claim", "c1", "--by", "agent-a")
+        sess_c1 = _extract_session(r_c1.stdout)
+
+        # Agent B pushes a path-scoped flag covering docs/premise.md and bench/
+        flag_b = b / "frontier" / "flags" / "2026-11-26-path-scope.md"
+        flag_b.write_text(
+            "flags: docs/premise.md bench/\n"
+            "invariant: traceability\n"
+            "by: agent-b\n"
+            "status: open\n\n"
+            "**Evidence:** premise and queue paths flagged.\n"
+            "**Scope:** claims resting on docs/premise.md or owning bench/.\n"
+            "**What would resolve it:** independent check.\n"
+        )
+        _git(b, "add", str(flag_b))
+        _git(b, "commit", "-m", "flag premise and bench paths")
+        _git(b, "push", "origin", "master")
+
+        # c1 has premise docs/premise.md -> verify blocked
+        self.assertNotEqual(
+            self.sb.run_frontier(a, "verify", "c1", "--session", sess_c1).returncode, 0
+        )
+        # c2 has premise docs/premise.md -> claim blocked
+        self.assertNotEqual(self.sb.run_frontier(a, "claim", "c2", "--by", "agent-a").returncode, 0)
+        # run-a owns bench/workstation-queue.txt (under bench/) -> claim blocked
+        self.assertNotEqual(
+            self.sb.run_frontier(a, "claim", "run-a", "--by", "agent-a").returncode, 0
+        )
+        # c3 has no matching premise or owned_path -> allowed
+        r_c3 = self.sb.run_frontier(a, "claim", "c3", "--by", "agent-a")
+        self.assertEqual(r_c3.returncode, 0, r_c3.stdout + r_c3.stderr)
+
     def test_s4_check_validates_claim_premises_exist(self) -> None:
-        """FAIL (Scenario 4): `frontier.py` never inspects `premises` in check, brief, or claim."""
+        """`check` reports nonexistent paths listed in claim `premises`."""
         a = self.sb.clone("agent-a")
         bad_claim = a / "frontier" / "claims" / "bad-prem.toml"
         bad_claim.write_text(_claim_toml("bad-prem", premises=["docs/nonexistent-evidence.md"]))
         r_chk = self.sb.run_frontier(a, "check")
-        # Desired: missing premise path is reported by check. Actual: ignored completely.
+        self.assertNotEqual(r_chk.returncode, 0)
         self.assertIn("nonexistent-evidence.md", r_chk.stdout)
 
     # ------------------------------------------------------------------
@@ -547,15 +577,26 @@ class TestFrontierStress(unittest.TestCase):
         r_brief = self.sb.run_frontier(b, "brief")
         self.assertIn("2026-11-26-wrong-arg.md", r_brief.stdout)
 
-    @unittest.expectedFailure
     def test_s5_check_rejects_flag_resolved_without_independent_resolver(self) -> None:
-        """FAIL (Scenario 5 caveat): `check` allows resolving a flag without `resolved_by:`."""
+        """`check` rejects resolved flags missing independent `resolved_by:` and accepts distinct ones."""
         a = self.sb.clone("agent-a")
         flag = a / "frontier" / "flags" / "2026-11-26-initial.md"
-        flag.write_text(flag.read_text().replace("status: open", "status: resolved"))
-        r_chk = self.sb.run_frontier(a, "check")
-        # Desired: resolved flag without independent `resolved_by:` fails check. Actual: 0 errors.
-        self.assertNotEqual(r_chk.returncode, 0)
+        original = flag.read_text()
+
+        # Missing resolved_by -> rejected
+        flag.write_text(original.replace("status: open", "status: resolved"))
+        r_missing = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r_missing.returncode, 0)
+
+        # Self-resolution (same as by: agent-b) -> rejected
+        flag.write_text(original.replace("status: open", "status: resolved\nresolved_by: agent-b"))
+        r_self = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r_self.returncode, 0)
+
+        # Independent resolver (different from by: agent-b) -> accepted
+        flag.write_text(original.replace("status: open", "status: resolved\nresolved_by: agent-c"))
+        r_ok = self.sb.run_frontier(a, "check")
+        self.assertEqual(r_ok.returncode, 0, r_ok.stdout)
 
     # ------------------------------------------------------------------
     # Scenario 6: gate changed after data -> check & review catch it
@@ -576,21 +617,24 @@ class TestFrontierStress(unittest.TestCase):
         self.assertEqual(r_del.returncode, 1)
         self.assertIn("never deleted", r_del.stdout)
 
-    @unittest.expectedFailure
     def test_s6_check_catches_modified_stop_test_and_deleted_dead_end(self) -> None:
-        """FAIL (Scenario 6): `check` misses relaxed `stop_test` and deleted `dead-ends.tsv` rows."""
+        """`check` catches relaxed `stop_test` and deleted or rewritten `dead-ends.tsv` rows."""
         a = self.sb.clone("agent-a")
         c1 = a / "frontier" / "claims" / "c1.toml"
         c1.write_text(c1.read_text().replace("PASS iff exact bytes match.", "PASS always."))
+        r_stop = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r_stop.returncode, 0)
+        self.assertIn("stop_test", r_stop.stdout)
+
+        _git(a, "checkout", "--", str(c1))
         dead = a / "frontier" / "dead-ends.tsv"
         dead.write_text("claim\tverdict\twhat it showed\tevidence\n")
-        r_chk = self.sb.run_frontier(a, "check")
-        # Desired: modifying stop_test or deleting a dead-end verdict fails check. Actual: exit 0.
-        self.assertNotEqual(r_chk.returncode, 0)
+        r_dead = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r_dead.returncode, 0)
+        self.assertIn("dead-ends.tsv", r_dead.stdout)
 
-    @unittest.expectedFailure
     def test_s6_check_must_not_silently_skip_diff_without_origin_master(self) -> None:
-        """FAIL (Scenario 6 / CI): shallow checkout without `origin/master` skips check #3."""
+        """Shallow checkout without `origin/master` still runs check #3 and fails closed offline."""
         shallow = self.sb.tmp / "shallow-ci"
         _git(self.sb.tmp, "clone", "--depth=1", f"file://{self.sb.remote}", str(shallow))
         # Simulate actions/checkout@v6 on refs/pull/N/merge where refs/remotes/origin/master is absent
@@ -598,12 +642,18 @@ class TestFrontierStress(unittest.TestCase):
         delta = shallow / "frontier" / "deltas" / "2026-11-26-initial.md"
         delta.write_text(delta.read_text() + "tampered in PR\n")
         r_chk = self.sb.run_frontier(shallow, "check")
-        # Desired: tampering a delta fails check even in shallow CI. Actual: exits 0!
         self.assertNotEqual(r_chk.returncode, 0)
 
-    @unittest.expectedFailure
+        # Even on a clean tree, missing origin/master + unreachable origin fails closed
+        _git(shallow, "checkout", "--", str(delta))
+        _git(shallow, "update-ref", "-d", "refs/remotes/origin/master")
+        _git(shallow, "remote", "set-url", "origin", str(self.sb.tmp / "missing-remote.git"))
+        r_offline = self.sb.run_frontier(shallow, "check")
+        self.assertNotEqual(r_offline.returncode, 0)
+        self.assertIn("origin/master", r_offline.stdout)
+
     def test_s6_unrebased_parallel_branch_not_false_flagged_by_new_master_delta(self) -> None:
-        """FAIL (Scenario 6): two-dot diff false-fails un-rebased branches when master adds a delta."""
+        """Merge-base diff does not false-fail un-rebased branches when master adds a delta."""
         a = self.sb.clone("agent-a")
         b = self.sb.clone("agent-b")
         _git(a, "checkout", "-b", "frontier/c2")
@@ -618,7 +668,6 @@ class TestFrontierStress(unittest.TestCase):
         # A fetches origin (as `claim` does!) without rebasing its own branch
         _git(a, "fetch", "origin", "master")
         r_chk = self.sb.run_frontier(a, "check")
-        # Desired: A touched no deltas so check passes. Actual: exits 1 flagging B's delta as D!
         self.assertEqual(r_chk.returncode, 0, r_chk.stdout)
 
     # ------------------------------------------------------------------
@@ -672,9 +721,8 @@ class TestFrontierStress(unittest.TestCase):
         combined = res.stdout + res.stderr
         self.assertIn("queue.lock", combined)
 
-    @unittest.expectedFailure
     def test_s7_verify_detects_cross_id_overlapping_owned_paths_after_race(self) -> None:
-        """FAIL (Scenario 7 caveat): `verify` does not re-check overlapping `owned_paths`."""
+        """`verify` re-checks overlapping `owned_paths` across live holds after a race."""
         a = self.sb.clone("agent-a")
         b = self.sb.clone("agent-b")
         mod_a = _load_frontier_module(a)
@@ -699,7 +747,6 @@ class TestFrontierStress(unittest.TestCase):
 
         r_va = self.sb.run_frontier(a, "verify", "run-a", "--session", "aaaaaaaaaaaa")
         r_vb = self.sb.run_frontier(b, "verify", "run-b", "--session", "bbbbbbbbbbbb")
-        # Desired: at least one verify refuses the conflicting live hold. Actual: both exit 0.
         self.assertTrue(r_va.returncode != 0 or r_vb.returncode != 0)
 
     # ------------------------------------------------------------------
@@ -714,9 +761,8 @@ class TestFrontierStress(unittest.TestCase):
         self.assertEqual(r_chk.returncode, 0)
         self.assertIn("warning: protected files changed (CLAUDE.md)", r_chk.stdout)
 
-    @unittest.expectedFailure
     def test_s8_protected_warning_cannot_be_silenced_by_editing_config(self) -> None:
-        """FAIL (Scenario 8): editing `frontier/config.toml` to clear `protected` silences `check`."""
+        """Editing `frontier/config.toml` to clear `protected` does not silence `check`."""
         a = self.sb.clone("agent-a")
         (a / "CLAUDE.md").write_text("# Safety rules\nC2 is optional now.\n")
         cfg = a / "frontier" / "config.toml"
@@ -725,19 +771,39 @@ class TestFrontierStress(unittest.TestCase):
             "max_live_holds = 100\nmax_open_claims = 100\nprotected = []\n"
         )
         r_chk = self.sb.run_frontier(a, "check")
-        # Desired: `protected` read from origin/master still warns. Actual: 0 errors, 0 warnings!
         self.assertIn("protected files changed", r_chk.stdout)
 
-    @unittest.expectedFailure
     def test_s8_protected_warning_survives_shallow_ci_checkout(self) -> None:
-        """FAIL (Scenario 8 / CI): shallow checkout without `origin/master` drops protected warning."""
+        """Shallow checkout without `origin/master` still warns on protected edits."""
         shallow = self.sb.tmp / "shallow-ci-s8"
         _git(self.sb.tmp, "clone", "--depth=1", f"file://{self.sb.remote}", str(shallow))
         _git(shallow, "update-ref", "-d", "refs/remotes/origin/master")
         (shallow / "CLAUDE.md").write_text("# Safety rules\nC2 is optional now.\n")
         r_chk = self.sb.run_frontier(shallow, "check")
-        # Desired: protected edit still flagged in shallow CI. Actual: 0 errors, 0 warnings!
         self.assertIn("protected files changed", r_chk.stdout)
+
+    def test_s8_workflow_fetches_master_and_stops_needs_louis_at_open_flags(self) -> None:
+        """`.github/workflows/frontier.yml` fetches `master` and slices only `## Needs Louis`."""
+        wf = (REPO_ROOT / ".github" / "workflows" / "frontier.yml").read_text()
+        self.assertIn("fetch-depth: 0", wf)
+        self.assertIn("origin/master", wf)
+        self.assertIn("/^## Open flags/{f=0}", wf)
+        self.assertNotIn("## In progress", wf)
+
+        # Verify the awk filter against rendered STATUS.md stops cleanly before ## Open flags
+        a = self.sb.clone("agent-a")
+        self.assertEqual(self.sb.run_frontier(a, "status").returncode, 0)
+        res = subprocess.run(
+            ["awk", "/^## Needs Louis/{f=1} /^## Open flags/{f=0} f", "frontier/STATUS.md"],
+            cwd=str(a),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertIn("## Needs Louis", res.stdout)
+        self.assertIn("needs-louis", res.stdout)
+        self.assertNotIn("## Open flags", res.stdout)
+        self.assertNotIn("## The blog board", res.stdout)
 
 
 if __name__ == "__main__":
