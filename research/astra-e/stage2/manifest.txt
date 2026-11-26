@@ -1,0 +1,25 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+b88a02738799f8e021db356157ef4239bbea911e
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+c8eb7cc5a73a955428c226cb981d9beb2dc511108c31af89b8eebcfe03199b79  research/astra-e/stage2/experiment.rs
+1e5a0b46b1dbe6176bf6f548922263040a7d88c343bbb4697de2a08f7e7e3ed3  research/astra-e/stage2/target/experiment
+same 11 frozen ordinals as stage 1; 21 recorded passes, seven arms; one warm pass
+wall and Linux thread CPU; no worker pool, MTF front, CRC or finish in either clock
+400000 100000
+pid 41059's current affinity list: 0-4
+Supplement after first run: checkout HEAD at measurement launch was b88a02738799f8e021db356157ef4239bbea911e;
+stage harness sources were then uncommitted. They were preserved byte-for-byte in cec3a58635582885d9062c92e65a363c5fdff599.
+Below are SHA-256 digests of the committed stage files; experiment.rs matches the run-time manifest digest above.
+c8eb7cc5a73a955428c226cb981d9beb2dc511108c31af89b8eebcfe03199b79  research/astra-e/stage2/experiment.rs
+359d3b8a77ff6176922a0e2f4cd40096290adc45c8df1f12c92af9cc6bdcdf95  research/astra-e/stage2/prepare.py
+c561c16f902297ab3ec220b1bd58b5a401dbb60d1fc714361397fa00f1ee9c53  research/astra-e/stage2/clock.inc.rs
+57eef330a2fe03c87238b5d5872e029b0466373f0d84a11bcbf38ac6b99024cc  research/astra-e/stage2/report.py
+a6d41597c86aabef865ca7fb0b20f405f9b2a231f157a4598a4a5bed5b6d8298  research/astra-e/stage2/rules.py
+e7091fe58c46d31a8ceaa6552779bb613a94f06477c0e4716c7a1de22cecc9ee  research/astra-e/stage2/run.sh

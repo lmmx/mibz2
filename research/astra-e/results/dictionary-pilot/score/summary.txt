@@ -1,0 +1,19 @@
+MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run
+establish production performance; see bench/moonshot/README.md)
+candidate: /workspace/work/astra-e/research/astra-e/dictionary/candidate.rs (moonshot::candidate::DictionaryKernel<false>)
+machine: 4 CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)
+
+1. CORRECTNESS: PASS (98 cases, 0 failed)
+
+2. CONTAINER WALL TIME (paired rounds, candidate over 0.5.6's LazyCells; < 1 is faster)
+   workers  rounds  ratio [95% interval]       verdict       speedup  peak RSS ratio
+         1       3  0.846 [0.471, 1.518]  INCONCLUSIVE  1.18x   0.748
+         1       3  0.868 [0.423, 1.780]  INCONCLUSIVE  1.15x   0.748  (opend)
+         4       3  0.922 [0.682, 1.245]  INCONCLUSIVE  1.09x   0.667
+         4       3  0.879 [0.802, 0.964]  FASTER        1.14x   0.660  (opend)
+   (a container's wall misleads at contention: opend was 9-21% slower on a 4-CPU VM and
+   6-8% faster on the i9 at 8-10 workers)
+
+
+4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,
+   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)

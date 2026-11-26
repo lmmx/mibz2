@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.93s
+     Running unittests src/main.rs (/workspace/work/cells-build/debug/deps/moonshot-5662b5ce9a543761)
+
+running 1 test
+test candidate::checks::corpus_geometry has been running for over 60 seconds
+228/233 large blocks reconstructed by packed; every accepted result equals Segmented
+test candidate::checks::corpus_geometry ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 147.15s
+

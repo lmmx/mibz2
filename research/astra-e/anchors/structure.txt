@@ -1,0 +1,10 @@
+frozen: 1 blocks
+  89874 original marked residual hops, 15278 compact marked hops
+  final/original 0.169994; new discovery reads 89874
+  15278 anchors, 74596 staged literal bytes
+  maximum incremental owned capacity 327680 bytes
+all OpenGated blocks: 228 blocks
+  25484201 original marked residual hops, 4726246 compact marked hops
+  final/original 0.185458; new discovery reads 25484201
+  4726246 anchors, 20757955 staged literal bytes
+  maximum incremental owned capacity 1048576 bytes

@@ -1,0 +1,7 @@
+# Two-ended marked-cycle writer
+
+Built on the conjugate control at 775e604. For every band slice mapping successive sources to successive destinations, construction writes the usual packed forward words and a reverse slice with the same label. The latter costs four bytes per retained row in the packed case, plus its construction stores. Wide-code blocks keep the control writer. Both arrays retain their high-water capacities across calls. RSS must be measured over whole worker processes.
+
+Both cursors begin at the marked row. The forward cursor writes its edge label at the left end. The backward cursor consumes the incoming edge and places its entire forward-oriented label immediately before the suffix already written at the right end. The two consumed paths are disjoint until their first meeting. Testing after each half-step handles both parities, including a one-edge cycle. The prefix followed by the suffix is exactly one marked return. On a full-length return they are already adjacent. On a shorter return compact the suffix once, then repeat and truncate exactly as the reference does. Other cycles are never visited. The uninitialized gap is avoided by using initialized output storage.
+
+This tests whether two independent miss chains pay for a second table and its stores. No peak-memory or timing win is assumed. To regenerate the candidate, run `python3 research/astra-e/bidirectional/prepare.py`. It is also checked in for direct scoring. Its in-module exhaustive oracle is inherited from the conjugate control.

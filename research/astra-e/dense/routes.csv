@@ -1,0 +1,4 @@
+route,blocks,rows,output_bytes,historical_inverse_samples,seconds_sum_of_block_medians
+column,48,465,465,0,0.000000000
+dense runs,155,4508298,4508379,155,0.014328702
+open eligible,228,205197794,205191352,228,0.634614300
