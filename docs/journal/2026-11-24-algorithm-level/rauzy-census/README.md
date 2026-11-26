@@ -43,3 +43,16 @@ Otherwise, the census's output is a ranked list of orders with their time and st
 
 - `prompt.md`: the Antigravity task.
 - `results/`: once it exists.
+
+## Round 2 (26 November)
+
+Round 1 (PR #933) stopped at its frozen gate: the best order cuts Open's steps by only 16.7%, and online scheduling costs 160 ns per step. At Louis's request, round 1 is taken as feedback, not a final answer.
+
+Round 2 (`prompt-2.md`) asks a broader question: whether anything touching A6b's machinery, or what is eliminated at all, can cut ≥ 3% of the 1-worker wall. The candidates:
+- cheaper steps (latency hiding, interleaving blocks);
+- width in the induction;
+- a free-steps-only rule read from a bitmap;
+- the setup and the dictionary;
+- the thin/thick limit.
+
+It uses the same frozen gate and the same exactness rules.
