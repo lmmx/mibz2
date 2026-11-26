@@ -38,7 +38,7 @@ Replied to Thomas MurphyHmm what is this message board…
 
 ohhh well multiple agents constitute a team if autonomous, but with a shared message board they constitute a swarm (i think is the emerging distinction / term of art - as per the google Antigravity docs on ❧[/teamwork](<https://antigravity.google/docs/teamwork>)☙<sup class="fn" id="fnr3"><a href="#fn3">3</a></sup> vs ❧[/swarm](<https://antigravity.google/docs/swarm>)☙<sup class="fn" id="fnr4"><a href="#fn4">4</a></sup> slash commands)
 
-but I only just found that feature (which is elite) so before that i was sort of hand rolling their identities as ‘❧[modes](<https://github.com/lmmx/mibz2/blob/master/docs/team/MODE.md>)☙<sup class="fn" id="fnr5"><a href="#fn5">5</a></sup>’ along with a ‘❧[rationale](<https://github.com/lmmx/mibz2/blob/master/docs/team/MODE.RATIONALE.md>)☙<sup class="fn" id="fnr6"><a href="#fn6">6</a></sup>’ (this torrid approach of all caps md pseudo-repo health files)
+but I only just found that feature (which is elite) so before that i was sort of hand rolling their identities as ‘❧[modes](<https://github.com/lmmx/mibz2/blob/aa0558d540abfa23c7ceb9584e7983e12200702d/docs/team/MODE.md>)☙<sup class="fn" id="fnr5"><a href="#fn5">5</a></sup>’ along with a ‘❧[rationale](<https://github.com/lmmx/mibz2/blob/aa0558d540abfa23c7ceb9584e7983e12200702d/docs/team/MODE.RATIONALE.md>)☙<sup class="fn" id="fnr6"><a href="#fn6">6</a></sup>’ (this torrid approach of all caps md pseudo-repo health files)
 
 so in this way i said claude code would be the coordinator (as it had the best ability to subscribe event-driven’ly to PR comment events), i tried using a repo wiki as a message board <mark class="dzx med">as in the <a class="xl" href="https://en.wikipedia.org/wiki/OpenAI_rogue_agent_breach_of_Hugging_Face">huggingface fiasco</a><sup class="fn" id="fnr7"><a href="#fn7">7</a></sup></mark> etc but had to use a PR with comments
 
@@ -330,14 +330,14 @@ Seen
    [↩](<#fnr4>)
 5. 5
 
-   [mibz2: MODE.md](<https://github.com/lmmx/mibz2/blob/master/docs/team/MODE.md>) github.com
+   [mibz2: MODE.md](<https://github.com/lmmx/mibz2/blob/aa0558d540abfa23c7ceb9584e7983e12200702d/docs/team/MODE.md>) github.com
 
    The register of how mibz2’s agent team is operating at present: its mode. The agents reload it at the start of each session. This is the “modes” Louis describes hand-rolling, one of the all-caps Markdown files that give the agents their identities.
 
    [↩](<#fnr5>)
 6. 6
 
-   [mibz2: MODE.RATIONALE.md](<https://github.com/lmmx/mibz2/blob/master/docs/team/MODE.RATIONALE.md>) github.com
+   [mibz2: MODE.RATIONALE.md](<https://github.com/lmmx/mibz2/blob/aa0558d540abfa23c7ceb9584e7983e12200702d/docs/team/MODE.RATIONALE.md>) github.com
 
    The companion to MODE.md: why the team runs the way it does, so that an agent coming in cold can follow the reasoning, not just the rules.
 

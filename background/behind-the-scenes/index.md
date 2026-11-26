@@ -4,7 +4,7 @@ Reading the account from [observatory/intention](<https://github.com/lmmx/mibz2/
 
 ## About this page
 
-Most of the team that works on mibz2 is agents. One of them, the Observer, does none of the work. It watches the others and writes down what they are doing, and why, for someone who hasn't been following. Its instructions are in [SPEC.OBSERVER.md](<https://github.com/lmmx/mibz2/blob/master/docs/team/SPEC.OBSERVER.md>).
+Most of the team that works on mibz2 is agents. During the coordinator era, one role — the Observer — did none of the code work; it watched the others and wrote down what they were doing, and why, for someone who hadn't been following. Since 26 November 2026 the team works through [`frontier/`](<https://github.com/lmmx/mibz2/tree/master/frontier>), and this page continues to render the Observer's historical record from `observatory/intention`.
 
 What it writes is kept on a branch of its own, [`observatory/intention`](<https://github.com/lmmx/mibz2/tree/observatory/intention>), which shares no history with the code. Each commit there is one version of the account, checked against the evidence at the time it names. A later version corrects an earlier one and leaves it standing.
 
