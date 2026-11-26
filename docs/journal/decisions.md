@@ -350,3 +350,12 @@ And later in the same session:
 - **Owner's words, verbatim:** "Send" (confirming the two decisions offered for recording).
 - **Applies:** RULES D, C2; `frontier/claims/three-arm-experiment.toml`.
 - **Decision:** defer expenditure until the frontier has stabilised and the design has been refined; no new token or workstation expenditure is authorised. Fresh approval is required for a revised, bounded pilot. See `frontier/deltas/2026-11-26-owner-decisions.md`.
+
+## 2026-11-26: autonomous blog publication
+
+- **Source:** repository owner, directly in conversation following the merge of #959.
+- **Observed:** 2026-11-26 UTC.
+- **Owner's words, verbatim:**
+  > i think a standing rule that we should just get new blog merges out and not wait to approve is worth having, it’s just a blog, the ‘deploy’ is not something worth gating at all. it is pathological to introduce some manual step, if it needs modifying we will just do a further pass
+- **Applies:** ordinary blog-only PRs and the frontier's blog board; standing publishing authority.
+- **Decision:** publish without waiting for owner or independent editorial approval or for deployment/preview/visual polish; merge on the existing minimum mechanical publication checks and make corrections as follow-up PRs. No change to production, protected-rule, release, experimental or spending gates. See `frontier/deltas/2026-11-26-blog-publishing-authority.md`.
