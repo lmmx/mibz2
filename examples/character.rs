@@ -960,6 +960,13 @@ mod oracle {
         let mut bits = 0u8;
         if x != "none" {
             for c in x.chars() {
+                // (P: the pooled scan, the scanner real but pooled into the workers; the
+                // pooled-scan registration's arms)
+                if c == 'P' {
+                    assert!(bits & POOLED == 0, "TREAT: oracle {x}: P twice");
+                    bits |= POOLED;
+                    continue;
+                }
                 let i = FACTORS
                     .iter()
                     .position(|&f| f == c)
@@ -968,7 +975,43 @@ mod oracle {
                 bits |= 1 << i;
             }
         }
+        assert!(
+            bits & POOLED == 0 || bits & 1 == 0,
+            "TREAT: oracle {x}: P pools the real scan, so it can't be with S ideal"
+        );
         ARM.store(0x80 | bits, Ordering::SeqCst);
+    }
+
+    /// 0x40: the pooled scan (an arm's P)
+    const POOLED: u8 = 0x40;
+
+    /// Whether the arm pools the scan
+    fn pooled() -> bool {
+        ARM.load(Ordering::SeqCst) & POOLED != 0
+    }
+
+    /// The pooled scan on or off for decoders built from now on
+    #[cfg(feature = "pooled-scan")]
+    fn pool(on: bool) {
+        mibz2::pooled_scan::set(on);
+    }
+    #[cfg(not(feature = "pooled-scan"))]
+    fn pool(on: bool) {
+        assert!(!on, "TREAT: oracle P needs the pooled-scan feature");
+    }
+
+    /// The pooled scan's counts since the last call, as JSON fields
+    #[cfg(feature = "pooled-scan")]
+    fn pool_json() -> String {
+        let p = mibz2::pooled_scan::take();
+        format!(
+            "{{\"dispatched\":{},\"accepted\":{},\"rejected\":{},\"fallbacks\":{},\"degraded\":{},\"copied\":{}}}",
+            p.dispatched, p.accepted, p.rejected, p.fallbacks, p.degraded, p.copied
+        )
+    }
+    #[cfg(not(feature = "pooled-scan"))]
+    fn pool_json() -> String {
+        "null".into()
     }
 
     /// Whether factor `c` is ideal in this decode's arm
@@ -981,7 +1024,10 @@ mod oracle {
     /// The arm's name: `none`, or its ideal factors' letters in FACTORS' order
     #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     pub fn name() -> String {
-        let n: String = FACTORS.iter().filter(|&&c| ideal(c)).collect();
+        let n: String = std::iter::once('P')
+            .filter(|_| pooled())
+            .chain(FACTORS.iter().copied().filter(|&c| ideal(c)))
+            .collect();
         if n.is_empty() {
             "none".into()
         } else {
@@ -1274,6 +1320,8 @@ mod oracle {
             if !in_play() {
                 return;
             }
+            // (the record pass reads with the shipped scanner, whatever the arm)
+            super::pool(false);
             // (the hash itself, against FIPS 180-4's vectors: one block, and two)
             assert_eq!(
                 hex(sha256(b"abc")),
@@ -1345,6 +1393,8 @@ mod oracle {
             // the timed decode's modes, its counters from zero
             reset_counts();
             set_modes(arm_modes(false));
+            let _ = super::pool_json();
+            super::pool(super::pooled());
         }
 
         /// The timed decode's counts, taken as soon as its decoder is joined; it fails where an
@@ -1404,8 +1454,8 @@ mod oracle {
             *TIMED.lock().unwrap() = Some(format!(
                 "\"replayed\":{s_rep},\"open_blocks\":{n_open},\"supplied_blocks\":{n_sup},\"deliver_ns\":{deliver},\"consume_ns\":{consume},\
                  \"replays\":{{\"S\":{s_rep},\"C_constructed\":{c_con},\"C_built\":{c_built},\"C_refused\":{c_ref},\"M_executed\":{m_exec},\"M_replayed\":{m_rep},\
-                 \"R_executed\":{r_exec},\"R_replayed\":{r_rep},\"D_discarded_blocks\":{},\"D_discarded_bytes\":{},\"D_copied_bytes\":{}}}",
-                d.discarded_blocks, d.discarded_bytes, d.copied_bytes
+                 \"R_executed\":{r_exec},\"R_replayed\":{r_rep},\"D_discarded_blocks\":{},\"D_discarded_bytes\":{},\"D_copied_bytes\":{}}},\"pooled\":{}",
+                d.discarded_blocks, d.discarded_bytes, d.copied_bytes, super::pool_json()
             ));
             Replays {
                 supplied: n_sup,
@@ -1430,7 +1480,10 @@ mod oracle {
                 let rf = g.as_ref().expect("the record pass");
                 (rf.bytes, rf.sha.clone(), rf.wall, rf.store.clone(), rf.data)
             };
+            super::pool(super::pooled());
             let (cbytes, csha, cwall) = pass(data, arm_modes(true));
+            super::pool(false);
+            let cpooled = super::pool_json();
             let creplayed = scan::take_replayed();
             let crecs = sup::take();
             let checked = crecs.iter().filter(|r| !r.refused && r.supplied).count();
@@ -1446,7 +1499,7 @@ mod oracle {
             ));
             let identical = cbytes == rbytes && csha == rsha && mismatches == 0;
             let tail = format!(
-                ",\"oracle\":\"{}\",\"oracle_store\":{store},{timed},\"record_pass\":{{\"bytes\":{rbytes},\"sha256\":\"{rsha}\",\"wall_s\":{rwall:.4}}},\"check_pass\":{{\"bytes\":{cbytes},\"sha256\":\"{csha}\",\"wall_s\":{cwall:.4},\"replayed\":{creplayed},\"supplied_checked\":{checked},\"mismatches\":{mismatches},\"identical\":{identical}}}}}",
+                ",\"oracle\":\"{}\",\"oracle_store\":{store},{timed},\"record_pass\":{{\"bytes\":{rbytes},\"sha256\":\"{rsha}\",\"wall_s\":{rwall:.4}}},\"check_pass\":{{\"bytes\":{cbytes},\"sha256\":\"{csha}\",\"wall_s\":{cwall:.4},\"replayed\":{creplayed},\"supplied_checked\":{checked},\"mismatches\":{mismatches},\"pooled\":{cpooled},\"identical\":{identical}}}}}",
                 name()
             );
             // (the record's closing brace replaced by the oracle's fields and its own)
