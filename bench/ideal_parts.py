@@ -99,7 +99,19 @@ def fastest(byc, cores_json):
     return min(sorted(ns), key=lambda c: ns[c]), ns
 
 
+# the zero-copy floor (ideal-parts/registration-floor.md): all real; all ideal with zero-copy
+# handovers (E as supplied codes, its word spelling run); all ideal with E_full (F: emission's
+# word spelling removed too); and that with delivery real. Every decode counts its last level's
+# misses (pmu group 5) and the memory controllers' traffic where it can (imc)
+FLOOR_ARMS = ("none", ALL, "SFCMRD", "SFCMR")
+FLOOR_COUNTS = (1, 6, 7, 8, 9, 10)
+FLOOR_TRACE_BLOCKS = 4
+FLOOR_TREAT = ["pmu 5", "imc 1"]
+
+
 def plan(a) -> dict:
+    if getattr(a, "design", "matrix") == "floor":
+        return plan_floor(a)
     byc = topology(a.lscpu_e)
     scpu, ns = fastest(byc, a.cores)
     score = next(cs for cs in byc if scpu in cs)
@@ -121,6 +133,25 @@ def plan(a) -> dict:
     json.dump(out, open(a.out, "w"), indent=1)
     print(f"bench-ideal-parts: {len(cells)} cells ({len(ARMS)} arms x {len(COUNTS)} counts "
           f"pinned, the link at {k}); the scanner pinned to CPU {scpu} (core {score})")  # fmt: skip
+    return out
+
+
+def plan_floor(a) -> dict:
+    byc = topology(a.lscpu_e)
+    scpu, ns = fastest(byc, a.cores)
+    score = next(cs for cs in byc if scpu in cs)
+    others = [x for cs in byc for x in cs if x not in score]
+    cells = []
+    for k in FLOOR_COUNTS:
+        for arm in FLOOR_ARMS:
+            cells.append({"section": "pinned", "k": k, "arm": arm, "pinned": 1, "mask": others,
+                          "treat": [f"oracle {arm}", f"prespin {PRESPIN_MS}", f"scanner_cpu {scpu}", *FLOOR_TREAT]})  # fmt: skip
+    out = {"design": "ideal-parts: the zero-copy floor", "arms": list(FLOOR_ARMS), "counts": list(FLOOR_COUNTS),
+           "scanner_cpu": scpu, "scanner_core": score, "pinned_mask": others, "core_calibration_ns": ns,
+           "trace_blocks": FLOOR_TRACE_BLOCKS, "prespin_ms": PRESPIN_MS, "cells": cells}  # fmt: skip
+    json.dump(out, open(a.out, "w"), indent=1)
+    print(f"bench-zero-copy-floor: {len(cells)} cells ({len(FLOOR_ARMS)} arms x {len(FLOOR_COUNTS)} counts "
+          f"pinned); the scanner pinned to CPU {scpu} (core {score})")  # fmt: skip
     return out
 
 
@@ -204,6 +235,7 @@ def main() -> int:
     pp.add_argument("lscpu_e")
     pp.add_argument("cores")
     pp.add_argument("out")
+    pp.add_argument("--design", choices=("matrix", "floor"), default="matrix")
     pr = sub.add_parser("run")
     pr.add_argument("plan")
     pr.add_argument("--bin", required=True)

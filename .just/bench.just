@@ -2300,3 +2300,190 @@ bench-ideal-matrix DRY="":
     phase plan     cores                  plan
     phase run      plan,inputs            drive
     phase report   plan                   report
+
+# The zero-copy floor (docs/journal/2026-11-24-algorithm-level/ideal-parts/registration-floor.md,
+# frozen before the data): the decoder's residual with the oracles' handover copies removed, on
+# Antigravity's zero-copy oracles and #909's harness. Characterisation: it decides nothing, and
+# nothing is adopted.
+# - Four arms (all real; all six ideal, zero-copy; that with E_full; that with delivery real) at
+#   1, 6, 7, 8, 9 and 10 workers, the scanner pinned to its fastest core and the rest masked off,
+#   the 100 ms pre-spin, 8 randomised blocks with traces in the first 4.
+# - Every decode counts its last level's misses and, where the machine allows it, the memory
+#   controllers' traffic (else the reason is recorded); each is limited to 120 s.
+# - The analysis: ideal-parts/results/analysis/zero_copy_floor.py.
+# About 10 to 14 minutes. DRY (one block, a 2 s pre-warm; not evidence) checks the wiring.
+#   just submit bench-zero-copy-floor
+bench-zero-copy-floor DRY="":
+    #!/usr/bin/env bash
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle.
+    set -uo pipefail
+    # the base: master with Antigravity's zero-copy oracles (set at the rebase onto their merged
+    # PR); the build is it plus the research features alone
+    PIN=8c2b0e2576f80382cee25afac69b489aa4766ed2
+    COPIES=4 BLOCKS=8 SETTLE=0 PREWARM=50 SEED=20261126 TIMEOUT=120
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { BLOCKS=1; PREWARM=2; }
+    W=$PWD/target/zero-copy-floor
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-zero-copy-floor (docs/journal/2026-11-24-algorithm-level/ideal-parts/registration-floor.md; diagnostic) at $(git rev-parse HEAD): master $PIN with the zero-copy oracles, the character, scan-oracle and ideal-* features, $BLOCKS blocks (traces in the first 4), the 100 ms pre-spin, a ${TIMEOUT} s limit a decode, seed $SEED; the scanner pinned to a core of its own"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-zero-copy-floor: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-zero-copy-floor: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-zero-copy-floor: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-zero-copy-floor: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-zero-copy-floor: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-zero-copy-floor: the checkout has local changes"; exit 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "bench-zero-copy-floor: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+      # the pin: master's decoder at PIN (its oracles, src/ideal/, unchanged), plus the research
+      # features alone (character, scan-oracle, supplied-codes), never a later master
+      changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|lib|parallel|read|block|open|open/supplied|open/endpoint|open/outq)\.rs$|^$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-zero-copy-floor: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-zero-copy-floor: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+      # the zero-copy oracles: emission's E_full and its ledger's two halves (registration-floor.md),
+      # so that a head without them fails here, clearly
+      for want in 'E_full' '"hand_E_deliver"' '"E_consume"'; do
+        git grep -q -F -e "$want" HEAD -- src \
+          || { echo "bench-zero-copy-floor: $(git rev-parse --short HEAD) has no $want in src: not the zero-copy oracles"; exit 1; }
+      done
+    }
+    build() {
+      cargo build -q --release --features character,scan-oracle,ideal-construction,ideal-mtf,ideal-rle1,ideal-delivery \
+        --example character --example ab --example windows
+      sha256sum "$CH" | tee "$O/binaries.sha256"
+    }
+    # the corpus, as stage 1's
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-zero-copy-floor: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # the machine (best effort: what can't be read is recorded so)
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      # the counters' access: uncore (the memory controllers) needs perf_event_paranoid <= 0 or
+      # CAP_PERFMON; what the machine offers is recorded either way
+      { echo "perf_event_paranoid: $(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unreadable)"
+        ls -d /sys/bus/event_source/devices/uncore_imc* 2>/dev/null || echo "no uncore_imc PMU"
+        for d in /sys/bus/event_source/devices/uncore_imc*/events; do ls "$d" 2>/dev/null; done
+      } > "$O/counters-access.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
+    # each core's first CPU, the pacing loop pinned to it (long enough for the clock to ramp): the
+    # scanner's core is the fastest (journal §74: unpinned, the scanner sharing its core or CPU was
+    # most of 2a's noise above k 6)
+    cores() {
+      cpus=$(python3 -c "import sys; sys.path.insert(0, 'bench'); import ideal_parts as s; print(' '.join(str(c[0]) for c in s.topology('$O/lscpu-e.txt')))")
+      { echo "{"; sep=""
+        for c in $cpus; do printf '%s"%s": %s\n' "$sep" "$c" "$(taskset -c "$c" "$CH" --calibrate 200000000 5)"; sep=","; done
+        echo "}"; } > "$O/cores.json"
+      python3 -m json.tool "$O/cores.json" > /dev/null
+    }
+    # the plan: the floor's cells (4 arms at 1, 6, 7, 8, 9 and 10 workers, pinned), the pin from
+    # the cores' calibration
+    plan() {
+      python3 bench/ideal_parts.py plan "$O/lscpu-e.txt" "$O/cores.json" "$O/plan.json" --design floor
+    }
+    # the run (the driver records a failed decode as failed and carries on)
+    drive() {
+      python3 bench/ideal_parts.py run "$O/plan.json" --bin "$CH" --corpus "$X4" \
+        --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED --timeout $TIMEOUT
+    }
+    # the report: whatever completed, failed phases and missing decodes marked FAILED; exit 1 if VOID
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/zero_copy_floor.py \
+        "$O/plan.json" "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --out "$O" --blocks $BLOCKS \
+        | tee "$O/report.txt"
+    }
+    phase checks   -                      checks
+    phase build    checks                 build
+    phase inputs   build                  inputs
+    phase machine  build                  machine
+    phase cores    machine                cores
+    phase plan     cores                  plan
+    phase run      plan,inputs            drive
+    phase report   plan                   report

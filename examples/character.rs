@@ -136,6 +136,14 @@ mod pmu {
             ],
             // (the achieved frequency, every decode: two fixed counters, no general one taken)
             4 => vec![("cycles", HW, 0), ("ref-cycles", HW, 9)],
+            // (the achieved frequency and the last level's misses, loads and stores: the memory
+            // station's witnesses where the uncore's bandwidth can't be read)
+            5 => vec![
+                ("cycles", HW, 0),
+                ("ref-cycles", HW, 9),
+                ("LLC-load-misses", CACHE, 2 | 1 << 16),
+                ("LLC-store-misses", CACHE, 2 | 1 << 8 | 1 << 16),
+            ],
             // (the software group: the counters' check where there is no hardware PMU)
             3 => vec![
                 ("task-clock", SW, 1),
@@ -231,6 +239,141 @@ mod pmu {
                     // SAFETY: an fd this opened
                     unsafe { close(fd) };
                 }
+            }
+        }
+    }
+
+    /// The memory controllers' traffic (the uncore's IMC `data_reads` and `data_writes`, as
+    /// sysfs describes them), system-wide on one CPU: whatever else runs is counted too. Where
+    /// they can't be opened (no such PMU, or `perf_event_paranoid` above 0 without
+    /// CAP_PERFMON), `why` says so and the decode carries on without them
+    pub struct Imc {
+        fds: Vec<(String, i32, f64)>,
+        pub why: Option<String>,
+    }
+
+    impl Imc {
+        pub fn open() -> Imc {
+            let root = std::path::Path::new("/sys/bus/event_source/devices");
+            let mut fds = Vec::new();
+            let mut why = Vec::new();
+            let mut devs: Vec<_> = std::fs::read_dir(root)
+                .map(|d| {
+                    d.filter_map(Result::ok)
+                        .map(|e| e.file_name().to_string_lossy().into_owned())
+                        .filter(|n| n.starts_with("uncore_imc"))
+                        .collect()
+                })
+                .unwrap_or_default();
+            devs.sort();
+            if devs.is_empty() {
+                why.push("no uncore_imc PMU in sysfs".to_string());
+            }
+            let rd =
+                |p: std::path::PathBuf| std::fs::read_to_string(p).map(|s| s.trim().to_string());
+            for dev in &devs {
+                let d = root.join(dev);
+                let (Ok(ty), cpu) = (rd(d.join("type")), rd(d.join("cpumask"))) else {
+                    continue;
+                };
+                let cpu: i64 = cpu
+                    .ok()
+                    .and_then(|c| c.split([',', '-']).next().and_then(|x| x.parse().ok()))
+                    .unwrap_or(0);
+                for ev in ["data_reads", "data_writes"] {
+                    let Ok(spec) = rd(d.join("events").join(ev)) else {
+                        continue;
+                    };
+                    // `event=0x01,umask=0x..`: each term placed at its format's bits
+                    let mut config = 0u64;
+                    for term in spec.split(',') {
+                        let (k, v) = term.split_once('=').unwrap_or((term, "1"));
+                        let v = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap_or(0);
+                        let lo = rd(d.join("format").join(k))
+                            .ok()
+                            .and_then(|f| {
+                                f.strip_prefix("config:")
+                                    .and_then(|b| b.split('-').next().and_then(|x| x.parse().ok()))
+                            })
+                            .unwrap_or(0u32);
+                        config |= v << lo;
+                    }
+                    let scale: f64 = rd(d.join("events").join(format!("{ev}.scale")))
+                        .ok()
+                        .and_then(|x| x.parse().ok())
+                        .unwrap_or(1.0);
+                    let mut attr = [0u64; 8];
+                    attr[0] = ty.parse::<u64>().unwrap_or(0) | (64 << 32);
+                    attr[1] = config;
+                    attr[4] = 1 | 2;
+                    attr[5] = 1;
+                    // SAFETY: a valid perf_event_attr of the size it declares; every process,
+                    // one CPU, no group, close-on-exec
+                    let fd = unsafe { syscall(NR, attr.as_ptr(), -1i64, cpu, -1i64, 8u64) };
+                    if fd >= 0 {
+                        fds.push((format!("{dev}/{ev}"), fd as i32, scale));
+                    } else {
+                        why.push(format!(
+                            "{dev}/{ev}: perf_event_open failed ({})",
+                            std::io::Error::last_os_error()
+                        ));
+                    }
+                }
+            }
+            Imc {
+                why: (fds.is_empty() || !why.is_empty()).then(|| {
+                    if why.is_empty() {
+                        "no data_reads or data_writes events".into()
+                    } else {
+                        why.join("; ")
+                    }
+                }),
+                fds,
+            }
+        }
+        fn each(&self, req: std::ffi::c_ulong) {
+            for &(_, fd, _) in &self.fds {
+                // SAFETY: an fd this opened; the request takes no argument
+                unsafe { ioctl(fd, req, 0) };
+            }
+        }
+        pub fn enable(&self) {
+            self.each(0x2403);
+            self.each(0x2400);
+        }
+        pub fn disable(&self) {
+            self.each(0x2401);
+        }
+        /// JSON: each event's MiB (its count times the sysfs scale, MiB on client parts), and
+        /// why any could not be read
+        pub fn json(&self) -> String {
+            let mut out: Vec<String> = self
+                .fds
+                .iter()
+                .map(|(n, fd, scale)| {
+                    let mut v = [0u64; 3];
+                    // SAFETY: 24 bytes into a buffer of 24
+                    let got = unsafe { read(*fd, v.as_mut_ptr().cast(), 24) };
+                    let x = if got == 24 {
+                        format!("{:.3}", v[0] as f64 * scale)
+                    } else {
+                        "null".into()
+                    };
+                    format!("\"{n}\":{x}")
+                })
+                .collect();
+            if let Some(w) = &self.why {
+                out.push(format!("\"why\":\"{}\"", w.replace('"', "'")));
+            }
+            format!("{{{}}}", out.join(","))
+        }
+    }
+
+    impl Drop for Imc {
+        fn drop(&mut self) {
+            for &(_, fd, _) in &self.fds {
+                // SAFETY: an fd this opened
+                unsafe { close(fd) };
             }
         }
     }
@@ -871,6 +1014,10 @@ fn emit(line: String) {
 
 /// The pre-spin's length (`prespin MS`; 0: none)
 static PRESPIN_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// The counters' group for a decode that names none (`pmu G`; 0: group 4, cycles and
+/// reference cycles), and whether the memory controllers' traffic is read too (`imc 1`)
+static PMU_DEFAULT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+static IMC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// The pre-spin (journal §81's standard warm-up; bench-clock-mechanism: no decode at the low
 /// clock after it): one thread pinned to each online CPU, all spinning until a shared deadline
@@ -951,8 +1098,10 @@ mod oracle {
     /// delivery. An arm is `none` or its ideal parts' letters (`SE`, `SECMRD`, ...)
     const FACTORS: [char; 6] = ['S', 'E', 'C', 'M', 'R', 'D'];
 
-    /// 0x80: in play (an `oracle` line); bit i: factor FACTORS[i] ideal
+    /// 0x80: in play (an `oracle` line); bit i: factor FACTORS[i] ideal; FULL: emission in
+    /// E_full (an arm's F)
     static ARM: AtomicU8 = AtomicU8::new(0);
+    const FULL: u8 = 0x40;
     #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     pub const PASS_WORKERS: usize = 10;
 
@@ -960,10 +1109,15 @@ mod oracle {
         let mut bits = 0u8;
         if x != "none" {
             for c in x.chars() {
-                let i = FACTORS
-                    .iter()
-                    .position(|&f| f == c)
-                    .unwrap_or_else(|| panic!("TREAT: oracle {x}: none, or letters of SECMRD"));
+                // (F: emission ideal with E_full, its word spelling removed too; the zero-copy
+                // floor's arms)
+                let (c, full) = if c == 'F' { ('E', true) } else { (c, false) };
+                if full {
+                    bits |= FULL;
+                }
+                let i = FACTORS.iter().position(|&f| f == c).unwrap_or_else(|| {
+                    panic!("TREAT: oracle {x}: none, or letters of SECMRD (F for E with E_full)")
+                });
                 assert!(bits & (1 << i) == 0, "TREAT: oracle {x}: {c} twice");
                 bits |= 1 << i;
             }
@@ -981,7 +1135,11 @@ mod oracle {
     /// The arm's name: `none`, or its ideal factors' letters in FACTORS' order
     #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
     pub fn name() -> String {
-        let n: String = FACTORS.iter().filter(|&&c| ideal(c)).collect();
+        let n: String = FACTORS
+            .iter()
+            .filter(|&&c| ideal(c))
+            .map(|&c| if c == 'E' && full() { 'F' } else { c })
+            .collect();
         if n.is_empty() {
             "none".into()
         } else {
@@ -991,6 +1149,12 @@ mod oracle {
 
     fn in_play() -> bool {
         ARM.load(Ordering::SeqCst) & 0x80 != 0
+    }
+
+    /// Whether emission is in E_full (its word spelling removed too)
+    #[cfg_attr(not(feature = "ideal-delivery"), allow(dead_code))]
+    fn full() -> bool {
+        ARM.load(Ordering::SeqCst) & FULL != 0
     }
 
     /// The timed decode's replays, for the trace's forced flow: the open blocks emitted from
@@ -1274,6 +1438,11 @@ mod oracle {
             if !in_play() {
                 return;
             }
+            assert!(
+                !super::full(),
+                "TREAT: oracle {}: E_full needs the zero-copy oracles (ideal-parts/registration-floor.md), not in this binary",
+                name()
+            );
             // (the hash itself, against FIPS 180-4's vectors: one block, and two)
             assert_eq!(
                 hex(sha256(b"abc")),
@@ -1496,6 +1665,9 @@ fn treatments(spec: &str) {
             // record pass that supplies them, in every arm; the pre-spin before the decode)
             ["oracle", x] => oracle::set(x),
             ["prespin", ms] => PRESPIN_MS.store(ms.parse().expect("prespin"), Ordering::SeqCst),
+            // (the zero-copy floor run: the counters' group, and the memory controllers' traffic)
+            ["pmu", g] => PMU_DEFAULT.store(g.parse().expect("pmu"), Ordering::SeqCst),
+            ["imc", x] => IMC.store(*x == "1", Ordering::SeqCst),
             _ => panic!("TREAT: {line}"),
         }
     }
@@ -1610,7 +1782,13 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     oracle::record(data);
     // (every decode counts cycles and reference cycles, for its achieved frequency: group 4,
     // two fixed counters; a counter run's group in their place)
-    let counters = Some(pmu::Counters::open(if group > 0 { group } else { 4 }));
+    let group = match (group, PMU_DEFAULT.load(Ordering::SeqCst)) {
+        (0, 0) => 4,
+        (0, g) => g,
+        (g, _) => g,
+    };
+    let counters = Some(pmu::Counters::open(group));
+    let imc = IMC.load(Ordering::SeqCst).then(pmu::Imc::open);
     // the ledgers preallocated for the work ahead (no reallocation while decoding; an overflow
     // is counted): at most a block per 8 KiB of input, about 16 events a block on the scanner
     // and the reader, 20 on a worker
@@ -1626,6 +1804,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             if let Some(c) = &counters {
                 c.enable();
             }
+            if let Some(m) = &imc {
+                m.enable();
+            }
             mibz2::BzReader::parallel_workers(data, k, slots, mibz2::Kernels::detect(), true)
         },
         |r| {
@@ -1636,6 +1817,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             // inherited ones included, disabled at its stop)
             if let Some(c) = &counters {
                 c.disable();
+            }
+            if let Some(m) = &imc {
+                m.disable();
             }
             end.set(ch::now_ns());
         },
@@ -1669,6 +1853,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             );
         }
         line.push('}');
+    }
+    if let Some(m) = &imc {
+        let _ = write!(line, ",\"imc_mib\":{}", m.json());
     }
     if !on {
         emit(format!("{line}}}"));
@@ -2082,7 +2269,18 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             little[i]
         );
     }
-    line += "},\"threads\":[";
+    // (the activities' names in the states' order, the residual last, so that an analysis
+    // reads a ledger by name whatever activities this binary has)
+    let _ = write!(
+        line,
+        "}},\"activities\":[{}],\"threads\":[",
+        ACTIVITIES
+            .iter()
+            .chain(std::iter::once(&"resid"))
+            .map(|a| format!("\"{a}\""))
+            .collect::<Vec<_>>()
+            .join(",")
+    );
     for (i, t) in threads.iter().enumerate() {
         let _ = write!(
             line,
