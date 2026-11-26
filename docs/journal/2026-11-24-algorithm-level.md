@@ -2414,3 +2414,20 @@ Louis, 25 November, on reading the overnight summary: the point of the experimen
 - **The floor (all ideal) is mostly the oracles' own handover cost.** At 1 worker the handovers sum to the all-ideal wall, and from 8 to 10 the all-ideal wall rises. The decoder's irreducible residual is therefore unmeasured; that needs zero-copy oracles.
 - **Antigravity's predictions:** 14 of 28 values hit. They named S × C as the largest interaction, correctly. The floor predictions missed, mostly because of the handover artifact.
 - **The targets for the mathematics, by measured room:** construction (T2), then the scan (T4), then emission (T1), with S and C together at the operating points that matter.
+
+## 90. Antigravity's second pass, and the next measurement: the decoder's own residual
+
+`research/neon-movement/IDEAL-PARTS-2.md` at 7fab624e (#145, REVIEW 7179225952), against the full matrix (§89).
+- **The model, revised to three stations.** Memory is the third (the shared L3 and DRAM bandwidth), beside the scanner and the workers.
+  - Active workers tax the pinned scanner by about 6% through contention.
+  - Once the parts are made fast, memory binds, which accounts for the all-ideal wall rising from 8 to 10 workers.
+  - 8 workers, or 8–9 pooled, is the operating target.
+- **The floor, decomposed by arithmetic** (not measured):
+  - emission's oracle leaves the word spelling (`consume`, about 259 ms at 1 worker) in the clock;
+  - pure plumbing is about 14–19 ms;
+  - simultaneous copies add 39–69 ms at 8–10 workers.
+- **The targets:** C, then S, attacked together; then E; then D. Enrichment across the scanner's boundary is obstructed (its Theorems T5.1 and T5.2), so dissolving the boundary by a pooled scan is proposed instead. There are concrete designs with kill tests for C, S and E+A6c.
+- **The next characterisation step:** zero-copy oracles (its §3) and a short floor run.
+  - **The build goes to Antigravity** (`ideal-parts/antigravity/prompt-build-zero-copy.md`). It designed the change.
+  - **The recipe goes to the Pathfinder,** on #909's faster harness.
+  - Characterisation only. The designs' kill tests wait until the floor is measured.
