@@ -1,0 +1,9 @@
+id = "bottlenecks-floor-correction"
+holder = "claude-code"
+session = "01a1b8ab251e"
+claimed_at = "2026-11-26T18:30:25+00:00"
+expires = "2026-11-26T22:30:25+00:00"
+owned_paths = []
+mechanisms = []
+base = "ded8b919424fae727f177ffaebcf52769cfb3dff"
+released = false
