@@ -5,4 +5,4 @@ claimed_at = "2026-11-26T14:18:58+00:00"
 expires = "2026-11-26T14:22:35+00:00"
 owned_paths = []
 base = "23a23cb842766d7881769fa91dc349494b5d20bd"
-released = false
+released = true
