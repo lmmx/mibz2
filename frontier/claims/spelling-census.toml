@@ -5,6 +5,7 @@ zone = "smooth"
 needs = ["shell", "rust"]
 priority = 1
 status = "open"
+mechanisms = ["spelling"]
 owned_paths = []
 needs_louis = ""
 question = """

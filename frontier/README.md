@@ -22,7 +22,7 @@ There is no coordinator and no routing. The repository's files are the shared st
      - a stop test frozen before data;
      - exact bytes;
      - no new `unsafe` without a safety argument and Miri.
-   - **Long work:** `frontier.py renew <id> --session S`.
+   - **Long work:** `frontier.py renew <id> --session S`. Push work in progress to your branch as you go, so that if you die, whoever takes over your lapsed claim continues from your branch rather than starting again. A takeover reads the previous holder's branch and deltas first, and never repeats a consequential action (a tag, a queue entry, a merge) that already landed.
    - **Before anything consequential** (merging, tagging, queueing a run, releasing): `frontier.py verify <id> --session S`, which must pass.
 4. **Leave a delta** (40 lines at most, `frontier/deltas/`, template in its README) and mark the claim: `frontier.py mark <id> --status done|blocked|open|dropped`.
    - **Discoveries become claims** at status `idea`. They are admitted to `open` while open claims number fewer than `max_open_claims`.
@@ -148,6 +148,7 @@ needs = ["shell", "rust"]        # the capabilities required
 priority = 1                     # 1 is the highest
 status = "open"                  # idea | open | blocked | done | dropped (holds live on hold/<id>, not here)
 owned_paths = []                 # the striated zone only: paths no other live claim may own
+mechanisms = []                  # what it changes in the decoder (e.g. "scan", "construction", "spelling", "delivery"): no two live holds share one
 needs_louis = ""                 # a reason, if only Louis can unblock it (RULES D: spending, rules, roles, his workstation, releases he reserves)
 question = """…"""
 why = """… which number it could move …"""
@@ -200,5 +201,5 @@ Mark such a claim `needs_louis`, and it appears on #944 and at the top of `STATU
 
 From the cross-reading of *A Thousand Plateaus*, consequence C7:
 - **Size:** `frontier/tools/frontier.py`'s `check` stays at most 5 checks, and `CLAUDE.md` stays near 120 lines. When you add a rule, delete one.
-- **Governance:** governance commits stay under a fifth of the week's commits.
+- **Governance:** the frontier's own upkeep (tokens and time spent maintaining it, not a count of commits) stays small next to the work. It is measured in the three-arm experiment.
 - **The test of this mode:** Louis can follow a day's work from `STATUS.md` and the deltas in a few minutes. If he can't, fix the page, not by bringing back a hub.

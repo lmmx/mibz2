@@ -365,18 +365,16 @@ def claim(cid, by, hours):
     sha, lease = all_holds.get(cid, (None, None))
     if lease and live(lease):
         sys.exit(f"{cid} is held by {lease['holder']} until {lease['expires']}")
-    if c.get("zone") == "striated":
-        mine = c.get("owned_paths", [])
-        for k, (_, v) in all_holds.items():
-            if k != cid and live(v):
-                clash = [
-                    a
-                    for a in mine
-                    for b in v.get("owned_paths", [])
-                    if a.startswith(b) or b.startswith(a)
-                ]
-                if clash:
-                    sys.exit(f"{cid} would share {clash} with {k}, held by {v['holder']}")
+    for k, (_, v) in all_holds.items():
+        if k == cid or not live(v):
+            continue
+        same = sorted(set(c.get("mechanisms", [])) & set(v.get("mechanisms", [])))
+        paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+        clash = [
+            a for a in paths for b in v.get("owned_paths", []) if a.startswith(b) or b.startswith(a)
+        ]
+        if same or clash:
+            sys.exit(f"{cid} would share {same + clash} with {k}, held by {v.get('holder')}")
     t = now()
     new = {
         "id": cid,
@@ -385,6 +383,7 @@ def claim(cid, by, hours):
         "claimed_at": t.isoformat(),
         "expires": (t + dt.timedelta(hours=hours)).isoformat(),
         "owned_paths": c.get("owned_paths", []),
+        "mechanisms": c.get("mechanisms", []),
         "base": git("rev-parse", "origin/master")[1],
         "released": False,
     }

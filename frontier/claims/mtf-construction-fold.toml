@@ -5,6 +5,7 @@ zone = "striated"
 needs = ["shell", "rust", "i9"]
 priority = 2
 status = "open"
+mechanisms = ["mtf", "construction-first-pass"]
 owned_paths = ["src/runs.rs", "src/open.rs"]
 needs_louis = ""
 question = """

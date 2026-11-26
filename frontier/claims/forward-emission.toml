@@ -5,6 +5,7 @@ zone = "striated"
 needs = ["shell", "rust", "i9"]
 priority = 3
 status = "idea"
+mechanisms = ["construction-wiring", "emission-walk"]
 owned_paths = ["src/open.rs", "src/open/outq.rs"]
 needs_louis = ""
 question = """

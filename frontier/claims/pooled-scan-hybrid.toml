@@ -5,6 +5,7 @@ zone = "smooth"
 needs = ["long-context"]
 priority = 4
 status = "idea"
+mechanisms = ["scan"]
 owned_paths = []
 needs_louis = ""
 question = """

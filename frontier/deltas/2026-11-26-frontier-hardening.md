@@ -17,6 +17,7 @@ evidence: this PR; reviews in docs/journal/2026-11-26-rhizome/06 and 07; live ra
 - `explore` and `synthesise` are recurring claims, about 1 session in 5;
 - PR bodies start `Claim: <id>`;
 - the canary cap is `max_live_holds = 3`.
+- Also: `mechanisms` (semantic overlap, refused like owned_paths, tested live), the takeover-recovery rule, the governance metric replaced, the three-arm claim scored on ChatGPT's nine dimensions.
 **What's next:**
 - `stress-test-frontier` (P1) must pass before the cap is raised;
 - `migrate-rules` rewrites RULES.md by meaning (it needs Louis to merge);
