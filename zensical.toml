@@ -57,6 +57,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Dropping the coordinator" = "blog/2026-11-26-dropping-the-coordinator.md" },
     { "Complementary bottlenecks" = [
       { "The experiment" = "blog/2026-11-26-complementary-bottlenecks.md" },
       { "Beyond it: the algorithms" = "blog/2026-11-26-from-bottlenecks-to-better-algorithms.md" },
@@ -292,6 +293,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-26-dropping-the-coordinator.md" = "Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier." },
   { "blog/2026-11-26-complementary-bottlenecks.md" = "Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together." },
   { "blog/2026-11-26-from-bottlenecks-to-better-algorithms.md" = "How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them." },
   { "blog/2026-11-25-the-decoder-as-a-queueing-network.md" = "Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next." },

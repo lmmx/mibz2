@@ -314,6 +314,13 @@
     "section": " · Research blog",
     "title": "Complementary bottlenecks: reading the ideal-parts matrix"
   },
+  "assets/social/blog-2026-11-26-dropping-the-coordinator.png": {
+    "description": "Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.",
+    "foot": "lmmx.github.io/mibz2 · 26 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Dropping the coordinator: atomic file locks on a measured frontier"
+  },
   "assets/social/blog-2026-11-26-from-bottlenecks-to-better-algorithms.png": {
     "description": "How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them.",
     "foot": "lmmx.github.io/mibz2 · 26 November 2026",

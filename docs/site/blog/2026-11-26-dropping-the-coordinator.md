@@ -476,13 +476,7 @@ Decentralisation does not eliminate failure modes; it trades hub failures for fo
 ones, each paired with a lightweight guardrail:
 
 - **Backlog runaway.** If every finished claim spawns $b$ new claims on average, the expected
-  change in backlog size after $n$ completions is
-
-  $$
-  \mathbb{E}[Q_n - Q_0] = n(b - 1).
-  $$
-
-  Whenever $b > 1$, an open queue turns into an unnavigable graveyard. Keeping `idea` creation free
+  change in backlog size after $n$ completions is $\mathbb{E}[Q_n - Q_0] = n(b - 1)$. Whenever $b > 1$, an open queue turns into an unnavigable graveyard. Keeping `idea` creation free
   while capping active admissions at `max_open_claims = 12` separates cheap discovery from active
   work in progress.
 - **Intellectual monoculture.** Shared state can still produce centralised thinking if every
