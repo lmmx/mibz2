@@ -12,7 +12,7 @@ question = """
 Replace XOR-linked two-ended traversal with forward-only links and several forward lanes from sampled anchors (more anchors than lanes, by order statistics, E[L_max] ~ m H_K / K). It should simplify A6c's wiring (161 ms) and expose memory-level parallelism in the walk. Design first, then a census of cycle lengths and anchor spacings, then a prototype.
 """
 why = """
-E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work (unmeasured).
+E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work. Measured since (#958, rauzy-census/results-2): single-lane forward wiring and emit (`prod_forward_emit`) alone cuts C+E to 0.856–0.871x, +142–157 ms (+10.9–12.1% of the 1-worker wall), byte-exact; the multi-lane share is still unmeasured. It supersedes `preshifted-inline-back`. Synthesis second-pass §1: after `mtf-fold-build` it is the next worker build on `src/open.rs`, and the two together are projected to make the 8-worker wall scanner-bound.
 """
 stop_test = """
 A registration before data; exact bytes; the kill test against S ideal at 8 workers and at 1 worker.
@@ -20,4 +20,8 @@ A registration before data; exact bytes; the kill test against S ideal at 8 work
 done_when = """
 The design note, the census, a registration, a prototype PR, a delta.
 """
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/2026-11-26-synthesis/second-pass.md",
+]
 links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 3"]
