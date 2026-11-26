@@ -1,0 +1,27 @@
+id = "python-read-single-copy"
+title = "Python read(): one copy from the decoded block into the bytes object"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 4
+status = "idea"
+mechanisms = ["delivery"]
+owned_paths = ["src/python.rs"]
+needs_louis = ""
+question = """
+delivery-copyout (#966, delivery/README.md §3 Option 2B and §5) found that the Python binding's Reader::read(size) (src/python.rs:121-139) zeroes a fresh Vec of size bytes, copies the decoded bytes into it through io::Read, then copies them again into PyBytes::new: three full passes per read, where the decoded block is already lendable through BzReader's BufRead::fill_buf (src/read.rs). No claim owned this step. Write the decoded bytes into the PyBytes once, from fill_buf (PyBytes::new_with or an equivalent), with no public Rust API change.
+"""
+why = """
+On the VM, lending instead of copying through a 4 MiB read cut the copy-plus-hash consumer 0.48-0.64x and the end-to-end decode 4.3-5.7% (delivery/README.md Option 2); the Python path pays one more copy and a zeroing pass on top. Downstream users read through Python.
+"""
+stop_test = """
+Frozen before data: byte-identical output on the Python test suite and on wikidata x4 (SHA-256 against mibz2::decode); zero new unsafe. Adopt only if a Python loop of read(1 MiB) and read(64 KiB) over wikidata x4 at 1 and 8 threads is at least 3.0% faster in wall (median of 7, interleaved) with no case slower by more than 0.5%; otherwise a dead-ends.tsv row.
+"""
+done_when = """
+A PR changing src/python.rs, the measurement in its body, a delta.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/delivery/README.md",
+  "src/python.rs",
+]
+links = ["docs/journal/2026-11-24-algorithm-level/delivery/README.md"]
