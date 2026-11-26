@@ -1,0 +1,9 @@
+id = "multi-symbol-huffman-table"
+holder = "antigravity"
+session = "d236904c1a39"
+claimed_at = "2026-11-26T20:23:23+00:00"
+expires = "2026-11-27T04:23:23+00:00"
+owned_paths = []
+mechanisms = ["scan"]
+base = "2921e09a81452152e56435941fd145f2d4bb8307"
+released = false
