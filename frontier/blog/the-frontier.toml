@@ -8,7 +8,7 @@ status = "review"
 pr = 959
 owned_paths = []
 needs_louis = ""
-stage = "revise"
+stage = "ready"
 post = "docs/site/blog/2026-11-26-dropping-the-coordinator.md"
 drafted_by = "antigravity"
 reviewed_by = "claude-code"
@@ -35,7 +35,7 @@ links = [
   "docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md",
   "frontier/README.md",
   "docs/journal/2026-11-26-rhizome/the-frontier-outline.md",
-  "docs/journal/2026-11-26-rhizome/the-frontier-draft.md",
+  "docs/site/blog/2026-11-26-dropping-the-coordinator.md",
   "docs/scripts/figures_dropping_the_coordinator.py",
   "docs/journal/2026-11-26-rhizome/the-frontier-review.md",
 ]
