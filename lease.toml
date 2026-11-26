@@ -1,0 +1,9 @@
+id = "mtf-fold-census"
+holder = "antigravity"
+session = "27777739079d"
+claimed_at = "2026-11-26T17:04:30+00:00"
+expires = "2026-11-27T01:04:30+00:00"
+owned_paths = []
+mechanisms = ["mtf", "construction-first-pass"]
+base = "55cb38589439e84f01fb17ef9f0e807a8b602534"
+released = false
