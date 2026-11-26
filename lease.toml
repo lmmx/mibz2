@@ -1,0 +1,9 @@
+id = "archive-team-strata"
+holder = "antigravity"
+session = "7b7110e2d240"
+claimed_at = "2026-11-26T19:30:38+00:00"
+expires = "2026-11-27T03:30:38+00:00"
+owned_paths = ["docs/team/"]
+mechanisms = []
+base = "aa0558d540abfa23c7ceb9584e7983e12200702d"
+released = false
