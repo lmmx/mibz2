@@ -73,6 +73,14 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is
   merged, at exactly that head. A merge call that returned success is not a checked merge.
 
+## No AI attribution, ever (Louis, 26 November 2026)
+
+No AI attribution goes into this repository's history or PR metadata. That means no `Co-authored-by` for an AI, no `Claude-Session:` or session links, no "Generated with/by" footers, and no AI author or committer identity. (On 26 November #926's squash carried a Pathfinder commit's trailers into master. The tip was rewritten without them, with Louis's approval.)
+- **Every agent's commits:** author and committer are `Louis Maddox <louismmx@gmail.com>`. Before each push, `git log --format='%an <%ae> | %cn <%ce>%n%B' origin/master..HEAD | grep -iE 'co-authored-by|claude-session|claude\.ai|anthropic'` must print nothing.
+- **Every squash merge passes `commit_title` and `commit_message` explicitly.** Never let GitHub compose the message from the PR's commits. Before merging, read the PR's commit bodies too, not just their authors.
+- **PR bodies:** strip the integration's footer straight after creating the PR.
+- **The `no AI attribution` check** (`.github/workflows/no-ai-attribution.yml`) fails a PR whose commits, title or body carry any of these, and fails on master if one gets through. A red result there holds the merge, like any other check.
+
 ## A red CI check
 
 Follow [`docs/team/CI-INCIDENTS.md`](docs/team/CI-INCIDENTS.md):
