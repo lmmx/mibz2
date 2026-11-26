@@ -14,7 +14,8 @@ There is no coordinator and no routing. The repository's files are the shared st
    - **It's atomic.** It pushes the branch `hold/<id>` with a compare-and-swap, so of two agents claiming at once exactly one succeeds. Only a printed "acquired" means you hold it.
    - **Keep the session id it prints.**
    - **It refuses** a claim that isn't open, one needing Louis, one with an open flag, a striated claim whose `owned_paths` overlap a live hold, and anything once the live-hold budget is full.
-   - **About one session in five,** take an `explore` or `synthesise` claim instead of the top priority; `brief` lists them.
+   - **Priority measures marginal value including what it unlocks.** P1 is a concrete shared bottleneck: unblock multiple eligible claims, restore autonomy, remove a repeated human intervention or recover stranded capacity. P2 is a promising direct research or engineering advance; P3 is ordinary useful work; P4 is discretionary; P5 is deferred. Estimate the breadth and duration of the obstruction and the cost of removing it, not just the apparent size of the edit. Reassess on changed evidence: a small infrastructure fix can outrank a large scientific investigation. Bump the existing claim and state the specific dependency in its delta; do not create an approval process, scorecard or duplicate claim. Priority neither preempts valid active work nor overrides a safety constraint.
+   - **About one session in five,** take an `explore` or `synthesise` claim instead of the top priority; `brief` lists them. Prefer removing a current shared P1 obstruction first when capable.
 3. **Do it,** under the claim's frozen `stop_test`.
    - **Check its premises first.** Re-read the evidence it rests on; if a newer delta contradicts them, flag it rather than spend on it.
    - **The smooth zone** (`docs/`, `examples/`, `frontier/` data, reading, censuses) is free.
@@ -135,10 +136,13 @@ The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-
 | `surface.tsv` | the measured frontier: each target, its room at 1 and 8 workers, its state, its evidence, its claims | whoever's result changes a row |
 | `STATUS.md` | the generated page: Needs Louis, flags, review, open claims, the blog board, deltas, dead ends, the surface. Local and gitignored; #943 publishes it | `frontier.py status`, never by hand |
 | `dead-ends.tsv` | every killed or stopped direction: its verdict, what it showed and its evidence. Read it before proposing a direction | whoever's claim ends KILL or STOP |
-| `config.toml` | the two issues the optional Action mirrors to | rarely changed |
+| `config.toml` | mirror issues, protected paths, claim backlog and protocol settings | rarely changed |
+| `limits.toml` | owner-authorised operational reservation ceiling | ordinary lightweight config PR |
 | `tools/frontier.py` | brief, status, check, claim, release; standard library only | anyone, keeping `check` small |
 
 **Admission and integration safety.** Acquisitions, renewals and review transfers compare-and-swap a shared admission epoch together with the individual lease using an atomic push. A competing admission invalidates the decision; retry from fresh state. The GitHub PR API is required for safe acquisition on a GitHub origin; unavailable data means no new acquisition. Participant independence is declared, not authenticated. The next acquisition reconciles exact merged and closed-unmerged integration reservations. Do not raise the cap until the updated client has been independently tested and deployed to all participating checkouts; older clients do not use the shared epoch and must not acquire or renew. No new server or dispatcher is required.
+
+**Operational ceiling:** after the one-time limits-file migration, change only `frontier/limits.toml` for a further owner-authorised cap change. The existing check validates the exact positive integer setting; no repeat of the admission regression suite or independent sign-off solely for this file. The client reads the authoritative value on each acquisition, without merging its work branch. The zero in legacy config is a migration interlock, not the actual ceiling; refresh old clients before new claims, preserving current work. A lower ceiling drains existing reservations rather than revoking work; admissions already in flight may have observed the previous setting. No extra spending, credentials or authority is implied. Do not alter other safety mechanisms or frozen registrations.
 
 **Nothing depends on GitHub Actions.** Anyone regenerates `STATUS.md` locally, any time, with `frontier.py status`. `.github/workflows/frontier.yml` only mirrors it to issue #943 ("Frontier status") and #944 ("Needs Louis"), and runs `check` on every PR as a courtesy.
 
