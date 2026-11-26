@@ -1,4 +1,4 @@
-# Antigravity (Neon): the next task, in two parts: the Rauzy census, then two pre-port tests
+# Antigravity (Neon): the next task, in three parts: the Rauzy census, two pre-port tests, and a reading of the compact GRH proof
 
 Work in the lmmx/mibz2 repository on a new branch `research/rauzy-census`, from `origin/master`. Use Louis's identity (`git config user.name "Louis Maddox"`, `git config user.email louismmx@gmail.com`), with no AI attribution anywhere. Never put a PR or issue number straight after fix, close or resolve.
 
@@ -57,3 +57,48 @@ Do these after part 1, on a second branch `research/pre-port-tests` from `origin
 - a PR adding `docs/journal/2026-11-24-algorithm-level/leads/pre-port-tests/README.md`, with each test's numbers and its verdict (PASS, KILL or, if a tool couldn't run, UNRESOLVED with why), plus the scripts;
 - `plan.md` §2 thread 6's state updated;
 - a short REVIEW on #145 naming both PRs at their heads.
+
+---
+
+## Part 3: how the compact GRH proof closes its squeeze (a reading task)
+
+Do this last, as a third PR from `origin/master`, on a branch `research/grh-squeeze`. This is thread 7 of `plan.md`. Writing only: no code.
+
+**The source:** https://github.com/lsernau/grh-lean, the compact edition `grh-compact/` and the guide `grh/GUIDE.md`.
+- It is a roughly 76,000-line Lean rewrite of Levent Alpöge's roughly 17-million-line development, proving RH and GRH for Dirichlet L-functions.
+- It is machine-checked only: no mathematician has read it through.
+
+**Our earlier reading:** `docs/journal/2026-11-21-the-shape-of-the-rh-proof.md` worked from a second-hand overview of the proof's shape. It recorded that the overview's author had "not yet understood how these combine to exclude zeros". Read that note first.
+
+**Read:**
+- `grh/GUIDE.md`;
+- `grh-compact/README.md` and `src/Statements.lean`;
+- `src/New/Main.lean` (`star_inequality`, `New.grh`);
+- the files for theorems A (short forms), B (enough forms) and C (integral forms are long).
+
+Follow imports only as far as each step needs.
+
+**Write** `docs/journal/2026-11-24-algorithm-level/leads/grh-squeeze.md`, answering:
+1. **How the squeeze closes:**
+   - what each of A, B and C bounds, in which direction, and from which theory;
+   - how `star_inequality` combines them;
+   - how a hypothetical zero off the line contradicts it, step by step, at a level a programmer can follow.
+
+   Quote the Lean names you rely on, with file paths.
+2. **What the rewrite dropped.** Compare with the 21 November note's six moves (A–F) and twelve levers:
+   - which moves survived the 200-fold shortening and which went;
+   - which steps were proved "by other arguments".
+
+   Tie each claim to a file. If you can't tell, say so.
+3. **The mapping onto mibz2.** We hold three kinds of bound on the decoder's wall:
+   - the lower bounds of journal §70;
+   - the measured rooms of the ideal-parts matrix (`ideal-parts/results/full/README.md`);
+   - the proved upper bounds network calculus would give (part 2).
+
+   For each move in (1), say whether it has an exact counterpart in those quantities: what would play "short", "enough" and "long", and what would play the exclusion. Mark each answer `[PROVED]`, `[ARGUED]` or `[CONJECTURED]`.
+4. **The stop test, frozen:** if no move in (1) maps onto a quantity we measure or can compute, say so plainly. The thread then ends as this note. Otherwise, name the one experiment or derivation it suggests and what it would cost.
+
+**Deliver (part 3):**
+- a PR adding `leads/grh-squeeze.md`;
+- `plan.md` §2 thread 7's state updated;
+- a short REVIEW on #145, which may be the same post as part 2's.
