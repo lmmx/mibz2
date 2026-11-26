@@ -1,0 +1,9 @@
+id = "computational-permutation-structure"
+holder = "claude-code"
+session = "238e5a0e784a"
+claimed_at = "2026-11-26T23:55:52+00:00"
+expires = "2026-11-27T07:55:52+00:00"
+owned_paths = []
+mechanisms = ["labelled-permutation-operator-discovery"]
+base = "8f214b8ac9334eb0022affabfb4c7daf4879c0c2"
+released = false
