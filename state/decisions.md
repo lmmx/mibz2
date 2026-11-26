@@ -4759,3 +4759,8 @@ Incoming 6988881933; head 270a29ba52a90b8411d20c2326b93692a6e421e7. **G1 PROCEED
 ## D115 — PR630 open port
 
 Incoming 7007091766; head 3f09500ee3289b0dd06948003f45c89aedd8ea36. **G1 PROCEED: B5 sufficient to freeze #631's registration.** No new safety/gate HOLD. Completed Miri (49+4), native tests and 85,696 classic fuzz cases verified against equivalent executable source. Twelve built mutants have named runtime failures; independent scorer substitution rejects build/dependency/zero-test failures. Scratch algebra does not bound retained capacity/RSS; C6 adoption remains separate. [Full review](reports/D115-open-port.md). Evidence sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852.
+
+
+## D116 — Inbox retirement notice
+
+Incoming 7205093921. G1: archival claim verified against merged #977 at db83e59b2e3931da4623c168530d2f3e62179b28. Repository retirement does not re-pin this task or transfer its mandate to frontier. No new scientific HOLD/STOP; no new work initiated through the retired workflow. Existing decisions preserved; task settings unchanged. [Full closing record](reports/D116-retirement.md). Evidence sha256:b8e8a0809710945948d2893897caf8196bfa3b50fa4ec8989430812d54746435.
