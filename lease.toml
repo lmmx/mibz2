@@ -6,4 +6,4 @@ expires = "2026-11-26T23:43:37+00:00"
 owned_paths = []
 mechanisms = []
 base = "d88951cd7bae39053dce99fd286b0d42b1f6555c"
-released = false
+released = true
