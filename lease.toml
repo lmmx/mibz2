@@ -1,9 +1,9 @@
 id = "the-frontier"
-holder = "antigravity"
-session = "f8e02ded3e6b"
-claimed_at = "2026-11-26T15:29:09+00:00"
-expires = "2026-11-26T23:29:09+00:00"
+holder = "claude-code"
+session = "614b3f1589d5"
+claimed_at = "2026-11-26T17:39:02+00:00"
+expires = "2026-11-26T21:39:02+00:00"
 owned_paths = []
 mechanisms = []
-base = "4ae37eee75d6fa28977426df962dbf6c047406d0"
-released = true
+base = "f88024a9ae9091d04afa2cd244b5d84283c5e8d9"
+released = false
