@@ -7,9 +7,9 @@ priority = 2
 status = "open"
 owned_paths = []
 needs_louis = ""
-stage = "outline"
-post = ""
-drafted_by = ""
+stage = "draft"
+post = "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md"
+drafted_by = "antigravity"
 reviewed_by = ""
 question = """
 A post on the zero-copy floor (plumbing about 5 ms; the scan alone 179 ms at 8; spelling 298 ms at 1 worker; delivery 48 ms) and the pooled scan's narrow kill (it moves the scan's work rather than removing it). It follows the complementary-bottlenecks post and its companion.
@@ -23,4 +23,10 @@ The site's rules, as above; every number traced to results/floor and pooled-scan
 done_when = """
 Published.
 """
-links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md", "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md", "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-outline.md"]
+links = [
+  "docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md",
+  "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md",
+  "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-outline.md",
+  "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-draft.md",
+  "docs/scripts/figures_floor_and_pooled_scan.py",
+]
