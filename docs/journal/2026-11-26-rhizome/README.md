@@ -10,6 +10,7 @@ Louis read Deleuze and Guattari on rhizomes beside Paradigm 3's swarms study (Le
 | `02-neon-on-deleuze.md` | Neon on principles 3 and 4 of the rhizome, read against the study. Orchestration is overcoding; a context reset is asignifying rupture; the study's swarms were "arborescent pseudomultiplicities", clones under one scalar measure. The book passage is cited, not reproduced. |
 | `03-neon-on-mibz2-coordination.md` | Neon's proposal for mibz2, made without access to the repository. It proposes four moves: lateral heterogeneity in place of Claude prompting Neon; the board as a stigmergic frontier ledger, not a chat; short disposable sessions; and continuous re-characterisation. |
 | `04-antigravity-prompt.md` | Louis's prompt to Antigravity: ground those claims in the repository, diagnose, propose a redesign, and specify a falsifiable test against the current workflow and a restarted-solo baseline at matched spend. |
+| `05-prompt-deleuze-account.md` | the follow-up: a sourced account of the whole of *A Thousand Plateaus* (every plateau, from secondary sources, paraphrased), then a decisive cross-reading that commits each concept to a consequence, a diagnosis or no bearing |
 
 **Status:** recorded. Antigravity's cross-reading is running and will land beside this folder. Nothing is implemented until it does. The test it proposes decides what changes, so this doesn't become a redesign by assertion.
 
