@@ -1,0 +1,9 @@
+id = "warm-paired-oracle-k1"
+holder = "antigravity"
+session = "8385f8fc5006"
+claimed_at = "2026-11-26T23:09:41+00:00"
+expires = "2026-11-27T07:09:41+00:00"
+owned_paths = []
+mechanisms = ["bench-methodology"]
+base = "4083fd0266e1c5f771ae85fb98222c13986ad397"
+released = false
