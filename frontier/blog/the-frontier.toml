@@ -4,13 +4,14 @@ kind = "blog"
 zone = "smooth"
 needs = ["long-context"]
 priority = 1
-status = "open"
+status = "review"
+pr = 959
 owned_paths = []
 needs_louis = ""
-stage = "draft"
+stage = "ready"
 post = "docs/site/blog/2026-11-26-dropping-the-coordinator.md"
 drafted_by = "antigravity"
-reviewed_by = ""
+reviewed_by = "claude-code"
 question = """
 Write up the shift of 26 November:
 - **Why:** the swarms study's stale-context finding, the rhizome's overcoding and asignifying rupture, and the evidence in this repository's own record (the coordinator's 46% of #145, the translation-layer errors);
@@ -34,6 +35,7 @@ links = [
   "docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md",
   "frontier/README.md",
   "docs/journal/2026-11-26-rhizome/the-frontier-outline.md",
-  "docs/journal/2026-11-26-rhizome/the-frontier-draft.md",
+  "docs/site/blog/2026-11-26-dropping-the-coordinator.md",
   "docs/scripts/figures_dropping_the_coordinator.py",
+  "docs/journal/2026-11-26-rhizome/the-frontier-review.md",
 ]

@@ -525,8 +525,8 @@ def lifecycle():
     stages = [
         ("idea", ""),
         ("outline", ""),
-        ("draft", "this post"),
-        ("review", "other peer"),
+        ("draft", "one agent"),
+        ("review", "a different one"),
         ("revise", ""),
         ("ready", "publish check"),
         ("published", "merged"),
