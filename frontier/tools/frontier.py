@@ -58,8 +58,6 @@ DELTA_HEAD = ["claim:", "by:", "outcome:", "evidence:"]
 FLAG_HEAD = ["flags:", "invariant:", "by:", "status:"]
 DEAD_COLS = ["claim", "verdict", "what it showed", "evidence"]
 SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "evidence", "claims"]
-ME = {"GIT_AUTHOR_NAME": "Louis Maddox", "GIT_AUTHOR_EMAIL": "louismmx@gmail.com"}
-ME |= {"GIT_COMMITTER_NAME": ME["GIT_AUTHOR_NAME"], "GIT_COMMITTER_EMAIL": ME["GIT_AUTHOR_EMAIL"]}
 
 
 def config(ref=None):
@@ -209,17 +207,40 @@ def admission_snapshot():
     return epoch
 
 
+def lease_identity():
+    """Use the checkout's explicitly configured Git identity only for commit creation."""
+    rc_name, name = git("config", "--local", "--get", "user.name")
+    rc_email, email = git("config", "--local", "--get", "user.email")
+    if rc_name or rc_email or not name or not email:
+        return None
+    return {
+        "GIT_AUTHOR_NAME": name,
+        "GIT_AUTHOR_EMAIL": email,
+        "GIT_COMMITTER_NAME": name,
+        "GIT_COMMITTER_EMAIL": email,
+    }
+
+
 def write_lease(cid, lease, parent, expected, admission=None):
     """Commit `lease` onto hold/<cid> (child of `parent`) and push it, guarded by `expected`."""
+    identity = lease_identity()
+    if identity is None:
+        return False, "repository-local Git identity is not configured; no lease was written"
     body = "".join(
         f"{k} = {str(v).lower() if isinstance(v, bool) else repr(v).replace(chr(39), chr(34))}\n"
         for k, v in lease.items()
     )
-    _, blob = git("hash-object", "-w", "--stdin", inp=body)
-    _, tree = git("mktree", inp=f"100644 blob {blob}\tlease.toml\n")
+    rc, blob = git("hash-object", "-w", "--stdin", inp=body)
+    if rc:
+        return False, blob
+    rc, tree = git("mktree", inp=f"100644 blob {blob}\tlease.toml\n")
+    if rc:
+        return False, tree
     args = ["commit-tree", tree, "-m", f"hold {cid}: {lease['holder']} {lease['session']}"]
     args += ["-p", parent] if parent else []
-    _, sha = git(*args, env=ME)
+    rc, sha = git(*args, env=identity)
+    if rc:
+        return False, sha
     ref = f"refs/heads/hold/{cid}"
     args = ["push", "--porcelain", f"--force-with-lease={ref}:{expected or ''}"]
     updates = [f"{sha}:{ref}"]
@@ -228,7 +249,7 @@ def write_lease(cid, lease, parent, expected, admission=None):
         epoch_args = ["commit-tree", tree, "-m", f"admission {secrets.token_hex(16)}"]
         if admission:
             epoch_args += ["-p", admission]
-        rc, epoch = git(*epoch_args, env=ME)
+        rc, epoch = git(*epoch_args, env=identity)
         if rc:
             return False, epoch
         args += ["--atomic", f"--force-with-lease={ADMISSION_REF}:{admission}"]
