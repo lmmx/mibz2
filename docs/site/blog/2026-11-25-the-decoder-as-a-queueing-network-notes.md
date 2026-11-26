@@ -64,10 +64,10 @@ A **job** is a unit of work whose progress is followed: here, a block of the com
 identical servers sharing one queue. A **queue** holds jobs that cannot yet be served. A **discipline**
 decides which waiting job is served next: first come first served, by priority, by size, or shared.
 
-Per job, a station has a **service time** S (one visit's work), a **visit ratio** V (visits per job)
-and a **demand** D = V·S. Over an interval, the system has a **throughput** X (jobs completed a
-second), each station a utilisation U (fraction of time busy), a mean population N and a mean
-**residence** R (time from arrival to departure, waiting included). Residence is not service time:
+Per job, a station has a **service time** $S$ (one visit's work), a **visit ratio** $V$ (visits per job)
+and a **demand** $D = VS$. Over an interval, the system has a **throughput** $X$ (jobs completed a
+second), each station a utilisation $U$ (fraction of time busy), a mean population $N$ and a mean
+**residence** $R$ (time from arrival to departure, waiting included). Residence is not service time:
 the gap between them is the waiting, and confusing the two is the commonest error in applying the laws
 below.
 
@@ -79,8 +79,8 @@ below.
 
 Networks are **open** when jobs arrive from outside at some rate and leave when done, **closed** when
 a fixed population circulates, and **mixed** when they have both. Closed networks come in two kinds
-(Harchol-Balter, §2.6): **interactive**, where each job "thinks" for a time Z between visits, as a
-user at a terminal does, and **batch**, where Z = 0 and a finished job is replaced at once. The decoder
+(Harchol-Balter, §2.6): **interactive**, where each job "thinks" for a time $Z$ between visits, as a
+user at a terminal does, and **batch**, where $Z = 0$ and a finished job is replaced at once. The decoder
 is neither exactly. Its admission window is a ceiling, not a population, its stream is finite, and its
 in-order reader and byte cap make admission depend on its state: a finite pipeline with
 feedback-controlled admission, for which a closed network of permits is a surrogate
@@ -94,36 +94,41 @@ holds exactly for any interval in which the counts balance.
 
 | Law | Statement | What it says |
 |---|---|---|
-| Utilisation | Uᵢ = X·Dᵢ | a station's busy fraction is throughput times its demand |
-| Little | N = X·R | mean population is throughput times mean residence |
-| Forced flow | Xᵢ = Vᵢ·X | each station's throughput is the system's times its visit ratio |
-| General response time | R = Σᵢ Vᵢ·Rᵢ | a job's residence is the sum over stations of visits times residence per visit |
-| Interactive response time | R = N/X − Z | in a closed interactive system, residence follows from population, throughput and think time |
+| Utilisation | $U_i = X D_i$ | a station's busy fraction is throughput times its demand |
+| Little | $N = X R$ | mean population is throughput times mean residence |
+| Forced flow | $X_i = V_i X$ | each station's throughput is the system's times its visit ratio |
+| General response time | $R = \sum_i V_i R_i$ | a job's residence is the sum over stations of visits times residence per visit |
+| Interactive response time | $R = N/X - Z$ | in a closed interactive system, residence follows from population, throughput and think time |
 
 **Little's law on a finite trace.** The law is usually stated for long-run averages
 ([Little, 1961](https://doi.org/10.1287/opre.9.3.383)), but on a trace that starts and ends empty it
 is an identity: the area under the number-present curve equals the sum of the jobs' residences, and
-dividing both by the trace's length gives N = X·R. Sample-path analysis, on the theory course's book
+dividing both by the trace's length gives $N = XR$. Sample-path analysis, on the theory course's book
 list, makes such statements for deterministic traces. Stage 1's tracing checks exactly this form, for
 each of seven buffers, as an integer equality ([#841](https://github.com/lmmx/mibz2/pull/841)); the main
 post draws it ([Little's law as two counts of one area](2026-11-25-the-decoder-as-a-queueing-network.md#little)).
 
-**Bounds.** Since no Uᵢ exceeds 1, the utilisation law gives X ≤ 1/D_max, where D_max is the largest
-demand at a single-server station, or cᵢ/Dᵢ for a station of cᵢ servers: the **bottleneck law**
-(Jain, ch. 33). For a closed interactive system of population N, the **asymptotic bounds** are
+**Bounds.** Since no $U_i$ exceeds 1, the utilisation law gives $X \le 1/D_{\max}$, where $D_{\max}$ is the largest
+demand at a single-server station, or $c_i/D_i$ for a station of $c_i$ servers: the **bottleneck law**
+(Jain, ch. 33). For a closed interactive system of population $N$, the **asymptotic bounds** are
 
-X(N) ≤ min(N/(D + Z), 1/D_max) and R(N) ≥ max(D, N·D_max − Z),
+$$
+\begin{gathered}
+X(N) \le \min\!\left(\frac{N}{D + Z},\ \frac{1}{D_{\max}}\right), \\
+R(N) \ge \max\left(D,\ N D_{\max} - Z\right),
+\end{gathered}
+$$
 
-with D the total demand. The first term in each is the light-load regime, in which a job rarely
+with $D$ the total demand. The first term in each is the light-load regime, in which a job rarely
 queues; the second is the bottleneck regime. They cross at the **population knee**
-N\* = (D + Z)/D_max (Harchol-Balter, §7.2), beyond which some job is certainly queueing. N\* is a
-knee in the number of jobs, not in the number of servers. The decoder's knee k\* = w/s is a crossing
-of two capacities as servers are added, and the decoder ties population to servers through W = 4k,
+$N^* = (D + Z)/D_{\max}$ (Harchol-Balter, §7.2), beyond which some job is certainly queueing. $N^*$ is a
+knee in the number of jobs, not in the number of servers. The decoder's knee $k^* = w/s$ is a crossing
+of two capacities as servers are added, and the decoder ties population to servers through $W = 4k$,
 but the two are different variables, which is why the main post derives its knee from the bottleneck
-law rather than from N\*. **Balanced job bounds** (Jain, ch. 34) tighten the asymptotic bounds by
+law rather than from $N^*$. **Balanced job bounds** (Jain, ch. 34) tighten the asymptotic bounds by
 comparing the system with one whose demands are all equal.
 
-**Not a completion time.** For B blocks, max(B·s, B·w/k) bounds the wall from below but ignores
+**Not a completion time.** For $B$ blocks, $\max(Bs,\ Bw/k)$ bounds the wall from below but ignores
 start-up, drain, uneven assignment and in-order delivery. One block with a 1 s scan, a 1 s decode and
 a 1 s delivery done in series has a largest demand of 1 s and takes 3 s ([journal §70](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)).
 
@@ -133,7 +138,7 @@ Harchol-Balter's chapter 7, "Modification Analysis: What-if for Closed Systems",
 one station's demand, or to its number of servers, does to the bounds, before the change is built.
 Jain's deck on the operational laws sets it as homework: make one component twice as fast or twice
 as slow, and say which becomes the bottleneck. The book's opening questions are of the same kind,
-among them whether one machine of speed s beats n machines each of speed s/n, and whether doubling
+among them whether one machine of speed $s$ beats $n$ machines each of speed $s/n$, and whether doubling
 both the arrival and service rates leaves the mean response time unchanged. The 2025 course gave a
 session to modification analysis applied to a real caching system; its handout was not read here.
 
@@ -147,23 +152,28 @@ ideal-parts matrix (section 10) measures exactly these conditional values.
 
 Jain distinguishes types of service centre: fixed-capacity centres, whose rate is constant; delay
 centres, with no queueing; and load-dependent centres, whose rate depends on how many jobs are
-present (ch. 32). A pool of k identical servers is the simplest load-dependent centre, its rate rising
-as min(n, k)/w with n jobs present, and that is how the surrogate of section 8 models the workers.
+present (ch. 32). A pool of $k$ identical servers is the simplest load-dependent centre, its rate rising
+as $\min(n, k)/w$ with $n$ jobs present, and that is how the surrogate of section 8 models the workers.
 Contention adds a second kind: on real cores the rate per server falls as more servers run, because
 they share caches, memory bandwidth, execution units and clock frequency. Writing the decoder's bound
-as X(k) ≤ min(1/s(k), k/w(k)) carries both. The measurements of each, from the profile, stage 1 and
+as $X(k) \le \min\left(1/s(k),\ k/w(k)\right)$ carries both. The measurements of each, from the profile, stage 1 and
 stage 2b, are in the main post's section 8.
 
 ## 6. Variability, and open against closed
 
 Means are not enough wherever jobs queue. In the M/G/1 queue, with Poisson arrivals and a general
-service time S at utilisation ρ, the mean wait is
+service time $S$ at arrival rate $\lambda$ and utilisation $\rho$, the mean wait is
 
-E[W_q] = λ·E[S²] / (2(1 − ρ)) = (ρ/(1 − ρ)) · ((1 + C²_S)/2) · E[S],
+$$
+\begin{aligned}
+\mathbb{E}[W_q] &= \frac{\lambda\, \mathbb{E}[S^2]}{2(1 - \rho)} \\
+&= \frac{\rho}{1 - \rho} \cdot \frac{1 + C_S^2}{2} \cdot \mathbb{E}[S],
+\end{aligned}
+$$
 
 the Pollaczek–Khinchine formula (Harchol-Balter, ch. 23). The wait depends on the second moment of
-service, through the squared coefficient of variation C²_S. An outside reader's illustration: at 80%
-utilisation and a 10 ms mean, the mean wait is 20, 40 or 200 ms as C²_S is 0, 1 or 9
+service, through the squared coefficient of variation $C_S^2$. An outside reader's illustration: at 80%
+utilisation and a 10 ms mean, the mean wait is 20, 40 or 200 ms as $C_S^2$ is 0, 1 or 9
 ([journal §54](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). The same chapter's inspection paradox explains why: a random arrival is more
 likely to land during a long service than a short one. The formula describes an open single queue,
 not the decoder; it motivates keeping distributions of service time for each activity, as the
@@ -171,8 +181,8 @@ characterisation was amended to report.
 
 The corpus behind the decoder's measurements has two classes of block. 792 of its 1,724 blocks are
 under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks that skip the main inversion
-route ([journal §§60, 66](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). Across the mixture C² of block size is about 0.98; among the real
-blocks alone it is about 0.07, and their sizes are correlated along the stream, lag-1 r = 0.74
+route ([journal §§60, 66](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). Across the mixture $C^2$ of block size is about 0.98; among the real
+blocks alone it is about 0.07, and their sizes are correlated along the stream, lag-1 $r = 0.74$
 ([the opportunities](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)). Which matters depends on the question: the mixture's for head-of-line
 effects, the real blocks' for the workers' service.
 
@@ -222,16 +232,16 @@ computes the means without the normalising constant
 arrival theorem: a job arriving at a station sees the network in its equilibrium with one job fewer.
 Starting from an empty network and adding one job at a time, for single-server stations:
 
-1. residence per visit: Rᵢ(n) = Sᵢ·(1 + Qᵢ(n − 1)), or Rᵢ(n) = Sᵢ at a delay station;
-2. throughput: X(n) = n / (Z + Σᵢ Vᵢ·Rᵢ(n));
-3. queue lengths: Qᵢ(n) = X(n)·Vᵢ·Rᵢ(n).
+1. residence per visit: $R_i(n) = S_i\left(1 + Q_i(n - 1)\right)$, or $R_i(n) = S_i$ at a delay station;
+2. throughput: $X(n) = n \big/ \left(Z + \sum_i V_i R_i(n)\right)$;
+3. queue lengths: $Q_i(n) = X(n)\, V_i R_i(n)$.
 
 Load-dependent stations need the marginal probability of each queue length rather than the mean
 alone, a standard extension of the same recursion.
 
 **The surrogate.** One reader computed exact mean-value analysis for a two-station closed surrogate
 of the decoder: a scanner of 107.9 µs a block, a load-dependent pool of workers taking 815 µs each
-with rate min(n, k)/w, a population of N = 4k, and no fitted constant. Converted to the wall for the
+with rate $\min(n, k)/w$, a population of $N = 4k$, and no fitted constant. Converted to the wall for the
 corpus's 1,724 blocks, it gives 0.4683, 0.2811, 0.2035 and 0.1887 s at 3, 5, 7 and 8 workers, against
 0.4693, 0.2840, 0.2069 and 0.1911 s measured: within 1 to 4 ms ([the review](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md)).
 No solver script for it is in the repository; the figures are the review's, and recomputing them from
@@ -240,7 +250,7 @@ ways the surrogate cannot represent:
 
 | Product form assumes | The decoder has |
 |---|---|
-| a fixed population that circulates | an admission ceiling, W = 4k, on a finite stream that fills and drains |
+| a fixed population that circulates | an admission ceiling, $W = 4k$, on a finite stream that fills and drains |
 | stations that release jobs independently | in-order taking: a finished block waits for the one before it |
 | service rates set by the station alone | workers that slow one another and the scanner through shared caches and cores |
 | admission that does not depend on state | a byte cap on finished output that gates new scanning |
@@ -254,8 +264,14 @@ and not yet built ([journal §§59–60](https://github.com/lmmx/mibz2/blob/bfac
 
 ## 9. Fluid approximations
 
-A fluid model treats a queue as a reservoir whose level q changes at the rate work flows in less the
-rate it flows out, dq/dt = λ_in − μ_out, held at zero when the queue is empty and at the ceiling when
+A fluid model treats a queue as a reservoir whose level $q$ changes at the rate work flows in less the
+rate it flows out,
+
+$$
+\frac{dq}{dt} = \lambda_{\text{in}} - \mu_{\text{out}},
+$$
+
+held at zero when the queue is empty and at the ceiling when
 admission stops. It appears among the theory course's techniques. The decoder's pulse experiments
 read naturally in it: slowing the scanner drains the job queue, slowing emission fills it, and each
 recovers within milliseconds. No fluid model has been fitted to the decoder. The same picture, flows
@@ -269,20 +285,26 @@ effect depends on another's level, and Jain lists ignoring interactions, and var
 time, among the common mistakes. Run-time ratios suit a **multiplicative model**, analysed on
 logarithms (ch. 18).
 
-**The 2² design and its sign table.** With two factors at two levels, S and E, each real (−) or ideal
-(+), the four arms give the effects on log wall y as
+**The $2^2$ design and its sign table.** With two factors at two levels, S and E, each real (−) or ideal
+(+), the four arms give the effects on log wall $y$ as
 
-q_S = (−y₀ + y_S − y_E + y_SE)/4, q_E = (−y₀ − y_S + y_E + y_SE)/4, q_SE = (y₀ − y_S − y_E + y_SE)/4,
+$$
+\begin{aligned}
+q_S &= \tfrac14\left(-y_0 + y_S - y_E + y_{SE}\right), \\
+q_E &= \tfrac14\left(-y_0 - y_S + y_E + y_{SE}\right), \\
+q_{SE} &= \tfrac14\left(y_0 - y_S - y_E + y_{SE}\right),
+\end{aligned}
+$$
 
 and the **allocation of variation** splits the total sum of squares among S, E, SE and the residual
 (ch. 17). The four-arm oracle test and slice A of the ideal-parts matrix are both this design. In
-slice A at 8 workers q_SE is −0.028 [−0.038, −0.018], and the allocation gives 37% to S, 40% to E and
+slice A at 8 workers $q_{SE}$ is −0.028 [−0.038, −0.018], and the allocation gives 37% to S, 40% to E and
 13% to their interaction ([slice A](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/slice-a/README.md)).
 
-**Fractional factorials.** With six parts there are 2⁶ = 64 arms. A half fraction keeps 32, chosen by
-a **defining relation**: I = SECMRD keeps the arms whose six signs multiply to +1, that is, those with
+**Fractional factorials.** With six parts there are $2^6 = 64$ arms. A half fraction keeps 32, chosen by
+a **defining relation**: $I = SECMRD$ keeps the arms whose six signs multiply to +1, that is, those with
 an even number of ideal parts. Each effect is then **confounded** with its complement in the relation,
-S with ECMRD, SE with CMRD, and so on, and the design's **resolution** is the length of the shortest
+$S$ with $ECMRD$, $SE$ with $CMRD$, and so on, and the design's **resolution** is the length of the shortest
 word in the relation, here VI: each main effect is confounded only with a five-part interaction, and
 each two-part interaction only with a four-part one (ch. 19).
 
@@ -299,7 +321,7 @@ and masking are read directly from the measured odd arms, which are never fitted
 the allocation of variation over the 32 fraction arms gives construction 80% at one worker and 46% at
 six, the scanner 46% at eight and 53% at ten, and the two-part interactions 18–22% from six workers
 up; the three-part interactions, aliased in pairs, take 2–6%. The largest interaction is the scanner
-with construction, q_SC = −0.110 [−0.112, −0.108] at six workers and −0.071 at eight, where 4q, the
+with construction, $q_{SC} = -0.110$ [−0.112, −0.108] at six workers and −0.071 at eight, where $4q$, the
 difference of differences, is −0.44 and −0.28. No part earns the MASKED label, because each
 masked-looking part keeps more than ±2% of room alone, which leaves it UNRESOLVED rather than NO ROOM;
 in substance, construction at eight and ten and the scanner at six and eight are masked behind each

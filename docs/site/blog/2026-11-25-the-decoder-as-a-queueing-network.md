@@ -167,8 +167,8 @@ The decoder is a tandem: the scanner feeds a parallel group of k workers, each o
 whole block, and a reader hands the finished blocks to the caller in order. Its admission is
 precise in the code ([`src/parallel.rs`](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/src/parallel.rs#L399-L408)). With issued counting the blocks the
 scanner has finished and taken the blocks the reader has taken, the scanner waits while
-issued − taken has reached W = 4k, or while 12 MiB of finished output is unread and at least
-k + 2 blocks are ahead. The block it is scanning is not yet counted, and a slot frees when the
+$\text{issued} - \text{taken}$ has reached $W = 4k$, or while 12 MiB of finished output is unread and at least
+$k + 2$ blocks are ahead. The block it is scanning is not yet counted, and a slot frees when the
 reader takes the next block in order, before it has copied any of it out
 ([taken advances](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/src/parallel.rs#L983-L986)).
 
@@ -188,7 +188,7 @@ in the second and third cases; in the fourth they only hold more memory behind a
 The return arrow is why the decoder was first described as a closed network, in which a fixed
 population of jobs circulates. That description was withdrawn
 ([the summary](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reports/2026-11-25-course-mining.md)). The decoder is a finite pipeline with
-feedback-controlled admission: a finite stream starts empty and drains, W is a ceiling rather than a
+feedback-controlled admission: a finite stream starts empty and drains, $W$ is a ceiling rather than a
 population, and the byte cap and the in-order reader make admission depend on the decoder's state.
 A closed network whose population is the admission permits is a useful surrogate, provided its
 relation to the real blocks is stated whenever it is used.
@@ -197,15 +197,21 @@ relation to the real blocks is stated whenever it is used.
 
 The operational laws relate quantities measured over an interval and assume nothing about how
 arrivals or service times are distributed (Jain, ch. 33; Harchol-Balter, ch. 6–7). The utilisation
-law, U = X·D, says a station's busy fraction is its throughput times its demand. No station can be
-busy more than all of the time, so U ≤ 1 gives the bottleneck law: the system's throughput is at
+law, $U = XD$, says a station's busy fraction is its throughput times its demand. No station can be
+busy more than all of the time, so $U \le 1$ gives the bottleneck law: the system's throughput is at
 most the capacity of its busiest station over that station's demand.
 
-Applied to a scanner taking s a block and k workers each taking w, the scanner can finish at most
-1/s blocks a second and the workers together k/w, so X(k) ≤ min(k/w, 1/s). The workers set the pace
+Applied to a scanner taking $s$ a block and $k$ workers each taking $w$, the scanner can finish at most
+$1/s$ blocks a second and the workers together $k/w$, so
+
+$$
+X(k) \le \min\left(\frac{k}{w},\ \frac{1}{s}\right).
+$$
+
+The workers set the pace
 until there are enough of them that the scanner cannot keep up, and from then on the scanner alone
-does; the two limits meet at k\* = w/s. From measurements at one to four workers only, s = 106.6 µs
-and w = 798.3 µs a block, which puts the knee at 7.49 workers. The measured crossing is 7.67, and
+does; the two limits meet at $k^* = w/s$. From measurements at one to four workers only, $s = 106.6$ µs
+and $w = 798.3$ µs a block, which puts the knee at 7.49 workers. The measured crossing is 7.67, and
 the best wall, 0.191 s, is at 8 ([journal §57](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the data](https://github.com/lmmx/mibz2/blob/61f960932ea45b709b3a9aeca35599bc6bad21b3/docs/journal/2026-11-24-algorithm-level/math-targets/data/measurements-scan-profile.tsv)). Nothing was fitted to
 the knee: two service times measured where the workers bind located the region where the scanner
 takes over.
@@ -242,15 +248,15 @@ add, and drawing them as separate parallel stations would invent capacity. Secon
 throughput; it does not give a completion time. One block that takes a 1 s scan, a 1 s decode and a
 1 s delivery in series has a largest demand of 1 s and takes 3 s, so the bottleneck maximum is a
 lower bound on the wall, not a forecast of it ([journal §70](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md)). A global fit of
-c + max(b, a/k) to all twenty counts is accordingly less exact than the four-count prediction: its
+$c + \max(b, a/k)$ to all twenty counts is accordingly less exact than the four-count prediction: its
 crossover is 7.17, its residuals run about −13 ms from 8 to 14 workers and +21 ms from 17, and its
 32 ms constant has no identified cause. Third, the textbook's knee for closed systems,
-N\* = (D + Z)/D_max, is a knee in the population of jobs, not in the number of servers; the decoder
-couples the two through W = 4k, but they are different variables ([the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#3-the-operational-laws)).
+$N^* = (D + Z)/D_{\max}$, is a knee in the population of jobs, not in the number of servers; the decoder
+couples the two through $W = 4k$, but they are different variables ([the companion](2026-11-25-the-decoder-as-a-queueing-network-notes.md#3-the-operational-laws)).
 
 ## 6. Little's law, and what the instruments must record
 
-Little's law, L = X·R, says the mean number of jobs in a system is its throughput times the mean
+Little's law, $L = XR$, says the mean number of jobs in a system is its throughput times the mean
 time each spends there ([Little, 1961](https://doi.org/10.1287/opre.9.3.383); Jain, ch. 30;
 Harchol-Balter, ch. 6). For a finite trace it is a statement about counting the same thing twice.
 
@@ -308,10 +314,10 @@ caching system.
 
 ## 8. Load dependence: the month's findings, named
 
-The first approximation treats s and w as constants. Real cores share caches, memory bandwidth,
+The first approximation treats $s$ and $w$ as constants. Real cores share caches, memory bandwidth,
 execution units and clock frequency, so a service centre's rate can depend on how many jobs are
 present; Jain's chapter on queueing networks names load-dependent centres among its types. Writing
-the bound as X(k) ≤ min(1/s(k), k/w(k)) is a reminder that adding a worker raises the pool's nominal
+the bound as $X(k) \le \min\left(1/s(k),\ k/w(k)\right)$ is a reminder that adding a worker raises the pool's nominal
 capacity and can slow the station that already limits the output.
 
 The measurements show it at every scale. The scanner's work per decode stays near 0.186 s up to 8
@@ -367,7 +373,7 @@ behind them. The corpus has two classes of
 block: 792 of its 1,724 are under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks
 that skip the main inversion route. Across the mixture the squared coefficient of variation of size
 is about 0.98; among the real blocks alone it is about 0.07, and their sizes are correlated along the
-stream (lag-1 r = 0.74) ([journal §§60–61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the opportunities](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)). Which of those numbers
+stream (lag-1 $r = 0.74$) ([journal §§60–61](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md); [the opportunities](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md)). Which of those numbers
 matters depends on the question. A paper on the 2025 reading list warns that scheduling policies
 behave very differently in closed systems than in open ones
 ([Schroeder, Wierman and Harchol-Balter, NSDI 2006](https://www.usenix.org/conference/nsdi-06/open-versus-closed-cautionary-tale)),
@@ -386,8 +392,8 @@ Lavenberg's mean-value analysis, which computes a closed network's mean queue le
 by adding one job at a time ([the companion, with the papers](2026-11-25-the-decoder-as-a-queueing-network-notes.md#8-product-form-and-mean-value-analysis)).
 
 It was tried. One reader computed exact mean-value analysis for a two-station closed surrogate, with
-a population of N = 4k, a scanner taking 107.9 µs a block and a pool of workers taking 815 µs each,
-whose rate grows with the blocks present up to k, and no fitted constant ([the review](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md)):
+a population of $N = 4k$, a scanner taking 107.9 µs a block and a pool of workers taking 815 µs each,
+whose rate grows with the blocks present up to $k$, and no fitted constant ([the review](https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md)):
 
 | Workers | Surrogate | Measured wall |
 |---|---|---|
@@ -465,7 +471,7 @@ costs 0.7 to 1.0 of each unit, but speeding it gains only 0.13 to 0.18, because 
 behind and take over at once.
 
 The pulse experiments gave the dynamics. A fluid approximation treats a queue as a reservoir whose
-level changes at the rate work flows in less the rate it flows out, dq/dt = λ_in − μ_out, bounded
+level changes at the rate work flows in less the rate it flows out, $dq/dt = \lambda_{\text{in}} - \mu_{\text{out}}$, bounded
 below by an empty queue and above by the window; it appears in the theory course's topics, and no
 fluid model has been fitted to the decoder.
 
