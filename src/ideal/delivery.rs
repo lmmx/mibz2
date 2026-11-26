@@ -85,6 +85,8 @@ pub(crate) fn count_copied(n: u64) {
 }
 
 pub(crate) fn record_discarded(slice: &[u8], m: Mode) {
+    let mut scope = super::accounting::Scope::begin(super::accounting::Phase::DeliveryDiscard);
+    scope.set_bytes(slice.len() as u64);
     DISCARDED_BLOCKS.fetch_add(1, Ordering::Relaxed);
     DISCARDED_BYTES.fetch_add(slice.len() as u64, Ordering::Relaxed);
     if m == Mode::Check {

@@ -1,19 +1,33 @@
 //! (research only, `supplied-codes`) The open kernel's emit stage on the block's own word codes
-//! supplied in marked-cycle output order, for the bench-supplied-codes diagnostic
-//! (docs/journal/2026-11-24-supplied-codes-registration.md; the switch, the store and the
-//! records are `src/supplied_codes.rs`').
+//! supplied in marked-cycle output order (`IDEAL-PARTS-2.md` §3;
+//! `docs/journal/2026-11-24-supplied-codes-registration.md`; switch, store and records in
+//! `src/supplied_codes.rs`).
 //!
-//! Arm B keeps everything of arm A's but the walk: the construction as shipped, then the codes
-//! q_0..q_{L-1} of the marked cycle (q_i the dictionary code of the i-th retained row the walk
-//! from the marked row visits, L the cycle's length) copied into `edges[..L]`, the packed-edge
-//! buffer the walk would have read, and consumed in index order: from the front alone where
-//! arm A runs `emit`, from both ends where it runs `emit_bidirectional`. The appends (the
-//! 16-byte inline store, its shifted twin at the back, the long words' slices from `spelling`,
-//! the clamp to `n`, the short cycle's `copy_within` and `repeat`) are those two functions'
-//! own, unchanged; only where the next code comes from differs.
+//! Zero-copy borrowed hand-overs:
+//! - When C (`ideal-construction`) replays, borrows `&Built` straight from C's lock-free
+//!   `OnceLock` store (0 bytes copied).
+//! - When E (`Mode::Supplied`) replays, borrows `&[u32]` straight from E's lock-free `OnceLock`
+//!   store without copying into `edges`, timing `HandEDeliver` strictly apart from `EConsume`.
+//! - When E runs in `Mode::SuppliedFull` (`E_full`) and R (`ideal-rle1`) is also replaying the
+//!   block, skips `EConsume` completely (leaving `out` untouched); otherwise falls back to
+//!   `Mode::Supplied` so output stays byte-identical in every mode.
 use super::*;
+use crate::ideal::accounting::{self, Phase, Scope};
 use crate::supplied_codes::{self as sup, Key, Mode, Rec};
 use std::time::Instant;
+
+#[inline]
+fn rle1_replaying_block() -> bool {
+    #[cfg(feature = "ideal-rle1")]
+    {
+        crate::ideal::rle1::mode() == crate::ideal::Mode::Replay
+            && crate::ideal::current_block().is_some_and(crate::ideal::rle1::has_block)
+    }
+    #[cfg(not(feature = "ideal-rle1"))]
+    {
+        false
+    }
+}
 
 impl Kernel {
     /// `try_run` under the mode now set (`supplied_codes::mode`), its block recorded
@@ -39,8 +53,7 @@ impl Kernel {
         )
     }
 
-    /// `try_run` under `mode`, conditioned or not: construct | deliver | condition | consume,
-    /// five clock reads in every mode
+    /// `try_run` under `mode`, conditioned or not.
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn staged<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
@@ -53,29 +66,111 @@ impl Kernel {
         cap: Cap,
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
-        let t0 = Instant::now();
+        let track_recs = sup::record_recs();
+        let t0 = track_recs.then(Instant::now);
+
+        // Zero-copy borrowed C path: borrow `&Built` straight from C's frozen `OnceLock` store
+        // and pass its slices directly into borrowed E emission (zero copies for C and E).
+        #[cfg(feature = "ideal-construction")]
+        {
+            use crate::ideal::{construction as ic, Mode as IMode};
+            if ic::mode() == IMode::Replay {
+                std::hint::black_box(records);
+                if let Some(idx) = crate::ideal::current_block() {
+                    let scratch_bytes = if track_recs {
+                        self.scratch_bytes() as u64
+                    } else {
+                        0
+                    };
+                    match ic::with_built(idx, n as u32, |b| {
+                        let construct_ns = t0.map_or(0, |s| sup::ns(s.elapsed()));
+                        let key = Key {
+                            n: n as u32,
+                            p,
+                            m: b.m,
+                            mark: b.mark,
+                            records: records.len() as u32,
+                            first: records[0],
+                            last: records[records.len() - 1],
+                        };
+                        emit_staged_slices(
+                            mode,
+                            cond,
+                            track_recs,
+                            construct_ns,
+                            scratch_bytes,
+                            key,
+                            b.predecessor,
+                            &b.edges,
+                            &b.extra,
+                            &b.spelling,
+                            &b.inline16,
+                            &b.lens,
+                            n,
+                            b.mark,
+                            b.bits,
+                            out,
+                        );
+                        Counts {
+                            n,
+                            retained: b.m as usize,
+                            ..Counts::default()
+                        }
+                    }) {
+                        ic::Replay::Built(stats) => return Some(stats),
+                        ic::Replay::Refused => {
+                            sup::count_refused();
+                            if track_recs {
+                                sup::record(Rec {
+                                    n: n as u32,
+                                    m: 0,
+                                    cycle: 0,
+                                    mode,
+                                    cond,
+                                    bidi: false,
+                                    refused: true,
+                                    supplied: false,
+                                    construct_ns: t0.map_or(0, |s| sup::ns(s.elapsed())),
+                                    deliver_ns: 0,
+                                    cond_ns: 0,
+                                    consume_ns: 0,
+                                    scratch: 0,
+                                    id: 0,
+                                });
+                            }
+                            return None;
+                        }
+                        ic::Replay::Miss => {}
+                    }
+                }
+            }
+        }
+
         let Some((stats, mark, bits)) =
-            self.construct_for::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
+            self.construct_and_record::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
         else {
-            sup::record(Rec {
-                n: n as u32,
-                m: 0,
-                cycle: 0,
-                mode,
-                cond,
-                bidi: false,
-                refused: true,
-                supplied: false,
-                construct_ns: sup::ns(t0.elapsed()),
-                deliver_ns: 0,
-                cond_ns: 0,
-                consume_ns: 0,
-                scratch: 0,
-                id: 0,
-            });
+            sup::count_refused();
+            if track_recs {
+                sup::record(Rec {
+                    n: n as u32,
+                    m: 0,
+                    cycle: 0,
+                    mode,
+                    cond,
+                    bidi: false,
+                    refused: true,
+                    supplied: false,
+                    construct_ns: t0.map_or(0, |s| sup::ns(s.elapsed())),
+                    deliver_ns: 0,
+                    cond_ns: 0,
+                    consume_ns: 0,
+                    scratch: 0,
+                    id: 0,
+                });
+            }
             return None;
         };
-        let t1 = Instant::now();
+        let construct_ns = t0.map_or(0, |s| sup::ns(s.elapsed()));
         let m = stats.retained;
         let key = Key {
             n: n as u32,
@@ -86,150 +181,36 @@ impl Kernel {
             first: records[0],
             last: records[records.len() - 1],
         };
-        // arm B's delivery: the lookup and the copy into `edges[..L]`, charged
-        let mut cycle = 0;
-        // (`character`: the delivery and the consumption below are emission's handover, its own
-        // entry, apart from A7)
-        if mode == Mode::Supplied {
-            ch!(begin HandE);
-            cycle = sup::deliver(&key, &mut self.edges[..m]).unwrap_or(0);
-            ch!(end HandE);
-        }
-        let t2 = Instant::now();
-        if cond {
-            std::hint::black_box(self.condition(m));
-        }
-        let t3 = Instant::now();
-        let mut supplied = false;
-        // (`character`: the walk is A7, emission's real work; the supplied codes' consumption
-        // is the oracle's handover, left out of A7, so emission ideal shows A7 removed)
-        match mode {
-            Mode::Open => {
-                ch!(begin A7);
-                self.walk(n, m, mark, bits, out);
-                ch!(end A7);
-            }
-            Mode::Supplied => {
-                if cycle > 0 {
-                    ch!(begin HandE);
-                    self.consume(n, cycle, out);
-                    ch!(end HandE);
-                    supplied = true;
-                } else {
-                    // nothing held: the walk as shipped (`edges` untouched), the record says so
-                    ch!(begin A7);
-                    self.walk(n, m, mark, bits, out);
-                    ch!(end A7);
-                }
-            }
-            Mode::Record => {
-                let codes = self.cycle_codes(m, mark, bits);
-                cycle = codes.len();
-                sup::store(key, &codes);
-                self.walk(n, m, mark, bits, out);
-            }
-            Mode::Check => {
-                let own = self.cycle_codes(m, mark, bits);
-                cycle = own.len();
-                self.walk(n, m, mark, bits, out);
-                let want = out.clone();
-                match (sup::held(&key), sup::deliver(&key, &mut self.edges[..m])) {
-                    (Some(held), Some(l)) => {
-                        supplied = true;
-                        self.consume(n, l, out);
-                        if held != own || *out != want {
-                            sup::mismatch();
-                        }
-                    }
-                    _ => sup::mismatch(),
-                }
-            }
-        }
-        let t4 = Instant::now();
-        sup::record(Rec {
-            n: n as u32,
-            m: m as u32,
-            cycle: cycle as u32,
+        let scratch_bytes = if track_recs {
+            self.scratch_bytes() as u64
+        } else {
+            0
+        };
+        emit_staged_slices(
             mode,
             cond,
-            bidi: self.predecessor.is_some(),
-            refused: false,
-            supplied,
-            construct_ns: sup::ns(t1 - t0),
-            deliver_ns: sup::ns(t2 - t1),
-            cond_ns: sup::ns(t3 - t2),
-            consume_ns: sup::ns(t4 - t3),
-            scratch: self.scratch_bytes() as u64,
-            id: key.id(),
-        });
+            track_recs,
+            construct_ns,
+            scratch_bytes,
+            key,
+            self.predecessor,
+            &self.edges[..m],
+            &self.extra,
+            &self.spelling,
+            &self.inline16,
+            &self.lens,
+            n,
+            mark,
+            bits,
+            out,
+        );
         Some(stats)
     }
 
-    /// The marked cycle's codes in output order, walked once from the marked row (the oracle,
-    /// outside the clock): at most `m` steps, as the emitters bound theirs
+    /// Test helper: walk the marked cycle once from `self`'s buffers
+    #[cfg(test)]
     fn cycle_codes(&self, m: usize, mark: u32, bits: u32) -> Vec<u32> {
-        let edges = &self.edges[..m];
-        let mask = (1u32 << bits) - 1;
-        let mut codes = Vec::new();
-        if let Some(before) = self.predecessor {
-            let (mut prev, mut j) = (before, mark);
-            for _ in 0..m {
-                let e = edges[j as usize];
-                codes.push(e >> bits);
-                (prev, j) = (j, (e & mask) ^ prev);
-                if j == mark {
-                    break;
-                }
-            }
-        } else {
-            let mut j = mark;
-            for _ in 0..m {
-                let e = edges[j as usize];
-                codes.push(if self.extra.is_empty() {
-                    e >> bits
-                } else {
-                    self.extra[j as usize]
-                });
-                j = e & mask;
-                if j == mark {
-                    break;
-                }
-            }
-        }
-        codes
-    }
-
-    /// Arm B's consumer on the `l` codes delivered into `edges`: from both ends where arm A's
-    /// walk is two-ended, else from the front
-    fn consume(&self, n: usize, l: usize, out: &mut Vec<u8>) {
-        let codes = &self.edges[..l];
-        if self.predecessor.is_some() {
-            emit_bidirectional_codes(codes, &self.spelling, &self.inline16, &self.lens, n, out);
-        } else {
-            emit_codes(codes, &self.spelling, &self.inline16, &self.lens, n, out);
-        }
-    }
-
-    /// The conditioning read (both arms, outside the consumer's clock): every buffer either
-    /// consumer may read, sequentially, one load a 64-byte line
-    fn condition(&self, m: usize) -> u64 {
-        let mut s = 0u64;
-        for &e in self.edges[..m].iter().step_by(16) {
-            s = s.wrapping_add(u64::from(e));
-        }
-        for &e in self.extra.iter().step_by(16) {
-            s = s.wrapping_add(u64::from(e));
-        }
-        for w in self.inline16.iter().step_by(4) {
-            s = s.wrapping_add(u64::from(w[0]));
-        }
-        for &b in self.lens.iter().step_by(64) {
-            s = s.wrapping_add(u64::from(b));
-        }
-        for &b in self.spelling.iter().step_by(64) {
-            s = s.wrapping_add(u64::from(b));
-        }
-        s
+        cycle_codes_slices(self.predecessor, &self.edges[..m], &self.extra, mark, bits)
     }
 
     /// The scratch the kernel keeps, in bytes, across every buffer it owns (b5's `scratch`)
@@ -245,6 +226,274 @@ impl Kernel {
             + self.lens.capacity()
             + self.endpoint.scratch()
     }
+}
+
+/// Zero-copy borrowed emission dispatch on borrowed Open slices (from `&Kernel` or `&Built`).
+#[allow(clippy::too_many_arguments)]
+fn emit_staged_slices(
+    mode: Mode,
+    cond: bool,
+    track_recs: bool,
+    construct_ns: u64,
+    scratch: u64,
+    key: Key,
+    predecessor: Option<u32>,
+    edges: &[u32],
+    extra: &[u32],
+    spelling: &[u8],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    sup::count_open();
+    let bidi = predecessor.is_some();
+    let mut cycle = 0usize;
+    let mut supplied = false;
+    let mut deliver_ns = 0u64;
+    let mut cond_ns = 0u64;
+    let mut consume_ns = 0u64;
+
+    match mode {
+        Mode::Open => {
+            if cond {
+                let tc = track_recs.then(Instant::now);
+                std::hint::black_box(condition_slices(edges, extra, inline16, lens, spelling));
+                cond_ns = tc.map_or(0, |s| sup::ns(s.elapsed()));
+            }
+            let te = track_recs.then(Instant::now);
+            ch!(begin A7);
+            walk_slices(
+                predecessor,
+                edges,
+                extra,
+                spelling,
+                inline16,
+                lens,
+                n,
+                mark,
+                bits,
+                out,
+            );
+            ch!(end A7);
+            consume_ns = te.map_or(0, |s| sup::ns(s.elapsed()));
+            sup::count_walked();
+        }
+        Mode::Supplied | Mode::SuppliedFull => {
+            let skip_consume = mode == Mode::SuppliedFull && rle1_replaying_block();
+            let acct_on = accounting::enabled();
+            let td = (track_recs || acct_on).then(Instant::now);
+            ch!(begin HandEDeliver);
+            let hit = sup::with_codes(&key, |codes| {
+                ch!(end HandEDeliver);
+                let d_ns = td.map_or(0, |s| sup::ns(s.elapsed()));
+                if acct_on {
+                    accounting::record(Phase::HandEDeliver, d_ns, 0);
+                }
+                deliver_ns = d_ns;
+                cycle = codes.len();
+                supplied = true;
+                if skip_consume {
+                    // E_full: R replays the final block bytes, so skip word spelling completely.
+                    sup::count_supplied_full();
+                    return;
+                }
+                if cond {
+                    let tc = track_recs.then(Instant::now);
+                    std::hint::black_box(condition_slices(codes, extra, inline16, lens, spelling));
+                    cond_ns = tc.map_or(0, |s| sup::ns(s.elapsed()));
+                }
+                let te = track_recs.then(Instant::now);
+                let mut consume_scope = Scope::begin(Phase::EConsume);
+                consume_scope.set_bytes(n as u64);
+                ch!(begin EConsume);
+                consume_codes(bidi, codes, spelling, inline16, lens, n, out);
+                ch!(end EConsume);
+                drop(consume_scope);
+                consume_ns = te.map_or(0, |s| sup::ns(s.elapsed()));
+                sup::count_supplied_chase();
+                sup::count_consumed();
+            });
+            if hit.is_none() {
+                ch!(end HandEDeliver);
+                if cond {
+                    let tc = track_recs.then(Instant::now);
+                    std::hint::black_box(condition_slices(edges, extra, inline16, lens, spelling));
+                    cond_ns = tc.map_or(0, |s| sup::ns(s.elapsed()));
+                }
+                let te = track_recs.then(Instant::now);
+                ch!(begin A7);
+                walk_slices(
+                    predecessor,
+                    edges,
+                    extra,
+                    spelling,
+                    inline16,
+                    lens,
+                    n,
+                    mark,
+                    bits,
+                    out,
+                );
+                ch!(end A7);
+                consume_ns = te.map_or(0, |s| sup::ns(s.elapsed()));
+                sup::count_walked();
+            }
+        }
+        Mode::Record => {
+            let codes = cycle_codes_slices(predecessor, edges, extra, mark, bits);
+            cycle = codes.len();
+            sup::store(key, &codes);
+            let te = track_recs.then(Instant::now);
+            walk_slices(
+                predecessor,
+                edges,
+                extra,
+                spelling,
+                inline16,
+                lens,
+                n,
+                mark,
+                bits,
+                out,
+            );
+            consume_ns = te.map_or(0, |s| sup::ns(s.elapsed()));
+            sup::count_walked();
+        }
+        Mode::Check => {
+            let own = cycle_codes_slices(predecessor, edges, extra, mark, bits);
+            cycle = own.len();
+            walk_slices(
+                predecessor,
+                edges,
+                extra,
+                spelling,
+                inline16,
+                lens,
+                n,
+                mark,
+                bits,
+                out,
+            );
+            let want = out.clone();
+            let ok = sup::with_codes(&key, |codes| {
+                supplied = true;
+                consume_codes(bidi, codes, spelling, inline16, lens, n, out);
+                codes == own.as_slice() && *out == want
+            });
+            if ok != Some(true) {
+                sup::mismatch();
+            }
+            sup::count_walked();
+        }
+    }
+
+    if track_recs {
+        sup::record(Rec {
+            n: n as u32,
+            m: key.m,
+            cycle: cycle as u32,
+            mode,
+            cond,
+            bidi,
+            refused: false,
+            supplied,
+            construct_ns,
+            deliver_ns,
+            cond_ns,
+            consume_ns,
+            scratch,
+            id: key.id(),
+        });
+    }
+}
+
+/// The marked cycle's codes in output order, walked once from the marked row (the oracle,
+/// outside the clock): at most `m` steps, as the emitters bound theirs.
+fn cycle_codes_slices(
+    predecessor: Option<u32>,
+    edges: &[u32],
+    extra: &[u32],
+    mark: u32,
+    bits: u32,
+) -> Vec<u32> {
+    let m = edges.len();
+    let mask = (1u32 << bits) - 1;
+    let mut codes = Vec::new();
+    if let Some(before) = predecessor {
+        let (mut prev, mut j) = (before, mark);
+        for _ in 0..m {
+            let e = edges[j as usize];
+            codes.push(e >> bits);
+            (prev, j) = (j, (e & mask) ^ prev);
+            if j == mark {
+                break;
+            }
+        }
+    } else {
+        let mut j = mark;
+        for _ in 0..m {
+            let e = edges[j as usize];
+            codes.push(if extra.is_empty() {
+                e >> bits
+            } else {
+                extra[j as usize]
+            });
+            j = e & mask;
+            if j == mark {
+                break;
+            }
+        }
+    }
+    codes
+}
+
+/// Consume borrowed output-order word codes without copying into `edges`.
+#[inline]
+fn consume_codes(
+    bidi: bool,
+    codes: &[u32],
+    spelling: &[u8],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    out: &mut Vec<u8>,
+) {
+    if bidi {
+        emit_bidirectional_codes(codes, spelling, inline16, lens, n, out);
+    } else {
+        emit_codes(codes, spelling, inline16, lens, n, out);
+    }
+}
+
+/// The conditioning read (both arms, outside the consumer's clock): every buffer either
+/// consumer may read, sequentially, one load a 64-byte line.
+fn condition_slices(
+    primary: &[u32],
+    extra: &[u32],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    spelling: &[u8],
+) -> u64 {
+    let mut s = 0u64;
+    for &e in primary.iter().step_by(16) {
+        s = s.wrapping_add(u64::from(e));
+    }
+    for &e in extra.iter().step_by(16) {
+        s = s.wrapping_add(u64::from(e));
+    }
+    for w in inline16.iter().step_by(4) {
+        s = s.wrapping_add(u64::from(w[0]));
+    }
+    for &b in lens.iter().step_by(64) {
+        s = s.wrapping_add(u64::from(b));
+    }
+    for &b in spelling.iter().step_by(64) {
+        s = s.wrapping_add(u64::from(b));
+    }
+    s
 }
 
 /// `emit` with the next code read from `codes` in order instead of walked from the marked row

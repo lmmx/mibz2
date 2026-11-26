@@ -88,7 +88,7 @@ struct Cap {
 }
 
 /// A decoded block (or its error)
-type Res = Result<Vec<u8>, Error>;
+type Res = Result<super::DecodedBlock, Error>;
 
 /// The decoded blocks (or errors) not yet read, by their place in the stream: a ring of
 /// the window's slots (place p in slot p mod its length) and, for a place whose slot is
@@ -119,7 +119,7 @@ impl Ready {
     }
 
     fn size(r: &Res) -> usize {
-        r.as_ref().map_or(0, Vec::len)
+        r.as_ref().map_or(0, |b| b.len())
     }
 
     /// `place`'s block in (replacing any it had, as a map's insert does)
@@ -441,7 +441,7 @@ pub struct StreamDecoder {
 
 #[derive(Default)]
 struct Reader {
-    cur: Vec<u8>,
+    cur: super::DecodedBlock,
     at: usize,
     failed: Option<Error>,
     done: bool,
@@ -892,11 +892,19 @@ impl StreamDecoder {
                 let n = buf.len().min(r.cur.len() - r.at);
                 // (`character`: the copy to the caller, delivery's own work, D's)
                 ch!(begin CopyOut);
+                #[cfg(feature = "ideal-delivery")]
+                let mut copy_scope = crate::ideal::accounting::Scope::begin(
+                    crate::ideal::accounting::Phase::DeliveryCopy,
+                );
                 buf[..n].copy_from_slice(&r.cur[r.at..r.at + n]);
+                #[cfg(feature = "ideal-delivery")]
+                {
+                    copy_scope.set_bytes(n as u64);
+                    drop(copy_scope);
+                    crate::ideal::delivery::count_copied(n as u64);
+                }
                 ch!(end CopyOut);
                 r.at += n;
-                #[cfg(feature = "ideal-delivery")]
-                crate::ideal::delivery::count_copied(n as u64);
                 return Ok(n);
             }
             if r.done || buf.is_empty() {
@@ -931,7 +939,14 @@ impl StreamDecoder {
             }
             if r.at < r.cur.len() {
                 let v = if r.at == 0 {
-                    std::mem::take(&mut r.cur)
+                    #[cfg(feature = "ideal-rle1")]
+                    {
+                        std::mem::take(&mut r.cur).into_vec()
+                    }
+                    #[cfg(not(feature = "ideal-rle1"))]
+                    {
+                        std::mem::take(&mut r.cur)
+                    }
                 } else {
                     let rest = r.cur[r.at..].to_vec();
                     r.at = r.cur.len();
@@ -1009,7 +1024,11 @@ impl StreamDecoder {
             ch!(occ Consumed, r.consumed, 0; Consuming -1);
             r.consumed += 1;
         }
-        for spent in [std::mem::take(&mut r.cur), extra] {
+        #[cfg(feature = "ideal-rle1")]
+        let cur_spent = std::mem::take(&mut r.cur).into_recyclable();
+        #[cfg(not(feature = "ideal-rle1"))]
+        let cur_spent = Some(std::mem::take(&mut r.cur));
+        for spent in cur_spent.into_iter().chain(std::iter::once(extra)) {
             if spent.capacity() >= POOLED_FROM && st.free_out.len() < self.shared.slots as usize {
                 st.free_out.push(spent);
             }
@@ -1230,8 +1249,11 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 );
                 debug_assert_eq!(place, index);
                 #[cfg(feature = "scan-oracle")]
-                if recording {
-                    crate::scan_oracle::record(index, &symbols);
+                {
+                    crate::scan_oracle::count_scanned();
+                    if recording {
+                        crate::scan_oracle::record(index, &symbols);
+                    }
                 }
                 if !jobs.send_job((place, bit, symbols)) {
                     ch!(end Issue);
@@ -1254,11 +1276,10 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     // fails, and the workers end once the jobs queued are done)
 }
 
-/// (research only, `scan-oracle`) The scanner's place taken by the recorded blocks
-/// (`scan_oracle::Mode::Replay`): each slot the scanner would fill, in the same order and under
-/// the same limit, filled with the block's recorded symbols copied into the reused buffer, and
-/// sent through the same job queue. The input is still taken from the reader as it comes and
-/// its chunks recycled, as the scanner's window does; no bit of it is read
+/// (research only, `scan-oracle`) Zero-copy lock-free replay scanner (`scan_oracle::Mode::Replay`):
+/// drains and recycles compressed input chunks, enforces the same slot and ready-byte bounds, and
+/// sends lightweight headers (`syms: Vec::new()`, 0 bytes copied) so workers borrow `&[u16]`
+/// directly from the frozen `OnceLock` store.
 #[cfg(feature = "scan-oracle")]
 fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     use std::sync::mpsc::TryRecvError;
@@ -1289,7 +1310,7 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
         // ledgers' flow and occupancy identities hold with the scan replayed; its reading, A2
         // and A3, is what the replay removes)
         ch!(begin SlotWait);
-        let (syms, index) = {
+        let index = {
             let mut st = shared.lock();
             #[cfg(feature = "character")]
             if !st.cancelled && shared.full(&st) {
@@ -1311,15 +1332,14 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 return finish();
             }
             ch!(occ ScanStart, st.issued, 0; Scanning 1);
-            let index = st.issued;
-            (st.free_syms.pop().unwrap_or_default(), index)
+            st.issued
         };
         ch!(end SlotWait);
-        // (`character`: the replay's copy is the scan's handover, its own entry)
+        // (`character`: the zero-copy lookup is the scan's handover, its own entry)
         ch!(begin HandS);
-        let replayed = crate::scan_oracle::replay(index, syms);
+        let replayed = crate::scan_oracle::replay_header(index);
         ch!(end HandS);
-        let Some(symbols) = replayed else {
+        let Some((symbols, syms_bytes)) = replayed else {
             ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
             // the input's end: taken to its end, as the scanner reads to it
             while !eof {
@@ -1330,11 +1350,13 @@ fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             }
             return finish();
         };
+        #[cfg(not(feature = "character"))]
+        let _ = syms_bytes;
         ch!(begin Issue);
         let mut st = shared.lock();
         let place = st.issued;
         st.issued += 1;
-        ch!(occ Issued, place, std::mem::size_of_val(&symbols.syms[..]); Admitted 1, Scanning -1);
+        ch!(occ Issued, place, syms_bytes; Admitted 1, Scanning -1);
         drop(st);
         if !jobs.send_job((place, 0, symbols)) {
             ch!(end Issue);
@@ -1376,6 +1398,8 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         // block of `POOLED_FROM` rows or more, its own for a smaller one
         let res = catch_unwind(AssertUnwindSafe(|| {
             #[cfg(any(
+                feature = "scan-oracle",
+                feature = "supplied-codes",
                 feature = "ideal-construction",
                 feature = "ideal-mtf",
                 feature = "ideal-rle1",
@@ -1404,9 +1428,10 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         mark!(
             DecodeEnd,
             place,
-            res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
             res.as_ref()
-                .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
+                .map_or(0, |r| r.as_ref().map_or(0, |b| b.len())),
+            res.as_ref()
+                .map_or(0, |r| r.as_ref().map_or(0, |b| b.capacity()))
         );
         let res = match res {
             Ok(r) => r,
@@ -1684,7 +1709,7 @@ fn finish_block(inverted: &[u8], crc: u32, k: Kernels, out: &mut Vec<u8>) -> Res
 /// A block's result (or error, with its place and bit) into `ready`, and its symbols'
 /// buffer recycled: the worker's own last steps
 fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind>, syms: Vec<u16>) {
-    let res = res.map_err(|kind| Error {
+    let res = res.map(super::DecodedBlock::from).map_err(|kind| Error {
         kind,
         block: Some(place),
         bit: Some(bit),
@@ -4220,7 +4245,7 @@ mod service_tests {
             let r = published(&sh, 5);
             match (cancelled, want) {
                 (true, _) => assert!(r.is_none(), "{what}"),
-                (false, Some(bytes)) => assert_eq!(r, Some(Ok(bytes)), "{what}"),
+                (false, Some(bytes)) => assert_eq!(r, Some(Ok(bytes.into())), "{what}"),
                 (false, None) => {
                     let e = r.expect(what).unwrap_err();
                     assert_eq!((e.block, e.bit), (Some(5), Some(40)), "{what}");

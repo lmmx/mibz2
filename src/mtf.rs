@@ -15,15 +15,32 @@ pub fn mtf(
     counts: &mut [u32; 256],
     k: Kernels,
 ) -> Result<usize, ErrorKind> {
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| mtf_with_syms(b, syms, ll, counts, k))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        mtf_with_syms(b, &b.syms, ll, counts, k)
+    }
+}
+
+fn mtf_with_syms(
+    b: &Symbols,
+    syms: &[u16],
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
             // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
-            return unsafe { mtf_avx2(b, ll, counts) };
+            return unsafe { mtf_avx2(b, syms, ll, counts) };
         }
     }
     let _ = k;
-    mtf_scalar(b, ll, counts)
+    mtf_scalar_with_syms(b, syms, ll, counts)
 }
 
 /// A run's weight (N in libbzip2) refused at this, so its length cannot overflow
@@ -34,12 +51,28 @@ pub fn mtf_scalar(
     ll: &mut Vec<u8>,
     counts: &mut [u32; 256],
 ) -> Result<usize, ErrorKind> {
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| mtf_scalar_with_syms(b, syms, ll, counts))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        mtf_scalar_with_syms(b, &b.syms, ll, counts)
+    }
+}
+
+fn mtf_scalar_with_syms(
+    b: &Symbols,
+    syms: &[u16],
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
     ll.clear();
     ll.reserve(b.max_len);
     *counts = [0; 256];
     let mut list: [u8; 256] = std::array::from_fn(|i| i as u8);
     let (mut run, mut weight) = (0u32, 1u32);
-    for &s in &b.syms {
+    for &s in syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
                 return Err(ErrorKind::RunTooLong);
@@ -191,6 +224,7 @@ unsafe fn second(
 #[target_feature(enable = "avx2")]
 unsafe fn mtf_avx2(
     b: &Symbols,
+    syms: &[u16],
     ll: &mut Vec<u8>,
     counts: &mut [u32; 256],
 ) -> Result<usize, ErrorKind> {
@@ -221,7 +255,7 @@ unsafe fn mtf_avx2(
     let out = ll.as_mut_ptr();
     let mut n = 0usize;
     let mut result = Ok(());
-    for &s in &b.syms {
+    for &s in syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
                 result = Err(ErrorKind::RunTooLong);
@@ -302,14 +336,34 @@ pub fn mtf_checkpoints(
     checkpoints: &mut Vec<[u32; 256]>,
     k: Kernels,
 ) -> Result<usize, ErrorKind> {
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| {
+            mtf_checkpoints_with_syms(b, syms, ll, counts, checkpoints, k)
+        })
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        mtf_checkpoints_with_syms(b, &b.syms, ll, counts, checkpoints, k)
+    }
+}
+
+fn mtf_checkpoints_with_syms(
+    b: &Symbols,
+    syms: &[u16],
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    checkpoints: &mut Vec<[u32; 256]>,
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
             // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
-            return unsafe { mtf_checkpoints_avx2(b, ll, counts, checkpoints) };
+            return unsafe { mtf_checkpoints_avx2(b, syms, ll, counts, checkpoints) };
         }
     }
-    let _ = k;
+    let _ = (k, syms);
     mtf_checkpoints_scalar(b, ll, counts, checkpoints)
 }
 
@@ -375,6 +429,7 @@ const _: () = {
 #[target_feature(enable = "avx2")]
 unsafe fn mtf_checkpoints_avx2(
     b: &Symbols,
+    syms_slice: &[u16],
     ll: &mut Vec<u8>,
     counts: &mut [u32; 256],
     checkpoints: &mut Vec<[u32; 256]>,
@@ -427,7 +482,7 @@ unsafe fn mtf_checkpoints_avx2(
         }};
     }
     let mut next = CHECKPOINT;
-    let mut syms = b.syms.iter();
+    let mut syms = syms_slice.iter();
     'block: loop {
         let limit = max.min(next);
         // `mtf_avx2`'s loop, `max` replaced by `limit`; `at` the symbol it stopped before

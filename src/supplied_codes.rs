@@ -1,38 +1,34 @@
-//! Research only (`supplied-codes`): the bench-supplied-codes diagnostic's switch, store and
-//! records (docs/journal/2026-11-24-supplied-codes-registration.md), for
-//! examples/supplied_codes.rs. The question: if the open kernel's emitter were handed the
-//! block's existing dictionary word codes already in marked-cycle output order, so that it no
-//! longer walks the retained cycle to find that order, how much faster is the decoder?
+//! Research only (`supplied-codes`): zero-copy lock-free factor E (target T1) of the
+//! ideal-parts matrix and the bench-supplied-codes diagnostic (`IDEAL-PARTS-2.md` §3;
+//! `docs/journal/2026-11-24-supplied-codes-registration.md`).
 //!
-//! **The modes** (a process-global switch the harness sets between decodes, read once a block
-//! at its start; `src/open/supplied.rs` is the kernel's side):
-//! - [`Mode::Open`], arm A: the kernel as shipped, construction and the current emitter
-//!   (`emit_bidirectional` on its two-ended blocks, `emit` on the others);
-//! - [`Mode::Supplied`], arm B: the same construction, then the block's code sequence
-//!   q_0..q_{L-1} (L the marked cycle's length) taken from the [store](store) by the block's
-//!   [`Key`] and copied into the first L words of the packed-edge buffer (`edges`, 4m bytes),
-//!   then consumed from the front (and, on a two-ended block, the back) with the shipped
-//!   emitters' own short/long-word appends. Nothing else is supplied: no output, no offsets,
-//!   no word boundaries, no dictionary;
-//! - [`Mode::Record`], the oracle pass outside the clock: the construction, the cycle walked
-//!   once to record its codes into the store, then arm A's emit;
-//! - [`Mode::Check`], the per-round check outside the clock: arm A's bytes, then arm B's from
-//!   the store, compared byte for byte on every block (a difference counts a
-//!   [mismatch](mismatches)); arm B's bytes go to the output, where the decoder checks the
-//!   block's and the stream's CRCs.
+//! **The modes** (a process-global switch set between decodes; `src/open/supplied.rs` is the
+//! kernel's side):
+//! - [`Mode::Open`]: the kernel as shipped (`Kernel::walk`: pointer chase + word spelling);
+//! - [`Mode::Supplied`] (`E_chase`): skips the pointer chase, borrows `&[u32]` straight from the
+//!   lock-free `OnceLock` frozen store without copying into `edges` (`HandEDeliver`, 0 bytes
+//!   copied), and spells words into `out` (`EConsume`, timed separately);
+//! - [`Mode::SuppliedFull`] (`E_full`): when `R` (`ideal-rle1`) is also replaying the block,
+//!   skips BOTH the pointer chase AND word spelling (`EConsume`), leaving `out` untouched so the
+//!   floor's pure plumbing residual (Residual B) can be read directly. Falls back to
+//!   [`Mode::Supplied`] if `R` is not replaying the block so output stays byte-identical in every
+//!   mode;
+//! - [`Mode::Record`]: records each Open block's output-order word codes into the store, then
+//!   runs `Kernel::walk`;
+//! - [`Mode::Check`]: runs `Kernel::walk` and borrowed `Supplied` consumption side by side,
+//!   counting any mismatch.
 //!
-//! **Conditioning** ([`set_condition`], the diagnostic receipt's decodes): in both arms, after
-//! the delivery and before the consumer's clock, one sequential read of every buffer either
-//! consumer may read (`edges[..m]`, `extra`, the inline words, their lengths and the long words'
-//! spelling), one load a 64-byte line. Off, nothing is touched.
-//!
-//! **The records:** five clock reads a block in every mode (construct | deliver | condition |
-//! consume), the block's rows, retained rows, cycle length (arm B and the oracle), whether it
-//! was two-ended, refused or supplied, the kernel's scratch and the block's key id.
+//! **Lock-free timed runs:** [`set_record_recs(false)`] gates off per-block `RECS.lock()` pushes
+//! and `Instant::now()` reads during timed floor runs while keeping lock-free atomic [`Counts`]
+//! (`take_counts`) and `character` / `ideal::accounting` phase ledgers active.
+
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
-use std::sync::{Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
+
+use crate::ideal::frozen::FrozenSlot;
 
 /// What the open kernel's emit stage does with a block
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -40,12 +36,14 @@ use std::time::Duration;
 pub enum Mode {
     /// arm A: the kernel as shipped
     Open = 0,
-    /// arm B: the block's codes supplied in output order, consumed sequentially
+    /// arm B (`E_chase`): the block's codes borrowed in output order, consumed sequentially
     Supplied = 1,
     /// the oracle pass: the codes recorded into the store, then arm A's emit
     Record = 2,
     /// the check: arm A's bytes and arm B's compared on every block
     Check = 3,
+    /// `E_full`: skips both pointer chase and word spelling (`E_consume`) when R replays
+    SuppliedFull = 4,
 }
 
 impl Mode {
@@ -56,14 +54,20 @@ impl Mode {
             Mode::Supplied => "supplied",
             Mode::Record => "record",
             Mode::Check => "check",
+            Mode::SuppliedFull => "supplied-full",
         }
     }
 
     /// The mode named `s`
     pub fn parse(s: &str) -> Option<Mode> {
-        [Mode::Open, Mode::Supplied, Mode::Record, Mode::Check]
-            .into_iter()
-            .find(|m| m.name() == s)
+        match s {
+            "open" => Some(Mode::Open),
+            "supplied" | "chase" => Some(Mode::Supplied),
+            "record" => Some(Mode::Record),
+            "check" => Some(Mode::Check),
+            "supplied-full" | "full" => Some(Mode::SuppliedFull),
+            _ => None,
+        }
     }
 
     pub(crate) fn of(v: u8) -> Mode {
@@ -71,6 +75,7 @@ impl Mode {
             1 => Mode::Supplied,
             2 => Mode::Record,
             3 => Mode::Check,
+            4 => Mode::SuppliedFull,
             _ => Mode::Open,
         }
     }
@@ -78,16 +83,42 @@ impl Mode {
 
 static MODE: AtomicU8 = AtomicU8::new(Mode::Open as u8);
 static CONDITION: AtomicBool = AtomicBool::new(false);
+static RECORD_RECS: AtomicBool = AtomicBool::new(true);
 static COLLISIONS: AtomicU64 = AtomicU64::new(0);
 static MISMATCHES: AtomicU64 = AtomicU64::new(0);
 
-/// Switch the mode for the blocks the kernel starts from now on (between decodes: a decode's
-/// workers are spawned after it, so they see it)
+// Lock-free atomic block counts (always maintained even when `RECS` is gated off).
+static CNT_OPEN: AtomicU64 = AtomicU64::new(0);
+static CNT_WALKED: AtomicU64 = AtomicU64::new(0);
+static CNT_SUPPLIED_CHASE: AtomicU64 = AtomicU64::new(0);
+static CNT_SUPPLIED_FULL: AtomicU64 = AtomicU64::new(0);
+static CNT_CONSUMED: AtomicU64 = AtomicU64::new(0);
+static CNT_REFUSED: AtomicU64 = AtomicU64::new(0);
+
+/// Lock-free emission counters collected since the last [`take_counts`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Counts {
+    pub open: u64,
+    pub walked: u64,
+    pub supplied_chase: u64,
+    pub supplied_full: u64,
+    pub consumed: u64,
+    pub refused: u64,
+}
+
+/// Switch the mode for the blocks the kernel starts from now on.
+///
+/// Entering `Supplied`, `SuppliedFull`, or `Check` freezes the recorded store into the
+/// lock-free `OnceLock` snapshot.
 pub fn set_mode(m: Mode) {
+    if matches!(m, Mode::Supplied | Mode::SuppliedFull | Mode::Check) {
+        freeze_store();
+    }
     MODE.store(m as u8, Ordering::SeqCst);
 }
 
 /// The mode now set
+#[inline]
 pub fn mode() -> Mode {
     Mode::of(MODE.load(Ordering::Relaxed))
 }
@@ -98,8 +129,64 @@ pub fn set_condition(on: bool) {
 }
 
 /// Whether the consumer's inputs are conditioned
+#[inline]
 pub fn condition() -> bool {
     CONDITION.load(Ordering::Relaxed)
+}
+
+/// Gate per-block `RECS.lock()` recording on or off (`true` by default for compatibility with
+/// `examples/supplied_codes.rs`, `examples/four_arm.rs` and `examples/character.rs`; set `false`
+/// during timed zero-copy floor decodes to eliminate mutex contention and per-block clock reads).
+pub fn set_record_recs(on: bool) {
+    RECORD_RECS.store(on, Ordering::SeqCst);
+}
+
+/// Whether per-block `Rec` recording under `RECS.lock()` is currently enabled
+#[inline]
+pub fn record_recs() -> bool {
+    RECORD_RECS.load(Ordering::Relaxed)
+}
+
+/// Lock-free emission counts since the last call (and reset)
+pub fn take_counts() -> Counts {
+    Counts {
+        open: CNT_OPEN.swap(0, Ordering::SeqCst),
+        walked: CNT_WALKED.swap(0, Ordering::SeqCst),
+        supplied_chase: CNT_SUPPLIED_CHASE.swap(0, Ordering::SeqCst),
+        supplied_full: CNT_SUPPLIED_FULL.swap(0, Ordering::SeqCst),
+        consumed: CNT_CONSUMED.swap(0, Ordering::SeqCst),
+        refused: CNT_REFUSED.swap(0, Ordering::SeqCst),
+    }
+}
+
+#[inline]
+pub(crate) fn count_open() {
+    CNT_OPEN.fetch_add(1, Ordering::Relaxed);
+}
+
+#[inline]
+pub(crate) fn count_walked() {
+    CNT_WALKED.fetch_add(1, Ordering::Relaxed);
+}
+
+#[inline]
+pub(crate) fn count_supplied_chase() {
+    CNT_SUPPLIED_CHASE.fetch_add(1, Ordering::Relaxed);
+}
+
+#[inline]
+pub(crate) fn count_supplied_full() {
+    CNT_SUPPLIED_FULL.fetch_add(1, Ordering::Relaxed);
+}
+
+#[inline]
+pub(crate) fn count_consumed() {
+    CNT_CONSUMED.fetch_add(1, Ordering::Relaxed);
+}
+
+#[inline]
+pub(crate) fn count_refused() {
+    CNT_REFUSED.fetch_add(1, Ordering::Relaxed);
 }
 
 /// A block's identity in the store, from what the construction knows in O(1): equal for equal
@@ -141,8 +228,22 @@ impl Key {
     }
 }
 
-type Store = HashMap<Key, Box<[u32]>>;
+type Store = HashMap<Key, Arc<[u32]>>;
+
 static STORE: RwLock<Option<Store>> = RwLock::new(None);
+static FROZEN: FrozenSlot<Store> = FrozenSlot::new();
+
+thread_local! {
+    static TLS: RefCell<(u64, Option<Arc<Store>>)> = const { RefCell::new((0, None)) };
+}
+
+fn freeze_store() {
+    FROZEN.freeze(|| {
+        let g = STORE.read().unwrap_or_else(|e| e.into_inner());
+        let st = g.as_ref()?;
+        (!st.is_empty()).then(|| st.clone())
+    });
+}
 
 /// Record a block's code sequence (the oracle pass). A key already held with other codes is a
 /// collision, counted, and the codes first held are kept
@@ -155,33 +256,46 @@ pub(crate) fn store(key: Key, codes: &[u32]) {
         }
         Some(_) => {}
         None => {
-            s.insert(key, codes.into());
+            s.insert(key, Arc::from(codes));
+            FROZEN.mark_dirty();
         }
     }
 }
 
-/// Copy the codes held for `key` into the front of `dst` (arm B's delivery): their count, or
-/// `None` if none are held or they don't fit
-pub(crate) fn deliver(key: &Key, dst: &mut [u32]) -> Option<usize> {
-    let s = STORE.read().unwrap_or_else(|e| e.into_inner());
-    let codes = s.as_ref()?.get(key)?;
-    let l = codes.len();
-    if l == 0 || l > dst.len() {
-        return None;
+/// Zero-copy borrowed lookup of `key`'s codes straight from the lock-free frozen store.
+/// Falls back lazily to freezing if called directly (e.g. unit tests calling `staged` without
+/// `set_mode`).
+#[inline]
+pub(crate) fn with_codes<R>(key: &Key, f: impl FnOnce(&[u32]) -> R) -> Option<R> {
+    let mut f = Some(f);
+    if let Some(res) = FROZEN.with(&TLS, |map| {
+        map.get(key)
+            .filter(|c| !c.is_empty())
+            .map(|c| (f.take().unwrap())(c))
+    }) {
+        return res;
     }
-    dst[..l].copy_from_slice(codes);
-    Some(l)
+    // Cold path: direct unit test called `staged(Mode::Supplied, ...)` without `set_mode`.
+    freeze_store();
+    FROZEN
+        .with(&TLS, |map| {
+            map.get(key)
+                .filter(|c| !c.is_empty())
+                .map(|c| (f.take().unwrap())(c))
+        })
+        .flatten()
 }
 
-/// The codes held for `key`, copied (the check's comparison)
+/// The codes held for `key`, copied (the check's comparison and unit tests)
+#[cfg(test)]
 pub(crate) fn held(key: &Key) -> Option<Vec<u32>> {
-    let s = STORE.read().unwrap_or_else(|e| e.into_inner());
-    s.as_ref()?.get(key).map(|c| c.to_vec())
+    with_codes(key, |c| c.to_vec())
 }
 
-/// Empty the store and its collision count
+/// Empty the store and its collision count, and invalidate any frozen snapshot
 pub fn clear_store() {
     *STORE.write().unwrap_or_else(|e| e.into_inner()) = None;
+    FROZEN.invalidate();
     COLLISIONS.store(0, Ordering::SeqCst);
 }
 
@@ -192,6 +306,17 @@ pub fn store_size() -> (usize, usize, usize) {
         let codes: usize = s.values().map(|c| c.len()).sum();
         (s.len(), codes, 4 * codes)
     })
+}
+
+/// Fallback `RwLock` acquisitions during `Supplied` / `SuppliedFull` since the last call
+/// (0 on the `OnceLock` fast path)
+pub fn take_lock_acquires() -> u64 {
+    FROZEN.take_lock_acquires()
+}
+
+/// Whether `Supplied` / `SuppliedFull` is currently serving from the lock-free `OnceLock` path
+pub fn is_frozen_lock_free() -> bool {
+    FROZEN.is_once_active()
 }
 
 /// Keys recorded with codes other than those held for them, since the store was last cleared
@@ -230,12 +355,11 @@ pub struct Rec {
     pub supplied: bool,
     /// the construction, ns
     pub construct_ns: u64,
-    /// the delivery (arm B: the lookup and the copy into `edges`), ns; else two adjacent clock
-    /// reads' gap
+    /// the delivery (zero-copy lookup in the frozen store), ns; else two adjacent clock reads' gap
     pub deliver_ns: u64,
     /// the conditioning read, ns; else two adjacent clock reads' gap
     pub cond_ns: u64,
-    /// the consumer (the emit), ns
+    /// the consumer (word spelling `E_consume`, or `0` in `E_full`), ns
     pub consume_ns: u64,
     /// the bytes the worker's kernel holds after the block, every buffer's capacity
     pub scratch: u64,
@@ -246,7 +370,9 @@ pub struct Rec {
 static RECS: Mutex<Vec<Rec>> = Mutex::new(Vec::new());
 
 pub(crate) fn record(r: Rec) {
-    RECS.lock().unwrap_or_else(|e| e.into_inner()).push(r);
+    if record_recs() {
+        RECS.lock().unwrap_or_else(|e| e.into_inner()).push(r);
+    }
 }
 
 /// The records since the last `take`, in the order the workers finished them
@@ -264,10 +390,18 @@ mod tests {
 
     #[test]
     fn mode_names() {
-        for m in [Mode::Open, Mode::Supplied, Mode::Record, Mode::Check] {
+        for m in [
+            Mode::Open,
+            Mode::Supplied,
+            Mode::Record,
+            Mode::Check,
+            Mode::SuppliedFull,
+        ] {
             assert_eq!(Mode::parse(m.name()), Some(m));
             assert_eq!(Mode::of(m as u8), m);
         }
+        assert_eq!(Mode::parse("chase"), Some(Mode::Supplied));
+        assert_eq!(Mode::parse("full"), Some(Mode::SuppliedFull));
         assert_eq!(Mode::parse("base"), None);
     }
 }

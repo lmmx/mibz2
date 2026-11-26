@@ -423,7 +423,7 @@ fn miri_the_ready_ring() {
                 let v: Res = if x.below(5) == 0 {
                     Err(Error::new(ErrorKind::BadOrigPtr))
                 } else {
-                    Ok(vec![step as u8; x.below(9) as usize])
+                    Ok(vec![step as u8; x.below(9) as usize].into())
                 };
                 r.insert(place, v.clone());
                 m.insert(place, v);
