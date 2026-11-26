@@ -1,0 +1,27 @@
+id = "harden-frontier-tooling"
+title = "Fix the frontier.py and frontier.yml failures found by stress-test-frontier"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = ["frontier/tools/frontier.py", ".github/workflows/frontier.yml"]
+mechanisms = ["frontier-tooling"]
+needs_louis = ""
+question = """
+Resolve the three flags opened by `stress-test-frontier` before `max_live_holds` is raised above 3:
+1. `renew`/`release` must exit non-zero on CAS failure; `holds()`/`verify` must fail closed if `git fetch` fails; `verify` must re-check live-hold `owned_paths`/`mechanisms` overlap.
+2. `open_flags()` must read `origin/master:frontier/flags/` (merged with local flags) and match path-scoped flags against `premises`/`owned_paths`; `check` must validate `premises` paths.
+3. `.github/workflows/frontier.yml` must fetch `master` so `check` runs checks #3 and #5 in CI, and fix line 49's `awk` stop heading (`## Open flags`, not removed `## In progress`); `check` must use merge-base diff, fail closed if `origin/master` is missing, read `protected` from `origin/master:frontier/config.toml`, and catch `stop_test` edits, `dead-ends.tsv` verdict deletions, and flag resolutions missing independent `resolved_by:`.
+"""
+why = """
+Four of eight stress-test scenarios failed against `frontier/tools/frontier.py` and `.github/workflows/frontier.yml`. Raising `max_live_holds` before fixing them leaves remote flags, CI checks, and protected-path warnings silently bypassed.
+"""
+stop_test = """
+PASS iff all `@unittest.expectedFailure` decorators in `tests/test_frontier.py` are removed and the full suite passes with 0 failures, `frontier.py check` runs cleanly in CI with `origin/master` present (warning on protected files), and a different agent reviews and merges the PR.
+"""
+done_when = """
+A reviewed PR fixing `frontier/tools/frontier.py`, `.github/workflows/frontier.yml`, and `tests/test_frontier.py`, with all three flags resolved by a different agent and a follow-on PR raising `max_live_holds`.
+"""
+premises = ["frontier/deltas/2026-11-26-stress-test-frontier.md", "tests/test_frontier.py"]
+links = []
