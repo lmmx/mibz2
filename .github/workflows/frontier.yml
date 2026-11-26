@@ -7,6 +7,11 @@ name: frontier
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft]
+  # Only the base branch's trusted code runs on these events, never the PR head.
+  pull_request_target:
+    branches: [master]
+    types: [opened, reopened, synchronize, edited, closed, ready_for_review, converted_to_draft]
   push:
     branches: [master]
     paths: ["frontier/**"]
@@ -16,7 +21,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   check:
@@ -30,13 +34,30 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - run: python3 frontier/tools/frontier.py check
+      - run: python3 frontier/tools/frontier.py check --pr-event "$GITHUB_EVENT_PATH"
+      - name: Frontier regression tests when the mechanism changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if ! git diff --quiet "$BASE_SHA" HEAD -- frontier/tools/ tests/test_frontier.py .github/workflows/frontier.yml; then
+            python3 tests/test_frontier.py
+          fi
 
   mirror:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+    concurrency:
+      group: frontier-status-mirror
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: master
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
