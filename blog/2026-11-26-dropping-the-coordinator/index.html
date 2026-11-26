@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1480a5d67592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=3963db8a25e7">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=1480a5d67592">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3853,9 +3853,9 @@ the new mode.</p>
   every decoder stage's unmasked headroom onto <code>frontier/surface.tsv</code>. Independent sessions now
   pull disjoint work through atomic git holds and leave append-only deltas of at most 40 lines.
   A generated status page replaces chat.</li>
-<li><strong>One word suffices to request work.</strong> A small lexicon (<code>take one</code>, <code>swarm</code>, <code>probe</code> and sixteen
-  more) works because repository files hold the procedures, capability tags, stop tests and merge
-  gates.</li>
+<li><strong>One word suffices, but no special words are required.</strong> The vocabulary names activities the
+  participants already understand. Repository files supply the procedures, capability tags, stop
+  tests and merge gates, so the maintainer can speak naturally rather than dispatch tasks.</li>
 <li><strong>The mode is an experiment, not dogma.</strong> Live concurrency stays capped at three holds until
   eight adversarial stress tests pass. A pre-registered three-arm experiment and a daily human
   readability check will decide whether the flat mode stays or yields to a restarted solo workflow.</li>
@@ -4239,16 +4239,27 @@ commit. This post is the first card moving through that board.</p>
 <p>Retiring a central prompt-writer might sound as though the human maintainer now has to write longer
 instructions. In practice the opposite happens. Under the old hub, a 100-line brief had to repeat
 base branches, header syntax, stop tests and merge rules, yet still got them wrong. On the
-frontier, asking for work shrinks to one or two words. The repository's own files—<code>frontier.py
-brief</code>, <code>surface.tsv</code>, <code>dead-ends.tsv</code>, the root rules and each claim's stop test—supply every
-operational detail deterministically.</p>
-<p>The lexicon in <code>frontier/README.md</code> groups 19 short commands into four loops. First, three commands
-control execution and session boundaries:</p>
+frontier, one or two words can suffice. The repository's own files supply the operational details,
+not a central prompt-writer.</p>
+<p><strong>The vocabulary is not a user interface.</strong> A fresh session can begin with <code>swarm</code>; there is no
+need to memorise the other expressions. Participants can select and move between activities
+themselves, and a conversation can uncover a useful contribution without an explicit command.
+If the maintainer asks why a measurement looks strange, the session can follow the evidence and
+record a discovery rather than wait to be told to <code>explore</code> or <code>probe</code>. No separate dispatcher
+translates ordinary language into commands.</p>
+<p>There is one practical limit to starting a swarm. The initial configuration allows at most three
+live claims across the repository, not three running model processes. A hold awaiting a PR merge
+still occupies a slot even if its worker has stopped. A fresh session can read or review without
+taking a new hold. The three-slot canary stays in place until the protocol's stress tests and
+handoff defects are addressed; it is not a target number of agents to spawn. The separate
+admission limit is twelve open claims. New ideas can still be recorded without being admitted.</p>
+<p>The lexicon in <code>frontier/README.md</code> names several families of activity. The first concerns
+participation and session boundaries:</p>
 <table>
 <thead>
 <tr>
-<th>Say</th>
-<th>Mechanical loop triggered</th>
+<th>Shorthand</th>
+<th>Activity</th>
 </tr>
 </thead>
 <tbody>
@@ -4262,16 +4273,16 @@ control execution and session boundaries:</p>
 </tr>
 <tr>
 <td><code>rupture</code></td>
-<td>Stop cleanly, write the delta, leave repository state readable, and end the session so the next starts fresh</td>
+<td>Request a clean stop now, even if further work is available; no special closing prompt is needed when a session finishes normally</td>
 </tr>
 </tbody>
 </table>
-<p>Second, seven commands shape research targets, measurements and falsification tests:</p>
+<p>The second family concerns research targets, measurements and falsification tests:</p>
 <table>
 <thead>
 <tr>
-<th>Say</th>
-<th>Mechanical loop triggered</th>
+<th>Shorthand</th>
+<th>Activity</th>
 </tr>
 </thead>
 <tbody>
@@ -4305,12 +4316,12 @@ control execution and session boundaries:</p>
 </tr>
 </tbody>
 </table>
-<p>Third, seven commands handle stewardship, visibility and local vetoes:</p>
+<p>The third concerns stewardship, visibility and local vetoes:</p>
 <table>
 <thead>
 <tr>
-<th>Say</th>
-<th>Mechanical loop triggered</th>
+<th>Shorthand</th>
+<th>Activity</th>
 </tr>
 </thead>
 <tbody>
@@ -4344,8 +4355,11 @@ control execution and session boundaries:</p>
 </tr>
 </tbody>
 </table>
-<p>Finally, two commands operate the blog board: <code>blog X</code> creates a card at stage <code>idea</code>, and
-<code>move &lt;card&gt;</code> advances it one stage under the board's rules.</p>
+<p>Finally, <code>blog X</code> and <code>move &lt;card&gt;</code> name the introduction and development of a blog topic.
+The participants need no instruction from the maintainer to make successive editorial passes.</p>
+<p>A session leaves its result and state readable as part of normal completion, not as a special
+ceremony invoked by the maintainer. Asignifying rupture is about breaking dependence on the
+session's accumulated context, not requiring another human instruction to close it.</p>
 <p>Beside the lexicon sit five compact figures of speech that act as everyday design rules:</p>
 <ol>
 <li><strong>Leave a mark, not a message.</strong> Record state transitions in committed files (<code>claims/</code>,
@@ -4359,11 +4373,12 @@ control execution and session boundaries:</p>
 <li><strong>Every number has a home.</strong> Every cited figure traces to an evidence digest, a results folder
    or a table row—never an unsourced prose claim.</li>
 </ol>
-<p>Knowing when <em>not</em> to act autonomously is just as explicit. An agent answers questions directly
-without opening a pull request. It escalates via <code>needs_louis</code> only for genuine ambiguity or the
-four matters reserved to the maintainer under <code>RULES D</code>: spending and new infrastructure, rule or
-role changes, physical workstation runs outside standing authorisation, and facts only the
-maintainer knows.</p>
+<p>Knowing when <em>not</em> to act autonomously is equally important. A purely informational question
+gets an answer; a concrete contribution clearly implied by the discussion can be made within
+standing authority (the conversational participation amendment, <a href="https://github.com/lmmx/mibz2/pull/964">#964</a>).
+Explicit read-only requests stay read-only. Genuine ambiguity and matters reserved under
+<code>RULES D</code>—spending and new infrastructure, rule or role changes, physical workstation runs outside
+standing authorisation, and facts only the maintainer knows—still require clarification.</p>
 <h2 id="5-how-this-should-change-the-work-and-what-could-still-go-wrong">5. How this should change the work — and what could still go wrong<a class="headerlink" href="#5-how-this-should-change-the-work-and-what-could-still-go-wrong" title="Permanent link">&para;</a></h2>
 <p>Moving from a central narrator to a shared frontier targets three concrete changes in daily work.
 First, copy-paste relaying disappears: agents read raw code, tables and evidence bundles directly,
@@ -4678,19 +4693,19 @@ and Deleuze &amp; Guattari via <a href="https://en.wikipedia.org/wiki/A_Thousand
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/bench.js?v=1480a5d67592"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1480a5d67592"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/blog.js?v=1480a5d67592"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/frontier.js?v=1480a5d67592"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/observatory.js?v=1480a5d67592"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=3963db8a25e7"></script>
+        <script src="../../assets/javascripts/katex.js?v=1480a5d67592"></script>
       
     
   </body>
