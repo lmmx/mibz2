@@ -1,18 +1,24 @@
 ---
 name: publish-page
-description: Use before opening or merging a PR that adds or changes a page of the mibz2 site, above all a blog post. The rendered page must be looked at, not just built.
+description: Publish blog posts autonomously on the strict build and render check; improve after merging. Other site pages retain the visual verification procedure.
 ---
 
 # Publishing a page
 
-**For a blog post, version 1 ships on the strict build and `check_render.py` alone**
-(write-blog-post, "Iterate, ship, re-ship"). The steps below then run on the live post, and
-what they find goes out as follow-up PRs. For other pages:
+**For a blog-only PR, publish on the strict build and `check_render.py` and the applicable
+mechanical merge checks.** Standing authorisation from Louis, 26 November 2026: any agent,
+including the author, merges without waiting for human approval, editorial sign-off, preview,
+`look`, or deployment completion. Do not leave a publishable PR for the maintainer.
+The steps below are improvements to the live blog post, not prerequisites; corrections ship as
+small follow-up PRs. Verify deployment afterwards when useful, and distinguish merged from live.
+Protected files, production changes and other site pages retain their existing rules.
+
+For other pages:
 
 A page is ready when its rendered version at the PR's final head has been looked at. A green
 strict build, the site checks and a read of the Markdown don't show how it renders.
 
-0. For a blog post, run the `link-and-gloss` skill first: `python3 docs/scripts/link_audit.py
+0. For a blog post, run the `link-and-gloss` skill as an improvement pass: `python3 docs/scripts/link_audit.py
    docs/site/blog/<post>.md`, then resolve each line with a link, a gloss, a definition or a cut.
 
 1. Build, and run the checks on the build:
@@ -36,8 +42,9 @@ strict build, the site checks and a read of the Markdown don't show how it rende
    the `page-shots` artifact. Once the preview is deployed, run `look_pages.py` against it
    with `--base-url`.
 
-4. Before merging, record in the PR which commit was looked at, and what was found and
-   fixed.
+4. For non-blog pages, before merging record in the PR which commit was looked at and
+   what was found and fixed. For blog-only PRs, record these observations when made, without
+   holding publication.
 
 5. A new page goes to master through its PR, merged on green. Never push a new post to master
    directly; direct commits are only for amendments Louis asks for (the frontier's blog board, `frontier/README.md`; formerly coordinate-blog-post, "The
