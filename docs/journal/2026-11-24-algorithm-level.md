@@ -2454,3 +2454,12 @@ Recorded verbatim at Louis's request: `2026-11-24-algorithm-level/ideal-parts/re
   - delivery's serial copy-out, about 48 ms at every count, which becomes the next serial floor.
 - **Memory doesn't bind at 8–10 with the oracles' copies gone:** Residual A is flat at 40–43 ms. The third-station hypothesis (§90) isn't supported.
 - **Characterisation is closed.** The pooled-scan prototype is unblocked, and its §5 readings are set: 8 and 9 judged, the capture not uncapped.
+
+## 93. The pooled scan's kill test: KILL, narrowly; pooling moves the scan's work, it doesn't remove it
+
+`pooled-scan/results/` (evidence c71c4a56, 480 decodes, valid, every pooled decode wholly pooled).
+- **K1 fires at 8 and 9:** the capture of the scan's room behind construction is 0.52 and 0.48 (point estimates). The upper bounds miss the √(SC/C) bar by 0.009 and 0.042. K2, K3 and K4 pass; the finder takes 4.8 ms.
+- **The mechanism:** the workers' summed scanning equals the serial scanner's. Pooling shifts about 175 ms of CPU onto workers that bind below the knee.
+  - So P alone is 10% slower at 6–7 and 5% at 8, and 6.4% faster at 10.
+  - With construction ideal it takes 158 ms at 8, against C's 183 and SC's 135.
+- **Stopped as built** (C2). The data points to a hybrid (idle workers scan ahead from slack only), and to a registered re-run once threads 4–5 make the workers cheaper.
