@@ -111,7 +111,7 @@ fn pass(data: &[u8], k: Kernels, w: Option<Walk>, keep: bool) -> (Times, usize, 
         if keep {
             decoded.extend_from_slice(&out);
         }
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
     (tm, n, blocks, decoded)
 }

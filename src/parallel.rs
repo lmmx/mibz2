@@ -1238,7 +1238,8 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         let wake = shared.insert_locked(&mut st, place, res);
         // (the symbols, where the block failed before its rows were known)
         if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
-            st.free_syms.push(std::mem::take(&mut symbols.syms));
+            st.free_syms
+                .push(std::mem::take(&mut symbols.syms).into_buffer());
         }
         drop(st);
         mark!(Ready, place);
@@ -1601,7 +1602,7 @@ fn finish_and_publish(shared: &Shared, b: Inverted, inverted: &[u8], k: Kernels)
         Ok(Err(kind)) => (Err(kind), false),
         Err(p) => (Err(ErrorKind::Internal(panic_message(p))), true),
     };
-    publish(shared, b.place, b.bit, res, b.symbols.syms);
+    publish(shared, b.place, b.bit, res, b.symbols.syms.into_buffer());
     panicked
 }
 
@@ -1642,7 +1643,7 @@ fn solo(shared: &Shared, f: &Front, sc: &mut Solo, s: Staged, k: Kernels) -> boo
         Ok(Err(kind)) => (Err(kind), false),
         Err(p) => (Err(ErrorKind::Internal(panic_message(p))), true),
     };
-    publish(shared, s.place, s.bit, res, s.symbols.syms);
+    publish(shared, s.place, s.bit, res, s.symbols.syms.into_buffer());
     panicked
 }
 
@@ -1697,13 +1698,13 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
         Ok(Ok(n)) if n >= min_coop(shared) => Staging::Team(s),
         Ok(Ok(_)) => Staging::Small(s),
         Ok(Err(kind)) => {
-            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            publish(shared, place, bit, Err(kind), s.symbols.syms.into_buffer());
             Staging::Failed
         }
         Err(p) => {
             *f = Front::default();
             let kind = ErrorKind::Internal(panic_message(p));
-            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            publish(shared, place, bit, Err(kind), s.symbols.syms.into_buffer());
             Staging::Failed
         }
     }
@@ -1867,7 +1868,13 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             Ok(Err(p)) => {
                 // a helper's stage panicked: block i fails, and the back set is reset
                 let kind = ErrorKind::Internal(panic_message(p));
-                publish(shared, s.place, s.bit, Err(kind), s.symbols.syms);
+                publish(
+                    shared,
+                    s.place,
+                    s.bit,
+                    Err(kind),
+                    s.symbols.syms.into_buffer(),
+                );
                 t.tt = Default::default();
                 t.seg = Default::default();
                 t.bufs = Default::default();
@@ -1883,11 +1890,23 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                 let held = [Some(s), l.next.take()];
                 for b in held.into_iter().flatten() {
                     let kind = ErrorKind::Internal(msg.clone());
-                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                    publish(
+                        shared,
+                        b.place,
+                        b.bit,
+                        Err(kind),
+                        b.symbols.syms.into_buffer(),
+                    );
                 }
                 if let Some(b) = l.inverted.take() {
                     let kind = ErrorKind::Internal(msg.clone());
-                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                    publish(
+                        shared,
+                        b.place,
+                        b.bit,
+                        Err(kind),
+                        b.symbols.syms.into_buffer(),
+                    );
                 }
                 t = Team::default();
                 continue;
@@ -2564,12 +2583,12 @@ fn prepare(shared: &Shared, hub: &Hub, o: &Outer, job: Job, mut front: Front, k:
             outer_fault(hub, OuterAt::AfterPrepared, Some(place));
         }
         Ok(Err(kind)) => {
-            publish(shared, place, bit, Err(kind), symbols.syms);
+            publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
             hub.retire(o, Some(front), None);
         }
         Err(p) => {
             let kind = ErrorKind::Internal(panic_message(p));
-            publish(shared, place, bit, Err(kind), symbols.syms);
+            publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
             hub.retire(o, Some(Front::default()), None);
         }
     }
@@ -2617,7 +2636,7 @@ fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k
     };
     // (published, not yet retired: still `o`'s, so an unwind here retires it once, and
     // `Hub::fail` never publishes it again)
-    publish(shared, place, bit, res, symbols.syms);
+    publish(shared, place, bit, res, symbols.syms.into_buffer());
     #[cfg(test)]
     outer_fault(hub, OuterAt::AfterPublish, Some(place));
     hub.retire_counted(o, None, Some(back), true);
@@ -2770,7 +2789,7 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize, k: Kernels) {
                 // once all its threads had ended)
                 tt = Default::default();
                 let kind = ErrorKind::Internal(panic_message(p));
-                publish(shared, place, bit, Err(kind), symbols.syms);
+                publish(shared, place, bit, Err(kind), symbols.syms.into_buffer());
                 hub.retire(&o, Some(front), Some(Back::default()));
             }
         }
@@ -4047,7 +4066,7 @@ mod service_tests {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq: [0; 256],
-            syms: vec![],
+            syms: Vec::new().into(),
             eob: 1,
             max_len: 100_000,
         };
@@ -4483,7 +4502,7 @@ mod front_tests {
             crc: 0,
             orig_ptr: 0,
             seq_to_unseq,
-            syms,
+            syms: syms.into(),
             eob,
             max_len,
         }

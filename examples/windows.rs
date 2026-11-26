@@ -59,7 +59,7 @@ fn main() {
                     let crc = decode_block(&b, Kernels::detect(), &mut scratch, &mut want)
                         .unwrap_or_else(|k| panic!("{name}: block at bit {bit}: {k}"));
                     blocks.push((bit, end, crc));
-                    syms = b.syms;
+                    syms = b.syms.into_buffer();
                     bit = end;
                 }
                 Ok(Item::End(_)) => {

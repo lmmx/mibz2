@@ -368,7 +368,7 @@ fn team_routes(data: &[u8]) -> ([u64; 4], [u64; 2]) {
             (false, true) => 2,
             (false, false) => 3,
         }] += 1;
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
     (by, front_errors)
 }

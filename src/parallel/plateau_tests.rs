@@ -465,7 +465,7 @@ fn miri_the_job_queue() {
                 crc: 0,
                 orig_ptr: 0,
                 seq_to_unseq: [0; 256],
-                syms: vec![],
+                syms: Vec::new().into(),
                 eob: 1,
                 max_len: 100_000,
             };

@@ -821,7 +821,7 @@ mod tests {
                     "block {block}: Ψ's intervals are the runs"
                 );
                 block += 1;
-                syms = b.syms;
+                syms = b.syms.into_buffer();
             }
             eprintln!("{name}: {block} blocks checked");
         }

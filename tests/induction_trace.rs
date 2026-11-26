@@ -25,7 +25,7 @@ fn records(z: &[u8]) -> Vec<Record> {
     while let Event::Block { symbols, index, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
         let rec = itrace::record(&symbols, k).unwrap_or_else(|e| panic!("block {index}: {e}"));
         out.push(rec);
-        syms = symbols.syms;
+        syms = symbols.syms.into_buffer();
     }
     out
 }

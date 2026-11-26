@@ -60,7 +60,9 @@ Where the counts and bounds come from:
   the instrument measures them.
 - **Symbols** are reserved at the format's bound (18,002 selectors × 50 symbols × 2 B),
   whatever the level. There are at most `slots` buffers: the scanner's block and the
-  blocks issued but not yet decoded, with no new buffer while the pool has one.
+  blocks issued but not yet decoded, with no new buffer while the pool has one. A buffer
+  keeps its length at its high-water mark (`block::Syms`), so a block's read zeroes only
+  the symbols no earlier block in it reached.
 - **Output buffers number at most `slots + 1`.** At most `slots` are decoding or in
   `ready`, and one more is the reader's current block. A block that decodes to more than
   n + 64 bytes doubles its buffer.

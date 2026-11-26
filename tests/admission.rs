@@ -19,7 +19,7 @@ fn blocks(data: &[u8]) -> Vec<(usize, usize, bool)> {
     let mut out = Vec::new();
     while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
         out.push((b.syms.len(), b.max_len, takes_runs(&b)));
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
     out
 }

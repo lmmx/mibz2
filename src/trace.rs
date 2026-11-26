@@ -1070,7 +1070,7 @@ mod tests {
             decoded.push(out.len());
             tt = grown(tt, n);
             out_cap = grown(out_cap, n + pad);
-            syms = symbols.syms;
+            syms = symbols.syms.into_buffer();
         }
         assert_eq!(rows.len(), 2);
         assert!(rows[0] < rows[1] && rows[1] < 2 * rows[0] && rows[0] >= 1 << 16);
@@ -1155,7 +1155,7 @@ mod tests {
             decoded.push(out.len());
             tt = grown(tt, n);
             rle = grown(rle, n);
-            syms = symbols.syms;
+            syms = symbols.syms.into_buffer();
         }
         assert_eq!(rows.len(), 2);
         assert!(rows[0] < rows[1] && rows[1] < 2 * rows[0]);
@@ -1219,7 +1219,10 @@ mod tests {
                 out.len(),
                 bytes.len()
             );
-            assert!(matches!(scanner.next(symbols.syms).unwrap(), Event::Done));
+            assert!(matches!(
+                scanner.next(symbols.syms.into_buffer()).unwrap(),
+                Event::Done
+            ));
             let samples = scratch.allocation_history();
             let sample = samples.last().unwrap();
             let route = if run {
