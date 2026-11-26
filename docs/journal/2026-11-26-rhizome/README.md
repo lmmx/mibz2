@@ -14,6 +14,7 @@ Louis read Deleuze and Guattari on rhizomes beside Paradigm 3's swarms study (Le
 | `06-chatgpt-on-the-frontier.md` | ChatGPT's review of the frontier (#945): atomic claims, five invariants, against monoculture, synthesis, the immune system, measuring it, breaking it first |
 | `07-gemini-on-the-frontier.md` | Gemini's review, made without access to #945: gate bypass, fan-out, lineage, a canary rollout |
 | `08-antigravity-on-the-frontier.md` | Antigravity's review, read against the repository: STATUS.md conflicts, path matching, staged claims, a review state, dead ends, entry points |
+| `09-smooth-striated-trajectories.md` | Further reading of plateau 14 against first-day evidence: modes of discovery and verification intensity are distinct; the map must remain revisable; investigate passages between smooth and striated rather than treating the labels as fixed zones. |
 
 **Status:** recorded. Antigravity's cross-reading is running and will land beside this folder. Nothing is implemented until it does. The test it proposes decides what changes, so this doesn't become a redesign by assertion.
 
