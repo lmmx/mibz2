@@ -9,9 +9,12 @@ hard passes.
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import datetime as dt
 import fcntl
 import importlib.util
+import io
+import json
 import os
 import pathlib
 import shutil
@@ -804,6 +807,164 @@ class TestFrontierStress(unittest.TestCase):
         self.assertIn("needs-louis", res.stdout)
         self.assertNotIn("## Open flags", res.stdout)
         self.assertNotIn("## The blog board", res.stdout)
+
+
+    # ------------------------------------------------------------------
+    # Live review discovery: a PR must be visible before its claim edit merges
+    # ------------------------------------------------------------------
+
+    def test_review_visible_from_clean_master_at_capacity(self) -> None:
+        """The actual open PR is the review event, even at full capacity and before merge."""
+        a = self.sb.clone("author")
+        for cid in ("c1", "c2", "c3"):
+            result = self.sb.run_frontier(a, "claim", cid, "--by", "author")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        _git(a, "switch", "-c", "work-c1")
+        card = a / "frontier" / "claims" / "c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "review"\npr = 42'))
+        _git(a, "add", str(card))
+        _git(a, "commit", "-m", "work awaiting review")
+        _git(a, "push", "origin", "work-c1")
+        head = _git(a, "rev-parse", "HEAD")
+
+        b = self.sb.clone("fresh-reviewer")
+        self.assertIn('status = "open"', (b / "frontier/claims/c1.toml").read_text())
+        mod = _load_frontier_module(b)
+        pr = {
+            "number": 42,
+            "body": "Claim: c1\n\nReady for independent review.",
+            "head": {"sha": head},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+        }
+        with mock.patch.object(mod, "read_open_prs", return_value=([pr], None)):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief({"shell"})
+            brief = buf.getvalue()
+            status = mod.render()
+        review = brief.split("## Awaiting review or merge", 1)[1].split("##", 1)[0]
+        self.assertIn(f"c1: PR #42 at {head[:12]}", review)
+        self.assertIn(f"c1: PR #42 at {head[:12]}", status)
+        self.assertNotIn("**c1**", status.split("## Open claims, by priority", 1)[1].split("##", 1)[0])
+        self.assertIn("c1", brief.split("## Held now", 1)[1].split("##", 1)[0])
+
+    def test_review_projection_drafts_duplicates_and_stale_pointers(self) -> None:
+        """Neither stale TOML pointers nor malformed, draft or duplicate PRs look like authority."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        items = mod.load("claims")
+        c2 = next(c for c in items if c["id"] == "c2")
+        c2.update(status="review", pr=99)
+
+        def pr(number, body, draft=False):
+            return {
+                "number": number,
+                "body": body,
+                "head": {"sha": "a" * 40},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": draft,
+            }
+
+        rows = [
+            pr(12, "Claim: c1"),
+            pr(13, "Claim: c1", draft=True),
+            pr(14, "Claim: none"),
+            pr(15, "legacy PR"),
+            pr(16, "Claim: not-in-checkout"),
+        ]
+        lines, pending = mod.review_projection(items, rows, None)
+        out = "\n".join(lines)
+        self.assertEqual(pending, {"c1", "not-in-checkout"})
+        for part in (
+            "PR #12",
+            "PR #13",
+            "multiple open PRs",
+            "draft, not ready",
+            "Claim: none): #14",
+            "no valid Claim header; may be legacy): #15",
+            "claim not in this checkout",
+            "PR #99 is not a linked open PR (stale pointer)",
+        ):
+            self.assertIn(part, out)
+        lines, pending = mod.review_projection(items, None, "offline")
+        self.assertEqual(pending, set())
+        self.assertIn("UNAVAILABLE: offline", lines[0])
+        self.assertIn("stored PR #99 (unverified)", "\n".join(lines))
+        lines, pending = mod.review_projection(items, [{"number": 1}], None)
+        self.assertEqual(pending, set())
+        self.assertIn("UNAVAILABLE", lines[0])
+
+    def test_review_projection_excludes_linked_open_claim_without_hold(self) -> None:
+        """An expired or absent lease must not make a PR's claim look like new work."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        pr = {
+            "number": 42,
+            "body": "Claim: c1",
+            "head": {"sha": "b" * 40},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+        }
+        with mock.patch.object(mod, "read_open_prs", return_value=([pr], None)):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief({"shell"})
+        take = buf.getvalue().split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("**c1**", take)
+        self.assertIn("**c2**", take)
+
+    def test_review_discovery_paginates_without_gh(self) -> None:
+        """The standard-library fallback reads every page, or reports failure."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        page1 = [{"number": n} for n in range(1, 101)]
+        page2 = [{"number": 101}]
+        with (
+            mock.patch.object(mod, "github_repository", return_value="test-owner/test-repo"),
+            mock.patch.object(mod.shutil, "which", return_value=None),
+            mock.patch.object(
+                mod.urllib.request,
+                "urlopen",
+                side_effect=[
+                    io.BytesIO(json.dumps(page1).encode()),
+                    io.BytesIO(json.dumps(page2).encode()),
+                ],
+            ) as request,
+        ):
+            prs, error = mod.read_open_prs()
+        self.assertIsNone(error)
+        self.assertEqual(prs, page1 + page2)
+        self.assertIn("page=2", request.call_args.args[0].full_url)
+
+    def test_review_lineage_gate_checks_frontier_pr_event(self) -> None:
+        """CI rejects missing or mismatched existing Claim lineage, not ordinary legacy PRs."""
+        a = self.sb.clone("author")
+        base = _git(a, "rev-parse", "HEAD")
+        mod = _load_frontier_module(a)
+        event_path = a / "event.json"
+        pr = {"number": 42, "base": {"sha": base}, "body": None}
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIsNone(mod.check_pr_lineage(event_path, mod.load("claims")))
+
+        card = a / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "review"\npr = 42'))
+        _git(a, "add", str(card))
+        _git(a, "commit", "-m", "work awaiting review")
+        items = mod.load("claims")
+        self.assertIn("Claim:", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: missing"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIn("no claim", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: c2"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIn("does not match", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: c1"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIsNone(mod.check_pr_lineage(event_path, items))
 
 
 if __name__ == "__main__":
