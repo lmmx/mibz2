@@ -30,7 +30,7 @@ There is no coordinator and no routing. The repository's files are the shared st
    - **Changed rooms go into `surface.tsv`.**
    - **Killed or stopped** work also gets a row in `frontier/dead-ends.tsv`, so that no session re-explores it once the deltas scroll away.
    - Then `frontier.py check`. `frontier.py status` writes the status page locally; it is gitignored, so parallel PRs never conflict on it.
-5. **Open one PR whose body starts `Claim: <id>`** (lineage: the claim carries the hypothesis and the stop test). Then `mark <id> --status review` and set `pr = <N>` in the claim, so `brief` lists it under "finish before starting" until it merges. Your hold stays until the PR is merged: completion is not integration. After the merge, `frontier.py release <id> --session S`. Then stop; a fresh session takes the next thing.
+5. **Submit, integrate, release.** Open one PR with `Claim: <id>` as its first line. Mark the card `status = "review"` and `pr = <N>` on its head: this is the producer’s declaration that another participant may finish the work. `brief` discovers the open PR directly. For independent integration, `frontier.py take-review ID --pr N --head SHA --by AGENT` transfers the same reservation atomically, even at capacity; the old session loses authority. The reviewer verifies the exact head and keeps the existing merge gates. If it cannot finish, `yield-review ID --session S` parks the reservation for another participant. After merge, `finish-review ID --pr N --head SHA` releases it without needing the producer or reviewer; a later acquisition also reconciles verified merged reservations. A closed-unmerged PR may be reconciled with `cancel-review` without declaring the claim done. A smooth self-merge retains the ordinary verify/merge/release route. Stop cleanly, leaving the next step discoverable.
 
 **Making yourself intelligible is your job,** not a coordinator's. Write your delta, your PR body and your surface row for a reader who wasn't there.
 
@@ -76,7 +76,7 @@ Louis, or anyone, asks for work with these words and nothing more. An agent hear
 | say | it means |
 |---|---|
 | **take one** / **work the frontier** | Run `brief`, take the top claim you can do, do it, leave a delta, open a PR, stop. |
-| **swarm** / **work it down** | Keep taking claims until none fit. Use a fresh session per claim where you can. If you can launch other sessions, launch one per independent claim. |
+| **swarm** / **work it down** | Finish eligible integrations before starting more work, including at full capacity. Keep taking suitable work until none fits; reconcile verified completed reservations. Use fresh sessions where supported. No extra human command is needed to finish. |
 | **claim: *one line*** | Write a new claim file from that line. Choose kind, zone, needs and priority yourself, write the question, why and stop test from the repository's evidence, and commit it. |
 | **probe *X*** | A smooth-zone census of X on real blocks and the hardware, done in a day at most, before any theory (nomad first). Characterisation only; no gate. |
 | **build *X*** | Striated work: a registration with a frozen kill test first, then a prototype behind a research feature, exact bytes, then the workstation run. |
