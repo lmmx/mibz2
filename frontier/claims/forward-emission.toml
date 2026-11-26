@@ -12,7 +12,7 @@ question = """
 Replace XOR-linked two-ended traversal with forward-only links and several forward lanes from sampled anchors (more anchors than lanes, by order statistics, E[L_max] ~ m H_K / K). It should simplify A6c's wiring (161 ms) and expose memory-level parallelism in the walk. Design first, then a census of cycle lengths and anchor spacings, then a prototype.
 """
 why = """
-E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work. Measured since (#958, rauzy-census/results-2): single-lane forward wiring and emit (`prod_forward_emit`) alone cuts C+E to 0.856–0.871x, +142–157 ms (+10.9–12.1% of the 1-worker wall), byte-exact; the multi-lane share is still unmeasured. It supersedes `preshifted-inline-back`. Synthesis second-pass §1: after `mtf-fold-build` it is the next worker build on `src/open.rs`, and the two together are projected to make the 8-worker wall scanner-bound.
+E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work. Measured since (#958, rauzy-census/results-2): single-lane forward wiring and emit (`prod_forward_emit`) alone cuts C+E to 0.856–0.871x, +142–157 ms (+10.9–12.1% of the 1-worker wall), byte-exact. Measured further (#992, #998 on held-out wikidata): on uncontracted Open (`edges = 455.5 KiB/blk` > 256 KiB L2), single-lane forward (MLP=1) regresses vs shipped bidirectional (MLP=2) in cold mode (+3.4..+16.5%) and is flat on native warm E, whereas prebuilt 4-lane forward (MLP=4) cuts E to 0.731–0.818x warm / 0.643–0.697x cold vs 1-lane fwd, projecting +215–270 ms at 1W (+28.9–36.5 ms/w at 8W) on C+E before sampled-anchor overhead — crossing pooled-scan-hybrid's S(8) <= 158–165 ms trigger even without mtf-fold (synthesis fourth-pass §2–§3). It supersedes `preshifted-inline-back`, queues on `src/open.rs` behind `mtf-fold-build`, and also unlocks upstream RLE1+CRC fusion (`forward-rle1-crc-fusion`, after #988's standalone STOP).
 """
 stop_test = """
 A registration before data; exact bytes; the kill test against S ideal at 8 workers and at 1 worker.
@@ -22,6 +22,10 @@ The design note, the census, a registration, a prototype PR, a delta.
 """
 premises = [
   "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/results.md",
+  "docs/journal/2026-11-26-explore/rle1-crc-census.md",
   "docs/journal/2026-11-26-synthesis/second-pass.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
 ]
 links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 3"]
