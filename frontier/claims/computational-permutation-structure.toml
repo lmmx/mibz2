@@ -1,0 +1,31 @@
+id = "computational-permutation-structure"
+title = "Work backwards from decoder computation to a useful mathematical operator"
+kind = "explore"
+zone = "smooth"
+needs = ["math", "long-context", "shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = []
+mechanisms = ["labelled-permutation-operator-discovery"]
+needs_louis = ""
+question = """
+Owner asks what actionable mathematical question would identify a permutation compression, structure or other operation that actually helps mibz2, rather than another static encoding. Use the linked inverse-problem brief. Define the weakest sufficient exact operator on raw LF / labelled trajectories, work backwards from work eliminated and paid construction budget, search primary literature and existing algorithms, then test at most two new orthogonal operator hypotheses on small exact witnesses and bounded training data where justified. Candidate axes: labelled powers/composition before first return, coherent orbit-local structures, selective multi-step execution, or alternative direct transformations. Challenge the problem formulation itself; identify missing primitive if none fits. Do not duplicate the active digram/F-bucket constructor or reopen #998 STOP.
+"""
+why = """
+#998 shows compact static representations of the unchanged map lose despite exact structure and lower bytes. #992 shows genuine prebuilt consumer value from reducing visits/literal fragmentation but expensive constructors. The owner requires mathematical software to earn its existence via concrete computational benefit here, not unrelated use cases. A new computational contract may connect a wider body of mathematics to this actual workload.
+"""
+stop_test = """
+Before new data select at most two nonduplicative operators and freeze bounded diagnostic and exactness/selection criteria. Identify input/output, construction and consumer, real eliminated work, labels/orientation/cycles, complexity parameters and all induced cost, and source-backed comparison to prior attempts. Tiny exact witnesses/reference and bounded real-data measurements or justified bounds; no decoded transcript as a shortcut. Return at least one actionable candidate with plausible paid >=39.18 ms C+E headroom on 1306 ms reference versus strongest matched forward control, with explicit uncertainty and smallest falsifying experiment, OR a precise scoped obstruction and sharpened missing-primitive question. No claimed performance PASS on oracle/projection, no src edits, unsafe, new spending, workstation run, or generic package implementation. Preserve all frozen verdicts.
+"""
+done_when = """
+A concise primary-source-grounded operation specification, witness or counterexample, paid-cost ledger and reproducible bounded diagnostic where appropriate; delta; at most one evidence-backed constructor/probe follow-on if warranted. Do not admit the standalone package until actual application value qualifies.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/computational-permutation-structure/README.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/results.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/2026-11-22-neon-teamwork-paradigm.md",
+  "frontier/claims/bwt-digram-return-map.toml",
+]
+links = ["frontier/claims/permutation-patterns.toml", "frontier/claims/ideal-permutation-structures.toml", "https://github.com/lmmx/mibz2/pull/990"]
