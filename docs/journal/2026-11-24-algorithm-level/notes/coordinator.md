@@ -159,3 +159,9 @@ When something plainly belongs in a prompt or a task, put it in. That includes a
 - **The opening grounds the reader before any finding.** Say what problem motivated the work and why it was worth doing, then the result. Louis on #920: "the opening was awful, just bombards the reader with junk sentences and in medias res".
 - **The motivation is the subject, not the apparatus.** For the ideal-parts work: "the matrix is the means, not the subject" (ChatGPT's review of the post).
 - **Figures get real effort.** Brief the writer to use the `dataviz` skill, and to prefer static figures that show a whole response surface over sliders. Louis: the earlier figures "came out rather basic".
+
+## AI trailers reached master (26 November 2026)
+
+#926's squash merge composed master's commit from the Pathfinder's commit messages, which ended with `Claude-Session:` and `Co-authored-by: Claude …`. I had checked authors' emails, not bodies. With Louis's approval, master's tip (df716f57) was rewritten as a5014e31 (same tree, parent, author and date; trailers dropped) and force-pushed with a lease. The rule and the CI check are now in `CLAUDE.md` ("No AI attribution, ever"). I always pass the squash message myself.
+
+**Three older master commits** carry the same trailers: 0647fbef, b534eaeb and c5e28c94 (16 November, MONODROMY's #446, #461 and #482). They sit under 493 commits and every release tag from py-0.5.0. Rewriting them would change every later SHA, every release tag and every evidence pin. That is left to Louis.

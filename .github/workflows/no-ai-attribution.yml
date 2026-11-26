@@ -1,0 +1,53 @@
+# No AI attribution in this repository's history or PR metadata (Louis, 26 November 2026: "you
+# merged AI commit metadata / coauthorship in the trunk"). A squash merge composes master's
+# commit from the PR's commit messages, so a trailer on any PR commit reaches master. This check
+# fails a PR whose commits, title or body carry one, and fails on master if one gets through.
+name: no AI attribution
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  no-ai-attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check commit messages, PR title and body
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          pattern='Claude-Session:|claude\.ai/code|noreply@anthropic\.com|Co-authored-by:.*(Claude|Anthropic|GPT|Gemini|Copilot|Codex)|Generated (with|by) \[?(Claude|ChatGPT|Gemini)|🤖'
+          if [ "$EVENT" = pull_request ]; then
+            range="$BASE..$HEAD"
+            meta="$TITLE"$'\n'"$BODY"
+          else
+            range="$AFTER^..$AFTER"
+            meta=""
+          fi
+          bad=0
+          for c in $(git rev-list "$range"); do
+            if git log -1 --format='%an <%ae>%n%cn <%ce>%n%B' "$c" | grep -inE "$pattern"; then
+              echo "::error::commit $c carries AI attribution"
+              bad=1
+            fi
+          done
+          if [ -n "$meta" ] && printf '%s\n' "$meta" | grep -inE "$pattern"; then
+            echo "::error::the PR's title or body carries AI attribution (strip the footer)"
+            bad=1
+          fi
+          exit $bad
