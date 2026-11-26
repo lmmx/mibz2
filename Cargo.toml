@@ -190,6 +190,11 @@ unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 name = "supplied_codes"
 required-features = ["supplied-codes"]
 
+# the pooled scan's demonstration and bench-pooled-scan's K4 pass need the pooled scan
+[[example]]
+name = "pooled_scan"
+required-features = ["pooled-scan"]
+
 # bench-four-arm's harness needs the scanner's replay and the emission switch
 [[example]]
 name = "four_arm"
