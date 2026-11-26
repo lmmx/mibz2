@@ -1,9 +1,11 @@
 id = "mtf-fold-build"
-holder = "claude-code"
-session = "f49edf8bb270"
+holder = "chatgpt"
+session = "8add192d5d0d"
 claimed_at = "2026-11-26T18:09:10+00:00"
 expires = "2026-11-27T00:09:10+00:00"
 owned_paths = ["src/runs.rs", "src/open.rs"]
 mechanisms = ["mtf", "construction-first-pass"]
 base = "f46b9695bb0684bee3cb19972f06e17c3e8dd67e"
 released = false
+recovery_pr = 968
+recovery_head = "8add192d5d0ddb50224c883d0b18bc9f3a4ef15f"
