@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=aa0558d540ab">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -4014,6 +4014,11 @@ memory bandwidth, and with both parts supplied, going from eight workers to ten 
 from 125 ms to 149 ms. Memory as a third station is the natural repair, still a hypothesis, since
 this experiment cannot separate the decoder's own contention from the traffic of the oracles' stores;
 <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#2-quantifying-complementary-bottlenecks">the companion</a> sets it out.</p>
+<p>Measured on 26 November, the zero-copy floor run found no sign of a memory-bandwidth third station
+between eight and ten workers. Memory traffic stayed at 13–17 GB/s, far below the machine's
+bandwidth. The earlier rise to 142 ms was the old oracles' copying
+(<a href="#6-what-the-experiment-could-not-remove">§6</a>;
+<a href="../2026-11-26-true-floor-and-pooled-scan/#1-how-much-of-the-first-matrixs-floor-was-the-decoders">the true-floor post</a>).</p>
 <h2 id="6-what-the-experiment-could-not-remove">6. What the experiment could not remove<a class="headerlink" href="#6-what-the-experiment-could-not-remove" title="Permanent link">&para;</a></h2>
 <p>The configuration with every part ideal should reveal what remains of the decoder when all of its
 work has been supplied: its floor. It took 391 ms at one worker, 94 ms at six, 112 ms at eight and
@@ -4064,6 +4069,18 @@ workers, a forecast for the run to test rather than a measurement, and not a dec
 a real decoder must still compute the answers the oracles supply; the arithmetic is in
 <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#3-accounting-for-the-remaining-computation">the companion</a>. The run's purpose is narrow, to keep experimental copying and leftover emission work from being mistaken
 for a limit of the decoder, and it leaves the scanner–construction result untouched.</p>
+<p>Measured on 26 November, the zero-copy floor run put the pipeline alone at 5.2–5.7 ms across one to
+ten workers, with every part supplied and the words not expanded. At eight workers it took
+5.2 [5.0, 5.5] ms, which is 2.7% of the shipped 194.6 ms decode. That is about a third of the
+design analysis's 12–19 ms forecast, kept above beside the measurement as registered before the
+data. Under the run's frozen rule, the forecast scored a miss on the low side, closing pipeline
+plumbing as a target. With word expansion kept and oracle copying removed, the decode took 42.4 ms
+at eight workers. It did not rise towards ten (42.9 ms at nine, 40.5 ms at ten), confirming that
+the climb to 142 ms was the old oracles' copying. Full figures and intervals are in
+<a href="https://github.com/lmmx/mibz2/blob/311923efd5ac7b113a9f944db34f41172c096816/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">the floor results</a>,
+<a href="../2026-11-26-true-floor-and-pooled-scan/#1-how-much-of-the-first-matrixs-floor-was-the-decoders">the true-floor post</a>
+and
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#3-accounting-for-the-remaining-computation">the companion's table</a>.</p>
 <h2 id="7-what-mathematics-could-change">7. What mathematics could change<a class="headerlink" href="#7-what-mathematics-could-change" title="Permanent link">&para;</a></h2>
 <p>The experiment says where time could be saved. It does not say how. A part can be made cheaper by
 doing its present computation faster, and that is engineering; or by finding a different computation
@@ -4165,6 +4182,11 @@ third. Above it, the scanner does, and at eight workers the scanner and construc
 complementary pair whose joint value is many times what either shows alone. The last stages hold
 little. The decoder's true floor is still unknown, because the experiment's emission oracle left the
 word expansion in place.</p>
+<p>Measured on 26 November, that floor is now known
+(<a href="#6-what-the-experiment-could-not-remove">§6</a>). The pipeline alone takes 5.2–5.7 ms across one to
+ten workers. Once every other part is supplied, what binds at eight workers is the serial scan
+alone: 179.1 ms of 194.6 ms, or 92% of the wall
+(<a href="../2026-11-26-true-floor-and-pooled-scan/#2-what-remains-when-one-stage-at-a-time-is-real">the true-floor post</a>).</p>
 <p>Each measurement that remains has a single decision to make, and then it stops
 (<a href="https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/plan.md">the plan</a>).</p>
 <table>
@@ -4369,19 +4391,19 @@ at all.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/bench.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/couriers.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/blog.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/frontier.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/observatory.js?v=aa0558d540ab"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/katex.js?v=aa0558d540ab"></script>
       
     
   </body>

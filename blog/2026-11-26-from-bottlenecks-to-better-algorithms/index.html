@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=aa0558d540ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=c24b41a6a93b">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=aa0558d540ab">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3825,6 +3825,11 @@ account for the all-ideal configuration's rise from 112 ms to 142 ms between eig
 (<a href="https://github.com/lmmx/mibz2/blob/7fab624eb204c591b0a72c925cf90bbad401396a/research/neon-movement/IDEAL-PARTS-2.md">the design analysis, §§1 and 6</a>). That is a hypothesis. The matrix
 cannot separate the decoder's own contention from the traffic of the oracles' stores, which is the next
 section's subject.</p>
+<p>Measured on 26 November, the zero-copy floor run found no sign of a memory-bandwidth third station
+between eight and ten workers. Memory traffic stayed at 13–17 GB/s, far below the machine's
+bandwidth. Without oracle copying, the all-ideal wall did not rise towards ten workers
+(<a href="#3-accounting-for-the-remaining-computation">§3</a>;
+<a href="../2026-11-26-true-floor-and-pooled-scan/#1-how-much-of-the-first-matrixs-floor-was-the-decoders">the true-floor post</a>).</p>
 <h2 id="3-accounting-for-the-remaining-computation">3. Accounting for the remaining computation<a class="headerlink" href="#3-accounting-for-the-remaining-computation" title="Permanent link">&para;</a></h2>
 <p>Every oracle hands its recorded answer to the decoder, and the handover was timed in a ledger entry of
 its own. The entries, per thread, with each part alone ideal:</p>
@@ -3938,6 +3943,67 @@ traffic alone takes 115–145 ms. The follow-up run is built to remove it: its o
 answers without copying, and one configuration skips the expansion as well, so that Residuals A and B
 are measured rather than inferred
 (<a href="https://github.com/lmmx/mibz2/pull/917">the floor run</a>).</p>
+<p>Measured on 26 November, the zero-copy floor run put both residuals beside the design analysis's
+forecasts, which stay above as registered before the data
+(<a href="https://github.com/lmmx/mibz2/blob/311923efd5ac7b113a9f944db34f41172c096816/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">the floor results</a>;
+<a href="../2026-11-26-true-floor-and-pooled-scan/#1-how-much-of-the-first-matrixs-floor-was-the-decoders">the true-floor post</a>;
+<a href="../2026-11-26-complementary-bottlenecks/#6-what-the-experiment-could-not-remove">the main post's note</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Per decode (ms)</th>
+<th style="text-align: right;">1 worker</th>
+<th style="text-align: right;">6 workers</th>
+<th style="text-align: right;">8 workers</th>
+<th style="text-align: right;">10 workers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Residual A, forecast</td>
+<td style="text-align: right;">~273</td>
+<td style="text-align: right;">~60–62</td>
+<td style="text-align: right;">~51–55</td>
+<td style="text-align: right;">~50–54</td>
+</tr>
+<tr>
+<td>Residual A, measured</td>
+<td style="text-align: right;">303.9 [302.9, 305.0]</td>
+<td style="text-align: right;">54.0 [51.2, 56.7]</td>
+<td style="text-align: right;">42.4 [40.3, 44.4]</td>
+<td style="text-align: right;">40.5 [37.6, 43.5]</td>
+</tr>
+<tr>
+<td>Residual B, forecast</td>
+<td style="text-align: right;">~14</td>
+<td style="text-align: right;">~12–15</td>
+<td style="text-align: right;">~14–17</td>
+<td style="text-align: right;">~15–19</td>
+</tr>
+<tr>
+<td>Residual B, measured</td>
+<td style="text-align: right;">5.7 [5.5, 5.8]</td>
+<td style="text-align: right;">5.3 [5.3, 5.4]</td>
+<td style="text-align: right;">5.2 [5.0, 5.5]</td>
+<td style="text-align: right;">5.4 [5.3, 5.5]</td>
+</tr>
+</tbody>
+</table>
+<p><em>Measured rows are block means with 95% intervals over eight randomised blocks, from one run on one
+machine and one workload. Forecast rows and the copying-and-contention row above remain argued.</em></p>
+<p>Residual B was the run's scored prediction under the rule frozen before the data
+(<a href="https://github.com/lmmx/mibz2/pull/917">the floor run</a>). It measured 5.2–5.7 ms across one to ten
+workers, or 2.7% of the shipped 194.6 ms decode at eight. That misses low at every count — whether
+compared against the floor report's 14–19 ms one-worker label or the per-count forecasts above —
+and closes pipeline plumbing as a target. Residual A was reported unscored. At one worker it
+exceeds its forecast because that configuration reads the oracles' stores cold from main memory,
+adding about 55–65 ms to its 298 ms word-spelling figure
+(<a href="https://github.com/lmmx/mibz2/blob/2aaded3a3ba00f140d2621813e87a365758e975b/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md">the cold-store reread</a>,
+<a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>). From eight to ten workers Residual A stays flat
+(42.4, 42.9 and 40.5 ms), confirming that the earlier rise to 142 ms was the old oracles' copying.
+The previous table's last forecast row, for simultaneous copying and lock contention, is not
+re-derived here. The matrix and the floor run are separate runs, so subtracting across them would
+mix their noise.</p>
 <h2 id="4-contraction-enrichment-and-closure">4. Contraction, enrichment and closure<a class="headerlink" href="#4-contraction-enrichment-and-closure" title="Permanent link">&para;</a></h2>
 <p>The main post introduces the two principles. Here are their limits, which matter as much as the
 principles do.</p>
@@ -4419,19 +4485,19 @@ main post's matrix, at the part of the decoder where it could pay.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/bench.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/couriers.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/blog.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/frontier.js?v=aa0558d540ab"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/observatory.js?v=aa0558d540ab"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c24b41a6a93b"></script>
+        <script src="../../assets/javascripts/katex.js?v=aa0558d540ab"></script>
       
     
   </body>
