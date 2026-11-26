@@ -5,9 +5,10 @@ status_issue = 943
 needs_louis_issue = 944
 
 # Bounded expenditure, canary first (Gemini and ChatGPT, 26 November): at most this many live holds at once (frontier.py claim refuses beyond
-# it; 3 until stress-test-frontier passes, then raise it in a reviewed PR), and at most this
-# many open claims (more stay at status "idea" until admitted).
-max_live_holds = 3
+# it), and at most this many open claims (more stay at status "idea" until admitted). The canary
+# cap of 3 held until the stress-test flags were resolved (#955, #974, #987); raised to 6 on
+# 26 November at Louis's request. Next step, 10, after saturation evidence at 6 (#991).
+max_live_holds = 6
 max_open_claims = 12
 
 # Conservation of authority: changes to these paths are never self-merged; a different agent
