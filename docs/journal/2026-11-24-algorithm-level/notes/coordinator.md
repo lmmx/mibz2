@@ -152,3 +152,10 @@
 ## Prompts carry every plainly useful addition (Louis, 26 November 2026)
 
 When something plainly belongs in a prompt or a task, put it in. That includes a cheap test, a follow-up the last result proposed, or a check that makes the result more useful. Never hold it back as a question for Louis. "You are making me micromanage when i asked for autonomy." The two pre-port tests from the software survey were asked about after he had already pasted the prompt that should have carried them. Ask only about what is genuinely his to decide (RULES D), or what changes the task's direction.
+
+## Briefing a research post (26 November 2026)
+
+- **No agent's name in a research post,** whatever the source: not ChatGPT, Antigravity, Neon, MONODROMY, the Pathfinder or Claude. I wrote "credit ChatGPT's review … and name it" into the brief for #920, against `write-blog-post`. Louis rejected the post for it. Brief "an independent review" and "the design analysis" instead, linking to the journal record.
+- **The opening grounds the reader before any finding.** Say what problem motivated the work and why it was worth doing, then the result. Louis on #920: "the opening was awful, just bombards the reader with junk sentences and in medias res".
+- **The motivation is the subject, not the apparatus.** For the ideal-parts work: "the matrix is the means, not the subject" (ChatGPT's review of the post).
+- **Figures get real effort.** Brief the writer to use the `dataviz` skill, and to prefer static figures that show a whole response surface over sliders. Louis: the earlier figures "came out rather basic".
