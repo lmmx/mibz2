@@ -6,7 +6,7 @@ needs = ["repo-write"]
 priority = 3
 status = "open"
 owned_paths = []
-needs_louis = "repository settings and branch protection are infrastructure (RULES D)"
+needs_louis = ""
 question = """
 Today the protected list and the merge gates are kept by convention. GitHub branch protection could make them binding:
 - required checks (no AI attribution, check-commit, the frontier check);
@@ -24,4 +24,4 @@ done_when = """
 Louis's decision recorded in a delta, and the settings applied.
 """
 premises = []
-links = []
+links = ["frontier/deltas/2026-11-26-owner-decisions.md"]
