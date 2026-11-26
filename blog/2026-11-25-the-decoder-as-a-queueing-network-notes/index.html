@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=649664ead693">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=f2f6fbec2008">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=649664ead693">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3540,10 +3540,10 @@ questions independently and is recorded verbatim, with its claims marked where t
 <strong>station</strong>, or service centre, is a resource that performs work for jobs: a server, or a group of
 identical servers sharing one queue. A <strong>queue</strong> holds jobs that cannot yet be served. A <strong>discipline</strong>
 decides which waiting job is served next: first come first served, by priority, by size, or shared.</p>
-<p>Per job, a station has a <strong>service time</strong> S (one visit's work), a <strong>visit ratio</strong> V (visits per job)
-and a <strong>demand</strong> D = V·S. Over an interval, the system has a <strong>throughput</strong> X (jobs completed a
-second), each station a utilisation U (fraction of time busy), a mean population N and a mean
-<strong>residence</strong> R (time from arrival to departure, waiting included). Residence is not service time:
+<p>Per job, a station has a <strong>service time</strong> <span class="arithmatex">\(S\)</span> (one visit's work), a <strong>visit ratio</strong> <span class="arithmatex">\(V\)</span> (visits per job)
+and a <strong>demand</strong> <span class="arithmatex">\(D = VS\)</span>. Over an interval, the system has a <strong>throughput</strong> <span class="arithmatex">\(X\)</span> (jobs completed a
+second), each station a utilisation <span class="arithmatex">\(U\)</span> (fraction of time busy), a mean population <span class="arithmatex">\(N\)</span> and a mean
+<strong>residence</strong> <span class="arithmatex">\(R\)</span> (time from arrival to departure, waiting included). Residence is not service time:
 the gap between them is the waiting, and confusing the two is the commonest error in applying the laws
 below.</p>
 <figure class="bf-fig" id="shapes">
@@ -3554,8 +3554,8 @@ below.</p>
 
 <p>Networks are <strong>open</strong> when jobs arrive from outside at some rate and leave when done, <strong>closed</strong> when
 a fixed population circulates, and <strong>mixed</strong> when they have both. Closed networks come in two kinds
-(Harchol-Balter, §2.6): <strong>interactive</strong>, where each job "thinks" for a time Z between visits, as a
-user at a terminal does, and <strong>batch</strong>, where Z = 0 and a finished job is replaced at once. The decoder
+(Harchol-Balter, §2.6): <strong>interactive</strong>, where each job "thinks" for a time <span class="arithmatex">\(Z\)</span> between visits, as a
+user at a terminal does, and <strong>batch</strong>, where <span class="arithmatex">\(Z = 0\)</span> and a finished job is replaced at once. The decoder
 is neither exactly. Its admission window is a ceiling, not a population, its stream is finite, and its
 in-order reader and byte cap make admission depend on its state: a finite pipeline with
 feedback-controlled admission, for which a closed network of permits is a surrogate
@@ -3575,27 +3575,27 @@ holds exactly for any interval in which the counts balance.</p>
 <tbody>
 <tr>
 <td>Utilisation</td>
-<td>Uᵢ = X·Dᵢ</td>
+<td><span class="arithmatex">\(U_i = X D_i\)</span></td>
 <td>a station's busy fraction is throughput times its demand</td>
 </tr>
 <tr>
 <td>Little</td>
-<td>N = X·R</td>
+<td><span class="arithmatex">\(N = X R\)</span></td>
 <td>mean population is throughput times mean residence</td>
 </tr>
 <tr>
 <td>Forced flow</td>
-<td>Xᵢ = Vᵢ·X</td>
+<td><span class="arithmatex">\(X_i = V_i X\)</span></td>
 <td>each station's throughput is the system's times its visit ratio</td>
 </tr>
 <tr>
 <td>General response time</td>
-<td>R = Σᵢ Vᵢ·Rᵢ</td>
+<td><span class="arithmatex">\(R = \sum_i V_i R_i\)</span></td>
 <td>a job's residence is the sum over stations of visits times residence per visit</td>
 </tr>
 <tr>
 <td>Interactive response time</td>
-<td>R = N/X − Z</td>
+<td><span class="arithmatex">\(R = N/X - Z\)</span></td>
 <td>in a closed interactive system, residence follows from population, throughput and think time</td>
 </tr>
 </tbody>
@@ -3603,23 +3603,28 @@ holds exactly for any interval in which the counts balance.</p>
 <p><strong>Little's law on a finite trace.</strong> The law is usually stated for long-run averages
 (<a href="https://doi.org/10.1287/opre.9.3.383">Little, 1961</a>), but on a trace that starts and ends empty it
 is an identity: the area under the number-present curve equals the sum of the jobs' residences, and
-dividing both by the trace's length gives N = X·R. Sample-path analysis, on the theory course's book
+dividing both by the trace's length gives <span class="arithmatex">\(N = XR\)</span>. Sample-path analysis, on the theory course's book
 list, makes such statements for deterministic traces. Stage 1's tracing checks exactly this form, for
 each of seven buffers, as an integer equality (<a href="https://github.com/lmmx/mibz2/pull/841">#841</a>); the main
 post draws it (<a href="../2026-11-25-the-decoder-as-a-queueing-network/#little">Little's law as two counts of one area</a>).</p>
-<p><strong>Bounds.</strong> Since no Uᵢ exceeds 1, the utilisation law gives X ≤ 1/D_max, where D_max is the largest
-demand at a single-server station, or cᵢ/Dᵢ for a station of cᵢ servers: the <strong>bottleneck law</strong>
-(Jain, ch. 33). For a closed interactive system of population N, the <strong>asymptotic bounds</strong> are</p>
-<p>X(N) ≤ min(N/(D + Z), 1/D_max) and R(N) ≥ max(D, N·D_max − Z),</p>
-<p>with D the total demand. The first term in each is the light-load regime, in which a job rarely
+<p><strong>Bounds.</strong> Since no <span class="arithmatex">\(U_i\)</span> exceeds 1, the utilisation law gives <span class="arithmatex">\(X \le 1/D_{\max}\)</span>, where <span class="arithmatex">\(D_{\max}\)</span> is the largest
+demand at a single-server station, or <span class="arithmatex">\(c_i/D_i\)</span> for a station of <span class="arithmatex">\(c_i\)</span> servers: the <strong>bottleneck law</strong>
+(Jain, ch. 33). For a closed interactive system of population <span class="arithmatex">\(N\)</span>, the <strong>asymptotic bounds</strong> are</p>
+<div class="arithmatex">\[
+\begin{gathered}
+X(N) \le \min\!\left(\frac{N}{D + Z},\ \frac{1}{D_{\max}}\right), \\
+R(N) \ge \max\left(D,\ N D_{\max} - Z\right),
+\end{gathered}
+\]</div>
+<p>with <span class="arithmatex">\(D\)</span> the total demand. The first term in each is the light-load regime, in which a job rarely
 queues; the second is the bottleneck regime. They cross at the <strong>population knee</strong>
-N* = (D + Z)/D_max (Harchol-Balter, §7.2), beyond which some job is certainly queueing. N* is a
-knee in the number of jobs, not in the number of servers. The decoder's knee k* = w/s is a crossing
-of two capacities as servers are added, and the decoder ties population to servers through W = 4k,
+<span class="arithmatex">\(N^* = (D + Z)/D_{\max}\)</span> (Harchol-Balter, §7.2), beyond which some job is certainly queueing. <span class="arithmatex">\(N^*\)</span> is a
+knee in the number of jobs, not in the number of servers. The decoder's knee <span class="arithmatex">\(k^* = w/s\)</span> is a crossing
+of two capacities as servers are added, and the decoder ties population to servers through <span class="arithmatex">\(W = 4k\)</span>,
 but the two are different variables, which is why the main post derives its knee from the bottleneck
-law rather than from N*. <strong>Balanced job bounds</strong> (Jain, ch. 34) tighten the asymptotic bounds by
+law rather than from <span class="arithmatex">\(N^*\)</span>. <strong>Balanced job bounds</strong> (Jain, ch. 34) tighten the asymptotic bounds by
 comparing the system with one whose demands are all equal.</p>
-<p><strong>Not a completion time.</strong> For B blocks, max(B·s, B·w/k) bounds the wall from below but ignores
+<p><strong>Not a completion time.</strong> For <span class="arithmatex">\(B\)</span> blocks, <span class="arithmatex">\(\max(Bs,\ Bw/k)\)</span> bounds the wall from below but ignores
 start-up, drain, uneven assignment and in-order delivery. One block with a 1 s scan, a 1 s decode and
 a 1 s delivery done in series has a largest demand of 1 s and takes 3 s (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md">journal §70</a>).</p>
 <h2 id="4-modification-analysis">4. Modification analysis<a class="headerlink" href="#4-modification-analysis" title="Permanent link">&para;</a></h2>
@@ -3627,7 +3632,7 @@ a 1 s delivery done in series has a largest demand of 1 s and takes 3 s (<a href
 one station's demand, or to its number of servers, does to the bounds, before the change is built.
 Jain's deck on the operational laws sets it as homework: make one component twice as fast or twice
 as slow, and say which becomes the bottleneck. The book's opening questions are of the same kind,
-among them whether one machine of speed s beats n machines each of speed s/n, and whether doubling
+among them whether one machine of speed <span class="arithmatex">\(s\)</span> beats <span class="arithmatex">\(n\)</span> machines each of speed <span class="arithmatex">\(s/n\)</span>, and whether doubling
 both the arrival and service rates leaves the mean response time unchanged. The 2025 course gave a
 session to modification analysis applied to a real caching system; its handout was not read here.</p>
 <p>The general lesson is the main post's: with stages that overlap, the wall follows the larger demand,
@@ -3638,27 +3643,32 @@ ideal-parts matrix (section 10) measures exactly these conditional values.</p>
 <h2 id="5-load-dependent-service">5. Load-dependent service<a class="headerlink" href="#5-load-dependent-service" title="Permanent link">&para;</a></h2>
 <p>Jain distinguishes types of service centre: fixed-capacity centres, whose rate is constant; delay
 centres, with no queueing; and load-dependent centres, whose rate depends on how many jobs are
-present (ch. 32). A pool of k identical servers is the simplest load-dependent centre, its rate rising
-as min(n, k)/w with n jobs present, and that is how the surrogate of section 8 models the workers.
+present (ch. 32). A pool of <span class="arithmatex">\(k\)</span> identical servers is the simplest load-dependent centre, its rate rising
+as <span class="arithmatex">\(\min(n, k)/w\)</span> with <span class="arithmatex">\(n\)</span> jobs present, and that is how the surrogate of section 8 models the workers.
 Contention adds a second kind: on real cores the rate per server falls as more servers run, because
 they share caches, memory bandwidth, execution units and clock frequency. Writing the decoder's bound
-as X(k) ≤ min(1/s(k), k/w(k)) carries both. The measurements of each, from the profile, stage 1 and
+as <span class="arithmatex">\(X(k) \le \min\left(1/s(k),\ k/w(k)\right)\)</span> carries both. The measurements of each, from the profile, stage 1 and
 stage 2b, are in the main post's section 8.</p>
 <h2 id="6-variability-and-open-against-closed">6. Variability, and open against closed<a class="headerlink" href="#6-variability-and-open-against-closed" title="Permanent link">&para;</a></h2>
 <p>Means are not enough wherever jobs queue. In the M/G/1 queue, with Poisson arrivals and a general
-service time S at utilisation ρ, the mean wait is</p>
-<p>E[W_q] = λ·E[S²] / (2(1 − ρ)) = (ρ/(1 − ρ)) · ((1 + C²_S)/2) · E[S],</p>
+service time <span class="arithmatex">\(S\)</span> at arrival rate <span class="arithmatex">\(\lambda\)</span> and utilisation <span class="arithmatex">\(\rho\)</span>, the mean wait is</p>
+<div class="arithmatex">\[
+\begin{aligned}
+\mathbb{E}[W_q] &amp;= \frac{\lambda\, \mathbb{E}[S^2]}{2(1 - \rho)} \\
+&amp;= \frac{\rho}{1 - \rho} \cdot \frac{1 + C_S^2}{2} \cdot \mathbb{E}[S],
+\end{aligned}
+\]</div>
 <p>the Pollaczek–Khinchine formula (Harchol-Balter, ch. 23). The wait depends on the second moment of
-service, through the squared coefficient of variation C²_S. An outside reader's illustration: at 80%
-utilisation and a 10 ms mean, the mean wait is 20, 40 or 200 ms as C²_S is 0, 1 or 9
+service, through the squared coefficient of variation <span class="arithmatex">\(C_S^2\)</span>. An outside reader's illustration: at 80%
+utilisation and a 10 ms mean, the mean wait is 20, 40 or 200 ms as <span class="arithmatex">\(C_S^2\)</span> is 0, 1 or 9
 (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md">journal §54</a>). The same chapter's inspection paradox explains why: a random arrival is more
 likely to land during a long service than a short one. The formula describes an open single queue,
 not the decoder; it motivates keeping distributions of service time for each activity, as the
 characterisation was amended to report.</p>
 <p>The corpus behind the decoder's measurements has two classes of block. 792 of its 1,724 blocks are
 under 10 kbit and hold 0.1% of the bits, and they are exactly the blocks that skip the main inversion
-route (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md">journal §§60, 66</a>). Across the mixture C² of block size is about 0.98; among the real
-blocks alone it is about 0.07, and their sizes are correlated along the stream, lag-1 r = 0.74
+route (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md">journal §§60, 66</a>). Across the mixture <span class="arithmatex">\(C^2\)</span> of block size is about 0.98; among the real
+blocks alone it is about 0.07, and their sizes are correlated along the stream, lag-1 <span class="arithmatex">\(r = 0.74\)</span>
 (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/leads/course-opportunities.md">the opportunities</a>). Which matters depends on the question: the mixture's for head-of-line
 effects, the real blocks' for the workers' service.</p>
 <p><strong>Open against closed.</strong> A paper on the 2025 reading list shows that scheduling policies behave very
@@ -3746,15 +3756,15 @@ computes the means without the normalising constant
 arrival theorem: a job arriving at a station sees the network in its equilibrium with one job fewer.
 Starting from an empty network and adding one job at a time, for single-server stations:</p>
 <ol>
-<li>residence per visit: Rᵢ(n) = Sᵢ·(1 + Qᵢ(n − 1)), or Rᵢ(n) = Sᵢ at a delay station;</li>
-<li>throughput: X(n) = n / (Z + Σᵢ Vᵢ·Rᵢ(n));</li>
-<li>queue lengths: Qᵢ(n) = X(n)·Vᵢ·Rᵢ(n).</li>
+<li>residence per visit: <span class="arithmatex">\(R_i(n) = S_i\left(1 + Q_i(n - 1)\right)\)</span>, or <span class="arithmatex">\(R_i(n) = S_i\)</span> at a delay station;</li>
+<li>throughput: <span class="arithmatex">\(X(n) = n \big/ \left(Z + \sum_i V_i R_i(n)\right)\)</span>;</li>
+<li>queue lengths: <span class="arithmatex">\(Q_i(n) = X(n)\, V_i R_i(n)\)</span>.</li>
 </ol>
 <p>Load-dependent stations need the marginal probability of each queue length rather than the mean
 alone, a standard extension of the same recursion.</p>
 <p><strong>The surrogate.</strong> One reader computed exact mean-value analysis for a two-station closed surrogate
 of the decoder: a scanner of 107.9 µs a block, a load-dependent pool of workers taking 815 µs each
-with rate min(n, k)/w, a population of N = 4k, and no fitted constant. Converted to the wall for the
+with rate <span class="arithmatex">\(\min(n, k)/w\)</span>, a population of <span class="arithmatex">\(N = 4k\)</span>, and no fitted constant. Converted to the wall for the
 corpus's 1,724 blocks, it gives 0.4683, 0.2811, 0.2035 and 0.1887 s at 3, 5, 7 and 8 workers, against
 0.4693, 0.2840, 0.2069 and 0.1911 s measured: within 1 to 4 ms (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md">the review</a>).
 No solver script for it is in the repository; the figures are the review's, and recomputing them from
@@ -3770,7 +3780,7 @@ ways the surrogate cannot represent:</p>
 <tbody>
 <tr>
 <td>a fixed population that circulates</td>
-<td>an admission ceiling, W = 4k, on a finite stream that fills and drains</td>
+<td>an admission ceiling, <span class="arithmatex">\(W = 4k\)</span>, on a finite stream that fills and drains</td>
 </tr>
 <tr>
 <td>stations that release jobs independently</td>
@@ -3796,8 +3806,12 @@ exact mean-value analysis is applied only to a documented surrogate, with its er
 approximation error, and the faithful model is a trace-driven discrete-event simulation, specified
 and not yet built (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level.md">journal §§59–60</a>).</p>
 <h2 id="9-fluid-approximations">9. Fluid approximations<a class="headerlink" href="#9-fluid-approximations" title="Permanent link">&para;</a></h2>
-<p>A fluid model treats a queue as a reservoir whose level q changes at the rate work flows in less the
-rate it flows out, dq/dt = λ_in − μ_out, held at zero when the queue is empty and at the ceiling when
+<p>A fluid model treats a queue as a reservoir whose level <span class="arithmatex">\(q\)</span> changes at the rate work flows in less the
+rate it flows out,</p>
+<div class="arithmatex">\[
+\frac{dq}{dt} = \lambda_{\text{in}} - \mu_{\text{out}},
+\]</div>
+<p>held at zero when the queue is empty and at the ceiling when
 admission stops. It appears among the theory course's techniques. The decoder's pulse experiments
 read naturally in it: slowing the scanner drains the job queue, slowing emission fills it, and each
 recovers within milliseconds. No fluid model has been fitted to the decoder. The same picture, flows
@@ -3808,17 +3822,23 @@ between discrete events, is the starting point of the hybrid-systems reading in 
 effect depends on another's level, and Jain lists ignoring interactions, and varying one factor at a
 time, among the common mistakes. Run-time ratios suit a <strong>multiplicative model</strong>, analysed on
 logarithms (ch. 18).</p>
-<p><strong>The 2² design and its sign table.</strong> With two factors at two levels, S and E, each real (−) or ideal
-(+), the four arms give the effects on log wall y as</p>
-<p>q_S = (−y₀ + y_S − y_E + y_SE)/4, q_E = (−y₀ − y_S + y_E + y_SE)/4, q_SE = (y₀ − y_S − y_E + y_SE)/4,</p>
+<p><strong>The <span class="arithmatex">\(2^2\)</span> design and its sign table.</strong> With two factors at two levels, S and E, each real (−) or ideal
+(+), the four arms give the effects on log wall <span class="arithmatex">\(y\)</span> as</p>
+<div class="arithmatex">\[
+\begin{aligned}
+q_S &amp;= \tfrac14\left(-y_0 + y_S - y_E + y_{SE}\right), \\
+q_E &amp;= \tfrac14\left(-y_0 - y_S + y_E + y_{SE}\right), \\
+q_{SE} &amp;= \tfrac14\left(y_0 - y_S - y_E + y_{SE}\right),
+\end{aligned}
+\]</div>
 <p>and the <strong>allocation of variation</strong> splits the total sum of squares among S, E, SE and the residual
 (ch. 17). The four-arm oracle test and slice A of the ideal-parts matrix are both this design. In
-slice A at 8 workers q_SE is −0.028 [−0.038, −0.018], and the allocation gives 37% to S, 40% to E and
+slice A at 8 workers <span class="arithmatex">\(q_{SE}\)</span> is −0.028 [−0.038, −0.018], and the allocation gives 37% to S, 40% to E and
 13% to their interaction (<a href="https://github.com/lmmx/mibz2/blob/bfacdf6e7fcd23e20dede638738af36c94d2e199/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/slice-a/README.md">slice A</a>).</p>
-<p><strong>Fractional factorials.</strong> With six parts there are 2⁶ = 64 arms. A half fraction keeps 32, chosen by
-a <strong>defining relation</strong>: I = SECMRD keeps the arms whose six signs multiply to +1, that is, those with
+<p><strong>Fractional factorials.</strong> With six parts there are <span class="arithmatex">\(2^6 = 64\)</span> arms. A half fraction keeps 32, chosen by
+a <strong>defining relation</strong>: <span class="arithmatex">\(I = SECMRD\)</span> keeps the arms whose six signs multiply to +1, that is, those with
 an even number of ideal parts. Each effect is then <strong>confounded</strong> with its complement in the relation,
-S with ECMRD, SE with CMRD, and so on, and the design's <strong>resolution</strong> is the length of the shortest
+<span class="arithmatex">\(S\)</span> with <span class="arithmatex">\(ECMRD\)</span>, <span class="arithmatex">\(SE\)</span> with <span class="arithmatex">\(CMRD\)</span>, and so on, and the design's <strong>resolution</strong> is the length of the shortest
 word in the relation, here VI: each main effect is confounded only with a five-part interaction, and
 each two-part interaction only with a four-part one (ch. 19).</p>
 <p>The registered matrix needed more than that fraction. A part's room is defined as that part alone
@@ -3833,7 +3853,7 @@ and masking are read directly from the measured odd arms, which are never fitted
 the allocation of variation over the 32 fraction arms gives construction 80% at one worker and 46% at
 six, the scanner 46% at eight and 53% at ten, and the two-part interactions 18–22% from six workers
 up; the three-part interactions, aliased in pairs, take 2–6%. The largest interaction is the scanner
-with construction, q_SC = −0.110 [−0.112, −0.108] at six workers and −0.071 at eight, where 4q, the
+with construction, <span class="arithmatex">\(q_{SC} = -0.110\)</span> [−0.112, −0.108] at six workers and −0.071 at eight, where <span class="arithmatex">\(4q\)</span>, the
 difference of differences, is −0.44 and −0.28. No part earns the MASKED label, because each
 masked-looking part keeps more than ±2% of room alone, which leaves it UNRESOLVED rather than NO ROOM;
 in substance, construction at eight and ten and the scanner at six and eight are masked behind each
@@ -4077,19 +4097,19 @@ bounds, validated predictors and proved upper bounds apart (<a href="https://git
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/bench.js?v=649664ead693"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/couriers.js?v=649664ead693"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/blog.js?v=649664ead693"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/frontier.js?v=649664ead693"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/observatory.js?v=649664ead693"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=f2f6fbec2008"></script>
+        <script src="../../assets/javascripts/katex.js?v=649664ead693"></script>
       
     
   </body>
