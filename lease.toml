@@ -1,9 +1,9 @@
 id = "bottlenecks-floor-correction"
-holder = "claude-code"
-session = "01a1b8ab251e"
-claimed_at = "2026-11-26T18:30:25+00:00"
-expires = "2026-11-26T22:30:25+00:00"
+holder = "antigravity"
+session = "8717e50313af"
+claimed_at = "2026-11-26T19:18:16+00:00"
+expires = "2026-11-27T03:18:16+00:00"
 owned_paths = []
 mechanisms = []
-base = "ded8b919424fae727f177ffaebcf52769cfb3dff"
-released = true
+base = "3963db8a25e74fb3dda0a167ac8f86562222abff"
+released = false
