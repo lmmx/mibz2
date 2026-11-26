@@ -197,7 +197,7 @@ Louis delegated these as a class (RULES C6, 9 November 2026):
 
 ## The coordinator-era machinery (retired, 26 November 2026)
 
-- **The #145 channel, the role inboxes and `coord.py`'s routing commands** are no longer used for work.
+- **The #145 channel, the role inboxes and `coord.py`'s routing commands** are no longer used for work. #145 stays only as the workstation's evidence noticeboard: `just submit` posts each bundle's identity and digest there. `frontier.py brief` shows the latest evidence commits.
 - **`coord.py head-sha`** stays, as a merge check.
 - **`docs/team/`'s role specs, `MODE.md` and `PROTOCOL.md`** are history, to be archived (claim `archive-team-strata`).
 - **compact30** (`docs/journal/compact30-channel/`) stays frozen history.

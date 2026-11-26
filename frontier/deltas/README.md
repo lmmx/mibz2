@@ -15,4 +15,4 @@ evidence: <commit SHAs, PR numbers, evidence digests, file paths>
 **Caveats:** what the result does not show.
 ```
 
-Write for a reader who wasn't there. This file (`README.md`) is not a delta; `frontier.py check` skips nothing else here.
+Write for a reader who wasn't there. The `by:` line is internal provenance: never copy it into commit or PR metadata, or into a blog post. This file (`README.md`) is not a delta; `frontier.py check` skips nothing else here.

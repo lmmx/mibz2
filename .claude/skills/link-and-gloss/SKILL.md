@@ -129,5 +129,5 @@ LF step per letter. Run for many patterns at once, it moves their intervals toge
 
 ## 5. For a published post
 
-The fix ships as a docs commit to master (coordinate-blog-post §4). If other commits to master are
+The fix ships as a docs commit to master (as a blog card's revise stage, `frontier/README.md`). If other commits to master are
 deploying, wait until the page serves them: each push cancels the Pages deploy in flight.

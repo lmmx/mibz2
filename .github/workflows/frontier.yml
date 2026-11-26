@@ -1,12 +1,12 @@
 # The frontier's optional mirror and courtesy check. Nothing depends on this workflow: STATUS.md is
-# regenerated locally with `python3 frontier/tools/frontier.py status`, and every agent runs
-# `frontier.py check` itself. This only copies STATUS.md into issue #943 and the Needs Louis list
-# into #944, so they can be read without a checkout, and runs the check on PRs that touch frontier/.
+# generated locally with `python3 frontier/tools/frontier.py status` (it is gitignored, so parallel
+# PRs never conflict on it), and every agent runs `frontier.py check` itself. This only publishes
+# the page to issue #943 and the Needs Louis list to #944, so they can be read without a checkout,
+# and runs the check on every PR.
 name: frontier
 
 on:
   pull_request:
-    paths: ["frontier/**"]
   push:
     branches: [master]
     paths: ["frontier/**"]

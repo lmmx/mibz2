@@ -1,7 +1,7 @@
 id = "open-prs-triage"
 title = "Triage the coordinator-era open PRs"
 kind = "ops"
-zone = "smooth"
+zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 2
 status = "open"

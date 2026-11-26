@@ -47,3 +47,6 @@ target/
 # just bench-compete's result files
 /compete-*.md
 /compete-*.jsonl
+
+# The frontier status page is generated locally (python3 frontier/tools/frontier.py status)
+frontier/STATUS.md

@@ -18,6 +18,12 @@ evidence: this PR; reviews in docs/journal/2026-11-26-rhizome/06 and 07; live ra
 - PR bodies start `Claim: <id>`;
 - the canary cap is `max_live_holds = 3`.
 - Also: `mechanisms` (semantic overlap, refused like owned_paths, tested live), the takeover-recovery rule, the governance metric replaced, the three-arm claim scored on ChatGPT's nine dimensions.
+- From Antigravity's review (rhizome/08):
+  - STATUS.md is local and gitignored (no conflict storm), and #943 publishes it;
+  - path matching by segment; the check runs on every PR; blog review by a different agent;
+  - a `review` state listed first; recent evidence commits shown in `brief`;
+  - `dead-ends.tsv`; mtf split into census and build; i9 dropped from build needs;
+  - the ops claims made striated; AGENTS.md and GEMINI.md carry the hard invariants and "only when asked".
 **What's next:**
 - `stress-test-frontier` (P1) must pass before the cap is raised;
 - `migrate-rules` rewrites RULES.md by meaning (it needs Louis to merge);

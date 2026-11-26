@@ -7,7 +7,8 @@ There is no coordinator and no routing. The repository's files are the shared st
 <!-- brief -->
 ## The loop: what every agent does (read this, then act)
 
-1. **Read the state.** Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`. It shows Needs Louis, open flags, the live holds and what you can take. With no shell, read `frontier/STATUS.md` and `frontier/claims/`; read-only work (review, explore, synthesise) needs no hold.
+0. **Only when asked.** Run this loop when someone says `take one`, `swarm` or another lexicon word. A question gets an answer, not a PR.
+1. **Read the state.** Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`. It shows Needs Louis, open flags, the live holds and what you can take. With no shell, read issue #943 (the status page, published) and `frontier/claims/`; read-only work (review, explore, synthesise) needs no hold.
    - **Capabilities:** `shell`, `repo-write`, `rust`, `web`, `i9` (Louis's workstation), `cloud-session`, `math`, `long-context`.
 2. **Take one thing:** `frontier.py claim <id> --by <agent-kind> [--hours N]`.
    - **It's atomic.** It pushes the branch `hold/<id>` with a compare-and-swap, so of two agents claiming at once exactly one succeeds. Only a printed "acquired" means you hold it.
@@ -27,8 +28,9 @@ There is no coordinator and no routing. The repository's files are the shared st
 4. **Leave a delta** (40 lines at most, `frontier/deltas/`, template in its README) and mark the claim: `frontier.py mark <id> --status done|blocked|open|dropped`.
    - **Discoveries become claims** at status `idea`. They are admitted to `open` while open claims number fewer than `max_open_claims`.
    - **Changed rooms go into `surface.tsv`.**
-   - Then `frontier.py status` and `frontier.py check`.
-5. **Open one PR whose body starts `Claim: <id>`** (lineage: the claim carries the hypothesis and the stop test). Your hold stays until the PR is merged: completion is not integration. After the merge, `frontier.py release <id> --session S`. Then stop; a fresh session takes the next thing.
+   - **Killed or stopped** work also gets a row in `frontier/dead-ends.tsv`, so that no session re-explores it once the deltas scroll away.
+   - Then `frontier.py check`. `frontier.py status` writes the status page locally; it is gitignored, so parallel PRs never conflict on it.
+5. **Open one PR whose body starts `Claim: <id>`** (lineage: the claim carries the hypothesis and the stop test). Then `mark <id> --status review` and set `pr = <N>` in the claim, so `brief` lists it under "finish before starting" until it merges. Your hold stays until the PR is merged: completion is not integration. After the merge, `frontier.py release <id> --session S`. Then stop; a fresh session takes the next thing.
 
 **Making yourself intelligible is your job,** not a coordinator's. Write your delta, your PR body and your surface row for a reader who wasn't there.
 
@@ -131,11 +133,12 @@ The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-
 | `blog/<id>.toml` | a blog card on the board, the same schema plus `stage` | anyone |
 | `deltas/*.md` | one ≤ 40-line write-up per finished session, the group's memory | the session that did the work |
 | `surface.tsv` | the measured frontier: each target, its room at 1 and 8 workers, its state, its evidence, its claims | whoever's result changes a row |
-| `STATUS.md` | the generated page: Needs Louis, in progress, open claims, the blog board, recent deltas, the surface | `frontier.py status`, never by hand |
+| `STATUS.md` | the generated page: Needs Louis, flags, review, open claims, the blog board, deltas, dead ends, the surface. Local and gitignored; #943 publishes it | `frontier.py status`, never by hand |
+| `dead-ends.tsv` | every killed or stopped direction: its verdict, what it showed and its evidence. Read it before proposing a direction | whoever's claim ends KILL or STOP |
 | `config.toml` | the two issues the optional Action mirrors to | rarely changed |
 | `tools/frontier.py` | brief, status, check, claim, release; standard library only | anyone, keeping `check` small |
 
-**Nothing depends on GitHub Actions.** `STATUS.md` is regenerated locally by whoever changes the frontier. `.github/workflows/frontier.yml` only mirrors it to issue #943 ("Frontier status") and #944 ("Needs Louis"), and runs `check` on PRs as a courtesy.
+**Nothing depends on GitHub Actions.** Anyone regenerates `STATUS.md` locally, any time, with `frontier.py status`. `.github/workflows/frontier.yml` only mirrors it to issue #943 ("Frontier status") and #944 ("Needs Louis"), and runs `check` on every PR as a courtesy.
 
 ## The claim schema
 
@@ -146,7 +149,8 @@ kind = "probe"                   # probe | build | run | review | write | ops | 
 zone = "smooth"                  # smooth | striated
 needs = ["shell", "rust"]        # the capabilities required
 priority = 1                     # 1 is the highest
-status = "open"                  # idea | open | blocked | done | dropped (holds live on hold/<id>, not here)
+status = "open"                  # idea | open | review | blocked | done | dropped (holds live on hold/<id>, not here)
+pr = 0                           # the PR, once status is review
 owned_paths = []                 # the striated zone only: paths no other live claim may own
 mechanisms = []                  # what it changes in the decoder (e.g. "scan", "construction", "spelling", "delivery"): no two live holds share one
 needs_louis = ""                 # a reason, if only Louis can unblock it (RULES D: spending, rules, roles, his workstation, releases he reserves)
@@ -162,12 +166,14 @@ Blog cards add `stage` (idea → outline → draft → review → revise → rea
 
 ## The blog board
 
+**One claim, one session.** Work that spans sessions (a census, then a build, then a workstation run) is several claims, each admitting the next. Don't put the i9 in a claim's `needs` unless that session itself runs on the workstation; runs go through the queue.
+
 Any agent moves any card forward one stage, and records the move in a delta:
 - **outline:** the claim, the reader, the takeaways first (`write-blog-post`);
 - **draft:** the post, with figures made by the `dataviz` method;
 - **review:** done by a different agent from the drafter. It is a simulated-reader pass, and every number is checked against its source;
 - **revise;**
-- **ready:** `publish-page` has passed on the final head;
+- **ready:** `publish-page` has passed on the final head (this stage needs `shell`);
 - **published:** merged.
 
 **The site's rules still hold:**
@@ -202,4 +208,4 @@ Mark such a claim `needs_louis`, and it appears on #944 and at the top of `STATU
 From the cross-reading of *A Thousand Plateaus*, consequence C7:
 - **Size:** `frontier/tools/frontier.py`'s `check` stays at most 5 checks, and `CLAUDE.md` stays near 120 lines. When you add a rule, delete one.
 - **Governance:** the frontier's own upkeep (tokens and time spent maintaining it, not a count of commits) stays small next to the work. It is measured in the three-arm experiment.
-- **The test of this mode:** Louis can follow a day's work from `STATUS.md` and the deltas in a few minutes. If he can't, fix the page, not by bringing back a hub.
+- **The test of this mode:** Louis can follow a day's work from the status page (#943, or `frontier.py status`) and the deltas in a few minutes. If he can't, fix the page, not by bringing back a hub.

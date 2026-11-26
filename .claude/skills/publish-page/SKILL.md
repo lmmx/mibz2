@@ -40,7 +40,7 @@ strict build, the site checks and a read of the Markdown don't show how it rende
    fixed.
 
 5. A new page goes to master through its PR, merged on green. Never push a new post to master
-   directly; direct commits are only for amendments Louis asks for (coordinate-blog-post, "The
+   directly; direct commits are only for amendments Louis asks for (the frontier's blog board, `frontier/README.md`; formerly coordinate-blog-post, "The
    PR opens first").
 
 **No redirects, ever** (Louis, 25 November 2026). When a page's URL changes, move it: never add a
