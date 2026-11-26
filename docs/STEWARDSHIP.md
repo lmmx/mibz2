@@ -39,7 +39,7 @@ the head that will merge, and the CI paired A/B bench (`.github/workflows/bench.
 by that policy.
 
 **Maintenance route** (2026-11-10). A change that is neutral on the bench and improves the code
-(simpler, safer, a better API) merges on green CI and one review.
+(simpler, safer, a better API) merges on the applicable green CI and evidence; independent review only where required under RULES O/B5/C6 or a material objection. The author can integrate ordinary maintenance.
 
 **Target-gated changes** follow PERFORMANCE-POLICY.md §2: the gain on the target machine (C5), a
 deterministic CI test that the predicate is false and master's plan is built, and a neutral CI
