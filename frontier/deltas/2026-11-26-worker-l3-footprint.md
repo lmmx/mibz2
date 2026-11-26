@@ -1,0 +1,17 @@
+claim: worker-l3-footprint
+by: antigravity
+outcome: done
+evidence: examples/worker_l3_footprint_census.rs; docs/journal/2026-11-26-synthesis/worker-l3-footprint.md; origin/evidence c71c4a56 (sha256 97e397ad...8867) & cc8ba137 (sha256 10df0d89...5e34)
+
+**What was asked:** Census per-block/per-stage live worker bytes on real `wikidata`/`x4` blocks, and fit `none` and `S` `A9 + copy_out` growth over `k = 6` against (a) `ready_hwm`, (b) `ready_avg`, (c) `k*W_worker + ready_avg` (excluding cold-store oracle arms).
+
+**What I found:**
+- **Frozen `stop_test` verdict (C2 intact):** **(a) `ready_hwm` passes `R² >= 0.5`** on `c71c4a56` `none+S` `k = 6..10` (`R² = 0.9320` on `n = 10` cell medians, `0.8722` on `n = 30` runs; `0.9802` on `cc8ba137` pinned `none`), vs **(b) `ready_avg`** `0.9680` (`0.9384` runs) and **(c) `k*W_worker + ready_avg`** `0.9767` active / `0.9750` resident / `0.9619` A7-peak (`0.9713/0.9691/0.9527` runs; `(c) - (a) = +0.045 < 0.15`). Per the frozen gate, `delivery-l3-working-set` stays as is (`status = "idea"`), with no `dead-ends.tsv` row.
+- **Measured per-worker live set (`wikidata` 431 blks & `x4` 1,724 blks, 100% byte-exact, matching `c71c4a56` routes, `queue_syms_bytes` and `oracle_store.C.bytes` to 0.02%):** All 233 full blocks (99.996% B) take `Open`; all 198 non-Open blocks are runts (<= 1.2 KiB). Aliasing (`OutQ16` 279 KiB inside `out`, A6b arena 282 KiB + 24 KiB cache inside `edges`, `stage`/`s.ll` = 0 B, `symbols` 209 KiB freed before `out` is popped) keeps time-weighted live bytes at **`0.845 MiB` active / `0.897 MiB` resident per worker**, peaking at **`1.352 MiB`** in A7 (`Built 505 KiB + out 879 KiB`; A5 `0.366`, A6a `0.451`, A6b `0.361/0.636`, A6c `0.737/0.795`, A9 `0.859 MiB`; persistent Scratch HWM `1.492 MiB`). At `k = 6..10`, `k*W_resident` is `5.4–9.0 MiB` (`k*W_peak` `8.1–13.5 MiB`) vs `ready_avg` `0.31–2.30 MiB`.
+- **Two regimes separated beyond full-range collinearity (`r(k, hwm) = 0.858`):** (1) On zero-SMT `cc8ba137` `k = 6..8` (`ready_hwm` `5.15–6.01 MiB`, `ready_avg` `0.31–0.59 MiB`), `IMC` jumps `+672 MiB` and `A9` `+13.5 ms`; **(a) drops to `R² = 0.344` (`IMC 0.407`) while (c) holds `0.947` (`A9 0.981`, `IMC 0.991`; `k=6..10` `IMC 0.9988`)**, proving worker live set drives initial `k = 6..8` L3 spillover. (2) Holding `(arm, k)` fixed, within-cell `ready_avg` tracks `A9+CO` (`r = +0.955` `c71c`, `+0.826` `cc8`), `A7` (`+0.896/+0.909`), `LLC` (`+0.926`), and `IMC` (`+0.871`) — a coupled SMT + queue-burst + L3-eviction loop at `k = 9..10` (`d(A9+CO) ~ k + ready_avg`: `R² = 0.9876`, `+6.70 ms/w`, `+19.39 ms/MiB`).
+
+**What changed:** Added `examples/worker_l3_footprint_census.rs`, `docs/journal/2026-11-26-synthesis/worker-l3-footprint.md`, this delta; updated `frontier/surface.tsv` rows `R` and `D`; marked `frontier/claims/worker-l3-footprint.toml` `done`. Left `delivery-l3-working-set` at `idea`.
+
+**What's next:** `delivery-l3-working-set` remains eligible (note its `<= 2.2%` `none` / `<= 2.5%` `S` 10W wall ceiling once `k = 6..8` worker-footprint growth is accounted for); worker-side wins (`mtf-fold-build`, `forward-emission`, `bwt-digram-return-map`) shrink the larger steady-state `k*W_worker` L3 term (`1.352 MiB/w` in A7).
+
+**Caveats:** Observational traces cannot prove what fraction of the `k = 9..10` coupled SMT/queue burst an active `READY_BYTES` cap removes; only a workstation intervention can measure that.
