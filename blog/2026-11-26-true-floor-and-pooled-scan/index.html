@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=826cf0a62121">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=b2553be6b552">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=826cf0a62121">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3528,6 +3528,8 @@
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
+<p><strong>mibz2 already decompresses at 4.31 GB/s on our eight-worker Wikidata benchmark, and almost none of the remaining cost is in the pipeline's plumbing.</strong> Queues, synchronisation and hand-offs account for only about 3% of the current 194.6 ms wall time when we isolate them with zero-copy stand-ins. Main-memory bandwidth is not yet the limiting factor on this machine, although L3 cache capacity matters. The implication is that the next substantial speedups must come primarily from making the algorithms themselves cheaper, rather than rearranging how they are coordinated.</p>
+<p>This is the practical payoff of our <a href="https://github.com/lmmx/mibz2/blob/03994d67f03ba3a409c2705c5c20f40d045cdf9b/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/decoder-as-hybrid-system.md">hybrid-systems model</a> and its <a href="https://github.com/lmmx/mibz2/blob/03994d67f03ba3a409c2705c5c20f40d045cdf9b/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md">design levers</a>: distinguish the work done between events from the rules that move work between threads. Pooling the scan redistributes computation without eliminating it. The experiments instead expose a previously underestimated cost in spelling dictionary words into bytes, alongside opportunities to fuse construction and reduce cache traffic. The next milestone is to demonstrate a path towards <strong>6 GB/s</strong> (about 140 ms for the same 838.8 MB of output, or 39% higher throughput). Supplying both scan and construction with idealised answers has already produced 135.3 ms, equivalent to 6.20 GB/s, but that is a diagnostic measurement, not a production speed or a promise that the target is attainable. The task now is to turn that measured headroom into real algorithmic gains.</p>
 <p>In <a href="../2026-11-26-complementary-bottlenecks/">Complementary bottlenecks</a>, we replaced each stage of
 mibz2's bzip2 decoder with a pre-recorded stand-in called an <em>oracle</em>. That factorial experiment
 showed where new algorithms could still speed up decoding. Its technical companion,
@@ -4362,19 +4364,19 @@ blind alleys and lay out a clear order for our next work:</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/bench.js?v=826cf0a62121"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/couriers.js?v=826cf0a62121"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/blog.js?v=826cf0a62121"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/frontier.js?v=826cf0a62121"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/observatory.js?v=826cf0a62121"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b2553be6b552"></script>
+        <script src="../../assets/javascripts/katex.js?v=826cf0a62121"></script>
       
     
   </body>
