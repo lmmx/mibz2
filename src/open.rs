@@ -210,6 +210,7 @@ impl Pass<'_> {
         if keep {
             if p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
+                f.mark_byte = c;
             }
             if QUEUE {
                 self.queues.push(a, f.m, w, &f.thin);
@@ -249,6 +250,8 @@ struct First {
     thick: [u32; 256],
     m: u32,
     mark: u32,
+    /// the marked row's byte: its queue is the only one that holds `mark`
+    mark_byte: u8,
     runs: usize,
 }
 
@@ -260,6 +263,7 @@ impl Default for First {
             thick: [0; 256],
             m: 0,
             mark: 0,
+            mark_byte: 0,
             runs: 0,
         }
     }
@@ -394,6 +398,7 @@ impl Kernel {
             thick,
             m,
             mark,
+            mark_byte,
             runs,
         } = *f;
         let mut stats = Counts {
@@ -475,7 +480,7 @@ impl Kernel {
             self.offsets.push(0);
         }
         let mut cursors = if INDUCE {
-            self.induced(ns, n, &thin, &mut stats)
+            self.induced(ns, n, &thin, &mut stats, m <= ONE_ENDED_MOST)
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
@@ -519,7 +524,7 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
-        if QUEUE && !wide && m >= 65_536 {
+        if QUEUE && !wide && m > ONE_ENDED_MOST {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
@@ -527,16 +532,31 @@ impl Kernel {
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
-                for &band in &self.bands[cursors[a]..end] {
-                    queue.wire_xor(
-                        edges,
-                        band.dst() as usize,
-                        (band.end() - k) as usize,
-                        band.code() << bits,
-                        mark,
-                        &mut predecessor,
-                    );
-                    k = band.end();
+                // only the marked row's byte's queue can hold `mark`: the others skip the search
+                if a == usize::from(mark_byte) {
+                    for &band in &self.bands[cursors[a]..end] {
+                        queue.wire_xor::<true>(
+                            edges,
+                            band.dst() as usize,
+                            (band.end() - k) as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                        k = band.end();
+                    }
+                } else {
+                    for &band in &self.bands[cursors[a]..end] {
+                        queue.wire_xor::<false>(
+                            edges,
+                            band.dst() as usize,
+                            (band.end() - k) as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                        k = band.end();
+                    }
                 }
             }
             self.predecessor = Some(predecessor);
@@ -726,6 +746,11 @@ impl Kernel {
         );
     }
 }
+
+/// The most retained rows a block's walk takes from one end (`emit`), with its bands
+/// coalesced; past it the walk takes both ends (`emit_bidirectional`), its bands as built.
+/// 98,304 rows is 384 KiB of `edges`.
+pub(crate) const ONE_ENDED_MOST: u32 = 98_304;
 
 /// Rows a thin run may have, as retained ranks (the arm `Open<16, true, true>` measured on the
 /// i9: bench-open-return, the moonshot runs)
