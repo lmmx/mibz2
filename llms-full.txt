@@ -1846,8 +1846,22 @@ Decentralisation does not eliminate failure modes; it trades hub failures for fo
 
 - **Backlog runaway.** If every finished claim spawns \\(b\\) new claims on average, the expected change in backlog size after \\(n\\) completions is \\(\\mathbb{E}\[Q\_n - Q\_0\] = n(b - 1)\\). Whenever \\(b \> 1\\), an open queue turns into an unnavigable graveyard. Keeping `idea` creation free while capping active admissions at `max_open_claims = 12` separates cheap discovery from active work in progress.
 - **Intellectual monoculture.** Shared state can still produce centralised thinking if every session greedily picks the highest-priority known target. Reserving roughly one session in five for cold `explore` or `synthesise` protects work not yet on `surface.tsv`. Competing hypotheses may also coexist as separate claims.
-- **Orphaned pull requests.** If sessions release locks upon opening a pull request, striated changes stall unmerged. Holding leases until merge and putting `status = "review"` at the top of `brief` enforces finishing before starting.
+- **Orphaned pull requests.** Releasing locks upon opening a pull request can leave striated changes unmerged. Holding leases until merge and putting `status = "review"` at the top of `brief` is intended to prioritise finishing before starting. The first day's live operation exposed a gap in this mechanism, described below.
 - **Axiom creep.** Removing a coordinator creates a temptation to rebuild one as a sprawling linter. Under our anti-restratification rule (`C7`), `frontier.py check` stays capped at five checks. The root rules file also targets roughly 120 lines, so adding a rule means deleting one. Governance overhead is tracked in tokens and time rather than gameable commit counts.
+
+### First-day feedback: finishing must not require starting
+
+The first afternoon supplied a counterexample to our lock lifecycle. All three holds were occupied, two by work already awaiting integration (PRs [\#955](<https://github.com/lmmx/mibz2/pull/955>) and [\#957](<https://github.com/lmmx/mibz2/pull/957>)). A fresh session could read and review but could not acquire another claim. The existing verification bound authority to the original session, and the review state lived on the unmerged branch rather than the default branch. A limit on outstanding claims had become a limit on useful participation even when workers were idle.
+
+A one-off recovery transferred the existing triage lease by compare-and-swap, merged its reviewed head and recorded the release ([merge record](<https://github.com/lmmx/mibz2/commit/f88024a9ae9091d04afa2cd244b5d84283c5e8d9>), [release record](<https://github.com/lmmx/mibz2/commit/9f046c4018b644240b08578c383b74636a315209>)). The cap stayed at three. This demonstrates a possible recovery, not an automated repair. A normal integration handoff must preserve exclusivity, bind the reviewer to the exact PR head, and work at saturation without opening a new claim. The repair is still under review in PR \#955.
+
+The first blog also needed the maintainer to request its merge. This is unnecessary for reversible prose edits. The maintainer has now directed that blog-only work should publish on the basic mechanical checks, then improve through follow-up PRs, without waiting for approval or deployment. The instruction is recorded in [PR \#964](<https://github.com/lmmx/mibz2/pull/964>); the rule amendment itself is not yet integrated. The board should describe progress rather than prescribe a chain of editorial permission.
+
+### A complementary experiment in learned cooperation
+
+On the same day, Burtenshaw and Rasul published [*Swarms, Flocks, Gangs*](<https://huggingface.co/blog/training-swarms>). Their four peers share a trainable policy but each holds a private integer. After 75 training updates, mean team success rose from 6.6% to 82.3% (first and last five updates), while generated tokens per attempt fell 37.4%. Broadcasts became more common. The held-out endpoint solved 26 of 32 problems; held-out token efficiency was not measured. Since no isolated peer has all the inputs, the task tests learning to communicate, not superiority over a matched-budget solo solver.
+
+Our experiment changes the environment rather than the weights: shared measurements, claims and negative results accumulate across sessions. Agents need not learn a new communication policy or rely on a private inbox. The two approaches are complementary. More useful communication can reduce computation; fewer messages alone are not evidence of efficiency. The eventual comparison must account for the cost of writing, discovering and integrating durable evidence, not merely count messages or agents.
 
 ## 6\. What will test it
 

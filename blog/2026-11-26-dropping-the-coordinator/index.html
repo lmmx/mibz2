@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=53bb9223eb36">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=37f14b61f8de">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=53bb9223eb36">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1393,6 +1393,34 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="5. How this should change the work — and what could still go wrong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-day-feedback-finishing-must-not-require-starting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        First-day feedback: finishing must not require starting
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-complementary-experiment-in-learned-cooperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A complementary experiment in learned cooperation
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3642,6 +3670,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5. How this should change the work — and what could still go wrong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-day-feedback-finishing-must-not-require-starting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        First-day feedback: finishing must not require starting
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-complementary-experiment-in-learned-cooperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A complementary experiment in learned cooperation
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4298,14 +4354,48 @@ ones, each paired with a lightweight guardrail:</p>
   session greedily picks the highest-priority known target. Reserving roughly one session in five
   for cold <code>explore</code> or <code>synthesise</code> protects work not yet on <code>surface.tsv</code>. Competing hypotheses
   may also coexist as separate claims.</li>
-<li><strong>Orphaned pull requests.</strong> If sessions release locks upon opening a pull request, striated
-  changes stall unmerged. Holding leases until merge and putting <code>status = "review"</code> at the top of
-  <code>brief</code> enforces finishing before starting.</li>
+<li><strong>Orphaned pull requests.</strong> Releasing locks upon opening a pull request can leave striated
+  changes unmerged. Holding leases until merge and putting <code>status = "review"</code> at the top of
+  <code>brief</code> is intended to prioritise finishing before starting. The first day's live operation exposed
+  a gap in this mechanism, described below.</li>
 <li><strong>Axiom creep.</strong> Removing a coordinator creates a temptation to rebuild one as a sprawling
   linter. Under our anti-restratification rule (<code>C7</code>), <code>frontier.py check</code> stays capped at five
   checks. The root rules file also targets roughly 120 lines, so adding a rule means deleting one.
   Governance overhead is tracked in tokens and time rather than gameable commit counts.</li>
 </ul>
+<h3 id="first-day-feedback-finishing-must-not-require-starting">First-day feedback: finishing must not require starting<a class="headerlink" href="#first-day-feedback-finishing-must-not-require-starting" title="Permanent link">&para;</a></h3>
+<p>The first afternoon supplied a counterexample to our lock lifecycle. All three holds were occupied,
+two by work already awaiting integration (PRs <a href="https://github.com/lmmx/mibz2/pull/955">#955</a>
+and <a href="https://github.com/lmmx/mibz2/pull/957">#957</a>). A fresh session could read and review but could not
+acquire another claim. The existing verification bound authority to the original session, and the
+review state lived on the unmerged branch rather than the default branch. A limit on outstanding
+claims had become a limit on useful participation even when workers were idle.</p>
+<p>A one-off recovery transferred the existing triage lease by compare-and-swap, merged its reviewed
+head and recorded the release (<a href="https://github.com/lmmx/mibz2/commit/f88024a9ae9091d04afa2cd244b5d84283c5e8d9">merge record</a>,
+<a href="https://github.com/lmmx/mibz2/commit/9f046c4018b644240b08578c383b74636a315209">release record</a>).
+The cap stayed at three. This demonstrates a possible recovery, not an automated repair.
+A normal integration handoff must preserve exclusivity, bind the reviewer to the exact PR head,
+and work at saturation without opening a new claim. The repair is still under review in PR #955.</p>
+<p>The first blog also needed the maintainer to request its merge. This is unnecessary for reversible
+prose edits. The maintainer has now directed that blog-only work should publish on the basic
+mechanical checks, then improve through follow-up PRs, without waiting for approval or deployment.
+The instruction is recorded in <a href="https://github.com/lmmx/mibz2/pull/964">PR #964</a>; the rule amendment
+itself is not yet integrated. The board should describe progress rather than prescribe a chain
+of editorial permission.</p>
+<h3 id="a-complementary-experiment-in-learned-cooperation">A complementary experiment in learned cooperation<a class="headerlink" href="#a-complementary-experiment-in-learned-cooperation" title="Permanent link">&para;</a></h3>
+<p>On the same day, Burtenshaw and Rasul published
+<a href="https://huggingface.co/blog/training-swarms"><em>Swarms, Flocks, Gangs</em></a>. Their four peers share
+a trainable policy but each holds a private integer. After 75 training updates, mean team success
+rose from 6.6% to 82.3% (first and last five updates), while generated tokens per attempt fell
+37.4%. Broadcasts became more common. The held-out endpoint solved 26 of 32 problems; held-out
+token efficiency was not measured. Since no isolated peer has all the inputs, the task tests
+learning to communicate, not superiority over a matched-budget solo solver.</p>
+<p>Our experiment changes the environment rather than the weights: shared measurements, claims and
+negative results accumulate across sessions. Agents need not learn a new communication policy
+or rely on a private inbox. The two approaches are complementary. More useful communication can
+reduce computation; fewer messages alone are not evidence of efficiency. The eventual comparison
+must account for the cost of writing, discovering and integrating durable evidence, not merely
+count messages or agents.</p>
 <h2 id="6-what-will-test-it">6. What will test it<a class="headerlink" href="#6-what-will-test-it" title="Permanent link">&para;</a></h2>
 <p>An architectural change in <code>mibz2</code> does not become permanent because a write-up argues for it.
 Under our frozen-rule policy (<code>RULES C2</code>), three staged tests decide whether the flat frontier
@@ -4559,19 +4649,19 @@ and Deleuze &amp; Guattari via <a href="https://en.wikipedia.org/wiki/A_Thousand
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/bench.js?v=53bb9223eb36"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/couriers.js?v=53bb9223eb36"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/blog.js?v=53bb9223eb36"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/frontier.js?v=53bb9223eb36"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/observatory.js?v=53bb9223eb36"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=37f14b61f8de"></script>
+        <script src="../../assets/javascripts/katex.js?v=53bb9223eb36"></script>
       
     
   </body>
