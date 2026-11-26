@@ -1,0 +1,89 @@
+--- packed.rs
++++ candidate.rs
+@@ -1,5 +1,5 @@
+ //! Eager Cells with two packed slot words, a five-byte immediate grammar, and a
+-//! running marked offset. This module is an experimental moonshot scorer entry.
++//! five-to-sixteen-byte literal table, and a running marked offset. This module is an experimental moonshot scorer entry.
+ use crate::bwt::{InverseBwt, Segmented};
+ use crate::runs::Runs;
+ use crate::Kernels;
+@@ -9,6 +9,7 @@
+ const MARK: u64 = 1 << BITS;
+ const TAG: u64 = (1 << 24) - 1;
+ const INLINE: usize = 5;
++const LITERAL: usize = 16;
+ 
+ #[derive(Default)]
+ pub struct Candidate {
+@@ -17,6 +18,7 @@
+     // word. The second word describes the return word.
+     tops: Vec<[u64; 2]>,
+     rules: Vec<[u64; 2]>,
++    literals: Vec<u128>,
+     #[cfg(test)]
+     cuts: usize,
+ }
+@@ -87,6 +89,7 @@
+         }
+         fit(&mut self.tops, letters, [0, 0]);
+         self.rules.clear();
++        self.literals.clear();
+         #[cfg(test)]
+         {
+             self.cuts = 0;
+@@ -185,6 +188,13 @@
+                     // Both operands are immediate and their unused high bytes
+                     // are zero. b's bytes are shifted past a's byte prefix.
+                     (a & !TAG) | ((b & !TAG) << (8 * alen)) | tag
++                } else if len <= LITERAL {
++                    let a_bytes = short_payload(a, &self.literals);
++                    let b_bytes = short_payload(b, &self.literals);
++                    let value = a_bytes | (b_bytes << (8 * alen));
++                    let index = self.literals.len();
++                    self.literals.push(value);
++                    (index as u64) << 24 | tag
+                 } else {
+                     let index = self.rules.len();
+                     self.rules.push([a, b]);
+@@ -230,8 +240,8 @@
+         let n = word_len(root);
+         out.resize(n, 0);
+         let first = n - 1 - mark;
+-        if n <= INLINE {
+-            write_literal(out, first, root);
++        if n <= LITERAL {
++            write_literal(out, first, root, &self.literals);
+             return true;
+         }
+         let count = self.rules.len();
+@@ -249,8 +259,8 @@
+             let mut d = pos[j] as usize;
+             for (child, later) in children.into_iter().zip(next) {
+                 let len = word_len(child);
+-                if len <= INLINE {
+-                    write_literal(out, d, child);
++                if len <= LITERAL {
++                    write_literal(out, d, child, &self.literals);
+                 } else if child == later {
+                     tail -= 1;
+                     self.rules[tail] = [child, d as u64];
+@@ -272,8 +282,17 @@
+     }
+ }
+ 
+-fn write_literal(out: &mut [u8], dest: usize, word: u64) {
+-    let bytes = (word >> 24).to_le_bytes();
++#[inline]
++fn short_payload(word: u64, literals: &[u128]) -> u128 {
++    if word_len(word) <= INLINE {
++        (word >> 24) as u128
++    } else {
++        literals[(word >> 24) as usize]
++    }
++}
++
++fn write_literal(out: &mut [u8], dest: usize, word: u64, literals: &[u128]) {
++    let bytes = short_payload(word, literals).to_le_bytes();
+     let len = word_len(word);
+     let take = len.min(out.len() - dest);
+     out[dest..dest + take].copy_from_slice(&bytes[..take]);

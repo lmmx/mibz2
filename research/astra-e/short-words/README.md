@@ -1,0 +1,5 @@
+# Immediate words in open endpoint induction
+
+Open-Return keeps each nonempty concatenation as a 16-byte binary rule. During endpoint elimination a two-letter or three-letter word instead fits in the low 24 bits of one node's word ID. One-letter and empty words retain their existing handles. The top two bits distinguish two-letter, three-letter and rule handles. Each explicit constructor implements concatenation in little-endian byte order. Other products still form rules. Induction on rule birth proves that every handle spells the same bytes and has the same length as the original word. Endpoint surgery, mark transport, residual construction, the walker and density fallback are identical to gated Open-Return.
+
+This avoids rule writes, length reads and later stack operations for 2–3-letter products. It adds tag tests and byte packing to every nonempty join and changes the reuse of short words. Actual throughput and memory require complete worker measurements. `prepare.py` reproduces the checked-in constructor and endpoint from the original journal. The probe emits one record per admitted block with row count, mark, cuts, rules, traced area and retained rows.

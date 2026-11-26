@@ -1,0 +1,73 @@
+{
+  "assessment": "Independent CI found a crossover on its four logical CPUs. Conjugation ran 2.27% faster than LazyCells at four workers, with 15.13% less median peak RSS. One and two workers took 3.57% and 2.72% longer. Eager Cells was faster at every measured count. The independent run did not compare opend.",
+  "verification": "Independent CI at `e12e5f6` passed the full gate for all three arms and completed 12 paired rounds on Wikidata \u00d74. Candidate/LazyCells wall ratios at W1/W2/W4 were 1.0357/1.0272/0.9773, with median peak RSS ratios 0.9564/0.9282/0.8487. Candidate/eager wall ratios were 1.3810/1.3239/1.1351. Target i9 verification is pending. [CI run](https://github.com/lmmx/mibz2/actions/runs/44423427194) \u00b7 [Raw checks and measurements](ci/evidence/conjugate-44423427194.zip)",
+  "ci_run": {
+    "id": 44423427194,
+    "artifact_id": 14482923497,
+    "artifact_sha256": "ac65f316c3f6f875429901f416ae55372e7510309aea88b0240ffa587c043280",
+    "head": "e12e5f63173ee7cc6fcc413510ee76cfee0c1eb1",
+    "base": "9c31461df7bef24cecf79348545b27ee26846835",
+    "scorer_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+    "printed_scorer_version": null,
+    "machine": "Intel Xeon 6975P-C, 2 cores, 4 logical CPUs",
+    "rounds": 12,
+    "repeat": 4,
+    "settle_s": 2,
+    "gates": {
+      "candidate": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "lazy": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "cells": {
+        "cases": 338,
+        "verdict": "PASS"
+      }
+    },
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "geomean": 1.0356631727470684,
+          "lo": 1.0257654008671855,
+          "hi": 1.045656449786419,
+          "peak_rss_ratio": 0.9564246428703259
+        },
+        "2": {
+          "geomean": 1.0271788351364717,
+          "lo": 1.0217095549605026,
+          "hi": 1.0326773927382005,
+          "peak_rss_ratio": 0.9282119529469353
+        },
+        "4": {
+          "geomean": 0.9773127277745133,
+          "lo": 0.9743080225560872,
+          "hi": 0.9803266993165668,
+          "peak_rss_ratio": 0.8486873875060362
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "geomean": 1.3810366164098409,
+          "lo": 1.3683378075237138,
+          "hi": 1.3938532761265447,
+          "peak_rss_ratio": 0.9656386844311935
+        },
+        "2": {
+          "geomean": 1.3238557102098727,
+          "lo": 1.3188344270225785,
+          "hi": 1.3288961112517894,
+          "peak_rss_ratio": 0.9320901368642571
+        },
+        "4": {
+          "geomean": 1.135125780365287,
+          "lo": 1.130443223887004,
+          "hi": 1.1398277330721545,
+          "peak_rss_ratio": 0.91419485263693
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.74s
+     Running unittests src/main.rs (/tmp/astra-conjugate/debug/deps/moonshot-39f6e65ea26fa99a)
+
+running 2 tests
+test candidate::fill_tests::packed_and_wide_band_intersections ... ok
+checked 55302 (column, mark, width) triples
+test candidate::verify::exhaustive_conjugacy ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 2.62s
+

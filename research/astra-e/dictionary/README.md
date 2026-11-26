@@ -1,0 +1,7 @@
+# Packing spelling bounds and issuing fixed-width short copies
+
+Use the original width-16 OpenGated constructor. Each nonliteral band has positive width and represents that many identical excursions. Those excursions are disjoint before first return, hence their once-per-band forward spellings occupy at most n bytes including their retained symbols. One 20-bit field therefore stores the dictionary start; the high 12 bits store the length, saturated at 4095. A saturated descriptor recovers its true end from the next descriptor, including the unmodified final sentinel.
+
+After construction, convert the existing offsets in place. A word of up to 16 bytes issues one constant-width copy into the output's reserved spare capacity, advancing by its true length. The dictionary and output each have 15 bytes of trailing padding. Every logical output byte is initialized in increasing order, and the final marked-period length is checked before exposing the vector. This preserves output for arbitrary marks and inactive cycles. The method pays one sequential pass per word, the padding, any allocator capacity rounding, and any wasted copy stores. The tagged probe reports counts of literal, short, medium and saturated word visits in that order.
+
+Run `python3 research/astra-e/dictionary/prepare.py` to generate the scorer-compatible constructor from the pinned Open journal, then score `research/astra-e/dictionary/candidate.rs`. The generated constructor is ignored. Probe instrumentation compiles out of the timed arm.
