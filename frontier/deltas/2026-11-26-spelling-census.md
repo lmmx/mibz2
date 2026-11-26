@@ -1,0 +1,18 @@
+claim: spelling-census
+by: antigravity
+outcome: done
+evidence: examples/spelling_census.rs, docs/journal/2026-11-24-algorithm-level/spelling/README.md, frontier/surface.tsv (E-spelling)
+
+**What was asked:** Characterise where emission's 298 ms (1w) / 37 ms (8w) of spelling (`E_consume`) goes on real blocks (`wikidata`, `wikidata ×4`, `ab gen` corpora), reporting ns/code, ns/byte, and min..max over ≥5 repeats against a production mirror.
+**What I found:**
+- **Literal storm dominates code count, long words dominate bytes:** On `wikidata` (233 Open blocks, `26.57M` codes, `209.7 MB`, all byte-identical to `bwt::walk`), **81.58%** of codes are 1-byte literals (`10.34%` of bytes) arriving in consecutive streaks of mean length **8.81** (`79.03%` of codes in ≥2-literal streaks). Combined inline (`≤16 B`) is **93.57%** of codes for **18.71%** of bytes; long words (`>16 B`) are only **6.43%** of codes yet produce **81.29%** of bytes (`mean 99.8 B`, reused `26.6×`, only `0.45%` one-shot bytes).
+- **Time split against `mirror_e_consume` (`8.158 ns/code`, `1.034 ns/B` on `wikidata`, 7 repeats; `7.960 ns/code`, `1.008 ns/B` on `wikidata ×4`, 5 repeats; 7.6× `memcpy`):**
+  - Bidirectional overhead (`mirror − forward_only`): **41.6–42.6%** (`+3.31..3.47 ns/code`; `u128` back-shift **24.2–24.3%**, dual-cursor **17.4–18.3%**). Pre-right-aligned `inline_back` recovers **26.3–26.8%** (`0.732–0.737×`, byte-exact) even while staying bidirectional.
+  - Per-code lookup+branch (`no_copy_length_only`): **34.8–36.3%** (`2.77..2.96 ns/code`), of which `codes[]` scan is **5.8–6.1%** and pure `len != LONG` branch mispredictions (`8.06%` 2-bit miss rate, zero-controlled on `runs`/`records`) are **7.2–7.9%** (`+0.59..0.63 ns/code`).
+  - Inline 16 B copy (`fwd − long_only`): **18.5–18.9%** (`+1.50..1.51 ns/code`, 6.5× costlier/byte than long).
+  - Long-word copy (`fwd − inline_only`): **7.8–9.2%** (`+0.63..0.73 ns/code`, `~0.10–0.11 ns/B`, near `memcpy` `0.136–0.139 ns/B`).
+  - Cache footprint is NOT binding: `inline16 + lens` fits in 32 KiB L1d on **233/233** blocks (`18.0 KiB` median), total dict fits in 256 KiB L2 on **233/233** (`61.8 KiB` median); dict payload cache stalls are **7.4–7.5%**, `out` writes ~0%. In A6b, `32.3%` of `spelling` (`3.27 MB`) is dead `memo_dedup_slack`.
+- **Representation probes (all byte-exact vs `bwt::walk`):** `inline_32b` (`0.577–0.584×`), `packed_15b` (`0.577×`), `freq_sorted_dict` (`0.562–0.575×`), and `direct_meta` (`0.653–0.659×`) fail to beat `forward_only` (`0.569–0.574×`). `unrolled_4x_forward` hits `0.542–0.554×`. Greedily fusing consecutive `≤16 B` codes (`fused_16b_upper_bound`) cuts codes by **81.3%** and spelling to **0.215–0.217×** (`4.6×` faster).
+**What changed:** Added `examples/spelling_census.rs` (zero `unsafe`, zero `src/` edits) and `docs/journal/2026-11-24-algorithm-level/spelling/README.md`; updated `frontier/surface.tsv` row `E-spelling`; marked `frontier/claims/spelling-census.toml` `done`.
+**What's next:** `rauzy-output` should prioritize **lowering `LIMIT`** (16→12/8/per-byte) or fusing consecutive thin literals to shrink `m` and break the 81.6% literal storm, and **skip** SLP-during-emission (flat L2 `spelling` already copies 81% of bytes in 8–9% of `E_consume`). `forward-emission` inherits −42% of `E_consume` for free by dropping bidirectional spelling; pre-shifting `inline_back` is a quick check if bidi stays.
+**Caveats:** Measured on a 2-vCPU Xeon @ 2.30 GHz KVM VM (no hardware vPMU; `perf_event_open` returns `ENOENT`, replaced by same-loop zero-controlled ablations); all shares are ratios vs the production mirror on the same machine, and `bidi_pre_shifted` was measured on decoupled `E_consume` (not with pointer-chase latency overlapping the shift).

@@ -4,7 +4,7 @@ C-A6a	construction	first pass: classification, counts, admission (200 ms at 1w)	
 C-A6b	construction	setup 19%, induction steps 51%, dictionary 30% (216 ms at 1w)	part of C's 42.1%	part of C's 5.6%	induction order KILLED (1.41% ceiling); the output side open	rauzy-census/results	rauzy-output
 C-A6c	construction	retained-row wiring (161 ms at 1w)	part of C's 42.1%	part of C's 5.6%	open	math-targets/data/character-stage1	forward-emission
 E-walk	emission	the walk to the next code	16.5% (oracle)	3.5% (oracle)	open	ideal-parts/results/full	forward-emission
-E-spelling	emission	codes expanded into bytes (E_consume), unseen by the first matrix	298 ms (22%)	37 ms	open, the largest hidden cost	ideal-parts/results/floor	spelling-census; rauzy-output
+E-spelling	emission	codes expanded into bytes (E_consume): bidi 42% (u128 shift 24% + dual-cursor 18%), lookup+branch 35% (7-8% mispred), inline 16B copy 19% (94% of codes, 82% 1B literals in 8.8-code streaks), long copy 8-9% (81% of bytes at memcpy speed)	298 ms (22%)	37 ms	census done; main levers are fewer codes (lower LIMIT / fused short words) and dropping bidi shift	ideal-parts/results/floor; spelling/README.md	rauzy-output; forward-emission
 M	MTF/RLE2	undo move-to-front and the zero runs	7.5%	2.5%	open; best taken fused with C	ideal-parts/results/full	mtf-fold-census
 R	RLE1/CRC	RLE1, CRC and output	1.7%	-0.9%	small	ideal-parts/results/full; results/floor	-
 D	delivery	the reader's serial copy-out, 839 MB on one thread	48 ms flat	48 ms flat	open; the next serial floor once S is relieved	ideal-parts/results/floor	delivery-copyout
