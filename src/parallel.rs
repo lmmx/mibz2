@@ -31,6 +31,9 @@
 //! A worker's panic (a bug, never the input's doing by design) is caught and becomes an
 //! error, so a bad input can only ever end the decode with an error.
 
+// (research only, `pooled-scan`: the pooled scan's chain and workers)
+#[cfg(feature = "pooled-scan")]
+mod pooled;
 use super::stream::{Event, Scanner, Source};
 use super::{Error, ErrorKind, Kernels, Scratch};
 use std::collections::{BTreeMap, VecDeque};
@@ -309,6 +312,9 @@ struct State {
     /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
     /// reader's error in place of `Cancelled`
     terminal: Option<Error>,
+    /// (research only, `pooled-scan`) the pooled scan's candidates, reads and decodes
+    #[cfg(feature = "pooled-scan")]
+    pool: pooled::PoolState,
 }
 
 impl State {
@@ -327,6 +333,8 @@ impl State {
             #[cfg(test)]
             capped_waits: 0,
             terminal: None,
+            #[cfg(feature = "pooled-scan")]
+            pool: pooled::PoolState::default(),
         }
     }
 
@@ -707,6 +715,12 @@ impl StreamDecoder {
             bytes: cap,
             floor: threads as u64 + 2,
         };
+        // (research only, `pooled-scan`: the scan pooled into the workers, where its mode is
+        // set and there are two workers or more; else the decoder as shipped)
+        #[cfg(feature = "pooled-scan")]
+        if crate::pooled_scan::active() && threads >= 2 {
+            return pooled::launch::<I>(threads, slots, Some(cap), k);
+        }
         let mut dec = Self::launch(threads, slots, Some(cap), move |shared, jobs| {
             worker::<I>(shared, jobs, k)
         });

@@ -102,6 +102,14 @@ pub enum Tag {
     /// a worker: emission word spelling (`emit_codes` / `emit_bidirectional_codes`, separated
     /// from `HandEDeliver`; 0 visits in `E_full` mode when R replays)
     EConsume = 28,
+    // the pooled scan (`pooled-scan`; pooled-scan/registration.md §7): the chain thread's own
+    // work and its wait, apart from the shipped scanner's
+    /// the chain: the magic finder over the input as it arrives
+    PoolFind = 29,
+    /// the chain: a candidate's bytes copied for its worker (departure 2 of prototype.md)
+    PoolCopy = 30,
+    /// the chain: waiting for a worker's read of the candidate at the chain's bit
+    PoolWait = 31,
     // points
     /// the scanner: a block given its place (`x`: its symbols' bytes)
     Issued = 32,
@@ -131,7 +139,7 @@ pub enum Tag {
 }
 
 /// The activities and waits, in `Tag` order (their names in the ledgers)
-pub const ACTIVITIES: [&str; 29] = [
+pub const ACTIVITIES: [&str; 32] = [
     "A0",
     "feed_wait",
     "in_wait",
@@ -161,11 +169,14 @@ pub const ACTIVITIES: [&str; 29] = [
     "hand_R",
     "copy_out",
     "E_consume",
+    "pool_find",
+    "pool_copy",
+    "pool_wait",
 ];
 
 /// Whether an activity is a wait (its begin and end read the thread's CPU time)
 pub fn is_wait(t: u8) -> bool {
-    matches!(t, 1 | 2 | 6 | 8 | 19)
+    matches!(t, 1 | 2 | 6 | 8 | 19 | 31)
 }
 
 /// Whether an activity is a lock's acquisition (a wait, but too short and frequent for the CPU

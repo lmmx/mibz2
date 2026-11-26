@@ -2300,3 +2300,205 @@ bench-ideal-matrix DRY="":
     phase plan     cores                  plan
     phase run      plan,inputs            drive
     phase report   plan                   report
+
+# The pooled scan's kill test (docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md
+# §4, with §5's reading of the floor run and §7's clarifications, frozen before the data). A
+# diagnostic: it stops or continues the thread, and adopts nothing.
+# - Six arms (none, P, C, PC, SC, S: the scan shipped, pooled or ideal, construction real or
+#   ideal) at 6, 7, 8, 9 and 10 workers (8 and 9 judged), and none and P at 1 (the shipped
+#   path's check); unpinned, the 100 ms pre-spin, 12 randomised blocks, traces in the first 3.
+# - Before the decodes: tests/pooled_scan.rs on this machine (exactness; VOID if it fails), and
+#   K4's finder pass: the finder alone over wikidata x4, one thread pinned, 11 passes.
+# - The analysis: pooled-scan/analysis/pooled_scan.py (KILL, CONTINUE or VOID).
+# About 25 to 35 minutes. DRY (one block, a 2 s pre-warm; not evidence) checks the wiring.
+#   just submit bench-pooled-scan
+bench-pooled-scan DRY="":
+    #!/usr/bin/env bash
+    # Fail soft: every phase runs in a subshell of its own (set -e inside it), its exit status and
+    # last line go to $O/phases.tsv, and a phase whose prerequisite failed is SKIPPED; the EXIT
+    # trap always cleans up and bundles $O, console log included. The exit is 1 if any phase
+    # failed, so a failure still shows, always with its bundle.
+    set -uo pipefail
+    # the base: master 8c2b0e25; the build is it plus the research features alone: the matrix
+    # binary (#889, #909), the zero-copy oracles (#921) and the pooled scan (#932)
+    PIN=8c2b0e2576f80382cee25afac69b489aa4766ed2
+    COPIES=4 BLOCKS=12 SETTLE=0 PREWARM=50 SEED=20261127 TIMEOUT=120 REPEATS=11
+    FEATURES=character,scan-oracle,ideal-construction,ideal-mtf,ideal-rle1,ideal-delivery,pooled-scan
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { BLOCKS=1; PREWARM=2; }
+    W=$PWD/target/pooled-scan
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-pooled-scan (docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md; diagnostic) at $(git rev-parse HEAD): master $PIN with the research features $FEATURES, $BLOCKS blocks (traces in the first 3), unpinned, the 100 ms pre-spin, a ${TIMEOUT} s limit a decode, seed $SEED"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-pooled-scan: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    CH=$PWD/target/release/examples/character
+    AB=$PWD/target/release/examples/ab
+    PS=$PWD/target/release/examples/pooled_scan
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\tstatus\tstarted\tended\tlast line\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$X4"
+      if [ -n "$FAILED" ]; then
+        echo "bench-pooled-scan: FAILED phases:$FAILED (phases.tsv); the bundle is kept"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      # (the console log whole before it is bundled: the tee ends once its input closes)
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-pooled-scan: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    # phase NAME NEEDS COMMAND...: NEEDS a comma list of phases that must have passed (- for none)
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-pooled-scan: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-pooled-scan: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-pooled-scan: the checkout has local changes"; exit 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "bench-pooled-scan: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+      # the pin: master's decoder at PIN, plus the research modules alone (character, scan-oracle,
+      # supplied-codes, the zero-copy src/ideal/ and its hooks, the pooled scan and its hook in
+      # stream.rs), never a later master
+      changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|pooled_scan|lib|parallel|stream|read|block|open|open/supplied|open/endpoint|open/outq|mtf|runs|ideal/[a-z0-9_]+|parallel/pooled|parallel/[a-z0-9_]+_tests)\.rs$|^$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-pooled-scan: the build differs from $PIN beyond the research features: $(echo $beyond)"; exit 1; }
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-pooled-scan: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+      # the pooled scan and the zero-copy oracles, so that a head without them fails here, clearly
+      for want in 'fn next_hinted' 'PoolCopy' 'E_full'; do
+        git grep -q -F -e "$want" HEAD -- src \
+          || { echo "bench-pooled-scan: $(git rev-parse --short HEAD) has no $want in src"; exit 1; }
+      done
+    }
+    build() {
+      cargo build -q --release --features "$FEATURES" \
+        --example character --example ab --example windows --example pooled_scan
+      sha256sum "$CH" "$PS" | tee "$O/binaries.sha256"
+    }
+    # the prototype's exactness on this machine (registration.md §3: VOID otherwise)
+    # (two runs: a name filter would apply to both binaries, and the integration tests' names
+    # don't carry the module's path; each must report its tests passed, none filtered to 0)
+    exact() {
+      : > "$O/exact-tests.log"
+      ok=1
+      cargo test --release --features pooled-scan --test pooled_scan >> "$O/exact-tests.log" 2>&1 || ok=
+      cargo test --release --features pooled-scan --lib pooled_scan:: >> "$O/exact-tests.log" 2>&1 || ok=
+      grep 'test result' "$O/exact-tests.log"
+      n=$(grep -oE 'test result: ok\. [0-9]+ passed' "$O/exact-tests.log" | awk '{ s += $4 } END { print s + 0 }')
+      if [ -n "$ok" ] && [ "$n" -ge 10 ]; then
+        echo "the exactness phase: PASSED ($n tests: tests/pooled_scan.rs and the finder's unit tests)" | tee "$O/exact.txt"
+      else
+        echo "the exactness phase: FAILED ($n tests passed; exact-tests.log)" | tee "$O/exact.txt"
+        exit 1
+      fi
+    }
+    # the corpus, as stage 1's
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-pooled-scan: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    # the machine (best effort: what can't be read is recorded so)
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
+    # each core's first CPU, the pacing loop pinned to it: K4's finder runs on the fastest
+    cores() {
+      cpus=$(python3 -c "import sys; sys.path.insert(0, 'bench'); import ideal_parts as s; print(' '.join(str(c[0]) for c in s.topology('$O/lscpu-e.txt')))")
+      { echo "{"; sep=""
+        for c in $cpus; do printf '%s"%s": %s\n' "$sep" "$c" "$(taskset -c "$c" "$CH" --calibrate 200000000 5)"; sep=","; done
+        echo "}"; } > "$O/cores.json"
+      python3 -m json.tool "$O/cores.json" > /dev/null
+    }
+    plan() {
+      python3 bench/pooled_scan.py plan "$O/lscpu-e.txt" "$O/cores.json" "$O/plan.json"
+    }
+    # K4: the finder alone, one thread, pinned, $REPEATS passes (registration.md §7.2)
+    finder() {
+      cpu=$(python3 -c "import json; print(json.load(open('$O/plan.json'))['finder_cpu'])")
+      taskset -c "$cpu" "$PS" --finder "$X4" $REPEATS | tee "$O/finder.json"
+    }
+    # the run (the driver records a failed decode as failed and carries on)
+    drive() {
+      python3 bench/pooled_scan.py run "$O/plan.json" --bin "$CH" --corpus "$X4" \
+        --out "$O" --blocks $BLOCKS --settle $SETTLE --prewarm $PREWARM --seed $SEED --timeout $TIMEOUT
+    }
+    # the report: KILL, CONTINUE or VOID (exit 1 if VOID)
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 docs/journal/2026-11-24-algorithm-level/pooled-scan/analysis/pooled_scan.py \
+        "$O/plan.json" "$O/runs.jsonl" --finder "$O/finder.json" --exact "$O/exact.txt" \
+        --lscpu "$O/lscpu.txt" --out "$O" --blocks $BLOCKS | tee "$O/report.txt"
+    }
+    phase checks   -                      checks
+    phase build    checks                 build
+    phase exact    build                  exact
+    phase inputs   build                  inputs
+    phase machine  build                  machine
+    phase cores    machine                cores
+    phase plan     cores                  plan
+    phase finder   plan,inputs            finder
+    phase run      plan,inputs            drive
+    phase report   plan                   report

@@ -184,3 +184,175 @@ impl<S: Source> Scanner<S> {
         }
     }
 }
+
+/// (research only, `pooled-scan`) `Scanner::next_hinted`'s result: a block the hint gave (its
+/// read was a worker's), or the scanner's own event as `next` gives it
+#[cfg(feature = "pooled-scan")]
+#[allow(clippy::large_enum_variant)] // (as `Event`: moved once a block)
+pub enum Hinted {
+    /// a block whose item a worker read: its index, first bit, end bit, stream and level, and
+    /// the CRC its header stores (the scanner's combined CRC takes it in)
+    Pooled {
+        index: u64,
+        bit: u64,
+        end: u64,
+        stream: u64,
+        level: u32,
+        crc: u32,
+    },
+    Own(Event),
+}
+
+/// (research only, `pooled-scan`) `Scanner::next_hinted`'s hint: `(src, bit, index, level)` to
+/// a block's end bit and stored CRC
+#[cfg(feature = "pooled-scan")]
+pub type Hint<'a, S> = dyn FnMut(&mut S, u64, u64, u32) -> Option<(u64, u32)> + 'a;
+
+#[cfg(feature = "pooled-scan")]
+impl<S: Source> Scanner<S> {
+    /// The input source (the pooled scan's chain finds its candidates in it)
+    pub fn source(&mut self) -> &mut S {
+        &mut self.src
+    }
+
+    /// The next item's first bit
+    pub fn bit(&self) -> u64 {
+        self.bit
+    }
+
+    /// `next`, with a hint asked at each block position of a stream: `hint(src, bit, index,
+    /// level)` gives the end bit and stored CRC of a block item read from exactly `bit` at
+    /// `level` (a worker's), or None. Given one, the item is taken as read there: the scanner
+    /// steps to its end and takes its CRC into the stream's combined CRC, as `next` does
+    /// after its own read. Otherwise the scanner reads the item itself, exactly as `next`
+    /// does (a stream's end, a stream's header, a block no one read, every error). The body
+    /// is `next`'s, with the hint at the top of a block position.
+    pub fn next_hinted(
+        &mut self,
+        mut syms: Vec<u16>,
+        hint: &mut Hint<'_, S>,
+    ) -> Result<Hinted, Error> {
+        loop {
+            match self.state {
+                State::Done => return Ok(Hinted::Own(Event::Done)),
+                State::Header { first } => {
+                    let at = self.bit;
+                    let err = |kind| Error {
+                        kind,
+                        block: None,
+                        bit: Some(at),
+                    };
+                    let (data, eof) = self.src.view(at / 8, 4).map_err(err)?;
+                    if data.is_empty() && eof {
+                        if first {
+                            return Err(err(ErrorKind::Empty));
+                        }
+                        self.state = State::Done;
+                        continue;
+                    }
+                    match data {
+                        [b'B', b'Z', b'h', l @ b'1'..=b'9', ..] => {
+                            self.state = State::Stream {
+                                level: (l - b'0') as u32,
+                                combined: 0,
+                            };
+                            self.bit += 32;
+                        }
+                        _ => {
+                            return Err(err(if first {
+                                ErrorKind::NotBz2
+                            } else {
+                                ErrorKind::TrailingData
+                            }))
+                        }
+                    }
+                }
+                State::Stream { level, combined } => {
+                    let at = self.bit;
+                    let index = self.blocks;
+                    // (the hint: a worker's read of a block from exactly here, taken as this
+                    // scanner's own read would be)
+                    if let Some((end, crc)) = hint(&mut self.src, at, index, level) {
+                        self.bit = end;
+                        self.src.release(self.bit / 8);
+                        self.state = State::Stream {
+                            level,
+                            combined: combined.rotate_left(1) ^ crc,
+                        };
+                        self.blocks += 1;
+                        return Ok(Hinted::Pooled {
+                            index,
+                            bit: at,
+                            end,
+                            stream: self.streams,
+                            level,
+                            crc,
+                        });
+                    }
+                    let err = |kind| Error {
+                        kind,
+                        block: Some(index),
+                        bit: Some(at),
+                    };
+                    let base = at / 8;
+                    let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
+                    let mut br = Bits::at(data, at % 8);
+                    let item =
+                        block::read_item_with_scratch(&mut br, level, syms, &mut self.scratch);
+                    let used = br.bit_pos() - at % 8;
+                    if br.overran() {
+                        // an item past the input held: more input, or the input's end
+                        if eof {
+                            return Err(err(ErrorKind::Truncated));
+                        }
+                        if self.lookahead >= MAX_ITEM {
+                            return Err(err(ErrorKind::BlockTooLarge));
+                        }
+                        self.lookahead = (self.lookahead * 2).max(data.len() + 1).min(MAX_ITEM);
+                        syms = match item {
+                            Ok(Item::Block(b)) => b.syms,
+                            Ok(Item::End(_)) => Vec::new(),
+                            Err((_, s)) => s,
+                        };
+                        continue;
+                    }
+                    self.bit += used;
+                    self.src.release(self.bit / 8);
+                    match item.map_err(|(kind, _)| err(kind))? {
+                        Item::End(stored) => {
+                            if stored != combined {
+                                return Err(err(ErrorKind::StreamCrc {
+                                    stored,
+                                    computed: combined,
+                                }));
+                            }
+                            // the next stream starts at a byte
+                            self.bit = self.bit.div_ceil(8) * 8;
+                            self.state = State::Header { first: false };
+                            self.streams += 1;
+                            syms = Vec::new();
+                        }
+                        Item::Block(symbols) => {
+                            // (the stored CRC: each block's computed CRC is checked
+                            // against it by its worker, in order before this stream's end)
+                            self.state = State::Stream {
+                                level,
+                                combined: combined.rotate_left(1) ^ symbols.crc,
+                            };
+                            self.blocks += 1;
+                            let (end, stream) = (self.bit, self.streams);
+                            return Ok(Hinted::Own(Event::Block {
+                                index,
+                                bit: at,
+                                end,
+                                stream,
+                                level,
+                                symbols,
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

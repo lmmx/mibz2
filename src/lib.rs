@@ -168,6 +168,11 @@ pub mod supplied_codes;
 #[cfg(feature = "scan-oracle")]
 #[doc(hidden)]
 pub mod scan_oracle;
+// (research only, `pooled-scan`: the scan pooled into the workers, the chain accepting each
+// worker's block where the sequential scanner would have read it; its mode and its finder)
+#[cfg(feature = "pooled-scan")]
+#[doc(hidden)]
+pub mod pooled_scan;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;

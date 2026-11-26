@@ -142,6 +142,13 @@ ideal-rle1 = []
 # to the caller, measuring the in-order reader and copy cost. Never on a production path.
 # Retain until the ideal-parts matrix is analysed; then remove
 ideal-delivery = []
+# Research only: the pooled scan (docs/journal/2026-11-24-algorithm-level/pooled-scan/
+# registration.md, plan.md thread 3): no scanner thread reading symbols; the feeder's chain
+# thread finds the block magics and the workers read and decode each candidate's block end to
+# end, the chain accepting a worker's block only where the sequential scanner would have read
+# the same item (src/pooled_scan.rs, src/parallel/pooled.rs). Off, and with its mode unset,
+# the decoder is as shipped. Never on a production path. Retain until its kill test is read
+pooled-scan = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -182,6 +189,11 @@ unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 [[example]]
 name = "supplied_codes"
 required-features = ["supplied-codes"]
+
+# the pooled scan's demonstration and bench-pooled-scan's K4 pass need the pooled scan
+[[example]]
+name = "pooled_scan"
+required-features = ["pooled-scan"]
 
 # bench-four-arm's harness needs the scanner's replay and the emission switch
 [[example]]
