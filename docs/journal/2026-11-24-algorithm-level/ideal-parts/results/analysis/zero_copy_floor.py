@@ -258,6 +258,15 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
             cells_.append(f"{r[0]:.4f} [{r[1]:.4f}, {r[2]:.4f}] {lab:<10}")
             row(k, f"room {part} against the floor", r, lab)
         pr(f"{k:<4} " + " ".join(cells_))
+    # (reported only, the Coordinator's split of emission: its walk made free with the spelling
+    # kept, SECMRD over SCMRD; the spelling is then SFCMRD over SECMRD)
+    pr(
+        "\nemission's walk against the floor, the spelling kept (SECMRD over SCMRD; reported only, no label):"
+    )
+    for k, w in walls.items():
+        r = gm([math.log(w[A][b] / w[ALL_BUT["E"]][b]) for b in range(blocks)])
+        pr(f"  k {k:<3} {r[0]:.4f} [{r[1]:.4f}, {r[2]:.4f}]")
+        row(k, "E walk against SECMRD", r)
 
     pr(
         "\n## The handover and the spelling in SECMRD's traces (ms; summed over the part's threads, and per thread; 95% over the traces)\n"

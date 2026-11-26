@@ -167,6 +167,8 @@ def main():
         "k 8: R's room 0.80 and D's 16/30, both ROOM",
         abs(room(8, "R") - 0.80) < 0.01 and room(8, "D", "label") == "ROOM",
     )
+    ew = get(rows, 8, "E walk against SECMRD")
+    check("k 8: emission's walk against SECMRD, 60/56 (reported)", abs(ew - 60 / 56) < 0.01, ew)
     check(
         "the prediction: Residual B 16 ms at 1 worker is a HIT",
         get(rows, 1, "prediction residual B", "label") == "hit" and "HIT" in text,

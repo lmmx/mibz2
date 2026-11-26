@@ -71,7 +71,7 @@ At each count k, the arms are paired within a block. Every figure is given with 
    - **NO ROOM** iff the interval lies within [0.98, 1.02];
    - **UNRESOLVED** otherwise.
 
-   MASKED needs the pairs, which this run lacks. For E, the arm with emission real (`SCMRD`) runs both the walk and the spelling, so E's room here is the whole of emission's work against `E_full`.
+   MASKED needs the pairs, which this run lacks. For E, the arm with emission real (`SCMRD`) runs both the walk and the spelling, so E's room here is the whole of emission made free against `E_full` (the Coordinator's decision, 26 November, before any data). Beside it, reported only and unlabelled: emission's walk against the floor with the spelling kept, `SECMRD` over `SCMRD`.
 8. **The decomposition** at each k: Residual A = E_consume (on the wall) + Residual B, with the handover (6) reported beside it as the copies' part of the plumbing.
 9. **Beside them:**
    - each arm's clock (cycles over reference cycles × 3.7 GHz);
