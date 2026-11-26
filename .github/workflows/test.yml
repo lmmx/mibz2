@@ -207,6 +207,12 @@ jobs:
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
+      # bench-open-route-adaptive's verdict (bench/open_route.py, a wrapper around
+      # bench/parscan_verdict.py's PARSCAN rule with the default path's arms) and its untimed
+      # preflight on synthetic runs: the verdict where the registration puts it, and no verdict
+      # from incomplete or malformed records
+      - name: The open-route verdict (synthetic runs)
+        run: python3 bench/test_parscan_verdict.py && python3 bench/test_open_route.py
       # bench-cells-imc's statistic, rule and validity (bench/cells_imc.py) on synthetic
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict
