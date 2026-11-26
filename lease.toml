@@ -1,0 +1,9 @@
+id = "permutation-patterns"
+holder = "antigravity"
+session = "99bae486a5e4"
+claimed_at = "2026-11-26T22:30:49+00:00"
+expires = "2026-11-27T06:30:49+00:00"
+owned_paths = []
+mechanisms = ["permutation-pattern-representation"]
+base = "25b0a030f6a77b9333548c7d25be747104c43a26"
+released = false
