@@ -19,12 +19,18 @@ GitHub Actions.
 """
 
 import datetime as dt
+import json
+import os
 import pathlib
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import tomllib
+import urllib.error
+import urllib.parse
+import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
@@ -264,14 +270,179 @@ def table(rows):
     return out + ["| " + " | ".join(r) + " |" for r in rows[1:]]
 
 
+def claim_header(body):
+    """Read the existing Claim header, not instructions elsewhere in a PR body."""
+    lines = (body or "").splitlines()
+    m = re.fullmatch(r"Claim: ([a-z0-9][a-z0-9_-]*)", lines[0].strip()) if lines else None
+    return m.group(1) if m else None
+
+
+def github_repository():
+    """Identify a GitHub origin, including local GitHub git proxies; never query a test remote."""
+    rc, remote = git("remote", "get-url", "origin")
+    if rc:
+        return None
+    if remote.startswith("git@github.com:"):
+        name = remote.split(":", 1)[1]
+    else:
+        url = urllib.parse.urlsplit(remote)
+        if url.hostname == "github.com":
+            name = url.path.lstrip("/")
+        elif url.hostname in ("localhost", "127.0.0.1", "::1", "local_proxy"):
+            if not url.path.startswith("/git/"):
+                return None
+            name = url.path.removeprefix("/git/")
+        else:
+            return None
+    name = name.rstrip("/").removesuffix(".git")
+    return name if re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", name) else None
+
+
+def read_open_prs():
+    """Return (open PRs to master, error), using live GitHub data rather than claim status."""
+    repo = github_repository()
+    if not repo:
+        return None, "origin is not a recognised GitHub remote"
+    endpoint = f"repos/{repo}/pulls?state=open&base=master&per_page=100"
+    # gh can use the session's existing authentication; the standard-library fallback
+    # also works for public repositories without gh. Never print credentials or response bodies.
+    if shutil.which("gh"):
+        try:
+            proc = subprocess.run(
+                ["gh", "api", "--hostname", "github.com", "--paginate", "--slurp", endpoint],
+                cwd=REPO,
+                capture_output=True,
+                text=True,
+                timeout=12,
+            )
+            if proc.returncode == 0:
+                pages = json.loads(proc.stdout)
+                if isinstance(pages, list) and all(isinstance(p, list) for p in pages):
+                    return [pr for page in pages for pr in page], None
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            pass
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "frontier-review"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    found = []
+    try:
+        for page in range(1, 1001):
+            req = urllib.request.Request(
+                f"https://api.github.com/{endpoint}&page={page}", headers=headers
+            )
+            with urllib.request.urlopen(req, timeout=8) as response:
+                rows = json.load(response)
+            if not isinstance(rows, list):
+                break
+            found.extend(rows)
+            if len(rows) < 100:
+                return found, None
+    except (OSError, ValueError, urllib.error.URLError):
+        pass
+    return None, "GitHub open-PR query failed or was incomplete"
+
+
+def review_projection(items, prs, error):
+    """Project review candidates from open PRs; this is visibility, never merge authority."""
+    by_id = {c["id"]: c for c in items}
+    linked, unclaimed, unlinked = {}, [], []
+    # A partial or malformed response must not be reported as an empty queue.
+    if prs is not None:
+        try:
+            for pr in prs:
+                if (
+                    not isinstance(pr["number"], int)
+                    or pr["number"] < 1
+                    or not re.fullmatch(r"[0-9a-f]{40}", pr["head"]["sha"])
+                    or pr["state"] != "open"
+                    or pr["base"]["ref"] != "master"
+                    or not isinstance(pr["draft"], bool)
+                    or (pr["body"] is not None and not isinstance(pr["body"], str))
+                ):
+                    raise ValueError("malformed PR metadata")
+                cid = claim_header(pr["body"])
+                if cid == "none":
+                    unclaimed.append(pr["number"])
+                elif cid is None:
+                    unlinked.append(pr["number"])
+                else:
+                    linked.setdefault(cid, {})[pr["number"]] = pr
+        except (KeyError, TypeError, ValueError):
+            prs, error = None, "GitHub returned incomplete or malformed PR metadata"
+            linked, unclaimed, unlinked = {}, [], []
+    lines = []
+    if prs is None:
+        lines.append(f"- UNAVAILABLE: {error}; stored review pointers below are unverified.")
+    else:
+        for cid, group in sorted(
+            linked.items(), key=lambda x: (by_id.get(x[0], {}).get("priority", 999), x[0])
+        ):
+            for number, pr in sorted(group.items()):
+                state = "draft, not ready" if pr["draft"] else "open; integration gates apply"
+                notes = []
+                if cid not in by_id:
+                    notes.append("claim not in this checkout")
+                if len(group) > 1:
+                    notes.append("multiple open PRs for claim")
+                suffix = "; " + "; ".join(notes) if notes else ""
+                lines.append(f"- {cid}: PR #{number} at {pr['head']['sha'][:12]} ({state}{suffix})")
+        if unclaimed:
+            refs = ", ".join(f"#{n}" for n in sorted(set(unclaimed)))
+            lines.append(f"- Unclaimed contributions (Claim: none): {refs}")
+        if unlinked:
+            refs = ", ".join(f"#{n}" for n in sorted(set(unlinked)))
+            lines.append(f"- Unclassified open PRs (no valid Claim header; may be legacy): {refs}")
+    for cid, c in sorted(by_id.items()):
+        if c.get("status") != "review":
+            continue
+        number = c.get("pr", "?")
+        if prs is None:
+            lines.append(f"- {cid}: stored PR #{number} (unverified)")
+        elif number not in linked.get(cid, {}):
+            lines.append(f"- {cid}: stored PR #{number} is not a linked open PR (stale pointer)")
+    return lines or ["- none"], set(linked)
+
+
+def check_pr_lineage(event_path, items):
+    """Check the existing Claim header convention for PRs that change frontier data."""
+    try:
+        pr = json.loads(pathlib.Path(event_path).read_text())["pull_request"]
+        base = pr["base"]["sha"]
+        if not re.fullmatch(r"[0-9a-f]{40}", base):
+            raise ValueError("invalid base SHA")
+        rc, changed = git("diff", "--name-only", base, "HEAD", "--", "frontier/")
+        if rc:
+            return "cannot inspect PR's frontier diff for claim lineage"
+        if not changed:
+            return None
+        cid = claim_header(pr.get("body"))
+        if cid is None:
+            return "frontier PR needs its existing Claim: <id> or Claim: none first line"
+        if cid != "none" and cid not in {c["id"] for c in items}:
+            return f"PR Claim: {cid} has no claim or blog card in the checked tree"
+        for c in items:
+            if (
+                c.get("status") == "review"
+                and c.get("pr") == pr["number"]
+                and c["id"] != cid
+            ):
+                return f"PR Claim: {cid} does not match its review pointer for {c['id']}"
+    except (OSError, KeyError, TypeError, ValueError):
+        return "cannot read PR event for claim lineage"
+    return None
+
+
 def render():
     """The whole of STATUS.md, from the files alone (live holds are in `brief` and `holds`)."""
     claims, cards = load("claims"), load("blog")
     every = claims + cards
+    prs, pr_error = read_open_prs()
+    review_lines, pending = review_projection(every, prs, pr_error)
     _, head = git("rev-parse", "--short", "HEAD")
     out = ["# Frontier status", ""]
     out += [
-        f"*Generated by `python3 frontier/tools/frontier.py status` at commit {head}. A local, uncommitted page; live holds aren't here: run `frontier.py holds` or `brief`.*",
+        f"*Generated by `python3 frontier/tools/frontier.py status` at commit {head}. A local, uncommitted page; the review queue uses live PRs. For live holds run `frontier.py holds` or `brief`.*",
         "",
     ]
     louis = [
@@ -284,14 +455,19 @@ def render():
     out += ["", "## Open flags", ""] + (
         [f"- `{p.name}`: {h.get('flags')} ({h.get('invariant')})" for p, h in flags] or ["- none"]
     )
+    out += ["", "## Awaiting review or merge", ""] + review_lines
     for state, title in (
-        ("review", "Awaiting review or merge"),
         ("open", "Open claims, by priority"),
         ("blocked", "Blocked"),
         ("idea", "Ideas, not yet admitted"),
     ):
         sel = sorted(
-            [c for c in claims if c.get("status") == state], key=lambda c: (c["priority"], c["id"])
+            [
+                c
+                for c in claims
+                if c.get("status") == state and (state != "open" or c["id"] not in pending)
+            ],
+            key=lambda c: (c["priority"], c["id"]),
         )
         out += ["", f"## {title}", ""] + ([row(c) for c in sel] or ["- none"])
     cols = [[c["id"] for c in cards if c.get("stage") == s] for s in STAGES]
@@ -335,7 +511,7 @@ def _merge_base():
     return base, None
 
 
-def check():
+def check(pr_event=None):
     """Validate the frontier's files (five checks); return 1 on any error."""
     errs, warn = [], []
     claims, cards = load("claims"), load("blog")
@@ -357,6 +533,10 @@ def check():
             errs.append(
                 f"{n}: past review, it needs reviewed_by, by a different agent from drafted_by"
             )
+    if pr_event:
+        error = check_pr_lineage(pr_event, claims + cards)
+        if error:
+            errs.append(error)
     # 2. deltas and flags: fixed headers, 40-line cap, and independent flag resolution
     for d, head in (("deltas", DELTA_HEAD), ("flags", FLAG_HEAD)):
         for p, lines, h in heads(d, head):
@@ -497,11 +677,9 @@ def brief(can):
             or "- nothing"
         )
     )
-    review = [c for c in claims + cards if c.get("status") == "review"]
-    print(
-        "\n## Awaiting review or merge (finish before starting)\n"
-        + ("\n".join(f"- {c['id']}: PR #{c.get('pr', '?')}" for c in review) or "- nothing")
-    )
+    prs, pr_error = read_open_prs()
+    review_lines, pending = review_projection(claims + cards, prs, pr_error)
+    print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(review_lines))
     git("fetch", "-q", "origin", "evidence")
     rc, ev = git("log", "-5", "--format=%h %cs %s", "origin/evidence")
     print(
@@ -513,12 +691,15 @@ def brief(can):
         for c in claims + cards
         if c.get("status") == "open"
         and c["id"] not in held
+        and c["id"] not in pending
         and not c.get("needs_louis")
         and (not can or set(c["needs"]) <= can)
         and not any(_flag_matches(h, c["id"], c) for _, h in flags)
     ]
     take.sort(key=lambda c: (c["priority"], c["id"]))
     print("\n## What you can take (highest priority first)")
+    if prs is None:
+        print("- Review discovery unavailable: these local suggestions are not a verified queue.")
     for c in take:
         print(row(c) + (f", stage {c['stage']}" if "stage" in c else ""))
     other = [c for c in take if c["kind"] in ("explore", "synthesise")]
@@ -605,7 +786,7 @@ def main(argv):
         (ROOT / "STATUS.md").write_text(render())
         print("wrote frontier/STATUS.md")
     elif cmd == "check":
-        return check()
+        return check(opt("--pr-event"))
     elif cmd == "holds":
         for k, (sha, v) in sorted(holds().items()):
             state = "live" if live(v) else ("released" if v.get("released") else "expired")
