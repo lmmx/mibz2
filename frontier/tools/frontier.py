@@ -521,6 +521,20 @@ def finish_review(cid, number, head, *, cancelled=False):
     print(f"{cid}: terminal PR #{number}; reservation released")
 
 
+def reconcile_integrations(all_holds):
+    """Recover merged reservations before admitting new work; never release on uncertainty."""
+    for cid, (_, lease) in sorted(all_holds.items()):
+        if lease.get("released") or lease.get("phase") not in ("integration", "parked"):
+            continue
+        try:
+            pr = read_pr(lease["pr"])
+            if pr.get("merged") is True and pr.get("state") == "closed":
+                finish_review(cid, lease["pr"], lease["pr_head"])
+        except (SystemExit, KeyError, TypeError, ValueError):
+            print(f"{cid}: integration reconciliation unavailable; reservation retained", file=sys.stderr)
+    return holds()
+
+
 def review_projection(items, prs, error):
     """Project review candidates from open PRs; this is visibility, never merge authority."""
     by_id = {c["id"]: c for c in items}
@@ -914,6 +928,8 @@ def claim(cid, by, hours):
         if cid in pending:
             sys.exit(f"{cid} already has a pending PR; finish it before starting again")
     all_holds = holds()
+    if any(v.get("phase") in ("integration", "parked") and not v.get("released") for _, v in all_holds.values()):
+        all_holds = reconcile_integrations(all_holds)
     if sum(live(v) for _, v in all_holds.values()) >= config("origin/master").get(
         "max_live_holds", 6
     ):
