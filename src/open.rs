@@ -908,8 +908,14 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
             pos: 0,
             width: 0,
         };
-        let Some((n, records)) = fold::front(b, scratch, k, &mut sink) else {
-            return Outcome::Bailed;
+        let refused = if FORCED {
+            usize::MAX
+        } else {
+            fold::refused(bound)
+        };
+        let (n, records) = match fold::front(b, scratch, k, &mut sink, refused) {
+            Ok(x) => x,
+            Err(o) => return o,
         };
         sink.flush();
         let pass = sink.pass;

@@ -49,6 +49,15 @@ jobs:
         run: |
           cargo test --features phase-counters --lib phase::
           cargo test --features phase-counters --test phase --test phase_off
+      # the MTF-into-construction fold (research feature `mtf-fold`, claim mtf-fold-build;
+      # docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md): its fronts against
+      # the shipped ones, its open kernel and decode_owned against the shipped path, and the
+      # parallel decoder with it on and off on the corpora (bytes and errors), then the whole
+      # library's tests with the feature on
+      - name: The MTF-into-construction fold (research feature)
+        run: |
+          cargo test --release --features mtf-fold --test mtf_fold
+          cargo test --features mtf-fold --lib
       # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
       # arbitrary columns, tampered logs refused, every block of the test corpora recorded
       # and checked; then a file of the repository's Markdown recorded (MONODROMY's prose

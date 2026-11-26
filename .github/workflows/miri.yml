@@ -121,3 +121,13 @@ jobs:
           grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' lever-list.txt
       - name: Miri, the memory-lever kernels
         run: cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy
+      # the MTF-into-construction fold (`mtf-fold`, research): its scalar front against the
+      # shipped fronts and its open kernel against the shipped path, under Miri
+      - name: The fold's tests are selected
+        run: |
+          cargo miri test --features mtf-fold --lib -- miri_fold --list 2>/dev/null | tee fold-list.txt
+          grep -q '^runs::tests::fold_tests::miri_fold_front_is_the_records_maximal_runs:' fold-list.txt
+          grep -q '^runs::tests::fold_tests::miri_fold_front_edges:' fold-list.txt
+          grep -q '^runs::tests::fold_tests::miri_fold_open_kernel_is_the_shipped_path:' fold-list.txt
+      - name: Miri, the fold
+        run: cargo miri test --features mtf-fold --lib -- miri_fold

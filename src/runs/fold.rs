@@ -119,27 +119,56 @@ pub(crate) fn wants(b: &Symbols) -> bool {
     enabled() && b.max_len <= MAX_LEN && b.syms.len() >= MIN_SYMS
 }
 
-/// The block's runs into `sink`: its rows and the records `runs::front` would have written,
-/// or None where the shipped front must decide (its errors, and what its AVX2 kernel leaves to
-/// its scalar one). `f` lends the AVX2 kernel its bitmaps.
+/// The least literals with which a block of bound `max_len` is refused by the open kernel's
+/// admission whatever its rows (`OpenCells::cap`, unforced). Every literal opens a record, so
+/// a block has at least as many records as literals, and `cap` admits r records in n rows
+/// only below its dense line, 25 r < 7 n (its lazy line, 20 r < 3 n, is inside it), with
+/// n <= `max_len`. So `lits >= refused(max_len)` is refused.
+pub(crate) fn refused(max_len: usize) -> usize {
+    (7 * max_len).div_ceil(25)
+}
+
+/// The block's runs into `sink`: its rows and the records `runs::front` would have written.
+/// Or `Bailed` where the shipped front must decide (its errors, and what its AVX2 kernel
+/// leaves to its scalar one); or `NotOpen` once its literals reach `lits_refused`
+/// ([`refused`]), before any run is sent (the shipped path then decides, as it decides every
+/// block the admission refuses). `f` lends the AVX2 kernel its bitmaps.
 pub(crate) fn front<S: Sink>(
     b: &Symbols,
     f: &mut Runs,
     k: Kernels,
     sink: &mut S,
-) -> Option<(usize, usize)> {
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
     #[cfg(target_arch = "x86_64")]
     if super::front_fast(k) {
         // SAFETY: `front_fast` holds only when AVX2, BMI1, BMI2, LZCNT and POPCNT were
         // detected (`Kernels::avx2` is set only when AVX2 and BMI1 were)
-        return unsafe { front_avx2(b, f, sink) };
+        return unsafe { front_avx2(b, f, sink, lits_refused) };
     }
     let _ = (k, f);
-    front_scalar(b, sink)
+    front_scalar(b, sink, lits_refused)
 }
 
-/// `runs::front_scalar`'s loop with each record group sent to the sink: None wherever it errs
-pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize, usize)> {
+/// `runs::front_scalar`'s loop with each record group sent to the sink: `Bailed` wherever it
+/// errs, `NotOpen` (before any run is sent) once the literals before the first end-of-block
+/// symbol reach `lits_refused`
+pub(crate) fn front_scalar<S: Sink>(
+    b: &Symbols,
+    sink: &mut S,
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
+    if lits_refused < b.syms.len() {
+        let lits = b
+            .syms
+            .iter()
+            .take_while(|&&s| s != b.eob || s <= 1)
+            .filter(|&&s| s > 1)
+            .count();
+        if lits >= lits_refused {
+            return Err(Outcome::NotOpen);
+        }
+    }
     let mut recs = 0usize;
     let mut close = |open: (u8, u32), sink: &mut S| {
         if open.1 > 0 {
@@ -154,7 +183,7 @@ pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize,
     for &s in &b.syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
-                return None;
+                return Err(Outcome::Bailed);
             }
             run += (s as u32 + 1) * weight;
             weight <<= 1;
@@ -162,7 +191,7 @@ pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize,
         }
         if run != 0 {
             if n + run as usize > b.max_len {
-                return None;
+                return Err(Outcome::Bailed);
             }
             let c = b.seq_to_unseq[list[0] as usize];
             open = (c, open.1 + run);
@@ -173,7 +202,7 @@ pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize,
             break;
         }
         if n >= b.max_len {
-            return None;
+            return Err(Outcome::Bailed);
         }
         let nn = ((s - 1) as usize).min(255);
         let v = list[nn];
@@ -185,11 +214,12 @@ pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize,
         n += 1;
     }
     close(open, sink);
-    Some((n, recs))
+    Ok((n, recs))
 }
 
 /// `runs::front_avx2` with each record's write replaced by the sink (and no `counts`/`per`).
-/// None wherever `front_avx2` returns None, and only there: the bitmaps, the list's two levels
+/// `Bailed` wherever `front_avx2` returns None, and only there (`NotOpen` as `front_scalar`'s,
+/// from its bitmaps): the bitmaps, the list's two levels
 /// and every check are its own, line for line.
 ///
 /// What it writes: the bitmaps, as `front_avx2` writes them (`words` words each, reserved,
@@ -206,13 +236,18 @@ pub(crate) fn front_scalar<S: Sink>(b: &Symbols, sink: &mut S) -> Option<(usize,
 /// AVX2, BMI1, BMI2, LZCNT and POPCNT must be available.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
-unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option<(usize, usize)> {
+unsafe fn front_avx2<S: Sink>(
+    b: &Symbols,
+    f: &mut Runs,
+    sink: &mut S,
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
     use super::{second, STEPS};
     use std::arch::x86_64::*;
     let m = b.syms.len();
     let sp = b.syms.as_ptr();
     if b.max_len >= 1 << 31 || m >= 1 << 24 {
-        return None;
+        return Err(Outcome::Bailed);
     }
 
     // ---- the bitmaps, 32 symbols a step, to the first end-of-block symbol ----
@@ -283,7 +318,15 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
     f.lit.set_len(words);
     f.one.set_len(words);
     if end == usize::MAX {
-        return None;
+        return Err(Outcome::Bailed);
+    }
+    // (the admission's refusal by the literals alone, `refused`: `lit` holds exactly the
+    // literals before `end`)
+    if lits_refused < m {
+        let lits: usize = f.lit.iter().map(|w| w.count_ones() as usize).sum();
+        if lits >= lits_refused {
+            return Err(Outcome::NotOpen);
+        }
     }
 
     // ---- the literals ----
@@ -314,7 +357,7 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
             let more = r.saturating_sub(1) as usize;
             big += total;
             if more > slack || big > b.max_len as u64 {
-                return None;
+                return Err(Outcome::Bailed);
             }
             slack -= more;
             recs += r as usize;
@@ -330,7 +373,7 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
             let (c, total): (u64, u64) = ($c, $total);
             if total > CAP as u64 {
                 if $span > 22 {
-                    return None;
+                    return Err(Outcome::Bailed);
                 }
                 long!(c, total);
             } else {
@@ -372,7 +415,7 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
     let first = seek!();
     let q = first.map_or(end, |t| wi * 64 + t);
     if q > 21 {
-        return None;
+        return Err(Outcome::Bailed);
     }
     long!(*s2u.as_ptr() as u64, _bzhi_u64(*onep, q as u32 + 1) - 1);
     if let Some(mut tz) = first {
@@ -408,7 +451,7 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
                 let next = seek!();
                 let q2 = next.map_or(end, |t| wi * 64 + t);
                 if q2 - q > 22 {
-                    return None;
+                    return Err(Outcome::Bailed);
                 }
                 emit!(c, count!(q, q2), q2 - q);
                 match next {
@@ -419,7 +462,7 @@ unsafe fn front_avx2<S: Sink>(b: &Symbols, f: &mut Runs, sink: &mut S) -> Option
         }
     }
     if n > b.max_len as u64 {
-        return None;
+        return Err(Outcome::Bailed);
     }
-    Some((n as usize, recs))
+    Ok((n as usize, recs))
 }

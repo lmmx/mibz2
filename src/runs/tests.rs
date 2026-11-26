@@ -1027,9 +1027,24 @@ mod fold_tests {
         let mut folded = false;
         for k in kernels() {
             let mut kept = Kept::default();
-            let got = fold::front(b, &mut Runs::default(), k, &mut kept);
+            let got = fold::front(b, &mut Runs::default(), k, &mut kept, usize::MAX);
             let want = front(b, r, k);
-            match got {
+            // and with the admission's refusal by literals: refused only where the shipped
+            // records are refused by the dense line (or the shipped front errs), else the same
+            let refused = fold::refused(b.max_len);
+            let got_r = fold::front(b, &mut Runs::default(), k, &mut Kept::default(), refused);
+            match (&got_r, &want) {
+                (Err(Outcome::NotOpen), Ok(n)) => assert!(
+                    25 * r.runs.len() >= 7 * n,
+                    "{what}, {k:?}: refused by its literals, admissible by its records"
+                ),
+                (Err(Outcome::NotOpen), Err(_)) => {}
+                _ => assert!(got_r == got, "{what}, {k:?}: {got_r:?} against {got:?}"),
+            }
+            if let Err(o) = got {
+                assert!(o == Outcome::Bailed, "{what}, {k:?}: {o:?}");
+            }
+            match got.ok() {
                 Some((n, recs)) => {
                     assert!(want == Ok(n), "{what}, {k:?}: {n} rows, shipped {want:?}");
                     assert!(recs == r.runs.len(), "{what}, {k:?}: the record count");
@@ -1075,14 +1090,17 @@ mod fold_tests {
                 seen[0] += 1;
             }
             Outcome::NotOpen => {
-                assert!(decodes, "{what}, {k:?}: not open, shipped {shipped:?}");
-                let n = shipped.unwrap();
-                let mut want = Vec::new();
-                assert!(ship.invert_runs(&r, n, b.orig_ptr, &mut want, k));
-                assert!(
-                    ship.opened == 0,
-                    "{what}, {k:?}: the shipped path opened it"
-                );
+                // (refused by its literals before its rows are known, it may also be a block
+                // the shipped front refuses: either way the shipped path decides)
+                if decodes {
+                    let n = shipped.unwrap();
+                    let mut want = Vec::new();
+                    assert!(ship.invert_runs(&r, n, b.orig_ptr, &mut want, k));
+                    assert!(
+                        ship.opened == 0,
+                        "{what}, {k:?}: the shipped path opened it"
+                    );
+                }
                 seen[1] += 1;
             }
             Outcome::Bailed => {
@@ -1102,6 +1120,8 @@ mod fold_tests {
         b.max_len = match (rng.below(4), n) {
             (0, Some(n)) if n <= 900_000 => n,
             (1, Some(n)) if (1..=900_000).contains(&n) => n - 1,
+            // (Miri: a bound of a few thousand rows, as the fold sizes its buffer by it)
+            _ if cfg!(miri) => 1 << 12,
             _ => 900_000,
         };
         if let Some(n) = n.filter(|&n| n > 0) {
