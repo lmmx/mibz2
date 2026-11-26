@@ -1,19 +1,24 @@
-//! Research only (`ideal-mtf`): factor M (target T3) of the ideal-parts matrix.
+//! Research only (`ideal-mtf`): zero-copy lock-free factor M (target T3) of the ideal-parts
+//! matrix (`IDEAL-PARTS-2.md` §3).
 //!
 //! Records each block's BWT last column L as produced by the worker's MTF/RLE2 stage:
-//! - on the run-records route (`runs::front`), the run records, byte row counts and per-byte
-//!   record counts (`Runs`), which construction consumes directly;
+//! - on the run-records route (`runs::front`), the run records (`Arc<[u16]>`), byte row counts
+//!   and per-byte record counts (`Runs`), which construction consumes directly;
 //! - on the column route (`mtf::mtf` or `mtf::mtf_checkpoints`), the unpacked column `ll`,
 //!   its byte counts, and any count checkpoints.
 //!
-//! Repeated blocks across streams share one entry. In `Replay`, the worker's MTF and RLE2
-//! inversion is skipped completely, and the recorded L is copied once (charged to the
-//! handover) into the worker's `Scratch` right where construction consumes it.
+//! Repeated blocks across streams share one entry. Switching to `Replay` freezes the store into
+//! a lock-free `OnceLock` snapshot. In `Replay`, MTF/RLE2 inversion is skipped completely: on the
+//! run-records route, `runs` is handed over zero-copy via `Arc<[u16]>` (only the 2 KiB `counts`
+//! and `per` arrays are copied).
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, RwLock};
 
+use super::accounting::{Phase, Scope};
+use super::frozen::FrozenSlot;
 use super::{Fnv1a, Mode};
 use crate::runs::Runs;
 
@@ -21,12 +26,18 @@ static MODE: AtomicU8 = AtomicU8::new(Mode::Real as u8);
 static EXECUTED: AtomicU64 = AtomicU64::new(0);
 static REPLAYED: AtomicU64 = AtomicU64::new(0);
 
-/// Switch the MTF/RLE2 oracle's mode for decodes started from now on
+/// Switch the MTF/RLE2 oracle's mode for decodes started from now on.
+///
+/// Entering [`Mode::Replay`] freezes the recorded store into the lock-free `OnceLock` snapshot.
 pub fn set_mode(m: Mode) {
+    if m == Mode::Replay {
+        freeze_store();
+    }
     MODE.store(m as u8, Ordering::SeqCst);
 }
 
-/// The mode now set
+/// The mode now set.
+#[inline]
 pub fn mode() -> Mode {
     Mode::of(MODE.load(Ordering::Relaxed))
 }
@@ -34,7 +45,7 @@ pub fn mode() -> Mode {
 enum Entry {
     Runs {
         n: usize,
-        runs: Box<[u16]>,
+        runs: Arc<[u16]>,
         counts: Box<[u32; 256]>,
         per: Box<[u32; 256]>,
     },
@@ -128,15 +139,31 @@ struct Store {
     conflicts: u64,
 }
 
-static STORE: RwLock<Option<Store>> = RwLock::new(None);
+type Snapshot = Box<[Option<Arc<Entry>>]>;
 
-/// Empty the store
+static STORE: RwLock<Option<Store>> = RwLock::new(None);
+static FROZEN: FrozenSlot<Snapshot> = FrozenSlot::new();
+
+thread_local! {
+    static TLS: RefCell<(u64, Option<Arc<Snapshot>>)> = const { RefCell::new((0, None)) };
+}
+
+fn freeze_store() {
+    FROZEN.freeze(|| {
+        let g = STORE.read().unwrap_or_else(|e| e.into_inner());
+        let st = g.as_ref()?;
+        (!st.blocks.is_empty()).then(|| st.blocks.clone().into_boxed_slice())
+    });
+}
+
+/// Empty the store and invalidate any frozen snapshot.
 pub fn clear_store() {
     *STORE.write().unwrap_or_else(|e| e.into_inner()) = Some(Store::default());
+    FROZEN.invalidate();
 }
 
 /// The store: (blocks indexed, distinct entries, their bytes, conflicts, blocks missing below
-/// the last indexed)
+/// the last indexed).
 pub fn store_size() -> (u64, u64, u64, u64, u64) {
     let g = STORE.read().unwrap_or_else(|e| e.into_inner());
     g.as_ref().map_or((0, 0, 0, 0, 0), |s| {
@@ -151,14 +178,24 @@ pub fn store_size() -> (u64, u64, u64, u64, u64) {
 }
 
 /// Real MTF/RLE2 executions (`runs::front`, `mtf::mtf`, `mtf::mtf_checkpoints`) since the last
-/// call (and reset)
+/// call (and reset).
 pub fn take_executed() -> u64 {
     EXECUTED.swap(0, Ordering::SeqCst)
 }
 
-/// Blocks whose MTF/RLE2 output was replayed since the last call (and reset)
+/// Blocks whose MTF/RLE2 output was replayed since the last call (and reset).
 pub fn take_replayed() -> u64 {
     REPLAYED.swap(0, Ordering::SeqCst)
+}
+
+/// Fallback `RwLock` acquisitions during `Replay` since the last call (0 on the `OnceLock` path).
+pub fn take_lock_acquires() -> u64 {
+    FROZEN.take_lock_acquires()
+}
+
+/// Whether `Replay` is currently serving from the lock-free `OnceLock` fast path.
+pub fn is_frozen_lock_free() -> bool {
+    FROZEN.is_once_active()
 }
 
 pub(crate) fn count_executed() {
@@ -178,7 +215,7 @@ pub(crate) fn record_runs(index: u64, n: usize, r: &Runs) {
     let entry = found.unwrap_or_else(|| {
         let e = Arc::new(Entry::Runs {
             n,
-            runs: runs.into(),
+            runs: Arc::from(runs),
             counts: Box::new(*counts),
             per: Box::new(*per),
         });
@@ -195,6 +232,7 @@ pub(crate) fn record_runs(index: u64, n: usize, r: &Runs) {
         Some(_) => {}
         None => st.blocks[i] = Some(entry),
     }
+    FROZEN.mark_dirty();
 }
 
 pub(crate) fn record_column(
@@ -230,6 +268,7 @@ pub(crate) fn record_column(
         Some(_) => {}
         None => st.blocks[i] = Some(entry),
     }
+    FROZEN.mark_dirty();
 }
 
 pub(crate) enum Replay {
@@ -238,8 +277,10 @@ pub(crate) enum Replay {
     Miss,
 }
 
-/// Hand over block `index`'s recorded L (either into `runs` on the run-records route, or into
-/// `ll`/`counts`/`checkpoints` on the column route), with the lock released before copying.
+/// Hand over block `index`'s recorded L lock-free from the frozen store.
+///
+/// On the run-records route (`reads_runs == true`), hands `runs` over zero-copy via
+/// `Arc<[u16]>` (`Runs::load_shared`, 0 bytes of run records copied).
 pub(crate) fn replay(
     index: u64,
     reads_runs: bool,
@@ -248,54 +289,61 @@ pub(crate) fn replay(
     counts: &mut [u32; 256],
     checkpoints: &mut Vec<[u32; 256]>,
 ) -> Replay {
-    let entry = {
-        let g = STORE.read().unwrap_or_else(|e| e.into_inner());
-        match g
-            .as_ref()
-            .and_then(|s| s.blocks.get(index as usize))
-            .and_then(|b| b.clone())
-        {
-            Some(e) => e,
-            None => return Replay::Miss,
-        }
-    };
-    match entry.as_ref() {
-        Entry::Runs {
-            n,
-            runs: r,
-            counts: c,
-            per,
-        } => {
-            REPLAYED.fetch_add(1, Ordering::Relaxed);
-            if reads_runs {
-                runs.load_snapshot(r, c, per);
-                Replay::Runs(*n)
-            } else {
-                ll.clear();
-                ll.reserve(*n);
-                for &rec in r.iter() {
-                    let byte = (rec >> 8) as u8;
-                    let len = (rec & 255) as usize;
-                    ll.resize(ll.len() + len, byte);
+    let mut scope = Scope::begin(Phase::HandM);
+    let res = FROZEN.with(&TLS, |blocks| {
+        let Some(entry) = blocks.get(index as usize).and_then(|b| b.as_ref()) else {
+            return Replay::Miss;
+        };
+        match entry.as_ref() {
+            Entry::Runs {
+                n,
+                runs: r,
+                counts: c,
+                per,
+            } => {
+                REPLAYED.fetch_add(1, Ordering::Relaxed);
+                if reads_runs {
+                    runs.load_shared(Arc::clone(r), c, per);
+                    scope.set_bytes(0);
+                    Replay::Runs(*n)
+                } else {
+                    ll.clear();
+                    ll.reserve(*n);
+                    for &rec in r.iter() {
+                        let byte = (rec >> 8) as u8;
+                        let len = (rec & 255) as usize;
+                        ll.resize(ll.len() + len, byte);
+                    }
+                    *counts = **c;
+                    scope.set_bytes(*n as u64);
+                    Replay::Column(*n)
                 }
+            }
+            Entry::Column {
+                ll: col,
+                counts: c,
+                checkpoints: cp,
+            } => {
+                ll.clear();
+                ll.extend_from_slice(col);
                 *counts = **c;
-                Replay::Column(*n)
+                let mut copied = col.len() as u64;
+                if !cp.is_empty() {
+                    checkpoints.clear();
+                    checkpoints.extend_from_slice(cp);
+                    copied += (cp.len() * std::mem::size_of::<[u32; 256]>()) as u64;
+                }
+                scope.set_bytes(copied);
+                REPLAYED.fetch_add(1, Ordering::Relaxed);
+                Replay::Column(col.len())
             }
         }
-        Entry::Column {
-            ll: col,
-            counts: c,
-            checkpoints: cp,
-        } => {
-            ll.clear();
-            ll.extend_from_slice(col);
-            *counts = **c;
-            if !cp.is_empty() {
-                checkpoints.clear();
-                checkpoints.extend_from_slice(cp);
-            }
-            REPLAYED.fetch_add(1, Ordering::Relaxed);
-            Replay::Column(col.len())
+    });
+    match res {
+        Some(Replay::Miss) | None => {
+            scope.cancel();
+            Replay::Miss
         }
+        Some(r) => r,
     }
 }
