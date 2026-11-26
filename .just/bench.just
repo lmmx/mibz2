@@ -2395,7 +2395,7 @@ bench-zero-copy-floor DRY="":
       # the pin: master's decoder at PIN, plus the research modules alone (character, scan-oracle,
       # supplied-codes, the zero-copy src/ideal/ and its hooks), never a later master
       changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
-      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|lib|parallel|read|block|open|open/supplied|open/endpoint|open/outq|mtf|runs|ideal/[a-z_]+|parallel/[a-z_]+_tests)\.rs$|^$' || true)
+      beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/(character|scan_oracle|supplied_codes|lib|parallel|read|block|open|open/supplied|open/endpoint|open/outq|mtf|runs|ideal/[a-z0-9_]+|parallel/[a-z0-9_]+_tests)\.rs$|^$' || true)
       [ -z "$beyond" ] \
         || { echo "bench-zero-copy-floor: the build differs from $PIN beyond the character feature: $(echo $beyond)"; exit 1; }
       printf '%s\n' "$changed" > "$O/src-changed.txt"
