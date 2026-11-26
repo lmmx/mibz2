@@ -1,33 +1,29 @@
-# The mibz2 agent team
+# Standing policies and research rules (`docs/team/`)
 
-> **Superseded (26 November 2026):** the team now works through `frontier/` (start at `frontier/README.md`). These files are the coordinator era's record, kept for history until they are archived (claim `archive-team-strata`).
+Live work in `mibz2` runs through [`frontier/`](../../frontier/README.md), with the hard
+invariants in [`CLAUDE.md`](../../CLAUDE.md) (and [`AGENTS.md`](../../AGENTS.md) /
+[`GEMINI.md`](../../GEMINI.md)).
 
-The live machinery of the agent team that works on mibz2. Its objective is STEWARDSHIP.md's: a
-measurably faster, correct production decoder, properly released. MODE.md says the same.
+This directory holds the standing policies and research guidelines that remain in force:
 
-| file | what it is |
+| file | what it covers |
 |---|---|
-| [MODE.md](MODE.md) | the register every role writes in; read first on every run. Changed only by Louis ([why](MODE.RATIONALE.md)) |
-| [RULES.md](RULES.md) | who may decide what: the team's standing rules, with STEWARDSHIP.md (`docs/STEWARDSHIP.md`) |
-| [PROTOCOL.md](PROTOCOL.md) | how messages move: the channel #145, the inboxes, dispatch and format |
-| [ROLES.md](ROLES.md) | the roles, including MONODROMY and the manually invoked Codex implementation delegate |
-| [SPEC.md](SPEC.md) | what every Work task's spec has in common, and the command that loads them |
-| [WORK-TASKS.md](WORK-TASKS.md) | the only prompts for creating or re-pinning a ChatGPT Work task, each marked known to work or untested |
-| `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, OBSERVER |
-| [SPEC.PATHFINDER.md](SPEC.PATHFINDER.md) | the Pathfinder's spec: a Claude Code session, not a Work task (ROLES.md) |
-| [CODEX-PILOT.md](CODEX-PILOT.md) / [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md) | Codex implementation mandate, routed issue inbox #363, manual wake and reporting |
-| [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md) / [WORK-ACTING-COORDINATOR.md](WORK-ACTING-COORDINATOR.md) | owner-activated coordination handoff between Claude and Work, with safety boundaries |
+| [RULES.md](RULES.md) | standing authority, evidence, safety and owner-reserved rules (RULES D) |
+| [OWNERSHIP.md](OWNERSHIP.md) | engineering ownership: shipping, non-negotiable safety and correctness |
+| [PERFORMANCE-POLICY.md](PERFORMANCE-POLICY.md) | performance and memory acceptance rules, statistical tests and decision quality |
+| [CI-INCIDENTS.md](CI-INCIDENTS.md) | classifying, recovering from and recording red CI checks |
+| [EXTERNAL-DIAGRAMS.md](EXTERNAL-DIAGRAMS.md) | describing outside-model diagrams without committing screenshots |
+| [ACQUISITION-FIRST.md](ACQUISITION-FIRST.md) | costed derivation from decoder entry state (with [`acquisition/`](acquisition/primitives.toml)) |
+| [DELIVERED.md](DELIVERED.md) | summary table of shipped performance changes |
+| [`research-charter/`](research-charter/METHOD.md) | research method, obligation register (`FRONTIER.md`) and proof programme |
 
-**Optional event monitor:** [SPEC.COORDINATOR-ACTING-MONITOR.md](SPEC.COORDINATOR-ACTING-MONITOR.md), created only by Louis in Work using [WORK-TASKS.md](WORK-TASKS.md) after adoption. A checked-in spec is not an installed task.
+**Related live documents:**
+- **Release runbook:** [`docs/RELEASING.md`](../RELEASING.md)
+- **Stewardship:** [`docs/STEWARDSHIP.md`](../STEWARDSHIP.md)
+- **Exact-head merge check:** `.github/coordination/coord.py head-sha` (its coordinator-era routing
+  subcommands are retired)
 
-**Where the rest lives:**
-- **Each role's state:** `team-state/<role>`, a continuation of its old branch, holding its
-  cursor and records. These branches have no PR, and the workflows' filters run no CI on them.
-- **The Observer's record of what the team is doing and why:** `observatory/intention`, an orphan
-  branch with its own history.
-- **Routing:** `.github/coordination/coord.py`.
-- **Louis's requests from ChatGPT:** PROTOCOL.md §7 is the rule; `CHATGPT.md` at the
-  repository's root is the procedure a ChatGPT conversation follows to send one.
-- **History:** the team began as the compact30 research channel. That record is frozen in
-  `docs/journal/compact30-channel/` and on the compact30 branches. How it was separated:
-  `docs/journal/2026-11-06-team-neutral.md`.
+**History:** The coordinator-era role specs, `MODE.md`, `PROTOCOL.md`, `ROLES.md`, failover docs
+and role inboxes were retired on 26 November 2026 (`docs/journal/2026-11-26-rhizome/`); their
+frozen copies are preserved in the historical archive beside this directory. The earlier compact30
+channel record remains frozen in `docs/journal/compact30-channel/`.
