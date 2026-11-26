@@ -1103,5 +1103,22 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(mod.holds()["c1"][1]["released"])
 
 
+    def test_next_acquisition_recovers_abandoned_merged_integration(self):
+        """A new swarm iteration need not ask the old reviewer to release a merged PR."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        _git(author, "push", "origin", "HEAD:master")
+        merged = {**pr, "state": "closed", "merged": True, "merge_commit_sha": head}
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.claim("c4", "fresh", 1)
+        holds = fresh.holds()
+        self.assertTrue(holds["c1"][1]["released"])
+        self.assertTrue(fresh.live(holds["c4"][1]))
+        self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
