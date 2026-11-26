@@ -1,9 +1,11 @@
 id = "open-prs-triage"
-holder = "antigravity"
-session = "ac55a72fb246"
+holder = "chatgpt"
+session = "9fa77edb3ce2"
 claimed_at = "2026-11-26T16:22:59+00:00"
 expires = "2026-11-27T00:22:59+00:00"
 owned_paths = []
 mechanisms = []
 base = "68cf5404c791882630e85fbb3fbfd3f5dc120c82"
 released = false
+recovery_pr = 957
+recovery_head = "9fa77edb3ce2745f2a7bf9cffaacfbb51b717080"
