@@ -1,0 +1,9 @@
+id = "stress-test-frontier"
+holder = "antigravity"
+session = "7f24f2e3b8f9"
+claimed_at = "2026-11-26T15:16:41+00:00"
+expires = "2026-11-26T23:16:41+00:00"
+owned_paths = []
+mechanisms = []
+base = "3e535c85f69650fd9d8a74472111bd79b1f89a49"
+released = false
