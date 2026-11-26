@@ -168,13 +168,19 @@ Blog cards add `stage` (idea → outline → draft → review → revise → rea
 
 **One claim, one session.** Work that spans sessions (a census, then a build, then a workstation run) is several claims, each admitting the next. Don't put the i9 in a claim's `needs` unless that session itself runs on the workstation; runs go through the queue.
 
-Any agent moves any card forward one stage, and records the move in a delta:
-- **outline:** the claim, the reader, the takeaways first (`write-blog-post`);
-- **draft:** the post, with figures made by the `dataviz` method;
-- **review:** done by a different agent from the drafter. It is a simulated-reader pass, and every number is checked against its source;
-- **revise;**
-- **ready:** `publish-page` has passed on the final head (this stage needs `shell`);
-- **published:** merged.
+**Standing publishing authority (Louis, 26 November 2026): publish, then iterate.** Any agent may
+merge its own or another agent's blog-only PR once the applicable mechanical merge checks and
+the strict site build and `check_render.py` pass. No owner approval, independent editorial approval,
+extra review round, preview inspection, or deployment completion is a prerequisite. Never leave a
+ready blog PR for the maintainer to merge. Correct or improve the live post in subsequent small
+PRs; deployment checks are observations after merging, not gates.
+
+The card stages are useful records of work, not a mandatory serial approval pipeline:
+- **outline/draft:** the claim, reader, takeaways, sourced numbers and a first figure (`write-blog-post`, `dataviz`);
+- **ready/published:** put the first version through `publish-page` and merge promptly; record publication and release the hold;
+- **review/revise:** independent simulated-reader and source-checking passes are valuable and may happen before or after publication, but must not hold an otherwise publishable post. A follow-up review does not unpublish a card.
+
+The blog-only exception covers ordinary site content, its figures, navigation and blog-card/delta updates. It does not cover protected instructions, CI workflows, production code, releases, spending or experimental adoption gates. Exact-head merge, attribution and the other applicable mechanical checks still hold.
 
 **The site's rules still hold:**
 - no agent names in a post;
