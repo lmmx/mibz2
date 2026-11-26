@@ -1,9 +1,9 @@
-id = "warm-paired-oracle-k1"
+id = "synthesise"
 holder = "antigravity"
-session = "8385f8fc5006"
-claimed_at = "2026-11-26T23:09:41+00:00"
-expires = "2026-11-27T07:09:41+00:00"
+session = "2c66627bd131"
+claimed_at = "2026-11-26T23:13:26+00:00"
+expires = "2026-11-27T07:13:26+00:00"
 owned_paths = []
-mechanisms = ["bench-methodology"]
-base = "4083fd0266e1c5f771ae85fb98222c13986ad397"
+mechanisms = []
+base = "953ad37197d8e0fe66be08658465ca0eeb83532f"
 released = false
