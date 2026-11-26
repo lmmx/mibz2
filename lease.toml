@@ -1,0 +1,9 @@
+id = "harden-frontier-tooling"
+holder = "antigravity"
+session = "0b97a38d9859"
+claimed_at = "2026-11-26T16:16:51+00:00"
+expires = "2026-11-27T00:16:51+00:00"
+owned_paths = ["frontier/tools/frontier.py", ".github/workflows/frontier.yml"]
+mechanisms = ["frontier-tooling"]
+base = "9564f80f3268e6c2cc280cc95901f93d91bf7c2e"
+released = false
