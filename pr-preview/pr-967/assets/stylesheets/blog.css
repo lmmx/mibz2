@@ -1,0 +1,1355 @@
+/* The blog's figures (blog/*.md): a framed figure holding a title, an inline SVG and a
+   caption. Colours are roles, light by default and stepped for the dark scheme (slate). */
+.bf-fig {
+  --bf-ink: var(--md-default-fg-color);
+  --bf-muted: var(--md-default-fg-color--light);
+  --bf-frame: #e1e0d9;
+  --bf-surface: #f4f3ef;
+  --bf-track: #e9e8e3;
+  --bf-green: #1f9a72;
+  --bf-green-ink: #12805a;
+  --bf-green-tint: #dcefe7;
+  --bf-steel: #4687a8;
+  --bf-steel-tint: #d6e5ec;
+  --bf-blue: #4a8fe8;
+  --bf-blue-tint: #dce9fa;
+  --bf-amber: #b26b00;
+  --bf-amber-tint: #f8ead0;
+  --bf-claude: #d97757;
+  --bf-claude-tint: #f8e8e0;
+  --bf-openai: #10a37f;
+  --bf-openai-tint: #e2f3ec;
+  --bf-xh: #b26b00;
+  --bf-xh-tint: #f8ead0;
+  --bf-ultra: #7b4fd6;
+  --bf-ultra-tint: #ece4fb;
+  /* Chart roles (the dataviz method; validated with its palette checker against #ffffff and
+     #0b0c0f, the page's surfaces). vz-1..4 categorical, in this order; f1..f5 the faster arm and
+     s1..s5 the slower arm of a diverging scale about vz-mid; q1..q5 sequential; o1..o3 ordinal.
+     Each fill has an -ink: the text colour that reads inside it. */
+  --bf-vz-1: #4a8fe8; --bf-vz-1-ink: #191919;
+  --bf-vz-2: #b26b00; --bf-vz-2-ink: #ffffff;
+  --bf-vz-3: #1f9a72; --bf-vz-3-ink: #191919;
+  --bf-vz-4: #7b4fd6; --bf-vz-4-ink: #ffffff;
+  --bf-vz-grid: #e7e7e7;
+  --bf-vz-axis: #c2c2c2;
+  --bf-vz-mid: #efefef; --bf-vz-mid-ink: #191919;
+  --bf-vz-f1: #b6d5f8; --bf-vz-f1-ink: #191919;
+  --bf-vz-f2: #84b9f3; --bf-vz-f2-ink: #191919;
+  --bf-vz-f3: #519ced; --bf-vz-f3-ink: #191919;
+  --bf-vz-f4: #2370cd; --bf-vz-f4-ink: #ffffff;
+  --bf-vz-f5: #0f4a96; --bf-vz-f5-ink: #ffffff;
+  --bf-vz-s1: #fbe0c8; --bf-vz-s1-ink: #191919;
+  --bf-vz-s2: #f6bf8e; --bf-vz-s2-ink: #191919;
+  --bf-vz-s3: #ee9a52; --bf-vz-s3-ink: #191919;
+  --bf-vz-s4: #cf7420; --bf-vz-s4-ink: #191919;
+  --bf-vz-s5: #9c520e; --bf-vz-s5-ink: #ffffff;
+  --bf-vz-q1: #eef5fe; --bf-vz-q1-ink: #191919;
+  --bf-vz-q2: #cce3fd; --bf-vz-q2-ink: #191919;
+  --bf-vz-q3: #9dc8f7; --bf-vz-q3-ink: #191919;
+  --bf-vz-q4: #519ced; --bf-vz-q4-ink: #191919;
+  --bf-vz-q5: #2370cd; --bf-vz-q5-ink: #ffffff;
+  --bf-vz-o1: #84b9f3;
+  --bf-vz-o2: #2370cd;
+  --bf-vz-o3: #0e3d7e;
+}
+[data-md-color-scheme="slate"] .bf-fig {
+  --bf-frame: #34342f;
+  --bf-surface: #23231f;
+  --bf-track: #34342f;
+  --bf-green: #22a87c;
+  --bf-green-ink: #4fd1a1;
+  --bf-green-tint: #1b3a2f;
+  --bf-steel: #5199bd;
+  --bf-steel-tint: #1f3440;
+  --bf-blue: #3d86e0;
+  --bf-blue-tint: #1d2f47;
+  --bf-amber: #f2b544;
+  --bf-amber-tint: #3b3020;
+  --bf-claude: #e08a6d;
+  --bf-claude-tint: #3a2821;
+  --bf-openai: #19c37d;
+  --bf-openai-tint: #16302a;
+  --bf-xh: #f2b544;
+  --bf-xh-tint: #3b3020;
+  --bf-ultra: #b195f2;
+  --bf-ultra-tint: #2d2543;
+  --bf-vz-1: #3d86e0; --bf-vz-1-ink: #191919;
+  --bf-vz-2: #cf8e1c; --bf-vz-2-ink: #191919;
+  --bf-vz-3: #1f9a72; --bf-vz-3-ink: #191919;
+  --bf-vz-4: #9483ec; --bf-vz-4-ink: #191919;
+  --bf-vz-grid: #26282d;
+  --bf-vz-axis: #44474e;
+  --bf-vz-mid: #24262b; --bf-vz-mid-ink: #ffffff;
+  --bf-vz-f1: #172b48; --bf-vz-f1-ink: #ffffff;
+  --bf-vz-f2: #1d4580; --bf-vz-f2-ink: #ffffff;
+  --bf-vz-f3: #2a68bf; --bf-vz-f3-ink: #ffffff;
+  --bf-vz-f4: #5c9eec; --bf-vz-f4-ink: #191919;
+  --bf-vz-f5: #a3cbf6; --bf-vz-f5-ink: #191919;
+  --bf-vz-s1: #33230f; --bf-vz-s1-ink: #ffffff;
+  --bf-vz-s2: #5a3a12; --bf-vz-s2-ink: #ffffff;
+  --bf-vz-s3: #8a5719; --bf-vz-s3-ink: #ffffff;
+  --bf-vz-s4: #c57e2b; --bf-vz-s4-ink: #191919;
+  --bf-vz-s5: #eaa95a; --bf-vz-s5-ink: #191919;
+  --bf-vz-q1: #12161d; --bf-vz-q1-ink: #ffffff;
+  --bf-vz-q2: #15294a; --bf-vz-q2-ink: #ffffff;
+  --bf-vz-q3: #1d4580; --bf-vz-q3-ink: #ffffff;
+  --bf-vz-q4: #2f70c8; --bf-vz-q4-ink: #ffffff;
+  --bf-vz-q5: #6aabf1; --bf-vz-q5-ink: #191919;
+  --bf-vz-o1: #1b64be;
+  --bf-vz-o2: #338ced;
+  --bf-vz-o3: #9dc8f7;
+}
+
+.md-typeset .bf-fig {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 1.4rem 0;
+  padding: 0.8rem 0.9rem 0.7rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.6rem;
+  text-align: left;
+}
+.md-typeset .bf-fig .bf-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.md-typeset .bf-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--md-text-font-family);
+}
+.md-typeset .bf-fig figcaption {
+  max-width: none;
+  margin: 0.7rem 0 0;
+  color: var(--bf-muted);
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+/* text */
+.bf-fig .bf-t { fill: var(--bf-ink); font-size: 13px; }
+.bf-fig .bf-t-strong { fill: var(--bf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-t-green { fill: var(--bf-green-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-ts { fill: var(--bf-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-tm { fill: var(--bf-muted); font-size: 11.5px; }
+.bf-fig .bf-tl { fill: var(--bf-muted); font-size: 15px; }
+.bf-fig .bf-ttiny { fill: var(--bf-ink); font-size: 10px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-num { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big-green { fill: var(--bf-green-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* shapes */
+.bf-fig .bf-card,
+.bf-fig .bf-cell,
+.bf-fig .bf-panel,
+.bf-fig .bf-pill { fill: var(--bf-surface); }
+.bf-fig .bf-pill { stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-card-hi,
+.bf-fig .bf-pill-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-cell-hi { fill: var(--bf-green-tint); }
+.bf-fig .bf-box { fill: none; stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-slot { fill: var(--bf-steel-tint); }
+.bf-fig .bf-track { fill: var(--bf-track); }
+.bf-fig .bf-green { fill: var(--bf-green); }
+.bf-fig .bf-steel { fill: var(--bf-steel); }
+.bf-fig .bf-bar { fill: var(--bf-blue); }
+.bf-fig .bf-bar-est { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-dot { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-dot-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.5; }
+
+/* lines */
+.bf-fig .bf-rule,
+.bf-fig .bf-axis { stroke: var(--bf-frame); stroke-width: 1; fill: none; }
+.bf-fig .bf-grid { stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.bf-fig .bf-arrow,
+.bf-fig .bf-link,
+.bf-fig .bf-icon { stroke: var(--bf-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bf-fig .bf-icon-green { stroke: var(--bf-green); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* status pills (the roadmap) */
+.bf-fig .bf-pill-done,
+.bf-fig .bf-pill-later { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-pill-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1; }
+.bf-fig .bf-pill-next { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1; }
+.bf-fig .bf-dot-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.5; }
+.bf-fig .bf-pill-done-t,
+.bf-fig .bf-pill-later-t { fill: var(--bf-muted); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-ready-t { fill: var(--bf-amber); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-next-t { fill: var(--bf-blue); font-size: 11px; font-weight: 600; }
+
+/* the interactive pointer chain (blog.js): cards, then the walk */
+.bf-chain [hidden] { display: none !important; }
+.md-typeset .bf-chain .bf-cards {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .bf-chain .bf-cards li { margin: 0; padding: 0; }
+.md-typeset .bf-chain .bf-cardx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.2rem 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 0.45rem;
+  background: var(--bf-surface);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.bf-chain .bf-cl { color: var(--bf-muted); font-size: 0.55rem; }
+.bf-chain .bf-cv { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.bf-chain .bf-ca { color: var(--bf-muted); font-size: 0.6rem; line-height: 1; }
+.md-typeset .bf-chain .bf-cardx.is-current { background: var(--bf-green-tint); border-color: var(--bf-green); }
+.bf-chain .is-visited .bf-ca { color: var(--bf-green); }
+.bf-chain .bf-walk {
+  margin-top: 0.7rem;
+  padding: 0.75rem 0.85rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--bf-surface);
+}
+.bf-chain .bf-walk-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+.bf-chain .bf-count { color: var(--bf-muted); font-size: 0.62rem; }
+.md-typeset .bf-fig:has(.bf-anim-controls) { position: relative; }
+.md-typeset .bf-fig:has(.bf-anim-controls) .bf-title { padding-right: 4.5rem; }
+.bf-anim-controls { position: absolute; top: 0.55rem; right: 0.7rem; display: flex; gap: 0.3rem; }
+.bf-anim-controls[hidden] { display: none; }
+.md-typeset .bf-fig .bf-anim-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-muted);
+  cursor: pointer;
+}
+.md-typeset .bf-fig .bf-anim-btn:hover,
+.md-typeset .bf-fig .bf-anim-btn:focus-visible { color: var(--bf-ink); border-color: var(--bf-muted); }
+.md-typeset .bf-fig .bf-anim-btn svg { display: block; width: 0.75rem; height: 0.75rem; fill: currentColor; }
+.md-typeset .bf-fig .bf-anim-btn[data-state="playing"] .i-play,
+.md-typeset .bf-fig .bf-anim-btn[data-state="paused"] .i-pause { display: none; }
+.bf-chain .bf-buttons, .bf-bitbuf .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.bf-chain .bf-btn, .bf-bitbuf .bf-btn {
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.bf-chain .bf-btn:hover, .bf-bitbuf .bf-btn:hover { background: var(--bf-track); }
+.bf-chain .bf-follow, .bf-bitbuf .bf-read {
+  flex: 1;
+  border-color: var(--bf-ink);
+  background: var(--bf-ink);
+  color: var(--md-default-bg-color);
+}
+.bf-bitbuf .bf-read:hover, .bf-chain .bf-follow:hover { opacity: 0.88; background: var(--bf-ink); }
+.bf-bitbuf .bf-read:disabled, .bf-chain .bf-follow:disabled {
+  border-color: var(--bf-track);
+  background: var(--bf-track);
+  color: var(--bf-muted);
+  opacity: 1;
+  cursor: default;
+}
+.bf-bitbuf .bf-btn:focus-visible, .bf-chain .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.md-typeset .bf-chain .bf-path { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.62rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-chain .bf-cardx, .bf-chain .bf-btn { transition: none; }
+}
+
+/* A post's header: the kicker, the title, the summary and the date, beside the home page's
+   illustration, on a panel with the accent bar the social cards have. */
+.md-typeset .post-hero {
+  --post-hero-bg: #f6f4ee;
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0 0 2rem;
+  padding: 1.5rem 1.2rem 1.3rem 1.6rem;
+  border-bottom: 5px solid var(--md-primary-fg-color);
+  border-radius: 0.8rem;
+  background: var(--post-hero-bg);
+  overflow: hidden;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-hero {
+  --post-hero-bg: #22221f;
+}
+.md-typeset .post-hero-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.md-typeset .post-hero .post-kicker {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.md-typeset .post-hero .post-kicker a {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+}
+.md-typeset .post-hero .post-kicker a:hover {
+  text-decoration: underline;
+}
+.md-typeset .post-hero h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-hero h1 .headerlink {
+  display: none;
+}
+.md-typeset .post-hero .post-dek {
+  max-width: 32rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-hero .post-meta {
+  margin: 1.1rem 0 0;
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--light);
+}
+/* A post's kind, one colour each (blog.js sets data-kind from the label, and
+   docs/scripts/check_site.py keeps the labels to this list):
+   result (Research result): green; synthesis (Research synthesis): teal;
+   progress (Research, Work or Investigation in progress): amber, also the default;
+   question (Open question): violet; meta (Meta): blue.
+   Every pair's text-on-pill contrast is at least 4.5:1 in both schemes. */
+.md-typeset .post-meta a,
+.post-card-date {
+  --pill: #965700;
+  --pill-bg: #f8ead0;
+}
+.md-typeset .post-meta a[data-kind="result"],
+.post-card-date[data-kind="result"] { --pill: #1b7339; --pill-bg: #e1f2e5; }
+.md-typeset .post-meta a[data-kind="synthesis"],
+.post-card-date[data-kind="synthesis"] { --pill: #0b6e70; --pill-bg: #dbf0f0; }
+.md-typeset .post-meta a[data-kind="question"],
+.post-card-date[data-kind="question"] { --pill: #6a3db3; --pill-bg: #eee6f8; }
+.md-typeset .post-meta a[data-kind="meta"],
+.post-card-date[data-kind="meta"] { --pill: #2155ad; --pill-bg: #e3ebfa; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a,
+[data-md-color-scheme="slate"] .post-card-date {
+  --pill: #f2b544;
+  --pill-bg: #3b3020;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="result"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="result"] { --pill: #6fd08c; --pill-bg: #1d3324; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="synthesis"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="synthesis"] { --pill: #5ccfcd; --pill-bg: #163333; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="question"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="question"] { --pill: #c4a6f6; --pill-bg: #2b2340; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="meta"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="meta"] { --pill: #90b5f5; --pill-bg: #1e2940; }
+/* the hero's bottom line, and a card's border on hover, in its kind's colour */
+.md-typeset .post-card[data-kind="progress"] { --kind-line: #965700; }
+.md-typeset .post-card[data-kind="result"] { --kind-line: #1b7339; }
+.md-typeset .post-card[data-kind="synthesis"] { --kind-line: #0b6e70; }
+.md-typeset .post-card[data-kind="question"] { --kind-line: #6a3db3; }
+.md-typeset .post-card[data-kind="meta"] { --kind-line: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="progress"] { --kind-line: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="result"] { --kind-line: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="synthesis"] { --kind-line: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="question"] { --kind-line: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="meta"] { --kind-line: #90b5f5; }
+.md-typeset .post-hero[data-kind="progress"] { border-bottom-color: #965700; }
+.md-typeset .post-hero[data-kind="result"] { border-bottom-color: #1b7339; }
+.md-typeset .post-hero[data-kind="synthesis"] { border-bottom-color: #0b6e70; }
+.md-typeset .post-hero[data-kind="question"] { border-bottom-color: #6a3db3; }
+.md-typeset .post-hero[data-kind="meta"] { border-bottom-color: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="progress"] { border-bottom-color: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="result"] { border-bottom-color: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="synthesis"] { border-bottom-color: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="question"] { border-bottom-color: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="meta"] { border-bottom-color: #90b5f5; }
+.md-typeset .post-hero .post-meta a {
+  display: inline-block;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--pill);
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-weight: 600;
+  text-decoration: none;
+}
+/* A post that explains a release: "Shipped in mibz2 X.Y.Z", under the date, linked to the
+   release's notes on the History page and its CHANGELOG section (front matter `releases`;
+   docs/scripts/release_notes.py writes the line). The card on the blog index says the same. */
+.md-typeset .post-hero .post-shipped {
+  margin: 0.45rem 0 0;
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-hero .post-shipped::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 1px;
+  background: var(--md-primary-fg-color);
+  transform: rotate(45deg) translateY(-0.05rem);
+}
+.md-typeset .post-card-rel {
+  align-self: flex-start;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.md-typeset .post-card-rel::before {
+  content: "";
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-right: 0.35rem;
+  border-radius: 1px;
+  background: var(--md-primary-fg-color);
+  transform: rotate(45deg) translateY(-0.05rem);
+}
+/* the illustration's own margin is wide: the negative margins take some of it back */
+.md-typeset .post-hero-art {
+  flex: none;
+  width: 11.5rem;
+  margin: -1.2rem -0.6rem -1.2rem -0.8rem;
+}
+.md-typeset .post-hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-hero {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 1.1rem 1rem 1.1rem;
+  }
+  .md-typeset .post-hero-art {
+    width: 7.5rem;
+    margin: -0.3rem 0 -0.9rem -0.9rem;
+  }
+  .md-typeset .post-hero h1 {
+    font-size: 1.45rem;
+  }
+}
+
+/* The blog index: each post as a card, its social card beside its title and summary. */
+.md-typeset .post-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1.4rem 0;
+}
+.md-typeset .post-card {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.md-typeset .post-card * {
+  text-decoration: none;
+}
+.md-typeset .post-card:hover {
+  border-color: var(--kind-line, var(--md-primary-fg-color));
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+.md-typeset .post-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.md-typeset .post-card-date {
+  align-self: flex-start;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.md-typeset .post-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.md-typeset .post-card-dek {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A post and its technical companion, chained on the index. The companion is its own object, a
+   leaf hung from its main post's card: a bookplate on laid paper, inset, with a small square of
+   its illustration, a small-capitals strip naming the relation, a serif title and its topics as
+   chips. A spine in the pair's kind colour runs from the main card's bottom edge into the leaf's
+   side, clasped by a ringed fleuron in the gap.
+     <div class="post-chain">
+     <a class="post-card" href="MAIN.md">…</a>
+     <a class="post-card" href="COMPANION.md" data-companion-of="MAIN.md"><img …><span class="post-card-text">
+       date, title, dek, <span class="post-card-topics"><span>…</span>…</span>,
+       <span class="post-card-rel post-card-rel--companion">Technical companion</span></span></a>
+     </div>
+   check_site.py keeps the pair adjacent and their pages linked both ways (.post-companion). */
+.md-typeset .post-chain {
+  display: grid;
+  gap: 1.1rem;
+  --chain-in: 3.2rem;
+  --chain-x: 1.25rem;
+}
+.md-typeset .post-chain > .post-card[data-companion-of] {
+  --k: var(--kind-line, var(--md-primary-fg-color));
+  position: relative;
+  margin-left: var(--chain-in);
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem 0.95rem 0.95rem;
+  border-color: color-mix(in srgb, var(--k) 45%, transparent);
+  border-radius: 0.35rem;
+  /* laid paper: faint chain lines across a warm wash of the kind colour */
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--k) 5%, transparent) 5px 6px),
+    color-mix(in srgb, var(--k) 5%, var(--md-default-bg-color));
+  /* the bookplate's inner hairline frame */
+  box-shadow: inset 0 0 0 4px var(--md-default-bg-color),
+    inset 0 0 0 5px color-mix(in srgb, var(--k) 30%, transparent);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.md-typeset .post-chain > .post-card[data-companion-of]:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 4px var(--md-default-bg-color),
+    inset 0 0 0 5px color-mix(in srgb, var(--k) 55%, transparent),
+    0 0.35rem 1rem rgba(0, 0, 0, 0.1);
+}
+/* a narrow upright vignette of the illustration, cropped from the social card's right-hand side
+   (a 3:5 window at full height holds the drawing and none of the card's text) */
+.md-typeset .post-chain > .post-card[data-companion-of] img {
+  aspect-ratio: 3 / 5;
+  object-fit: cover;
+  object-position: 96% 50%;
+  border-radius: 0.3rem;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--k) 30%, transparent);
+}
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-text {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.8rem;
+  align-items: baseline;
+}
+/* the strip first: what this leaf is, in the kind colour, with its date on the right in plain type */
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-rel--companion {
+  grid-row: 1;
+  grid-column: 1;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--k) 25%, transparent);
+}
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-date {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: stretch;
+  padding: 0 0 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--k) 25%, transparent);
+  border-radius: 0;
+  background: none;
+  color: var(--md-default-fg-color--light);
+  font-weight: 500;
+}
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-title,
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-dek,
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-topics { grid-column: 1 / -1; }
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-title {
+  margin-top: 0.15rem;
+  font: 600 1.02rem/1.22 "EB Garamond", Georgia, serif;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+.md-typeset .post-chain > .post-card[data-companion-of] .post-card-dek { font-size: 0.7rem; }
+.md-typeset .post-card-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+.md-typeset .post-card-topics > span {
+  padding: 0.08rem 0.5rem 0.1rem;
+  border: 1px solid color-mix(in srgb, var(--k, var(--md-primary-fg-color)) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k, var(--md-primary-fg-color)) 7%, var(--md-default-bg-color));
+  color: color-mix(in srgb, var(--k, var(--md-primary-fg-color)) 75%, var(--md-default-fg-color));
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+/* the spine: from the main card's bottom edge, down and into the leaf's side */
+.md-typeset .post-chain > .post-card[data-companion-of]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--chain-x) - var(--chain-in));
+  top: calc(-1.1rem - 1px);
+  bottom: 50%;
+  width: calc(var(--chain-in) - var(--chain-x) - 1px);
+  border-left: 2px solid var(--k);
+  border-bottom: 2px solid var(--k);
+  border-bottom-left-radius: 0.75rem;
+  pointer-events: none;
+}
+/* the clasp: a fleuron in a ring, astride the gap; it fills when either card of the pair is hovered */
+.md-typeset .post-chain > .post-card[data-companion-of]::after {
+  content: "❦";
+  position: absolute;
+  left: calc(var(--chain-x) - var(--chain-in) - 0.8rem + 1px);
+  top: calc(-0.55rem - 0.8rem);
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  box-sizing: border-box;
+  border: 1.5px solid var(--k);
+  border-radius: 50%;
+  background: var(--md-default-bg-color);
+  color: var(--k);
+  font: 400 0.95rem/1 "EB Garamond", Georgia, serif;
+  pointer-events: none;
+  transition: background 0.15s, color 0.15s;
+}
+.md-typeset .post-chain:hover > .post-card[data-companion-of]::after {
+  background: var(--k);
+  color: var(--md-default-bg-color);
+}
+.md-typeset .post-card-rel--companion {
+  color: var(--kind-line, var(--md-default-fg-color--light));
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+.md-typeset .post-card-rel--companion::before {
+  content: "❧";
+  width: auto;
+  height: auto;
+  margin-right: 0.3rem;
+  border-radius: 0;
+  background: none;
+  transform: none;
+  font: 400 0.9rem/1 "EB Garamond", Georgia, serif;
+  font-variant: normal;
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .post-chain > .post-card[data-companion-of]:hover { transform: none; }
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-chain { --chain-in: 1.9rem; --chain-x: 0.9rem; }
+  .md-typeset .post-chain > .post-card[data-companion-of] {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.85rem 0.95rem;
+  }
+  /* on a phone the leaf is text alone: the vignette would only narrow the title */
+  .md-typeset .post-chain > .post-card[data-companion-of] img { display: none; }
+  .md-typeset .post-chain > .post-card[data-companion-of] .post-card-text { grid-template-columns: minmax(0, 1fr); }
+  .md-typeset .post-chain > .post-card[data-companion-of] .post-card-date { grid-row: 2; grid-column: 1; padding: 0; border: 0; }
+  .md-typeset .post-chain > .post-card[data-companion-of] .post-card-title { font-size: 0.98rem; }
+}
+
+/* On the page: the panel right after the hero that ties a post to its companion, both ways.
+   <div class="post-companion" data-role="has-companion|companion-of" markdown> with one
+   paragraph, a bold lead and a link whose text ends in →; the whole plate is the link. The fleuron points on (❧)
+   from a main post and back (☙) from its companion; blog.js gives it the post's kind colour. */
+.md-typeset .post-companion {
+  position: relative;
+  margin: 1.1rem 0 1.6rem;
+  padding: 0.7rem 1rem 0.7rem 3.1rem;
+  border: 1px solid color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 40%, transparent);
+  border-left: 3px solid var(--kind-line, var(--md-primary-fg-color));
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 5%, transparent);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.md-typeset .post-companion:hover {
+  background: color-mix(in srgb, var(--kind-line, var(--md-primary-fg-color)) 9%, transparent);
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+}
+.md-typeset .post-companion::before {
+  content: "❧";
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-52%);
+  color: var(--kind-line, var(--md-primary-fg-color));
+  font: 400 1.7rem/1 "EB Garamond", Georgia, serif;
+}
+.md-typeset .post-companion[data-role="companion-of"]::before { content: "☙"; }
+.md-typeset .post-companion p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+.md-typeset .post-companion strong {
+  font: 700 0.82em/1 "Cinzel", "EB Garamond", serif;
+  letter-spacing: 0.05em;
+  color: var(--kind-line, var(--md-primary-fg-color));
+}
+.md-typeset .post-companion a {
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* the whole plate takes the click */
+.md-typeset .post-companion a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.md-typeset .post-companion[data-kind="progress"] { --kind-line: #965700; }
+.md-typeset .post-companion[data-kind="result"] { --kind-line: #1b7339; }
+.md-typeset .post-companion[data-kind="synthesis"] { --kind-line: #0b6e70; }
+.md-typeset .post-companion[data-kind="question"] { --kind-line: #6a3db3; }
+.md-typeset .post-companion[data-kind="meta"] { --kind-line: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="progress"] { --kind-line: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="result"] { --kind-line: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="synthesis"] { --kind-line: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="question"] { --kind-line: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-companion[data-kind="meta"] { --kind-line: #90b5f5; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-companion { padding-left: 2.6rem; }
+  .md-typeset .post-companion::before { left: 0.6rem; font-size: 1.45rem; }
+  .md-typeset .post-companion a { white-space: normal; }
+}
+.bf-fig .bf-pill-pass { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-pill-pass-t { fill: var(--bf-green-ink); font-size: 11px; font-weight: 600; }
+
+/* the room-walk post: overlap bands, lane slots, latency bars and lane chips */
+.bf-fig .bf-band { fill: var(--bf-green-tint); fill-opacity: 0.6; stroke: var(--bf-green); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-slot-hi { fill: var(--bf-green); }
+.bf-fig .bf-lat { fill: var(--bf-steel-tint); }
+.bf-fig .bf-lat-hi { fill: var(--bf-steel); }
+.bf-fig .bf-cut { stroke: var(--bf-green); stroke-width: 2; fill: none; }
+.bf-fig .bf-chip-on { fill: var(--bf-green); }
+.bf-fig .bf-chip-off { fill: var(--bf-track); }
+
+/* screenshots (the MLP post): one excerpt at a readable size, the rest as thumbnails that open
+   at full size; never inverted in the dark theme */
+.md-typeset .bf-shots img {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.4rem;
+}
+.md-typeset .bf-shot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.6rem;
+  align-items: start;
+  margin: 0.6rem 0 1rem;
+}
+.md-typeset .bf-shot-row img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
+}
+
+/* A post's roadmap: its numbered sections as links, grouped into parts, centred. */
+.md-typeset .post-roadmap {
+  --rm-line: var(--md-default-fg-color--lightest);
+  --rm-dot: #f4f3ef;
+  --rm-dot-ink: var(--md-default-fg-color);
+  --rm-hi: #1f9a72;
+  --rm-hi-tint: #dcefe7;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.6rem;
+  margin: 1.6rem 0 2rem;
+  font-size: 0.8rem;
+}
+@media (max-width: 44em) {
+  .md-typeset .post-roadmap {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 25rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+[data-md-color-scheme="slate"] .md-typeset .post-roadmap {
+  --rm-dot: #23231f;
+  --rm-hi: #22a87c;
+  --rm-hi-tint: #1b3a2f;
+}
+.md-typeset .post-roadmap-part {
+  margin: 1.1rem 0 0.4rem 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-roadmap ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.md-typeset .post-roadmap li {
+  position: relative;
+  margin: 0;
+}
+.md-typeset .post-roadmap li + li::before {
+  content: "";
+  position: absolute;
+  left: 1.3rem;
+  top: -0.5rem;
+  height: 1rem;
+  border-left: 1.5px solid var(--rm-line);
+}
+.md-typeset .post-roadmap a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.6rem 0.45rem 0.25rem;
+  border-radius: 0.6rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.md-typeset .post-roadmap .rm-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.md-typeset .post-roadmap .rm-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--rm-line);
+  background: var(--rm-dot);
+  font-weight: 700;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.md-typeset .post-roadmap .rm-ours .rm-n {
+  border-color: var(--rm-hi);
+}
+.md-typeset .post-roadmap .rm-t {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.md-typeset .post-roadmap .rm-d {
+  font-size: 0.88em;
+  line-height: 1.35;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-roadmap a {
+  position: relative;
+  padding-right: 1.8rem;
+}
+.md-typeset .post-roadmap a::after {
+  content: "→";
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--rm-hi);
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.md-typeset .post-roadmap a:hover,
+.md-typeset .post-roadmap a:focus-visible {
+  background: var(--rm-hi-tint);
+  transform: translateX(0.2rem);
+}
+.md-typeset .post-roadmap a:hover .rm-n,
+.md-typeset .post-roadmap a:focus-visible .rm-n {
+  background: var(--rm-hi);
+  border-color: var(--rm-hi);
+  color: #fff;
+}
+.md-typeset .post-roadmap a:hover .rm-t,
+.md-typeset .post-roadmap a:focus-visible .rm-t {
+  color: var(--rm-hi);
+}
+.md-typeset .post-roadmap a:hover::after,
+.md-typeset .post-roadmap a:focus-visible::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .post-roadmap a,
+  .md-typeset .post-roadmap .rm-n,
+  .md-typeset .post-roadmap a::after {
+    transition: none;
+  }
+  .md-typeset .post-roadmap a:hover,
+  .md-typeset .post-roadmap a:focus-visible {
+    transform: none;
+  }
+}
+
+/* A results table whose last column is a summary (a mean): set apart by a rule and a tint. */
+.md-typeset .bf-rates th:last-child,
+.md-typeset .bf-rates td:last-child {
+  border-left: 2px solid var(--md-default-fg-color--lighter);
+  background-color: var(--md-code-bg-color);
+}
+.md-typeset .bf-rates th:last-child {
+  font-style: italic;
+}
+.md-typeset .bf-rates table:not([class]) th,
+.md-typeset .bf-rates table:not([class]) td {
+  min-width: 0;
+  padding: 0.55em 0.7em;
+}
+
+/* Data tables in a post: centred in the column, compact cells. */
+.md-typeset .bf-data,
+.md-typeset .bf-rates {
+  text-align: center;
+}
+.md-typeset .bf-data table:not([class]),
+.md-typeset .bf-rates table:not([class]) {
+  text-align: left;
+}
+.md-typeset .bf-data table:not([class]) th,
+.md-typeset .bf-data table:not([class]) td {
+  padding: 0.55em 0.8em;
+}
+/* In the rates table, the second column is memory, a property of the algorithm, not a result. */
+.md-typeset .bf-rates th:nth-child(2),
+.md-typeset .bf-rates td:nth-child(2) {
+  border-right: 2px solid var(--md-default-fg-color--lighter);
+  color: var(--md-default-fg-color--light);
+}
+
+/* the agent-team post: product marks, the agent families and the Codex lane */
+.bf-fig .bf-logo-ink { fill: var(--bf-ink); }
+.bf-fig .bf-logo-claude { fill: var(--bf-claude); }
+.bf-fig .bf-card-claude { fill: var(--bf-claude-tint); stroke: var(--bf-claude); stroke-width: 1.5; }
+.bf-fig .bf-group { fill: none; stroke: var(--bf-frame); stroke-width: 1.5; }
+.bf-fig .bf-lane { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-group-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-card-astra-in { fill: var(--bf-surface); stroke: var(--bf-openai); stroke-width: 1; }
+.bf-fig .bf-card-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-lane-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-pill-xh { fill: var(--bf-xh-tint); stroke: var(--bf-xh); stroke-width: 1; }
+.bf-fig .bf-pill-xh-t { fill: var(--bf-xh); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-pill-ultra { fill: var(--bf-ultra-tint); stroke: var(--bf-ultra); stroke-width: 1; }
+.bf-fig .bf-pill-ultra-t { fill: var(--bf-ultra); font-size: 10px; font-weight: 600; }
+
+/* the agent-team post: product and effort colours in running text and tables */
+.md-typeset .ag-claude { color: #c15f3c; font-weight: 600; }
+.md-typeset .ag-astra { color: #0b8a68; font-weight: 600; }
+.md-typeset .ag-chip { display: inline-block; padding: 0 0.5em; border-radius: 0.7em; font-size: 0.85em; font-weight: 600; white-space: nowrap; }
+.md-typeset .ag-xh { color: #8a5300; background: #f8ead0; box-shadow: inset 0 0 0 1px #b26b00; }
+.md-typeset .ag-ultra { color: #5b33b8; background: #ece4fb; box-shadow: inset 0 0 0 1px #7b4fd6; }
+.md-typeset .ag-high { color: #2f6f8f; background: #d6e5ec; box-shadow: inset 0 0 0 1px #4687a8; }
+.md-typeset .ag-session { color: #c15f3c; background: #f8e8e0; box-shadow: inset 0 0 0 1px #d97757; }
+[data-md-color-scheme="slate"] .md-typeset .ag-claude { color: #e9967a; }
+[data-md-color-scheme="slate"] .md-typeset .ag-astra { color: #3fd69c; }
+[data-md-color-scheme="slate"] .md-typeset .ag-xh { color: #f2b544; background: #3b3020; box-shadow: inset 0 0 0 1px #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .ag-ultra { color: #c4adf6; background: #2d2543; box-shadow: inset 0 0 0 1px #b195f2; }
+[data-md-color-scheme="slate"] .md-typeset .ag-high { color: #8cc3df; background: #1f3440; box-shadow: inset 0 0 0 1px #5199bd; }
+[data-md-color-scheme="slate"] .md-typeset .ag-session { color: #e9967a; background: #3a2821; box-shadow: inset 0 0 0 1px #e08a6d; }
+
+/* The bit buffer read one code at a time (.bf-bitbuf, blog.js) */
+.md-typeset .bf-bitbuf .bf-bits { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; margin: 0.4rem 0 0.2rem; padding: 0; list-style: none; }
+.md-typeset .bf-bitbuf .bf-bit { margin: 0; padding: 0.45rem 0; border: 1px solid var(--bf-frame); border-radius: 6px; background: var(--bf-surface); color: var(--bf-ink); font-family: var(--md-code-font-family); font-size: 0.8rem; text-align: center; transition: background-color 0.15s, border-color 0.15s; }
+.md-typeset .bf-bitbuf .bf-bit.is-next { background: var(--bf-green-tint); border-color: var(--bf-green); font-weight: 700; }
+.md-typeset .bf-bitbuf .bf-bit.is-empty { color: var(--bf-muted); background: transparent; border-style: dashed; }
+.md-typeset .bf-bitbuf .bf-bits-note { margin: 0; color: var(--bf-muted); font-size: 0.62rem; }
+.md-typeset .bf-bitbuf .bf-buf-state { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.8rem; margin: 0.6rem 0 0; font-size: 0.7rem; }
+.md-typeset .bf-bitbuf .bf-buf-state dt { color: var(--bf-muted); }
+.md-typeset .bf-bitbuf .bf-buf-state dd { margin: 0; color: var(--bf-ink); }
+.md-typeset .bf-bitbuf .bf-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.3rem 0 0.5rem; font-size: 0.7rem; }
+.md-typeset .bf-bitbuf .bf-keys-label { color: var(--bf-muted); margin-right: 0.2rem; }
+.md-typeset .bf-bitbuf .bf-key { padding: 0.15rem 0.5rem; border: 1px solid var(--bf-frame); border-radius: 6px; background: var(--bf-surface); color: var(--bf-ink); transition: background-color 0.15s, border-color 0.15s; }
+.md-typeset .bf-bitbuf .bf-key.is-next { background: var(--bf-green-tint); border-color: var(--bf-green); font-weight: 700; }
+.md-typeset .bf-bitbuf .bf-buf-step { margin: 0.6rem 0 0; padding: 0.55rem 0.7rem; border-left: 3px solid var(--bf-green); background: var(--bf-surface); color: var(--bf-ink); font-size: 0.74rem; line-height: 1.55; }
+.md-typeset .bf-bitbuf .bf-buf-static { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.66rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-bitbuf .bf-bit, .md-typeset .bf-bitbuf .bf-key, .bf-bitbuf .bf-btn { transition: none; }
+}
+
+/* A numbered equation (KaTeX \tag) on a phone: the theme sizes a displayed formula to its
+   content and scrolls it sideways, and KaTeX pins the number to the right edge, so the number
+   would cover the formula's end. Set it after the formula instead, where it scrolls with it. */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
+}
+
+/* Maths in a table on a phone: the theme scrolls a wide table inside its wrapper, but KaTeX's
+   hidden MathML copy is absolutely positioned, so without a positioned wrapper it escapes the
+   scroll and widens the whole page. Positioning the wrapper keeps it inside. */
+.md-typeset .md-typeset__scrollwrap { position: relative; }
+
+/* Frames (the inverse-BWT post): one art-directed sequence of small static frames, each drawn
+   on the same 230-unit width so every figure has the same scale. Typeset rails of letters, small
+   indices, smooth connectors with small heads; green marks the one run being matched, ink the
+   active interval, everything else is quiet. Three across on a wide screen, stacked on a phone. */
+.bf-fig .bf-ch { fill: var(--bf-ink); font-size: 18px; font-weight: 600; }
+.bf-fig .bf-ch-dim { fill: var(--bf-muted); font-size: 18px; }
+.bf-fig .bf-sub { fill: var(--bf-green-ink); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-ix { fill: var(--bf-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-lab { fill: var(--bf-muted); font-size: 14px; font-style: italic; font-weight: 600; }
+.bf-fig .bf-cap { fill: var(--bf-muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.bf-fig .bf-eq { fill: var(--bf-ink); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-eq-l { fill: var(--bf-ink); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-val { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-state { fill: var(--bf-ink); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-note { fill: var(--bf-ink); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-halo { paint-order: stroke; stroke: var(--md-default-bg-color); stroke-width: 5px; stroke-linejoin: round; }
+.bf-fig .bf-tint { fill: var(--bf-green-tint); }
+.bf-fig .bf-act { fill: none; stroke: var(--bf-green); stroke-width: 2; stroke-linecap: round; }
+.bf-fig .bf-quiet { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; stroke-linecap: round; opacity: 0.5; }
+.bf-fig .bf-quiet-ink { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.bf-fig .bf-head { fill: var(--bf-green); }
+.bf-fig .bf-head-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-head-ink { fill: var(--bf-ink); }
+.bf-fig .bf-pin { fill: var(--bf-green); }
+.bf-fig .bf-pin-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-ribbon { fill: var(--bf-green); fill-opacity: 0.2; stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-seg { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; opacity: 0.7; }
+.bf-fig .bf-seg-a { fill: none; stroke: var(--bf-green); stroke-width: 1.5; }
+.bf-fig .bf-seg-on { fill: none; stroke: var(--bf-ink); stroke-width: 2.2; }
+.bf-fig .bf-seg-a-on { fill: none; stroke: var(--bf-green); stroke-width: 2.4; }
+.bf-fig .bf-segl { fill: var(--bf-muted); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-segl-on { fill: var(--bf-ink); font-size: 13.5px; font-weight: 700; }
+.bf-fig .bf-ring { fill: none; stroke: var(--bf-ink); stroke-width: 1.6; }
+.bf-fig .bf-ring-a { fill: none; stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-tick { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.md-typeset .bf-frames { display: grid; gap: 1.4rem 1.6rem; margin: 0.2rem 0 0; }
+.md-typeset .bf-frames-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.md-typeset .bf-frames-pair { grid-template-columns: repeat(2, minmax(0, calc((100% - 3.2rem) / 3))); justify-content: center; }
+.md-typeset .bf-frame { min-width: 0; margin: 0; }
+.md-typeset .bf-frame svg { max-width: 13rem; margin: 0 auto; }
+.md-typeset .bf-frame .bf-step { margin: 0.5rem 0 0; color: var(--bf-ink); font-size: 0.68rem; line-height: 1.5; }
+.md-typeset .bf-frame .bf-step code { font-size: 0.92em; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
+}
+
+/* A playful figure in the logo's language (the service-threads post's "A block's path", a race
+   circuit): translucent, interlocking bands in the logo's three hues, numbered rounded-triangle
+   stops, and a block that drives the circuit as a car. With reduced motion the car is not
+   shown; parked cars show the way instead. */
+.bf-fig .bf-play { --bf-play-bg: var(--md-default-bg-color); }
+.bf-fig .bf-play-coral { color: rgb(255, 92, 74); }
+.bf-fig .bf-play-blue { color: rgb(40, 92, 255); }
+.bf-fig .bf-play-green { color: rgb(40, 190, 135); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-coral { color: rgb(255, 112, 96); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-blue { color: rgb(92, 132, 255); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-green { color: rgb(52, 206, 150); }
+.bf-fig .bf-play-glow path { fill: none; stroke: currentColor; stroke-linecap: round; opacity: 0.3; }
+.bf-fig .bf-play-band path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-opacity: 0.42; }
+.bf-fig .bf-play-shine { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.1 14; opacity: 0.75; }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-shine { opacity: 0.4; }
+.bf-fig .bf-play-start { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: 0.9; }
+.bf-fig .bf-play-checkl { fill: #fff; }
+.bf-fig .bf-play-checkd { fill: #1d1d1b; }
+.bf-fig .bf-play-rim { fill: currentColor; stroke: currentColor; stroke-width: 23; stroke-linejoin: round; }
+.bf-fig .bf-play-badge {
+  fill: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke-width: 16;
+  stroke-linejoin: round;
+}
+.bf-fig .bf-play-num { fill: var(--bf-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-play-tag { fill: color-mix(in srgb, currentColor 20%, var(--bf-play-bg)); stroke: color-mix(in srgb, currentColor 70%, var(--bf-play-bg)); stroke-width: 1.5; }
+.bf-fig .bf-play-tagt { fill: var(--bf-ink); font-weight: 600; letter-spacing: 0.02em; }
+.bf-fig .bf-play-key { fill: color-mix(in srgb, currentColor 30%, transparent); stroke: currentColor; stroke-width: 3.5; stroke-linejoin: round; }
+.bf-fig .bf-play-chip { fill: var(--bf-surface); stroke: var(--bf-ink); stroke-width: 2.5; }
+.bf-fig .bf-play-wheel, .bf-fig .bf-play-wing { fill: var(--bf-ink); }
+.bf-fig .bf-play-stripe { fill: none; stroke: rgb(255, 92, 74); stroke-width: 3; stroke-linecap: round; }
+.bf-fig .bf-play-helmet { fill: rgb(40, 92, 255); stroke: var(--bf-ink); stroke-width: 1.5; }
+.bf-fig .bf-play-token { offset-rotate: auto; animation: bf-play-ride 18.1s linear infinite; }
+.bf-fig .bf-play-still { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bf-fig .bf-play-token { display: none; animation: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@supports not (offset-path: path("M0 0")) {
+  .bf-fig .bf-play-token { display: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@keyframes bf-play-ride {
+  0.0% { offset-distance: 0.00%; }
+  2.0% { offset-distance: 3.15%; }
+  6.4% { offset-distance: 3.15%; }
+  10.4% { offset-distance: 9.40%; }
+  14.9% { offset-distance: 9.40%; }
+  18.6% { offset-distance: 15.19%; }
+  23.0% { offset-distance: 15.19%; }
+  50.4% { offset-distance: 57.90%; }
+  54.8% { offset-distance: 57.90%; }
+  73.7% { offset-distance: 87.33%; }
+  78.1% { offset-distance: 87.33%; }
+  81.8% { offset-distance: 93.12%; }
+  86.2% { offset-distance: 93.12%; }
+  90.2% { offset-distance: 99.37%; }
+  94.6% { offset-distance: 99.37%; }
+  95.0% { offset-distance: 100.00%; }
+  100% { offset-distance: 100%; }
+  0%, 100% { opacity: 0; }
+  2%, 95.9% { opacity: 1; }
+}
+
+
+/* An annotated formal statement: black definitions, each with a coloured note on what it means
+   here (the Rauzy–Veech post). Two columns on a wide screen; the note below its line on a phone. */
+.md-typeset .bf-formal .bf-fstep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 13rem);
+  gap: 0.6rem 1rem;
+  align-items: start;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--bf-frame);
+}
+.md-typeset .bf-formal .bf-fbody { color: var(--bf-ink); font-size: 0.74rem; line-height: 1.6; }
+.md-typeset .bf-formal .bf-fbody p { margin: 0 0 0.4rem; }
+.md-typeset .bf-formal .bf-fbody .arithmatex { overflow-x: auto; overflow-y: hidden; }
+.md-typeset .bf-formal .bf-fnote {
+  --c: var(--bf-blue); --c-tint: var(--bf-blue-tint);
+  border-left: 3px solid var(--c);
+  background: var(--c-tint);
+  border-radius: 0.3rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--bf-ink);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+.md-typeset .bf-formal .bf-fnote p { margin: 0; }
+.md-typeset .bf-formal .bf-fnote-h { display: block; margin-bottom: 0.2rem; color: var(--c); font-weight: 700; }
+.md-typeset .bf-formal .bf-fterm { border-bottom: 2px solid var(--c); font-weight: 600; }
+.md-typeset .bf-formal .bf-c-blue { --c: var(--bf-blue); --c-tint: var(--bf-blue-tint); }
+.md-typeset .bf-formal .bf-c-green { --c: var(--bf-green-ink); --c-tint: var(--bf-green-tint); }
+.md-typeset .bf-formal .bf-c-amber { --c: var(--bf-amber); --c-tint: var(--bf-amber-tint); }
+.md-typeset .bf-formal .bf-c-ultra { --c: var(--bf-ultra); --c-tint: var(--bf-ultra-tint); }
+.md-typeset .bf-formal .bf-c-claude { --c: var(--bf-claude); --c-tint: var(--bf-claude-tint); }
+.md-typeset .bf-formal .bf-c-steel { --c: var(--bf-steel); --c-tint: var(--bf-steel-tint); }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .bf-formal .bf-fstep { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* .bf-stepper: a process shown one step at a time (blog.js). The controls and the live text
+   appear only with JavaScript; without it the static summary shows. */
+.bf-stepper [hidden] { display: none !important; }
+.md-typeset .bf-stepper .bf-step-stages { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.6rem; }
+.md-typeset .bf-stepper .bf-step-text { min-height: 4.6em; margin: 0.6rem 0 0; color: var(--bf-ink); font-size: 0.72rem; line-height: 1.55; }
+.md-typeset .bf-stepper .bf-step-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.md-typeset .bf-stepper .bf-step-controls input[type="range"] { flex: 1 1 8rem; min-width: 6rem; accent-color: var(--bf-green); }
+.bf-stepper .bf-btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-ink);
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.bf-stepper .bf-btn:hover { background: var(--bf-track); }
+.bf-stepper .bf-btn:disabled { color: var(--bf-muted); opacity: 0.5; cursor: default; background: transparent; }
+.bf-stepper .bf-btn[aria-pressed="true"], .bf-stepper .bf-btn.bf-step-main { border-color: var(--bf-ink); background: var(--bf-ink); color: var(--md-default-bg-color); }
+.bf-stepper .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.bf-stepper .bf-arrow { stroke: var(--bf-muted); }
+
+/* .bf-l3fill: workers' footprints filling the shared L3, set by a slider (blog.js). The slider,
+   the live bar and its text appear only with JavaScript; without it the stepped summary shows. */
+.bf-l3fill [hidden] { display: none !important; }
+.md-typeset .bf-l3fill .bf-l3-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.2rem 0 0.6rem; font-size: 0.72rem; }
+.md-typeset .bf-l3fill .bf-l3-controls label { font-weight: 600; min-width: 5.5rem; }
+.md-typeset .bf-l3fill .bf-l3-controls input[type="range"] { flex: 1 1 10rem; min-width: 8rem; accent-color: var(--bf-green); }
+.md-typeset .bf-l3fill .bf-l3-text { min-height: 3.2em; margin: 0.5rem 0 0; padding: 0.5rem 0.7rem; border-left: 3px solid var(--bf-green); background: var(--bf-surface); color: var(--bf-ink); font-size: 0.72rem; line-height: 1.55; }
+
+/* Figures reproduced from papers: keep their white page background in both themes. */
+.md-typeset .bf-fig img.bf-src {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+/* Figures drawn as their objects (the "Advancing the search" post, #820 and after): rings for
+   cycles, ribbons for intervals carried by a translation, triangles for triangles. One colour per
+   letter across a post's figures: a green, n steel, b amber, c violet, $ (fx-d) ink. Every class
+   draws from the bf-* colours above, so light and slate both follow. */
+.bf-fig { --fx-a: var(--bf-green); --fx-a-t: var(--bf-green-tint);
+  --fx-n: var(--bf-steel); --fx-n-t: var(--bf-steel-tint);
+  --fx-b: var(--bf-amber); --fx-b-t: var(--bf-amber-tint);
+  --fx-c: var(--bf-ultra); --fx-c-t: var(--bf-ultra-tint);
+  --fx-d: var(--bf-muted); --fx-d-t: var(--bf-surface);
+  --fx-k: var(--fx-d); --fx-kt: var(--fx-d-t); }
+.bf-fig .fx-a { --fx-k: var(--fx-a); --fx-kt: var(--fx-a-t); }
+.bf-fig .fx-n { --fx-k: var(--fx-n); --fx-kt: var(--fx-n-t); }
+.bf-fig .fx-b { --fx-k: var(--fx-b); --fx-kt: var(--fx-b-t); }
+.bf-fig .fx-c { --fx-k: var(--fx-c); --fx-kt: var(--fx-c-t); }
+.bf-fig .fx-d { --fx-k: var(--fx-d); --fx-kt: var(--fx-d-t); }
+
+/* layout: two panels side by side, stacked on a phone; a wide strip scrolls inside its frame */
+.bf-fig .fx-panels { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1rem; }
+.bf-fig .fx-panels > svg { flex: 1 1 300px; max-width: 360px; width: 100%; height: auto; }
+.bf-fig .fx-wide > svg { width: 100%; height: auto; }
+/* a long strip is drawn across on a wide screen and downwards on a phone */
+.bf-fig .fx-switch > .fx-narrow { display: none; }
+@media screen and (max-width: 44.9375em) {
+  .bf-fig .fx-switch > .fx-wide { display: none; }
+  .bf-fig .fx-switch > .fx-narrow { display: block; }
+}
+
+/* type */
+.bf-fig .fx-letter { fill: var(--bf-ink); font: 600 15px var(--md-code-font-family, monospace); }
+.bf-fig .fx-letter-s { fill: var(--bf-ink); font: 600 13px var(--md-code-font-family, monospace); }
+.bf-fig .fx-row { fill: var(--bf-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.bf-fig .fx-step { fill: var(--bf-muted); font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .fx-centre { fill: var(--bf-muted); font-size: 12.5px; }
+.bf-fig .fx-math { fill: var(--bf-ink); font: italic 19px KaTeX_Math, "Times New Roman", serif; }
+.bf-fig .fx-rule { fill: var(--bf-ink); font: 17px KaTeX_Main, "Times New Roman", serif; }
+.bf-fig .fx-pair { fill: var(--bf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .fx-side { fill: var(--bf-ink); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .fx-frac { fill: var(--bf-ink); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bf-fig .fx-shift { fill: var(--bf-ink); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  paint-order: stroke; stroke: var(--md-default-bg-color); stroke-width: 4px; stroke-linejoin: round; }
+
+/* cells, columns, rings and ribbons */
+.bf-fig .fx-node { fill: var(--fx-kt); stroke: var(--fx-k); stroke-width: 1.6; }
+.bf-fig .fx-cell { fill: var(--fx-kt); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .fx-cell.fx-dim { opacity: 0.38; }
+.bf-fig .fx-sel { fill: none; stroke: var(--bf-ink); stroke-width: 1.8; }
+.bf-fig .fx-run { fill: none; stroke: var(--bf-ink); stroke-width: 1.4; }
+.bf-fig .fx-ribbon { fill: var(--fx-k); fill-opacity: 0.22; stroke: var(--fx-k); stroke-width: 1.1; stroke-opacity: 0.85; }
+.bf-fig .fx-loop { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; opacity: 0.75; }
+.bf-fig .fx-head { fill: var(--bf-ink); opacity: 0.75; }
+.bf-fig .fx-lf { fill: none; stroke: var(--fx-k); stroke-width: 1.8; }
+.bf-fig .fx-brace { fill: none; stroke: var(--fx-k, var(--bf-muted)); stroke-width: 1.4; }
+.bf-fig .fx-brace-t { fill: var(--bf-ink); font-size: 12.5px; font-weight: 600; }
+
+/* the Pell triangles and the ladder to root two */
+.bf-fig .fx-tri { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.8; stroke-linejoin: round; }
+.bf-fig .fx-ghost { fill: none; stroke: var(--bf-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+.bf-fig .fx-right { fill: none; stroke: var(--bf-green); stroke-width: 1.2; }
+.bf-fig .fx-axis { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; }
+.bf-fig .fx-tick { fill: none; stroke: var(--bf-muted); stroke-width: 1; }
+.bf-fig .fx-dot { fill: var(--bf-muted); }
+.bf-fig .fx-dot-on { fill: var(--bf-green); stroke: var(--md-default-bg-color); stroke-width: 2; }
+.bf-fig .fx-back { fill: none; stroke: var(--bf-amber); stroke-width: 1.5; }
+
+/* two ways to search */
+.bf-fig .fx-orbit { fill: none; stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 2 4; }
+.bf-fig .fx-ray { fill: none; stroke: var(--bf-muted); stroke-width: 1.3; }
+.bf-fig .fx-shut { fill: none; stroke: var(--bf-ink); stroke-width: 3; stroke-linecap: round; }
+.bf-fig .fx-kept { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .fx-verdict { fill: var(--bf-muted); font-size: 11px; font-style: italic; }
+.bf-fig .fx-verdict-kept { fill: var(--bf-green-ink); font-size: 11px; font-weight: 700; }
+.bf-fig .fx-hub { fill: var(--bf-surface); stroke: var(--bf-ink); stroke-width: 1.4; }
+.bf-fig .fx-hub-t { fill: var(--bf-ink); font-size: 11.5px; font-weight: 600; }
+.bf-fig .fx-station { fill: var(--bf-ink); }
+.bf-fig .fx-map { fill: none; stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .fx-map-t { fill: var(--bf-green-ink); font-size: 13px; font-weight: 700; }
+.bf-fig .fx-ledger { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .fx-key { fill: var(--bf-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.bf-fig .fx-inv { fill: var(--bf-green-ink); font-size: 13px; font-weight: 700; }
+.bf-fig .fx-flow { fill: none; stroke: var(--bf-ink); stroke-width: 1.4; opacity: 0.75; }
+.bf-fig .fx-target { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.6; }
+.bf-fig .fx-target-t { fill: var(--bf-ink); font-size: 13px; font-weight: 700; }
+
+/* tilings */
+.bf-fig .fx-grid { fill: none; stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 2 3; }
+.bf-fig .fx-w1-band { fill: var(--bf-amber-tint); opacity: 0.55; }
+.bf-fig .fx-tile { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .fx-tile-big { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.4; }
+.bf-fig .fx-tile-w1 { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.6; }
+.bf-fig .fx-seam { fill: none; stroke: var(--bf-green); stroke-width: 1; opacity: 0.35; }
+.bf-fig .fx-tile-t { fill: var(--bf-green-ink); font-size: 11px; font-weight: 600;
+  paint-order: stroke; stroke: var(--bf-green-tint); stroke-width: 3px; stroke-linejoin: round; }
+.bf-fig .fx-w1-t { fill: var(--bf-amber); font-size: 10.5px; font-weight: 700; }
+
+/* chains and rounds */
+.bf-fig .fx-bead { fill: var(--bf-surface); stroke: var(--bf-steel); stroke-width: 1.3; }
+.bf-fig .fx-chain { fill: none; stroke: var(--bf-steel); stroke-width: 1.4; }
+.bf-fig .fx-round { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1; stroke-opacity: 0.6; }
+
+/* stations: in hand, the frontier, open */
+.bf-fig .fx-line-done { fill: none; stroke: var(--bf-green); stroke-width: 3; }
+.bf-fig .fx-line-open { fill: none; stroke: var(--bf-muted); stroke-width: 2; stroke-dasharray: 5 5; }
+.bf-fig .fx-stop-done { fill: var(--bf-green); }
+.bf-fig .fx-stop-front { fill: var(--md-default-bg-color); stroke: var(--bf-green); stroke-width: 3; }
+.bf-fig .fx-stop-open { fill: var(--md-default-bg-color); stroke: var(--bf-muted); stroke-width: 2; }
+.bf-fig .fx-stop-text { fill: var(--bf-ink); }
+.bf-fig .fx-state-done { fill: var(--bf-green-ink); font-size: 11px; font-weight: 700; }
+.bf-fig .fx-state-open { fill: var(--bf-amber); font-size: 11px; font-weight: 700; }
+
+/* the 18-row witness */
+.bf-fig .fx-cell9 { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .fx-cell9.fx-start { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.4; }
+.bf-fig .fx-cell9.fx-w1cell { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.8; }
+.bf-fig .fx-runline { fill: none; stroke: var(--bf-muted); stroke-width: 1.4; }
+.bf-fig .fx-path-a { fill: none; stroke: var(--bf-green); stroke-width: 1.7; }
+.bf-fig .fx-path-b { fill: none; stroke: var(--bf-steel); stroke-width: 1.7; }
+.bf-fig .fx-path-a-t { fill: var(--bf-green-ink); font-size: 13px; font-weight: 600; }
+.bf-fig .fx-path-b-t { fill: var(--bf-steel); font-size: 13px; font-weight: 600; }
+
+/* the supplied test */
+.bf-fig .fx-rail { fill: none; stroke: var(--bf-muted); stroke-width: 2; }
+.bf-fig .fx-inset { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.8; }
+.bf-fig .fx-inset-t { fill: var(--bf-ink); font-size: 11.5px; font-weight: 600; }
+.bf-fig .fx-gate-zone { fill: var(--bf-green-tint); }
+.bf-fig .fx-gate { fill: none; stroke: var(--bf-ink); stroke-width: 2.5; }
+/* a single drawing is shown at its own size at most, centred, never scaled up */
+.bf-fig svg.fx-solo { display: block; width: 100%; height: auto; margin: 0 auto; }
+.bf-fig svg.bf-step-svg.fx-solo { margin: 0 auto; }
+.bf-fig .fx-math-s { fill: var(--bf-ink); font: italic 15px KaTeX_Math, "Times New Roman", serif; }
+
+/* .bf-twostation: the bottleneck law min(k/w, 1/s) with two sliders (blog.js). Without
+   JavaScript the controls stay hidden and the figure shows the measured values. */
+.bf-twostation [hidden] { display: none !important; }
+.md-typeset .bf-twostation .bf-ts-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.2rem; margin: 0.4rem 0 0.6rem; font-size: 0.72rem; }
+.md-typeset .bf-twostation .bf-ts-controls label { display: flex; align-items: center; gap: 0.5rem; flex: 1 1 14rem; font-weight: 600; white-space: nowrap; }
+.md-typeset .bf-twostation .bf-ts-controls input[type="range"] { flex: 1 1 8rem; min-width: 6rem; accent-color: var(--bf-steel); }
+.md-typeset .bf-twostation .bf-ts-controls output { font-weight: 400; min-width: 4.5rem; font-variant-numeric: tabular-nums; }
+.md-typeset .bf-twostation .bf-ts-reset { font: inherit; padding: 0.25rem 0.7rem; border: 1px solid var(--bf-frame); border-radius: 0.4rem; background: var(--bf-surface); color: var(--bf-ink); cursor: pointer; }
