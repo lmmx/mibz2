@@ -19,7 +19,9 @@ At 1 worker A6b takes **216 ms of 1,306** (`../math-targets/data/character-stage
 **What isn't known:**
 1. how much of A6b's time is the steps themselves, and how much is setup and the dictionary;
 2. whether fewer steps means less time, since a cheaper order might do more work per step;
-3. whether a good order can be chosen *online*, from what's already decoded, cheaply.
+3. whether a good order can be chosen cheaply while decoding. Construction already holds the whole block's run representation, so "online" means "from what construction has, at a cost below the saving", not "before the block arrives" (clarified 26 November).
+
+**The budget, worked through** (ChatGPT's review, `../ideal-parts/reviews/2026-11-26-chatgpt.md` §6B): the known order cuts steps by 29.4%. The 3% gate is about 39 ms at 1 worker, so about 62% of A6b's 216 ms would have to be step time that falls in proportion, before paying for the scheduling. The 1.812 and 1.279 counts are from the earlier full run-letter exchange. The census must recount on Open's actual object, where thick strips are eliminated and thin rows retained.
 
 ## Why it matters
 

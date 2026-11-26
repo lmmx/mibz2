@@ -67,12 +67,12 @@ From 6 to 8 workers, the scanner and construction co-limit. Making either alone 
 
 **The floor is mostly the oracles' own cost, not the decoder's residual.**
 - **At 1 worker,** the handovers' times sum to 0.392 s (S 15, E 286, C 30, M 9 and R 52 ms), equal to the all-ideal wall of 0.391 s.
-- **From 8 to 10 workers,** the all-ideal wall *rises* (0.112 → 0.142 s), while the per-thread handovers barely change. That points to many threads copying large replayed buffers at once and contending for memory bandwidth.
+- **From 8 to 10 workers,** the all-ideal wall *rises* (0.112 → 0.142 s), while the per-thread handovers barely change. That is consistent with many threads copying large replayed buffers at once and contending for memory bandwidth. This run cannot separate that from production's own contention (corrected 26 November).
 
 So the matrix cannot say what the decoder's irreducible residual is. That needs oracles whose handover costs nothing: a zero-copy handover, as Antigravity assumed for R. This is the main limitation of this run, and the case for a follow-up.
 
 **The handovers also hide part of some rooms:**
-- **E's oracle copies about 40 ms per thread.** Its measured room above the knee is small (0.965 at 8), but net of the handover it is about 0.75.
+- **E's "handover" is mostly real emission work, not copying** (corrected 26 November, `../../reviews/2026-11-26-chatgpt.md` §4). `HandE` times both `sup::deliver` (the oracle's copy, about 26 ms at 1 worker) and `self.consume`, the expansion of codes into bytes, which the oracle leaves in place (about 259 ms). So E's oracle removes the graph walk only: E's room here is not a ceiling for emission, and the all-ideal arm still expands every word. The "net of handover" figures for E in §1 (0.62–0.78) subtract that real work and overstate E's room.
 - **R's handover costs more than RLE1 and CRC save** (1.009–1.021 at 8–10). Net, R's own work is about 4%.
 
 The net figures assume each handover lies on the critical path. They are a bound, not a measurement.
@@ -81,13 +81,13 @@ The net figures assume each handover lies on the critical path. They are a bound
 
 1. **Below the knee (1 to 6 workers), construction is the largest room.** Building Open's structures, ideal, is 0.58 of the wall at 1 worker and 0.75 at 6. Emission is next (0.83–0.85; net of handover, about 0.62), then MTF/RLE2 (0.92).
 2. **At the knee and above (8 to 10), the scanner is the largest room** (0.92 at 10; net of handover, 0.75–0.84). But at 6–8 it co-limits with construction: either part's room appears only when the other is cheap too.
-3. **RLE1/CRC/output and delivery have little room of their own.** Delivery's matters only once the scanner is free (S × D).
+3. **MTF/RLE2 has real room** (7.5% at 1 worker, 8.4% at 6), smaller than C's but worth fusing with it. **RLE1/CRC/output and delivery have little room of their own.** Delivery's matters only once the scanner is free (S × D).
 4. **For the mathematics,** the targets ranked by measured room are:
    1. construction (C, target T2);
    2. the scan (S, T4);
    3. emission (E, T1).
 
-   S and C have to be attacked together to win at the operating points that matter (8 workers and up).
+   S and C are the strongest complementary pair at 8 workers (195 → 125 ms together, against 189 and 184 ms alone), and the first research priority. They aren't the only route: S with E's oracle gives about 16% at 8, and a change of representation can touch several parts at once (corrected 26 November).
 5. **The decoder's true residual is unmeasured** (§4).
 
 ## 6. Antigravity's predictions, scored (`scoring-neon-1.tsv`)

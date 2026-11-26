@@ -2431,3 +2431,15 @@ Louis, 25 November, on reading the overnight summary: the point of the experimen
   - **The build goes to Antigravity** (`ideal-parts/antigravity/prompt-build-zero-copy.md`). It designed the change.
   - **The recipe goes to the Pathfinder,** on #909's faster harness.
   - Characterisation only. The designs' kill tests wait until the floor is measured.
+
+## 91. ChatGPT's review of the ideal-parts work, and the corrections it made
+
+Recorded verbatim at Louis's request: `2026-11-24-algorithm-level/ideal-parts/reviews/2026-11-26-chatgpt.md`.
+- **Its verdict:** the matrix is the experiment needed to direct the algorithmic work, and it is enough to start constructive design.
+  - The remaining measurements, the zero-copy floor (#917) and A6b's time split (the Rauzy census), each have one decision to make, and then they close.
+  - The S + C result is the headline: 195 → 125 ms at 8 workers, 1.56× throughput, against 189 and 184 ms for either alone.
+- **Corrections:** the full list is in that folder's `reviews/README.md`. The ones that change readings:
+  - **E's oracle left the expansion of codes into bytes in place** (about 259 of its 285 ms "handover" at 1 worker). So E's measured room is not emission's ceiling, and the all-ideal floor still contains most of emission.
+  - **Memory bandwidth as a third bottleneck (§90) is a hypothesis.** The matrix can't separate it from the oracles' replay traffic, and the zero-copy run tests it.
+  - **MTF/RLE2 has real room:** 7.5–8.4% below the knee.
+- **The plan changes in one way:** threads 3–5 (pooled scan, C's A5+A6a fold and A6c, forward emission) may start design work now, alongside the two closing measurements (`plan.md` §1).

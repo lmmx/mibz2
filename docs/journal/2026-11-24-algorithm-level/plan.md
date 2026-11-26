@@ -41,12 +41,14 @@ Walls are on wikidata ×4, with the scanner pinned and the clock pre-spun.
 | 10 | 196 ms | S: 180 ms (−8%) | 149 ms (−24%) | 142 ms |
 
 **What this says:**
-1. **At one or a few workers, construction (C) is the cost.** It is 80% of the explainable variation at 1 worker, and making it free takes 42% off.
-2. **At 8 workers, which is what ships, no single part has much room**, because two parts take turns being the bottleneck. Speed up the scanner and construction binds; speed up construction and the scanner binds. Together they have 36%. This is the S × C interaction, the largest in the matrix.
-3. **Emission (E) is third:** 16% at 1 worker, and more net of its oracle's copying.
-4. **MTF, RLE1/CRC and delivery have little room of their own.** Delivery matters only once the scanner is free.
-5. **Above 8 workers, memory bandwidth becomes a third bottleneck** (Antigravity's second pass, journal §90). So 8–9 workers is the target, not 10.
-6. **The floor is not yet measured.** The 112 ms at 8 workers is mostly the oracles' own copying, not the decoder's. Thread 1 below measures it.
+1. **At one or a few workers, construction (C) is the cost.** Making it free takes 42% off. In normal running it is about 45% of the 1-worker time (578 of 1,283 ms, stage 1). The "80%" in the report is the share of the *variation across the matrix's arms*, a different quantity.
+2. **At 8 workers, which is what ships, no single part has much room alone**, because two parts take turns being the bottleneck. Speed up the scanner and construction binds; speed up construction and the scanner binds. Together they have 36% (195 → 125 ms, 1.56× throughput). This is the S × C interaction, the largest in the matrix. It is the strongest pair, not the only route: S with E's oracle gives about 16%, and a representation change can touch several parts at once.
+3. **Emission (E) is third:** 16.5% at 1 worker and 15% at 6. That is *not* E's ceiling: its oracle removes only the graph walk and still expands every code into bytes (about 259 ms at 1 worker). The zero-copy run's `E_full` arm measures the rest.
+4. **MTF/RLE2 has real room:** 7.5% at 1 worker, 8.4% at 6, best taken by fusing it with C. **RLE1/CRC and delivery have little room of their own.** Delivery matters only once the scanner is free.
+5. **Above 8 workers, adding workers makes things worse even with S and C free** (125 → 149 ms). Shared cache and memory contention is the plausible cause (Antigravity's second pass, journal §90). This run can't separate it from the oracles' own replay traffic, so it's a hypothesis that the zero-copy run tests.
+6. **The floor is not yet measured.** The all-ideal walls (391, 94, 112 and 142 ms) mix the remaining word expansion, replay copies, oracle locking, contention and pipeline overhead. Thread 1 below separates them.
+
+**The matrix is enough to guide constructive work** (ChatGPT's review, `ideal-parts/reviews/2026-11-26-chatgpt.md`). The remaining measurements (the floor and A6b's time split) each have one decision to make, and then they close. Characterisation is not a prerequisite for designing the S + C and representation changes: threads 3–5 may start design work in parallel.
 
 ## 2. The threads, in priority order
 
