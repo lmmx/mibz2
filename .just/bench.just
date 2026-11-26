@@ -1940,3 +1940,165 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# Lazy against eager workers below 8, and the worker-count cap (docs/journal/
+# 2026-11-25-kernel-count-registration.md, frozen before the data). DIAGNOSTIC (RULES C1a): it
+# decides nothing; a later adoption registration decides any production default. Stage 1 of the
+# character study (character/run-20261125T001135Z; journal §66) found that `BzReader::parallel`
+# builds eager workers at 3, 5 and 7 threads asked (`Plan::lazy` needs `LAZY_FROM_THREADS` = 8;
+# the measured i9 cells cover 4, 6 and 10 or more), 0.337 s and 140 MB at 7 against 0.209 s and
+# 54 MB for 7 lazy workers; and that 10 or more asked build 7 lazy workers with a 28-slot window,
+# where 8 or 9 asked were faster. Master at PIN, unchanged (src, Cargo.*, build.rs and
+# examples/ab.rs checked). Unpinned on every online CPU, wikidata x COPIES, ROUNDS randomised
+# complete rounds of 29 cells (bench/kernel_count_run.py), every decode a fresh `ab child`
+# process (wall, CPU, peak RSS):
+# - explicit workers (`BzReader::parallel_workers`, window 4k): lazy at k = 1..10, eager at
+#   k = 1..9 (the cap's cells are lazy 7, 8, 9 and 10 among them);
+# - the public API (`BzReader::parallel`) at t = 3..12 asked, with what it built probed beside
+#   every observation (examples/kernel_count.rs: workers, window, lazy, service, pipelined).
+# An observation: SETTLE s of sleep, then REPS decodes back to back; PREWARM s of discarded
+# decodes first. bench/kernel_count.py reports each cell's median wall, CPU and peak RSS, the
+# paired lazy/eager ratio at each k with its 95% interval, the cap's ratios to lazy 8, and the
+# public API's built configuration and wall at each t. Fail-soft: every phase's status in
+# phases.tsv, and the EXIT trap always bundles. About 17 minutes on the i9.
+# DRY (the first positional argument: two rounds, one decode an observation, no settle, 2 s of
+# pre-warm; the wiring only, not evidence).
+#   just submit bench-kernel-count
+bench-kernel-count DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=16aaee3b11ed91d8a1ff6cb3d1a39426a44718a0
+    COPIES=4 ROUNDS=12 REPS=3 SETTLE=1 PREWARM=50 SEED=20261125
+    dry="{{DRY}}"
+    [ -z "$dry" ] || { ROUNDS=2; REPS=1; SETTLE=0; PREWARM=2; }
+    W=$PWD/target/kernel-count
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-kernel-count (docs/journal/2026-11-25-kernel-count-registration.md; DIAGNOSTIC, decides nothing) at $(git rev-parse HEAD): master $PIN, lazy against eager at k = 1..9, lazy at 10, the public API at 3..12 asked, unpinned, $ROUNDS randomised rounds of $REPS decodes, settle $SETTLE s, pre-warm $PREWARM s, seed $SEED, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-kernel-count: DRY RUN: two rounds, one decode an observation, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    printf 'phase\tstatus\tstarted\tfinished\n' > "$O/phases.tsv"
+    X=$W/wikidata-x$COPIES.bz2
+    AB=$PWD/target/release/examples/ab
+    KC=$PWD/target/release/examples/kernel_count
+    outcome="INCOMPLETE: stopped before the report (console.log and phases.tsv say where)"
+    failed=""
+    finish() {
+      st=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      echo "$outcome" > "$O/outcome.txt"
+      echo "bench-kernel-count: OUTCOME: $outcome"
+      rm -f "$X"
+      bash bench/bundle.sh "$O"
+      if [ -n "$failed" ] || [ "$st" != 0 ]; then exit 1; fi
+    }
+    trap finish EXIT
+    # a phase: its commands with errexit, in a subshell; its status recorded and the recipe going
+    # on. A required phase's failure skips the required phases after it (recorded as skipped);
+    # the report runs on whatever was recorded, and opt- phases never block anything
+    phase() {
+      local name=$1; shift
+      local t0; t0=$(date -u +%FT%TZ)
+      local rc=0
+      if [ -n "$failed" ] && [ "${name#opt-}" = "$name" ] && [ "$name" != report ]; then
+        printf '%s\tskipped (after %s)\t%s\t%s\n' "$name" "$failed" "$t0" "$t0" >> "$O/phases.tsv"
+        echo "bench-kernel-count: phase $name skipped (after $failed)"
+        return 0
+      fi
+      echo "bench-kernel-count: phase $name"
+      set +e
+      ( set -e; "$@" )
+      rc=$?
+      set -e
+      printf '%s\t%s\t%s\t%s\n' "$name" "$([ $rc = 0 ] && echo ok || echo "failed ($rc)")" "$t0" "$(date -u +%FT%TZ)" >> "$O/phases.tsv"
+      if [ $rc != 0 ]; then
+        echo "bench-kernel-count: phase $name failed ($rc); the bundle is kept"
+        [ "${name#opt-}" != "$name" ] || failed=${failed:+$failed, }$name
+      fi
+      return 0
+    }
+    export RUSTUP_TOOLCHAIN=1.99.1
+    preflight() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "the checkout has local changes"; return 1; }
+      git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+      git merge-base --is-ancestor "$PIN" HEAD \
+        || { echo "$PIN is not an ancestor of $(git rev-parse HEAD)"; return 1; }
+      # the decoder and the timed harness: master's at PIN, byte for byte
+      git diff --quiet "$PIN" HEAD -- src Cargo.toml Cargo.lock build.rs examples/ab.rs \
+        || { echo "src, Cargo.*, build.rs or examples/ab.rs differs from master's $PIN"; return 1; }
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'head %s\npin %s\n' "$(git rev-parse HEAD)" "$PIN" | tee "$O/commits.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; return 1; }
+    }
+    build() {
+      cargo build -q --release --example ab --example kernel_count --example windows
+      { rustc -vV; cargo -vV; } > "$O/toolchain.txt"
+      sha256sum "$AB" "$KC" | tee "$O/binaries.sha256"
+    }
+    corpus() {
+      # corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch), checked by
+      # bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      c=corpora/wikidata.bz2
+      if [ ! -f "$c" ] || [ "$(sha256sum "$c" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$c"
+      fi
+      [ "$(sha256sum "$c" | cut -d' ' -f1)" = "$want" ] || { echo "$c is not bench/wikidata.json's $want"; return 1; }
+      : > "$X"
+      for i in $(seq $COPIES); do cat "$c" >> "$X"; done
+      sha256sum "$c" "$X" | tee "$O/inputs.txt"
+    }
+    machine() {
+      "$AB" env > "$O/env.json" || true
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      echo "thp: $(cat /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      grep -m1 microcode /proc/cpuinfo >> "$O/frequency-policy.txt" || true
+      uname -a > "$O/uname.txt"
+      uptime > "$O/uptime-before.txt"
+    }
+    run() {
+      python3 bench/kernel_count_run.py --ab "$AB" --probe "$KC" --corpus "$X" --out "$O" \
+        --rounds $ROUNDS --reps $REPS --settle $SETTLE --prewarm $PREWARM --seed $SEED
+      date -u +%FT%TZ > "$O/timed.txt"
+      uptime > "$O/uptime-after.txt"
+    }
+    report() {
+      [ -s "$O/runs.jsonl" ] || { echo "no runs.jsonl to report"; return 1; }
+      rc=0
+      python3 bench/kernel_count.py "$O/runs.jsonl" --rounds $ROUNDS --reps $REPS --tsv-dir "$O/tsv" \
+        > "$O/report.txt" || rc=$?
+      cat "$O/report.txt"
+      return $rc
+    }
+    phase preflight preflight
+    phase build build
+    phase corpus corpus
+    phase opt-machine machine
+    phase run run
+    phase report report
+    status=$(sed -n 's/^Status: //p' "$O/report.txt" 2>/dev/null | head -1 || true)
+    if [ -n "$failed" ]; then
+      outcome="INCOMPLETE: phase(s) failed: $failed (phases.tsv; report status ${status:-none})"
+    elif [ -n "$dry" ]; then
+      outcome="DRY: report status ${status:-none}; the wiring only, not evidence"
+    else
+      outcome="DIAGNOSTIC: report status ${status:-none}; decides nothing"
+    fi
