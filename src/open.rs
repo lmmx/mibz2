@@ -636,19 +636,65 @@ impl Kernel {
         }
         #[cfg(not(feature = "supplied-codes"))]
         {
+            #[cfg(feature = "ideal-construction")]
+            {
+                use crate::ideal::{construction as ic, Mode};
+                if ic::mode() == Mode::Replay {
+                    std::hint::black_box(records);
+                    if let Some(idx) = crate::ideal::current_block() {
+                        match ic::with_built(idx, n as u32, |b| {
+                            ch!(begin A7);
+                            walk_slices(
+                                b.predecessor,
+                                &b.edges,
+                                &b.extra,
+                                &b.spelling,
+                                &b.inline16,
+                                &b.lens,
+                                n,
+                                b.mark,
+                                b.bits,
+                                out,
+                            );
+                            ch!(end A7);
+                            Counts {
+                                n,
+                                retained: b.m as usize,
+                                ..Counts::default()
+                            }
+                        }) {
+                            ic::Replay::Built(stats) => return Some(stats),
+                            ic::Replay::Refused => return None,
+                            ic::Replay::Miss => {}
+                        }
+                    }
+                }
+            }
             let (stats, mark, bits) =
-                self.construct_for::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+                self.construct_and_record::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
             ch!(begin A7);
-            self.walk(n, stats.retained, mark, bits, out);
+            walk_slices(
+                self.predecessor,
+                &self.edges[..stats.retained],
+                &self.extra,
+                &self.spelling,
+                &self.inline16,
+                &self.lens,
+                n,
+                mark,
+                bits,
+                out,
+            );
             ch!(end A7);
             Some(stats)
         }
     }
 
-    /// The construction emission is handed: `construct_capped`, or under `ideal-construction`
-    /// its oracle's hand-over point (`construct_or_replay`)
+    /// Runs `construct_capped` and, under `ideal-construction`, counts the real construction
+    /// and records Open's built structures (with the 256 literal slots pre-populated) in
+    /// `Mode::Record`.
     #[inline(always)]
-    pub(crate) fn construct_for<const INDUCE: bool, const QUEUE: bool>(
+    pub(crate) fn construct_and_record<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         records: &[u16],
         n: u32,
@@ -658,68 +704,13 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<(Counts, u32, u32)> {
         #[cfg(feature = "ideal-construction")]
-        {
-            self.construct_or_replay::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
-        }
-        #[cfg(not(feature = "ideal-construction"))]
-        {
-            self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
-        }
-    }
-
-    /// (research only, `ideal-construction`) Factor C's hand-over point: in `Real`, runs
-    /// `construct_capped`; in `Record`, runs it and stores Open's built structures (or refusal);
-    /// in `Replay`, skips `construct_capped`, copies the recorded structures into `self`, and
-    /// hands them to `walk`. Upstream MTF/RLE2 still ran; `records` is discarded here.
-    #[cfg(feature = "ideal-construction")]
-    fn construct_or_replay<const INDUCE: bool, const QUEUE: bool>(
-        &mut self,
-        records: &[u16],
-        n: u32,
-        p: u32,
-        limit: u32,
-        cap: Cap,
-        out: &mut Vec<u8>,
-    ) -> Option<(Counts, u32, u32)> {
-        use crate::ideal::{construction as ic, Mode};
-        let mode = ic::mode();
-        if mode == Mode::Replay {
-            std::hint::black_box(records);
-            if let Some(idx) = crate::ideal::current_block() {
-                // (`character`: the replay's copy is C's handover, apart from A6a to A6c)
-                ch!(begin HandC);
-                let replayed = ic::replay(
-                    idx,
-                    n,
-                    &mut self.predecessor,
-                    &mut self.edges,
-                    &mut self.extra,
-                    &mut self.spelling,
-                    &mut self.inline16,
-                    &mut self.lens,
-                    begin_inline,
-                );
-                ch!(end HandC);
-                match replayed {
-                    ic::Replay::Built { m, mark, bits } => {
-                        let stats = Counts {
-                            n: n as usize,
-                            retained: m,
-                            ..Counts::default()
-                        };
-                        return Some((stats, mark, bits));
-                    }
-                    ic::Replay::Refused => return None,
-                    ic::Replay::Miss => {}
-                }
-            }
-        }
-        ic::count_constructed();
+        crate::ideal::construction::count_constructed();
         let res = self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out);
-        if mode == Mode::Record {
+        #[cfg(feature = "ideal-construction")]
+        if crate::ideal::construction::mode() == crate::ideal::Mode::Record {
             if let Some(idx) = crate::ideal::current_block() {
                 match &res {
-                    Some((stats, mark, bits)) => ic::record_built(
+                    Some((stats, mark, bits)) => crate::ideal::construction::record_built(
                         idx,
                         n,
                         stats.retained as u32,
@@ -729,44 +720,37 @@ impl Kernel {
                         &self.edges[..stats.retained],
                         &self.extra,
                         &self.spelling,
-                        &self.inline16[256..],
-                        &self.lens[256..],
+                        &self.inline16,
+                        &self.lens,
                     ),
-                    None => ic::record_refused(idx),
+                    None => crate::ideal::construction::record_refused(idx),
                 }
             }
         }
         res
     }
+}
 
-    /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
-    fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
-        if let Some(before) = self.predecessor {
-            emit_bidirectional(
-                &self.edges[..m],
-                &self.spelling,
-                &self.inline16,
-                &self.lens,
-                n,
-                mark,
-                before,
-                bits,
-                out,
-            );
-            return;
-        }
-        emit(
-            &self.edges[..m],
-            &self.extra,
-            &self.spelling,
-            &self.inline16,
-            &self.lens,
-            n,
-            mark,
-            bits,
-            out,
-        );
+/// Emit from borrowed Open slices (zero copy): called both from `Kernel::try_run` and directly on
+/// `&ideal::construction::Built`.
+#[allow(clippy::too_many_arguments)]
+fn walk_slices(
+    predecessor: Option<u32>,
+    edges: &[u32],
+    extra: &[u32],
+    spelling: &[u8],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    if let Some(before) = predecessor {
+        emit_bidirectional(edges, spelling, inline16, lens, n, mark, before, bits, out);
+        return;
     }
+    emit(edges, extra, spelling, inline16, lens, n, mark, bits, out);
 }
 
 /// Rows a thin run may have, as retained ranks (the arm `Open<16, true, true>` measured on the
@@ -932,7 +916,7 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
 }
 
 /// The bytes of a code's word kept inline, and the longest word kept whole there
-const INLINE: usize = 16;
+pub(crate) const INLINE: usize = 16;
 /// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
 const LONG: u8 = u8::MAX;
 
