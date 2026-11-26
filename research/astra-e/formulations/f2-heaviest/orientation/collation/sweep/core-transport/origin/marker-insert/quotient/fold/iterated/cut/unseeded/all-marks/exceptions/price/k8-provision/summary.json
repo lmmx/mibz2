@@ -1,0 +1,1243 @@
+{
+  "all": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 16.940013,
+        "jump_ns": 8.758199,
+        "provision_ns": 0.403996,
+        "first_ns": 6.899735
+      },
+      "lazy": {
+        "thread_ns": 25.548469
+      },
+      "opend": {
+        "thread_ns": 24.864664
+      },
+      "parse_jump": {
+        "thread_ns": 20.003656,
+        "parse_ns": 4.604323,
+        "jump_ns": 7.831275,
+        "provision_ns": 0.381495,
+        "first_ns": 6.599678
+      },
+      "parse_unit": {
+        "thread_ns": 25.755895,
+        "parse_ns": 4.64658,
+        "provision_ns": 0.355237,
+        "first_ns": 19.623331
+      },
+      "scalar": {
+        "thread_ns": 24.730129
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.683132,
+        0.60028,
+        0.777419
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.370879,
+        0.32522,
+        0.422949
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.016554,
+        0.014233,
+        0.019253
+      ],
+      "build_jump.first_ns/scalar": [
+        0.287452,
+        0.246377,
+        0.335374
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.799607,
+        0.760899,
+        0.840285
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.195313,
+        0.179299,
+        0.212758
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.30586,
+        0.303432,
+        0.308308
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.018826,
+        0.011839,
+        0.029934
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.26771,
+        0.240543,
+        0.297944
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.009594,
+        0.995585,
+        1.023799
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.193215,
+        0.174552,
+        0.213873
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.017216,
+        0.012235,
+        0.024225
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.788283,
+        0.766456,
+        0.810732
+      ],
+      "paid_jump/paid_unit": [
+        0.792009,
+        0.757135,
+        0.82849
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.676641,
+        0.596854,
+        0.767094
+      ]
+    }
+  },
+  "1": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.21425,
+        "jump_ns": 0.516909,
+        "provision_ns": 0.029496,
+        "first_ns": 0.522984
+      },
+      "lazy": {
+        "thread_ns": 1.843777
+      },
+      "opend": {
+        "thread_ns": 1.707766
+      },
+      "parse_jump": {
+        "thread_ns": 1.398953,
+        "parse_ns": 0.337068,
+        "jump_ns": 0.464537,
+        "provision_ns": 0.029488,
+        "first_ns": 0.521806
+      },
+      "parse_unit": {
+        "thread_ns": 2.059992,
+        "parse_ns": 0.347769,
+        "provision_ns": 0.029673,
+        "first_ns": 1.55127
+      },
+      "scalar": {
+        "thread_ns": 1.778718
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.665545,
+        0.623852,
+        0.710024
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.326174,
+        0.289758,
+        0.367167
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.01867,
+        0.016144,
+        0.021591
+      ],
+      "build_jump.first_ns/scalar": [
+        0.299563,
+        0.286174,
+        0.313579
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.805943,
+        0.733954,
+        0.884992
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.215837,
+        0.166064,
+        0.280528
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.260985,
+        0.238476,
+        0.285618
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.018531,
+        0.015665,
+        0.021921
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.292838,
+        0.24904,
+        0.34434
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.137717,
+        1.054105,
+        1.227962
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.20846,
+        0.175759,
+        0.247246
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.019408,
+        0.015888,
+        0.023708
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.895131,
+        0.81857,
+        0.978852
+      ],
+      "paid_jump/paid_unit": [
+        0.708386,
+        0.64321,
+        0.780165
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.584982,
+        0.519925,
+        0.65818
+      ]
+    }
+  },
+  "41": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 2.951894,
+        "jump_ns": 1.715172,
+        "provision_ns": 0.030575,
+        "first_ns": 1.193585
+      },
+      "lazy": {
+        "thread_ns": 3.981647
+      },
+      "opend": {
+        "thread_ns": 3.801625
+      },
+      "parse_jump": {
+        "thread_ns": 3.462495,
+        "parse_ns": 0.674502,
+        "jump_ns": 1.573656,
+        "provision_ns": 0.030947,
+        "first_ns": 0.97338
+      },
+      "parse_unit": {
+        "thread_ns": 3.119296,
+        "parse_ns": 0.634187,
+        "provision_ns": 0.0292,
+        "first_ns": 2.493265
+      },
+      "scalar": {
+        "thread_ns": 4.891709
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.667201,
+        0.547098,
+        0.813671
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.402837,
+        0.325063,
+        0.49922
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.007167,
+        0.004733,
+        0.010854
+      ],
+      "build_jump.first_ns/scalar": [
+        0.242487,
+        0.192763,
+        0.305038
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.735597,
+        0.564113,
+        0.959211
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.146105,
+        0.114426,
+        0.186554
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.340282,
+        0.279367,
+        0.41448
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.008536,
+        0.003675,
+        0.019826
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.212295,
+        0.154619,
+        0.291486
+      ],
+      "parse_unit.thread_ns/scalar": [
+        0.661745,
+        0.557361,
+        0.785679
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.12708,
+        0.101502,
+        0.159103
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.006853,
+        0.00574,
+        0.008182
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.52095,
+        0.430271,
+        0.63074
+      ],
+      "paid_jump/paid_unit": [
+        1.111602,
+        0.827882,
+        1.492554
+      ],
+      "prepared_model_jump/paid_unit": [
+        1.008245,
+        0.718642,
+        1.414553
+      ]
+    }
+  },
+  "85": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.406617,
+        "jump_ns": 0.685868,
+        "provision_ns": 0.029735,
+        "first_ns": 0.654101
+      },
+      "lazy": {
+        "thread_ns": 2.328089
+      },
+      "opend": {
+        "thread_ns": 1.996201
+      },
+      "parse_jump": {
+        "thread_ns": 1.666165,
+        "parse_ns": 0.374852,
+        "jump_ns": 0.609383,
+        "provision_ns": 0.029855,
+        "first_ns": 0.596376
+      },
+      "parse_unit": {
+        "thread_ns": 2.456126,
+        "parse_ns": 0.405461,
+        "provision_ns": 0.02916,
+        "first_ns": 1.895034
+      },
+      "scalar": {
+        "thread_ns": 2.0042
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.663099,
+        0.576008,
+        0.763358
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.322882,
+        0.255429,
+        0.408147
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.017476,
+        0.012306,
+        0.024816
+      ],
+      "build_jump.first_ns/scalar": [
+        0.306394,
+        0.270922,
+        0.34651
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.852637,
+        0.785129,
+        0.925949
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.196881,
+        0.184635,
+        0.209939
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.289042,
+        0.279639,
+        0.298762
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.020457,
+        0.014508,
+        0.028847
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.301787,
+        0.22746,
+        0.400401
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.152908,
+        1.116412,
+        1.190597
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.229491,
+        0.214117,
+        0.245969
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.015791,
+        0.011235,
+        0.022194
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.873591,
+        0.79639,
+        0.958275
+      ],
+      "paid_jump/paid_unit": [
+        0.739553,
+        0.678432,
+        0.80618
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.575153,
+        0.492963,
+        0.671046
+      ]
+    }
+  },
+  "134": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.21164,
+        "jump_ns": 0.563009,
+        "provision_ns": 0.03058,
+        "first_ns": 0.54423
+      },
+      "lazy": {
+        "thread_ns": 2.019184
+      },
+      "opend": {
+        "thread_ns": 2.217142
+      },
+      "parse_jump": {
+        "thread_ns": 1.565953,
+        "parse_ns": 0.404082,
+        "jump_ns": 0.500538,
+        "provision_ns": 0.030722,
+        "first_ns": 0.488844
+      },
+      "parse_unit": {
+        "thread_ns": 2.40329,
+        "parse_ns": 0.401267,
+        "provision_ns": 0.030522,
+        "first_ns": 1.852242
+      },
+      "scalar": {
+        "thread_ns": 1.933281
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.646829,
+        0.528519,
+        0.791622
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.309752,
+        0.277713,
+        0.345487
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.018924,
+        0.008739,
+        0.040981
+      ],
+      "build_jump.first_ns/scalar": [
+        0.288355,
+        0.196307,
+        0.423563
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.817341,
+        0.651267,
+        1.025765
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.219184,
+        0.191106,
+        0.251387
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.268193,
+        0.195003,
+        0.368854
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.020579,
+        0.011596,
+        0.036519
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.263352,
+        0.208943,
+        0.331929
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.198463,
+        1.061562,
+        1.353018
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.233592,
+        0.14866,
+        0.367046
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.018515,
+        0.011108,
+        0.03086
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.892283,
+        0.82432,
+        0.96585
+      ],
+      "paid_jump/paid_unit": [
+        0.681991,
+        0.558919,
+        0.832163
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.539715,
+        0.479139,
+        0.607949
+      ]
+    }
+  },
+  "176": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.230114,
+        "jump_ns": 0.600376,
+        "provision_ns": 0.029077,
+        "first_ns": 0.496348
+      },
+      "lazy": {
+        "thread_ns": 1.950805
+      },
+      "opend": {
+        "thread_ns": 1.919896
+      },
+      "parse_jump": {
+        "thread_ns": 1.371002,
+        "parse_ns": 0.377478,
+        "jump_ns": 0.464283,
+        "provision_ns": 0.030198,
+        "first_ns": 0.486803
+      },
+      "parse_unit": {
+        "thread_ns": 2.13095,
+        "parse_ns": 0.330685,
+        "provision_ns": 0.029282,
+        "first_ns": 1.712093
+      },
+      "scalar": {
+        "thread_ns": 1.924454
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.643747,
+        0.499338,
+        0.829918
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.329825,
+        0.215594,
+        0.504581
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.015619,
+        0.012612,
+        0.019344
+      ],
+      "build_jump.first_ns/scalar": [
+        0.279233,
+        0.235384,
+        0.331252
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.786213,
+        0.667673,
+        0.925798
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.212041,
+        0.161171,
+        0.278967
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.271837,
+        0.23168,
+        0.318955
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.01686,
+        0.011397,
+        0.024942
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.257837,
+        0.183391,
+        0.362503
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.137323,
+        0.938599,
+        1.37812
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.192516,
+        0.142813,
+        0.259517
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.019468,
+        0.010431,
+        0.036334
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.893616,
+        0.729284,
+        1.094977
+      ],
+      "paid_jump/paid_unit": [
+        0.691284,
+        0.582653,
+        0.820169
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.56602,
+        0.470298,
+        0.681223
+      ]
+    }
+  },
+  "225": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.106632,
+        "jump_ns": 0.546952,
+        "provision_ns": 0.028774,
+        "first_ns": 0.474008
+      },
+      "lazy": {
+        "thread_ns": 1.77761
+      },
+      "opend": {
+        "thread_ns": 1.807922
+      },
+      "parse_jump": {
+        "thread_ns": 1.409158,
+        "parse_ns": 0.396805,
+        "jump_ns": 0.444717,
+        "provision_ns": 0.028828,
+        "first_ns": 0.489302
+      },
+      "parse_unit": {
+        "thread_ns": 2.071973,
+        "parse_ns": 0.352315,
+        "provision_ns": 0.02892,
+        "first_ns": 1.650697
+      },
+      "scalar": {
+        "thread_ns": 1.726031
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.659089,
+        0.582191,
+        0.746144
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.34097,
+        0.265332,
+        0.438169
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.018949,
+        0.014723,
+        0.024387
+      ],
+      "build_jump.first_ns/scalar": [
+        0.279141,
+        0.275229,
+        0.283109
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.829615,
+        0.753486,
+        0.913435
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.225128,
+        0.213503,
+        0.237385
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.283333,
+        0.266072,
+        0.301714
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.021386,
+        0.011736,
+        0.03897
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.269768,
+        0.222161,
+        0.327577
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.217759,
+        0.979122,
+        1.514557
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.205059,
+        0.173886,
+        0.241821
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.018708,
+        0.013411,
+        0.026097
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.976166,
+        0.777285,
+        1.225933
+      ],
+      "paid_jump/paid_unit": [
+        0.681264,
+        0.571463,
+        0.812161
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.541231,
+        0.389127,
+        0.752791
+      ]
+    }
+  },
+  "269": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 2.756568,
+        "jump_ns": 1.513464,
+        "provision_ns": 0.030567,
+        "first_ns": 1.110869
+      },
+      "lazy": {
+        "thread_ns": 4.369585
+      },
+      "opend": {
+        "thread_ns": 3.68664
+      },
+      "parse_jump": {
+        "thread_ns": 3.133878,
+        "parse_ns": 0.596704,
+        "jump_ns": 1.487099,
+        "provision_ns": 0.031246,
+        "first_ns": 1.020539
+      },
+      "parse_unit": {
+        "thread_ns": 3.370232,
+        "parse_ns": 0.639041,
+        "provision_ns": 0.02982,
+        "first_ns": 2.729343
+      },
+      "scalar": {
+        "thread_ns": 3.398504
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.813171,
+        0.64125,
+        1.031184
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.466482,
+        0.364231,
+        0.597437
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.010177,
+        0.007424,
+        0.013949
+      ],
+      "build_jump.first_ns/scalar": [
+        0.325091,
+        0.250136,
+        0.422506
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.942032,
+        0.80019,
+        1.109016
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.186513,
+        0.157862,
+        0.220364
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.429327,
+        0.382745,
+        0.481579
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.012124,
+        0.005821,
+        0.025253
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.299703,
+        0.23946,
+        0.375101
+      ],
+      "parse_unit.thread_ns/scalar": [
+        0.973191,
+        0.725967,
+        1.304607
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.202873,
+        0.151751,
+        0.271216
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.010356,
+        0.00835,
+        0.012844
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.749964,
+        0.551047,
+        1.020686
+      ],
+      "paid_jump/paid_unit": [
+        0.967982,
+        0.826118,
+        1.134208
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.835571,
+        0.618219,
+        1.12934
+      ]
+    }
+  },
+  "313": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.147531,
+        "jump_ns": 0.515452,
+        "provision_ns": 0.030085,
+        "first_ns": 0.570613
+      },
+      "lazy": {
+        "thread_ns": 1.8435
+      },
+      "opend": {
+        "thread_ns": 1.884639
+      },
+      "parse_jump": {
+        "thread_ns": 1.29534,
+        "parse_ns": 0.345125,
+        "jump_ns": 0.445994,
+        "provision_ns": 0.028492,
+        "first_ns": 0.464155
+      },
+      "parse_unit": {
+        "thread_ns": 1.997853,
+        "parse_ns": 0.315007,
+        "provision_ns": 0.029035,
+        "first_ns": 1.579994
+      },
+      "scalar": {
+        "thread_ns": 1.907606
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.617499,
+        0.606961,
+        0.628221
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.269747,
+        0.226547,
+        0.321186
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.016059,
+        0.01368,
+        0.018851
+      ],
+      "build_jump.first_ns/scalar": [
+        0.314042,
+        0.267333,
+        0.368912
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.702982,
+        0.598566,
+        0.825614
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.177392,
+        0.148166,
+        0.212383
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.236369,
+        0.205246,
+        0.272211
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.018062,
+        0.01237,
+        0.026372
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.25511,
+        0.198814,
+        0.327347
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.076147,
+        0.949285,
+        1.219963
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.175834,
+        0.145543,
+        0.212428
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.018351,
+        0.014103,
+        0.023877
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.865152,
+        0.752274,
+        0.994967
+      ],
+      "paid_jump/paid_unit": [
+        0.65324,
+        0.561083,
+        0.760534
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.573805,
+        0.505146,
+        0.651797
+      ]
+    }
+  },
+  "359": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.045338,
+        "jump_ns": 0.522501,
+        "provision_ns": 0.029703,
+        "first_ns": 0.438463
+      },
+      "lazy": {
+        "thread_ns": 1.656552
+      },
+      "opend": {
+        "thread_ns": 1.787992
+      },
+      "parse_jump": {
+        "thread_ns": 1.297195,
+        "parse_ns": 0.318352,
+        "jump_ns": 0.434939,
+        "provision_ns": 0.029575,
+        "first_ns": 0.407793
+      },
+      "parse_unit": {
+        "thread_ns": 2.072367,
+        "parse_ns": 0.320537,
+        "provision_ns": 0.02951,
+        "first_ns": 1.62346
+      },
+      "scalar": {
+        "thread_ns": 1.646119
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.630231,
+        0.563653,
+        0.704673
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.333503,
+        0.288872,
+        0.38503
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.020582,
+        0.016226,
+        0.026106
+      ],
+      "build_jump.first_ns/scalar": [
+        0.264083,
+        0.230082,
+        0.303109
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.756353,
+        0.593057,
+        0.964612
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.207254,
+        0.138494,
+        0.310154
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.26414,
+        0.229695,
+        0.303751
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.018433,
+        0.015204,
+        0.022348
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.250724,
+        0.196796,
+        0.319429
+      ],
+      "parse_unit.thread_ns/scalar": [
+        1.23784,
+        0.948192,
+        1.615968
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.215133,
+        0.135817,
+        0.340768
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.019969,
+        0.014966,
+        0.026644
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.974138,
+        0.812551,
+        1.16786
+      ],
+      "paid_jump/paid_unit": [
+        0.611026,
+        0.506261,
+        0.737471
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.509137,
+        0.378261,
+        0.685296
+      ]
+    }
+  },
+  "397": {
+    "median_ms": {
+      "build_jump": {
+        "thread_ns": 1.366075,
+        "jump_ns": 0.671674,
+        "provision_ns": 0.030193,
+        "first_ns": 0.624116
+      },
+      "lazy": {
+        "thread_ns": 1.990453
+      },
+      "opend": {
+        "thread_ns": 2.286948
+      },
+      "parse_jump": {
+        "thread_ns": 1.61118,
+        "parse_ns": 0.392188,
+        "jump_ns": 0.527544,
+        "provision_ns": 0.029257,
+        "first_ns": 0.594399
+      },
+      "parse_unit": {
+        "thread_ns": 2.126516,
+        "parse_ns": 0.344981,
+        "provision_ns": 0.029777,
+        "first_ns": 1.735808
+      },
+      "scalar": {
+        "thread_ns": 2.322651
+      }
+    },
+    "ratios": {
+      "build_jump.thread_ns/scalar": [
+        0.632462,
+        0.553245,
+        0.723022
+      ],
+      "build_jump.jump_ns/scalar": [
+        0.327502,
+        0.265294,
+        0.404298
+      ],
+      "build_jump.provision_ns/scalar": [
+        0.017264,
+        0.009703,
+        0.03072
+      ],
+      "build_jump.first_ns/scalar": [
+        0.263381,
+        0.212096,
+        0.327067
+      ],
+      "parse_jump.thread_ns/scalar": [
+        0.700959,
+        0.622676,
+        0.789084
+      ],
+      "parse_jump.parse_ns/scalar": [
+        0.164146,
+        0.148363,
+        0.181607
+      ],
+      "parse_jump.jump_ns/scalar": [
+        0.238564,
+        0.205882,
+        0.276435
+      ],
+      "parse_jump.provision_ns/scalar": [
+        0.014235,
+        0.012131,
+        0.016704
+      ],
+      "parse_jump.first_ns/scalar": [
+        0.263844,
+        0.209758,
+        0.331876
+      ],
+      "parse_unit.thread_ns/scalar": [
+        0.947483,
+        0.737479,
+        1.217289
+      ],
+      "parse_unit.parse_ns/scalar": [
+        0.168165,
+        0.128772,
+        0.219608
+      ],
+      "parse_unit.provision_ns/scalar": [
+        0.01429,
+        0.012697,
+        0.016084
+      ],
+      "parse_unit.first_ns/scalar": [
+        0.751448,
+        0.581109,
+        0.971717
+      ],
+      "paid_jump/paid_unit": [
+        0.739812,
+        0.626754,
+        0.873264
+      ],
+      "prepared_model_jump/paid_unit": [
+        0.667518,
+        0.499204,
+        0.892582
+      ]
+    }
+  },
+  "rss_kib": {
+    "build_jump": {
+      "median": 5280.0,
+      "max": 6536
+    },
+    "lazy": {
+      "median": 4392.0,
+      "max": 9184
+    },
+    "opend": {
+      "median": 4830.0,
+      "max": 9180
+    },
+    "parse_jump": {
+      "median": 5278.0,
+      "max": 7432
+    },
+    "parse_unit": {
+      "median": 4514.0,
+      "max": 5724
+    },
+    "scalar": {
+      "median": 4634.0,
+      "max": 5980
+    }
+  },
+  "geometry": {
+    "n": 8999915,
+    "states": 815844,
+    "events": 409432,
+    "wire_bytes": 7764348,
+    "jump8": 915165,
+    "unit_tail": 1269163
+  },
+  "max_capacity": {
+    "state_bytes": 616508,
+    "event_bytes": 413168,
+    "jump_bytes": 1849524,
+    "output_bytes": 900000,
+    "resident_wire_bytes": 1235473,
+    "reference_bytes": 0
+  }
+}

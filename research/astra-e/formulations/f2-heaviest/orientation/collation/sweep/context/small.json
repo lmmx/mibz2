@@ -1,0 +1,52 @@
+{
+  "counters": {
+    "sections": 9216,
+    "valid_assignments": 23046,
+    "nonuniform": 4614,
+    "sections_beating_uniform": 532
+  },
+  "first_mixed_witness": {
+    "column": "000100",
+    "section": [
+      0,
+      2
+    ],
+    "types": 2,
+    "mass": 2,
+    "components": 2,
+    "largest": 1,
+    "closed_masks": 4,
+    "injective": 4,
+    "mixed": 2,
+    "Q0": 2,
+    "Q1": 2,
+    "Qmixed": 2,
+    "D0": 3,
+    "Dmixed": 3,
+    "fragments_uniform": 2,
+    "fragments_best_mixed": 2,
+    "useful_mixed": 0
+  },
+  "mixed_beats_uniform": {
+    "column": "01000000",
+    "section": [
+      1,
+      3
+    ],
+    "types": 2,
+    "mass": 2,
+    "components": 2,
+    "largest": 1,
+    "closed_masks": 3,
+    "injective": 3,
+    "mixed": 1,
+    "Q0": 3,
+    "Q1": 3,
+    "Qmixed": 2,
+    "D0": 4,
+    "Dmixed": 4,
+    "fragments_uniform": 1,
+    "fragments_best_mixed": 2,
+    "useful_mixed": 0
+  }
+}

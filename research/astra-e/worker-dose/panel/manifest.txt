@@ -1,0 +1,18 @@
+77a3f8c6123bcb0b0c479789b46316da1778272a
+be74d5763d212864607d46521d74ebc0827f9f36
+75297a1
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+400000 100000
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e-dose-77a3f8c/corpora/wikidata.bz2
+076c5c673a4f9b379d4ab2f666c81fd39413e95b812d630cece2cec164bc2594  research/astra-e/worker-dose/candidate.rs
+93c35bfcc1d635526f4029c70adf435a18a0199344329330d356246c7391d773  /workspace/work/astra-dose-bins/dose
+ab34fe917173c9bffee7717da18f7c5b86300ac67260013b2909a747f946b81a  research/astra-e/worker-dose/observe.rs
+1febbfdb0c03972167291046907d932cf7fda9eae22e8e24e8eb1e1a13c4adbb  /workspace/work/astra-dose-bins/observer
+c5b7cb186c5a82b7cba4f071b972e8a82bfff66627c24fe80c8624c4cc680602  research/astra-e/edge-budget/candidate.rs
+74dfb158ddc2f9db4c756be6edb1a86472a18157237fa0238cf603a8e69b54eb  /workspace/work/astra-dose-bins/edge

@@ -1,0 +1,17 @@
+ab7076541459b8b66a137c9f1cc0804e0cd72de0
+c76927421dae1cc46a08122dc410728bfcc3e4a7
+scorer path revision 604dac3
+82704548e38df71d53eb7eab1b12674d62b0987d7fc789c5d1bc00cdff6213dc  research/astra-e/formulations/f2-pages/payload/construction/eager.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-compact-eager-confirm research/astra-e/formulations/f2-pages/payload/construction/eager.rs --workers 1\,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/compact-eager-whole-target

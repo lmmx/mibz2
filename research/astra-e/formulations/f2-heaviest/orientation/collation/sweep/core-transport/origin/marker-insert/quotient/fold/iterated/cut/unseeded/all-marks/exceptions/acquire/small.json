@@ -1,0 +1,57 @@
+{
+  "partial_maps": {
+    "maps": 17576,
+    "nontrivial_paths": 10130
+  },
+  "marked": {
+    "totals": {
+      "columns": 374,
+      "emitted_horizons": 39156,
+      "marked_tables": 9789,
+      "event_returns": 17579,
+      "all_default_marks": 4445,
+      "foreign_cycle_marks": 8117,
+      "anchored_real_paths": 15107,
+      "nontrivial_fifo_cases": 566
+    },
+    "maxima": {
+      "cycle_anchors": 4,
+      "maximum_fifo": 3,
+      "regular_rows_bulk": 5
+    }
+  },
+  "large": {
+    "monotone_line": 281474976710668,
+    "positive_and_negative_regular_gap": 281474976710664,
+    "lifted_rows": 30786325577745,
+    "source_rows": 7,
+    "stats": {
+      "states": 4,
+      "original_states": 4,
+      "events": 8,
+      "overlay_fragments": 9,
+      "default_packets": 5,
+      "cycle_anchors": 1,
+      "virtual_rows": 30786325577724,
+      "virtual_full_returns": 30786325577717,
+      "real_via_anchors": 7,
+      "regular_rows_bulk": 30786325577710,
+      "maximum_fifo": 7,
+      "rope_nodes_created": 34
+    },
+    "contracted": {
+      "states": 2,
+      "original_states": 4,
+      "events": 8,
+      "overlay_fragments": 9,
+      "default_packets": 3,
+      "cycle_anchors": 1,
+      "virtual_rows": 30786325577724,
+      "virtual_full_returns": 30786325577717,
+      "real_via_anchors": 7,
+      "regular_rows_bulk": 30786325577710,
+      "maximum_fifo": 7,
+      "rope_nodes_created": 34
+    }
+  }
+}

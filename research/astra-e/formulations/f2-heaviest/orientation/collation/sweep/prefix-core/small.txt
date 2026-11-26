@@ -1,0 +1,1 @@
+cases 130310 admitted 51340 rejected 78970 marked_outputs 353846 empty_core_objects 18173 core_shared_by_prefixes 5772 varying_prefix_objects 8696 first_shared_core_example 10 U=[0,2) h=1

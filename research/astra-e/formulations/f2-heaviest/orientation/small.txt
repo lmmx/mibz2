@@ -1,0 +1,1 @@
+1470 optimal cuts matched exhaustive direction assignments; 0 strictly beat both one-direction tries

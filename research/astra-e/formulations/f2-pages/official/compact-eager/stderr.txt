@@ -1,0 +1,5 @@
+moonshot: building the harness with /workspace/work/astra-e-page-scorer/research/astra-e/formulations/f2-pages/payload/construction/eager.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-page-scorer/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 18.88s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-e/research/astra-e/formulations/f2-pages/official/compact-eager/score

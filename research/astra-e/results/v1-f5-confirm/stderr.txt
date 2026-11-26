@@ -1,0 +1,14 @@
+moonshot: building the harness with /workspace/work/astra-f5-checked/research/astra-e/formulations/f5/kernel/candidate.rs
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.06s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-f5-checked/corpora/wikidata.bz2
+moonshot: round 1 of 9 timed
+moonshot: round 2 of 9 timed
+moonshot: round 3 of 9 timed
+moonshot: round 4 of 9 timed
+moonshot: round 5 of 9 timed
+moonshot: round 6 of 9 timed
+moonshot: round 7 of 9 timed
+moonshot: round 8 of 9 timed
+moonshot: round 9 of 9 timed
+moonshot: written to research/astra-e/results/v1-f5-confirm/score
+moonshot: recorded in research/astra-e/results/v1-f5-confirm/official-register.jsonl

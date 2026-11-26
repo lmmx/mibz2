@@ -1,0 +1,10 @@
+wall_ns sparse 40.3629 ms opend 36.7968 ms
+paired 1.04619 [0.86629,1.26345]
+cpu_ns sparse 37.1722 ms opend 30.0720 ms
+paired 1.13519 [1.04959,1.22777]
+hazards_ns sparse 5.1590 ms opend 0.0070 ms
+construction_walk_ns sparse 30.6079 ms opend 28.2803 ms
+unrle_ns sparse 0.0252 ms opend 1.3128 ms
+crc_ns sparse 0.5797 ms opend 0.5637 ms
+eligible 228 actual 227 verified coded bytes 204297794
+index capacity frozen 55152 high water 146592

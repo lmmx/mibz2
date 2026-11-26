@@ -1,0 +1,30 @@
+{
+  "counters": {
+    "sections": 55796,
+    "types": 116190,
+    "section_rows": 177210,
+    "bare_lex_wrong": 14588,
+    "fixed_tails": 177210,
+    "marked": 420038,
+    "disjoint": 105024,
+    "tail_steps": 398110,
+    "compare": 252960,
+    "prefix": 124278,
+    "shift": 22042
+  },
+  "bare_lex_witness": {
+    "last": "010001",
+    "section": [
+      1,
+      3
+    ],
+    "actual": [
+      "0100",
+      "01"
+    ],
+    "bare": [
+      "01",
+      "0100"
+    ]
+  }
+}

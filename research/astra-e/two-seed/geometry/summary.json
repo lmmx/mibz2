@@ -1,0 +1,1192 @@
+{
+  "half_shift": {
+    "all": {
+      "blocks": 233,
+      "n": 209697662,
+      "m": 26567581,
+      "unbounded_paired_hops": 6542615,
+      "ideal_paired_hops": 13283735,
+      "frac_of_ideal_unbounded": 0.49252826859313287,
+      "unbounded_critical_hop_fraction": 0.75373689460098,
+      "idealized_unit_latency_speed": 1.326722901801681,
+      "actual_bounded_paired_hops": 6496920,
+      "frac_of_ideal_bounded": 0.48908834751671876,
+      "fraction_bounded_vs_unbounded": 0.9930157895581507,
+      "primary_words": 2313347,
+      "secondary_words": 2581321,
+      "secondary_words_payload": 97913694,
+      "secondary_all_bytes": 109349454,
+      "secondary_byte_fraction": 0.5214624376689522,
+      "word_word_rounds": 226681,
+      "paired_min_payload": 8640718,
+      "modeled_same_edge_lines": 815,
+      "modeled_same_edge_pages": 59018,
+      "unbounded_peak_scratch_if_separate_vector": 1015808,
+      "normal_carried": 52095741,
+      "normal_moved": 57966109,
+      "directed_carried": 52763621,
+      "directed_moved": 52763621,
+      "stop": {
+        "seed": 217,
+        "primary_boundary": 9,
+        "secondary_boundary": 7
+      },
+      "seed_relation": {
+        "same": 233
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 26,
+          "frac": 0.00017904390554439293
+        },
+        {
+          "p": 0.1,
+          "block": 425,
+          "frac": 0.06904551903976684
+        },
+        {
+          "p": 0.25,
+          "block": 35,
+          "frac": 0.25987364557230086
+        },
+        {
+          "p": 0.5,
+          "block": 277,
+          "frac": 0.4876644821981344
+        },
+        {
+          "p": 0.75,
+          "block": 383,
+          "frac": 0.7497725089732572
+        },
+        {
+          "p": 0.9,
+          "block": 12,
+          "frac": 0.8987176345666912
+        },
+        {
+          "p": 1,
+          "block": 249,
+          "frac": 0.9978942330701125
+        }
+      ]
+    },
+    "guarded": {
+      "blocks": 5,
+      "n": 4499868,
+      "m": 1083380,
+      "unbounded_paired_hops": 212029,
+      "ideal_paired_hops": 541689,
+      "frac_of_ideal_unbounded": 0.3914220152153727,
+      "unbounded_critical_hop_fraction": 0.8042893536893795,
+      "idealized_unit_latency_speed": 1.2433336278950733,
+      "actual_bounded_paired_hops": 212029,
+      "frac_of_ideal_bounded": 0.3914220152153727,
+      "fraction_bounded_vs_unbounded": 1.0,
+      "primary_words": 99244,
+      "secondary_words": 69204,
+      "secondary_words_payload": 1617363,
+      "secondary_all_bytes": 2037059,
+      "secondary_byte_fraction": 0.4526930567741098,
+      "word_word_rounds": 4339,
+      "paired_min_payload": 245670,
+      "modeled_same_edge_lines": 12,
+      "modeled_same_edge_pages": 1015,
+      "unbounded_peak_scratch_if_separate_vector": 1015808,
+      "normal_carried": 926326,
+      "normal_moved": 926326,
+      "directed_carried": 926326,
+      "directed_moved": 926326,
+      "stop": {
+        "seed": 5
+      },
+      "seed_relation": {
+        "same": 5
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 56,
+          "frac": 0.020197014354399783
+        },
+        {
+          "p": 0.1,
+          "block": 56,
+          "frac": 0.020197014354399783
+        },
+        {
+          "p": 0.25,
+          "block": 278,
+          "frac": 0.3273987429127486
+        },
+        {
+          "p": 0.5,
+          "block": 41,
+          "frac": 0.33995682210708117
+        },
+        {
+          "p": 0.75,
+          "block": 165,
+          "frac": 0.5744286373214915
+        },
+        {
+          "p": 0.9,
+          "block": 270,
+          "frac": 0.7415406550595417
+        },
+        {
+          "p": 1,
+          "block": 270,
+          "frac": 0.7415406550595417
+        }
+      ]
+    },
+    "ordinary": {
+      "blocks": 228,
+      "n": 205197794,
+      "m": 25484201,
+      "unbounded_paired_hops": 6330586,
+      "ideal_paired_hops": 12742046,
+      "frac_of_ideal_unbounded": 0.49682649081631003,
+      "unbounded_critical_hop_fraction": 0.7515878170949916,
+      "idealized_unit_latency_speed": 1.330516510851868,
+      "actual_bounded_paired_hops": 6284891,
+      "frac_of_ideal_bounded": 0.49324033204714535,
+      "fraction_bounded_vs_unbounded": 0.9927818688506878,
+      "primary_words": 2214103,
+      "secondary_words": 2512117,
+      "secondary_words_payload": 96296331,
+      "secondary_all_bytes": 107312395,
+      "secondary_byte_fraction": 0.5229705101020725,
+      "word_word_rounds": 222342,
+      "paired_min_payload": 8395048,
+      "modeled_same_edge_lines": 803,
+      "modeled_same_edge_pages": 58003,
+      "unbounded_peak_scratch_if_separate_vector": 1015808,
+      "normal_carried": 51169415,
+      "normal_moved": 57039783,
+      "directed_carried": 51837295,
+      "directed_moved": 51837295,
+      "stop": {
+        "seed": 212,
+        "primary_boundary": 9,
+        "secondary_boundary": 7
+      },
+      "seed_relation": {
+        "same": 228
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 26,
+          "frac": 0.00017904390554439293
+        },
+        {
+          "p": 0.1,
+          "block": 421,
+          "frac": 0.07055484489926447
+        },
+        {
+          "p": 0.25,
+          "block": 35,
+          "frac": 0.25987364557230086
+        },
+        {
+          "p": 0.5,
+          "block": 248,
+          "frac": 0.48931667690627345
+        },
+        {
+          "p": 0.75,
+          "block": 257,
+          "frac": 0.7517283534271983
+        },
+        {
+          "p": 0.9,
+          "block": 12,
+          "frac": 0.8987176345666912
+        },
+        {
+          "p": 1,
+          "block": 249,
+          "frac": 0.9978942330701125
+        }
+      ]
+    }
+  },
+  "xor1": {
+    "all": {
+      "blocks": 233,
+      "n": 209697662,
+      "m": 26567581,
+      "unbounded_paired_hops": 5829511,
+      "ideal_paired_hops": 13283735,
+      "frac_of_ideal_unbounded": 0.43884577643260725,
+      "unbounded_critical_hop_fraction": 0.7805780285378635,
+      "idealized_unit_latency_speed": 1.2811019058186224,
+      "actual_bounded_paired_hops": 5755448,
+      "frac_of_ideal_bounded": 0.43327031139961764,
+      "fraction_bounded_vs_unbounded": 0.9872951607776365,
+      "primary_words": 2502176,
+      "secondary_words": 2392492,
+      "secondary_words_payload": 87703745,
+      "secondary_all_bytes": 98031927,
+      "secondary_byte_fraction": 0.46749175009876837,
+      "word_word_rounds": 203849,
+      "paired_min_payload": 7651340,
+      "modeled_same_edge_lines": 2200,
+      "modeled_same_edge_pages": 53772,
+      "unbounded_peak_scratch_if_separate_vector": 1294336,
+      "normal_carried": 45561571,
+      "normal_moved": 49639432,
+      "directed_carried": 46282788,
+      "directed_moved": 46282788,
+      "stop": {
+        "seed": 221,
+        "primary_boundary": 9,
+        "secondary_boundary": 3
+      },
+      "seed_relation": {
+        "same": 233
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 173,
+          "frac": 2.3400297183774235e-05
+        },
+        {
+          "p": 0.1,
+          "block": 350,
+          "frac": 0.07273239172258458
+        },
+        {
+          "p": 0.25,
+          "block": 384,
+          "frac": 0.20325191288993524
+        },
+        {
+          "p": 0.5,
+          "block": 315,
+          "frac": 0.4407729753650981
+        },
+        {
+          "p": 0.75,
+          "block": 395,
+          "frac": 0.6946381082440882
+        },
+        {
+          "p": 0.9,
+          "block": 1,
+          "frac": 0.8541958742239135
+        },
+        {
+          "p": 1,
+          "block": 81,
+          "frac": 0.9915665190807506
+        }
+      ]
+    },
+    "guarded": {
+      "blocks": 5,
+      "n": 4499868,
+      "m": 1083380,
+      "unbounded_paired_hops": 102477,
+      "ideal_paired_hops": 541689,
+      "frac_of_ideal_unbounded": 0.18918050763445446,
+      "unbounded_critical_hop_fraction": 0.9054099208034115,
+      "idealized_unit_latency_speed": 1.104472103765612,
+      "actual_bounded_paired_hops": 102477,
+      "frac_of_ideal_bounded": 0.18918050763445446,
+      "fraction_bounded_vs_unbounded": 1.0,
+      "primary_words": 48808,
+      "secondary_words": 119640,
+      "secondary_words_payload": 2142437,
+      "secondary_all_bytes": 2685909,
+      "secondary_byte_fraction": 0.5968861753278096,
+      "word_word_rounds": 2821,
+      "paired_min_payload": 119696,
+      "modeled_same_edge_lines": 14,
+      "modeled_same_edge_pages": 475,
+      "unbounded_peak_scratch_if_separate_vector": 1294336,
+      "normal_carried": 380801,
+      "normal_moved": 380801,
+      "directed_carried": 380801,
+      "directed_moved": 380801,
+      "stop": {
+        "seed": 5
+      },
+      "seed_relation": {
+        "same": 5
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 41,
+          "frac": 0.00231433506044905
+        },
+        {
+          "p": 0.1,
+          "block": 41,
+          "frac": 0.00231433506044905
+        },
+        {
+          "p": 0.25,
+          "block": 165,
+          "frac": 0.00814875778925377
+        },
+        {
+          "p": 0.5,
+          "block": 270,
+          "frac": 0.045113159427274736
+        },
+        {
+          "p": 0.75,
+          "block": 56,
+          "frac": 0.445351556726397
+        },
+        {
+          "p": 0.9,
+          "block": 278,
+          "frac": 0.45271028408583147
+        },
+        {
+          "p": 1,
+          "block": 278,
+          "frac": 0.45271028408583147
+        }
+      ]
+    },
+    "ordinary": {
+      "blocks": 228,
+      "n": 205197794,
+      "m": 25484201,
+      "unbounded_paired_hops": 5727034,
+      "ideal_paired_hops": 12742046,
+      "frac_of_ideal_unbounded": 0.449459529497853,
+      "unbounded_critical_hop_fraction": 0.7752711964561887,
+      "idealized_unit_latency_speed": 1.2898712148356088,
+      "actual_bounded_paired_hops": 5652971,
+      "frac_of_ideal_bounded": 0.4436470406714903,
+      "fraction_bounded_vs_unbounded": 0.9870678260335105,
+      "primary_words": 2453368,
+      "secondary_words": 2272852,
+      "secondary_words_payload": 85561308,
+      "secondary_all_bytes": 95346018,
+      "secondary_byte_fraction": 0.4646542057854677,
+      "word_word_rounds": 201028,
+      "paired_min_payload": 7531644,
+      "modeled_same_edge_lines": 2186,
+      "modeled_same_edge_pages": 53297,
+      "unbounded_peak_scratch_if_separate_vector": 1294336,
+      "normal_carried": 45180770,
+      "normal_moved": 49258631,
+      "directed_carried": 45901987,
+      "directed_moved": 45901987,
+      "stop": {
+        "seed": 216,
+        "primary_boundary": 9,
+        "secondary_boundary": 3
+      },
+      "seed_relation": {
+        "same": 228
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 173,
+          "frac": 2.3400297183774235e-05
+        },
+        {
+          "p": 0.1,
+          "block": 176,
+          "frac": 0.08584865327062847
+        },
+        {
+          "p": 0.25,
+          "block": 85,
+          "frac": 0.21174740145126494
+        },
+        {
+          "p": 0.5,
+          "block": 231,
+          "frac": 0.4479188527457153
+        },
+        {
+          "p": 0.75,
+          "block": 218,
+          "frac": 0.7003677063509983
+        },
+        {
+          "p": 0.9,
+          "block": 1,
+          "frac": 0.8541958742239135
+        },
+        {
+          "p": 1,
+          "block": 81,
+          "frac": 0.9915665190807506
+        }
+      ]
+    }
+  },
+  "zero": {
+    "all": {
+      "blocks": 233,
+      "n": 209697662,
+      "m": 26567581,
+      "unbounded_paired_hops": 6520603,
+      "ideal_paired_hops": 13283735,
+      "frac_of_ideal_unbounded": 0.49087120452192096,
+      "unbounded_critical_hop_fraction": 0.754565423174959,
+      "idealized_unit_latency_speed": 1.3252661323816488,
+      "actual_bounded_paired_hops": 6473550,
+      "frac_of_ideal_bounded": 0.4873290531616296,
+      "fraction_bounded_vs_unbounded": 0.992783949582577,
+      "primary_words": 2456268,
+      "secondary_words": 2438400,
+      "secondary_words_payload": 94290598,
+      "secondary_all_bytes": 105071226,
+      "secondary_byte_fraction": 0.5010605506894016,
+      "word_word_rounds": 220861,
+      "paired_min_payload": 8575563,
+      "modeled_same_edge_lines": 596,
+      "modeled_same_edge_pages": 57241,
+      "unbounded_peak_scratch_if_separate_vector": 1409024,
+      "normal_carried": 51236370,
+      "normal_moved": 56166138,
+      "directed_carried": 51338603,
+      "directed_moved": 51338603,
+      "stop": {
+        "seed": 219,
+        "primary_boundary": 4,
+        "secondary_boundary": 10
+      },
+      "seed_relation": {
+        "same": 233
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 35,
+          "frac": 1.764726643842869e-05
+        },
+        {
+          "p": 0.1,
+          "block": 379,
+          "frac": 0.06666387636158168
+        },
+        {
+          "p": 0.25,
+          "block": 270,
+          "frac": 0.1981344257686206
+        },
+        {
+          "p": 0.5,
+          "block": 22,
+          "frac": 0.5191942579300765
+        },
+        {
+          "p": 0.75,
+          "block": 206,
+          "frac": 0.7555131857024717
+        },
+        {
+          "p": 0.9,
+          "block": 71,
+          "frac": 0.9161669956426204
+        },
+        {
+          "p": 1,
+          "block": 126,
+          "frac": 0.997975630446518
+        }
+      ]
+    },
+    "guarded": {
+      "blocks": 5,
+      "n": 4499868,
+      "m": 1083380,
+      "unbounded_paired_hops": 296054,
+      "ideal_paired_hops": 541689,
+      "frac_of_ideal_unbounded": 0.5465386965583573,
+      "unbounded_critical_hop_fraction": 0.7267311561963484,
+      "idealized_unit_latency_speed": 1.376024670847908,
+      "actual_bounded_paired_hops": 296054,
+      "frac_of_ideal_bounded": 0.5465386965583573,
+      "fraction_bounded_vs_unbounded": 1.0,
+      "primary_words": 103635,
+      "secondary_words": 64813,
+      "secondary_words_payload": 1242953,
+      "secondary_all_bytes": 1559914,
+      "secondary_byte_fraction": 0.3466577241821316,
+      "word_word_rounds": 8281,
+      "paired_min_payload": 345985,
+      "modeled_same_edge_lines": 8,
+      "modeled_same_edge_pages": 1293,
+      "unbounded_peak_scratch_if_separate_vector": 1409024,
+      "normal_carried": 1158399,
+      "normal_moved": 1158399,
+      "directed_carried": 1158399,
+      "directed_moved": 1158399,
+      "stop": {
+        "seed": 5
+      },
+      "seed_relation": {
+        "same": 5
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 270,
+          "frac": 0.1981344257686206
+        },
+        {
+          "p": 0.1,
+          "block": 270,
+          "frac": 0.1981344257686206
+        },
+        {
+          "p": 0.25,
+          "block": 41,
+          "frac": 0.31541450777202074
+        },
+        {
+          "p": 0.5,
+          "block": 165,
+          "frac": 0.6053233727355769
+        },
+        {
+          "p": 0.75,
+          "block": 278,
+          "frac": 0.6501007854312921
+        },
+        {
+          "p": 0.9,
+          "block": 56,
+          "frac": 0.9337315353382544
+        },
+        {
+          "p": 1,
+          "block": 56,
+          "frac": 0.9337315353382544
+        }
+      ]
+    },
+    "ordinary": {
+      "blocks": 228,
+      "n": 205197794,
+      "m": 25484201,
+      "unbounded_paired_hops": 6224549,
+      "ideal_paired_hops": 12742046,
+      "frac_of_ideal_unbounded": 0.4885046718556816,
+      "unbounded_critical_hop_fraction": 0.755748708778431,
+      "idealized_unit_latency_speed": 1.3231911459251704,
+      "actual_bounded_paired_hops": 6177496,
+      "frac_of_ideal_bounded": 0.48481193679570767,
+      "fraction_bounded_vs_unbounded": 0.9924407374735101,
+      "primary_words": 2352633,
+      "secondary_words": 2373587,
+      "secondary_words_payload": 93047645,
+      "secondary_all_bytes": 103511312,
+      "secondary_byte_fraction": 0.504446514663798,
+      "word_word_rounds": 212580,
+      "paired_min_payload": 8229578,
+      "modeled_same_edge_lines": 588,
+      "modeled_same_edge_pages": 55948,
+      "unbounded_peak_scratch_if_separate_vector": 1409024,
+      "normal_carried": 50077971,
+      "normal_moved": 55007739,
+      "directed_carried": 50180204,
+      "directed_moved": 50180204,
+      "stop": {
+        "seed": 214,
+        "primary_boundary": 4,
+        "secondary_boundary": 10
+      },
+      "seed_relation": {
+        "same": 228
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 35,
+          "frac": 1.764726643842869e-05
+        },
+        {
+          "p": 0.1,
+          "block": 379,
+          "frac": 0.06666387636158168
+        },
+        {
+          "p": 0.25,
+          "block": 27,
+          "frac": 0.19765784745027573
+        },
+        {
+          "p": 0.5,
+          "block": 22,
+          "frac": 0.5191942579300765
+        },
+        {
+          "p": 0.75,
+          "block": 206,
+          "frac": 0.7555131857024717
+        },
+        {
+          "p": 0.9,
+          "block": 407,
+          "frac": 0.916117717512191
+        },
+        {
+          "p": 1,
+          "block": 126,
+          "frac": 0.997975630446518
+        }
+      ]
+    }
+  },
+  "midpoint": {
+    "all": {
+      "blocks": 233,
+      "n": 209697662,
+      "m": 26567581,
+      "unbounded_paired_hops": 6624805,
+      "ideal_paired_hops": 13283735,
+      "frac_of_ideal_unbounded": 0.49871553444870736,
+      "unbounded_critical_hop_fraction": 0.7506432745984665,
+      "idealized_unit_latency_speed": 1.3321907140711002,
+      "actual_bounded_paired_hops": 6591045,
+      "frac_of_ideal_bounded": 0.4961740805579154,
+      "fraction_bounded_vs_unbounded": 0.9949040009479524,
+      "primary_words": 2257214,
+      "secondary_words": 2637454,
+      "secondary_words_payload": 101660061,
+      "secondary_all_bytes": 113317368,
+      "secondary_byte_fraction": 0.5403845084357688,
+      "word_word_rounds": 222231,
+      "paired_min_payload": 8699763,
+      "modeled_same_edge_lines": 713,
+      "modeled_same_edge_pages": 58499,
+      "unbounded_peak_scratch_if_separate_vector": 1658880,
+      "normal_carried": 53034621,
+      "normal_moved": 57492630,
+      "directed_carried": 53238000,
+      "directed_moved": 53238000,
+      "stop": {
+        "seed": 221,
+        "secondary_boundary": 5,
+        "primary_boundary": 7
+      },
+      "seed_relation": {
+        "same": 233
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 81,
+          "frac": 0.0025108772736856227
+        },
+        {
+          "p": 0.1,
+          "block": 280,
+          "frac": 0.1080147832420621
+        },
+        {
+          "p": 0.25,
+          "block": 227,
+          "frac": 0.24985962942167322
+        },
+        {
+          "p": 0.5,
+          "block": 421,
+          "frac": 0.5156100095938599
+        },
+        {
+          "p": 0.75,
+          "block": 399,
+          "frac": 0.7346243555119076
+        },
+        {
+          "p": 0.9,
+          "block": 297,
+          "frac": 0.8770212018958825
+        },
+        {
+          "p": 1,
+          "block": 204,
+          "frac": 0.9983101328658034
+        }
+      ]
+    },
+    "guarded": {
+      "blocks": 5,
+      "n": 4499868,
+      "m": 1083380,
+      "unbounded_paired_hops": 359495,
+      "ideal_paired_hops": 541689,
+      "frac_of_ideal_unbounded": 0.6636557138874889,
+      "unbounded_critical_hop_fraction": 0.6681727556351419,
+      "idealized_unit_latency_speed": 1.496618938090995,
+      "actual_bounded_paired_hops": 359495,
+      "frac_of_ideal_bounded": 0.6636557138874889,
+      "fraction_bounded_vs_unbounded": 1.0,
+      "primary_words": 67112,
+      "secondary_words": 101336,
+      "secondary_words_payload": 2094058,
+      "secondary_all_bytes": 2620013,
+      "secondary_byte_fraction": 0.5822421902153574,
+      "word_word_rounds": 7744,
+      "paired_min_payload": 416468,
+      "modeled_same_edge_lines": 20,
+      "modeled_same_edge_pages": 1643,
+      "unbounded_peak_scratch_if_separate_vector": 1658880,
+      "normal_carried": 1543416,
+      "normal_moved": 1543416,
+      "directed_carried": 1543416,
+      "directed_moved": 1543416,
+      "stop": {
+        "seed": 5
+      },
+      "seed_relation": {
+        "same": 5
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 165,
+          "frac": 0.4051225931318905
+        },
+        {
+          "p": 0.1,
+          "block": 165,
+          "frac": 0.4051225931318905
+        },
+        {
+          "p": 0.25,
+          "block": 41,
+          "frac": 0.4466493955094991
+        },
+        {
+          "p": 0.5,
+          "block": 56,
+          "frac": 0.7563838389107697
+        },
+        {
+          "p": 0.75,
+          "block": 278,
+          "frac": 0.7986575181959904
+        },
+        {
+          "p": 0.9,
+          "block": 270,
+          "frac": 0.9593951442858003
+        },
+        {
+          "p": 1,
+          "block": 270,
+          "frac": 0.9593951442858003
+        }
+      ]
+    },
+    "ordinary": {
+      "blocks": 228,
+      "n": 205197794,
+      "m": 25484201,
+      "unbounded_paired_hops": 6265310,
+      "ideal_paired_hops": 12742046,
+      "frac_of_ideal_unbounded": 0.49170360866692836,
+      "unbounded_critical_hop_fraction": 0.7541492472139896,
+      "idealized_unit_latency_speed": 1.3259974782103712,
+      "actual_bounded_paired_hops": 6231550,
+      "frac_of_ideal_bounded": 0.4890541126597722,
+      "fraction_bounded_vs_unbounded": 0.9946115994260459,
+      "primary_words": 2190102,
+      "secondary_words": 2536118,
+      "secondary_words_payload": 99566003,
+      "secondary_all_bytes": 110697355,
+      "secondary_byte_fraction": 0.5394665938757607,
+      "word_word_rounds": 214487,
+      "paired_min_payload": 8283295,
+      "modeled_same_edge_lines": 693,
+      "modeled_same_edge_pages": 56856,
+      "unbounded_peak_scratch_if_separate_vector": 1658880,
+      "normal_carried": 51491205,
+      "normal_moved": 55949214,
+      "directed_carried": 51694584,
+      "directed_moved": 51694584,
+      "stop": {
+        "seed": 216,
+        "secondary_boundary": 5,
+        "primary_boundary": 7
+      },
+      "seed_relation": {
+        "same": 228
+      },
+      "quantiles_unbounded": [
+        {
+          "p": 0,
+          "block": 81,
+          "frac": 0.0025108772736856227
+        },
+        {
+          "p": 0.1,
+          "block": 280,
+          "frac": 0.1080147832420621
+        },
+        {
+          "p": 0.25,
+          "block": 291,
+          "frac": 0.2477616294972556
+        },
+        {
+          "p": 0.5,
+          "block": 421,
+          "frac": 0.5156100095938599
+        },
+        {
+          "p": 0.75,
+          "block": 77,
+          "frac": 0.7162661399465965
+        },
+        {
+          "p": 0.9,
+          "block": 101,
+          "frac": 0.873927470499303
+        },
+        {
+          "p": 1,
+          "block": 204,
+          "frac": 0.9983101328658034
+        }
+      ]
+    }
+  },
+  "examples": {
+    "1": {
+      "block": 1,
+      "stream": 0,
+      "n": 899931,
+      "m": 89874,
+      "mark": 35272,
+      "method": "half_shift",
+      "seed": 80209,
+      "relation": "same",
+      "primary_hops": 14973,
+      "secondary_hops": 74901,
+      "paired_rounds": 14973,
+      "ideal_paired_rounds": 44937,
+      "critical_rounds": 74901,
+      "primary_words": 2248,
+      "secondary_words": 13030,
+      "primary_spelling_bytes": 162235,
+      "secondary_spelling_bytes": 663100,
+      "primary_bytes": 174960,
+      "secondary_bytes": 724971,
+      "join_copy_bytes": 724971,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 390,
+      "paired_shorter_payload_sum": 27134,
+      "same_edge_line_rounds": 4,
+      "same_edge_page_rounds": 213,
+      "fresh_secondary_capacity": 1015808,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 14973,
+      "stop": "seed",
+      "normal_carried": 189299,
+      "normal_moved": 189299,
+      "directed_carried": 189299,
+      "directed_moved": 189299
+    },
+    "26": {
+      "block": 26,
+      "stream": 0,
+      "n": 899939,
+      "m": 100535,
+      "mark": 19632,
+      "method": "half_shift",
+      "seed": 69899,
+      "relation": "same",
+      "primary_hops": 100526,
+      "secondary_hops": 9,
+      "paired_rounds": 9,
+      "ideal_paired_rounds": 50267,
+      "critical_rounds": 100526,
+      "primary_words": 18127,
+      "secondary_words": 6,
+      "primary_spelling_bytes": 816717,
+      "secondary_spelling_bytes": 820,
+      "primary_bytes": 899116,
+      "secondary_bytes": 823,
+      "join_copy_bytes": 823,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 0,
+      "paired_shorter_payload_sum": 9,
+      "same_edge_line_rounds": 0,
+      "same_edge_page_rounds": 0,
+      "fresh_secondary_capacity": 1066,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 9,
+      "stop": "seed",
+      "normal_carried": 823,
+      "normal_moved": 823,
+      "directed_carried": 823,
+      "directed_moved": 823
+    },
+    "41": {
+      "block": 41,
+      "stream": 1,
+      "n": 900000,
+      "m": 231600,
+      "mark": 56976,
+      "method": "half_shift",
+      "seed": 172776,
+      "relation": "same",
+      "primary_hops": 192233,
+      "secondary_hops": 39367,
+      "paired_rounds": 39367,
+      "ideal_paired_rounds": 115800,
+      "critical_rounds": 192233,
+      "primary_words": 36131,
+      "secondary_words": 7861,
+      "primary_spelling_bytes": 593447,
+      "secondary_spelling_bytes": 118945,
+      "primary_bytes": 749549,
+      "secondary_bytes": 150451,
+      "join_copy_bytes": 150451,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 1339,
+      "paired_shorter_payload_sum": 45875,
+      "same_edge_line_rounds": 3,
+      "same_edge_page_rounds": 175,
+      "fresh_secondary_capacity": 163840,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 39367,
+      "stop": "seed",
+      "normal_carried": 150451,
+      "normal_moved": 150451,
+      "directed_carried": 150451,
+      "directed_moved": 150451
+    },
+    "56": {
+      "block": 56,
+      "stream": 1,
+      "n": 899996,
+      "m": 230034,
+      "mark": 60838,
+      "method": "half_shift",
+      "seed": 175855,
+      "relation": "same",
+      "primary_hops": 2323,
+      "secondary_hops": 227711,
+      "paired_rounds": 2323,
+      "ideal_paired_rounds": 115017,
+      "critical_rounds": 227711,
+      "primary_words": 300,
+      "secondary_words": 37515,
+      "primary_spelling_bytes": 6522,
+      "secondary_spelling_bytes": 701255,
+      "primary_bytes": 8545,
+      "secondary_bytes": 891451,
+      "join_copy_bytes": 891451,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 25,
+      "paired_shorter_payload_sum": 2490,
+      "same_edge_line_rounds": 0,
+      "same_edge_page_rounds": 19,
+      "fresh_secondary_capacity": 1048576,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 2323,
+      "stop": "seed",
+      "normal_carried": 9212,
+      "normal_moved": 9212,
+      "directed_carried": 9212,
+      "directed_moved": 9212
+    },
+    "165": {
+      "block": 165,
+      "stream": 4,
+      "n": 899934,
+      "m": 221139,
+      "mark": 192239,
+      "method": "half_shift",
+      "seed": 81669,
+      "relation": "same",
+      "primary_hops": 157625,
+      "secondary_hops": 63514,
+      "paired_rounds": 63514,
+      "ideal_paired_rounds": 110569,
+      "critical_rounds": 157625,
+      "primary_words": 29335,
+      "secondary_words": 11053,
+      "primary_spelling_bytes": 513025,
+      "secondary_spelling_bytes": 206158,
+      "primary_bytes": 641315,
+      "secondary_bytes": 258619,
+      "join_copy_bytes": 258619,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 1979,
+      "paired_shorter_payload_sum": 74340,
+      "same_edge_line_rounds": 2,
+      "same_edge_page_rounds": 290,
+      "fresh_secondary_capacity": 360448,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 63514,
+      "stop": "seed",
+      "normal_carried": 258619,
+      "normal_moved": 258619,
+      "directed_carried": 258619,
+      "directed_moved": 258619
+    },
+    "249": {
+      "block": 249,
+      "stream": 6,
+      "n": 900000,
+      "m": 83580,
+      "mark": 80843,
+      "method": "half_shift",
+      "seed": 39053,
+      "relation": "same",
+      "primary_hops": 41702,
+      "secondary_hops": 41878,
+      "paired_rounds": 41702,
+      "ideal_paired_rounds": 41790,
+      "critical_rounds": 41878,
+      "primary_words": 6161,
+      "secondary_words": 8186,
+      "primary_spelling_bytes": 474816,
+      "secondary_spelling_bytes": 355951,
+      "primary_bytes": 510357,
+      "secondary_bytes": 389643,
+      "join_copy_bytes": 389643,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 1205,
+      "paired_shorter_payload_sum": 58396,
+      "same_edge_line_rounds": 3,
+      "same_edge_page_rounds": 488,
+      "fresh_secondary_capacity": 393216,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 37779,
+      "stop": "primary_boundary",
+      "normal_carried": 349208,
+      "normal_moved": 698416,
+      "directed_carried": 389643,
+      "directed_moved": 389643
+    },
+    "270": {
+      "block": 270,
+      "stream": 7,
+      "n": 900000,
+      "m": 199189,
+      "mark": 11288,
+      "method": "half_shift",
+      "seed": 110882,
+      "relation": "same",
+      "primary_hops": 73853,
+      "secondary_hops": 125336,
+      "paired_rounds": 73853,
+      "ideal_paired_rounds": 99594,
+      "critical_rounds": 125336,
+      "primary_words": 5320,
+      "secondary_words": 8387,
+      "primary_spelling_bytes": 267569,
+      "secondary_spelling_bytes": 446949,
+      "primary_bytes": 336102,
+      "secondary_bytes": 563898,
+      "join_copy_bytes": 563898,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 339,
+      "paired_shorter_payload_sum": 83040,
+      "same_edge_line_rounds": 6,
+      "same_edge_page_rounds": 355,
+      "fresh_secondary_capacity": 1081344,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 73853,
+      "stop": "seed",
+      "normal_carried": 335404,
+      "normal_moved": 335404,
+      "directed_carried": 335404,
+      "directed_moved": 335404
+    },
+    "277": {
+      "block": 277,
+      "stream": 7,
+      "n": 899890,
+      "m": 193183,
+      "mark": 155603,
+      "method": "half_shift",
+      "seed": 59011,
+      "relation": "same",
+      "primary_hops": 146079,
+      "secondary_hops": 47104,
+      "paired_rounds": 47104,
+      "ideal_paired_rounds": 96591,
+      "critical_rounds": 146079,
+      "primary_words": 31159,
+      "secondary_words": 8563,
+      "primary_spelling_bytes": 576527,
+      "secondary_spelling_bytes": 169902,
+      "primary_bytes": 691447,
+      "secondary_bytes": 208443,
+      "join_copy_bytes": 208443,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 1514,
+      "paired_shorter_payload_sum": 56253,
+      "same_edge_line_rounds": 2,
+      "same_edge_page_rounds": 213,
+      "fresh_secondary_capacity": 384000,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 47104,
+      "stop": "seed",
+      "normal_carried": 208443,
+      "normal_moved": 208443,
+      "directed_carried": 208443,
+      "directed_moved": 208443
+    },
+    "278": {
+      "block": 278,
+      "stream": 7,
+      "n": 899938,
+      "m": 201418,
+      "mark": 177342,
+      "method": "half_shift",
+      "seed": 76633,
+      "relation": "same",
+      "primary_hops": 168446,
+      "secondary_hops": 32972,
+      "paired_rounds": 32972,
+      "ideal_paired_rounds": 100709,
+      "critical_rounds": 168446,
+      "primary_words": 28158,
+      "secondary_words": 4388,
+      "primary_spelling_bytes": 587010,
+      "secondary_spelling_bytes": 144056,
+      "primary_bytes": 727298,
+      "secondary_bytes": 172640,
+      "join_copy_bytes": 172640,
+      "discarded_bytes": 0,
+      "repeat_bytes": 0,
+      "both_nonliteral_rounds": 657,
+      "paired_shorter_payload_sum": 39925,
+      "same_edge_line_rounds": 1,
+      "same_edge_page_rounds": 176,
+      "fresh_secondary_capacity": 239616,
+      "persistent_secondary_capacity": 1015808,
+      "paired_before_boundary": 32972,
+      "stop": "seed",
+      "normal_carried": 172640,
+      "normal_moved": 172640,
+      "directed_carried": 172640,
+      "directed_moved": 172640
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "data": "dd83cf2938b51c85f1d3e1e6dfe7e20893601452",
+  "master": "58db12d1241e9368fff6d956c151a0d4462acd44",
+  "scorer_source": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_source_short": "75297a1d",
+  "printed_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+  "evaluator_sha256": "b758f995e3481803e9cef2849e6c02a836f763008ae28cfda883b479fdf3ea63",
+  "official_output_sha256": "d08812919ad1102a16fd94d1adb1972b49b60f8c0b504681e95ba906c4556260",
+  "argv": [
+    "python3",
+    "-B",
+    "bench/moonshot/eval.py",
+    "research/astra-e"
+  ],
+  "dry_evidence": "f0c26c1b202bf9eeec76528e43731a4a8647c1ea",
+  "measured_evidence": "f71f153baaae2d28f0a61acc25a2129612eac9cc",
+  "workstation_master": "f6cfcb04a53c91d521ddb973427b4d53ad7548da",
+  "workstation_recipe": "9f867e69e5e7fe33aaae569af94a447eb38cbe26"
+}

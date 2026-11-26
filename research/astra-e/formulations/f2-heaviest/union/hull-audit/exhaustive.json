@@ -1,0 +1,291 @@
+{
+  "alphabet_and_max_length": [
+    [
+      2,
+      11
+    ],
+    [
+      3,
+      8
+    ]
+  ],
+  "counterexamples": {
+    "branch_hidden_exceeds_global_hole_mass": {
+      "last": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      "marker": [
+        0
+      ],
+      "occupied": [
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          3,
+          5,
+          1
+        ]
+      ],
+      "root_holes": 1,
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "total_hidden": 2,
+      "word": []
+    },
+    "branch_hidden_exceeds_local_hole_loss": {
+      "full_run_lookups": 4,
+      "hole_loss": 0,
+      "last": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "marker": [
+        0
+      ],
+      "occupied": [
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          3,
+          5,
+          1
+        ]
+      ],
+      "packed_runs": 3,
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "word": []
+    },
+    "dense_ordinal_is_not_destination_rank": {
+      "byte": 0,
+      "colour": 0,
+      "last": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "marker": [
+        0
+      ],
+      "new_interval": [
+        0,
+        2
+      ],
+      "occupied": [
+        [
+          0,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          1
+        ]
+      ],
+      "old_rows": [
+        0,
+        2
+      ],
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "word": []
+    },
+    "hull_contains_disjoint_primary": {
+      "last": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "mark": 1,
+      "marker": [
+        0
+      ],
+      "occupied": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          3,
+          1
+        ]
+      ],
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "word": []
+    },
+    "nonempty_hull_contains_disjoint_primary": {
+      "last": [
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "mark": 5,
+      "marker": [
+        0
+      ],
+      "occupied": [
+        [
+          4,
+          5,
+          0
+        ],
+        [
+          6,
+          7,
+          1
+        ]
+      ],
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "word": [
+        1
+      ]
+    },
+    "same_occupied_byte_distinct_displacements": {
+      "displacements": [
+        3,
+        2
+      ],
+      "hull_last": [
+        1,
+        0,
+        1
+      ],
+      "last": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "marker": [
+        0
+      ],
+      "occupied": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          3,
+          1
+        ]
+      ],
+      "selected": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "word": []
+    }
+  },
+  "counts": {
+    "C": 121204,
+    "D": 96674,
+    "J": 128958,
+    "M": 131048,
+    "S": 123852,
+    "disjoint_marks": 23594,
+    "hull_runs": 139472,
+    "marked_outputs": 136756,
+    "nondividing_mark_period": 91904,
+    "root_holes": 21120,
+    "selections": 17576,
+    "total_hidden": 5106,
+    "unary_hidden": 3146
+  },
+  "parent_lengths": [
+    1,
+    2,
+    3,
+    4
+  ]
+}

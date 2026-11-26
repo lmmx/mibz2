@@ -1,0 +1,14 @@
+chosen {'prepare_ns': 3.1384, 'select_mark_ns': 0.1417, 'discover_ns': 61.5052, 'merge_ns': 0.5583, 'residual_output_ns': 0.5741, 'total_ns': 66.6925}
+fixed {'prepare_ns': 3.2538, 'select_mark_ns': 0.0089, 'discover_ns': 20.0027, 'merge_ns': 1.4827, 'residual_output_ns': 1.7397, 'total_ns': 27.1005}
+lazy {'prepare_ns': 0.0, 'select_mark_ns': 0.0, 'discover_ns': 0.0, 'merge_ns': 0.0, 'residual_output_ns': 17.9043, 'total_ns': 17.9043}
+chosen/fixed discover_ns {'n': 30, 'geomean': 2.965902271254852, 'lo': 2.808219931842163, 'hi': 3.1324385183977483}
+chosen/fixed merge_ns {'n': 30, 'geomean': 0.4003184970165906, 'lo': 0.36234946593388584, 'hi': 0.44226613841032164}
+chosen/fixed residual_output_ns {'n': 30, 'geomean': 0.3097256238349724, 'lo': 0.2663410155146178, 'hi': 0.36017720317919943}
+chosen/fixed total_ns {'n': 30, 'geomean': 2.3559666566350637, 'lo': 2.2377695761848657, 'hi': 2.480406806065924}
+chosen/lazy total_ns {'n': 30, 'geomean': 3.599727906886993, 'lo': 3.454838075984672, 'hi': 3.7506941623965426}
+token_rows chosen 705337 fixed 5566401
+words chosen 326626 fixed 806027
+dict_bytes chosen 125949883 fixed 41433719
+lookups chosen 89002161 fixed 28053831
+root_runs chosen 447380 fixed 1433311
+token_visits chosen 705565 fixed 5566622

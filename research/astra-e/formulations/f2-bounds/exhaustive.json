@@ -1,0 +1,65 @@
+{
+  "totals": {
+    "arbitrary_sections": 348502,
+    "nonempty_word_sections": 17392,
+    "two_equal_length_cylinders": 36604
+  },
+  "arbitrary_counterexample": {
+    "column": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "mask": 11,
+    "original_runs": 2,
+    "section_runs": 3,
+    "intervals": 2
+  },
+  "tight_word_section": {
+    "column": [
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "pattern": [
+      0,
+      0
+    ],
+    "original_runs": 3,
+    "section_runs": 3
+  },
+  "contiguous_counterexample": {
+    "column": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "mask": 7,
+    "original_runs": 2,
+    "section_runs": 3
+  },
+  "tight_two_cylinder": {
+    "column": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "patterns": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "original_runs": 2,
+    "section_runs": 3
+  }
+}

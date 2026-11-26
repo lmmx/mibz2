@@ -1,0 +1,5 @@
+arbitrary residual/weight/output-limit comparisons across four schedules 14091920
+original-permutation/retention graphs 49489, omitted whole components 24308, direct original/induced p,s comparisons 514717
+all byte-exact schedule comparisons 16150788, over-budget speculative drops 2598232
+forward-reservation exact schedule/split comparisons 28371496, no reservation exceeded 15536260, A first 3331810, B first 3006666 (distinct seeds)
+same seed 2973780, both cut arcs completed 4532776, other/short/drop 8644232, non-integral period fills 6566736, max staged bytes 18

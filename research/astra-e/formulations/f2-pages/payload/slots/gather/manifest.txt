@@ -1,0 +1,16 @@
+7ddf3bd6b63bc5608c0bb49a1f851685597dfda3
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+ccae1848527f5e4f3f1748c147408655bdb7a587cc0f7c0bfcf02b27d74f921d  /workspace/work/queue-spans/gather-rank/price
+0097ad5769a93e28b84ee93c0cb5e4ec3b4b0b4d4b6a806ecfba00e85526a55b  /workspace/work/queue-spans/gather-rank/focus.rs
+4081729ca21e6aab15d3caa8e6973fac6ae8d8533ea5f6d11d5964c3f16bf73e  /workspace/work/queue-spans/gather-rank/control.rs
+0ddb133a2007a82e32cb99303040258e97565bbb618e4c5218b76171a95fcd84  /workspace/work/queue-spans/gather-rank/slots.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+def8278300dafb49534e9721b8c9c0a08cc0f5214fb2044cf515c3069ff44a61  research/astra-e/formulations/f2-pages/payload/slots/gather/lookup.inc
+pinned CPUs 4 2
+400000 100000

@@ -1,0 +1,1 @@
+125680 certified mark/windows: 30548 single cycle, 95132 multi-cycle. 38408 have at least one true edit (10314 single, 28094 multi). All count-only outputs and iff mass decisions matched dense Psi and stock RLE1.

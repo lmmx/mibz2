@@ -1,0 +1,13 @@
+431 blocks, 12 nonempty streams, 209700196 oracle bytes, block and stream CRCs checked
+adjacent thread CPU clocks p50 224 ns, p95 238 ns
+worker scopes round 0/10 complete
+worker scopes round 1/10 complete
+worker scopes round 2/10 complete
+worker scopes round 3/10 complete
+worker scopes round 4/10 complete
+worker scopes round 5/10 complete
+worker scopes round 6/10 complete
+worker scopes round 7/10 complete
+worker scopes round 8/10 complete
+worker scopes round 9/10 complete
+worker scopes round 10/10 complete

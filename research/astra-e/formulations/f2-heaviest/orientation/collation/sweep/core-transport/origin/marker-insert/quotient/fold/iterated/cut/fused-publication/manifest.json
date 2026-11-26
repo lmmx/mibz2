@@ -1,0 +1,16 @@
+{
+  "source_sha256": {
+    "fused": "bc25c957a04ffe15299e15fcad2a3b9ee7a979f0e9813915da731c3bf9c35b5b",
+    "fusion.cpp": "5da93610bc14e5569f54cc939f4d1aa3f6379168d4651611760e6e008882f0a2",
+    "stream-fused.hpp": "b08936b598ba19a15d02904d6b626a082223d986817ed8418dc281f3fd07c15a",
+    "xor/stream.hpp": "0e3aad27d928fb41f36a7747d22859bd4d7eb80afd4227f429197dcccf1988ee",
+    "xor/route.cpp": "871b9fe2ae0706880c0c3a877cdd289fb59c6c41f6b1a9f0ff6230847c414328",
+    "direct_cut.cpp": "8103e58d3969782635526f2fd260318c271b903dde699e4c9f1d0b645d1d4651",
+    "native.cpp": "5c7878c430506a766e50b0c0c5a7ea13516e23febd2b623c93b6d0dd898ccc98",
+    "interval.hpp": "faf88fd824e76c36748dad8be4afdbd352b6adc0554b6390ca7dbe388841e760"
+  },
+  "donor": "0dd79ba81bb5474d60f113e3de82c027f2351d50",
+  "stream": "37c3bfd",
+  "g++": "g++ (Debian 14.2.0-19) 14.2.0",
+  "flags": "-std=c++20 -O3 -g0 -Wall -Wextra -Wno-return-type"
+}

@@ -1,0 +1,5 @@
+6114bf54853c9488901eb8c275082c6135a540472b0bfc62ca90f8f6e685837d  /workspace/work/astra-packed-standalone/deferred.bin
+3382786d13c9fbfc7b2ed162c9a8d2c0dd36ef3ee47939e55cc469d95d021240  /workspace/work/astra-packed-standalone/edge.bin
+aa456e4540e04aa89efc7586add9f2986716c19c711249a7a5b6466d8f90fec3  /workspace/work/astra-packed-standalone/inplace_only_build.bin
+ca809e762cdc66c1195982cad06db5c2ef7ec8bef29ab18e7451c34dbe1728b5  /workspace/work/astra-packed-standalone/inplace_separate_build.bin
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2

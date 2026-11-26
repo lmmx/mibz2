@@ -1,0 +1,2 @@
+431 real blocks, 12 streams with validated combined CRCs, 209700196 independent libbzip2 bytes
+3961 complete width-specific inverses, 3564860254 coded bytes and 3564752168 RLE1 output bytes checked with block CRCs and libbzip2 across all 17 widths

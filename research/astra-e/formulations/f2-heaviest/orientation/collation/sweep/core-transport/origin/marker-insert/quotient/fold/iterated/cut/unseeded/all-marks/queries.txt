@@ -1,0 +1,1 @@
+rows=899931 levels=25 primary_offset=84941 pieces=98484 descriptor_bytes=1181808 visits=22498275 binary_comparisons=200524606 all_cyclic_offsets_verified=1

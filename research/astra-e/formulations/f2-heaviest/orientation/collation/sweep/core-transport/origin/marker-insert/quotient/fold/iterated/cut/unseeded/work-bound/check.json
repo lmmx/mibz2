@@ -1,0 +1,27 @@
+{
+  "tiny": {
+    "columns": 2785,
+    "fixed": 63,
+    "rank_queries": 21926,
+    "runs": 13377,
+    "types": 7947,
+    "rows": 17954,
+    "published": 9234,
+    "lookups": 12368,
+    "intersections": 13172,
+    "rank_blocks": 2722,
+    "leaf_fragments": 10362
+  },
+  "all_positions_across_empty_mask_words": 12346,
+  "original_first_power": {
+    "rank_queries": 100496,
+    "runs": 51184,
+    "types": 89,
+    "rows": 899931,
+    "published": 48931,
+    "lookups": 51643,
+    "intersections": 62446,
+    "rank_blocks": 14062,
+    "leaf_fragments": 59656
+  }
+}

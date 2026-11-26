@@ -1,0 +1,13 @@
+metric,candidate,reference,paired_rounds,geo,lo95,hi95
+thread_ns,twin,stock,24,0.99643804,0.96308032,1.03095116
+thread_ns,scatter,stock,24,1.07672860,0.97920851,1.18396079
+thread_ns,interval,stock,24,1.03254813,1.01168656,1.05383987
+thread_ns,scatter,twin,24,1.08057757,0.98647663,1.18365490
+thread_ns,interval,twin,24,1.03623917,1.00301690,1.07056183
+thread_ns,interval,scatter,24,0.95896786,0.88147584,1.04327235
+wall_ns,twin,stock,24,0.99662834,0.96324307,1.03117072
+wall_ns,scatter,stock,24,1.09165316,0.98574540,1.20893957
+wall_ns,interval,stock,24,1.03249089,1.01171518,1.05369324
+wall_ns,scatter,twin,24,1.09534630,0.99450976,1.20640697
+wall_ns,interval,twin,24,1.03598388,1.00225528,1.07084753
+wall_ns,interval,scatter,24,0.94580488,0.86362992,1.03579885

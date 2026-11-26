@@ -1,0 +1,2 @@
+small blocks/tables/symbols 198 398 8295
+zero listed / zero used 190 190

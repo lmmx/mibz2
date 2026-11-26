@@ -1,0 +1,2 @@
+Empty, singleton, 48 fully colliding distinct words with duplicate replay, 32-probe exhaustion, and original allocation-bound fallback passed.
+233 real dictionaries, 368867 original codes, 186981 compacted codes, 186981 exact byte-distinct codes, 0 missed aliases.

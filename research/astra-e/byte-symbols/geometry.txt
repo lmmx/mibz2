@@ -1,0 +1,12 @@
+all blocks=431 rows=209706557 symbols=24979299 max_eob=103 min_eob=2 fits=431
+large blocks=233 rows=209697662 symbols=24971004 max_eob=103 min_eob=80 fits=233
+small blocks=198 rows=8895 symbols=8295 max_eob=61 min_eob=2 fits=198
+W,slots,logical_bytes_saved_whole_corpus,max_contiguous_payload_saved,top_K_payload_saved_upper_bound,capacity_bytes_saved_if_all_slots_acquired
+1,4,24979299,660354,796261,3600392
+2,8,24979299,1080791,1535701,7200784
+4,16,24979299,1959203,2924978,14401568
+7,28,24979299,2609785,4793530,25202744
+8,32,24979299,2832307,5371728,28803136
+9,36,24979299,3074667,5919771,32403528
+10,40,24979299,3275584,6412967,36003920
+carrier_header_pad_bytes=1083 odd_tapes=221 realized_handoff_payload_saving=24978216

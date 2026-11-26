@@ -1,0 +1,537 @@
+{
+  "compact": {
+    "mean_ten_block_ms": {
+      "cpu_s": 33.68513472222222,
+      "wall_s": 34.26949527777778,
+      "setup_cpu_s": 0.0,
+      "discovery_mark_cpu_s": 0.0,
+      "handoff_cpu_s": 0.0,
+      "writer_cpu_s": 0.0
+    },
+    "totals": {
+      "sort_comparisons": 0,
+      "history_slots": 0,
+      "gapped_nodes": 0,
+      "holes": 0,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 0,
+      "lf_pieces": 0,
+      "selector_runs": 0,
+      "logical_dict_bytes": 0,
+      "words": 0,
+      "root_runs": 0,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0
+  },
+  "global_h0": {
+    "mean_ten_block_ms": {
+      "cpu_s": 194.8507388888889,
+      "wall_s": 195.3417086111111,
+      "setup_cpu_s": 7.828606055555555,
+      "discovery_mark_cpu_s": 172.80702194444444,
+      "handoff_cpu_s": 2.0054360555555557,
+      "writer_cpu_s": 8.725235055555556
+    },
+    "totals": {
+      "sort_comparisons": 0,
+      "history_slots": 0,
+      "gapped_nodes": 0,
+      "holes": 0,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 1296362,
+      "lf_pieces": 1423936,
+      "selector_runs": 1423936,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.575124937249436,
+          5.146300861684379,
+          6.039681491875976
+        ],
+        "wall_s": [
+          5.49902652680563,
+          5.053713625226534,
+          5.98357860872192
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_s": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "observed_h0": {
+    "mean_ten_block_ms": {
+      "cpu_s": 218.41627555555556,
+      "wall_s": 222.8338036111111,
+      "setup_cpu_s": 8.070309222222223,
+      "discovery_mark_cpu_s": 196.05910583333332,
+      "handoff_cpu_s": 2.1454175833333333,
+      "writer_cpu_s": 8.123318750000001
+    },
+    "totals": {
+      "sort_comparisons": 0,
+      "history_slots": 0,
+      "gapped_nodes": 0,
+      "holes": 0,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 1296362,
+      "lf_pieces": 1423936,
+      "selector_runs": 1423936,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          6.11206694022335,
+          5.543926968704713,
+          6.738429725472995
+        ],
+        "wall_s": [
+          6.140872679109416,
+          5.54488489258057,
+          6.800919765077792
+        ]
+      },
+      "observed_h0": {
+        "cpu_s": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_s": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          1.0963103085612322,
+          0.998199394781558,
+          1.2040643371865025
+        ],
+        "wall_s": [
+          1.116719959282799,
+          1.0146803659163974,
+          1.2290209896141082
+        ]
+      }
+    }
+  },
+  "global_h3": {
+    "mean_ten_block_ms": {
+      "cpu_s": 194.6121486111111,
+      "wall_s": 200.7013847222222,
+      "setup_cpu_s": 12.391409388888889,
+      "discovery_mark_cpu_s": 167.34844222222222,
+      "handoff_cpu_s": 1.8231058333333334,
+      "writer_cpu_s": 9.14245113888889
+    },
+    "totals": {
+      "sort_comparisons": 199468,
+      "history_slots": 10235,
+      "gapped_nodes": 222,
+      "holes": 435,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 1181564,
+      "lf_pieces": 1308198,
+      "selector_runs": 1308130,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.425378229241536,
+          4.89745538840345,
+          6.01020868919515
+        ],
+        "wall_s": [
+          5.522496558051024,
+          4.963870033318909,
+          6.143990078099217
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          0.9731402058799815,
+          0.8981719140086148,
+          1.0543659243068355
+        ],
+        "wall_s": [
+          1.0042680338294399,
+          0.9252784224201483,
+          1.090000868207523
+        ]
+      }
+    }
+  },
+  "observed_h3": {
+    "mean_ten_block_ms": {
+      "cpu_s": 196.775655,
+      "wall_s": 198.0035736111111,
+      "setup_cpu_s": 12.782646944444444,
+      "discovery_mark_cpu_s": 170.07170527777777,
+      "handoff_cpu_s": 1.8403497777777778,
+      "writer_cpu_s": 8.511622888888889
+    },
+    "totals": {
+      "sort_comparisons": 88719,
+      "history_slots": 0,
+      "gapped_nodes": 222,
+      "holes": 435,
+      "posted_holes": 435,
+      "link_reads": 648,
+      "link_writes": 648,
+      "lf_seeks": 1181564,
+      "lf_pieces": 1308198,
+      "selector_runs": 1308130,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 3072,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.57989764431099,
+          5.102472985389214,
+          6.101993643110361
+        ],
+        "wall_s": [
+          5.532777093703357,
+          5.034359558697715,
+          6.0805395426557824
+        ]
+      },
+      "observed_h0": {
+        "cpu_s": [
+          0.9129313698431265,
+          0.8366630217595913,
+          0.9961521716243975
+        ],
+        "wall_s": [
+          0.9009757053790198,
+          0.8220542474132183,
+          0.9874740313520696
+        ]
+      },
+      "global_h3": {
+        "cpu_s": [
+          1.0284808558114218,
+          0.9515851989787235,
+          1.1115902936550879
+        ],
+        "wall_s": [
+          1.0018615739356769,
+          0.9248985898619281,
+          1.0852288286856522
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          1.0008560717679464,
+          0.8882239501567654,
+          1.1277706216072754
+        ],
+        "wall_s": [
+          1.0061375530256502,
+          0.8918046001309263,
+          1.1351284524208833
+        ]
+      }
+    }
+  },
+  "global_h8": {
+    "mean_ten_block_ms": {
+      "cpu_s": 204.34533638888888,
+      "wall_s": 207.95300388888887,
+      "setup_cpu_s": 26.67243111111111,
+      "discovery_mark_cpu_s": 164.15086972222224,
+      "handoff_cpu_s": 2.057367722222222,
+      "writer_cpu_s": 8.315246638888889
+    },
+    "totals": {
+      "sort_comparisons": 2227451,
+      "history_slots": 111815,
+      "gapped_nodes": 1157,
+      "holes": 11079,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 1017069,
+      "lf_pieces": 1133302,
+      "selector_runs": 1127693,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.793770676659638,
+          5.2953238804840055,
+          6.339136077669513
+        ],
+        "wall_s": [
+          5.813454073238224,
+          5.324139736140505,
+          6.347738777823507
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          1.039218087822454,
+          0.9271761290072864,
+          1.164799438067576
+        ],
+        "wall_s": [
+          1.057178765168686,
+          0.9449588812623382,
+          1.1827254748170501
+        ]
+      }
+    }
+  },
+  "observed_h8": {
+    "mean_ten_block_ms": {
+      "cpu_s": 185.97542305555555,
+      "wall_s": 187.93142555555556,
+      "setup_cpu_s": 25.590574444444446,
+      "discovery_mark_cpu_s": 146.91970138888888,
+      "handoff_cpu_s": 1.9286223333333332,
+      "writer_cpu_s": 8.424387027777778
+    },
+    "totals": {
+      "sort_comparisons": 346285,
+      "history_slots": 0,
+      "gapped_nodes": 1157,
+      "holes": 11079,
+      "posted_holes": 11079,
+      "link_reads": 21001,
+      "link_writes": 21001,
+      "lf_seeks": 1017069,
+      "lf_pieces": 1133302,
+      "selector_runs": 1127693,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 49152,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.36266752719194,
+          5.014819356690178,
+          5.7346438548844505
+        ],
+        "wall_s": [
+          5.336433723284144,
+          4.960676443882448,
+          5.740653559077214
+        ]
+      },
+      "observed_h0": {
+        "cpu_s": [
+          0.8773901823457408,
+          0.7952465441794667,
+          0.9680187077970694
+        ],
+        "wall_s": [
+          0.8690025021098572,
+          0.7867490953497149,
+          0.9598553759219978
+        ]
+      },
+      "global_h8": {
+        "cpu_s": [
+          0.9255919549587269,
+          0.8385977914610256,
+          1.0216106884704748
+        ],
+        "wall_s": [
+          0.9179454513711555,
+          0.8305066903485117,
+          1.0145900827594752
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          0.9618919015360551,
+          0.8798570146060776,
+          1.0515754433746114
+        ],
+        "wall_s": [
+          0.9704324387727702,
+          0.8862359996716996,
+          1.062627921424234
+        ]
+      }
+    }
+  },
+  "global_h10": {
+    "mean_ten_block_ms": {
+      "cpu_s": 200.07094888888886,
+      "wall_s": 205.24288305555555,
+      "setup_cpu_s": 33.22968138888889,
+      "discovery_mark_cpu_s": 154.05231583333335,
+      "handoff_cpu_s": 1.8777959444444443,
+      "writer_cpu_s": 7.873650722222222
+    },
+    "totals": {
+      "sort_comparisons": 3370877,
+      "history_slots": 169883,
+      "gapped_nodes": 1324,
+      "holes": 20418,
+      "posted_holes": 0,
+      "link_reads": 0,
+      "link_writes": 0,
+      "lf_seeks": 966263,
+      "lf_pieces": 1076917,
+      "selector_runs": 1063421,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 0,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.762158295677132,
+          5.3198529215130295,
+          6.241238003060735
+        ],
+        "wall_s": [
+          5.809426524193628,
+          5.338950179328277,
+          6.321361954392812
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          1.0335478326553829,
+          0.9374997330142719,
+          1.139436188373162
+        ],
+        "wall_s": [
+          1.0564463538909872,
+          0.9554642941017771,
+          1.1681011059641702
+        ]
+      }
+    }
+  },
+  "observed_h10": {
+    "mean_ten_block_ms": {
+      "cpu_s": 180.0843675,
+      "wall_s": 181.9647961111111,
+      "setup_cpu_s": 31.17167527777778,
+      "discovery_mark_cpu_s": 134.56441416666667,
+      "handoff_cpu_s": 2.320794638888889,
+      "writer_cpu_s": 8.253973083333333
+    },
+    "totals": {
+      "sort_comparisons": 428155,
+      "history_slots": 0,
+      "gapped_nodes": 1324,
+      "holes": 20418,
+      "posted_holes": 20418,
+      "link_reads": 39512,
+      "link_writes": 39512,
+      "lf_seeks": 966263,
+      "lf_pieces": 1076917,
+      "selector_runs": 1063421,
+      "logical_dict_bytes": 1926457,
+      "words": 38648,
+      "root_runs": 66373,
+      "second": 10
+    },
+    "max_gap_capacity_bytes": 98304,
+    "paired": {
+      "compact": {
+        "cpu_s": [
+          5.3030523391347435,
+          5.03638151190082,
+          5.583843091543039
+        ],
+        "wall_s": [
+          5.273310780010203,
+          4.976669215527549,
+          5.58763409386534
+        ]
+      },
+      "observed_h0": {
+        "cpu_s": [
+          0.8676364953131479,
+          0.7930836608561125,
+          0.9491975754319062
+        ],
+        "wall_s": [
+          0.8587233534330446,
+          0.7813481496154494,
+          0.9437608549968635
+        ]
+      },
+      "global_h10": {
+        "cpu_s": [
+          0.9203239597067616,
+          0.8793144464233383,
+          0.9632460768221633
+        ],
+        "wall_s": [
+          0.9077162363701914,
+          0.8626321962302402,
+          0.955156519048067
+        ]
+      },
+      "global_h0": {
+        "cpu_s": [
+          0.9511988338957433,
+          0.8788841181990318,
+          1.0294636151335324
+        ],
+        "wall_s": [
+          0.9589535082809383,
+          0.8833994812637421,
+          1.0409694034784835
+        ]
+      }
+    }
+  }
+}

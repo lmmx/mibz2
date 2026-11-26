@@ -1,0 +1,99 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-e-edge-safe/research/astra-e/edge-budget/candidate.rs",
+  "candidate_type": "moonshot::candidate::Candidate",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-e-edge-safe/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/edge-budget/candidate.rs",
+  "corpus": null,
+  "rounds": 9,
+  "settle": 2.0,
+  "repeat": 2,
+  "workers": [
+   1,
+   4
+  ],
+  "with_opend": true,
+  "proxy_blocks": "48+16",
+  "bootstrap": 400,
+  "quick": false,
+  "no_timing": false,
+  "no_proxy": true,
+  "no_build": false,
+  "target_dir": null,
+  "out": "research/astra-e/results/v1-edge-confirm/score",
+  "record": "research/astra-e/results/v1-edge-confirm/official-register.jsonl"
+ },
+ "scorer": {
+  "version": "v1",
+  "commit": "6a8a366cd786d58a528000b58da12fd2cfb47be8"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 338,
+  "failed": [],
+  "exit": 0
+ },
+ "timing": {
+  "1": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.9699102113434759,
+    "lo": 0.6679782571002307,
+    "hi": 1.4083180224340583,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.0310232723654338,
+    "peak_rss_ratio": 0.8968028330590054,
+    "wall_s": 1.566385
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.9835147302611094,
+    "lo": 0.6564876173235762,
+    "hi": 1.473449306757921,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.0167615890557267,
+    "peak_rss_ratio": 0.9639882288393437,
+    "wall_s": 1.424517
+   },
+   "lazy_wall_s": 1.264541,
+   "lazy_peak_rss_kb": 80196
+  },
+  "4": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.7426297757352917,
+    "lo": 0.6209257554150059,
+    "hi": 0.8881882882117623,
+    "verdict": "FASTER",
+    "speedup": 1.3465659911224017,
+    "peak_rss_ratio": 0.7319467505607504,
+    "wall_s": 0.589002
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.7783646711150211,
+    "lo": 0.691257461871873,
+    "hi": 0.8764484937340056,
+    "verdict": "FASTER",
+    "speedup": 1.2847448466121703,
+    "peak_rss_ratio": 0.8389117073028635,
+    "wall_s": 0.700684
+   },
+   "lazy_wall_s": 0.888801,
+   "lazy_peak_rss_kb": 137316
+  }
+ }
+}

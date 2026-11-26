@@ -1,0 +1,68 @@
+{
+  "4": {
+    "rounds": 24,
+    "median_cpu_ms": {
+      "direct": 169.08664549999997,
+      "induced": 85.6955545
+    },
+    "ratio": 0.507452217284702,
+    "lo": 0.4746974983126368,
+    "hi": 0.5424670526861831,
+    "memory": {
+      "direct": {
+        "max_process_kib": 6988,
+        "max_growth_kib": 4652,
+        "max_reused_vector_bytes": 4722048
+      },
+      "induced": {
+        "max_process_kib": 9108,
+        "max_growth_kib": 6772,
+        "max_reused_vector_bytes": 6947336
+      }
+    }
+  },
+  "8": {
+    "rounds": 24,
+    "median_cpu_ms": {
+      "direct": 160.830541,
+      "induced": 84.192753
+    },
+    "ratio": 0.5353717402475071,
+    "lo": 0.5060952372991918,
+    "hi": 0.5663418248810733,
+    "memory": {
+      "direct": {
+        "max_process_kib": 6108,
+        "max_growth_kib": 3980,
+        "max_reused_vector_bytes": 4027232
+      },
+      "induced": {
+        "max_process_kib": 7320,
+        "max_growth_kib": 5192,
+        "max_reused_vector_bytes": 5320436
+      }
+    }
+  },
+  "16": {
+    "rounds": 24,
+    "median_cpu_ms": {
+      "direct": 161.8482785,
+      "induced": 92.04511600000001
+    },
+    "ratio": 0.5764472659141053,
+    "lo": 0.533380680179837,
+    "hi": 0.6229911632116303,
+    "memory": {
+      "direct": {
+        "max_process_kib": 5928,
+        "max_growth_kib": 3824,
+        "max_reused_vector_bytes": 3867656
+      },
+      "induced": {
+        "max_process_kib": 6936,
+        "max_growth_kib": 4832,
+        "max_reused_vector_bytes": 4957156
+      }
+    }
+  }
+}

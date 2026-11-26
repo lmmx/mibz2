@@ -1,0 +1,44 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-rleslices-checked/research/astra-e/formulations/f2-rle/slices/candidate.rs",
+  "candidate_type": "moonshot::candidate::Candidate",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-rleslices-checked/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/formulations/f2-rle/slices/candidate.rs",
+  "corpus": null,
+  "rounds": 5,
+  "settle": 2.0,
+  "repeat": 1,
+  "workers": null,
+  "with_opend": false,
+  "proxy_blocks": "48+16",
+  "bootstrap": 400,
+  "quick": false,
+  "no_timing": true,
+  "no_proxy": true,
+  "no_build": false,
+  "target_dir": "/workspace/work/f2-slices-score",
+  "out": "research/astra-e/results/v1-rle-slices-gate/score",
+  "record": "research/astra-e/results/v1-rle-slices-gate/official-register.jsonl"
+ },
+ "scorer": {
+  "version": "v1",
+  "commit": "6a8a366cd786d58a528000b58da12fd2cfb47be8"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 338,
+  "failed": [],
+  "exit": 0
+ }
+}

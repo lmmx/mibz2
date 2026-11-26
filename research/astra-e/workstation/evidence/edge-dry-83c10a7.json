@@ -1,0 +1,12 @@
+{
+  "mode": "dry",
+  "sha256": "c28f72e8ac7b5e3926cfe8cf706cd8e21a33b517a331ccabcc1d70570a3f3ec3",
+  "recorded_scorer": "scorer v1 at 9c31461df7bef24cecf79348545b27ee26846835+dirty",
+  "scorer_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "checked_projection_blobs": 31,
+  "binary_sha256": [
+    "99b9ace434a2a407fa89ee4457fd721e52e158c757c987d3d057f830bcbb69d8",
+    "427468a9ee34b2f276b0ade48220fb0be5fc65850cb113dece59b0dba775acaf"
+  ],
+  "worker_arm_gates": 16
+}

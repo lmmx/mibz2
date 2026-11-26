@@ -1,0 +1,10 @@
+f2b caps 0/228
+f2b run_count 0/228
+f2b root_runs 224/228
+f2b words 228/228
+frozen caps=56386 run_count=51184 root_runs=6133 words=2716 token_rows=135716
+f2-word caps 227/228
+f2-word run_count 228/228
+f2-word root_runs 228/228
+f2-word words 228/228
+frozen caps=56386 run_count=51184 root_runs=5060 words=2950 token_rows=24165

@@ -1,0 +1,9 @@
+{
+  "affinity": [
+    3
+  ],
+  "nice": 12,
+  "thread_clock": "CLOCK_THREAD_CPUTIME_ID",
+  "wall_clock": "Rust Instant",
+  "kernel": "6.18.57"
+}

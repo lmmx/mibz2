@@ -1,0 +1,53 @@
+{
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-mpopcnt",
+    "-mbmi2",
+    "-Wall",
+    "-Wextra",
+    "-fPIC",
+    "-shared"
+  ],
+  "rust": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "g++": "g++ (Debian 14.2.0-19) 14.2.0",
+    "donor": "d0a42980e896211906234c7679b38760ae44a46e",
+    "src_tree": "3a6a7b574d4216b909c68f26223a70d02ad00473",
+    "source_sha256": {
+      "open_return": "b02a1d2ed7490a0dbef8f5ecf464153d75d2cd71b42993807a3a713bc18bbfc1",
+      "arms": "b08e1153c9ab680f008cabb8245f40ad57338d7eacf0abacd12ce7b3e21b706c",
+      "candidate": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+      "kernel.rs": "6ec9b514f032890c04e1afb7c29ea3d1983ab359bbf59880f8171b95c96f0278",
+      "gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+      "adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104"
+    },
+    "rlib_sha256": "b5eed93a5d80e89a35e492de78455e18df92a4ca65ecda91807e921a14a497bb",
+    "dso_sha256": "bedff2fc9326bde4fdc223f9183548da9b74ec5ccf911080e2b020c29685a146",
+    "exe_sha256": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+    "rust_flags": [
+      "--edition=2021",
+      "-C",
+      "opt-level=3",
+      "-C",
+      "codegen-units=1",
+      "-C",
+      "debuginfo=line-tables-only",
+      "-C",
+      "lto=fat"
+    ]
+  },
+  "gxx": "g++ (Debian 14.2.0-19) 14.2.0",
+  "sources": {
+    "research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/all-marks/exceptions/jumps/native/bench/bridge.cpp": "27b27daa7b984c6833b41cf335ded5af54b55c6064b8af622b4a71f88680e239",
+    "research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/all-marks/exceptions/jumps/native/generate.py": "1f39461d3acb728a61f87dbaf22ecdd03a7d3b8c0f0064e10946682d2ec32b0b",
+    "research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/all-marks/exceptions/jumps/native/jump.hpp": "f0a04ef5ecd953515917ff4faa2c8836c653695a2d2eec14070845f5002b41c1",
+    "research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/all-marks/exceptions/jumps/native/model.hpp": "33403f4cdb0cd7596e867b976d0b81a15ea70b4d33926c1f3b106949c9e992fd",
+    "research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/all-marks/exceptions/contexts/contexts.hpp": "2e849e261b3dc4207b03b5d522cdfa86e1b9fcca8f021791b90c971196b98a49"
+  },
+  "selector": "f8f47b6f73f915da25029088a9e3414db14fa9d4a82c2906878cc494e1f4ee21",
+  "shared_object": "f087e5843147fc79ccaf3ac6ce09d98f8bec7ab0453e93a187067ab3ddd04d53",
+  "rss": "20ec2f55e18dd6893e2cc466a30e584e70e8dab647d7ac7d9ae45ada4e45c289",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+}

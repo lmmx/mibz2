@@ -1,0 +1,16 @@
+ea4d83b51cad9d2138be9e13e92ec71be2f759e7
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+202d3cf14a6ef21ddb35af50b5eb78a9f1dbb387dbc3bc67fe84bbce1a72ddf3  /workspace/work/queue-spans/split-singletons/price
+32166a2a6d8efa0b5bba0637183f3731c53f919645d99a8f7183f7d8fab7d12a  /workspace/work/queue-spans/split-singletons/focus.rs
+7b058a149c4b690b6e8f6af58473a636ef3c117627417f68f52e36bcb71df3b3  /workspace/work/queue-spans/split-singletons/control.rs
+d4dd73fade51f9c9052c7185fa28ac5d55a6128fabc349330f0f41298357520b  /workspace/work/queue-spans/split-singletons/aos.rs
+36ef0b1cc0445ed652849817e9b746c07bda2b6ae399045dbd17757fca3f46fe  /workspace/work/queue-spans/split-singletons/soa.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+pinned CPUs 4 2
+400000 100000

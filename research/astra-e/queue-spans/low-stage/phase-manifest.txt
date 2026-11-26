@@ -1,0 +1,7 @@
+source 7998c953ab4e0de27508ab76e6c8f1018c6225d0
+5 modes, 11 blocks, 20 balanced rounds, warm pass, core 0, CLOCK_THREAD_CPUTIME_ID
+b4b7fb0807eb217ee749186ab1edb7ea6553f82c9ea481a6e23c81122efe88f4  research/astra-e/queue-spans/phase.py
+341d8e9e66cd57e16cda7d44f5c548daab14970a0fccef982bc7193d9e8e211a  research/astra-e/queue-spans/kernel.rs
+5030bf67ea2342dbdfd8d26af061853e8132e9a11a799c9b95bf2d0754acd8f8  /workspace/work/queue-spans/phase/phase.rs
+2123985ee5498814d753ec4b73852710f29541b2ff1d4bb207fa5d1730eccaa1  /workspace/work/queue-spans/phase/kernel.rs
+d61cbbc3ae78a9891fe15eca3632590c59dd428b61b94843269fd209cd9aeab5  /workspace/work/queue-spans/phase/probe

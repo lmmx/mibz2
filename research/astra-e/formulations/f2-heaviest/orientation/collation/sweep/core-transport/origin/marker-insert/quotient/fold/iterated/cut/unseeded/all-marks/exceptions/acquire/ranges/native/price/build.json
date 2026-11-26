@@ -1,0 +1,39 @@
+{
+  "rust_donor": "d0a42980e896211906234c7679b38760ae44a46e",
+  "native_source": "990450a2",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "rlib_sha256": "b5eed93a5d80e89a35e492de78455e18df92a4ca65ecda91807e921a14a497bb",
+  "rust_flags": [
+    "--edition=2021",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "codegen-units=1",
+    "-C",
+    "debuginfo=line-tables-only",
+    "-C",
+    "lto=fat"
+  ],
+  "gxx": "g++ (Debian 14.2.0-19) 14.2.0",
+  "cpp_flags": [
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++20",
+    "-fPIC",
+    "-shared"
+  ],
+  "sources": {
+    "main.rs": "8ef2dd9036574116777e5d2b4655a5f59cc5f71d848e217778d8a27e88fb1cb6",
+    "constructor/bridge.cpp": "5eb3f8a43e1c807575e0834f4f56c62255d3c41d72581b3e3b0d15f64036c7c0",
+    "constructor/ranges.hpp": "af12663fcca4ff7a4c90eb344b814d6ab8fa8cec1fbe553cb627ca2dd9f4c9d9",
+    "constructor/rope.hpp": "b88e2a0611dda54ff4f70e3a2302e546517f00f2cef0153720c1faa8c80e4c55",
+    "constructor/sweep.hpp": "42f82900442cce0224966021545ff4ccf2b2af232d4fd4185da90d5b6798407e",
+    "scalar/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104",
+    "scalar/candidate.rs": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+    "scalar/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+    "scalar/kernel.rs": "6ec9b514f032890c04e1afb7c29ea3d1983ab359bbf59880f8171b95c96f0278"
+  },
+  "executable": "84027564f8736f8ee608eb8f30d77a5a0ee1befe009e0b1a4ef31bb52a04a082",
+  "shared": "5ec77f8e2c8a482adc4f8861fc265a36e6efce194625090bac68d6d5e5da13a8",
+  "processor": "INTEL(R) XEON(R) PLATINUM 8573C"
+}

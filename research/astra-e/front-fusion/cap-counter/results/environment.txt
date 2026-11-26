@@ -1,0 +1,16 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+8410f3b79a3510bc8a385dec0e64484c9888a98435e8b6e4bc470893b194305b  /workspace/work/astra-counter-factor-gates/counter_edge-build/release/deps/libmibz2.rlib
+4c3dbe4553e9b31c840edbd7dc318855106b937fa552953a4fe54c4ee15bd254  /workspace/work/astra-counter-factor-gates/counter_edge-build/release/moonshot
+ea1feb27523276cff5a5bed8c7367cbfa63b4f9368da32bd6a815140c85506f9  /workspace/work/astra-counter-factor-gates/both-build/release/moonshot
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e/corpora/wikidata.bz2
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+Linux 6.18.57
+400000 100000
+50b8ecb8946a498601e3fd894ed84a2687df6cc8
+75297a1d57b2bdf262c3a19f3064848dedf2c493

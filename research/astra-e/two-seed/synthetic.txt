@@ -1,0 +1,1 @@
+261586 exact packed-output comparisons, all permutations through five, every mark, second seed and byte split, four unequal label models, sealed gaps, short cycles and bounded repeats

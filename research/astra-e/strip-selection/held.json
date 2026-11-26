@@ -1,0 +1,96 @@
+{
+  "split": "held",
+  "blocks": 140,
+  "streams": [
+    1,
+    2,
+    4,
+    5,
+    7,
+    8,
+    10,
+    11
+  ],
+  "rows": 125998569,
+  "reference": {
+    "n": 125998569,
+    "q": 0,
+    "retained": 17601660,
+    "strips": 442381,
+    "nodes": 1064543,
+    "steps": 1594559,
+    "rules": 619727,
+    "bands": 503333,
+    "dictionary_bytes": 6409642,
+    "words": 230212,
+    "word_visits": 3264899,
+    "edge_bytes": 70406640,
+    "same_line": 4544,
+    "same_4k": 428510,
+    "edge_cap": 204433344,
+    "selector_cap": 0
+  },
+  "neutral": {
+    "n": 125998569,
+    "q": 10482,
+    "retained": 17612142,
+    "strips": 442381,
+    "nodes": 1064641,
+    "steps": 1596455,
+    "rules": 617262,
+    "bands": 506997,
+    "dictionary_bytes": 6423123,
+    "words": 232819,
+    "word_visits": 3298056,
+    "edge_bytes": 70448568,
+    "same_line": 4607,
+    "same_4k": 436166,
+    "edge_cap": 204554988,
+    "selector_cap": 2252800
+  },
+  "policies": {
+    "2": {
+      "steps_vs_neutral": 0.996262343755383,
+      "bytes_vs_neutral": 0.9942294425935795,
+      "stream_ratio_steps": {
+        "1": 0.9965934430279351,
+        "2": 0.9963845828555319,
+        "4": 0.9998299276342083,
+        "5": 0.9957406145684694,
+        "7": 0.9991811120039796,
+        "8": 0.993507944389275,
+        "10": 0.9979692471885685,
+        "11": 0.994525447042641
+      },
+      "geometry_vs_champion": {
+        "nodes": 0.9934384989615263,
+        "steps": 0.9974469430105753,
+        "rules": 0.9957013330063076,
+        "bands": 0.9971907266163752,
+        "dictionary_bytes": 0.9963205433314373,
+        "words": 1.0022761628412071,
+        "word_visits": 1.0042224889652023,
+        "retained": 1.0005955120142078,
+        "same_line": 1.0088028169014085,
+        "same_4k": 1.002195981424004
+      },
+      "geometry_vs_neutral": {
+        "nodes": 0.9933470531381001,
+        "steps": 0.996262343755383,
+        "rules": 0.9996776085357595,
+        "bands": 0.9899841616419821,
+        "dictionary_bytes": 0.9942294425935795,
+        "words": 0.9910531356976879,
+        "word_visits": 0.994126539998108,
+        "retained": 1.0,
+        "same_line": 0.9950075971347949,
+        "same_4k": 0.9846044854482009
+      },
+      "max_select_bytes": 17408,
+      "blocks_moved_edge_capacity_up": 140,
+      "qualifies": false
+    }
+  },
+  "winner": 2,
+  "qualifies": false
+}

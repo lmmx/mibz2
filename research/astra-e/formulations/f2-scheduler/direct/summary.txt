@@ -1,0 +1,15 @@
+direct-refill prep_mark_ns=3.3496 ms discover_ns=9.1946 ms merge_ns=1.5404 ms residual_output_ns=1.7439 ms total_ns=16.0746 ms wall_ns=16.2504 ms
+direct-batch prep_mark_ns=3.2623 ms discover_ns=10.1440 ms merge_ns=1.4872 ms residual_output_ns=1.6884 ms total_ns=16.7821 ms wall_ns=17.0235 ms
+nested-refill prep_mark_ns=3.1238 ms discover_ns=6.7666 ms merge_ns=1.1521 ms residual_output_ns=4.6991 ms total_ns=15.9506 ms wall_ns=16.0519 ms
+nested-batch prep_mark_ns=3.2154 ms discover_ns=7.9286 ms merge_ns=1.1751 ms residual_output_ns=4.7985 ms total_ns=17.4449 ms wall_ns=17.6035 ms
+lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=16.2843 ms total_ns=16.2843 ms wall_ns=16.4408 ms
+direct-refill/direct-batch total_ns 0.9696 [0.9441,0.9958]
+direct-refill/direct-batch wall_ns 1.0414 [0.8812,1.2308]
+nested-refill/nested-batch total_ns 0.9115 [0.8791,0.9451]
+nested-refill/nested-batch wall_ns 0.9704 [0.8442,1.1155]
+direct-refill/nested-refill total_ns 1.0096 [0.9834,1.0365]
+direct-refill/nested-refill wall_ns 0.9426 [0.7671,1.1583]
+direct-refill/lazy total_ns 0.9726 [0.9293,1.0179]
+direct-refill/lazy wall_ns 1.0589 [0.8912,1.2582]
+nested-refill/lazy total_ns 0.9634 [0.9256,1.0027]
+nested-refill/lazy wall_ns 1.1234 [0.9304,1.3564]

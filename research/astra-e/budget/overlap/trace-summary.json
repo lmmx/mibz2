@@ -1,0 +1,25 @@
+{
+  "workers": 2,
+  "slots": 8,
+  "blocks": 1724,
+  "thread_received": {
+    "mibz2-0": 768,
+    "mibz2-1": 956
+  },
+  "mtf_symbols": 99917196,
+  "first_mark_to_last_taken_ms": 2367.227796,
+  "independent_front_opportunities": 96,
+  "original_local_opportunity_ms": 13.811351,
+  "scan_interval_sum_ms": 559.685232,
+  "front_cap_sum_ms": 246.226786,
+  "ideal_saved_ms": 4.90862,
+  "ideal_fraction": 0.002073573150963457,
+  "no_feedback_max_ms": 9.434653,
+  "packing_max_ms": 73.674867,
+  "cumulative_savings_at_copy_end_ms": [
+    1.318778,
+    1.930827,
+    3.237303,
+    4.90862
+  ]
+}

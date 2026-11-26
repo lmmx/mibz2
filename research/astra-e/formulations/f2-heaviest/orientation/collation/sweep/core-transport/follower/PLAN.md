@@ -1,0 +1,5 @@
+# Direct physical-column induction
+
+For the short-safe cut, test whether the ordinary token BWT on the physical section V can feed the second induction directly. The payload carried out of v is its incoming-to-U core C followed by the prefix of its next original source. Within one core's V-ordered source bucket, split at each change of that follower prefix. Compare this exact alphabet with the minimum stability-only refinement at actual destination descents. Charge the scatter into atlas-band order, all resulting token types, maximal runs, and repeated and unique spelling bytes.
+
+Before reading the structural outputs, the screening condition for a paid native follow-up is h=8 with both refined types at most 1.2 times original types and refined runs at most 1.1 times original runs on at least eight of the ten frequent sections. Quote is a second diagnostic population. Every claimed partner and marked output must match direct forward navigation. A failed gate prices this representation and leaves open other choices of payload and physical section.

@@ -1,0 +1,5 @@
+{
+  "kind": "settled confirmation",
+  "assessment": "Six rotated rounds per worker count, Wikidata ×4, 2 s settle, complete gate. Candidate/opend at W1,2,3,4: 1.144 [0.914,1.432], 0.978 [0.678,1.411], 1.294 [1.051,1.594], 0.977 [0.798,1.196], computed from same-round walls with the scorer's paired_ratio. W4 is faster than LazyCells; comparison against opend is inconclusive there. W3 regresses vs opend.",
+  "verification": "Separate sources and worktree from the concurrent research edits. The independent CI receipts for conjugate and lookahead refer to different candidates. The short-word implementation has no independent i9 timing."
+}

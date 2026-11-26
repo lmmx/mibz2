@@ -1,0 +1,130 @@
+{
+  "quote": {
+    "reclaim_over_packed_cpu_s": {
+      "n": 16,
+      "ratio": 1.0738299325366338,
+      "lo": 1.041602924713871,
+      "hi": 1.1070540382059624
+    },
+    "reclaim_over_packed_wall_s": {
+      "n": 16,
+      "ratio": 1.0748680306586345,
+      "lo": 1.0475530644013962,
+      "hi": 1.1028952351852157
+    },
+    "reclaim_over_packed_constructor_cpu_s": {
+      "n": 16,
+      "ratio": 1.0977249930744835,
+      "lo": 1.0597465614475787,
+      "hi": 1.1370644682954991
+    },
+    "reclaim_over_packed_writer_cpu_s": {
+      "n": 16,
+      "ratio": 1.0085204253309425,
+      "lo": 0.9732185055434143,
+      "hi": 1.0451028648923826
+    },
+    "tree": {
+      "vmhwm_kib": 16596,
+      "tracked_constructor_bytes": 11354312,
+      "tracked_marked_bytes": 11354312,
+      "descriptor_capacity_bytes": 0
+    },
+    "history64": {
+      "vmhwm_kib": 19584,
+      "tracked_constructor_bytes": 16514368,
+      "tracked_marked_bytes": 16514368,
+      "descriptor_capacity_bytes": 4194304
+    },
+    "packed64": {
+      "vmhwm_kib": 18140,
+      "tracked_constructor_bytes": 14130252,
+      "tracked_marked_bytes": 14130252,
+      "descriptor_capacity_bytes": 1930368
+    },
+    "direct": {
+      "vmhwm_kib": 9460,
+      "tracked_constructor_bytes": 0,
+      "tracked_marked_bytes": 0,
+      "descriptor_capacity_bytes": 0
+    },
+    "reclaim": {
+      "vmhwm_kib": 15764,
+      "tracked_constructor_bytes": 13327340,
+      "tracked_marked_bytes": 13327340,
+      "descriptor_capacity_bytes": 783520,
+      "summed": {
+        "reclaim_passes": 125652,
+        "reclaim_scanned": 1050408,
+        "reclaim_discarded": 556942,
+        "descriptors": 1004994,
+        "lookups": 104149,
+        "examined": 720794
+      }
+    }
+  },
+  "frequent": {
+    "reclaim_over_packed_cpu_s": {
+      "n": 16,
+      "ratio": 1.0550456833169408,
+      "lo": 1.0318808327280373,
+      "hi": 1.0787305651786294
+    },
+    "reclaim_over_packed_wall_s": {
+      "n": 16,
+      "ratio": 1.0495055196353371,
+      "lo": 1.022511278766275,
+      "hi": 1.0772124069614402
+    },
+    "reclaim_over_packed_constructor_cpu_s": {
+      "n": 16,
+      "ratio": 1.0641933548704186,
+      "lo": 1.0392271911583157,
+      "hi": 1.0897593001661854
+    },
+    "reclaim_over_packed_writer_cpu_s": {
+      "n": 16,
+      "ratio": 0.9860132294602186,
+      "lo": 0.9266385872845206,
+      "hi": 1.0491923194345163
+    },
+    "tree": {
+      "vmhwm_kib": 19248,
+      "tracked_constructor_bytes": 17507640,
+      "tracked_marked_bytes": 17507640,
+      "descriptor_capacity_bytes": 0
+    },
+    "history64": {
+      "vmhwm_kib": 23552,
+      "tracked_constructor_bytes": 22433632,
+      "tracked_marked_bytes": 22433632,
+      "descriptor_capacity_bytes": 4194304
+    },
+    "packed64": {
+      "vmhwm_kib": 21496,
+      "tracked_constructor_bytes": 20864092,
+      "tracked_marked_bytes": 20864092,
+      "descriptor_capacity_bytes": 2344816
+    },
+    "direct": {
+      "vmhwm_kib": 9236,
+      "tracked_constructor_bytes": 0,
+      "tracked_marked_bytes": 0,
+      "descriptor_capacity_bytes": 0
+    },
+    "reclaim": {
+      "vmhwm_kib": 19240,
+      "tracked_constructor_bytes": 19502076,
+      "tracked_marked_bytes": 19502076,
+      "descriptor_capacity_bytes": 981488,
+      "summed": {
+        "reclaim_passes": 150443,
+        "reclaim_scanned": 1194560,
+        "reclaim_discarded": 616312,
+        "descriptors": 1161397,
+        "lookups": 69164,
+        "examined": 491696
+      }
+    }
+  }
+}

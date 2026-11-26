@@ -1,0 +1,115 @@
+{
+  "explicit_dense_prices": {
+    "21229": {
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 100644
+    },
+    "151103": {
+      "words": 3499,
+      "distinct_bytes": 131203,
+      "proper_suffixes": 107545
+    },
+    "324490": {
+      "words": 5285,
+      "distinct_bytes": 198455,
+      "proper_suffixes": 79253
+    },
+    "333788": {
+      "words": 3749,
+      "distinct_bytes": 144850,
+      "proper_suffixes": 93016
+    },
+    "333831": {
+      "words": 3757,
+      "distinct_bytes": 144611,
+      "proper_suffixes": 92898
+    },
+    "333910": {
+      "words": 3758,
+      "distinct_bytes": 144685,
+      "proper_suffixes": 92889
+    },
+    "336204": {
+      "words": 2958,
+      "distinct_bytes": 145489,
+      "proper_suffixes": 96944
+    },
+    "336231": {
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 97695
+    },
+    "381189": {
+      "words": 5849,
+      "distinct_bytes": 295956,
+      "proper_suffixes": 140889
+    }
+  },
+  "successive_common_byte_shifts": [
+    {
+      "depth": 0,
+      "intervals": 1,
+      "first": 21229,
+      "last": 45393,
+      "outgoing_bytes": 1,
+      "common_byte": 34,
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 100644
+    },
+    {
+      "depth": 1,
+      "intervals": 1,
+      "first": 336231,
+      "last": 360395,
+      "outgoing_bytes": 1,
+      "common_byte": 58,
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 97695
+    },
+    {
+      "depth": 2,
+      "intervals": 135,
+      "first": 3234,
+      "last": 128964,
+      "outgoing_bytes": 1,
+      "common_byte": 34,
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 94746
+    },
+    {
+      "depth": 3,
+      "intervals": 511,
+      "first": 141160,
+      "last": 874502,
+      "outgoing_bytes": 60,
+      "common_byte": null,
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 91849
+    }
+  ],
+  "named_image": {
+    "start": 336231,
+    "end": 360396,
+    "common_byte": 34,
+    "original": {
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 100644
+    },
+    "shifted": {
+      "words": 2950,
+      "distinct_bytes": 146183,
+      "proper_suffixes": 97695
+    },
+    "maximal_nonempty_tails": 2950,
+    "suffix_nodes_saved": 2949,
+    "next_image_min": 3234,
+    "next_image_max": 128964,
+    "next_image_runs": 135
+  }
+}

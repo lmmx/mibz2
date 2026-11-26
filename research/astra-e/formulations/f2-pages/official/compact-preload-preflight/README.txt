@@ -1,0 +1,1 @@
+Preflight only. A concurrent index lock prevented the original source commit. The source file did not exist at the captured revision, so the sha256 preflight exited before launching the scorer. The validated source is 6758831810b6a913c88ff079dede881b578ca03a.

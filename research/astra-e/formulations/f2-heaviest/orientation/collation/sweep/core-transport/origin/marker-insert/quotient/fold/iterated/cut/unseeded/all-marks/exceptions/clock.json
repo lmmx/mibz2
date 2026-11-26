@@ -1,0 +1,47 @@
+{
+  "totals": {
+    "columns": 1385,
+    "context_tables": 6907,
+    "pure_default_laps": 24215,
+    "finite_mark_horizons": 343410,
+    "foreign_cycle_marks": 42552,
+    "mid_cycle_horizons": 175356
+  },
+  "witnesses": {
+    "wrong_endpoint": {
+      "L": [
+        0,
+        1,
+        0
+      ],
+      "k": 1,
+      "p": 1,
+      "N": 3,
+      "ell": 2,
+      "wrong": [
+        1,
+        0,
+        1
+      ],
+      "right": [
+        0,
+        1,
+        0
+      ]
+    },
+    "zero_context": {
+      "physical_L": [
+        0,
+        0,
+        0,
+        1,
+        2
+      ],
+      "different_exception_bytes": [
+        1,
+        2
+      ],
+      "successor_state": 0
+    }
+  }
+}

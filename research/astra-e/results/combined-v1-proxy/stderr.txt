@@ -1,0 +1,19 @@
+moonshot: building the harness with /workspace/work/narrow-proxy/v1-tree/research/astra-e/narrow-short/ahead.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/narrow-proxy/v1-tree/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/narrow-proxy/v1-tree)
+    Finished `release` profile [optimized + debuginfo] target(s) in 35.90s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/narrow-proxy/v1-tree/corpora/wikidata.bz2 --quick
+moonshot: proxy: 960 chaingrind runs (2 arms, 6 worker counts, 48+16 blocks)
+moonshot: proxy: 200 of 960 runs
+moonshot: proxy: 400 of 960 runs
+moonshot: proxy: 600 of 960 runs
+moonshot: proxy: 800 of 960 runs
+moonshot: written to research/astra-e/results/combined-v1-full-proxy/score
+moonshot: recorded in research/astra-e/results/combined-v1-full-proxy/record.jsonl

@@ -1,0 +1,1 @@
+262080 exact sliced/fallback differential cases; 174007 certified, 145165 bridged, 16384 RunUnfinished, 61424 deliberately rejected CRCs, nonempty output rollback matched

@@ -1,0 +1,6 @@
+sorted {'prep_mark_ns': 3.1871, 'discover_ns': 11.7965, 'merge_ns': 1.1967, 'residual_output_ns': 4.7811, 'total_ns': 21.5505}
+refill {'prep_mark_ns': 3.1953, 'discover_ns': 7.1677, 'merge_ns': 1.244, 'residual_output_ns': 4.7711, 'total_ns': 17.0164}
+lazy {'prep_mark_ns': 0.0, 'discover_ns': 0.0, 'merge_ns': 0.0, 'residual_output_ns': 16.8337, 'total_ns': 16.8337}
+sorted/refill discover_ns 1.6572 [1.4110,1.9465]
+sorted/refill total_ns 1.2962 [1.1470,1.4648]
+sorted/lazy total_ns 1.3184 [1.1785,1.4750]

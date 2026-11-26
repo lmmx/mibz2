@@ -1,0 +1,19 @@
+Thu Nov 19 06:24:39 UTC 2026
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+model name	: INTEL(R) XEON(R) PLATINUM 8573C
+400000 100000
+879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb  /tmp/astra-clipped/ten.bin
+da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26  /tmp/astra-token-all/admissions.bin
+371c94a260c2f9a01cca5580cbee43ac687cc7b8d1a2b1a3d3e8b295c4131c10  /tmp/astra-clipped-final/expected.csv
+26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9  target/release/deps/libmibz2.rlib
+0eb4d48f91d32e2e17ec478a437ad5badd97b34c87925fd2054fc57ec4a59d58  /tmp/astra-implicit-child-final/main.rs
+a5426f11a3ec8378266a17da7797690922f8b8fccf1313543cd721af83455c13  /tmp/astra-implicit-child-final/control.rs
+c825e725a7b347c933ced2fb495524f981e2da4fd6a6afac0c958774231a563b  /tmp/astra-implicit-child-final/second.rs
+1b5751156fe377528552b9d3bf0c840945e87b118f84f928e20abeae6054f831  /tmp/astra-implicit-child-final/virtual_column.rs
+c79fb372adb33a5aeca17160d7dab21b297a46c0de6525d6164fda5562b81fa1  /tmp/astra-implicit-child-final/combined

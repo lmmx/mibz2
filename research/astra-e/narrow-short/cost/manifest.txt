@@ -1,0 +1,15 @@
+80d8409359214b4e5abfd4430213921e82e9cd30
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+034e66aed30759128cec8a3b4ea94faa403648dac2e7dffac17808f7d8cb0684  /workspace/work/f2-word-build/release/deps/libmibz2.rlib
+6fdb28bed0b735aa43ffb0edf6acb00c9d9ee8181130ecce2893d17548fcfc02  /workspace/work/astra-combined-cost/phase
+926a3e2bcb38e8bd6c7c1f9167869cdcb3721038d44a89a6db3c09492acea1c0  /workspace/work/astra-combined-cost/reprice
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+400000 100000
+CPU3, native thread CPU, callgrind 3.24.0; 11 historical blocks, plus full admission state check

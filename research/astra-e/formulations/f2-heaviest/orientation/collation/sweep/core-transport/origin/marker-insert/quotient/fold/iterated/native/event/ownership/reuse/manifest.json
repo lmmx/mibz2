@@ -1,0 +1,13 @@
+{
+  "prereg": "25ecb6c",
+  "control": "ac7763a",
+  "sha256": {
+    "/tmp/astra-terminal-reuse/reuse": "a0a42d00332af8beec9b58a6f028af00f55934c8637a87f4a21738c497a53d08",
+    "/tmp/astra-terminal-reuse/main.rs": "a3995ddc3dea6c770f2c72e3bf88966401971e63b9575bafcee0c93a85a1afc3",
+    "/tmp/astra-terminal-reuse/control.rs": "be918a410ef35406f714d4b017d22bfe710fd82eea08ae81831c46d55786f195",
+    "/workspace/work/astra-e/target/release/deps/libmibz2.rlib": "26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9",
+    "/tmp/astra-clipped/ten.bin": "879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb",
+    "/tmp/astra-token-all/admissions.bin": "da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26"
+  },
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+}

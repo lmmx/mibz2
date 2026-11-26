@@ -1,0 +1,6 @@
+moonshot: building the harness with /workspace/work/astra-e/research/astra-e/formulations/f2-rootstream/frames/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 12.41s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/v1-delimiter-frames-gate/score
+moonshot: recorded in research/astra-e/results/v1-delimiter-frames-gate/official-register.jsonl

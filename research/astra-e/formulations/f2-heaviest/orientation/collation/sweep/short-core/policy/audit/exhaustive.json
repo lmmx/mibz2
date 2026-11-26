@@ -1,0 +1,91 @@
+{
+  "counts": {
+    "incomparable_policy_pairs": 5164,
+    "policies": 57134,
+    "policies_with_charged_short_fragments": 25484,
+    "policy_instances_with_depth_impossible_suffixes": 7418,
+    "policy_instances_with_shared_obligation": 662,
+    "section_depths": 22520,
+    "source_arcs_checked": 153678,
+    "strict_complement_pairs": 496
+  },
+  "witnesses": {
+    "all_length_one": {
+      "U": [
+        0,
+        2
+      ],
+      "coalesced_identity_chart": 1,
+      "default": [
+        1,
+        0,
+        1
+      ],
+      "enabled_root": [
+        1,
+        2,
+        2
+      ],
+      "last": "01"
+    },
+    "complementarity": {
+      "Q_F_B": [
+        [
+          2,
+          4,
+          2
+        ],
+        [
+          2,
+          5,
+          2
+        ],
+        [
+          2,
+          5,
+          2
+        ],
+        [
+          1,
+          6,
+          2
+        ]
+      ],
+      "U": [
+        0,
+        2
+      ],
+      "last": "11220210",
+      "policies": [
+        [
+          "",
+          "0"
+        ],
+        [
+          "",
+          "0",
+          "01"
+        ],
+        [
+          "",
+          "0",
+          "02"
+        ],
+        [
+          "",
+          "0",
+          "01",
+          "02"
+        ]
+      ],
+      "return_types": [
+        "0121",
+        "0221"
+      ],
+      "suffix_one_obligations": [
+        "01",
+        "02"
+      ]
+    }
+  }
+}

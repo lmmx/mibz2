@@ -1,0 +1,1247 @@
+{
+  "stats": {
+    "all": {
+      "median_ms": {
+        "prefix": 62.412827,
+        "thin4": 58.804207,
+        "raref16": 63.509204,
+        "scalar": 21.706503,
+        "lazy": 22.332199,
+        "opend": 21.868656
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.809993,
+          2.664242,
+          2.963717
+        ],
+        "prefix/lazy": [
+          2.713227,
+          2.568257,
+          2.86638
+        ],
+        "prefix/opend": [
+          2.801719,
+          2.621937,
+          2.993829
+        ],
+        "thin4/scalar": [
+          2.645462,
+          2.57706,
+          2.71568
+        ],
+        "thin4/lazy": [
+          2.554362,
+          2.393721,
+          2.725782
+        ],
+        "thin4/opend": [
+          2.637673,
+          2.413316,
+          2.882887
+        ],
+        "raref16/scalar": [
+          2.97893,
+          2.647944,
+          3.351289
+        ],
+        "raref16/lazy": [
+          2.876347,
+          2.595859,
+          3.187142
+        ],
+        "raref16/opend": [
+          2.970159,
+          2.868252,
+          3.075688
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 2.591997,
+          "selector_ns": 0.008337,
+          "induce_ns": 22.051464,
+          "map_ns": 1.131735,
+          "emit_ns": 36.593587,
+          "other_ns": 0.043731
+        },
+        "thin4": {
+          "caps_ns": 2.585904,
+          "selector_ns": 2.261661,
+          "induce_ns": 24.797047,
+          "map_ns": 2.983385,
+          "emit_ns": 25.939819,
+          "other_ns": 0.039784
+        },
+        "raref16": {
+          "caps_ns": 2.486,
+          "selector_ns": 0.051133,
+          "induce_ns": 23.730051,
+          "map_ns": 0.696515,
+          "emit_ns": 35.698234,
+          "other_ns": 0.041441
+        }
+      }
+    },
+    "1": {
+      "median_ms": {
+        "prefix": 4.281504,
+        "thin4": 3.836468,
+        "raref16": 3.880823,
+        "scalar": 1.568985,
+        "lazy": 1.598672,
+        "opend": 1.609442
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.620491,
+          2.21831,
+          3.095588
+        ],
+        "prefix/lazy": [
+          2.571894,
+          2.179786,
+          3.034535
+        ],
+        "prefix/opend": [
+          2.705755,
+          2.465242,
+          2.969733
+        ],
+        "thin4/scalar": [
+          2.362116,
+          2.170167,
+          2.571043
+        ],
+        "thin4/lazy": [
+          2.318311,
+          2.14512,
+          2.505484
+        ],
+        "thin4/opend": [
+          2.438973,
+          2.227155,
+          2.670937
+        ],
+        "raref16/scalar": [
+          2.511449,
+          2.003554,
+          3.148093
+        ],
+        "raref16/lazy": [
+          2.464874,
+          2.062092,
+          2.94633
+        ],
+        "raref16/opend": [
+          2.593165,
+          2.383994,
+          2.820688
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.15689,
+          "selector_ns": 0.000638,
+          "induce_ns": 1.488496,
+          "map_ns": 0.073376,
+          "emit_ns": 2.475032,
+          "other_ns": 0.004189
+        },
+        "thin4": {
+          "caps_ns": 0.157222,
+          "selector_ns": 0.169205,
+          "induce_ns": 1.680888,
+          "map_ns": 0.182733,
+          "emit_ns": 1.616096,
+          "other_ns": 0.003708
+        },
+        "raref16": {
+          "caps_ns": 0.156063,
+          "selector_ns": 0.00498,
+          "induce_ns": 1.55278,
+          "map_ns": 0.032449,
+          "emit_ns": 2.072771,
+          "other_ns": 0.003856
+        }
+      }
+    },
+    "41": {
+      "median_ms": {
+        "prefix": 12.510782,
+        "thin4": 12.7603,
+        "raref16": 13.827317,
+        "scalar": 4.281438,
+        "lazy": 3.525169,
+        "opend": 3.772863
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.860174,
+          2.441147,
+          3.351128
+        ],
+        "prefix/lazy": [
+          3.282492,
+          2.720023,
+          3.961272
+        ],
+        "prefix/opend": [
+          3.125962,
+          2.650223,
+          3.687099
+        ],
+        "thin4/scalar": [
+          2.96701,
+          2.681649,
+          3.282737
+        ],
+        "thin4/lazy": [
+          3.405102,
+          2.97584,
+          3.896285
+        ],
+        "thin4/opend": [
+          3.242726,
+          2.914886,
+          3.607438
+        ],
+        "raref16/scalar": [
+          3.315461,
+          2.976304,
+          3.693267
+        ],
+        "raref16/lazy": [
+          3.805004,
+          3.292448,
+          4.397354
+        ],
+        "raref16/opend": [
+          3.623558,
+          3.252779,
+          4.036601
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.535402,
+          "selector_ns": 0.001334,
+          "induce_ns": 4.342473,
+          "map_ns": 0.213803,
+          "emit_ns": 7.279843,
+          "other_ns": 0.004418
+        },
+        "thin4": {
+          "caps_ns": 0.47117,
+          "selector_ns": 0.383493,
+          "induce_ns": 4.78102,
+          "map_ns": 0.748205,
+          "emit_ns": 6.082247,
+          "other_ns": 0.004058
+        },
+        "raref16": {
+          "caps_ns": 0.502559,
+          "selector_ns": 0.005703,
+          "induce_ns": 4.843058,
+          "map_ns": 0.152354,
+          "emit_ns": 8.158658,
+          "other_ns": 0.004321
+        }
+      }
+    },
+    "85": {
+      "median_ms": {
+        "prefix": 5.336106,
+        "thin4": 4.750089,
+        "raref16": 5.293889,
+        "scalar": 1.787181,
+        "lazy": 2.025989,
+        "opend": 1.92186
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.812903,
+          2.416383,
+          3.274491
+        ],
+        "prefix/lazy": [
+          2.558574,
+          2.308051,
+          2.83629
+        ],
+        "prefix/opend": [
+          2.763146,
+          2.481383,
+          3.076904
+        ],
+        "thin4/scalar": [
+          2.460588,
+          2.016156,
+          3.002989
+        ],
+        "thin4/lazy": [
+          2.238114,
+          1.832342,
+          2.733743
+        ],
+        "thin4/opend": [
+          2.417063,
+          2.293332,
+          2.54747
+        ],
+        "raref16/scalar": [
+          2.648319,
+          2.274347,
+          3.083782
+        ],
+        "raref16/lazy": [
+          2.40887,
+          2.109906,
+          2.750197
+        ],
+        "raref16/opend": [
+          2.601473,
+          2.532796,
+          2.672012
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.185926,
+          "selector_ns": 0.00057,
+          "induce_ns": 1.863651,
+          "map_ns": 0.086813,
+          "emit_ns": 3.162443,
+          "other_ns": 0.00414
+        },
+        "thin4": {
+          "caps_ns": 0.180916,
+          "selector_ns": 0.181094,
+          "induce_ns": 1.923677,
+          "map_ns": 0.184521,
+          "emit_ns": 2.139677,
+          "other_ns": 0.004058
+        },
+        "raref16": {
+          "caps_ns": 0.187401,
+          "selector_ns": 0.004756,
+          "induce_ns": 1.894554,
+          "map_ns": 0.049603,
+          "emit_ns": 3.108141,
+          "other_ns": 0.003941
+        }
+      }
+    },
+    "134": {
+      "median_ms": {
+        "prefix": 4.585171,
+        "thin4": 4.049989,
+        "raref16": 4.486181,
+        "scalar": 1.750321,
+        "lazy": 1.758336,
+        "opend": 1.871625
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.523931,
+          1.675943,
+          3.800981
+        ],
+        "prefix/lazy": [
+          2.501069,
+          1.634161,
+          3.827862
+        ],
+        "prefix/opend": [
+          2.395419,
+          1.773577,
+          3.235288
+        ],
+        "thin4/scalar": [
+          2.243097,
+          1.586791,
+          3.170854
+        ],
+        "thin4/lazy": [
+          2.222779,
+          1.451038,
+          3.404972
+        ],
+        "thin4/opend": [
+          2.128884,
+          1.607809,
+          2.818835
+        ],
+        "raref16/scalar": [
+          2.438162,
+          1.96535,
+          3.024721
+        ],
+        "raref16/lazy": [
+          2.416077,
+          1.809653,
+          3.225717
+        ],
+        "raref16/opend": [
+          2.314018,
+          2.04787,
+          2.614755
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.156286,
+          "selector_ns": 0.000539,
+          "induce_ns": 1.477888,
+          "map_ns": 0.076046,
+          "emit_ns": 2.749114,
+          "other_ns": 0.004159
+        },
+        "thin4": {
+          "caps_ns": 0.155334,
+          "selector_ns": 0.184432,
+          "induce_ns": 1.754026,
+          "map_ns": 0.172626,
+          "emit_ns": 1.77293,
+          "other_ns": 0.003914
+        },
+        "raref16": {
+          "caps_ns": 0.156781,
+          "selector_ns": 0.004564,
+          "induce_ns": 1.724753,
+          "map_ns": 0.037282,
+          "emit_ns": 2.424761,
+          "other_ns": 0.003729
+        }
+      }
+    },
+    "176": {
+      "median_ms": {
+        "prefix": 5.254631,
+        "thin4": 4.136195,
+        "raref16": 4.519564,
+        "scalar": 1.452668,
+        "lazy": 1.718768,
+        "opend": 1.583883
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          3.369733,
+          2.731824,
+          4.1566
+        ],
+        "prefix/lazy": [
+          2.912966,
+          2.465166,
+          3.44211
+        ],
+        "prefix/opend": [
+          2.957423,
+          2.551953,
+          3.427317
+        ],
+        "thin4/scalar": [
+          2.728955,
+          2.348078,
+          3.171613
+        ],
+        "thin4/lazy": [
+          2.359046,
+          2.031367,
+          2.739582
+        ],
+        "thin4/opend": [
+          2.395048,
+          2.002151,
+          2.865047
+        ],
+        "raref16/scalar": [
+          3.001019,
+          2.867825,
+          3.1404
+        ],
+        "raref16/lazy": [
+          2.594232,
+          2.316405,
+          2.905381
+        ],
+        "raref16/opend": [
+          2.633824,
+          2.136672,
+          3.246651
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.187792,
+          "selector_ns": 0.000929,
+          "induce_ns": 1.678228,
+          "map_ns": 0.072818,
+          "emit_ns": 2.957546,
+          "other_ns": 0.003844
+        },
+        "thin4": {
+          "caps_ns": 0.195866,
+          "selector_ns": 0.162648,
+          "induce_ns": 1.80282,
+          "map_ns": 0.156793,
+          "emit_ns": 1.560448,
+          "other_ns": 0.003962
+        },
+        "raref16": {
+          "caps_ns": 0.178893,
+          "selector_ns": 0.004836,
+          "induce_ns": 1.647492,
+          "map_ns": 0.039324,
+          "emit_ns": 2.462673,
+          "other_ns": 0.00413
+        }
+      }
+    },
+    "225": {
+      "median_ms": {
+        "prefix": 4.148464,
+        "thin4": 3.547704,
+        "raref16": 3.905084,
+        "scalar": 1.461944,
+        "lazy": 1.577974,
+        "opend": 1.502717
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.885913,
+          2.835205,
+          2.937528
+        ],
+        "prefix/lazy": [
+          2.7663,
+          2.627487,
+          2.912446
+        ],
+        "prefix/opend": [
+          2.725266,
+          2.558509,
+          2.902893
+        ],
+        "thin4/scalar": [
+          2.559172,
+          2.230364,
+          2.936453
+        ],
+        "thin4/lazy": [
+          2.453101,
+          2.055826,
+          2.927146
+        ],
+        "thin4/opend": [
+          2.416713,
+          2.011843,
+          2.903061
+        ],
+        "raref16/scalar": [
+          2.70955,
+          2.499084,
+          2.937742
+        ],
+        "raref16/lazy": [
+          2.597246,
+          2.286332,
+          2.950442
+        ],
+        "raref16/opend": [
+          2.558721,
+          2.230751,
+          2.934909
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.146749,
+          "selector_ns": 0.000561,
+          "induce_ns": 1.494903,
+          "map_ns": 0.070316,
+          "emit_ns": 2.418868,
+          "other_ns": 0.003825
+        },
+        "thin4": {
+          "caps_ns": 0.142246,
+          "selector_ns": 0.153855,
+          "induce_ns": 1.513867,
+          "map_ns": 0.160562,
+          "emit_ns": 1.410225,
+          "other_ns": 0.003635
+        },
+        "raref16": {
+          "caps_ns": 0.146035,
+          "selector_ns": 0.004872,
+          "induce_ns": 1.555815,
+          "map_ns": 0.033923,
+          "emit_ns": 2.23681,
+          "other_ns": 0.00392
+        }
+      }
+    },
+    "269": {
+      "median_ms": {
+        "prefix": 10.793074,
+        "thin4": 10.98567,
+        "raref16": 10.920257,
+        "scalar": 3.072761,
+        "lazy": 4.040639,
+        "opend": 3.1508
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          3.372043,
+          2.906749,
+          3.911817
+        ],
+        "prefix/lazy": [
+          2.60809,
+          2.326142,
+          2.924213
+        ],
+        "prefix/opend": [
+          3.477468,
+          3.09954,
+          3.901478
+        ],
+        "thin4/scalar": [
+          3.253398,
+          3.01101,
+          3.515299
+        ],
+        "thin4/lazy": [
+          2.516325,
+          2.409832,
+          2.627524
+        ],
+        "thin4/opend": [
+          3.355114,
+          3.107968,
+          3.621914
+        ],
+        "raref16/scalar": [
+          3.571136,
+          3.100111,
+          4.113728
+        ],
+        "raref16/lazy": [
+          2.762078,
+          2.517001,
+          3.031018
+        ],
+        "raref16/opend": [
+          3.682787,
+          3.219753,
+          4.212409
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.455765,
+          "selector_ns": 0.001159,
+          "induce_ns": 4.051736,
+          "map_ns": 0.177834,
+          "emit_ns": 5.802158,
+          "other_ns": 0.004054
+        },
+        "thin4": {
+          "caps_ns": 0.480862,
+          "selector_ns": 0.324068,
+          "induce_ns": 4.357475,
+          "map_ns": 0.560398,
+          "emit_ns": 4.526057,
+          "other_ns": 0.004144
+        },
+        "raref16": {
+          "caps_ns": 0.467209,
+          "selector_ns": 0.005085,
+          "induce_ns": 3.953063,
+          "map_ns": 0.147514,
+          "emit_ns": 6.429717,
+          "other_ns": 0.004346
+        }
+      }
+    },
+    "313": {
+      "median_ms": {
+        "prefix": 4.501131,
+        "thin4": 4.129342,
+        "raref16": 4.227815,
+        "scalar": 1.646706,
+        "lazy": 1.69925,
+        "opend": 1.738679
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.628874,
+          2.414884,
+          2.861826
+        ],
+        "prefix/lazy": [
+          2.58292,
+          2.204618,
+          3.026136
+        ],
+        "prefix/opend": [
+          2.470891,
+          2.260875,
+          2.700416
+        ],
+        "thin4/scalar": [
+          2.468133,
+          2.339426,
+          2.603921
+        ],
+        "thin4/lazy": [
+          2.424989,
+          1.926666,
+          3.0522
+        ],
+        "thin4/opend": [
+          2.31981,
+          1.957625,
+          2.749004
+        ],
+        "raref16/scalar": [
+          2.556814,
+          2.231773,
+          2.929196
+        ],
+        "raref16/lazy": [
+          2.51212,
+          2.219759,
+          2.842987
+        ],
+        "raref16/opend": [
+          2.403162,
+          2.121828,
+          2.721799
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.157327,
+          "selector_ns": 0.00055,
+          "induce_ns": 1.47184,
+          "map_ns": 0.079536,
+          "emit_ns": 2.589485,
+          "other_ns": 0.004156
+        },
+        "thin4": {
+          "caps_ns": 0.155186,
+          "selector_ns": 0.180147,
+          "induce_ns": 1.722606,
+          "map_ns": 0.166259,
+          "emit_ns": 1.713512,
+          "other_ns": 0.003581
+        },
+        "raref16": {
+          "caps_ns": 0.152736,
+          "selector_ns": 0.004668,
+          "induce_ns": 1.699431,
+          "map_ns": 0.038905,
+          "emit_ns": 2.329679,
+          "other_ns": 0.003715
+        }
+      }
+    },
+    "359": {
+      "median_ms": {
+        "prefix": 3.998213,
+        "thin4": 3.640731,
+        "raref16": 3.757097,
+        "scalar": 1.479998,
+        "lazy": 1.466897,
+        "opend": 1.503396
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.701854,
+          2.363747,
+          3.088325
+        ],
+        "prefix/lazy": [
+          2.629778,
+          2.246398,
+          3.078587
+        ],
+        "prefix/opend": [
+          2.678025,
+          2.530455,
+          2.834202
+        ],
+        "thin4/scalar": [
+          2.466695,
+          2.208933,
+          2.754534
+        ],
+        "thin4/lazy": [
+          2.400891,
+          1.978697,
+          2.913169
+        ],
+        "thin4/opend": [
+          2.44494,
+          2.306948,
+          2.591185
+        ],
+        "raref16/scalar": [
+          2.513057,
+          2.371424,
+          2.663148
+        ],
+        "raref16/lazy": [
+          2.446016,
+          2.094837,
+          2.856068
+        ],
+        "raref16/opend": [
+          2.490893,
+          2.318525,
+          2.676075
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.14103,
+          "selector_ns": 0.000505,
+          "induce_ns": 1.409268,
+          "map_ns": 0.069311,
+          "emit_ns": 2.304689,
+          "other_ns": 0.004047
+        },
+        "thin4": {
+          "caps_ns": 0.145193,
+          "selector_ns": 0.144843,
+          "induce_ns": 1.509892,
+          "map_ns": 0.147622,
+          "emit_ns": 1.490209,
+          "other_ns": 0.003835
+        },
+        "raref16": {
+          "caps_ns": 0.145882,
+          "selector_ns": 0.004561,
+          "induce_ns": 1.481237,
+          "map_ns": 0.032468,
+          "emit_ns": 2.052763,
+          "other_ns": 0.003735
+        }
+      }
+    },
+    "397": {
+      "median_ms": {
+        "prefix": 4.88713,
+        "thin4": 4.719409,
+        "raref16": 5.003732,
+        "scalar": 2.043827,
+        "lazy": 1.803997,
+        "opend": 1.996045
+      },
+      "paired_ratios": {
+        "prefix/scalar": [
+          2.383998,
+          2.096034,
+          2.711524
+        ],
+        "prefix/lazy": [
+          2.700814,
+          2.60043,
+          2.805074
+        ],
+        "prefix/opend": [
+          2.386166,
+          1.828387,
+          3.114105
+        ],
+        "thin4/scalar": [
+          2.362217,
+          1.992076,
+          2.801133
+        ],
+        "thin4/lazy": [
+          2.676139,
+          2.329933,
+          3.073788
+        ],
+        "thin4/opend": [
+          2.364365,
+          2.108751,
+          2.650965
+        ],
+        "raref16/scalar": [
+          2.933757,
+          1.840907,
+          4.675375
+        ],
+        "raref16/lazy": [
+          3.323632,
+          2.152714,
+          5.131443
+        ],
+        "raref16/opend": [
+          2.936425,
+          2.103933,
+          4.09832
+        ]
+      },
+      "phase_median_ms": {
+        "prefix": {
+          "caps_ns": 0.179983,
+          "selector_ns": 0.000568,
+          "induce_ns": 1.589581,
+          "map_ns": 0.086608,
+          "emit_ns": 2.935126,
+          "other_ns": 0.003995
+        },
+        "thin4": {
+          "caps_ns": 0.172098,
+          "selector_ns": 0.197947,
+          "induce_ns": 1.910616,
+          "map_ns": 0.217541,
+          "emit_ns": 2.035016,
+          "other_ns": 0.004084
+        },
+        "raref16": {
+          "caps_ns": 0.174687,
+          "selector_ns": 0.004705,
+          "induce_ns": 1.887455,
+          "map_ns": 0.041538,
+          "emit_ns": 2.83136,
+          "other_ns": 0.00388
+        }
+      }
+    }
+  },
+  "dimensions": {
+    "1": {
+      "prefix": {
+        "kept": 40906,
+        "records": 6004,
+        "joins": 74949,
+        "lap": 899931,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 57588,
+        "records": 44334,
+        "joins": 35432,
+        "lap": 899931,
+        "selected_spans": 8231,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 244,
+        "records": 195,
+        "joins": 92323,
+        "lap": 899931,
+        "selected_spans": 18,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6862486
+      }
+    },
+    "41": {
+      "prefix": {
+        "kept": 40910,
+        "records": 15227,
+        "joins": 198622,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 8575222
+      },
+      "thin4": {
+        "kept": 162116,
+        "records": 121280,
+        "joins": 76388,
+        "lap": 900000,
+        "selected_spans": 18591,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 9288326
+      },
+      "raref16": {
+        "kept": 210,
+        "records": 186,
+        "joins": 228141,
+        "lap": 900000,
+        "selected_spans": 17,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 7911062
+      }
+    },
+    "85": {
+      "prefix": {
+        "kept": 40910,
+        "records": 7754,
+        "joins": 97021,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 67701,
+        "records": 55516,
+        "joins": 44995,
+        "lap": 900000,
+        "selected_spans": 7250,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 1197,
+        "records": 672,
+        "joins": 116139,
+        "lap": 900000,
+        "selected_spans": 16,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6874774
+      }
+    },
+    "134": {
+      "prefix": {
+        "kept": 40910,
+        "records": 6812,
+        "joins": 81034,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 62301,
+        "records": 47773,
+        "joins": 38590,
+        "lap": 900000,
+        "selected_spans": 8981,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 502,
+        "records": 402,
+        "joins": 99320,
+        "lap": 900000,
+        "selected_spans": 18,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6866582
+      }
+    },
+    "176": {
+      "prefix": {
+        "kept": 40910,
+        "records": 6278,
+        "joins": 84008,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 59932,
+        "records": 50622,
+        "joins": 36659,
+        "lap": 900000,
+        "selected_spans": 7078,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 1469,
+        "records": 685,
+        "joins": 100327,
+        "lap": 900000,
+        "selected_spans": 16,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6874774
+      }
+    },
+    "225": {
+      "prefix": {
+        "kept": 40910,
+        "records": 5932,
+        "joins": 75686,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 54945,
+        "records": 43347,
+        "joins": 33925,
+        "lap": 900000,
+        "selected_spans": 6990,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 450,
+        "records": 327,
+        "joins": 92569,
+        "lap": 900000,
+        "selected_spans": 16,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6866582
+      }
+    },
+    "269": {
+      "prefix": {
+        "kept": 40909,
+        "records": 13751,
+        "joins": 178887,
+        "lap": 899984,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 8575222
+      },
+      "thin4": {
+        "kept": 144427,
+        "records": 117929,
+        "joins": 61476,
+        "lap": 899984,
+        "selected_spans": 12788,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 8764038
+      },
+      "raref16": {
+        "kept": 223,
+        "records": 166,
+        "joins": 206950,
+        "lap": 899984,
+        "selected_spans": 17,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 7911062
+      }
+    },
+    "313": {
+      "prefix": {
+        "kept": 40910,
+        "records": 6394,
+        "joins": 79557,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 56956,
+        "records": 43654,
+        "joins": 41329,
+        "lap": 900000,
+        "selected_spans": 9818,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 1304,
+        "records": 601,
+        "joins": 97177,
+        "lap": 900000,
+        "selected_spans": 18,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6874774
+      }
+    },
+    "359": {
+      "prefix": {
+        "kept": 40910,
+        "records": 5525,
+        "joins": 71881,
+        "lap": 900000,
+        "selected_spans": 4,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 54842,
+        "records": 42993,
+        "joins": 33219,
+        "lap": 900000,
+        "selected_spans": 7463,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 630,
+        "records": 467,
+        "joins": 87113,
+        "lap": 900000,
+        "selected_spans": 16,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6866582
+      }
+    },
+    "397": {
+      "prefix": {
+        "kept": 40909,
+        "records": 7142,
+        "joins": 88220,
+        "lap": 900000,
+        "selected_spans": 2,
+        "vector_bytes_max": 6215926,
+        "live_with_result_max": 7395574
+      },
+      "thin4": {
+        "kept": 63968,
+        "records": 49878,
+        "joins": 43716,
+        "lap": 900000,
+        "selected_spans": 10492,
+        "vector_bytes_max": 6142598,
+        "live_with_result_max": 7715462
+      },
+      "raref16": {
+        "kept": 516,
+        "records": 409,
+        "joins": 107534,
+        "lap": 900000,
+        "selected_spans": 18,
+        "vector_bytes_max": 5809814,
+        "live_with_result_max": 6866582
+      }
+    }
+  },
+  "cap_only_process_hwm": {
+    "prefix": {
+      "median_kib": 6052.0,
+      "max_kib": 11668,
+      "median_growth_kib": 3914.0,
+      "max_growth_kib": 9388
+    },
+    "thin4": {
+      "median_kib": 6686.0,
+      "max_kib": 14192,
+      "median_growth_kib": 4504.0,
+      "max_growth_kib": 11856
+    },
+    "raref16": {
+      "median_kib": 6058.0,
+      "max_kib": 12464,
+      "median_growth_kib": 3884.0,
+      "max_growth_kib": 10184
+    },
+    "scalar": {
+      "median_kib": 4594.0,
+      "max_kib": 5976,
+      "median_growth_kib": 2444.0,
+      "max_growth_kib": 3648
+    },
+    "lazy": {
+      "median_kib": 4330.0,
+      "max_kib": 9056,
+      "median_growth_kib": 2162.0,
+      "max_growth_kib": 6752
+    },
+    "opend": {
+      "median_kib": 4756.0,
+      "max_kib": 9052,
+      "median_growth_kib": 2598.0,
+      "max_growth_kib": 6752
+    }
+  }
+}

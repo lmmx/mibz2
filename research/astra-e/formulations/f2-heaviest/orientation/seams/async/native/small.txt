@@ -1,0 +1,1 @@
+arbitrary_permutation_sections=125162 stable_column_sections=21590 checked_marked_outputs=763396 sections_missing_at_least_one_cycle=73586

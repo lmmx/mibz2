@@ -1,0 +1,46 @@
+{
+  "totals": {
+    "lifted_tables": 1122,
+    "exact_b_returns": 5892,
+    "marked_clock_events": 17916,
+    "independent_encoded_bwts": 374
+  },
+  "entropy_witnesses": [
+    {
+      "m": 5,
+      "zeros": 2,
+      "k": 2,
+      "G": 16,
+      "expanded_rows": 87,
+      "same_table_and_spectrum": true,
+      "different_clocks": 2
+    },
+    {
+      "m": 7,
+      "zeros": 3,
+      "k": 2,
+      "G": 16,
+      "expanded_rows": 122,
+      "same_table_and_spectrum": true,
+      "different_clocks": 5
+    },
+    {
+      "m": 11,
+      "zeros": 5,
+      "k": 2,
+      "G": 16,
+      "expanded_rows": 192,
+      "same_table_and_spectrum": true,
+      "different_clocks": 42
+    },
+    {
+      "m": 13,
+      "zeros": 6,
+      "k": 2,
+      "G": 16,
+      "expanded_rows": 227,
+      "same_table_and_spectrum": true,
+      "different_clocks": 132
+    }
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "counts": {
+    "arbitrary_certified": 90722,
+    "arbitrary_contiguous_unstable": 15948,
+    "arbitrary_labeled_sections": 125162,
+    "arbitrary_minimum_refinement_added_types": 41954,
+    "cylinder_word_classes": 8704,
+    "diameter_certified_colored_classes": 58752,
+    "marked_orbit_misses_section": 27526,
+    "marker_cylinders": 7774,
+    "near_equal_width_certified_unions": 17814,
+    "noncylinder_mixed_one_byte_extensions": 1398,
+    "raw_heavy_disjoint": 24292,
+    "raw_homogeneous": 8456,
+    "raw_nondividing_period_marks": 63186,
+    "raw_second": 74812,
+    "single_rank_intervals": 5630,
+    "split_bucket_sections": 1310,
+    "split_destination_colored_classes": 18,
+    "stable_binary_sections": 21590,
+    "uniform_rotated_exact_marks": 27144
+  },
+  "first_witnesses": {
+    "arbitrary_split": {
+      "F": "00001",
+      "U": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "dest": [
+        0,
+        3,
+        4,
+        1
+      ],
+      "last": "01000",
+      "psi": [
+        0,
+        2,
+        3,
+        4,
+        1
+      ],
+      "raw": [
+        "0",
+        "00",
+        "0",
+        "1"
+      ]
+    },
+    "cylinder_lex_order": {
+      "F": "011",
+      "U": [
+        1,
+        2
+      ],
+      "base_order": [
+        "10",
+        "1"
+      ],
+      "dest": [
+        1,
+        2
+      ],
+      "last": "101",
+      "psi": [
+        1,
+        0,
+        2
+      ],
+      "raw": [
+        "10",
+        "1"
+      ]
+    },
+    "destination_color_insufficient": {
+      "F": "000111",
+      "U": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "colored_destination_component": 0,
+      "dest": [
+        0,
+        4,
+        2,
+        1
+      ],
+      "last": "111000",
+      "psi": [
+        3,
+        4,
+        5,
+        0,
+        1,
+        2
+      ],
+      "raw": [
+        "01",
+        "0",
+        "01",
+        "1"
+      ],
+      "split_sources": [
+        0,
+        2
+      ]
+    },
+    "heavy_disjoint": {
+      "F": "01",
+      "U": [
+        0,
+        1
+      ],
+      "dest": [
+        0,
+        1
+      ],
+      "last": "01",
+      "mark": 1,
+      "psi": [
+        0,
+        1
+      ],
+      "raw": [
+        "0",
+        "1"
+      ]
+    },
+    "inclusive_with_rotated": {
+      "F": "01",
+      "U": [
+        0
+      ],
+      "dest": [
+        0
+      ],
+      "expected": "01",
+      "last": "10",
+      "mark": 0,
+      "obtained": "10",
+      "psi": [
+        1,
+        0
+      ],
+      "raw": [
+        "01"
+      ]
+    },
+    "mixed_backward_termination": {
+      "F": "001",
+      "U": [
+        1,
+        2
+      ],
+      "dest": [
+        2,
+        1
+      ],
+      "last": "100",
+      "preceding_byte": 0,
+      "psi": [
+        1,
+        2,
+        0
+      ],
+      "raw": [
+        "0",
+        "10"
+      ],
+      "transitions": [
+        [
+          1,
+          0,
+          false
+        ],
+        [
+          2,
+          1,
+          true
+        ]
+      ]
+    },
+    "mixed_rotation": {
+      "F": "01",
+      "U": [
+        0,
+        1
+      ],
+      "dest": [
+        1,
+        0
+      ],
+      "expected": "01",
+      "last": "10",
+      "mark": 0,
+      "obtained": "10",
+      "psi": [
+        1,
+        0
+      ],
+      "raw": [
+        "0",
+        "1"
+      ]
+    },
+    "noncylinder_lex_order": {
+      "F": "0011",
+      "U": [
+        1,
+        2,
+        3
+      ],
+      "base_order": [
+        "0",
+        "10",
+        "1"
+      ],
+      "dest": [
+        2,
+        1,
+        3
+      ],
+      "last": "1001",
+      "psi": [
+        1,
+        2,
+        0,
+        3
+      ],
+      "raw": [
+        "0",
+        "10",
+        "1"
+      ]
+    },
+    "single_type_unstable": {
+      "F": "00",
+      "U": [
+        0,
+        1
+      ],
+      "dest": [
+        1,
+        0
+      ],
+      "psi": [
+        1,
+        0
+      ],
+      "raw": [
+        "0",
+        "0"
+      ]
+    },
+    "uniform_leading_byte_split": {
+      "F": "000001",
+      "U": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "dest": [
+        0,
+        3,
+        4,
+        1
+      ],
+      "last": "010000",
+      "psi": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "raw": [
+        "0",
+        "00",
+        "0",
+        "01"
+      ]
+    }
+  },
+  "limits": {
+    "arbitrary_labeled_permutations": 5,
+    "stable_binary_last_columns": 7
+  }
+}

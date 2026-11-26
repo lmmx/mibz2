@@ -1,0 +1,1 @@
+Compared 205197794 bytes from every one of the 228 retained production blocks against the independent dense stable-sort LF. Both the audit and paid specialization performed full byte-vector equality checks. The same output hash, period and transferred mark count appear in admissions-dag.csv from the separate fresh-process high-water run. Zero mismatches.

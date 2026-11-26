@@ -1,0 +1,44 @@
+first geometry (frozen, pooled)
+run_count 51184 14427155
+nodes 3689 987682
+edges 70560 19750839
+selectors 14992 4313576
+words 2716 728887
+dict_bytes 83454 23393313
+root_runs 6133 1786472
+token_rows 135716 30868395
+lookups 70560 19750839
+second geometry (frozen, pooled)
+lookups 5694 1424280
+copy_spans 16034 4418276
+final_visits 24166 5566621
+token_rows 24165 5566401
+dict_bytes 146183 41433719
+physical_nodes 3083 841920
+merged_pieces 17802 4949541
+phase (frozen, systematic observations) seconds then fraction of full inverse
+1 1 prep_mark_ns 0.0003746 0.1979
+1 1 discover_ns 0.00076 0.40153
+1 1 merge_ns 0.0001961 0.10362
+1 1 residual_output_ns 0.0005621 0.29694
+zero-cost merge / Lazy 0.97914 0.91331 1.04971
+observed frames / Lazy 1.08676 1.00914 1.17036
+mean residual additional saving needed vs Lazy for .80 0.19464
+1 9 prep_mark_ns 0.0050801 0.19124
+1 9 discover_ns 0.0111714 0.42054
+1 9 merge_ns 0.002617 0.09852
+1 9 residual_output_ns 0.0076956 0.2897
+zero-cost merge / Lazy 0.93630 0.88946 0.98560
+observed frames / Lazy 1.03821 0.98935 1.08949
+mean residual additional saving needed vs Lazy for .80 0.14856
+supported oracle fraction of frozen/real merge work saved at <=10% of full extra storage
+0 631 17419 0.06885
+24 2311 50157 0.0604
+48 610 24404 0.04571
+72 1070 19338 0.06993
+96 762 19068 0.06735
+120 507 17517 0.03769
+144 1659 39138 0.0657
+168 758 17872 0.05649
+192 1007 16221 0.05279
+216 790 20341 0.05108

@@ -1,0 +1,7 @@
+{
+  "rows": 300,
+  "stable_models_identical_to_pinned_parent": 30,
+  "paired_layout_sets": 30,
+  "atom_only_stabbing_equals_dense_models": 300,
+  "hist_source": "cd35d80851be5c6127345aa8f2d25556bfee8ecf"
+}

@@ -1,0 +1,11 @@
+MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run
+establish production performance; see bench/moonshot/README.md)
+scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04
+candidate: /workspace/work/astra-e/research/astra-e/formulations/f2-heaviest/union/native/candidate.rs (moonshot::candidate::Candidate)
+machine: 4 CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)
+
+1. CORRECTNESS: PASS (338 cases, 0 failed)
+
+
+4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,
+   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)

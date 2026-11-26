@@ -1,0 +1,13 @@
+implementation 7998c953ab4e0de27508ab76e6c8f1018c6225d0
+refreshed scorer path 604dac3
+6fb777541e3ce4613c34e14d8f5def7fbada8b4a
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+9c44f4162b77f60d1f0b48040df4504c03b6535c95469ca9019a1ece17fe986d  research/astra-e/queue-spans/raw.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e/corpora/wikidata.bz2
+python3 bench/moonshot/moonshot.py score research/astra-e/queue-spans/raw.rs --corpus /workspace/work/astra-e/corpora/wikidata.bz2 --no-timing --no-proxy --target-dir /workspace/work/queue-authoritative-build

@@ -1,0 +1,21 @@
+{
+  "build_commit": "b981d78984a195408501ff7fb495f77a1075be02",
+  "workstation_recipe_commit": "0694800bf4b2ef5ece720f7c43b8ab0ed7dced9b",
+  "diff_to_recipe": "7\t0\t.just/bench.just",
+  "refreshed_scorer": "9c31461df7bef24cecf79348545b27ee26846835",
+  "scorer_printed_version": null,
+  "nice": 12,
+  "recipe_binary_sha256": "a17f57b69946e4b74715174c06e274f8757bddfe002185d4a42dc3ea9148ab98",
+  "sha256": {
+    "candidate": "7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6",
+    "adapter": "210e294a9e91abd4a6ef39a474a69d41b1e434b06decf208d52636196f836e79",
+    "narrow_kernel": "252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224",
+    "constructor": "c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f",
+    "model_source": "1e464c36b5943db83e4cb252b4feb37b738912b1437b719fe89be06eb269b201",
+    "calibration": "96b91faa33879721e8d9257edb880df55d07f3d5f3d82139db8547d725dc7777",
+    "model_binary": "2459322912223ae86942a576809766856b45a87ff40a51f162f4a9d25d2417b4",
+    "harness_binary": "4a2e9bbc9b97870e3c60d614eaf39dc24d2109e74929c453bb2818bb9fa69406",
+    "symbols": "0b592103ec271da670ad467db7ad475c16fb9f7c7660a53c303a75f882e39abc",
+    "archived_route_census": "ca13fef44d69d53f8a93de51087ecc91dd5a741ed1bdd78906aff99d5fd692ac"
+  }
+}

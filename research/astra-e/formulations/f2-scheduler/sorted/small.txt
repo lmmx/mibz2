@@ -1,0 +1,1 @@
+4296 exhaustive columns/delimiters, 11658 reachable source intervals matched

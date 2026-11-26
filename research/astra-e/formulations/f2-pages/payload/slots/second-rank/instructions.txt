@@ -1,0 +1,2 @@
+0000000000027990 <<focus::slots::second::Second<1>>::discover_pop>:    27c73:	f3 48 0f b8 c8       	popcnt %rax,%rcx
+0000000000029f30 <<focus::slots::second::Second<2>>::column_pop>:    2a278:	f3 48 0f b8 d8       	popcnt %rax,%rbx

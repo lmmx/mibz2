@@ -1,0 +1,34 @@
+{
+  "stock": {
+    "path": "/workspace/work/astra-huff-integrated/stock-target/release/moonshot",
+    "sha256": "f2bb49927dc688e8c910f5e6438401079a4b715881bf12d10c50466e84e63902",
+    "info": {
+      "candidate": "/workspace/work/astra-huff-integrated/stock/research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  },
+  "phrase": {
+    "path": "/workspace/work/astra-huff-integrated/phrase-target/release/moonshot",
+    "sha256": "5b523c365f455ff06944c7f367c990b1d99e16936aab93ca42f436e331fd6a09",
+    "info": {
+      "candidate": "/workspace/work/astra-huff-integrated/phrase/research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  }
+}

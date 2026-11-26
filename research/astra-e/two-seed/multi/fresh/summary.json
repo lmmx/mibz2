@@ -1,0 +1,485 @@
+{
+  "all": {
+    "emit_ns": {
+      "retained scalar twin/retained scalar": [
+        0.995832,
+        0.936041,
+        1.059443
+      ],
+      "retained four twin/retained four": [
+        0.940276,
+        0.877697,
+        1.007317
+      ],
+      "retained four/scalar": [
+        0.763633,
+        0.730913,
+        0.797818
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.017306,
+        0.92212,
+        1.122318
+      ],
+      "fresh four twin/fresh four": [
+        0.970908,
+        0.891356,
+        1.057559
+      ],
+      "fresh four/scalar": [
+        0.904264,
+        0.858439,
+        0.952535
+      ],
+      "scalar fresh/retained": [
+        0.579382,
+        0.547521,
+        0.613097
+      ],
+      "four fresh/retained": [
+        0.686081,
+        0.646388,
+        0.728212
+      ],
+      "fresh-by-four interaction": [
+        1.184161,
+        1.112769,
+        1.260132
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 71.64921,
+        "retained four": 54.7137,
+        "fresh scalar": 41.51227,
+        "fresh four": 37.53805
+      }
+    },
+    "construct_ns": {
+      "retained scalar twin/retained scalar": [
+        1.003341,
+        0.92718,
+        1.085758
+      ],
+      "retained four twin/retained four": [
+        1.033625,
+        0.913343,
+        1.169747
+      ],
+      "retained four/scalar": [
+        1.056765,
+        0.98707,
+        1.131381
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.037973,
+        0.984039,
+        1.094862
+      ],
+      "fresh four twin/fresh four": [
+        1.009577,
+        0.952839,
+        1.069693
+      ],
+      "fresh four/scalar": [
+        1.000994,
+        0.955094,
+        1.0491
+      ],
+      "scalar fresh/retained": [
+        8849.056535,
+        8074.582065,
+        9697.814812
+      ],
+      "four fresh/retained": [
+        8382.045079,
+        7701.57188,
+        9122.641561
+      ],
+      "fresh-by-four interaction": [
+        0.947225,
+        0.866164,
+        1.035872
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 0.00542,
+        "retained four": 0.00573,
+        "fresh scalar": 47.96034,
+        "fresh four": 48.00802
+      }
+    },
+    "total_ns": {
+      "retained scalar twin/retained scalar": [
+        0.995831,
+        0.936045,
+        1.059435
+      ],
+      "retained four twin/retained four": [
+        0.940285,
+        0.87771,
+        1.007321
+      ],
+      "retained four/scalar": [
+        0.763657,
+        0.730937,
+        0.797841
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.028179,
+        0.972054,
+        1.087545
+      ],
+      "fresh four twin/fresh four": [
+        0.993515,
+        0.946131,
+        1.043273
+      ],
+      "fresh four/scalar": [
+        0.954657,
+        0.91839,
+        0.992355
+      ],
+      "scalar fresh/retained": [
+        1.257292,
+        1.20194,
+        1.315194
+      ],
+      "four fresh/retained": [
+        1.571757,
+        1.486294,
+        1.662134
+      ],
+      "fresh-by-four interaction": [
+        1.250112,
+        1.185246,
+        1.318529
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 71.65494,
+        "retained four": 54.71976,
+        "fresh scalar": 90.09122,
+        "fresh four": 86.00617
+      }
+    }
+  },
+  "ordinary": {
+    "emit_ns": {
+      "retained scalar twin/retained scalar": [
+        0.959142,
+        0.864946,
+        1.063596
+      ],
+      "retained four twin/retained four": [
+        1.00882,
+        0.929734,
+        1.094633
+      ],
+      "retained four/scalar": [
+        0.846829,
+        0.796336,
+        0.900524
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.098077,
+        0.965815,
+        1.248451
+      ],
+      "fresh four twin/fresh four": [
+        0.945257,
+        0.851369,
+        1.049499
+      ],
+      "fresh four/scalar": [
+        1.01899,
+        0.950563,
+        1.092342
+      ],
+      "scalar fresh/retained": [
+        0.58559,
+        0.54242,
+        0.632196
+      ],
+      "four fresh/retained": [
+        0.704641,
+        0.656704,
+        0.756077
+      ],
+      "fresh-by-four interaction": [
+        1.2033,
+        1.096419,
+        1.3206
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 28.86254,
+        "retained four": 24.44164,
+        "fresh scalar": 16.90162,
+        "fresh four": 17.22258
+      }
+    },
+    "construct_ns": {
+      "retained scalar twin/retained scalar": [
+        1.020397,
+        0.931215,
+        1.11812
+      ],
+      "retained four twin/retained four": [
+        1.060215,
+        0.919683,
+        1.222222
+      ],
+      "retained four/scalar": [
+        1.058759,
+        0.964698,
+        1.161992
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.039922,
+        0.956059,
+        1.131142
+      ],
+      "fresh four twin/fresh four": [
+        1.012443,
+        0.924959,
+        1.108202
+      ],
+      "fresh four/scalar": [
+        1.044229,
+        0.990078,
+        1.101342
+      ],
+      "scalar fresh/retained": [
+        7512.503223,
+        6835.309135,
+        8256.788912
+      ],
+      "four fresh/retained": [
+        7409.4023,
+        6705.753412,
+        8186.886554
+      ],
+      "fresh-by-four interaction": [
+        0.986276,
+        0.885016,
+        1.099122
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 0.00334,
+        "retained four": 0.00354,
+        "fresh scalar": 25.1068,
+        "fresh four": 26.21724
+      }
+    },
+    "total_ns": {
+      "retained scalar twin/retained scalar": [
+        0.959142,
+        0.864955,
+        1.063585
+      ],
+      "retained four twin/retained four": [
+        1.008826,
+        0.929748,
+        1.094629
+      ],
+      "retained four/scalar": [
+        0.846856,
+        0.796364,
+        0.900548
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.066907,
+        0.993106,
+        1.146194
+      ],
+      "fresh four twin/fresh four": [
+        0.982589,
+        0.923152,
+        1.045853
+      ],
+      "fresh four/scalar": [
+        1.033323,
+        0.986215,
+        1.08268
+      ],
+      "scalar fresh/retained": [
+        1.474085,
+        1.392236,
+        1.560745
+      ],
+      "four fresh/retained": [
+        1.798659,
+        1.705524,
+        1.896881
+      ],
+      "fresh-by-four interaction": [
+        1.220187,
+        1.133297,
+        1.31374
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 28.86615,
+        "retained four": 24.44546,
+        "fresh scalar": 42.55114,
+        "fresh four": 43.96905
+      }
+    }
+  },
+  "dense": {
+    "emit_ns": {
+      "retained scalar twin/retained scalar": [
+        1.029514,
+        0.95743,
+        1.107025
+      ],
+      "retained four twin/retained four": [
+        0.89275,
+        0.813777,
+        0.979386
+      ],
+      "retained four/scalar": [
+        0.705558,
+        0.657272,
+        0.757391
+      ],
+      "fresh scalar twin/fresh scalar": [
+        0.957913,
+        0.85979,
+        1.067235
+      ],
+      "fresh four twin/fresh four": [
+        1.006168,
+        0.88752,
+        1.140679
+      ],
+      "fresh four/scalar": [
+        0.822339,
+        0.759207,
+        0.890721
+      ],
+      "scalar fresh/retained": [
+        0.57072,
+        0.525888,
+        0.619374
+      ],
+      "four fresh/retained": [
+        0.665183,
+        0.611585,
+        0.723478
+      ],
+      "fresh-by-four interaction": [
+        1.165516,
+        1.06146,
+        1.279772
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 41.94419,
+        "retained four": 29.59405,
+        "fresh scalar": 23.93838,
+        "fresh four": 19.68546
+      }
+    },
+    "construct_ns": {
+      "retained scalar twin/retained scalar": [
+        0.996216,
+        0.908306,
+        1.092635
+      ],
+      "retained four twin/retained four": [
+        1.014259,
+        0.909968,
+        1.130503
+      ],
+      "retained four/scalar": [
+        1.029718,
+        0.962838,
+        1.101245
+      ],
+      "fresh scalar twin/fresh scalar": [
+        1.041519,
+        0.962884,
+        1.126575
+      ],
+      "fresh four twin/fresh four": [
+        1.020603,
+        0.933767,
+        1.115515
+      ],
+      "fresh four/scalar": [
+        0.950918,
+        0.893594,
+        1.01192
+      ],
+      "scalar fresh/retained": [
+        11072.434856,
+        10034.557186,
+        12217.660567
+      ],
+      "four fresh/retained": [
+        10225.107745,
+        9200.943413,
+        11363.272623
+      ],
+      "fresh-by-four interaction": [
+        0.923474,
+        0.846985,
+        1.00687
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 0.00202,
+        "retained four": 0.00208,
+        "fresh scalar": 22.3671,
+        "fresh four": 21.26929
+      }
+    },
+    "total_ns": {
+      "retained scalar twin/retained scalar": [
+        1.029512,
+        0.957431,
+        1.10702
+      ],
+      "retained four twin/retained four": [
+        0.892756,
+        0.813787,
+        0.979388
+      ],
+      "retained four/scalar": [
+        0.705575,
+        0.657291,
+        0.757407
+      ],
+      "fresh scalar twin/fresh scalar": [
+        0.989792,
+        0.919765,
+        1.065151
+      ],
+      "fresh four twin/fresh four": [
+        1.012203,
+        0.945013,
+        1.08417
+      ],
+      "fresh four/scalar": [
+        0.885377,
+        0.845951,
+        0.92664
+      ],
+      "scalar fresh/retained": [
+        1.116906,
+        1.042278,
+        1.196878
+      ],
+      "four fresh/retained": [
+        1.401526,
+        1.280519,
+        1.533969
+      ],
+      "fresh-by-four interaction": [
+        1.254829,
+        1.152641,
+        1.366077
+      ],
+      "per_complete_lap_geomean_ms": {
+        "retained scalar": 41.94631,
+        "retained four": 29.59629,
+        "fresh scalar": 46.85009,
+        "fresh four": 41.47998
+      }
+    }
+  }
+}

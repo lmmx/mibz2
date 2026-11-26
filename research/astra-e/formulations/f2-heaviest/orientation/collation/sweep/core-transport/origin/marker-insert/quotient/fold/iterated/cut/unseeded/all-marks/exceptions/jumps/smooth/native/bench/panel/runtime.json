@@ -1,0 +1,8 @@
+{
+  "affinity": [
+    0
+  ],
+  "nice": 8,
+  "quota": "400000 100000",
+  "so": "fc1bdfdffb0ec8ac0faf86752fdca7d193cff59e5304ce4018454fa830dfaeae"
+}

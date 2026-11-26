@@ -1,0 +1,16 @@
+columns 1752 maps 39230 retained_returns 198996 marked_forward_bytes 279976 nondividing_maps 16999
+two_run_family,m,n,graph_tiles,kept,unit_slope_word_bands
+two_run_family,4,9,3,6,6
+two_run_family,8,17,3,12,12
+two_run_family,16,33,3,24,24
+two_run_family,32,65,3,48,48
+two_run_family,64,129,3,96,96
+two_run_family,128,257,3,192,192
+two_run_family,256,513,3,384,384
+two_run_family,512,1025,3,768,768
+two_run_family,1024,2049,3,1536,1536
+two_run_family,2048,4097,3,3072,3072
+two_run_family,4096,8193,3,6144,6144
+two_run_family,8192,16385,3,12288,12288
+two_run_family,16384,32769,3,24576,24576
+two_run_family,32768,65537,3,49152,49152

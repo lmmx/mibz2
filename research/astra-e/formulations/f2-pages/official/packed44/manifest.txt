@@ -1,0 +1,11 @@
+implementation bd7f74f26409685a262c975ce5e68b758de7e860
+refreshed path 604dac3f46569edd9ac9b6706b23a68d9d7d8f8d
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+020c2d38b631da23f09d03f697cb847021566fa10dbee9f47760a55b4b5760dd  research/astra-e/formulations/f2-pages/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e/corpora/wikidata.bz2

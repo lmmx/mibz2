@@ -1,0 +1,2 @@
+233 seeded edge certificates give the original exact self mass, chosen ingress and class count.
+Four-row marked ambiguity: F=0122, L=1202 or 1220, source-pair masses identical; marked words 0210 vs 0221.

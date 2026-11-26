@@ -1,0 +1,24 @@
+streams 1
+learn prep_mark=0.5000ms discover=1.6072ms merge=0.1573ms residual_output=0.7714ms total=2.9782ms
+batched prep_mark=0.5289ms discover=1.3132ms merge=0.1687ms residual_output=0.7999ms total=2.8224ms
+certfront prep_mark=0.5322ms discover=1.9396ms merge=0.1588ms residual_output=0.8397ms total=3.7846ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=2.7644ms total=2.7644ms
+f2c prep_mark=0.5070ms discover=1.9218ms merge=0.1704ms residual_output=0.8416ms total=3.3881ms
+learn/f2c 1.0091 [0.8605,1.1834]
+learn/lazy 1.2810 [1.0245,1.6016]
+certfront/batched 1.2397 [1.0908,1.4090]
+certfront/learn 1.0310 [0.8653,1.2284]
+certfront/lazy 1.3206 [1.1446,1.5237]
+batched/f2c 0.8392 [0.7060,0.9975]
+streams 1,85,134,176,225,269,313,359,397
+learn prep_mark=5.1344ms discover=19.0478ms merge=1.6960ms residual_output=7.7045ms total=34.2451ms
+batched prep_mark=5.2921ms discover=13.9219ms merge=1.7119ms residual_output=7.9437ms total=30.3052ms
+certfront prep_mark=5.1637ms discover=20.8867ms merge=1.7018ms residual_output=8.1888ms total=36.7547ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=27.6896ms total=27.6896ms
+f2c prep_mark=5.3333ms discover=20.3831ms merge=1.7346ms residual_output=7.8783ms total=36.1016ms
+learn/f2c 1.0392 [0.9171,1.1774]
+learn/lazy 1.3628 [1.1880,1.5634]
+certfront/batched 1.2266 [1.1172,1.3468]
+certfront/learn 1.0008 [0.8661,1.1564]
+certfront/lazy 1.3639 [1.2524,1.4852]
+batched/f2c 0.8478 [0.7723,0.9307]

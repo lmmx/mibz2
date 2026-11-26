@@ -1,0 +1,1 @@
+exact augmented columns and marked bytes 10600; absent fixed marker 2581; mark in moved suffix 3685; disjoint old marked cycle 2084; zero-length old prefix present 5902

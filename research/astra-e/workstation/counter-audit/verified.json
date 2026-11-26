@@ -1,0 +1,171 @@
+{
+  "dry_sha256": "7f509e9f8fb1b47e7bd44155bebef476d53177d22d0cc47f0c974d8457bc3f96",
+  "measure_sha256": "d041b544977aef51ffd8377466fa4108bc6e779d0a470385a6436b0ccbb23d66",
+  "scorer": {
+    "candidate_commit": "50b8ecb8946a498601e3fd894ed84a2687df6cc8",
+    "fetched_master": "5298b23c7c89048c8986979e19b67c840397f0a0",
+    "fetched_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "last_working_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "fresh_path_checkout_status": 0,
+    "fresh_path_checkout_stderr": "",
+    "attempts": [
+      {
+        "build": "fresh",
+        "projection": "5298b23c7c89048c8986979e19b67c840397f0a0",
+        "failure": null
+      }
+    ],
+    "proceed": true,
+    "selected_build": "fresh",
+    "selected_projection": "5298b23c7c89048c8986979e19b67c840397f0a0",
+    "selected_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "selected_scorer_tree": "75f7b0321bd71c5086cbfb34747f7ea963463784"
+  },
+  "compiled_differences": {
+    "edge": [],
+    "scalar": [
+      "research/astra-e/front-fusion/cap-batch/worker/kernel.rs"
+    ],
+    "both": []
+  },
+  "direct": {
+    "edge": {
+      "registered": {
+        "geomean": 0.9937906029588274,
+        "lo": 0.9898407786246063,
+        "hi": 0.9977561885271865
+      },
+      "whole_rotor_sensitivity": {
+        "geomean": 0.9937906029588274,
+        "lo": 0.9895565115733594,
+        "hi": 0.9980428110760341
+      },
+      "per_w_guards": {
+        "7": true,
+        "8": true,
+        "9": true,
+        "10": true
+      },
+      "passed": true
+    },
+    "scalar": {
+      "registered": {
+        "geomean": 0.9998045428191396,
+        "lo": 0.9945188501872241,
+        "hi": 1.0051183279769975
+      },
+      "whole_rotor_sensitivity": {
+        "geomean": 0.9998045428191396,
+        "lo": 0.9917652865871578,
+        "hi": 1.007908965317412
+      },
+      "per_w_guards": {
+        "7": true,
+        "8": true,
+        "9": true,
+        "10": true
+      },
+      "passed": false
+    }
+  },
+  "workers": {
+    "7": {
+      "lazy": {
+        "geomean": 0.8656536754844452,
+        "lo": 0.859932341187418,
+        "hi": 0.8714130751786792
+      },
+      "peak_ok": true,
+      "stretch_ok": false,
+      "opend": {
+        "geomean": 0.9330023351142821,
+        "lo": 0.9307239419541332,
+        "hi": 0.9352863057342536
+      },
+      "edge": {
+        "geomean": 0.9925250722799795,
+        "lo": 0.9902232921705028,
+        "hi": 0.994832202891423
+      },
+      "scalar": {
+        "geomean": 0.9964462976701739,
+        "lo": 0.9944276149265268,
+        "hi": 0.998469078329002
+      }
+    },
+    "8": {
+      "lazy": {
+        "geomean": 0.8824285630094882,
+        "lo": 0.8766017019463073,
+        "hi": 0.8882941558134065
+      },
+      "peak_ok": true,
+      "stretch_ok": false,
+      "opend": {
+        "geomean": 0.9427960097696297,
+        "lo": 0.9372172843195714,
+        "hi": 0.948407942223195
+      },
+      "edge": {
+        "geomean": 0.9958010272889851,
+        "lo": 0.990373072557009,
+        "hi": 1.001258731105815
+      },
+      "scalar": {
+        "geomean": 1.0011992858410546,
+        "lo": 0.9941029016665895,
+        "hi": 1.0083463274155406
+      }
+    },
+    "9": {
+      "lazy": {
+        "geomean": 0.8826404926456725,
+        "lo": 0.8745895963134211,
+        "hi": 0.8907655002319632
+      },
+      "peak_ok": true,
+      "stretch_ok": false,
+      "opend": {
+        "geomean": 0.9360093801955864,
+        "lo": 0.9288539807212339,
+        "hi": 0.9432199010805159
+      },
+      "edge": {
+        "geomean": 0.9916741946425576,
+        "lo": 0.9793734015567177,
+        "hi": 1.004129483970893
+      },
+      "scalar": {
+        "geomean": 0.9974897479425247,
+        "lo": 0.9846062382665474,
+        "hi": 1.0105418375188924
+      }
+    },
+    "10": {
+      "lazy": {
+        "geomean": 0.8682812157638613,
+        "lo": 0.8594642459658063,
+        "hi": 0.8771886360452082
+      },
+      "peak_ok": true,
+      "stretch_ok": false,
+      "opend": {
+        "geomean": 0.923013844905583,
+        "lo": 0.9116078549615741,
+        "hi": 0.9345625460009875
+      },
+      "edge": {
+        "geomean": 0.99516816556418,
+        "lo": 0.9833848115933886,
+        "hi": 1.0070927129204743
+      },
+      "scalar": {
+        "geomean": 1.0041013549700775,
+        "lo": 0.9923342494758446,
+        "hi": 1.0160079948719816
+      }
+    }
+  },
+  "incremental": false,
+  "stretch": false
+}

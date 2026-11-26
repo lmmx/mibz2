@@ -1,0 +1,12 @@
+[package]
+name = "astra-e-f1"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "f1"
+path = "main.rs"
+
+[dependencies]
+mibz2 = { path = "../../../..", features = ["moonshot"] }

@@ -1,0 +1,94 @@
+{
+  "counts": {
+    "cases": 86870,
+    "live": 334962,
+    "ribbons": 285502,
+    "charged": 96176
+  },
+  "attained": {
+    "1": {
+      "column": [
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "live": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "initial": 2,
+      "components": 1,
+      "border": 1,
+      "ribbons": 3
+    },
+    "2": {
+      "column": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "live": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "initial": 2,
+      "components": 2,
+      "border": 2,
+      "ribbons": 5
+    }
+  },
+  "family": [
+    {
+      "n": 17,
+      "holes": 1,
+      "ribbons": 5
+    },
+    {
+      "n": 25,
+      "holes": 2,
+      "ribbons": 8
+    },
+    {
+      "n": 33,
+      "holes": 3,
+      "ribbons": 11
+    },
+    {
+      "n": 65,
+      "holes": 7,
+      "ribbons": 23
+    },
+    {
+      "n": 137,
+      "holes": 16,
+      "ribbons": 50
+    },
+    {
+      "n": 521,
+      "holes": 64,
+      "ribbons": 194
+    },
+    {
+      "n": 2065,
+      "holes": 257,
+      "ribbons": 773
+    },
+    {
+      "n": 8201,
+      "holes": 1024,
+      "ribbons": 3074
+    }
+  ]
+}

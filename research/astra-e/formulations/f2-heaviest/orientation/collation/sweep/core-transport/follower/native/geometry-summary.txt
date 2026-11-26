@@ -1,0 +1,6 @@
+second-geometry.csv compact_frequent {'second_lookups': 107637, 'second_nodes': 16165, 'second_words': 14843, 'second_dict_bytes': 5525525, 'second_selectors': 37944, 'second_merge_pieces': 54422, 'second_links': 31358}
+second-geometry.csv physical_h4 {'second_lookups': 107622, 'second_nodes': 16172, 'second_words': 14842, 'second_dict_bytes': 5525525, 'second_selectors': 37957, 'second_merge_pieces': 54437, 'second_links': 31357}
+second-geometry.csv physical_h8 {'second_lookups': 166837, 'second_nodes': 14088, 'second_words': 12766, 'second_dict_bytes': 8741631, 'second_selectors': 32234, 'second_merge_pieces': 47230, 'second_links': 13341}
+second-admissions.csv compact_frequent {'second_lookups': 2360866, 'second_nodes': 353833, 'second_words': 326626, 'second_dict_bytes': 125949883, 'second_selectors': 830601, 'second_merge_pieces': 1205913, 'second_links': 705337}
+second-admissions.csv physical_h4 {'second_lookups': 2360338, 'second_nodes': 353982, 'second_words': 326624, 'second_dict_bytes': 125950005, 'second_selectors': 830905, 'second_merge_pieces': 1206396, 'second_links': 705334}
+second-admissions.csv physical_h8 {'second_lookups': 3648625, 'second_nodes': 312237, 'second_words': 283812, 'second_dict_bytes': 197647056, 'second_selectors': 702015, 'second_merge_pieces': 1059661, 'second_links': 302049}

@@ -1,0 +1,278 @@
+{
+  "whole": {
+    "blocks": 431,
+    "coded": 209706557,
+    "output": 209700196,
+    "historical_decode_block_thread_ns": 555649382.5,
+    "fraction_of_historical_decode_block_cpu": 1.0
+  },
+  "admitted": {
+    "blocks": 233,
+    "coded": 209697662,
+    "output": 209691304,
+    "historical_decode_block_thread_ns": 554822633.5,
+    "fraction_of_historical_decode_block_cpu": 0.9985121030886775
+  },
+  "footprint_minimum_bytes": {
+    "all": {
+      "block": 47,
+      "limit": 15,
+      "bytes": 298491
+    },
+    "recurrent_aligned": {
+      "block": 47,
+      "limit": 15,
+      "bytes": 296640
+    },
+    "recurrent_shifted": {
+      "block": 47,
+      "limit": 15,
+      "bytes": 296704
+    }
+  },
+  "zero_width": {
+    "m": 233,
+    "h": 15141385,
+    "edge": 932,
+    "spell": 209697662,
+    "offset": 1864,
+    "initial_nodes": 15141851,
+    "steps": 27439989,
+    "rules": 18220194,
+    "bands": 233,
+    "exact_single_word_spells_entire_block": 233
+  },
+  "budget": {
+    "196608": {
+      "all": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "recurrent_aligned": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "recurrent_shifted": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "edge": {
+        "largest_positive_width": {
+          "1": 88,
+          "2": 85,
+          "3": 11
+        },
+        "positive": {
+          "blocks": 184,
+          "coded": 165599093,
+          "output": 165593059,
+          "historical_decode_block_thread_ns": 390402906,
+          "fraction_of_historical_decode_block_cpu": 0.7026065686305338
+        },
+        "changed_positive": {
+          "blocks": 184,
+          "coded": 165599093,
+          "output": 165593059,
+          "historical_decode_block_thread_ns": 390402906,
+          "fraction_of_historical_decode_block_cpu": 0.7026065686305338
+        }
+      },
+      "certified_edge": {
+        "largest_positive_width": {
+          "1": 85,
+          "2": 85,
+          "3": 11
+        },
+        "positive": {
+          "blocks": 181,
+          "coded": 162899093,
+          "output": 162893305,
+          "historical_decode_block_thread_ns": 382234280,
+          "fraction_of_historical_decode_block_cpu": 0.6879055246677972
+        },
+        "changed_positive": {
+          "blocks": 181,
+          "coded": 162899093,
+          "output": 162893305,
+          "historical_decode_block_thread_ns": 382234280,
+          "fraction_of_historical_decode_block_cpu": 0.6879055246677972
+        },
+        "changed_geometry_relative_to_width16": {
+          "m": 0.45203152192059953,
+          "h": 4.023557171077574,
+          "edge": 0.45203152192059953,
+          "spell": 8.255864474713151,
+          "offset": 3.481305283379911,
+          "initial_nodes": 3.3306596228484913,
+          "steps": 3.9478541980159836,
+          "rules": 4.849846955850488,
+          "bands": 3.1562279551743133
+        },
+        "narrow_endpoint_guard_failures_at_selected_width": 0
+      }
+    },
+    "262144": {
+      "all": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "recurrent_aligned": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "recurrent_shifted": {
+        "largest_positive_width": {},
+        "positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        },
+        "changed_positive": {
+          "blocks": 0,
+          "coded": 0,
+          "output": 0,
+          "historical_decode_block_thread_ns": 0,
+          "fraction_of_historical_decode_block_cpu": 0.0
+        }
+      },
+      "edge": {
+        "largest_positive_width": {
+          "1": 13,
+          "2": 21,
+          "3": 16,
+          "4": 27,
+          "5": 53,
+          "6": 31,
+          "7": 26,
+          "8": 9,
+          "9": 4,
+          "10": 1,
+          "16": 1
+        },
+        "positive": {
+          "blocks": 202,
+          "coded": 181798759,
+          "output": 181791503,
+          "historical_decode_block_thread_ns": 444643904,
+          "fraction_of_historical_decode_block_cpu": 0.8002238785894809
+        },
+        "changed_positive": {
+          "blocks": 201,
+          "coded": 180898759,
+          "output": 180891506,
+          "historical_decode_block_thread_ns": 442827355,
+          "fraction_of_historical_decode_block_cpu": 0.7969546425258558
+        }
+      },
+      "certified_edge": {
+        "largest_positive_width": {
+          "1": 5,
+          "2": 21,
+          "3": 16,
+          "4": 27,
+          "5": 53,
+          "6": 31,
+          "7": 26,
+          "8": 9,
+          "9": 4,
+          "10": 1,
+          "16": 1
+        },
+        "positive": {
+          "blocks": 194,
+          "coded": 174599041,
+          "output": 174591605,
+          "historical_decode_block_thread_ns": 418573734,
+          "fraction_of_historical_decode_block_cpu": 0.7533054965646434
+        },
+        "changed_positive": {
+          "blocks": 193,
+          "coded": 173699041,
+          "output": 173691608,
+          "historical_decode_block_thread_ns": 416757185,
+          "fraction_of_historical_decode_block_cpu": 0.7500362605010183
+        },
+        "changed_geometry_relative_to_width16": {
+          "m": 0.621008591946653,
+          "h": 2.3831666695523923,
+          "edge": 0.621008591946653,
+          "spell": 3.38742017236501,
+          "offset": 1.922581810071056,
+          "initial_nodes": 2.130194283059262,
+          "steps": 2.2708066400470837,
+          "rules": 2.664161845696546,
+          "bands": 1.9004864749682258
+        },
+        "narrow_endpoint_guard_failures_at_selected_width": 0
+      }
+    }
+  },
+  "nonzero_edge_certificate_overcharges": 234
+}

@@ -1,0 +1,1 @@
+205197794 output bytes independently compared in full on all 228 retained blocks in both the audit and the paid specialization for each sparse backend. Terminal, edits, event count, immutable node count, queue sequence aggregate counts, transferred marks, marked period and output digest agree with dense FIFO on every block.

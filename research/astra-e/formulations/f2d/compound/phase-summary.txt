@@ -1,0 +1,22 @@
+streams 1
+learn prep_mark=0.4486ms discover=1.8286ms merge=0.1817ms residual_output=0.8594ms total=3.5622ms
+direct prep_mark=0.4811ms discover=2.7309ms merge=0.2119ms residual_output=0.2964ms total=3.8791ms
+direct-learn prep_mark=0.5224ms discover=2.4125ms merge=0.1950ms residual_output=0.3147ms total=3.4998ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=2.5135ms total=2.5135ms
+f2c prep_mark=0.4651ms discover=1.8784ms merge=0.1654ms residual_output=1.0138ms total=3.7090ms
+learn/f2c 0.9123 [0.8209,1.0138]
+learn/lazy 1.3307 [1.2124,1.4605]
+direct-learn/direct 0.9463 [0.8486,1.0552]
+direct-learn/learn 1.0447 [0.9287,1.1751]
+direct-learn/lazy 1.3901 [1.2622,1.5311]
+streams 1,85,134,176,225,269,313,359,397
+learn prep_mark=5.4545ms discover=23.7757ms merge=1.8283ms residual_output=9.9693ms total=43.8619ms
+direct prep_mark=6.0721ms discover=31.7166ms merge=2.4050ms residual_output=3.2960ms total=44.5293ms
+direct-learn prep_mark=5.7167ms discover=28.0546ms merge=2.4664ms residual_output=3.0658ms total=40.8863ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=32.8728ms total=32.8728ms
+f2c prep_mark=5.9713ms discover=24.5250ms merge=1.9629ms residual_output=9.9563ms total=44.1474ms
+learn/f2c 1.0231 [0.9168,1.1417]
+learn/lazy 1.3331 [1.1927,1.4900]
+direct-learn/direct 0.9275 [0.8321,1.0339]
+direct-learn/learn 0.9174 [0.8242,1.0211]
+direct-learn/lazy 1.2230 [1.1041,1.3547]

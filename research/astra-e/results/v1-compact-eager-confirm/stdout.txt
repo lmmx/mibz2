@@ -1,0 +1,21 @@
+MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run
+establish production performance; see bench/moonshot/README.md)
+scorer v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8
+candidate: /workspace/work/astra-e-compact-timing/research/astra-e/formulations/f2-pages/payload/construction/eager.rs (moonshot::candidate::Dispatch<2>)
+machine: 4 CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)
+
+1. CORRECTNESS: PASS (338 cases, 0 failed)
+
+2. CONTAINER WALL TIME (paired rounds, candidate over 0.5.6's LazyCells; < 1 is faster)
+   workers  rounds  ratio [95% interval]       verdict       speedup  peak RSS ratio
+         1       9  0.825 [0.692, 0.984]  FASTER        1.21x   0.994
+         1       9  0.938 [0.791, 1.112]  INCONCLUSIVE  1.07x   0.967  (opend)
+         4       9  0.984 [0.685, 1.412]  INCONCLUSIVE  1.02x   0.921
+         4       9  0.792 [0.623, 1.006]  INCONCLUSIVE  1.26x   0.869  (opend)
+   (a container's wall misleads at contention: opend was 9-21% slower on a 4-CPU VM and
+   6-8% faster on the i9 at 8-10 workers)
+
+
+4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,
+   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)
+

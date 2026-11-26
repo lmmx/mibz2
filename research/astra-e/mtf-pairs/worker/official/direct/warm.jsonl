@@ -1,0 +1,6 @@
+{"label": "scalar", "arm": "candidate", "workers": 1, "wall_s": 2.060614, "cpu_s": 2.23, "out_bytes": 209700196, "peak_rss_kb": 40240}
+{"label": "copied", "arm": "candidate", "workers": 1, "wall_s": 2.248063, "cpu_s": 2.57, "out_bytes": 209700196, "peak_rss_kb": 40120}
+{"label": "candidate", "arm": "candidate", "workers": 1, "wall_s": 1.165514, "cpu_s": 1.29, "out_bytes": 209700196, "peak_rss_kb": 39872}
+{"label": "scalar", "arm": "candidate", "workers": 4, "wall_s": 0.321919, "cpu_s": 0.98, "out_bytes": 209700196, "peak_rss_kb": 68536}
+{"label": "copied", "arm": "candidate", "workers": 4, "wall_s": 0.279813, "cpu_s": 0.99, "out_bytes": 209700196, "peak_rss_kb": 68488}
+{"label": "candidate", "arm": "candidate", "workers": 4, "wall_s": 0.288684, "cpu_s": 0.92, "out_bytes": 209700196, "peak_rss_kb": 67556}

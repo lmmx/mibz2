@@ -1,0 +1,56 @@
+MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run
+establish production performance; see bench/moonshot/README.md)
+scorer v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8
+candidate: /workspace/work/narrow-proxy/v1-tree/research/astra-e/narrow-short/ahead.rs (moonshot::candidate::Candidate)
+machine: 4 CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)
+
+1. CORRECTNESS: PASS (98 cases, 0 failed)
+
+3. CONTENTION PROXY, ADVISORY: the gate and the wall times above are authoritative. The i9's
+   opend sweep found opend's gain flat in W and carried by fewer instructions (record 76):
+   the instructions ratio (instr) is the predictor the i9 evidence currently supports.
+   (chaingrind's model of one worker, the i9's LLC shared by W workers,
+   DRAM latency from each arm's own bandwidth; three quantities kept apart, per output byte)
+   sample: 48 full + 16 tiny blocks, corpus-weighted; kappa 0; intervals: paired bootstrap over the blocks
+
+   workers  predicted/lazy [95%]    drivers: instr  at-nominal  feedback | DRAM lat (cand/lazy)  sensitivity %/100cyc
+         1  0.860 [0.829, 0.890]          0.712  0.859       1.000    |  440/ 440               2.3/  5.1
+         2  0.859 [0.828, 0.890]          0.712  0.858       1.001    |  442/ 442               2.3/  5.1
+         4  0.857 [0.826, 0.889]          0.712  0.855       1.002    |  447/ 449               2.3/  5.2
+         7  0.910 [0.881, 0.938]          0.712  0.890       1.023    |  523/ 495               8.0/  8.8
+         8  0.912 [0.882, 0.940]          0.712  0.858       1.063    |  609/ 534               8.6/  9.8
+        10  0.915 [0.874, 0.952]          0.712  0.803       1.140    |  793/ 632               8.2/  9.2
+   (instr: instructions a byte over lazy's; at-nominal: modelled cycles over lazy's at the same
+   latencies; feedback: what the arm's own DRAM bandwidth does to its latency, against lazy's)
+
+   the three quantities, candidate against lazy:
+     W   transfers: L2 B  L3 B  DRAM B   | chains: dep past-L2 links  dep DRAM links  max chain | overlap: MLP  misses/link
+     1 cand     22.4  16.0  1.02   |        0.0580         0.00001       11/2176 |       2.52  113.1
+     1 lazy     46.0  32.6  1.97   |        0.0329         0.00001       11/350  |       2.52  112.8
+       OUT OF CALIBRATION, unreliable here: dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05]
+     2 cand     22.4  16.0  1.02   |        0.0580         0.00001       11/2176 |       2.52  113.1
+     2 lazy     46.0  32.6  1.99   |        0.0329         0.00001       11/350  |       2.52  113.0
+       OUT OF CALIBRATION, unreliable here: dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05]
+     4 cand     22.4  16.0  1.13   |        0.0580         0.00001       12/2176 |       2.50  105.9
+     4 lazy     46.0  32.6  2.13   |        0.0329         0.00001       12/350  |       2.50  102.7
+       OUT OF CALIBRATION, unreliable here: dep_dram_links_per_byte 1.297e-05 outside [1.588e-05, 2.241e-05]
+     7 cand     22.4  16.0  6.39   |        0.0571         0.00031       66/1254 |       2.88  15.7
+     7 lazy     46.0  32.6  5.98   |        0.0324         0.00031       66/149  |       2.82  15.8
+     8 cand     22.4  16.0  7.76   |        0.0569         0.00065       81/1191 |       3.44  10.1
+     8 lazy     46.0  32.6  7.36   |        0.0323         0.00066       80/149  |       3.19  10.5
+    10 cand     22.4  16.0  8.31   |        0.0563         0.00140       90/883  |       4.20  6.6
+    10 lazy     46.0  32.6  8.42   |        0.0323         0.00146       90/144  |       3.41  7.2
+
+   The reference arms on the i9 (bench/moonshot/README.md, 'Calibration'):
+     opend 7/28                  fitted   measured 0.940  predicted 0.956 [0.922, 0.986]
+     open 7/28                   held-out measured 0.915  predicted 0.924 [0.857, 0.979]
+     oce 7/28 (eager cells)      held-out measured 1.268  predicted 1.397 [1.229, 1.578]
+     opend 8/32 over 7 workers   held-out measured 0.919  predicted 0.931 [0.895, 0.967]
+     open 8/32                   held-out measured 0.929  predicted 0.905 [0.822, 0.966]
+     opend 8/32                  held-out measured 0.944  predicted 0.947 [0.916, 0.975]
+     oce 7/28 over 8 workers     held-out measured 1.300  predicted 1.420 [1.250, 1.625]
+     held-out pairs in the i9's order: 9 of 9
+
+4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,
+   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)
+

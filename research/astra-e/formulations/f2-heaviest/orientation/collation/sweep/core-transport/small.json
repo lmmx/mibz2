@@ -1,0 +1,26 @@
+{
+  "counts": {
+    "objects": 22520,
+    "marks": 145448,
+    "coalescing_cores": 3976
+  },
+  "coalesced_core_witness": {
+    "last": "010000",
+    "u": [
+      1,
+      3
+    ],
+    "depth": 1,
+    "mass": 2,
+    "core_types": 1,
+    "full_types": 2,
+    "core_runs": 1,
+    "full_runs": 2,
+    "origin_bands": 2,
+    "transport_segments": 2,
+    "independent_marked": 3,
+    "live_states": 1,
+    "lookups": 1,
+    "lf_pieces": 1
+  }
+}

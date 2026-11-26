@@ -1,0 +1,32 @@
+{
+  "source_revision": "47218b5a90369870e943f750a9f17a91b49e837c",
+  "scalar_revision": "d0a42980e896211906234c7679b38760ae44a46e",
+  "edge_revision": "badb2aec3624bd65606c429b2e6f79e9d9d0050f",
+  "prior_two_revision": "c0e0e657e1e9628a7b80c33f4584819d1b169893",
+  "scorer_path": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_tree": "040000 tree 75f7b0321bd71c5086cbfb34747f7ea963463784\tbench/moonshot",
+  "source_sha256": {
+    "research/astra-e/two-seed/multi/edge-four.rs": "d78447424da3535385320da683a69ab63dfa3461c65a2f59714529f699da15b8",
+    "research/astra-e/two-seed/multi/scalar-four.rs": "5af9efa7f3dff1e8a1e7787a90edba125bb54c8f424c5f9eff1e0ea6a656e233",
+    "research/astra-e/two-seed/multi/scalar.rs": "d07ac5d1b851697d20edd5a501dec606a933194ef9b17d76e1fbec995903723e",
+    "research/astra-e/two-seed/multi/build_worker.py": "3021484e65f89b812ca9aee5c72f6b02a7b86a7ec6d4b4db21cbb4aad2e5938c",
+    "research/astra-e/two-seed/multi/writer.rs": "8643f8fb4c2a431e73d105594184bff3874af4b07d78b154ece6c65b87c48279",
+    "research/astra-e/two-seed/multi/target/generated/edge-four.rs": "688bbc2ffbfb00423136105056e5741b61967e85b097dc4ccfb05623fb39bbb6",
+    "research/astra-e/two-seed/multi/target/generated/scalar-four.rs": "882d4ab9d8528a5d52f4938bce082ab6489d28b5120795cee0a6a0205f04de05",
+    "research/astra-e/two-seed/multi/target/generated/scalar.rs": "205c0bbc5f42311dfc52a9d8c2095e7c6b3e8a3eebe403dab0bd6bb312b75c8f",
+    "research/astra-e/two-seed/multi/target/generated/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+    "research/astra-e/two-seed/multi/target/generated/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104"
+  },
+  "binaries_sha256": {
+    "edge-four": "a25115788e665dbe47fae50ff3a57d49a9d2387328c5942fb05954383ee37004",
+    "scalar-four": "940766c0f34106ba749ba32e7b2ce0fccfe72fbdf894b4c533d7a868dd9c8531",
+    "scalar": "7e64fb3fd5cc03542fde1d3a36cc986db7cdcb983ef2e69de321f49092801fdc"
+  },
+  "common_edge_except_run_iterator": true,
+  "scalar_iterator_sha256": "109df9747a7ef626b4b9080d493dd256025175aa28dc90f1b455f1c78d0537a7",
+  "canonical_edge_iterator_sha256": "be5cc8a1e9bad4cf692908abcf002bfc1334ed64fc83498d640f12664ce73914",
+  "cpu_quota": "400000 100000",
+  "rustc": "1.99.1 (58cf8f9c3 2026-10-13), LLVM 23.1.1",
+  "origin_master_last_observed": "5298b23c7c89048c8986979e19b67c840397f0a0",
+  "initial_score_origin_master": "3df195b10e9fb6f86f0c06ad9fad1feb992406d5"
+}

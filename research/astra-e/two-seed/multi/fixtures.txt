@@ -1,0 +1,1 @@
+322553 exact outputs, all permutations through 7, variable word lengths up to 31, all marks, crossed all possible pass counts

@@ -1,0 +1,23 @@
+{
+  "stats": {
+    "forward_stream_decodes": 24060,
+    "decodes_or_refusals": 24060,
+    "cold_rows": 35607,
+    "mixed_groups": 8252,
+    "columns": 1092
+  },
+  "witness": {
+    "different_hidden_words_in_one_cut": {
+      "last": [
+        34,
+        33,
+        34
+      ],
+      "threshold": 2,
+      "mark": 0,
+      "cut_groups": 1,
+      "missing_destinations": 2,
+      "hidden_types": 2
+    }
+  }
+}

@@ -1,0 +1,7 @@
+
+running 1 test
+131072 independently enumerated full-lane prefixes across two AVX2 methods
+test slots::mixed_full_lanes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
+

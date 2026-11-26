@@ -1,0 +1,29 @@
+{
+  "full_worker_cpu_overhead_ratio": [
+    1.0512457238096191,
+    0.9940577805446699,
+    1.1117236778957535
+  ],
+  "dense_emit_full_process_fraction": [
+    0.013020865597413197,
+    0.011976540743972246,
+    0.014156253005796263
+  ],
+  "dense_complete_inverse_full_process_fraction": [
+    0.025479208889837762,
+    0.023774648775448732,
+    0.02730598007077119
+  ],
+  "conditional_previous_17pct_emitter_saving": [
+    0.0023133000029020253,
+    0.0021277642051148525,
+    0.0025150140652627695
+  ],
+  "mean_ms": {
+    "construct_ns": 8.665548,
+    "emit_ns": 9.0621615,
+    "process_ns": 694.8036941
+  },
+  "coded_fraction": 0.02145883724731275,
+  "retained_rank_fraction": 0.040778270328789064
+}

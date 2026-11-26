@@ -1,0 +1,14 @@
+merge_ns leaf / refill 1.02907 0.93476 1.13289
+merge_ns maximal / refill 0.90869 0.81545 1.01258
+merge_ns both / refill 1.01971 0.91358 1.13817
+merge_ns both / leaf 0.99090 0.87756 1.11889
+merge_ns both / maximal 1.12218 1.02009 1.23448
+total_ns leaf / refill 1.01488 0.98252 1.04831
+total_ns maximal / refill 1.00691 0.97570 1.03913
+total_ns both / refill 1.02018 0.98596 1.05557
+total_ns both / leaf 1.00522 0.97068 1.04098
+total_ns both / maximal 1.01317 0.98060 1.04682
+total_ns both / lazy 1.01674 0.97995 1.05491
+total_ns leaf / lazy 1.01146 0.97820 1.04585
+total_ns maximal / lazy 1.00352 0.97469 1.03320
+materialized local pairs 5390514 4686557 fraction removed 0.1305918136934623

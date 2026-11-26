@@ -1,0 +1,21 @@
+{
+  "builds": {
+    "run": "a35cb5cbb5210a72476ee276c507f06bbb92711d39015f7414b379e36df686d8",
+    "audit": "a83f326db1d8dfc74ab2b72e26408b6aebf7d908e1841f2b91a40fdce412f918"
+  },
+  "small": {
+    "marked_cases": 66712,
+    "arms": 3,
+    "through_rows": 8,
+    "shared_fixed": 16618,
+    "ordinary_moves": 55362,
+    "power_passes": 21772,
+    "power_queries": 28629,
+    "power_hops": 9408,
+    "nondividing_horizons": 33996,
+    "additional_large_marks": 15
+  },
+  "real_hashes": 60,
+  "complete_real_steps": 250,
+  "tapes": 10
+}

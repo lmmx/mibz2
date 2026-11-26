@@ -1,0 +1,13 @@
+# Reuse a fixed context dictionary across different BWT blocks
+
+The training procedure uses only block index 1. It records the suffix-closed set of rotation prefixes up to length 16 at three predetermined frequency thresholds. A retained pattern is serialized conceptually as its suffix's index and a prepended byte, five payload bytes plus per-depth boundaries with u32 indices. For a new block, project a child bu of interval [l,r) by C[b]+Occ(b,l) and C[b]+Occ(b,r). Children of missing suffixes are empty. The measured implementation builds a per-byte vector of true original L runs with cumulative bases. It answers both queries by binary search and overlays the surviving intervals in dictionary order. Merely reading every shared dictionary entry still costs O(|S|), including entries with absent suffixes. Per-block predictions are computed anew from the incoming distribution of the final components. The reference separately recovers the entire ground-truth marked word and tests every retained or missing interval by lexicographic search over all rotations. First and last filtered ranks for every used byte land in the same physical component.
+
+The nine held-out blocks total 8,099,984 pre-RLE bytes. At training threshold 32, **30,740 dictionary entries** (153,700 packed payload bytes, shared) produced 82,461 physical prediction components across the nine inputs. There were 434,006 actual BWT rank queries and 4,041,268 binary-search comparisons. Exceptions covered 13.04% of held-out rows and 72.67% of all output bytes could use complete eight-step jumps. Thresholds 128 and 512 used 12,879 and 6,527 shared entries and yielded 67.36% and 61.90% jump coverage. A larger model trained from this one block generalizes better in this particular screen. Whether saving context construction outweighs extra exception handling remains a complete native measurement. The fixed dictionary decoder always uses exact fallback transitions. Its correctness does not depend on a held-out text having training-like statistics. The reference regenerates the shared training object for convenience. Its dense arrays, strings and truth checks are outside the operation counts. [Every held-out block and training control](blocks.csv) · [Direct rank projection and independent oracle](project.cpp)
+
+```sh
+d=$(dirname "$(rg --files | rg '/jumps/variable/frozen/PLAN.md$')")
+g++ -std=c++17 -O3 -Wall -Wextra -pedantic "$d/project.cpp" -o /tmp/astra-frozen-prefix
+python3 -B "$d/panel.py" /tmp/astra-frozen-prefix /tmp/astra-clock-wires | diff - "$d/blocks.csv"
+```
+
+Obtain the ten input files with the authenticated data export. Each program reads the original last column, ignoring the trailing witness mask. [Fixture reproduction](../../../panel/)

@@ -1,0 +1,15 @@
+moonshot: building the harness with /workspace/work/astra-cap-batch-worker/research/astra-e/front-fusion/cap-batch/worker/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-cap-batch-worker/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 18.93s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-cap-batch-worker/corpora/wikidata.bz2
+moonshot: round 1 of 9 timed
+moonshot: round 2 of 9 timed
+moonshot: round 3 of 9 timed
+moonshot: round 4 of 9 timed
+moonshot: round 5 of 9 timed
+moonshot: round 6 of 9 timed
+moonshot: round 7 of 9 timed
+moonshot: round 8 of 9 timed
+moonshot: round 9 of 9 timed
+moonshot: written to research/astra-e/results/v1p2-cap-batch-scalar-confirm/score
+moonshot: recorded in research/astra-e/results/v1p2-cap-batch-scalar-confirm/official-register.jsonl

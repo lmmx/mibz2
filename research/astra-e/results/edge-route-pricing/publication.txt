@@ -1,0 +1,7 @@
+2026-11-19T02:22:04Z
+83c10a7bbc85770134ccfaa2bbf585def7c3473b	refs/heads/evidence
+274c565ac3971dd8b31234caddcf367fc7fa4c20	refs/heads/research/astra-e-moonshot
+e00b278656838aad9487ffa8fb7333eaa0c4705e	refs/tags/ready/bench-astra-e-edge-budget
+e00b278656838aad9487ffa8fb7333eaa0c4705e	refs/tags/ready/bench-astra-e-edge-budget-dry
+a6baa5ebd58c5aa5c67cd4e2af06847df09d58da 2026-11-19 02:18:36 +0000 research(astra-e): freeze six changed-route observations and their carried-row model
+dry

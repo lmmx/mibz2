@@ -1,0 +1,2 @@
+4096 schedules and exhaustive spacing sets passed; 770 reassigned workers
+one-slot tight witness: 28 -> 14, maximum single discount 7

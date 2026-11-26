@@ -1,0 +1,17 @@
+48759eed0ea95cd6454c9b7a8cbc8e33e58ffc75
+6fb777541e3ce4613c34e14d8f5def7fbada8b4a
+scorer path revision 604dac3
+93f0397e92f1451bb80f3cd06e8811d741b34413a4da924acd5512508545feb9  research/astra-e/formulations/f2-scheduler/direct/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-direct-refill-gate research/astra-e/formulations/f2-scheduler/direct/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build

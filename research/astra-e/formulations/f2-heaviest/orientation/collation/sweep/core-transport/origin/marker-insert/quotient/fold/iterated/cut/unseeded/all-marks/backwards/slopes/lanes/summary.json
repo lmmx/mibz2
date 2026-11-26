@@ -1,0 +1,96 @@
+{
+  "rows": 8999915,
+  "implied": 54673,
+  "best_by_implied": [
+    {
+      "index": 1,
+      "n": 899931,
+      "stride": 1,
+      "pieces": 446288,
+      "singletons": 1,
+      "implied": 7356,
+      "max_span": 4
+    },
+    {
+      "index": 41,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 449300,
+      "singletons": 1,
+      "implied": 1401,
+      "max_span": 5
+    },
+    {
+      "index": 85,
+      "n": 900000,
+      "stride": 3,
+      "pieces": 449862,
+      "singletons": 1,
+      "implied": 277,
+      "max_span": 3
+    },
+    {
+      "index": 134,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 445367,
+      "singletons": 0,
+      "implied": 9266,
+      "max_span": 10
+    },
+    {
+      "index": 176,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 449873,
+      "singletons": 0,
+      "implied": 254,
+      "max_span": 3
+    },
+    {
+      "index": 225,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 442610,
+      "singletons": 1,
+      "implied": 14781,
+      "max_span": 6
+    },
+    {
+      "index": 269,
+      "n": 899984,
+      "stride": 1,
+      "pieces": 449563,
+      "singletons": 0,
+      "implied": 858,
+      "max_span": 4
+    },
+    {
+      "index": 313,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 447682,
+      "singletons": 1,
+      "implied": 4637,
+      "max_span": 4
+    },
+    {
+      "index": 359,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 444165,
+      "singletons": 1,
+      "implied": 11671,
+      "max_span": 9
+    },
+    {
+      "index": 397,
+      "n": 900000,
+      "stride": 1,
+      "pieces": 447914,
+      "singletons": 0,
+      "implied": 4172,
+      "max_span": 5
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+5913 permutations, 949938 seed/mark/budget cases, 354012 foreign-cycle pairs, 241914 equal/out-of-range/singleton cases, 633292 repeated and 296341 partial-cycle truncations

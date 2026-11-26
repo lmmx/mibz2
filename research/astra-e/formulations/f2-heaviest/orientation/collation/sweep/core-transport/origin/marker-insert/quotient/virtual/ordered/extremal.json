@@ -1,0 +1,139 @@
+{
+  "exhaustive": [
+    {
+      "n": 1,
+      "permutations": 1,
+      "maximum_optimum": 1
+    },
+    {
+      "n": 2,
+      "permutations": 2,
+      "maximum_optimum": 1
+    },
+    {
+      "n": 3,
+      "permutations": 6,
+      "maximum_optimum": 2
+    },
+    {
+      "n": 4,
+      "permutations": 24,
+      "maximum_optimum": 2
+    },
+    {
+      "n": 5,
+      "permutations": 120,
+      "maximum_optimum": 2
+    },
+    {
+      "n": 6,
+      "permutations": 720,
+      "maximum_optimum": 3
+    },
+    {
+      "n": 7,
+      "permutations": 5040,
+      "maximum_optimum": 3
+    }
+  ],
+  "realized": [
+    {
+      "k": 1,
+      "queries": 1,
+      "rows": 5,
+      "runs": 3,
+      "lanes": 1
+    },
+    {
+      "k": 2,
+      "queries": 3,
+      "rows": 19,
+      "runs": 9,
+      "lanes": 2
+    },
+    {
+      "k": 3,
+      "queries": 6,
+      "rows": 49,
+      "runs": 18,
+      "lanes": 3
+    },
+    {
+      "k": 4,
+      "queries": 10,
+      "rows": 101,
+      "runs": 32,
+      "lanes": 4
+    },
+    {
+      "k": 5,
+      "queries": 15,
+      "rows": 151,
+      "runs": 50,
+      "lanes": 5
+    },
+    {
+      "k": 6,
+      "queries": 21,
+      "rows": 253,
+      "runs": 82,
+      "lanes": 6
+    },
+    {
+      "k": 7,
+      "queries": 28,
+      "rows": 337,
+      "runs": 117,
+      "lanes": 7
+    },
+    {
+      "k": 8,
+      "queries": 36,
+      "rows": 505,
+      "runs": 176,
+      "lanes": 8
+    },
+    {
+      "k": 9,
+      "queries": 45,
+      "rows": 631,
+      "runs": 218,
+      "lanes": 9
+    },
+    {
+      "k": 10,
+      "queries": 55,
+      "rows": 771,
+      "runs": 282,
+      "lanes": 10
+    },
+    {
+      "k": 11,
+      "queries": 66,
+      "rows": 1057,
+      "runs": 391,
+      "lanes": 11
+    },
+    {
+      "k": 12,
+      "queries": 78,
+      "rows": 1249,
+      "runs": 451,
+      "lanes": 12
+    },
+    {
+      "k": 13,
+      "queries": 91,
+      "rows": 1457,
+      "runs": 540,
+      "lanes": 13
+    },
+    {
+      "k": 14,
+      "queries": 105,
+      "rows": 1681,
+      "runs": 643,
+      "lanes": 14
+    }
+  ]
+}

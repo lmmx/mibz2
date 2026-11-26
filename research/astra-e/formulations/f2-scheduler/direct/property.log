@@ -1,0 +1,7 @@
+
+running 1 test
+98080 exact covered marks, 147740 exact section-free refusals
+test candidate::checks::arbitrary_marks_and_overlaps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.18s
+

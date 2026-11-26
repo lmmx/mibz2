@@ -1,0 +1,17 @@
+41685b52ceb5fece5a3a152023abf042a7ca4f92
+f8061b3c6e13047a787bc2169277389ed7b1b897
+scorer path revision 604dac3
+04c2d0a0a967ea267e617dfd057f0cd5dfc96f734861ea28746965c28f4dfdf5  research/astra-e/formulations/f2-rle/slices/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-rle-slices-gate research/astra-e/formulations/f2-rle/slices/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-slices-score

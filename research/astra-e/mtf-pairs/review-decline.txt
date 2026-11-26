@@ -1,0 +1,7 @@
+symbols=280001 n=280000 records=140000 retain_bytes=1120000 scans=2
+fresh private_vec_bytes=644228 retry_vec_bytes=644228 private_Runs_headers_and_counters=2120 word_capacity=4378 records_capacity=287090
+final_bytes=271164 crc=83c9aec4 complete_integrated_pass=true
+libbzip2=PASS input_bytes=70736 input_sha256=b800fd37477c0b7ea303761fb24eaae951fbe365cfa335e4d222629ffb809c0e decoded_sha256=f6c7d49b4069437c76837d5c45512510da54f555d398508eae8e620fe4ae129c
+scalar 271164
+copied 271164
+candidate 271164

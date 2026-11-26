@@ -1,0 +1,5 @@
+# Complete worker confirmation
+
+The boundary-directed emitter at c0e0e657e1e9628a7b80c33f4584819d1b169893 receives a full current authoritative gate and paired scorer timing against Lazy and opend at W1 and W4, nine rotations, two repeats and two-second settles. Measure the independently rebuilt unchanged historical edge worker as the direct control (same constructor, gate and density decisions). The edge and two-seed executables must have a common refreshed scorer projection, equal decoder library and 338-case gates. The path revision and printed commit both go in the receipt.
+
+Direct comparison on the same released host uses 20 pairs per W, repeat 2, four blocks in flight per W and zero settle. W and treatment orders alternate in a fixed four-round rotation. Preserve each 419,400,392-byte observation and compare per-W paired log wall, CPU and peak RSS ratios. Include 95% t intervals using both 20 individual rounds and five four-round clusters. An independent CI comparison is warranted for a plausible sub-five-percent incremental benefit. Local results cannot establish i9 throughput or memory.

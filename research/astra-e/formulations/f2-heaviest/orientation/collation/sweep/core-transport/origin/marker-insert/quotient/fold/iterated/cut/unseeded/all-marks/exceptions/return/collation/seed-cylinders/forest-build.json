@@ -1,0 +1,19 @@
+{
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ],
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "exe": "7f2f8211e0b2e3d3429fea5eaefea5f2d3e6505a90dc6f5928909cd98befd4b7",
+  "code": {
+    "forest_check.py": "4bec4bd0c2c4a21e442cfa04e71bd9b29156d91f01054d60d01d6813d600bb9b",
+    "forest_driver.cpp": "444c9ad27841f284d36146736bf71abf8e63f16f56915c9e98e481631035a707",
+    "forest.hpp": "2c6282cfce49a0bbc1dd2949f8ce7ad017b1efc4f3c372f11531ae20d865f2b8",
+    "seeds.hpp": "bb368f4065c1f2792ae04da86a2c8d48c78cab0766357b7a840a490bfb465a4e",
+    "seed_driver.cpp": "a98c57021910d866181436b605ddde01da187187d29340f2d73aaa5e0b86ca4a"
+  },
+  "generated": "1b737f4f5c8ddbff773d0f3eb8d656dca003a62f170fe268ce141f228e90e50e"
+}

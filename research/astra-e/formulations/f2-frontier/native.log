@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 35.89s
+     Running unittests src/main.rs (/workspace/work/f2word-frontier/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+228/233 second-level admissions; 205197794 exact raw bytes
+test candidate::checks::native_second_level ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 1.49s
+

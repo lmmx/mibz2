@@ -1,0 +1,1 @@
+772 complete marked comparisons with the frozen decoder and dense stable-LF oracle; 167 reduced word codes, 164 active comparisons had a marked cycle shorter than n, 2 used wide endpoint nodes.

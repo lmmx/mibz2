@@ -1,0 +1,15 @@
+{
+  "prereg": "48863b5",
+  "source": "df54544fedb5cacd522cc99bde6d7430ad0eb32b",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "sha256": {
+    "/tmp/astra-terminal-ownership/owner": "c3386ac98f6c42c07ac47992b0d065be7321a618a0cf66eb51b388123a8f4c04",
+    "/tmp/astra-terminal-ownership/main.rs": "6bb3b7688c3e76f671c4bb94866d6609696f10ef9718a7df784b88d7d0a6d060",
+    "/tmp/astra-terminal-ownership/control.rs": "bb445f6fbe1741bc86171b5426bd6504a157f2abf8d829e901bf52ddaf1c208e",
+    "/tmp/astra-terminal-ownership/second.rs": "523bee3c587e17bda12437918e2b5f45951df64a0435820fe045b05683fda52a",
+    "/workspace/work/astra-e/target/release/deps/libmibz2.rlib": "26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9",
+    "/tmp/astra-clipped/ten.bin": "879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb",
+    "/tmp/astra-token-all/admissions.bin": "da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26",
+    "/tmp/astra-clipped-final/expected.csv": "371c94a260c2f9a01cca5580cbee43ac687cc7b8d1a2b1a3d3e8b295c4131c10"
+  }
+}

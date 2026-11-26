@@ -1,0 +1,12 @@
+Thu Nov 19 06:32:28 UTC 2026
+Linux c834131f7d51 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026 x86_64 GNU/Linux
+Architecture:                            x86_64
+CPU(s):                                  5
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+Thread(s) per core:                      1
+NUMA node0 CPU(s):                       0-4
+400000 100000
+Cpus_allowed_list:	0-4
+ccd8b43eb3cd80d2391db273b18521d2497a2971
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+Paired command ran unpinned at normal niceness, with no configured delay. F5 reported a brief pre-existing nice+15 CPU2 compilation near panel start and suspended it. All rows retained.

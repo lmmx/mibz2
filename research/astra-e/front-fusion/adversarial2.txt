@@ -1,0 +1,1 @@
+11200 exact scalar/detected comparisons; 3842 valid paths; error counts {"BadOrigPtr": 1596, "BlockTooLong": 3776, "RunTooLong": 1312, "RunUnfinished": 674}

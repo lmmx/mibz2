@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 18.47s
+     Running unittests src/main.rs (bench/moonshot/target/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+228/233 large Wikidata blocks, 205197794 checked inverse bytes
+test candidate::checks::corpus ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 2.73s
+

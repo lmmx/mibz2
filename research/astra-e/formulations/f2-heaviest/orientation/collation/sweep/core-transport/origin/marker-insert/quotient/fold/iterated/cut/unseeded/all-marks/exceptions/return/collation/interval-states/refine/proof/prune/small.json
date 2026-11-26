@@ -1,0 +1,16 @@
+{
+  "counts": {
+    "checked": 62348,
+    "smaller_candidate_sets": 27354
+  },
+  "two_extremes_needed": {
+    "labels": "aaaaabbbbbbbbaaaaa",
+    "charge": 1,
+    "cuts": [
+      6,
+      12
+    ],
+    "objective": 14,
+    "best_one_seam": 11
+  }
+}

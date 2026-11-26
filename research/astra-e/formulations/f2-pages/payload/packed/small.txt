@@ -1,0 +1,11 @@
+
+running 4 tests
+exact section outputs for 11264 covered small marks
+test control::checks::arbitrary_marks ... ok
+exact section outputs for 11264 covered small marks
+test packed::checks::arbitrary_marks ... ok
+test control::checks::packed_lf_and_boundaries ... ok
+test packed::checks::packed_lf_and_boundaries ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+

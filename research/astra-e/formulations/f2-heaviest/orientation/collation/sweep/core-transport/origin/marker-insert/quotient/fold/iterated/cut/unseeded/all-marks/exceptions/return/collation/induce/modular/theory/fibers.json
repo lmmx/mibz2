@@ -1,0 +1,59 @@
+{
+  "counts": {
+    "marked_bytes_checked": 22600,
+    "mark_radix_settings": 3928,
+    "heterogeneous_gcd_one_compressions": 1496,
+    "tables": 374
+  },
+  "gcd_one_heterogeneous": {
+    "n": 3000000000023,
+    "base": [
+      0,
+      1,
+      0
+    ],
+    "starts": [
+      0,
+      1000000000007,
+      2000000000015
+    ],
+    "marks": [
+      {
+        "mark": 0,
+        "quotient": 0,
+        "lap": 1,
+        "period": "00"
+      },
+      {
+        "mark": 1000000000006,
+        "quotient": 0,
+        "lap": 1,
+        "period": "00"
+      },
+      {
+        "mark": 1000000000007,
+        "quotient": 1,
+        "lap": 2,
+        "period": "0001"
+      },
+      {
+        "mark": 2000000000014,
+        "quotient": 1,
+        "lap": 2,
+        "period": "0001"
+      },
+      {
+        "mark": 2000000000015,
+        "quotient": 2,
+        "lap": 2,
+        "period": "0100"
+      },
+      {
+        "mark": 3000000000022,
+        "quotient": 2,
+        "lap": 2,
+        "period": "0100"
+      }
+    ]
+  }
+}

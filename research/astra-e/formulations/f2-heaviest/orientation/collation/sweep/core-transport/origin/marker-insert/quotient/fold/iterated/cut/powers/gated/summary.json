@@ -1,0 +1,29 @@
+{
+  "binary_sha256": "c4e14165979d7f75352bdfd02553814596682e65fb5608173f0fd49d057aa443",
+  "source_sha256": {
+    "native.cpp": "5c7878c430506a766e50b0c0c5a7ea13516e23febd2b623c93b6d0dd898ccc98",
+    "interval.hpp": "faf88fd824e76c36748dad8be4afdbd352b6adc0554b6390ca7dbe388841e760",
+    "direct_cut.cpp": "5bc8ac7ddda3d1db6408bb6120e97f60f3f75db1c963cc4cf99bace031ba245b"
+  },
+  "flags": "g++ -std=c++20 -O3 -g0 -Wall -Wextra",
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "cpu": 1,
+  "nice": 12,
+  "paired_geomean": [
+    1.3836038551298784,
+    1.1207669755680696,
+    1.7080799752865248
+  ],
+  "gated_medians_us": {
+    "thread_ns": 23132.053,
+    "graph_ns": 10304.7625,
+    "cut_ns": 8634.819,
+    "norm_ns": 0.0,
+    "emit_ns": 1749.4925
+  },
+  "direct_median_us": 15543.983,
+  "peak_kib": {
+    "direct": 7512,
+    "gated": 6368
+  }
+}

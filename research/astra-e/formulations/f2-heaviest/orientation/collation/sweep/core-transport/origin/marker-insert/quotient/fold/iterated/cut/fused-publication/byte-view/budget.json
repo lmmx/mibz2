@@ -1,0 +1,167 @@
+{
+  "all": {
+    "new_first/explicit_first": [
+      0.623855,
+      0.582848,
+      0.667748
+    ],
+    "direct_remaining/scalar": [
+      3.98238,
+      3.868221,
+      4.099908
+    ],
+    "rounds_with_positive_remaining_budget": 23,
+    "median_remaining_scalar_share": 0.1249,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.96989
+  },
+  "1": {
+    "new_first/explicit_first": [
+      0.730204,
+      0.608996,
+      0.875537
+    ],
+    "direct_remaining/scalar": [
+      4.90561,
+      4.699174,
+      5.121114
+    ],
+    "rounds_with_positive_remaining_budget": 19,
+    "median_remaining_scalar_share": 0.11242,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.98129
+  },
+  "41": {
+    "new_first/explicit_first": [
+      0.53518,
+      0.447815,
+      0.63959
+    ],
+    "direct_remaining/scalar": [
+      2.246163,
+      1.89687,
+      2.659775
+    ],
+    "rounds_with_positive_remaining_budget": 19,
+    "median_remaining_scalar_share": 0.22457,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.90171
+  },
+  "85": {
+    "new_first/explicit_first": [
+      0.641933,
+      0.547606,
+      0.752508
+    ],
+    "direct_remaining/scalar": [
+      5.135778,
+      4.435763,
+      5.946263
+    ],
+    "rounds_with_positive_remaining_budget": 18,
+    "median_remaining_scalar_share": 0.11497,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.97446
+  },
+  "134": {
+    "new_first/explicit_first": [
+      0.67472,
+      0.604932,
+      0.752559
+    ],
+    "direct_remaining/scalar": [
+      4.552041,
+      3.47454,
+      5.963688
+    ],
+    "rounds_with_positive_remaining_budget": 18,
+    "median_remaining_scalar_share": 0.10052,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.98157
+  },
+  "176": {
+    "new_first/explicit_first": [
+      0.661307,
+      0.616276,
+      0.709628
+    ],
+    "direct_remaining/scalar": [
+      5.410151,
+      4.83569,
+      6.052857
+    ],
+    "rounds_with_positive_remaining_budget": 15,
+    "median_remaining_scalar_share": 0.04541,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.99227
+  },
+  "225": {
+    "new_first/explicit_first": [
+      0.651095,
+      0.618753,
+      0.685127
+    ],
+    "direct_remaining/scalar": [
+      4.972241,
+      4.752449,
+      5.202197
+    ],
+    "rounds_with_positive_remaining_budget": 15,
+    "median_remaining_scalar_share": 0.08529,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.9832
+  },
+  "269": {
+    "new_first/explicit_first": [
+      0.603657,
+      0.566415,
+      0.643349
+    ],
+    "direct_remaining/scalar": [
+      2.57062,
+      2.235673,
+      2.955749
+    ],
+    "rounds_with_positive_remaining_budget": 12,
+    "median_remaining_scalar_share": -0.00229,
+    "median_fraction_of_direct_residual_cost_to_remove": 1.00084
+  },
+  "313": {
+    "new_first/explicit_first": [
+      0.659316,
+      0.535253,
+      0.812135
+    ],
+    "direct_remaining/scalar": [
+      4.611026,
+      4.157346,
+      5.114215
+    ],
+    "rounds_with_positive_remaining_budget": 23,
+    "median_remaining_scalar_share": 0.2007,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.9601
+  },
+  "359": {
+    "new_first/explicit_first": [
+      0.658433,
+      0.556474,
+      0.779074
+    ],
+    "direct_remaining/scalar": [
+      5.231474,
+      4.449273,
+      6.151188
+    ],
+    "rounds_with_positive_remaining_budget": 14,
+    "median_remaining_scalar_share": 0.08762,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.9823
+  },
+  "397": {
+    "new_first/explicit_first": [
+      0.639793,
+      0.553549,
+      0.739475
+    ],
+    "direct_remaining/scalar": [
+      4.205917,
+      3.803358,
+      4.651085
+    ],
+    "rounds_with_positive_remaining_budget": 22,
+    "median_remaining_scalar_share": 0.16765,
+    "median_fraction_of_direct_residual_cost_to_remove": 0.96457
+  }
+}

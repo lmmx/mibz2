@@ -1,0 +1,18 @@
+{
+  "local_trace_pin": "92684cc",
+  "scalar_pin": "d0a42980e896211906234c7679b38760ae44a46e",
+  "raw_inputs": {
+    "huffman-phrases/integrated/trace/marks-0-4-stock.csv.gz": "38618ffbf7ba54c17f26390fe4122cea24c149d3716e038478ad27c9e86c5b2a",
+    "huffman-phrases/integrated/trace/marks-1-4-stock.csv.gz": "7313ffa7d62bb2d1684c4f46e7747b6006aa2fcb70f3f3f23f85275ac3533a6a",
+    "huffman-phrases/integrated/trace/marks-2-4-stock.csv.gz": "f0aeaecaf7d80530938c0d91835bad36a8b8c98279ee69f2287b52f5a9364b94",
+    "huffman-phrases/integrated/trace/marks-3-4-stock.csv.gz": "6be9c14d8d4224b635dc74ffb45cd5d1b9226530aa610b5091547012623a939d",
+    "huffman-phrases/integrated/trace/marks-4-4-stock.csv.gz": "bad1ddf0eea26058959432ca8510f401e48662c416c1c36e31913e110e11e3d5",
+    "huffman-phrases/integrated/trace/marks-5-4-stock.csv.gz": "1dbced0332f66a45b77fe0e53932eae7d9e268e954e813e0a0de37266af6ade9",
+    "huffman-phrases/integrated/trace/marks-6-4-stock.csv.gz": "47476f139cd2e070f9a53b3bc5fda4ecdf2f61ce0a644298ca32622e096fc9d0",
+    "huffman-phrases/integrated/trace/marks-7-4-stock.csv.gz": "43f48ceefa403b44293259774212756eac18251a92059a09677ec4dd2bf59e68",
+    "budget/i9-roles.csv": "e35a1d983ff6aa3732c4ec303b3ca1d4814afde9cf68869b264e0996a7105557",
+    "workstation/evidence/scalar-i9-1ac706d.tar.gz": "a5ec503104fb95412e6452dc821ed261a02bdda3234a97fa8b9334c47f46ae5f",
+    "budget/scanner.csv.xz": "742fd2bac811b73e440b4262a59a2234f018ae0e54121f01940881a4b4a98fd3",
+    "budget/copy.csv.xz": "eddacd9f6e454e70d76bc6be9fdfe4a92e27939db653f9bd6a113299ab156258"
+  }
+}

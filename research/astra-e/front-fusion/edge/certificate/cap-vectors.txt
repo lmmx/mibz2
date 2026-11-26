@@ -1,0 +1,1 @@
+30720 AVX2 cap-window checks: 64 starts, 32 tail lengths, 15 widths including 16,127,143,254 and 5000

@@ -1,0 +1,28 @@
+compact_frequent mean 10-block CPU ms {'setup_mark_ns': 3.387, 'discover_ns': 8.582, 'merge_only_ns': 2.279, 'compose_ns': 0.0, 'writer_ns': 4.215, 'total_ns': 18.472}
+core_h0 mean 10-block CPU ms {'setup_mark_ns': 4.107, 'discover_ns': 9.148, 'merge_only_ns': 2.216, 'compose_ns': 2.408, 'writer_ns': 4.184, 'total_ns': 22.079}
+core_h0 / compact_frequent {'first_ns': '1.2545 [1.2222, 1.2877]', 'total_ns': '1.1953 [1.1716, 1.2193]', 'discover_ns': '1.0613 [1.0127, 1.1123]', 'writer_ns': '0.9947 [0.9374, 1.0555]'}
+counterfactual core_h0 matched-setup 1.1556 [1.1349, 1.1766]
+counterfactual core_h0 free-setup 0.9717 [0.9506, 0.9934]
+counterfactual core_h0 free-setup-and-compose 0.8413 [0.8207, 0.8623]
+core_h8 mean 10-block CPU ms {'setup_mark_ns': 18.999, 'discover_ns': 7.396, 'merge_only_ns': 2.178, 'compose_ns': 3.878, 'writer_ns': 4.389, 'total_ns': 36.853}
+core_h8 / compact_frequent {'first_ns': '2.2725 [2.2040, 2.3431]', 'total_ns': '1.9916 [1.9362, 2.0486]', 'discover_ns': '0.8588 [0.8217, 0.8976]', 'writer_ns': '1.0359 [0.9845, 1.0901]'}
+core_h8 / core_h0 {'first_ns': '1.8114 [1.7583, 1.8661]', 'total_ns': '1.6663 [1.6263, 1.7072]', 'discover_ns': '0.8092 [0.7627, 0.8585]', 'writer_ns': '1.0414 [0.9621, 1.1273]'}
+counterfactual core_h8 matched-setup 1.1492 [1.1187, 1.1804]
+counterfactual core_h8 free-setup 0.9654 [0.9362, 0.9954]
+counterfactual core_h8 free-setup-and-compose 0.7551 [0.7300, 0.7812]
+core_h4 mean 10-block CPU ms {'setup_mark_ns': 10.867, 'discover_ns': 8.178, 'merge_only_ns': 2.164, 'compose_ns': 3.5, 'writer_ns': 4.06, 'total_ns': 28.781}
+core_h4 / compact_frequent {'first_ns': '1.7301 [1.6774, 1.7844]', 'total_ns': '1.5555 [1.5116, 1.6008]', 'discover_ns': '0.9493 [0.9150, 0.9849]', 'writer_ns': '0.9679 [0.9201, 1.0183]'}
+core_h4 / core_h0 {'first_ns': '1.3791 [1.3418, 1.4174]', 'total_ns': '1.3014 [1.2704, 1.3332]', 'discover_ns': '0.8945 [0.8579, 0.9326]', 'writer_ns': '0.9731 [0.9282, 1.0202]'}
+counterfactual core_h4 matched-setup 1.1529 [1.1280, 1.1784]
+counterfactual core_h4 free-setup 0.9688 [0.9430, 0.9954]
+counterfactual core_h4 free-setup-and-compose 0.7792 [0.7585, 0.8004]
+ten 0 10 {'live_states': 1296362, 'lf_pieces': 690494, 'forward_intersections': 0, 'origin_bands': 10, 'overlay_slices': 38648, 'full_runs': 66373, 'core_runs': 66373} second 10 max retained B 9656468 max extra atlas scratch/old B 0
+ten 4 10 {'live_states': 1144124, 'lf_pieces': 674547, 'forward_intersections': 25323, 'origin_bands': 15088, 'overlay_slices': 40220, 'full_runs': 66373, 'core_runs': 65681} second 10 max retained B 8905672 max extra atlas scratch/old B 1263896
+ten 8 10 {'live_states': 1005990, 'lf_pieces': 637823, 'forward_intersections': 111815, 'origin_bands': 25503, 'overlay_slices': 47141, 'full_runs': 66373, 'core_runs': 62385} second 10 max retained B 8934844 max extra atlas scratch/old B 1706264
+admissions 0 228 {'live_states': 28053831, 'lf_pieces': 14427375, 'forward_intersections': 0, 'origin_bands': 228, 'overlay_slices': 806027, 'full_runs': 1433311, 'core_runs': 1433311} second 228 max retained B 8590332 max extra atlas scratch/old B 0
+admissions 4 228 {'live_states': 24876536, 'lf_pieces': 14114746, 'forward_intersections': 491245, 'origin_bands': 292111, 'overlay_slices': 842833, 'full_runs': 1433311, 'core_runs': 1418353} second 228 max retained B 8868764 max extra atlas scratch/old B 1261664
+admissions 8 228 {'live_states': 21967795, 'lf_pieces': 13395218, 'forward_intersections': 2201933, 'origin_bands': 515724, 'overlay_slices': 988258, 'full_runs': 1433311, 'core_runs': 1353336} second 228 max retained B 8734164 max extra atlas scratch/old B 1654880
+compact_frequent process high water KiB 8428 max retained B 8528726
+core_h0 process high water KiB 9380 max retained B 9686262
+core_h8 process high water KiB 13000 max retained B 9791070
+core_h4 process high water KiB 12324 max retained B 9942358

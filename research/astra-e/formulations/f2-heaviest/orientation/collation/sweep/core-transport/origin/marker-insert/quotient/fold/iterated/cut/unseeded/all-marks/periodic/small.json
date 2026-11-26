@@ -1,0 +1,71 @@
+{
+  "exhaustive": {
+    "fixed_terminal_events": 39507,
+    "columns": 11469,
+    "marks": 111438,
+    "multi_cycle_columns": 10214,
+    "repeated_lane_columns": 212,
+    "heterogeneous_columns": 10128,
+    "cuts": 31712,
+    "power_levels": 3721
+  },
+  "families": {
+    "valid_input_words": 11469,
+    "two_run_sharp_cases": 88,
+    "modular_rotation_columns": 255
+  },
+  "witnesses": {
+    "unchecked_repeat": {
+      "last": [
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "mark": 2,
+      "g": 2,
+      "quotient": [
+        0,
+        1,
+        0
+      ],
+      "wrong": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "correct": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1
+      ]
+    },
+    "arithmetic_heterogeneous": {
+      "last": [
+        2,
+        2,
+        0,
+        1
+      ],
+      "shift": 2,
+      "cycles": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    }
+  }
+}

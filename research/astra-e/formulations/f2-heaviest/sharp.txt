@@ -1,0 +1,1 @@
+240 cyclic byte BWTs, 27540 total rows, n/f expansions attained in every case

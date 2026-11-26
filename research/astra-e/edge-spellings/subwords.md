@@ -1,0 +1,28 @@
+# Exact overlap bounds for contiguous word storage at width 16
+
+Even a freely reordered byte arena with free descriptors cannot fit the 256 KiB private L2 together with the existing width-16 packed edges on any of the 233 admitted Wikidata blocks. Block 47 alone has a packed edge allocation within the budget. Its 260,448 bytes leave 1,696 bytes for the dictionary. Its spelling strings require **at least 9,918 bytes** in any contiguous arena that supports each one by a single slice. An actually constructed arena takes 9,951 bytes. Every other block exceeds 256 KiB with its edges alone. All width-16 edge allocations exceed 192 KiB. The claim is specific to the existing edge encoding and directly copied contiguous spellings. [Exact data by block](subwords.csv)
+
+| Construction or bound | Spelling bytes over 233 blocks | Description |
+|---|---:|---|
+| Original | 11,613,622 | 368,867 nonliteral bands |
+| Adjacent overlap in original order | 8,593,821 | All bands retained with maximum pairwise suffix/prefix overlap |
+| Distinct complete words | 7,498,088 | 186,981 byte-distinct words, counted per block |
+| Remove complete strict substrings | 3,105,353 | 40,318 substring-maximal words |
+| Adjacent overlap after removing substrings | 3,102,922 | Attained arena in original first-occurrence order, every original word verified as a slice |
+| Lower bound with arbitrary reordering | 2,953,809 | Sum of independently valid per-block lower bounds, with free descriptors |
+
+Of the original bytes, 4,115,534 belong to duplicate whole words. Another 4,392,735 disappear when each distinct strict substring can use a slice of a longer word. Given the substring-maximal set, simply preserving first-occurrence order lives within 149,113 total bytes of the lower bound for arbitrary layout. This result separates the savings from finding contained strings from the modest room left for reordering those survivors.
+
+**Containment.** Insert the distinct words into a prefix trie and record the greatest source-word length at every prefix. Compute failure links for the trie. Every occurrence of a query word ends at a source-word prefix, and the query is on that prefix's failure chain. Propagating maximum source lengths up the failure tree gives an exact strict containment test at each word's terminal. The retained maximal set contains a superword of each deleted string. The census additionally builds the reported arena and finds and byte-checks every original distinct word in it.
+
+**Lower bound.** Fix any arena containing all substring-maximal words. Sort one occurrence of each by its start. After removing equality and containment, both starts and ends increase strictly. The overlap between each pair of successive occurrences is at most the longest suffix of the first which is a prefix of the second. Charge each source its largest such overlap to any *different* destination, ignoring the need for distinct destinations and an acyclic order. At least one source is last, so the sum of all maxima less the smallest maximum bounds total savings from overlap. Subtract from the sum of maximal lengths to get an arena lower bound. Repeating the calculation with all strings reversed yields the analogous incoming bound. The census takes the maximum of both, the longest required word, and the distinct-k-gram bound: an arena with Q distinct k-grams must have at least Q + k − 1 bytes when Q is positive. The tested k values are 1, 2, 3, 4, 8, and 16. The first-occurrence upper bound uses the actual consecutive overlaps, calculated by prefix-function matching. Full exhaustive arrangements for 1,470 short binary word sets and direct checks of all 196 pairwise overlaps verified the inequalities. [Program and exact falsifier](subwords.py)
+
+**Descriptor and execution costs.** Existing monotone offsets take 1,476,400 bytes over the corpus. Sharing arbitrary slices needs a start and length associated with each distinct word, and a way to assign that word's code to its band. With per-block fixed widths, start bits plus length bits were at most 28 on the measured cases. One 32-bit descriptor per distinct word can therefore encode all verified slices, including overlapping ones, for 747,924 bytes total. With the achieved arena the complete initialized edges plus dictionary and descriptors take 110,121,170 bytes, versus 119,360,346 originally. On block 47 they take 271,423 bytes. The original code-space already names all the bands, so dense renumbering by distinct word is possible if the mapping can be built affordably. These counts omit allocation slack, indexing for construction, the cost of recognizing duplicates and containment, and a per-block descriptor-format constant. The offline trie and arena searches explicitly perform some of this omitted work.
+
+The 4,894,668 nonliteral expansion visits still emit 188,024,749 bytes. The other 21,672,913 retained visits emit one literal each. The per-block identity between these emissions and the full coded length is checked in the census. Direct substring sharing can change descriptor loads and locality. It preserves every edge transition, word expansion and output copy length in this interface. Previous grammar-rule ownership already copies a previously expanded rule from its first position while constructing the dictionary. The present measurement concerns the final band spelling's stored slice, including its separate trailing byte.
+
+```sh
+xz -dc research/astra-e/edge-spellings/words.bin.xz > /tmp/astra-band-words.bin
+nice -n 16 python3 research/astra-e/edge-spellings/subwords.py --check /tmp/astra-band-words.bin > /tmp/astra-subwords.csv
+cmp /tmp/astra-subwords.csv research/astra-e/edge-spellings/subwords.csv
+```

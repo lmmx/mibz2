@@ -1,0 +1,3 @@
+# Exact cost of spelling a deterministic LF path
+
+Test whether choosing the smooth child of greatest physical row mass as the continuation at each parent minimizes total copy segments across a complete marked lap, among disjoint chain partitions of the smooth first-return forest. Compare observed splits against the sum of frequencies of rejected child links (allowing the two cuts at the output horizon). Measure exact copy calls and lengths over all real k=4,8,16 schedules, storage for sharing each smooth byte once and the naive total length if every source state's entire path were stored. Distinguish this optimum within static chain layouts from arbitrary repeating dictionaries or a full worker time bound.

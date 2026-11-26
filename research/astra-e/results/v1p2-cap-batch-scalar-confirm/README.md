@@ -1,0 +1,7 @@
+# Local complete-worker check of the scalar capped-run iterator
+
+Source d0a42980e896211906234c7679b38760ae44a46e replaced the cap coalescence loop at short run heads. The [experimental implementation](../../front-fusion/cap-batch/) contains the differential checks, exact policy proof, native stage evidence and separate modeled instruction/cache counters. All 338 correctness records passed again in the standard scorer. Its core printed v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04, refreshed from upstream scorer path revision 75297a1d57b2bdf262c3a19f3064848dedf2c493.
+
+Nine three-arm paired rounds verified 419,400,392 output bytes per measured process. Scalar/Lazy wall at W1 and W4 was 0.9097 [0.8181,1.0116] and 0.8781 [0.7591,1.0158]. Median peak ratios were 0.8845 and 0.7567. Scalar/opend took 0.9468 [0.7831,1.1448] and 1.0848 [0.9380,1.2546]. The local Xeon has four equivalent CPUs. These comparisons across an active research session are uncertain. This round did not measure scalar against edge directly or run the simulator. The independent CI used the paired edge predecessor. [Official scorer output](score/summary.txt) · [Raw measurements](score/runs.jsonl) · [Recomputed controls and maximum peaks](compare.csv) · [Immutable provenance and command](manifest.txt)
+
+Replay the extraction with `python3 research/astra-e/results/v1p2-cap-batch-scalar-confirm/compare.py`. In a new worktree at the source commit, with the pinned scorer and Wikidata corpus available, use the invocation in the manifest and a fresh local target directory.

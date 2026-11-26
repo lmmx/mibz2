@@ -1,0 +1,12 @@
+{
+  "marked_cases": 66712,
+  "arms": 3,
+  "through_rows": 8,
+  "shared_fixed": 16618,
+  "ordinary_moves": 55362,
+  "power_passes": 21772,
+  "power_queries": 28629,
+  "power_hops": 9408,
+  "nondividing_horizons": 33996,
+  "additional_large_marks": 15
+}

@@ -1,0 +1,1 @@
+768 ordered samples, 48 matched four-W rounds and four verified build/arm identities. A regressing W9 defeats a favorable pooled ratio; excess W9 peak defeats both decision rules.

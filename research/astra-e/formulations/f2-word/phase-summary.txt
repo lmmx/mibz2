@@ -1,0 +1,10 @@
+228/228 admissions have the same (token-row, dictionary-byte) counts
+9 systematic admissions match token rows, token runs, distinct words and dictionary bytes
+Streams 1
+direct prep_mark_ns=0.4330 ms discover_ns=2.0738 ms merge_ns=0.1962 ms residual_output_ns=0.2556 ms total_ns=2.9906 ms
+two prep_mark_ns=0.4215 ms discover_ns=1.4992 ms merge_ns=0.1692 ms residual_output_ns=0.7041 ms total_ns=2.8371 ms
+lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=2.2910 ms total_ns=2.2910 ms
+Streams 1,134,176,225,269,313,359,397,85
+direct prep_mark_ns=3.7697 ms discover_ns=20.5165 ms merge_ns=1.7509 ms residual_output_ns=2.0067 ms total_ns=28.9181 ms
+two prep_mark_ns=3.6883 ms discover_ns=15.3437 ms merge_ns=1.3704 ms residual_output_ns=5.6776 ms total_ns=26.6090 ms
+lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=19.9311 ms total_ns=19.9311 ms

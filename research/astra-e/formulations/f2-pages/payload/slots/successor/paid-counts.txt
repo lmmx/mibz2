@@ -1,0 +1,3 @@
+side 19750839 6169472 12573500
+embedded 19750839 6169472 12573500
+maximum_retained_side_table_bytes 818944

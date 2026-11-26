@@ -1,0 +1,1 @@
+233 admitted tables, 209697662 pre-RLE bytes and equal capacity versus independent Segmented and stock edge

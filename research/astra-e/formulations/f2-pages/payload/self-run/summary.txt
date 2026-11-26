@@ -1,0 +1,10 @@
+rows 205197794
+queries 19750839
+unary 18763157
+internal_transitions 47
+positive 47
+negative 0
+at_least_two 26
+at_least_eight 0
+max_further 3
+possible_query_reduction 0.00000238

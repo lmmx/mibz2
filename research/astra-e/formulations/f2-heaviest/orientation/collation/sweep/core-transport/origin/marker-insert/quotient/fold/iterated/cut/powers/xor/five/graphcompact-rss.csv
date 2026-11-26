@@ -1,0 +1,2 @@
+round,arm,thread_ns,choice_ns,publish_ns,normalize_ns,emit_ns,bytes,nodes,peak_kib
+0,graphcompact,217866484,24822872,16384049,0,78481421,899931,47523,6080

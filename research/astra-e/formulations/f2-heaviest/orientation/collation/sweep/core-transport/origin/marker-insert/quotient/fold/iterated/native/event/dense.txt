@@ -1,0 +1,1 @@
+Both exact byte-vector oracle builds (audit and release loops) passed 205197794 bytes on all 228 retained production blocks. Both the direct old-word walk and event grammar were compared to the independent dense LF. No oracle allocations occur in timed calls or fresh RSS runs.

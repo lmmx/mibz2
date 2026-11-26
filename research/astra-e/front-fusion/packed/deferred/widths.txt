@@ -1,0 +1,1 @@
+11050 in-place AVX2 direct, first EOB, tag and bit-boundary checks; 3900 reduced-bound rollback checks; both guard regions preserved

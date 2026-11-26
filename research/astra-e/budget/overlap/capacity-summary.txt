@@ -1,0 +1,12 @@
+7 scan_only_over_required 0.9555 1.21 1.701 70
+7 complete_over_required 0.521 0.6821 0.7739 0
+7 max_complete_ms 16.198
+8 scan_only_over_required 0.6768 0.862 1.2598 20
+8 complete_over_required 0.4108 0.5279 0.6096 0
+8 max_complete_ms 15.36
+9 scan_only_over_required 0.5403 0.6805 1.0535 20
+9 complete_over_required 0.347 0.4458 0.5258 0
+9 max_complete_ms 15.292
+10 scan_only_over_required 0.6359 0.8147 1.2886 20
+10 complete_over_required 0.4295 0.5358 0.7049 0
+10 max_complete_ms 16.883

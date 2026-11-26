@@ -1,0 +1,16 @@
+019359bc1be8e9fa26e825cce87cbbbc373204de
+735796c1882782e9b93fe7eb3d8d2068962d8c42
+604dac3
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+Linux c834131f7d51 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026 x86_64 GNU/Linux
+400000 100000
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+fixed cpu 3, 10 measured rotations

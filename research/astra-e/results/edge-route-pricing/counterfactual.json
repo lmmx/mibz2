@@ -1,0 +1,569 @@
+{
+  "carried_rows_in_each_counterfactual": 957,
+  "fresh_rows_in_each": 3,
+  "old_rows_reused_from": "23378304c93e85b131afb85f5e86adf6bd71d099",
+  "assumption": "All 63 other base blocks per high-W cell and every slope observation, including code layout and dispatch costs, retain their old combined-program counters. The lazy anchors and other worker cells also retain their archived values. This is a conditional diagnostic.",
+  "cells": {
+    "7": {
+      "historical_combined_over_lazy": 0.9101506974061911,
+      "actual_changed_block": {
+        "edge": {
+          "l2_bytes_per_byte": 33.26392888888889,
+          "l3_bytes_per_byte": 25.194382222222224,
+          "dram_bytes_per_byte": 9.892337777777778,
+          "dep_dram_links_per_byte": 3.111111111111111e-05,
+          "dep_past_l2_links_per_byte": 0.1312088888888889,
+          "dep_loads_per_byte": 2.2146066666666666,
+          "max_dram_chain": 12,
+          "max_past_l2_chain": 902,
+          "dram_mlp": 2.6411930026364567,
+          "overlap_per_dep_link": 6.357142857142857,
+          "dram_loads_per_dep_link": 78.85714285714286,
+          "past_l2_loads_per_byte": 0.15930555555555556,
+          "dram_loads_per_byte": 0.0024533333333333334,
+          "instructions_per_byte": 35.38964444444444,
+          "cycles_per_byte": 18.93413333333333
+        },
+        "combined": {
+          "l2_bytes_per_byte": 86.50140444444445,
+          "l3_bytes_per_byte": 79.70517333333333,
+          "dram_bytes_per_byte": 27.84241777777778,
+          "dep_dram_links_per_byte": 0.013173333333333334,
+          "dep_past_l2_links_per_byte": 0.3928688888888889,
+          "dep_loads_per_byte": 2.1398433333333333,
+          "max_dram_chain": 66,
+          "max_past_l2_chain": 150,
+          "dram_mlp": 3.0144960059558996,
+          "overlap_per_dep_link": 3.533400809716599,
+          "dram_loads_per_dep_link": 12.543184885290149,
+          "past_l2_loads_per_byte": 0.9284488888888889,
+          "dram_loads_per_byte": 0.16523555555555555,
+          "instructions_per_byte": 23.28712,
+          "cycles_per_byte": 33.216588888888886
+        },
+        "control_differences_from_original_by_counter": {
+          "cycles": [
+            29894781,
+            29894930
+          ],
+          "l1_miss": [
+            1092971,
+            1088624
+          ],
+          "l2_miss": [
+            890236,
+            889744
+          ],
+          "llc_miss": [
+            190744,
+            190742
+          ],
+          "l2_transfers": [
+            1222158,
+            1216426
+          ],
+          "l3_transfers": [
+            1121026,
+            1120854
+          ],
+          "dram_read_lines": [
+            268657,
+            268590
+          ],
+          "dram_write_lines": [
+            122969,
+            122944
+          ],
+          "prefetched_lines": [
+            109097,
+            109500
+          ],
+          "past_l2_loads": [
+            835650,
+            835604
+          ],
+          "dram_loads": [
+            148753,
+            148712
+          ],
+          "dep_past_l2_loads": [
+            353743,
+            353582
+          ],
+          "dep_dram_loads": [
+            11844,
+            11856
+          ],
+          "dep_any_loads": [
+            1925734,
+            1925859
+          ],
+          "max_chain_past_l2": [
+            149,
+            150
+          ],
+          "chain_sum_dram": [
+            171313,
+            171342
+          ],
+          "dram_latency_sum": [
+            73632735,
+            73612440
+          ],
+          "dram_busy_cycles": [
+            24411837,
+            24419485
+          ],
+          "dep_overlap_sum": [
+            41839,
+            41892
+          ],
+          "dep_overlap_n": [
+            11844,
+            11856
+          ],
+          "store_buffer_stall_cycles": [
+            2291323,
+            2277789
+          ],
+          "norfo_lines": [
+            59,
+            60
+          ]
+        }
+      },
+      "block165_edge_over_combined_nominal_cycles": 0.5700204014526878,
+      "counterfactual_edge_over_lazy": 0.8791078279909529,
+      "counterfactual_rerun_combined_over_lazy": 0.9101483388988719,
+      "counterfactual_edge_over_rerun_combined": 0.9658951078837622,
+      "counterfactual_drivers": {
+        "edge": {
+          "instructions_ratio": 0.7221481295443725,
+          "at_nominal_latency": 0.8614471357551635,
+          "contention_feedback": 1.0205011909643273,
+          "dram_bytes_ratio": 1.004723176008163,
+          "dram_latency": [
+            520.4667247093405,
+            494.876997759522
+          ],
+          "dram_gbs": [
+            22.830695705983267,
+            20.0
+          ],
+          "latency_sensitivity": [
+            8.006777228695123,
+            8.807230028140395
+          ],
+          "dep_past_l2_links": [
+            0.05164355324572991,
+            0.03240057673523719
+          ],
+          "dram_mlp": [
+            2.5870997774418405,
+            2.8170055521206487
+          ]
+        },
+        "combined": {
+          "instructions_ratio": 0.7116399346918815,
+          "at_nominal_latency": 0.8898265639665514,
+          "contention_feedback": 1.0228379054472512,
+          "dram_bytes_ratio": 1.0672305343479387,
+          "dram_latency": [
+            523.3848293072319,
+            494.876997759522
+          ],
+          "dram_gbs": [
+            23.079259387981637,
+            20.0
+          ],
+          "latency_sensitivity": [
+            8.006777228695123,
+            8.807230028140395
+          ],
+          "dep_past_l2_links": [
+            0.057094839871426536,
+            0.03240057673523719
+          ],
+          "dram_mlp": [
+            2.877541820699808,
+            2.8170055521206487
+          ]
+        }
+      }
+    },
+    "8": {
+      "historical_combined_over_lazy": 0.911774828445719,
+      "actual_changed_block": {
+        "edge": {
+          "l2_bytes_per_byte": 33.26392888888889,
+          "l3_bytes_per_byte": 25.194382222222224,
+          "dram_bytes_per_byte": 9.943893333333333,
+          "dep_dram_links_per_byte": 3.111111111111111e-05,
+          "dep_past_l2_links_per_byte": 0.13106777777777778,
+          "dep_loads_per_byte": 2.2143522222222223,
+          "max_dram_chain": 12,
+          "max_past_l2_chain": 902,
+          "dram_mlp": 2.6238968719678417,
+          "overlap_per_dep_link": 6.357142857142857,
+          "dram_loads_per_dep_link": 81.75,
+          "past_l2_loads_per_byte": 0.15930555555555556,
+          "dram_loads_per_byte": 0.002543333333333333,
+          "instructions_per_byte": 35.38964444444444,
+          "cycles_per_byte": 19.31381888888889
+        },
+        "combined": {
+          "l2_bytes_per_byte": 86.50140444444445,
+          "l3_bytes_per_byte": 79.70517333333333,
+          "dram_bytes_per_byte": 32.83157333333333,
+          "dep_dram_links_per_byte": 0.02942111111111111,
+          "dep_past_l2_links_per_byte": 0.3936366666666667,
+          "dep_loads_per_byte": 2.1394655555555557,
+          "max_dram_chain": 81,
+          "max_past_l2_chain": 150,
+          "dram_mlp": 3.7756206510235333,
+          "overlap_per_dep_link": 5.23898183466143,
+          "dram_loads_per_dep_link": 8.391404509233732,
+          "past_l2_loads_per_byte": 0.9284488888888889,
+          "dram_loads_per_byte": 0.24688444444444443,
+          "instructions_per_byte": 23.28712,
+          "cycles_per_byte": 40.00539222222222
+        },
+        "control_differences_from_original_by_counter": {
+          "cycles": [
+            36015803,
+            36004853
+          ],
+          "l1_miss": [
+            1092971,
+            1088624
+          ],
+          "l2_miss": [
+            890236,
+            889744
+          ],
+          "llc_miss": [
+            264260,
+            264270
+          ],
+          "l2_transfers": [
+            1222158,
+            1216426
+          ],
+          "l3_transfers": [
+            1121026,
+            1120854
+          ],
+          "dram_read_lines": [
+            342966,
+            342921
+          ],
+          "dram_write_lines": [
+            118796,
+            118773
+          ],
+          "prefetched_lines": [
+            109097,
+            109500
+          ],
+          "past_l2_loads": [
+            835650,
+            835604
+          ],
+          "dram_loads": [
+            222218,
+            222196
+          ],
+          "dep_past_l2_loads": [
+            354368,
+            354273
+          ],
+          "dep_dram_loads": [
+            26461,
+            26479
+          ],
+          "dep_any_loads": [
+            1925611,
+            1925519
+          ],
+          "max_chain_past_l2": [
+            149,
+            150
+          ],
+          "chain_sum_dram": [
+            270430,
+            270461
+          ],
+          "dram_latency_sum": [
+            115775578,
+            115764116
+          ],
+          "dram_busy_cycles": [
+            30670975,
+            30660950
+          ],
+          "dep_overlap_sum": [
+            138671,
+            138723
+          ],
+          "dep_overlap_n": [
+            26461,
+            26479
+          ],
+          "store_buffer_stall_cycles": [
+            2434989,
+            2428083
+          ],
+          "norfo_lines": [
+            57,
+            60
+          ]
+        }
+      },
+      "block165_edge_over_combined_nominal_cycles": 0.48278039074343676,
+      "counterfactual_edge_over_lazy": 0.8701880237020424,
+      "counterfactual_rerun_combined_over_lazy": 0.9117575654027735,
+      "counterfactual_edge_over_rerun_combined": 0.9544072423656089,
+      "counterfactual_drivers": {
+        "edge": {
+          "instructions_ratio": 0.7221481295443725,
+          "at_nominal_latency": 0.8208175372722809,
+          "contention_feedback": 1.060147942981126,
+          "dram_bytes_ratio": 0.9895699605607634,
+          "dram_latency": [
+            605.9422177024828,
+            533.615613937098
+          ],
+          "dram_gbs": [
+            27.200984531255916,
+            23.865328049103592
+          ],
+          "latency_sensitivity": [
+            8.619064361361906,
+            9.768127459529094
+          ],
+          "dep_past_l2_links": [
+            0.05142376010233352,
+            0.03230386312248205
+          ],
+          "dram_mlp": [
+            2.586341030292082,
+            3.1932952335808418
+          ]
+        },
+        "combined": {
+          "instructions_ratio": 0.7116399346918815,
+          "at_nominal_latency": 0.8579031576185471,
+          "contention_feedback": 1.062774460387488,
+          "dram_bytes_ratio": 1.0543732857085397,
+          "dram_latency": [
+            609.0271050078975,
+            533.615613937098
+          ],
+          "dram_gbs": [
+            27.292071211031505,
+            23.865328049103592
+          ],
+          "latency_sensitivity": [
+            8.619064361361906,
+            9.768127459529094
+          ],
+          "dep_past_l2_links": [
+            0.05689398204043648,
+            0.03230386312248205
+          ],
+          "dram_mlp": [
+            3.4383388169824483,
+            3.1932952335808418
+          ]
+        }
+      }
+    },
+    "10": {
+      "historical_combined_over_lazy": 0.9154763431826098,
+      "actual_changed_block": {
+        "edge": {
+          "l2_bytes_per_byte": 33.26392888888889,
+          "l3_bytes_per_byte": 25.194382222222224,
+          "dram_bytes_per_byte": 10.404693333333332,
+          "dep_dram_links_per_byte": 5.6666666666666664e-05,
+          "dep_past_l2_links_per_byte": 0.13013222222222223,
+          "dep_loads_per_byte": 2.21272,
+          "max_dram_chain": 12,
+          "max_past_l2_chain": 822,
+          "dram_mlp": 2.3052740049729024,
+          "overlap_per_dep_link": 3.6470588235294117,
+          "dram_loads_per_dep_link": 83.70588235294117,
+          "past_l2_loads_per_byte": 0.15930555555555556,
+          "dram_loads_per_byte": 0.004743333333333333,
+          "instructions_per_byte": 35.38964444444444,
+          "cycles_per_byte": 21.849064444444444
+        },
+        "combined": {
+          "l2_bytes_per_byte": 86.50140444444445,
+          "l3_bytes_per_byte": 79.70517333333333,
+          "dram_bytes_per_byte": 40.50432,
+          "dep_dram_links_per_byte": 0.06537,
+          "dep_past_l2_links_per_byte": 0.3947611111111111,
+          "dep_loads_per_byte": 2.1389744444444445,
+          "max_dram_chain": 90,
+          "max_past_l2_chain": 150,
+          "dram_mlp": 4.795130808035025,
+          "overlap_per_dep_link": 7.531708394948414,
+          "dram_loads_per_dep_link": 5.64066085360257,
+          "past_l2_loads_per_byte": 0.9284488888888889,
+          "dram_loads_per_byte": 0.36873,
+          "instructions_per_byte": 23.28712,
+          "cycles_per_byte": 57.83191444444444
+        },
+        "control_differences_from_original_by_counter": {
+          "cycles": [
+            52068290,
+            52048723
+          ],
+          "l1_miss": [
+            1092971,
+            1088624
+          ],
+          "l2_miss": [
+            890236,
+            889744
+          ],
+          "llc_miss": [
+            373919,
+            373961
+          ],
+          "l2_transfers": [
+            1222158,
+            1216426
+          ],
+          "l3_transfers": [
+            1121026,
+            1120854
+          ],
+          "dram_read_lines": [
+            454835,
+            454847
+          ],
+          "dram_write_lines": [
+            114804,
+            114745
+          ],
+          "prefetched_lines": [
+            109097,
+            109500
+          ],
+          "past_l2_loads": [
+            835650,
+            835604
+          ],
+          "dram_loads": [
+            331853,
+            331857
+          ],
+          "dep_past_l2_loads": [
+            355395,
+            355285
+          ],
+          "dep_dram_loads": [
+            58829,
+            58833
+          ],
+          "dep_any_loads": [
+            1925072,
+            1925077
+          ],
+          "max_chain_past_l2": [
+            144,
+            150
+          ],
+          "chain_sum_dram": [
+            436214,
+            436113
+          ],
+          "dram_latency_sum": [
+            220682245,
+            220684905
+          ],
+          "dram_busy_cycles": [
+            46039943,
+            46022708
+          ],
+          "dep_overlap_sum": [
+            442974,
+            443113
+          ],
+          "dep_overlap_n": [
+            58829,
+            58833
+          ],
+          "store_buffer_stall_cycles": [
+            3289018,
+            3289613
+          ],
+          "norfo_lines": [
+            57,
+            60
+          ]
+        }
+      },
+      "block165_edge_over_combined_nominal_cycles": 0.3778028905723585,
+      "counterfactual_edge_over_lazy": 0.8589022502567178,
+      "counterfactual_rerun_combined_over_lazy": 0.9154622233053136,
+      "counterfactual_edge_over_rerun_combined": 0.9382170322174698,
+      "counterfactual_drivers": {
+        "edge": {
+          "instructions_ratio": 0.7221481295443725,
+          "at_nominal_latency": 0.7509080031599814,
+          "contention_feedback": 1.1438182129398988,
+          "dram_bytes_ratio": 0.9124711725987684,
+          "dram_latency": [
+            797.5475164821949,
+            631.8349205283359
+          ],
+          "dram_gbs": [
+            30.179548204822048,
+            27.89048560955378
+          ],
+          "latency_sensitivity": [
+            8.221676379332266,
+            9.184683787652876
+          ],
+          "dep_past_l2_links": [
+            0.05082375607107134,
+            0.03229673344495007
+          ],
+          "dram_mlp": [
+            2.53646103835944,
+            3.4110070788094022
+          ]
+        },
+        "combined": {
+          "instructions_ratio": 0.7116399346918815,
+          "at_nominal_latency": 0.8028002517314844,
+          "contention_feedback": 1.1403362434563755,
+          "dram_bytes_ratio": 0.9869819488868173,
+          "dram_latency": [
+            793.4414135562179,
+            631.8349205283359
+          ],
+          "dram_gbs": [
+            30.146092039607797,
+            27.89048560955378
+          ],
+          "latency_sensitivity": [
+            8.221676379332266,
+            9.184683787652876
+          ],
+          "dep_past_l2_links": [
+            0.05633689496418819,
+            0.03229673344495007
+          ],
+          "dram_mlp": [
+            4.201270466361609,
+            3.4110070788094022
+          ]
+        }
+      }
+    }
+  }
+}

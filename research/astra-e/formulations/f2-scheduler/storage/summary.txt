@@ -1,0 +1,8 @@
+scalar frozen {'first_vectors': 1856296, 'first_lane_paths': 0, 'second_vectors': 1093936, 'second_lane_paths': 0, 'total_capacity_bytes': 2950232}
+scalar full stream high water {'first_vectors': 3974736, 'first_lane_paths': 0, 'second_vectors': 3214016, 'second_lane_paths': 0, 'total_capacity_bytes': 7188752}
+fixed frozen {'first_vectors': 1856296, 'first_lane_paths': 2048, 'second_vectors': 1093936, 'second_lane_paths': 0, 'total_capacity_bytes': 2952280}
+fixed full stream high water {'first_vectors': 3974736, 'first_lane_paths': 9216, 'second_vectors': 3214016, 'second_lane_paths': 0, 'total_capacity_bytes': 7197968}
+refill frozen {'first_vectors': 1856296, 'first_lane_paths': 2048, 'second_vectors': 1093936, 'second_lane_paths': 0, 'total_capacity_bytes': 2952280}
+refill full stream high water {'first_vectors': 3974736, 'first_lane_paths': 9216, 'second_vectors': 3214016, 'second_lane_paths': 0, 'total_capacity_bytes': 7197968}
+double frozen {'first_vectors': 1856296, 'first_lane_paths': 2048, 'second_vectors': 1225008, 'second_lane_paths': 512, 'total_capacity_bytes': 3083864}
+double full stream high water {'first_vectors': 3974736, 'first_lane_paths': 9216, 'second_vectors': 3181248, 'second_lane_paths': 1024, 'total_capacity_bytes': 7166224}

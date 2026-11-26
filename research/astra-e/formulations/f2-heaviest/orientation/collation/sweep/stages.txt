@@ -1,0 +1,1 @@
+rows 899931 cycles 1 mass 24165 windows 875767 permutation_and_orbits_s 0.0615264 suffix_index_s 1.2591 initial_dictionary_s 0.0245286 slides_and_csv_s 1.85273 independent_checks 19 checks_s 0.304363

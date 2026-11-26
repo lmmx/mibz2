@@ -1,0 +1,13 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.01s
+99e90871536108bed01e44809aad44ee729d517b
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+5856066c231f02efac6b60bb86f36bd89e1321df33ee962d2a6ead7627b8de1b  research/astra-e/formulations/f4/candidate.rs
+63898a3bcb10ea07ee4263e3e2c215de7c55f9394d324c2e599e0b90915c2057  research/astra-e/formulations/f4/phase.py
+68237a7c50eed4794a11fa01c1d27570e202d27138be00f335a3fea86d97f175  research/astra-e/formulations/f4/target/phase

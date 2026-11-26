@@ -1,0 +1,1006 @@
+{
+  "mode": "fixed",
+  "passes_complete_screen": false,
+  "stats": {
+    "all": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 65.72393,
+          "emit_ns": 65.64228
+        },
+        "geometry": {
+          "thread_ns": 96.93018,
+          "index_ns": 55.95734,
+          "emit_ns": 40.90482
+        },
+        "complete": {
+          "thread_ns": 148.10536,
+          "caps_ns": 1.08038,
+          "geometry_ns": 50.93806,
+          "index_ns": 53.59954,
+          "emit_ns": 40.47312
+        },
+        "scalar": {
+          "thread_ns": 25.23024
+        },
+        "lazy": {
+          "thread_ns": 25.12099
+        },
+        "opend": {
+          "thread_ns": 24.20024
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.571436,
+          2.473925,
+          2.672791
+        ],
+        "prepared/lazy": [
+          2.526285,
+          2.319559,
+          2.751434
+        ],
+        "prepared/opend": [
+          2.67755,
+          2.543997,
+          2.818114
+        ],
+        "geometry/scalar": [
+          3.905756,
+          3.710848,
+          4.110901
+        ],
+        "geometry/lazy": [
+          3.837175,
+          3.686892,
+          3.993584
+        ],
+        "geometry/opend": [
+          4.066932,
+          3.809076,
+          4.342244
+        ],
+        "complete/scalar": [
+          5.885547,
+          5.764454,
+          6.009184
+        ],
+        "complete/lazy": [
+          5.782204,
+          5.425454,
+          6.162411
+        ],
+        "complete/opend": [
+          6.128422,
+          5.731348,
+          6.553005
+        ]
+      }
+    },
+    "1": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.42349,
+          "emit_ns": 5.39705
+        },
+        "geometry": {
+          "thread_ns": 7.50544,
+          "index_ns": 4.04813,
+          "emit_ns": 3.43762
+        },
+        "complete": {
+          "thread_ns": 11.38593,
+          "caps_ns": 0.07058,
+          "geometry_ns": 3.46186,
+          "index_ns": 3.78684,
+          "emit_ns": 3.53057
+        },
+        "scalar": {
+          "thread_ns": 1.70057
+        },
+        "lazy": {
+          "thread_ns": 1.61394
+        },
+        "opend": {
+          "thread_ns": 1.79854
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          3.330674,
+          2.533283,
+          4.379057
+        ],
+        "prepared/lazy": [
+          3.210753,
+          2.437597,
+          4.229139
+        ],
+        "prepared/opend": [
+          3.164669,
+          2.875775,
+          3.482584
+        ],
+        "geometry/scalar": [
+          4.478419,
+          4.048212,
+          4.954345
+        ],
+        "geometry/lazy": [
+          4.317174,
+          3.551346,
+          5.248148
+        ],
+        "geometry/opend": [
+          4.255209,
+          3.849316,
+          4.703901
+        ],
+        "complete/scalar": [
+          6.493658,
+          5.956655,
+          7.079073
+        ],
+        "complete/lazy": [
+          6.259854,
+          5.052305,
+          7.756018
+        ],
+        "complete/opend": [
+          6.170006,
+          5.224254,
+          7.286968
+        ]
+      }
+    },
+    "41": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 9.22512,
+          "emit_ns": 9.22188
+        },
+        "geometry": {
+          "thread_ns": 16.74785,
+          "index_ns": 10.69302,
+          "emit_ns": 5.79648
+        },
+        "complete": {
+          "thread_ns": 25.96916,
+          "caps_ns": 0.13855,
+          "geometry_ns": 9.40498,
+          "index_ns": 10.58878,
+          "emit_ns": 5.73952
+        },
+        "scalar": {
+          "thread_ns": 4.92234
+        },
+        "lazy": {
+          "thread_ns": 4.18952
+        },
+        "opend": {
+          "thread_ns": 3.94223
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          1.790049,
+          1.631249,
+          1.964308
+        ],
+        "prepared/lazy": [
+          2.189777,
+          2.015585,
+          2.379023
+        ],
+        "prepared/opend": [
+          2.215115,
+          2.128793,
+          2.304937
+        ],
+        "geometry/scalar": [
+          3.175759,
+          2.779245,
+          3.628845
+        ],
+        "geometry/lazy": [
+          3.884923,
+          3.268673,
+          4.617357
+        ],
+        "geometry/opend": [
+          3.929877,
+          3.180209,
+          4.856263
+        ],
+        "complete/scalar": [
+          5.017975,
+          4.394992,
+          5.729265
+        ],
+        "complete/lazy": [
+          6.138515,
+          5.160781,
+          7.301484
+        ],
+        "complete/opend": [
+          6.209545,
+          5.087408,
+          7.579193
+        ]
+      }
+    },
+    "85": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.68233,
+          "emit_ns": 5.67737
+        },
+        "geometry": {
+          "thread_ns": 8.30848,
+          "index_ns": 4.54743,
+          "emit_ns": 3.78235
+        },
+        "complete": {
+          "thread_ns": 12.55363,
+          "caps_ns": 0.07968,
+          "geometry_ns": 4.08361,
+          "index_ns": 4.29956,
+          "emit_ns": 3.86942
+        },
+        "scalar": {
+          "thread_ns": 1.95209
+        },
+        "lazy": {
+          "thread_ns": 2.26111
+        },
+        "opend": {
+          "thread_ns": 2.05651
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.841787,
+          2.571913,
+          3.13998
+        ],
+        "prepared/lazy": [
+          2.416726,
+          2.207513,
+          2.645765
+        ],
+        "prepared/opend": [
+          2.710722,
+          2.638532,
+          2.784888
+        ],
+        "geometry/scalar": [
+          4.353088,
+          3.510084,
+          5.398553
+        ],
+        "geometry/lazy": [
+          3.701973,
+          3.151259,
+          4.34893
+        ],
+        "geometry/opend": [
+          4.152321,
+          3.604663,
+          4.783185
+        ],
+        "complete/scalar": [
+          6.238522,
+          5.683578,
+          6.84765
+        ],
+        "complete/lazy": [
+          5.305392,
+          4.891367,
+          5.754462
+        ],
+        "complete/opend": [
+          5.950797,
+          5.726667,
+          6.1837
+        ]
+      }
+    },
+    "134": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.5131,
+          "emit_ns": 5.50892
+        },
+        "geometry": {
+          "thread_ns": 7.61437,
+          "index_ns": 4.29798,
+          "emit_ns": 3.53546
+        },
+        "complete": {
+          "thread_ns": 11.72491,
+          "caps_ns": 0.07006,
+          "geometry_ns": 3.66823,
+          "index_ns": 4.30643,
+          "emit_ns": 3.37768
+        },
+        "scalar": {
+          "thread_ns": 1.94976
+        },
+        "lazy": {
+          "thread_ns": 1.81384
+        },
+        "opend": {
+          "thread_ns": 1.92858
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          3.02551,
+          2.540175,
+          3.603575
+        ],
+        "prepared/lazy": [
+          3.085449,
+          2.650679,
+          3.59153
+        ],
+        "prepared/opend": [
+          3.078611,
+          2.672914,
+          3.545885
+        ],
+        "geometry/scalar": [
+          4.130453,
+          3.553118,
+          4.801597
+        ],
+        "geometry/lazy": [
+          4.212282,
+          3.479211,
+          5.099811
+        ],
+        "geometry/opend": [
+          4.202947,
+          3.983576,
+          4.434399
+        ],
+        "complete/scalar": [
+          6.077765,
+          4.911185,
+          7.521448
+        ],
+        "complete/lazy": [
+          6.198172,
+          4.860298,
+          7.904318
+        ],
+        "complete/opend": [
+          6.184437,
+          5.473749,
+          6.987398
+        ]
+      }
+    },
+    "176": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.23162,
+          "emit_ns": 5.22747
+        },
+        "geometry": {
+          "thread_ns": 7.87575,
+          "index_ns": 4.24168,
+          "emit_ns": 3.60771
+        },
+        "complete": {
+          "thread_ns": 12.19178,
+          "caps_ns": 0.07674,
+          "geometry_ns": 3.87892,
+          "index_ns": 4.20216,
+          "emit_ns": 3.40071
+        },
+        "scalar": {
+          "thread_ns": 1.75981
+        },
+        "lazy": {
+          "thread_ns": 1.89407
+        },
+        "opend": {
+          "thread_ns": 1.76226
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.902347,
+          2.487608,
+          3.386231
+        ],
+        "prepared/lazy": [
+          2.770616,
+          2.070581,
+          3.707325
+        ],
+        "prepared/opend": [
+          3.055098,
+          2.687241,
+          3.473311
+        ],
+        "geometry/scalar": [
+          4.29121,
+          4.096909,
+          4.494725
+        ],
+        "geometry/lazy": [
+          4.096442,
+          3.499103,
+          4.795755
+        ],
+        "geometry/opend": [
+          4.517057,
+          4.260789,
+          4.788739
+        ],
+        "complete/scalar": [
+          6.617817,
+          5.816481,
+          7.529552
+        ],
+        "complete/lazy": [
+          6.317451,
+          6.022131,
+          6.627253
+        ],
+        "complete/opend": [
+          6.966114,
+          5.915429,
+          8.20342
+        ]
+      }
+    },
+    "225": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.29148,
+          "emit_ns": 5.28794
+        },
+        "geometry": {
+          "thread_ns": 7.5237,
+          "index_ns": 3.93445,
+          "emit_ns": 3.6344
+        },
+        "complete": {
+          "thread_ns": 10.99029,
+          "caps_ns": 0.06648,
+          "geometry_ns": 3.45396,
+          "index_ns": 3.57238,
+          "emit_ns": 3.51503
+        },
+        "scalar": {
+          "thread_ns": 1.64487
+        },
+        "lazy": {
+          "thread_ns": 1.79679
+        },
+        "opend": {
+          "thread_ns": 1.69754
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          3.257502,
+          2.610322,
+          4.065138
+        ],
+        "prepared/lazy": [
+          3.054736,
+          2.712062,
+          3.440707
+        ],
+        "prepared/opend": [
+          3.072815,
+          2.493518,
+          3.786696
+        ],
+        "geometry/scalar": [
+          4.610381,
+          3.781061,
+          5.6216
+        ],
+        "geometry/lazy": [
+          4.323404,
+          3.999958,
+          4.673004
+        ],
+        "geometry/opend": [
+          4.348991,
+          3.639478,
+          5.196824
+        ],
+        "complete/scalar": [
+          6.37185,
+          5.722414,
+          7.094991
+        ],
+        "complete/lazy": [
+          5.975229,
+          5.70076,
+          6.262912
+        ],
+        "complete/opend": [
+          6.010593,
+          5.412156,
+          6.675201
+        ]
+      }
+    },
+    "269": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 7.66555,
+          "emit_ns": 7.66171
+        },
+        "geometry": {
+          "thread_ns": 14.62914,
+          "index_ns": 9.42283,
+          "emit_ns": 4.60313
+        },
+        "complete": {
+          "thread_ns": 22.28909,
+          "caps_ns": 0.16458,
+          "geometry_ns": 8.04591,
+          "index_ns": 9.24191,
+          "emit_ns": 4.58927
+        },
+        "scalar": {
+          "thread_ns": 3.46501
+        },
+        "lazy": {
+          "thread_ns": 4.39766
+        },
+        "opend": {
+          "thread_ns": 3.49114
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.126501,
+          1.746176,
+          2.589663
+        ],
+        "prepared/lazy": [
+          1.693165,
+          1.286082,
+          2.229102
+        ],
+        "prepared/opend": [
+          2.104974,
+          1.641309,
+          2.699622
+        ],
+        "geometry/scalar": [
+          3.853318,
+          3.437383,
+          4.319582
+        ],
+        "geometry/lazy": [
+          3.068092,
+          2.576183,
+          3.653929
+        ],
+        "geometry/opend": [
+          3.814309,
+          3.087581,
+          4.712088
+        ],
+        "complete/scalar": [
+          6.107476,
+          5.512395,
+          6.766797
+        ],
+        "complete/lazy": [
+          4.8629,
+          4.222617,
+          5.600269
+        ],
+        "complete/opend": [
+          6.045646,
+          4.963809,
+          7.363264
+        ]
+      }
+    },
+    "313": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.66175,
+          "emit_ns": 5.5759
+        },
+        "geometry": {
+          "thread_ns": 8.1678,
+          "index_ns": 4.39927,
+          "emit_ns": 3.7345
+        },
+        "complete": {
+          "thread_ns": 11.87252,
+          "caps_ns": 0.07224,
+          "geometry_ns": 3.57639,
+          "index_ns": 3.95629,
+          "emit_ns": 3.63122
+        },
+        "scalar": {
+          "thread_ns": 1.93288
+        },
+        "lazy": {
+          "thread_ns": 1.9347
+        },
+        "opend": {
+          "thread_ns": 1.89567
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.885265,
+          2.390536,
+          3.48238
+        ],
+        "prepared/lazy": [
+          2.737547,
+          2.104437,
+          3.561126
+        ],
+        "prepared/opend": [
+          2.752404,
+          2.285256,
+          3.315044
+        ],
+        "geometry/scalar": [
+          4.119071,
+          3.507137,
+          4.837777
+        ],
+        "geometry/lazy": [
+          3.908186,
+          3.203579,
+          4.767767
+        ],
+        "geometry/opend": [
+          3.929395,
+          3.402406,
+          4.538007
+        ],
+        "complete/scalar": [
+          5.846722,
+          5.168156,
+          6.614383
+        ],
+        "complete/lazy": [
+          5.547387,
+          4.458213,
+          6.902653
+        ],
+        "complete/opend": [
+          5.577491,
+          4.839509,
+          6.42801
+        ]
+      }
+    },
+    "359": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.2015,
+          "emit_ns": 5.19801
+        },
+        "geometry": {
+          "thread_ns": 7.37563,
+          "index_ns": 3.74114,
+          "emit_ns": 3.49417
+        },
+        "complete": {
+          "thread_ns": 11.41784,
+          "caps_ns": 0.06728,
+          "geometry_ns": 3.83046,
+          "index_ns": 3.98637,
+          "emit_ns": 3.47122
+        },
+        "scalar": {
+          "thread_ns": 1.66782
+        },
+        "lazy": {
+          "thread_ns": 1.62216
+        },
+        "opend": {
+          "thread_ns": 1.59785
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.987696,
+          2.520397,
+          3.541636
+        ],
+        "prepared/lazy": [
+          3.144915,
+          2.891647,
+          3.420366
+        ],
+        "prepared/opend": [
+          3.113136,
+          2.989963,
+          3.241384
+        ],
+        "geometry/scalar": [
+          4.182096,
+          3.53289,
+          4.9506
+        ],
+        "geometry/lazy": [
+          4.402166,
+          3.821972,
+          5.070435
+        ],
+        "geometry/opend": [
+          4.357683,
+          3.850333,
+          4.931885
+        ],
+        "complete/scalar": [
+          6.682521,
+          5.587831,
+          7.991668
+        ],
+        "complete/lazy": [
+          7.034169,
+          5.739451,
+          8.620952
+        ],
+        "complete/opend": [
+          6.96309,
+          5.919784,
+          8.19027
+        ]
+      }
+    },
+    "397": {
+      "median_ms": {
+        "prepared": {
+          "thread_ns": 5.99641,
+          "emit_ns": 5.99315
+        },
+        "geometry": {
+          "thread_ns": 8.25383,
+          "index_ns": 4.25625,
+          "emit_ns": 3.69597
+        },
+        "complete": {
+          "thread_ns": 12.57528,
+          "caps_ns": 0.0777,
+          "geometry_ns": 4.09206,
+          "index_ns": 4.42051,
+          "emit_ns": 3.71231
+        },
+        "scalar": {
+          "thread_ns": 2.09415
+        },
+        "lazy": {
+          "thread_ns": 2.00484
+        },
+        "opend": {
+          "thread_ns": 2.18544
+        }
+      },
+      "ratios": {
+        "prepared/scalar": [
+          2.691566,
+          2.239312,
+          3.235157
+        ],
+        "prepared/lazy": [
+          2.87418,
+          2.234459,
+          3.697053
+        ],
+        "prepared/opend": [
+          2.811953,
+          2.368206,
+          3.338847
+        ],
+        "geometry/scalar": [
+          3.816397,
+          3.155072,
+          4.616339
+        ],
+        "geometry/lazy": [
+          4.075328,
+          3.751533,
+          4.427069
+        ],
+        "geometry/opend": [
+          3.987095,
+          3.744302,
+          4.24563
+        ],
+        "complete/scalar": [
+          5.854725,
+          4.917706,
+          6.970282
+        ],
+        "complete/lazy": [
+          6.25195,
+          5.559052,
+          7.031213
+        ],
+        "complete/opend": [
+          6.116592,
+          5.928563,
+          6.310584
+        ]
+      }
+    }
+  },
+  "blocks": {
+    "41": {
+      "states": 154127,
+      "exceptions": 51646,
+      "repair_steps": 0,
+      "raw_bytes": 1086152,
+      "geometry_bytes": 770635,
+      "index_bytes": 5682792,
+      "index_layer_peak": 8317604,
+      "output_bytes": 1799862
+    },
+    "85": {
+      "states": 72133,
+      "exceptions": 41689,
+      "repair_steps": 0,
+      "raw_bytes": 540752,
+      "geometry_bytes": 360665,
+      "index_bytes": 2979328,
+      "index_layer_peak": 4302236,
+      "output_bytes": 1799862
+    },
+    "134": {
+      "states": 65859,
+      "exceptions": 38632,
+      "repair_steps": 0,
+      "raw_bytes": 479792,
+      "geometry_bytes": 329295,
+      "index_bytes": 2754104,
+      "index_layer_peak": 3976628,
+      "output_bytes": 1799862
+    },
+    "176": {
+      "states": 65283,
+      "exceptions": 39407,
+      "repair_steps": 0,
+      "raw_bytes": 497680,
+      "geometry_bytes": 326415,
+      "index_bytes": 2741872,
+      "index_layer_peak": 3955180,
+      "output_bytes": 1799862
+    },
+    "225": {
+      "states": 60200,
+      "exceptions": 35782,
+      "repair_steps": 0,
+      "raw_bytes": 436096,
+      "geometry_bytes": 301000,
+      "index_bytes": 2550216,
+      "index_layer_peak": 3682196,
+      "output_bytes": 1799862
+    },
+    "269": {
+      "states": 146214,
+      "exceptions": 49627,
+      "repair_steps": 0,
+      "raw_bytes": 1034744,
+      "geometry_bytes": 731070,
+      "index_bytes": 5413424,
+      "index_layer_peak": 7921628,
+      "output_bytes": 1799862
+    },
+    "313": {
+      "states": 61680,
+      "exceptions": 38236,
+      "repair_steps": 0,
+      "raw_bytes": 455792,
+      "geometry_bytes": 308400,
+      "index_bytes": 2617208,
+      "index_layer_peak": 3772868,
+      "output_bytes": 1799862
+    },
+    "359": {
+      "states": 59766,
+      "exceptions": 37332,
+      "repair_steps": 0,
+      "raw_bytes": 434928,
+      "geometry_bytes": 298830,
+      "index_bytes": 2548728,
+      "index_layer_peak": 3673764,
+      "output_bytes": 1799862
+    },
+    "397": {
+      "states": 69075,
+      "exceptions": 39167,
+      "repair_steps": 0,
+      "raw_bytes": 509296,
+      "geometry_bytes": 345375,
+      "index_bytes": 2861296,
+      "index_layer_peak": 4135276,
+      "output_bytes": 1799862
+    },
+    "1": {
+      "states": 61507,
+      "exceptions": 37914,
+      "repair_steps": 0,
+      "raw_bytes": 451088,
+      "geometry_bytes": 307535,
+      "index_bytes": 2609072,
+      "index_layer_peak": 3761952,
+      "output_bytes": 1799862
+    }
+  },
+  "process_kib": {
+    "prepared": {
+      "pre_hwm_kib": {
+        "median": 2334.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 7206.0,
+        "max": 13452
+      }
+    },
+    "geometry": {
+      "pre_hwm_kib": {
+        "median": 2336.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 7240.0,
+        "max": 13452
+      }
+    },
+    "complete": {
+      "pre_hwm_kib": {
+        "median": 2336.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 7206.0,
+        "max": 13576
+      }
+    },
+    "scalar": {
+      "pre_hwm_kib": {
+        "median": 2334.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 4676.0,
+        "max": 6000
+      }
+    },
+    "lazy": {
+      "pre_hwm_kib": {
+        "median": 2334.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 4422.0,
+        "max": 9140
+      }
+    },
+    "opend": {
+      "pre_hwm_kib": {
+        "median": 2336.0,
+        "max": 2804
+      },
+      "post_hwm_kib": {
+        "median": 4820.0,
+        "max": 9200
+      }
+    }
+  }
+}

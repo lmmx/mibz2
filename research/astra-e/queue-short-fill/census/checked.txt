@@ -1,0 +1,2 @@
+233 admissions, 209697662 marked output bytes, 26567581 kept u32 entries, 14386594 kept append calls and 7 forced primary singletons
+159405486 native entries compared directly against original queues (fresh and reused, thresholds 0,8,16), all 233 marked outputs matched Segmented

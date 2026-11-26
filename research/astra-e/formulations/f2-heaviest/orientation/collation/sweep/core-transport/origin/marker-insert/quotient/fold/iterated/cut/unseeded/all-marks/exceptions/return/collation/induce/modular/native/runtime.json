@@ -1,0 +1,8 @@
+{
+  "affinity": [
+    0
+  ],
+  "nice": 12,
+  "quota": "400000 100000",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+}

@@ -1,0 +1,9 @@
+{
+  "positive_total_gains": 635,
+  "positive_total_cut_savings": 179,
+  "heterogeneous": 1445,
+  "models": 1800,
+  "strict_step_score_gains": 751,
+  "strict_step_cut_reductions": 182,
+  "positive_slabs": 2103
+}

@@ -1,0 +1,4 @@
+GenuineIntel Intel Xeon Platinum 8573C, x86-64 Linux container
+Visible logical CPU affinity 0–4, cgroup quota 400000/100000 (four CPU equivalents)
+Local hardware L1d 48 KiB/core, L2 2 MiB/core (lscpu)
+Target is i9-10900K. Local stage and worker timings are screening evidence.

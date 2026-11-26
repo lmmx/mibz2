@@ -1,0 +1,1 @@
+233 real admission outputs and block CRCs checked, 209700196 bytes compared with libbzip2 over all 431 blocks

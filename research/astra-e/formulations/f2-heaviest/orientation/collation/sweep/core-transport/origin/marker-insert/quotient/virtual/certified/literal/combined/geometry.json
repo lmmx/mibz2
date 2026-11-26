@@ -1,0 +1,9 @@
+{
+  "full_inputs": 228,
+  "matched_prior_heldout_inputs": 219,
+  "stored_records_all": {
+    "4": 577204,
+    "12": 463884
+  },
+  "aggregate_sha256": "cc8d6cf7baf2863c70c6f5afaf818dd252ee9b3a9e54ea9139b1a70973775c39"
+}

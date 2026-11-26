@@ -1,0 +1,2 @@
+full tip surgeries 31287 partial controls 20219 partial differences 13835
+minimal observed arbitrary partial difference (4, (2, 2), (1, 0), 1, [None, None], [0, None])

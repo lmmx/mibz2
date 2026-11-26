@@ -1,0 +1,18 @@
+{
+  "mode": "price",
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "sha256": {
+    "libgrammar.so": "92168430fa3b989128685d9383d6eab1844ea1113f689f54eaba578e1a46f350",
+    "price.cpp": "0274e4861038311a2d63591b5fff8949c39cd53f1bc2d99f8eafc895b6385609",
+    "matrix.hpp": "08065e532a9162e5757efafce377f2385c767ebf1c13581ed88d37dfd1ebc491",
+    "capped-base.inc": "a86dff3c7f541e0dd68215a836e6b8b9b4d6314d14cbef36329b750bc0cbcbda",
+    "tail.inc": "1bd6e6e6adbed4e393c649c4a7608f4b8aa5cbb088ccf0345f85047fe23b9ab4",
+    "residual.inc": "873c6b0d91f269cf09b4957a13aeba13f9e81bab01634c2796cbe24dc3fddf9a"
+  },
+  "donors": [
+    "0dd79ba",
+    "3eb3982",
+    "d8ce5ca",
+    "63c44f6"
+  ]
+}

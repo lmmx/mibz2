@@ -1,0 +1,1552 @@
+{
+  "all": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 40.54875,
+        "provision_ns": 0.018967,
+        "reverse_ns": 18.064888,
+        "scatter_ns": 22.421173,
+        "terminal_ns": 40.427853
+      },
+      "warm": {
+        "thread_ns": 82.514326,
+        "provision_ns": 0.00367,
+        "reverse_ns": 17.91988,
+        "scatter_ns": 21.94656,
+        "terminal_ns": 39.706274,
+        "rehearsal_ns": 43.071133
+      },
+      "parse": {
+        "thread_ns": 47.901104,
+        "parse_ns": 4.1143,
+        "provision_ns": 1.86486,
+        "reverse_ns": 17.560903,
+        "scatter_ns": 23.382447,
+        "terminal_ns": 41.207375
+      },
+      "scalar": {
+        "thread_ns": 24.541007
+      },
+      "lazy": {
+        "thread_ns": 24.581766
+      },
+      "opend": {
+        "thread_ns": 24.400514
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.669044,
+        1.602583,
+        1.73826
+      ],
+      "free.provision_ns/scalar": [
+        0.000869,
+        0.00061,
+        0.001239
+      ],
+      "free.reverse_ns/scalar": [
+        0.744668,
+        0.703102,
+        0.788691
+      ],
+      "free.scatter_ns/scalar": [
+        0.918206,
+        0.877399,
+        0.960911
+      ],
+      "free.terminal_ns/scalar": [
+        1.665245,
+        1.5989,
+        1.734342
+      ],
+      "warm.thread_ns/scalar": [
+        3.499267,
+        3.346166,
+        3.659372
+      ],
+      "warm.provision_ns/scalar": [
+        0.000156,
+        0.000127,
+        0.000192
+      ],
+      "warm.reverse_ns/scalar": [
+        0.766892,
+        0.69196,
+        0.849938
+      ],
+      "warm.scatter_ns/scalar": [
+        0.880416,
+        0.836685,
+        0.926432
+      ],
+      "warm.terminal_ns/scalar": [
+        1.656823,
+        1.577609,
+        1.740014
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.834845,
+        1.747687,
+        1.926349
+      ],
+      "parse.thread_ns/scalar": [
+        2.016309,
+        1.874537,
+        2.168802
+      ],
+      "parse.parse_ns/scalar": [
+        0.185773,
+        0.150257,
+        0.229683
+      ],
+      "parse.provision_ns/scalar": [
+        0.088765,
+        0.062759,
+        0.125546
+      ],
+      "parse.reverse_ns/scalar": [
+        0.72724,
+        0.709535,
+        0.745386
+      ],
+      "parse.scatter_ns/scalar": [
+        0.969778,
+        0.870403,
+        1.080498
+      ],
+      "parse.terminal_ns/scalar": [
+        1.707393,
+        1.595857,
+        1.826724
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.994943,
+        0.945999,
+        1.046419
+      ],
+      "free.thread_ns/lazy": [
+        1.638443,
+        1.557745,
+        1.723322
+      ],
+      "free.thread_ns/opend": [
+        1.645812,
+        1.52769,
+        1.773067
+      ]
+    }
+  },
+  "1": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.058065,
+        "provision_ns": 0.002713,
+        "reverse_ns": 1.333498,
+        "scatter_ns": 1.71689,
+        "terminal_ns": 3.050494
+      },
+      "warm": {
+        "thread_ns": 6.23741,
+        "provision_ns": 0.000385,
+        "reverse_ns": 1.343106,
+        "scatter_ns": 1.603619,
+        "terminal_ns": 3.027486,
+        "rehearsal_ns": 3.068983
+      },
+      "parse": {
+        "thread_ns": 3.692896,
+        "parse_ns": 0.282817,
+        "provision_ns": 0.146096,
+        "reverse_ns": 1.318504,
+        "scatter_ns": 1.768232,
+        "terminal_ns": 3.114523
+      },
+      "scalar": {
+        "thread_ns": 1.677628
+      },
+      "lazy": {
+        "thread_ns": 1.635226
+      },
+      "opend": {
+        "thread_ns": 1.923639
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.703511,
+        1.418628,
+        2.045603
+      ],
+      "free.provision_ns/scalar": [
+        0.001586,
+        0.001201,
+        0.002094
+      ],
+      "free.reverse_ns/scalar": [
+        0.733439,
+        0.611357,
+        0.879901
+      ],
+      "free.scatter_ns/scalar": [
+        0.957021,
+        0.786094,
+        1.165113
+      ],
+      "free.terminal_ns/scalar": [
+        1.698851,
+        1.414388,
+        2.040527
+      ],
+      "warm.thread_ns/scalar": [
+        3.593186,
+        2.959646,
+        4.362341
+      ],
+      "warm.provision_ns/scalar": [
+        0.000256,
+        0.000163,
+        0.000403
+      ],
+      "warm.reverse_ns/scalar": [
+        0.770228,
+        0.561972,
+        1.05566
+      ],
+      "warm.scatter_ns/scalar": [
+        0.935453,
+        0.787154,
+        1.111692
+      ],
+      "warm.terminal_ns/scalar": [
+        1.724254,
+        1.342022,
+        2.215351
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.843587,
+        1.554715,
+        2.186132
+      ],
+      "parse.thread_ns/scalar": [
+        2.220229,
+        1.480539,
+        3.329475
+      ],
+      "parse.parse_ns/scalar": [
+        0.148021,
+        0.109534,
+        0.20003
+      ],
+      "parse.provision_ns/scalar": [
+        0.09634,
+        0.044232,
+        0.209834
+      ],
+      "parse.reverse_ns/scalar": [
+        0.772722,
+        0.671993,
+        0.888552
+      ],
+      "parse.scatter_ns/scalar": [
+        1.099692,
+        0.636528,
+        1.899876
+      ],
+      "parse.terminal_ns/scalar": [
+        1.939288,
+        1.311094,
+        2.868472
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        1.014953,
+        0.858938,
+        1.199305
+      ],
+      "free.thread_ns/lazy": [
+        1.716924,
+        1.426852,
+        2.065967
+      ],
+      "free.thread_ns/opend": [
+        1.660779,
+        1.399581,
+        1.970723
+      ]
+    }
+  },
+  "41": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 6.89789,
+        "provision_ns": 0.002022,
+        "reverse_ns": 3.219845,
+        "scatter_ns": 3.572843,
+        "terminal_ns": 6.889769
+      },
+      "warm": {
+        "thread_ns": 14.726021,
+        "provision_ns": 0.000246,
+        "reverse_ns": 3.143279,
+        "scatter_ns": 3.435894,
+        "terminal_ns": 6.871232,
+        "rehearsal_ns": 7.586321
+      },
+      "parse": {
+        "thread_ns": 7.651594,
+        "parse_ns": 0.68343,
+        "provision_ns": 0.221472,
+        "reverse_ns": 3.118759,
+        "scatter_ns": 3.380891,
+        "terminal_ns": 6.647134
+      },
+      "scalar": {
+        "thread_ns": 4.694816
+      },
+      "lazy": {
+        "thread_ns": 3.912761
+      },
+      "opend": {
+        "thread_ns": 4.2214
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.487118,
+        1.183807,
+        1.868142
+      ],
+      "free.provision_ns/scalar": [
+        0.000556,
+        0.000392,
+        0.000789
+      ],
+      "free.reverse_ns/scalar": [
+        0.723026,
+        0.555401,
+        0.941242
+      ],
+      "free.scatter_ns/scalar": [
+        0.754173,
+        0.625469,
+        0.90936
+      ],
+      "free.terminal_ns/scalar": [
+        1.484402,
+        1.183846,
+        1.861263
+      ],
+      "warm.thread_ns/scalar": [
+        3.100732,
+        2.447251,
+        3.928711
+      ],
+      "warm.provision_ns/scalar": [
+        5.9e-05,
+        4.4e-05,
+        7.9e-05
+      ],
+      "warm.reverse_ns/scalar": [
+        0.700075,
+        0.51489,
+        0.951863
+      ],
+      "warm.scatter_ns/scalar": [
+        0.728501,
+        0.587153,
+        0.903876
+      ],
+      "warm.terminal_ns/scalar": [
+        1.453112,
+        1.096879,
+        1.925038
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.626687,
+        1.287493,
+        2.055241
+      ],
+      "parse.thread_ns/scalar": [
+        1.729641,
+        1.447906,
+        2.066196
+      ],
+      "parse.parse_ns/scalar": [
+        0.165549,
+        0.132776,
+        0.206412
+      ],
+      "parse.provision_ns/scalar": [
+        0.059031,
+        0.033377,
+        0.104402
+      ],
+      "parse.reverse_ns/scalar": [
+        0.679345,
+        0.581541,
+        0.793597
+      ],
+      "parse.scatter_ns/scalar": [
+        0.729467,
+        0.639765,
+        0.831747
+      ],
+      "parse.terminal_ns/scalar": [
+        1.42052,
+        1.232089,
+        1.637769
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.978921,
+        0.892935,
+        1.073186
+      ],
+      "free.thread_ns/lazy": [
+        1.690224,
+        1.343505,
+        2.126421
+      ],
+      "free.thread_ns/opend": [
+        1.666769,
+        1.494251,
+        1.859205
+      ]
+    }
+  },
+  "85": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.249404,
+        "provision_ns": 0.000336,
+        "reverse_ns": 1.529689,
+        "scatter_ns": 1.611671,
+        "terminal_ns": 3.244022
+      },
+      "warm": {
+        "thread_ns": 6.691194,
+        "provision_ns": 0.000333,
+        "reverse_ns": 1.63983,
+        "scatter_ns": 1.653302,
+        "terminal_ns": 3.322447,
+        "rehearsal_ns": 3.374876
+      },
+      "parse": {
+        "thread_ns": 3.849531,
+        "parse_ns": 0.323246,
+        "provision_ns": 0.142543,
+        "reverse_ns": 1.584669,
+        "scatter_ns": 1.643325,
+        "terminal_ns": 3.164496
+      },
+      "scalar": {
+        "thread_ns": 2.002369
+      },
+      "lazy": {
+        "thread_ns": 2.102495
+      },
+      "opend": {
+        "thread_ns": 2.120579
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.597754,
+        1.328489,
+        1.921596
+      ],
+      "free.provision_ns/scalar": [
+        0.000168,
+        0.000141,
+        0.0002
+      ],
+      "free.reverse_ns/scalar": [
+        0.789009,
+        0.662951,
+        0.939035
+      ],
+      "free.scatter_ns/scalar": [
+        0.801742,
+        0.648426,
+        0.99131
+      ],
+      "free.terminal_ns/scalar": [
+        1.595126,
+        1.326062,
+        1.918783
+      ],
+      "warm.thread_ns/scalar": [
+        3.265859,
+        3.116325,
+        3.422569
+      ],
+      "warm.provision_ns/scalar": [
+        0.000158,
+        0.000134,
+        0.000187
+      ],
+      "warm.reverse_ns/scalar": [
+        0.770134,
+        0.657715,
+        0.901766
+      ],
+      "warm.scatter_ns/scalar": [
+        0.794956,
+        0.686879,
+        0.920038
+      ],
+      "warm.terminal_ns/scalar": [
+        1.578782,
+        1.397962,
+        1.782991
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.670905,
+        1.625483,
+        1.717597
+      ],
+      "parse.thread_ns/scalar": [
+        1.925064,
+        1.788403,
+        2.072168
+      ],
+      "parse.parse_ns/scalar": [
+        0.188752,
+        0.154071,
+        0.23124
+      ],
+      "parse.provision_ns/scalar": [
+        0.081782,
+        0.064517,
+        0.103667
+      ],
+      "parse.reverse_ns/scalar": [
+        0.775192,
+        0.69058,
+        0.870172
+      ],
+      "parse.scatter_ns/scalar": [
+        0.827485,
+        0.739565,
+        0.925857
+      ],
+      "parse.terminal_ns/scalar": [
+        1.613955,
+        1.461041,
+        1.782873
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.989754,
+        0.86222,
+        1.136152
+      ],
+      "free.thread_ns/lazy": [
+        1.475342,
+        1.199402,
+        1.814766
+      ],
+      "free.thread_ns/opend": [
+        1.395101,
+        1.127147,
+        1.726756
+      ]
+    }
+  },
+  "134": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.185641,
+        "provision_ns": 0.003177,
+        "reverse_ns": 1.39146,
+        "scatter_ns": 1.698708,
+        "terminal_ns": 3.177559
+      },
+      "warm": {
+        "thread_ns": 6.408961,
+        "provision_ns": 0.000237,
+        "reverse_ns": 1.388295,
+        "scatter_ns": 1.645465,
+        "terminal_ns": 2.94094,
+        "rehearsal_ns": 3.384015
+      },
+      "parse": {
+        "thread_ns": 4.08887,
+        "parse_ns": 0.266805,
+        "provision_ns": 0.218247,
+        "reverse_ns": 1.656594,
+        "scatter_ns": 1.616814,
+        "terminal_ns": 3.378213
+      },
+      "scalar": {
+        "thread_ns": 1.955763
+      },
+      "lazy": {
+        "thread_ns": 1.90269
+      },
+      "opend": {
+        "thread_ns": 2.010731
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.568943,
+        1.277629,
+        1.926678
+      ],
+      "free.provision_ns/scalar": [
+        0.001373,
+        0.001059,
+        0.00178
+      ],
+      "free.reverse_ns/scalar": [
+        0.727172,
+        0.576937,
+        0.916527
+      ],
+      "free.scatter_ns/scalar": [
+        0.82997,
+        0.680213,
+        1.012696
+      ],
+      "free.terminal_ns/scalar": [
+        1.564068,
+        1.27351,
+        1.920918
+      ],
+      "warm.thread_ns/scalar": [
+        3.296734,
+        2.555771,
+        4.252515
+      ],
+      "warm.provision_ns/scalar": [
+        0.000134,
+        0.000111,
+        0.000161
+      ],
+      "warm.reverse_ns/scalar": [
+        0.683931,
+        0.577713,
+        0.809678
+      ],
+      "warm.scatter_ns/scalar": [
+        0.827239,
+        0.656923,
+        1.04171
+      ],
+      "warm.terminal_ns/scalar": [
+        1.516381,
+        1.247118,
+        1.84378
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.746966,
+        1.309806,
+        2.330032
+      ],
+      "parse.thread_ns/scalar": [
+        2.148505,
+        1.704891,
+        2.707546
+      ],
+      "parse.parse_ns/scalar": [
+        0.175921,
+        0.11979,
+        0.258355
+      ],
+      "parse.provision_ns/scalar": [
+        0.142436,
+        0.092453,
+        0.21944
+      ],
+      "parse.reverse_ns/scalar": [
+        0.826006,
+        0.65414,
+        1.043028
+      ],
+      "parse.scatter_ns/scalar": [
+        0.860201,
+        0.731577,
+        1.011439
+      ],
+      "parse.terminal_ns/scalar": [
+        1.703331,
+        1.420358,
+        2.042679
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.969511,
+        0.901855,
+        1.042242
+      ],
+      "free.thread_ns/lazy": [
+        1.619563,
+        1.519628,
+        1.72607
+      ],
+      "free.thread_ns/opend": [
+        1.494191,
+        1.312786,
+        1.700663
+      ]
+    }
+  },
+  "176": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 4.059306,
+        "provision_ns": 0.001025,
+        "reverse_ns": 1.490337,
+        "scatter_ns": 2.513692,
+        "terminal_ns": 4.048896
+      },
+      "warm": {
+        "thread_ns": 7.706572,
+        "provision_ns": 0.000364,
+        "reverse_ns": 1.264397,
+        "scatter_ns": 2.2147,
+        "terminal_ns": 3.484297,
+        "rehearsal_ns": 4.015189
+      },
+      "parse": {
+        "thread_ns": 4.372297,
+        "parse_ns": 0.276612,
+        "provision_ns": 0.179911,
+        "reverse_ns": 1.346418,
+        "scatter_ns": 2.335828,
+        "terminal_ns": 3.703931
+      },
+      "scalar": {
+        "thread_ns": 1.792048
+      },
+      "lazy": {
+        "thread_ns": 2.086057
+      },
+      "opend": {
+        "thread_ns": 1.872324
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        2.211427,
+        1.838954,
+        2.659343
+      ],
+      "free.provision_ns/scalar": [
+        0.000602,
+        0.000502,
+        0.000723
+      ],
+      "free.reverse_ns/scalar": [
+        0.773516,
+        0.642794,
+        0.930822
+      ],
+      "free.scatter_ns/scalar": [
+        1.416052,
+        1.185665,
+        1.691206
+      ],
+      "free.terminal_ns/scalar": [
+        2.204628,
+        1.837772,
+        2.644715
+      ],
+      "warm.thread_ns/scalar": [
+        4.229572,
+        3.854466,
+        4.641182
+      ],
+      "warm.provision_ns/scalar": [
+        0.000205,
+        0.000152,
+        0.000276
+      ],
+      "warm.reverse_ns/scalar": [
+        0.737698,
+        0.637297,
+        0.853916
+      ],
+      "warm.scatter_ns/scalar": [
+        1.202074,
+        0.990434,
+        1.458937
+      ],
+      "warm.terminal_ns/scalar": [
+        1.956619,
+        1.695118,
+        2.258462
+      ],
+      "warm.rehearsal_ns/scalar": [
+        2.247519,
+        2.112113,
+        2.391605
+      ],
+      "parse.thread_ns/scalar": [
+        2.404155,
+        2.302225,
+        2.510598
+      ],
+      "parse.parse_ns/scalar": [
+        0.178559,
+        0.146368,
+        0.21783
+      ],
+      "parse.provision_ns/scalar": [
+        0.118958,
+        0.076284,
+        0.185502
+      ],
+      "parse.reverse_ns/scalar": [
+        0.736336,
+        0.599386,
+        0.904578
+      ],
+      "parse.scatter_ns/scalar": [
+        1.293743,
+        1.184076,
+        1.413567
+      ],
+      "parse.terminal_ns/scalar": [
+        2.043883,
+        1.970666,
+        2.11982
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.887505,
+        0.778338,
+        1.011984
+      ],
+      "free.thread_ns/lazy": [
+        1.993913,
+        1.622204,
+        2.450796
+      ],
+      "free.thread_ns/opend": [
+        1.933558,
+        1.393243,
+        2.683414
+      ]
+    }
+  },
+  "225": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.134567,
+        "provision_ns": 0.000327,
+        "reverse_ns": 1.463153,
+        "scatter_ns": 1.635886,
+        "terminal_ns": 3.130114
+      },
+      "warm": {
+        "thread_ns": 6.351293,
+        "provision_ns": 0.00038,
+        "reverse_ns": 1.278124,
+        "scatter_ns": 1.718883,
+        "terminal_ns": 3.081741,
+        "rehearsal_ns": 3.043976
+      },
+      "parse": {
+        "thread_ns": 3.484329,
+        "parse_ns": 0.350309,
+        "provision_ns": 0.129145,
+        "reverse_ns": 1.278916,
+        "scatter_ns": 1.714197,
+        "terminal_ns": 3.025278
+      },
+      "scalar": {
+        "thread_ns": 1.758712
+      },
+      "lazy": {
+        "thread_ns": 1.844388
+      },
+      "opend": {
+        "thread_ns": 1.722881
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.751135,
+        1.471242,
+        2.084275
+      ],
+      "free.provision_ns/scalar": [
+        0.000174,
+        0.000153,
+        0.000197
+      ],
+      "free.reverse_ns/scalar": [
+        0.812383,
+        0.686171,
+        0.961809
+      ],
+      "free.scatter_ns/scalar": [
+        0.920406,
+        0.756206,
+        1.12026
+      ],
+      "free.terminal_ns/scalar": [
+        1.748658,
+        1.468957,
+        2.081616
+      ],
+      "warm.thread_ns/scalar": [
+        3.631053,
+        3.114811,
+        4.232856
+      ],
+      "warm.provision_ns/scalar": [
+        0.000219,
+        0.000179,
+        0.000268
+      ],
+      "warm.reverse_ns/scalar": [
+        0.804338,
+        0.629704,
+        1.027403
+      ],
+      "warm.scatter_ns/scalar": [
+        0.92087,
+        0.761809,
+        1.113142
+      ],
+      "warm.terminal_ns/scalar": [
+        1.757833,
+        1.410648,
+        2.190466
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.834056,
+        1.67445,
+        2.008875
+      ],
+      "parse.thread_ns/scalar": [
+        1.997977,
+        1.793611,
+        2.225629
+      ],
+      "parse.parse_ns/scalar": [
+        0.204237,
+        0.161125,
+        0.258884
+      ],
+      "parse.provision_ns/scalar": [
+        0.070843,
+        0.058704,
+        0.085491
+      ],
+      "parse.reverse_ns/scalar": [
+        0.688288,
+        0.603031,
+        0.785598
+      ],
+      "parse.scatter_ns/scalar": [
+        0.99598,
+        0.881079,
+        1.125864
+      ],
+      "parse.terminal_ns/scalar": [
+        1.693856,
+        1.566718,
+        1.831311
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        1.005247,
+        0.88305,
+        1.144354
+      ],
+      "free.thread_ns/lazy": [
+        1.656321,
+        1.441927,
+        1.902591
+      ],
+      "free.thread_ns/opend": [
+        1.848761,
+        1.544777,
+        2.212563
+      ]
+    }
+  },
+  "269": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 5.681487,
+        "provision_ns": 0.003489,
+        "reverse_ns": 2.538133,
+        "scatter_ns": 2.931995,
+        "terminal_ns": 5.672674
+      },
+      "warm": {
+        "thread_ns": 12.179627,
+        "provision_ns": 0.000315,
+        "reverse_ns": 2.442216,
+        "scatter_ns": 3.096973,
+        "terminal_ns": 5.566476,
+        "rehearsal_ns": 6.216046
+      },
+      "parse": {
+        "thread_ns": 6.243882,
+        "parse_ns": 0.603531,
+        "provision_ns": 0.180722,
+        "reverse_ns": 2.453985,
+        "scatter_ns": 2.87303,
+        "terminal_ns": 5.449347
+      },
+      "scalar": {
+        "thread_ns": 3.667481
+      },
+      "lazy": {
+        "thread_ns": 4.465253
+      },
+      "opend": {
+        "thread_ns": 3.536813
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.665015,
+        1.427598,
+        1.941916
+      ],
+      "free.provision_ns/scalar": [
+        0.000969,
+        0.000667,
+        0.001409
+      ],
+      "free.reverse_ns/scalar": [
+        0.734049,
+        0.685433,
+        0.786114
+      ],
+      "free.scatter_ns/scalar": [
+        0.908573,
+        0.711263,
+        1.160619
+      ],
+      "free.terminal_ns/scalar": [
+        1.660884,
+        1.427367,
+        1.932606
+      ],
+      "warm.thread_ns/scalar": [
+        3.478663,
+        3.014112,
+        4.014814
+      ],
+      "warm.provision_ns/scalar": [
+        9.7e-05,
+        8.4e-05,
+        0.000112
+      ],
+      "warm.reverse_ns/scalar": [
+        0.746766,
+        0.585506,
+        0.952439
+      ],
+      "warm.scatter_ns/scalar": [
+        0.863646,
+        0.800561,
+        0.931702
+      ],
+      "warm.terminal_ns/scalar": [
+        1.623298,
+        1.435861,
+        1.835202
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.815701,
+        1.552657,
+        2.123309
+      ],
+      "parse.thread_ns/scalar": [
+        1.895535,
+        1.744042,
+        2.060186
+      ],
+      "parse.parse_ns/scalar": [
+        0.214017,
+        0.179152,
+        0.255668
+      ],
+      "parse.provision_ns/scalar": [
+        0.054409,
+        0.03756,
+        0.078814
+      ],
+      "parse.reverse_ns/scalar": [
+        0.730113,
+        0.637116,
+        0.836684
+      ],
+      "parse.scatter_ns/scalar": [
+        0.862401,
+        0.802322,
+        0.92698
+      ],
+      "parse.terminal_ns/scalar": [
+        1.602154,
+        1.464449,
+        1.752808
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.977369,
+        0.941614,
+        1.014483
+      ],
+      "free.thread_ns/lazy": [
+        1.317932,
+        1.146003,
+        1.515655
+      ],
+      "free.thread_ns/opend": [
+        1.605186,
+        1.411158,
+        1.825891
+      ]
+    }
+  },
+  "313": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.133516,
+        "provision_ns": 0.000762,
+        "reverse_ns": 1.450178,
+        "scatter_ns": 1.646816,
+        "terminal_ns": 3.127473
+      },
+      "warm": {
+        "thread_ns": 6.435214,
+        "provision_ns": 0.000342,
+        "reverse_ns": 1.440367,
+        "scatter_ns": 1.65653,
+        "terminal_ns": 3.084961,
+        "rehearsal_ns": 3.405736
+      },
+      "parse": {
+        "thread_ns": 3.523039,
+        "parse_ns": 0.277309,
+        "provision_ns": 0.132508,
+        "reverse_ns": 1.291094,
+        "scatter_ns": 1.630389,
+        "terminal_ns": 2.966406
+      },
+      "scalar": {
+        "thread_ns": 2.039869
+      },
+      "lazy": {
+        "thread_ns": 1.915413
+      },
+      "opend": {
+        "thread_ns": 1.996468
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.544622,
+        1.412844,
+        1.688691
+      ],
+      "free.provision_ns/scalar": [
+        0.000346,
+        0.000292,
+        0.000409
+      ],
+      "free.reverse_ns/scalar": [
+        0.702372,
+        0.642232,
+        0.768144
+      ],
+      "free.scatter_ns/scalar": [
+        0.829504,
+        0.726198,
+        0.947506
+      ],
+      "free.terminal_ns/scalar": [
+        1.540428,
+        1.407654,
+        1.685726
+      ],
+      "warm.thread_ns/scalar": [
+        3.214718,
+        2.929411,
+        3.527812
+      ],
+      "warm.provision_ns/scalar": [
+        0.00018,
+        0.000154,
+        0.000209
+      ],
+      "warm.reverse_ns/scalar": [
+        0.684809,
+        0.583219,
+        0.804094
+      ],
+      "warm.scatter_ns/scalar": [
+        0.802393,
+        0.701073,
+        0.918356
+      ],
+      "warm.terminal_ns/scalar": [
+        1.494242,
+        1.339843,
+        1.666434
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.707438,
+        1.533218,
+        1.901456
+      ],
+      "parse.thread_ns/scalar": [
+        1.957026,
+        1.433062,
+        2.672565
+      ],
+      "parse.parse_ns/scalar": [
+        0.172332,
+        0.114965,
+        0.258326
+      ],
+      "parse.provision_ns/scalar": [
+        0.069368,
+        0.051183,
+        0.094015
+      ],
+      "parse.reverse_ns/scalar": [
+        0.732068,
+        0.611504,
+        0.876404
+      ],
+      "parse.scatter_ns/scalar": [
+        0.914083,
+        0.668986,
+        1.248977
+      ],
+      "parse.terminal_ns/scalar": [
+        1.683676,
+        1.234242,
+        2.296765
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.970018,
+        0.811005,
+        1.160208
+      ],
+      "free.thread_ns/lazy": [
+        1.609518,
+        1.337041,
+        1.937523
+      ],
+      "free.thread_ns/opend": [
+        1.498407,
+        1.26101,
+        1.780495
+      ]
+    }
+  },
+  "359": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 3.188554,
+        "provision_ns": 0.003269,
+        "reverse_ns": 1.329802,
+        "scatter_ns": 1.808156,
+        "terminal_ns": 3.173354
+      },
+      "warm": {
+        "thread_ns": 6.514727,
+        "provision_ns": 0.000338,
+        "reverse_ns": 1.308216,
+        "scatter_ns": 1.749796,
+        "terminal_ns": 3.013046,
+        "rehearsal_ns": 3.274979
+      },
+      "parse": {
+        "thread_ns": 3.494712,
+        "parse_ns": 0.264413,
+        "provision_ns": 0.127017,
+        "reverse_ns": 1.263972,
+        "scatter_ns": 1.757943,
+        "terminal_ns": 3.038144
+      },
+      "scalar": {
+        "thread_ns": 1.740181
+      },
+      "lazy": {
+        "thread_ns": 1.640959
+      },
+      "opend": {
+        "thread_ns": 1.778325
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.914588,
+        1.545999,
+        2.371053
+      ],
+      "free.provision_ns/scalar": [
+        0.001778,
+        0.001378,
+        0.002294
+      ],
+      "free.reverse_ns/scalar": [
+        0.804067,
+        0.594846,
+        1.086875
+      ],
+      "free.scatter_ns/scalar": [
+        1.086913,
+        0.881598,
+        1.340044
+      ],
+      "free.terminal_ns/scalar": [
+        1.908898,
+        1.54172,
+        2.363525
+      ],
+      "warm.thread_ns/scalar": [
+        4.059098,
+        2.536485,
+        6.495711
+      ],
+      "warm.provision_ns/scalar": [
+        0.000226,
+        0.000184,
+        0.000278
+      ],
+      "warm.reverse_ns/scalar": [
+        0.821269,
+        0.481182,
+        1.40172
+      ],
+      "warm.scatter_ns/scalar": [
+        1.076635,
+        0.721607,
+        1.606337
+      ],
+      "warm.terminal_ns/scalar": [
+        1.957753,
+        1.187957,
+        3.226378
+      ],
+      "warm.rehearsal_ns/scalar": [
+        2.06568,
+        1.318345,
+        3.236659
+      ],
+      "parse.thread_ns/scalar": [
+        2.109011,
+        1.972086,
+        2.255443
+      ],
+      "parse.parse_ns/scalar": [
+        0.157289,
+        0.129759,
+        0.190661
+      ],
+      "parse.provision_ns/scalar": [
+        0.075054,
+        0.06322,
+        0.089103
+      ],
+      "parse.reverse_ns/scalar": [
+        0.760855,
+        0.659736,
+        0.877473
+      ],
+      "parse.scatter_ns/scalar": [
+        1.072461,
+        0.998875,
+        1.151468
+      ],
+      "parse.terminal_ns/scalar": [
+        1.854709,
+        1.743916,
+        1.972541
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        1.025593,
+        0.663171,
+        1.58608
+      ],
+      "free.thread_ns/lazy": [
+        1.999054,
+        1.596808,
+        2.502628
+      ],
+      "free.thread_ns/opend": [
+        1.868656,
+        1.42372,
+        2.452644
+      ]
+    }
+  },
+  "397": {
+    "median_ms": {
+      "free": {
+        "thread_ns": 4.154248,
+        "provision_ns": 0.000324,
+        "reverse_ns": 1.687655,
+        "scatter_ns": 2.34087,
+        "terminal_ns": 4.14762
+      },
+      "warm": {
+        "thread_ns": 8.072692,
+        "provision_ns": 0.000338,
+        "reverse_ns": 1.569881,
+        "scatter_ns": 2.217992,
+        "terminal_ns": 3.825304,
+        "rehearsal_ns": 4.080757
+      },
+      "parse": {
+        "thread_ns": 4.450213,
+        "parse_ns": 0.30039,
+        "provision_ns": 0.133858,
+        "reverse_ns": 1.536587,
+        "scatter_ns": 2.280059,
+        "terminal_ns": 3.746964
+      },
+      "scalar": {
+        "thread_ns": 2.339278
+      },
+      "lazy": {
+        "thread_ns": 2.168376
+      },
+      "opend": {
+        "thread_ns": 2.349287
+      }
+    },
+    "ratios": {
+      "free.thread_ns/scalar": [
+        1.697329,
+        1.441551,
+        1.998491
+      ],
+      "free.provision_ns/scalar": [
+        0.000158,
+        0.000142,
+        0.000176
+      ],
+      "free.reverse_ns/scalar": [
+        0.718466,
+        0.604276,
+        0.854234
+      ],
+      "free.scatter_ns/scalar": [
+        0.967639,
+        0.819147,
+        1.143049
+      ],
+      "free.terminal_ns/scalar": [
+        1.694829,
+        1.439438,
+        1.995531
+      ],
+      "warm.thread_ns/scalar": [
+        3.561307,
+        3.22201,
+        3.936333
+      ],
+      "warm.provision_ns/scalar": [
+        0.000153,
+        0.000134,
+        0.000174
+      ],
+      "warm.reverse_ns/scalar": [
+        0.69651,
+        0.612354,
+        0.792231
+      ],
+      "warm.scatter_ns/scalar": [
+        0.954766,
+        0.842087,
+        1.082523
+      ],
+      "warm.terminal_ns/scalar": [
+        1.670081,
+        1.513807,
+        1.842487
+      ],
+      "warm.rehearsal_ns/scalar": [
+        1.859404,
+        1.630753,
+        2.120114
+      ],
+      "parse.thread_ns/scalar": [
+        1.867694,
+        1.469164,
+        2.37433
+      ],
+      "parse.parse_ns/scalar": [
+        0.141008,
+        0.120481,
+        0.165031
+      ],
+      "parse.provision_ns/scalar": [
+        0.063722,
+        0.051258,
+        0.079217
+      ],
+      "parse.reverse_ns/scalar": [
+        0.615413,
+        0.485605,
+        0.779918
+      ],
+      "parse.scatter_ns/scalar": [
+        1.000824,
+        0.71034,
+        1.410097
+      ],
+      "parse.terminal_ns/scalar": [
+        1.626128,
+        1.189355,
+        2.223301
+      ],
+      "warm.terminal_ns/free.terminal_ns": [
+        0.985398,
+        0.88298,
+        1.099696
+      ],
+      "free.thread_ns/lazy": [
+        1.868271,
+        1.765691,
+        1.976811
+      ],
+      "free.thread_ns/opend": [
+        1.77011,
+        1.550274,
+        2.021119
+      ]
+    }
+  },
+  "rss_kib": {
+    "free": {
+      "median": 7220.0,
+      "max": 8992
+    },
+    "lazy": {
+      "median": 4396.0,
+      "max": 9112
+    },
+    "opend": {
+      "median": 4828.0,
+      "max": 9116
+    },
+    "parse": {
+      "median": 7924.0,
+      "max": 12040
+    },
+    "scalar": {
+      "median": 4654.0,
+      "max": 5976
+    },
+    "warm": {
+      "median": 8108.0,
+      "max": 9876
+    }
+  },
+  "largest_per_array_capacity": {
+    "tree_capacity": 3292188,
+    "offset_capacity": 4809776,
+    "output_capacity": 1799862,
+    "resident_wire_bytes": 3291408
+  }
+}

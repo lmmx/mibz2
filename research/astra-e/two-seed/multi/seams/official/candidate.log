@@ -1,0 +1,43 @@
+moonshot: building the harness with /workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/candidate.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-seams-gate/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-seams-gate)
+warning: value assigned to `work` is never read
+    --> /workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/target/generated/expanded.rs:1132:23
+     |
+1132 |             if AUDIT {work.rotated+=extent;}
+     |                       ^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `work` is never read
+    --> /workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/target/generated/expanded.rs:1119:23
+     |
+1119 |             if AUDIT {work.compacted+=l.len;}
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: `mibz2-moonshot` (bin "moonshot") generated 2 warnings
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 18s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-seams/official/candidate
+MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run
+establish production performance; see bench/moonshot/README.md)
+scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04
+candidate: /workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/candidate.rs (moonshot::candidate::Candidate)
+machine: 1 CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)
+
+1. CORRECTNESS: PASS (338 cases, 0 failed)
+
+
+4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,
+   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)
+

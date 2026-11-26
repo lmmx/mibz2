@@ -1,0 +1,24 @@
+{
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ],
+  "code": {
+    "terminal.cpp": "173b02209703a22ec845aac56ea8467f39210aba8121451997e197fe80076cca",
+    "small.cpp": "6e91d126d7438fa298b8ad47d46ee39bc9e34a5c839c582957bf6f35f9b84899",
+    "run.py": "2147fd63fe426cd7934367483d396254f6732930644d2d04c484b6f653936594"
+  },
+  "binaries": {
+    "libgrammar.so": "9bc12f8c26c0b0071dc415c724089140c0e05d48d0a9d49e4b389bd58ea2fca0",
+    "small": "29fae5635a67642695bdf102eef3e6dfb27e909de518dd916aacf7a8a3dd00d8"
+  },
+  "ids_sha256": "debee20753e9e54598a1e064092482fb4c8e90e2764337586dbd7b5d144c75e9",
+  "scalar_donor": "d0a42980e896211906234c7679b38760ae44a46e",
+  "rust_panel": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+  "rust_rss": "20ec2f55e18dd6893e2cc466a30e584e70e8dab647d7ac7d9ae45ada4e45c289"
+}

@@ -1,0 +1,19 @@
+forced exhaustive marks 8805
+passed rows=2002 primary=0 stop=2 file=research/astra-e/formulations/f4/target/deep.column
+passed rows=2002 primary=1001 stop=2 file=research/astra-e/formulations/f4/target/deep.column
+passed rows=2002 primary=11 stop=2 file=research/astra-e/formulations/f4/target/deep.column
+passed rows=2002 primary=1668 stop=2 file=research/astra-e/formulations/f4/target/deep.column
+passed rows=2002 primary=1041 stop=2 file=research/astra-e/formulations/f4/target/deep.column
+passed rows=899931 primary=264045 stop=32768 file=research/astra-e/dense/target/0000.column
+passed rows=900000 primary=221182 stop=32768 file=research/astra-e/dense/target/0024.column
+passed rows=900000 primary=880651 stop=32768 file=research/astra-e/dense/target/0048.column
+passed rows=900000 primary=523129 stop=32768 file=research/astra-e/dense/target/0072.column
+passed rows=900000 primary=721531 stop=32768 file=research/astra-e/dense/target/0096.column
+passed rows=900000 primary=294130 stop=32768 file=research/astra-e/dense/target/0120.column
+passed rows=899984 primary=441922 stop=32768 file=research/astra-e/dense/target/0144.column
+passed rows=900000 primary=350261 stop=32768 file=research/astra-e/dense/target/0168.column
+passed rows=900000 primary=374465 stop=32768 file=research/astra-e/dense/target/0192.column
+passed rows=900000 primary=35838 stop=32768 file=research/astra-e/dense/target/0216.column
+passed rows=900000 primary=70230 stop=32768 file=research/astra-e/dense/target/random-runs-0.column
+passed rows=900000 primary=268587 stop=32768 file=research/astra-e/dense/target/random-runs-1.column
+passed rows=900000 primary=759596 stop=32768 file=research/astra-e/dense/target/random-runs-2.column

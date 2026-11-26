@@ -1,0 +1,1 @@
+85554 states crossed initial capacity 0..96, every occupancy, and widths 0..17; 14025 forced growth. All contents and resulting capacities agreed on Rust 1.99.1.

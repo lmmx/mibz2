@@ -1,0 +1,2 @@
+31626 scalar and detected repair/capacity comparisons passed
+Frozen and crafted integrated cases passed libbzip2 bytes, many LF cycles, nonempty and scalar fallback, wrong CRC, retry, late unfinished run and rollback

@@ -1,0 +1,17 @@
+d0a42980e896211906234c7679b38760ae44a46e
+be74d5763d212864607d46521d74ebc0827f9f36
+scorer path revision 75297a1
+6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c  research/astra-e/front-fusion/cap-batch/worker/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1p2-cap-batch-scalar-confirm research/astra-e/front-fusion/cap-batch/worker/candidate.rs --workers 1\,4 --rounds 9 --repeat 2 --settle 2 --with-opend --no-proxy --target-dir /workspace/work/astra-cap-batch-scalar-build

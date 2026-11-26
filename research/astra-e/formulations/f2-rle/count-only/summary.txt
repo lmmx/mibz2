@@ -1,0 +1,20 @@
+outcomes {'0': 222, '6': 5, '1': 1}
+events admissions sum 9372 frozen 34 high 277
+patches admissions sum 8811 frozen 34 high 258
+patched_spelling_bytes admissions sum 1129906 frozen 175 high 52938
+opend peak retained bytes 7910380
+ahead peak retained bytes 7558316
+combo peak retained bytes 6730182
+patch peak retained bytes 7636174
+wall_ns ahead/opend 0.99588 0.85275 1.16304
+wall_ns combo/opend 0.94673 0.82907 1.08109
+wall_ns combo/ahead 0.95065 0.81137 1.11383
+wall_ns patch/opend 0.97595 0.85269 1.11703
+wall_ns patch/ahead 0.97998 0.84692 1.13395
+wall_ns patch/combo 1.03086 0.87445 1.21525
+cpu_ns ahead/opend 1.03936 0.97655 1.10621
+cpu_ns combo/opend 0.98916 0.94096 1.03982
+cpu_ns combo/ahead 0.9517 0.89352 1.01366
+cpu_ns patch/opend 0.99504 0.94668 1.04587
+cpu_ns patch/ahead 0.95736 0.89834 1.02025
+cpu_ns patch/combo 1.00595 0.95777 1.05655

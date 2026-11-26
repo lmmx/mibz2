@@ -1,0 +1,1 @@
+PASS 13516 independent incoming-state/word cases across all three word actions; 276 truncated-period/error checks

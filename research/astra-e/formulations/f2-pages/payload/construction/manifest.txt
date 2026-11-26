@@ -1,0 +1,18 @@
+cb2e513cdda4afbf4a27496d34b4f128f195ad22
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+8169436728b04059a14f2153469c733def3be49ed42bbc46eb6a1543bbf99dab  /workspace/work/queue-spans/payload-construction/price
+67bba5789b17860a38d59d4b8d04d2ff4ea451315d657bceb23e4b16b9db715a  /workspace/work/queue-spans/payload-construction/focus.rs
+a144e6bac9786cb9df596d6d4203bcf609eb0c872ade9e6ad71db1202ca65155  /workspace/work/queue-spans/payload-construction/control.rs
+bbf201fdd6e766fe5454f477eca118b6d740f21041b36b09451d44c6e371d1d8  /workspace/work/queue-spans/payload-construction/starts.rs
+02d4c895648ffa41cd9c95af8574f88c3c224cde79b8d9b65a75975b6568266b  /workspace/work/queue-spans/payload-construction/ends.rs
+b9f696afc0746ad44472dc67a5379f4a79821121f2c6297c39d8e350701890ae  /workspace/work/queue-spans/payload-construction/coalesced.rs
+c95c3347a904c7de3b2a461c8abbb2a901b4a75bc721c926ffc677883f6b0d08  /workspace/work/queue-spans/payload-construction/eager.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+pinned CPUs 4 2
+400000 100000

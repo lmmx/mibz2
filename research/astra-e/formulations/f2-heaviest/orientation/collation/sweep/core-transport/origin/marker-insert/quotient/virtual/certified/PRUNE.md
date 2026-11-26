@@ -1,0 +1,14 @@
+# Removing artificial unary nodes at fixed root depth
+
+In the uncompressed logical discovery tree let a vertex be unary when its interval lies in one incoming run whose word differs from d. It then has one nonterminal child and no terminal selector. The ordinary contracted trie suppresses exactly these edges. The fully prebuilt controller instead materializes every certified source as its own node, including each such unary edge. For any root-closed choice A of certified buckets, where unprepared subtrees use ordinary unary contraction, the physical node count is exactly N₀ plus the number of unary certified buckets. Here N₀ is the ordinary contracted node count. Each extra unary node also adds exactly one selector and one whole-child copy range to the reverse merge. This explains all observed extra nodes in the full native tree.
+
+Choose just the root and complete first-hop children whose own source bucket contains an internal incoming-run seam. Each chosen child is reached in full from the root and already exists as a materialized endpoint after ordinary contraction. The root in every real test also contains seams. Therefore this subset adds zero trie nodes. It can be recognized from one full old-root census, sorting candidate child bases, one advancing run cursor to test for an internal seam, and a stream split at only selected source boundaries. A width-one child can be rejected before sorting. The root's incoming class c is a complete child exactly when min and max incoming destination of c both belong to B_d.
+
+| Ten-block sum | Root only, indexed records | Root plus branching immediate children, number of sources / indexed records | Full certificate, number of sources / indexed records | Extra nodes, immediate / full |
+|---|---:|---:|---:|---:|
+| Named | 78,647 | 77 / 75,570 | 1,422 / 74,706 | 0 / 731 |
+| Quotient h4 | 45,501 | 80 / 26,098 | 26,966 / 25,565 | 0 / 26,822 |
+| Quotient h8 | 44,251 | 100 / 24,283 | 27,672 / 24,027 | 0 / 27,509 |
+| Quotient h12 | 39,458 | 100 / 19,490 | 31,460 / 19,441 | 0 / 31,297 |
+
+For fixed h4, closing through all branching ancestors gives 103 selected sources and 25,354 index records, which is fewer than the full tree's 25,565. Deleting additional buckets can break an affine LF record and increase index size. The previously verified bridge formula counts these effects. At h12 the one-step selection gives up only 49 of the fully expanded forest's index records across all ten blocks. It performs only one precompiled query for each chosen child, so the removed random *find* count also falls from tens of thousands to at most a hundred. A reduced table and preserved physical trie do not by themselves establish a faster inverse. [All 200 complete structural variants](prune-wikidata.csv) · [Program](prune.py) · [Original native comparison](native/)

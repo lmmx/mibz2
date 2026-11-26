@@ -1,0 +1,29 @@
+queue baseline source 300160cf9f1ab38b0a1206eb1800c42bd26b7b7f
+library source 3c1d5a4b6781d1514d547e04464b71f5222c2466
+first pinned CPU 3; repeat pinned CPU 0; 28 rotated rounds; 11 distinct blocks; seven arms
+400000 100000
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+4192b7717ff9d272915542c948da6e3e4c0f9d1df359e25029abdebc38c9dffd  research/astra-e/queue-spans/candidate.rs
+1ca57012e9ca258f4942a45bf84af545bbe5ee855390e4cf266fdf4de3e176af  research/astra-e/queue-spans/check-low.rs
+65d2432958f39346be02abbd619c0b47a277b5c0e49a2f82dedf67f4b806e21b  research/astra-e/queue-spans/check.rs
+341d8e9e66cd57e16cda7d44f5c548daab14970a0fccef982bc7193d9e8e211a  research/astra-e/queue-spans/kernel.rs
+5afefbd02748dfaad055965ebc75242d72bd9e3439ba1f7c6acf76fac4174a41  research/astra-e/queue-spans/ledger-low.rs
+35c2bf4216b57a08eab265b0da70b049862d6ce306536dfe3a9d7090256a7558  research/astra-e/queue-spans/ledger.rs
+d3897d26152d0beb41c3465d6caec8bc9d275f9fe3755b381033b8bab5aaaf37  research/astra-e/queue-spans/low16.rs
+76ba05dbb39eee1cfa92a3c466c303e76287fa5c893ace64b09a54ef7d74c60e  research/astra-e/queue-spans/low_words.rs
+252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224  research/astra-e/queue-spans/narrow.rs
+9c44f4162b77f60d1f0b48040df4504c03b6535c95469ca9019a1ece17fe986d  research/astra-e/queue-spans/raw.rs
+86fe7d40929d25932f5f110a651bf11584ba0d575a27afeec6108725e125e27e  research/astra-e/queue-spans/spans.rs
+b1f1062768d3e976a4e1a5ec428ca037624b9b5598834c2f4bf90608ed3233c6  research/astra-e/queue-spans/stage-low.rs
+ecc2ca1073b910b58768de888586bce6971ac821999b9bd4a34a0a8ef4cb5bec  research/astra-e/queue-spans/stage.rs
+cf00846bbdc2752a8e513995976a6e992a300a6edd34768a6e8dbcdef266360e  target/release/deps/libmibz2.rlib
+ba9a16a3dc7d47f7341276306ade14c04d1559669744bca49ec13c944211cffd  /workspace/work/queue-spans/check-low
+3aef2fd8f7b6c4053dd84cd13c5f9a39e4eefc47cc4accb527e6672a1c7c003f  /workspace/work/queue-spans/ledger-low
+a7c4bd6f584f08285d641473036fc058e000c6e7f7832a97c0d9958e793bcadf  /workspace/work/queue-spans/stage-low
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2

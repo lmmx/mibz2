@@ -1,0 +1,8 @@
+//! Frozen scalar first-cap and retained-queue counter factorial arm.
+const SCALAR_CAP: bool = true;
+const RECOVER: bool = false;
+#[allow(dead_code)]
+#[path = "kernel.rs"]
+pub mod kernel;
+include!("../../edge-budget/gate.rs");
+include!("adapter.inc.rs");

@@ -1,0 +1,1 @@
+640196 arbitrary marked labelled permutations through five rows, 510752 short marked byte laps, 391680 nondivisor horizons, 492064 overlapping eligible starts checked

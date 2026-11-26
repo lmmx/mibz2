@@ -1,0 +1,158 @@
+{
+  "1": {
+    "lazy": {
+      "wall_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.9815301399905836,
+          "lo": 0.8700043847864398,
+          "hi": 1.1073523680532034
+        },
+        "median_phrase": 1.2603535,
+        "median_base": 1.2543389999999999,
+        "maximum_phrase": 1.975424,
+        "maximum_base": 1.684969
+      },
+      "cpu_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.9924349738527725,
+          "lo": 0.8918735523543369,
+          "hi": 1.1043349976307477
+        },
+        "median_phrase": 1.525,
+        "median_base": 1.5,
+        "maximum_phrase": 2.31,
+        "maximum_base": 1.99
+      },
+      "peak_rss_kb": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.8893997686295533,
+          "lo": 0.8836225613539768,
+          "hi": 0.8952147478287594
+        },
+        "median_phrase": 71368.0,
+        "median_base": 80222.0,
+        "maximum_phrase": 72456,
+        "maximum_base": 80400
+      }
+    },
+    "opend": {
+      "wall_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 1.0427188183711964,
+          "lo": 0.889608234790533,
+          "hi": 1.2221812834741022
+        },
+        "median_phrase": 1.2603535,
+        "median_base": 1.16463,
+        "maximum_phrase": 1.975424,
+        "maximum_base": 2.538809
+      },
+      "cpu_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 1.0353081983964323,
+          "lo": 0.9011812793354399,
+          "hi": 1.1893978384208035
+        },
+        "median_phrase": 1.525,
+        "median_base": 1.4249999999999998,
+        "maximum_phrase": 2.31,
+        "maximum_base": 2.8
+      },
+      "peak_rss_kb": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.9203893654315751,
+          "lo": 0.913635368298521,
+          "hi": 0.9271932911016103
+        },
+        "median_phrase": 71368.0,
+        "median_base": 77476.0,
+        "maximum_phrase": 72456,
+        "maximum_base": 77856
+      }
+    }
+  },
+  "4": {
+    "lazy": {
+      "wall_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.7251615562963832,
+          "lo": 0.5964019770591928,
+          "hi": 0.8817195498297301
+        },
+        "median_phrase": 0.473026,
+        "median_base": 0.61825,
+        "maximum_phrase": 0.640974,
+        "maximum_base": 1.456099
+      },
+      "cpu_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.7760962673733812,
+          "lo": 0.6830301740206453,
+          "hi": 0.8818430563401274
+        },
+        "median_phrase": 1.7850000000000001,
+        "median_base": 2.215,
+        "maximum_phrase": 2.2,
+        "maximum_base": 3.97
+      },
+      "peak_rss_kb": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.7341250992456329,
+          "lo": 0.7080315138958823,
+          "hi": 0.7611803299219569
+        },
+        "median_phrase": 98474.0,
+        "median_base": 134188.0,
+        "maximum_phrase": 102664,
+        "maximum_base": 145704
+      }
+    },
+    "opend": {
+      "wall_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.6956435812686592,
+          "lo": 0.3844641276030474,
+          "hi": 1.2586869812205856
+        },
+        "median_phrase": 0.473026,
+        "median_base": 0.5501039999999999,
+        "maximum_phrase": 0.640974,
+        "maximum_base": 11.892048
+      },
+      "cpu_s": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.7411505030417652,
+          "lo": 0.4613102516920563,
+          "hi": 1.1907475850455298
+        },
+        "median_phrase": 1.7850000000000001,
+        "median_base": 2.025,
+        "maximum_phrase": 2.2,
+        "maximum_base": 24.38
+      },
+      "peak_rss_kb": {
+        "paired": {
+          "n": 12,
+          "geomean": 0.8597688006583801,
+          "lo": 0.8355221978101508,
+          "hi": 0.8847190326276796
+        },
+        "median_phrase": 98474.0,
+        "median_base": 116924.0,
+        "maximum_phrase": 102664,
+        "maximum_base": 118552
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+nodes root 987682 materialized 987682
+words root 728887 materialized 728887
+selectors root 4313576 materialized 4313576
+root_runs root 1786472 materialized 1786472
+merged root 1786472 materialized 5390514
+merge_steps root 7739733 materialized 5390514
+merge_ns stream / refill {'n': 30, 'geomean': 1.642181860046708, 'lo': 1.3103550797007293, 'hi': 2.0580385448518093}
+total_ns stream / refill {'n': 30, 'geomean': 1.0186121199552962, 'lo': 0.9086631323823683, 'hi': 1.1418650256002791}
+total_ns stream / lazy {'n': 30, 'geomean': 1.1237736642942582, 'lo': 1.0360332881779897, 'hi': 1.218944664203091}

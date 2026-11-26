@@ -1,0 +1,5 @@
+moonshot: building the harness with /workspace/work/astra-e-queue-scorer/research/astra-e/queue-spans/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-queue-scorer/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 20.43s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-e/research/astra-e/queue-spans/official/candidate

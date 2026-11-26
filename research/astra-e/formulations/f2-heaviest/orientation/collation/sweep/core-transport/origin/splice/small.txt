@@ -1,0 +1,1 @@
+27014 sparse patches, 85273 independent direct induced partners and words, 431542 marked byte skips, 128507 transported deleted marks, 87264 certified deleted-only marked cycles, 259005 nonzero transported byte offsets, 21824 changed-live cases, 439 empty retained sections

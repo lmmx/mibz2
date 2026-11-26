@@ -1,0 +1,1 @@
+draws=16000 primitive=3802 forced_growth=0

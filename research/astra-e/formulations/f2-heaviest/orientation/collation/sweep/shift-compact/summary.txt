@@ -1,0 +1,30 @@
+compact_quote / compact_frequent total 0.9285 [0.8759, 0.9842] first 0.6961 [0.6583, 0.7360] setup 0.6233 [0.5959, 0.6520] discovery 0.7071 [0.6596, 0.7580]
+compact_quote / projected_h0 total 0.9195 [0.8713, 0.9703] first 0.6661 [0.6466, 0.6862] setup 0.4539 [0.4281, 0.4814] discovery 0.7465 [0.7179, 0.7763]
+compact_frequent / compact_quote total 1.0770 [1.0160, 1.1416] first 1.4366 [1.3586, 1.5190] setup 1.6043 [1.5337, 1.6780] discovery 1.4143 [1.3193, 1.5161]
+compact_frequent / projected_h0 total 0.9903 [0.9300, 1.0545] first 0.9569 [0.9009, 1.0163] setup 0.7283 [0.6825, 0.7771] discovery 1.0558 [0.9767, 1.1413]
+projected_h3 / compact_quote total 1.3127 [1.2492, 1.3794] first 1.8894 [1.8300, 1.9507] setup 3.8407 [3.6608, 4.0294] discovery 1.3858 [1.3253, 1.4491]
+projected_h3 / compact_frequent total 1.2188 [1.1413, 1.3016] first 1.3152 [1.2374, 1.3979] setup 2.3940 [2.2464, 2.5513] discovery 0.9799 [0.9045, 1.0616]
+projected_h3 / projected_h0 total 1.2070 [1.1696, 1.2455] first 1.2585 [1.2201, 1.2980] setup 1.7435 [1.6582, 1.8331] discovery 1.0346 [0.9889, 1.0823]
+projected_h0 / compact_quote total 1.0876 [1.0306, 1.1477] first 1.5013 [1.4573, 1.5466] setup 2.2029 [2.0774, 2.3360] discovery 1.3395 [1.2882, 1.3929]
+projected_h0 / compact_frequent total 1.0098 [0.9483, 1.0752] first 1.0451 [0.9840, 1.1099] setup 1.3731 [1.2868, 1.4653] discovery 0.9471 [0.8762, 1.0238]
+projected_h2 / compact_quote total 1.2829 [1.2206, 1.3484] first 1.8235 [1.7706, 1.8780] setup 3.7602 [3.6105, 3.9162] discovery 1.3440 [1.2895, 1.4009]
+projected_h2 / compact_frequent total 1.1912 [1.1268, 1.2593] first 1.2693 [1.1991, 1.3437] setup 2.3439 [2.2131, 2.4824] discovery 0.9503 [0.8777, 1.0290]
+projected_h2 / projected_h0 total 1.1796 [1.1451, 1.2152] first 1.2146 [1.1810, 1.2492] setup 1.7069 [1.6298, 1.7878] discovery 1.0034 [0.9588, 1.0500]
+projected_h1 / compact_quote total 1.3204 [1.2579, 1.3860] first 1.9009 [1.8238, 1.9813] setup 3.9834 [3.8027, 4.1728] discovery 1.3896 [1.3173, 1.4659]
+projected_h1 / compact_frequent total 1.2260 [1.1400, 1.3185] first 1.3232 [1.2369, 1.4155] setup 2.4830 [2.3362, 2.6391] discovery 0.9825 [0.9007, 1.0718]
+projected_h1 / projected_h0 total 1.2141 [1.1635, 1.2669] first 1.2662 [1.2089, 1.3261] setup 1.8083 [1.7117, 1.9103] discovery 1.0374 [0.9783, 1.1000]
+compact_quote reserved bytes including output 3460392 8243092
+compact_frequent reserved bytes including output 3440516 8724448
+projected_h3 reserved bytes including output 3579536 7897596
+projected_h0 reserved bytes including output 3448884 8732816
+projected_h2 reserved bytes including output 3429508 8889400
+projected_h1 reserved bytes including output 3436200 8721328
+projected_h1 / compact_quote replace setup with baseline setup 0.9674 [0.9240, 1.0129] free all setup 0.8477 [0.8061, 0.8915]
+projected_h1 / compact_frequent replace setup with baseline setup 0.9669 [0.9042, 1.0338] free all setup 0.7871 [0.7264, 0.8529]
+projected_h1 / projected_h0 replace setup with baseline setup 1.0217 [0.9831, 1.0618] free all setup 0.7795 [0.7421, 0.8187]
+projected_h2 / compact_quote replace setup with baseline setup 0.9551 [0.9089, 1.0037] free all setup 0.8360 [0.7934, 0.8809]
+projected_h2 / compact_frequent replace setup with baseline setup 0.9538 [0.9056, 1.0046] free all setup 0.7762 [0.7324, 0.8227]
+projected_h2 / projected_h0 replace setup with baseline setup 1.0100 [0.9768, 1.0442] free all setup 0.7687 [0.7380, 0.8007]
+projected_h3 / compact_quote replace setup with baseline setup 0.9754 [0.9287, 1.0244] free all setup 0.8562 [0.8131, 0.9017]
+projected_h3 / compact_frequent replace setup with baseline setup 0.9735 [0.9172, 1.0332] free all setup 0.7950 [0.7420, 0.8519]
+projected_h3 / projected_h0 replace setup with baseline setup 1.0286 [0.9956, 1.0627] free all setup 0.7873 [0.7566, 0.8193]

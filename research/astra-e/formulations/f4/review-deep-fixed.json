@@ -1,0 +1,9 @@
+{
+  "bytes": 8075,
+  "primary": 0,
+  "source_bzip2_sha256": "1b37f4d3d10f390564d241fb2f99a3bb312b9eade7f268db57c9167049168a8e",
+  "source_text_sha256": "16dc60cf33728ed10a646ef6d30d362a663d24f3d5652e14560f2d841c6ac30b",
+  "tokens": 1001,
+  "python_recursion_limit": 1000,
+  "second_level": "correct singleton token"
+}

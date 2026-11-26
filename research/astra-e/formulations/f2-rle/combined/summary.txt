@@ -1,0 +1,14 @@
+opend kernel max 4310528 coded max 1799862 output max 1799990 total max 7910380 frozen 4271693
+ahead kernel max 3958464 coded max 1799862 output max 1799990 total max 7558316 frozen 4157197
+bundle kernel max 5282256 coded max 0 output max 1799990 total max 7082246 frozen 3405106
+combo kernel max 4930192 coded max 0 output max 1799990 total max 6730182 frozen 3290610
+wall_ns ahead/opend 1.28967 1.10082 1.51092
+wall_ns bundle/opend 1.17938 1.0157 1.36945
+wall_ns combo/opend 1.02482 0.89925 1.16793
+wall_ns combo/ahead 0.79463 0.65901 0.95817
+wall_ns combo/bundle 0.86894 0.73782 1.02337
+cpu_ns ahead/opend 0.95052 0.91534 0.98706
+cpu_ns bundle/opend 1.0199 0.93532 1.11214
+cpu_ns combo/opend 0.93767 0.90898 0.96728
+cpu_ns combo/ahead 0.98648 0.95944 1.01429
+cpu_ns combo/bundle 0.91937 0.83954 1.00681

@@ -1,0 +1,62 @@
+{
+  "scalar": {
+    "sha256": "7e64fb3fd5cc03542fde1d3a36cc986db7cdcb983ef2e69de321f49092801fdc",
+    "info": {
+      "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/scalar.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  },
+  "four": {
+    "sha256": "940766c0f34106ba749ba32e7b2ce0fccfe72fbdf894b4c533d7a868dd9c8531",
+    "info": {
+      "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/scalar-four.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  },
+  "joined": {
+    "sha256": "7b86d337df13b96c0d0c88b7c6f57c59c8c7b22cba43c0f571f26f5e7b24a397",
+    "info": {
+      "candidate": "/workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/joined.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  },
+  "sliced": {
+    "sha256": "b0080bb2eebe4b9af0f5220b4d84c3f7a62fd3add6b150221fb360c16db09911",
+    "info": {
+      "candidate": "/workspace/work/astra-seams-gate/research/astra-e/two-seed/multi/seams/candidate.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 4
+    }
+  }
+}

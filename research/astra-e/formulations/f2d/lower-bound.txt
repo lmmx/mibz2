@@ -1,0 +1,1 @@
+hard-family columns=1020, count-preserving token-column swaps=3868

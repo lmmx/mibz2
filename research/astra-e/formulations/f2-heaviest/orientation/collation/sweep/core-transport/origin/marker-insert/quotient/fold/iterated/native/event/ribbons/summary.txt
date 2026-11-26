@@ -1,0 +1,54 @@
+named peak aggregate vectors (tree uses payload lower bound): 8473542 peak dedicated RSS KiB: 8280
+repeated peak aggregate vectors (tree uses payload lower bound): 8179526 peak dedicated RSS KiB: 8108
+indexed peak aggregate vectors (tree uses payload lower bound): 7648262 peak dedicated RSS KiB: 7380
+dense peak aggregate vectors (tree uses payload lower bound): 10920006 peak dedicated RSS KiB: 9484
+flat peak aggregate vectors (tree uses payload lower bound): 18880454 peak dedicated RSS KiB: 18916
+tree peak aggregate vectors (tree uses payload lower bound): 6866066 peak dedicated RSS KiB: 8136
+flat old sum 30868395 max 145852
+flat initial_ribbons sum 1786472 max 18500
+flat high sum 2048464 max 19680
+flat incl_tmp sum 2076576 max 20082
+flat source_visited sum 12314462 max 78747
+flat intersections sum 12624466 max 80507
+flat left_splits sum 5225889 max 32818
+flat right_splits sum 5302329 max 32614
+flat generated sum 12624466 max 80507
+flat coalesced sum 0 max 0
+flat flat_suffix_moved sum 597641635 max 7246393
+flat table_memory sum 1804519440 max 12014400
+flat aux_capacity sum 2162684976 max 13620928
+flat first_runs sum 1786472 max 18500
+flat eligible_tests sum 28463466 max 203357
+flat owner_queries sum 55470360 max 394748
+flat fixed_queries sum 31515 max 1522
+tree old sum 30868395 max 145852
+tree initial_ribbons sum 1786472 max 18500
+tree high sum 2048464 max 19680
+tree incl_tmp sum 2076573 max 20082
+tree source_visited sum 12314462 max 78747
+tree intersections sum 12624466 max 80507
+tree left_splits sum 5225889 max 32818
+tree right_splits sum 5302329 max 32614
+tree generated sum 12624466 max 80507
+tree coalesced sum 0 max 0
+tree flat_suffix_moved sum 0 max 0
+tree table_memory sum 24581568 max 236160
+tree aux_capacity sum 358168272 max 1606540
+tree first_runs sum 1786472 max 18500
+tree eligible_tests sum 28463466 max 203357
+tree owner_queries sum 55470360 max 394748
+tree fixed_queries sum 31515 max 1522
+named total_ns=1898.81us first_ns=1143.79us index_ns=0.00us contract_ns=0.00us emit_ns=754.27us
+repeated total_ns=6680.76us first_ns=1240.54us index_ns=140.60us contract_ns=3735.87us emit_ns=1561.80us
+tree total_ns=21183.29us first_ns=1198.67us index_ns=662.92us contract_ns=17581.21us emit_ns=1737.58us
+indexed total_ns=2602.05us first_ns=1179.29us index_ns=216.77us contract_ns=0.00us emit_ns=1204.09us
+flat total_ns=12737.43us first_ns=1170.28us index_ns=212.53us contract_ns=9645.38us emit_ns=1706.70us
+dense total_ns=4932.15us first_ns=1156.97us index_ns=304.55us contract_ns=1709.06us emit_ns=1758.93us
+flat/dense=2.5790 [2.3677,2.8092]
+tree/dense=4.3040 [4.1080,4.5093]
+tree/flat=1.6689 [1.5562,1.7897]
+flat/indexed=4.9075 [4.5383,5.3068]
+tree/indexed=8.1899 [7.7697,8.6328]
+flat/named=6.7306 [6.3540,7.1296]
+tree/named=11.2324 [10.8206,11.6597]
+dense/repeated=0.7389 [0.7127,0.7660]

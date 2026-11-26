@@ -1,0 +1,18 @@
+{
+  "scorer_checkout_verified_files": 18,
+  "candidate_revision": "d38b8af5aac80579da3ede854c65c9469d18bd03",
+  "entry_sha256": "fc1ab0c7f46bb8152e395c5ae22d52a1eb06d299212e9a6bf452139d8c9eb990",
+  "binary_sha256": "37f3660caeb77c5b0ec219301f301ac61310d50d1bd44dfe7b3631923eaf1c3d",
+  "generated_kernel_sha256": "377b1dd2fd9a17e4ceeb0fd1d586d6c33915842baf9d225e957c3c222c776ba6",
+  "path_normalized_kernel_sha256": "89bce3b25f273a365fb663f8a770e3b1df6d3cb88a038a6fa97fa478f85ba68f",
+  "generated_source_files_sha256": {
+    "research/astra-e/queue-short-fill/target/frozen/docs/journal/2026-11-18-open-return/segments.rs": "6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7",
+    "research/astra-e/queue-short-fill/target/frozen/research/astra-e/front-fusion/cap-counter/narrow.rs": "252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224",
+    "research/astra-e/queue-short-fill/target/frozen/research/astra-e/short-words/endpoint.rs": "09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d",
+    "research/astra-e/queue-short-fill/target/generated/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104",
+    "research/astra-e/queue-short-fill/target/generated/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212"
+  },
+  "input_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "refreshed_origin_master": "3df195b10e9fb6f86f0c06ad9fad1feb992406d5"
+}

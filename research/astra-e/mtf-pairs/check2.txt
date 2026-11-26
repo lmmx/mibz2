@@ -1,0 +1,2 @@
+Synthetic 4410
+Corpus blocks 431, record routes 383, active symbols 24978786, rows 209706092

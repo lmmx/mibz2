@@ -1,0 +1,27 @@
+{
+  "alphabet": [
+    0,
+    1,
+    2
+  ],
+  "exhaustive": {
+    "arbitrary_state_certificates": 549576,
+    "arbitrary_with_truncated_stream": 6936,
+    "bounded_paths": 216084,
+    "bridged_paths": 96000,
+    "joined_fallbacks": 27492,
+    "known_start_certificates": 41796,
+    "physical_partitions": 243576,
+    "raw_words": 9841
+  },
+  "foreign_state": 255,
+  "max_length": 8,
+  "width32": {
+    "bounded_paths": 127,
+    "bridged_paths": 61,
+    "full_count_range_partitions": 8192,
+    "joined_fallbacks": 117,
+    "max_copied": 64,
+    "width32_trials": 244
+  }
+}

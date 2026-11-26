@@ -1,0 +1,7 @@
+wall_ns lean/opend 1.06137 [0.87201, 1.29186]
+wall_ns lean/direct 0.89493 [0.73816, 1.08500]
+wall_ns direct/opend 1.18598 [1.01782, 1.38192]
+cpu_ns lean/opend 1.04654 [1.00248, 1.09254]
+cpu_ns lean/direct 0.98292 [0.93863, 1.02930]
+cpu_ns direct/opend 1.06472 [1.00771, 1.12496]
+maximum retained lean hint bytes 5304

@@ -1,0 +1,13 @@
+228 ordinary real blocks measured three times each; all five additional dense blocks 24 times
+ordinary 1/0 1.00442 0.98222 1.02712
+ordinary 2/0 1.02533 1.00221 1.04899
+ordinary 3/0 1.02826 0.99837 1.05905
+ordinary 2/3 0.99715 0.97096 1.02405
+extra 1/0 1.01543 0.9779 1.0544
+extra 2/0 1.02774 0.98141 1.07626
+extra 3/0 1.01335 0.97979 1.04805
+extra 2/3 1.0142 0.97372 1.05637
+weighted 1/0 1.00487 0.98354 1.02666
+weighted 2/0 1.02538 1.0031 1.04815
+weighted 3/0 1.02763 0.9992 1.05687
+weighted 2/3 0.99781 0.9728 1.02347

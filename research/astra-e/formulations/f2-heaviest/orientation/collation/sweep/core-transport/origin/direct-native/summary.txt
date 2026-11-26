@@ -1,0 +1,54 @@
+compact_quote mean ms {'select_ns': 0.005, 'setup_mark_ns': 2.583, 'discover_ns': 7.655, 'merge_ns': 2.008, 'second_index_ns': 0.788, 'second_discover_ns': 3.596, 'second_merge_ns': 1.18, 'second_emit_ns': 2.505, 'total_ns': 20.338}
+compact_quote / adaptive_frequent 0.8609 [0.8348, 0.8878]
+compact_quote / literal_frequent 0.9110 [0.8817, 0.9414]
+compact_quote / twice_heaviest 0.7282 [0.7042, 0.7529]
+adaptive_frequent mean ms {'select_ns': 3.116, 'setup_mark_ns': 3.645, 'discover_ns': 9.687, 'merge_ns': 2.424, 'second_index_ns': 0.629, 'second_discover_ns': 2.975, 'second_merge_ns': 0.276, 'second_emit_ns': 0.864, 'total_ns': 23.636}
+adaptive_frequent / compact_quote 1.1616 [1.1264, 1.1980]
+adaptive_frequent / literal_frequent 1.0582 [1.0211, 1.0968]
+adaptive_frequent / twice_heaviest 0.8458 [0.8231, 0.8693]
+literal_frequent mean ms {'select_ns': 1.002, 'setup_mark_ns': 4.086, 'discover_ns': 9.966, 'merge_ns': 2.524, 'second_index_ns': 0.564, 'second_discover_ns': 3.034, 'second_merge_ns': 0.276, 'second_emit_ns': 0.868, 'total_ns': 22.339}
+literal_frequent / compact_quote 1.0977 [1.0623, 1.1342]
+literal_frequent / adaptive_frequent 0.9450 [0.9118, 0.9794]
+literal_frequent / twice_heaviest 0.7993 [0.7720, 0.8276]
+comma_quote mean ms {'select_ns': 0.162, 'setup_mark_ns': 4.105, 'discover_ns': 9.988, 'merge_ns': 2.17, 'second_index_ns': 0.552, 'second_discover_ns': 4.974, 'second_merge_ns': 0.284, 'second_emit_ns': 0.925, 'total_ns': 23.183}
+comma_quote / compact_quote 1.1405 [1.1076, 1.1743]
+comma_quote / adaptive_frequent 0.9818 [0.9545, 1.0099]
+comma_quote / literal_frequent 1.0390 [1.0096, 1.0692]
+comma_quote / twice_heaviest 0.8305 [0.8046, 0.8571]
+property_landed mean ms {'select_ns': 0.707, 'setup_mark_ns': 4.155, 'discover_ns': 17.176, 'merge_ns': 0.924, 'second_index_ns': 0.247, 'second_discover_ns': 1.363, 'second_merge_ns': 0.021, 'second_emit_ns': 0.659, 'total_ns': 25.266}
+property_landed / compact_quote 1.2411 [1.2033, 1.2800]
+property_landed / adaptive_frequent 1.0684 [1.0325, 1.1056]
+property_landed / literal_frequent 1.1306 [1.0988, 1.1634]
+property_landed / twice_heaviest 0.9037 [0.8702, 0.9385]
+twice_heaviest mean ms {'select_ns': 3.194, 'setup_mark_ns': 4.155, 'discover_ns': 17.402, 'merge_ns': 0.902, 'second_index_ns': 0.224, 'second_discover_ns': 1.293, 'second_merge_ns': 0.019, 'second_emit_ns': 0.717, 'total_ns': 27.923}
+twice_heaviest / compact_quote 1.3733 [1.3281, 1.4200]
+twice_heaviest / adaptive_frequent 1.1823 [1.1504, 1.2150]
+twice_heaviest / literal_frequent 1.2511 [1.2083, 1.2954]
+property_landed / twice_heaviest both selectors free 0.9918 [0.9536, 1.0315]
+comma_quote / adaptive_frequent both selectors free 1.1232 [1.0921, 1.1553]
+property_landed / compact_quote both selectors free 1.2063 [1.1692, 1.2446]
+comma_quote / compact_quote both selectors free 1.1328 [1.1004, 1.1662]
+comma_quote inferred full stage with second phases free / complete quote 0.8078 [0.7800, 0.8367]
+property_landed inferred full stage with second phases free / complete quote 1.1286 [1.0927, 1.1658]
+ten compact_quote blocks 10 total mass 1357067 {'words': 35117, 'dict_bytes': 1077638, 'token_runs': 84317, 'edge_bytes': 908546, 'second_dict_bytes': 1926457} second 10
+ten adaptive_frequent blocks 10 total mass 245445 {'words': 38648, 'dict_bytes': 1926457, 'token_runs': 66373, 'edge_bytes': 1296362, 'second_dict_bytes': 5525525} second 10
+ten literal_frequent blocks 10 total mass 245445 {'words': 38648, 'dict_bytes': 1926457, 'token_runs': 66373, 'edge_bytes': 1296362, 'second_dict_bytes': 5525525} second 10
+ten comma_quote blocks 10 total mass 299698 {'words': 38078, 'dict_bytes': 1658122, 'token_runs': 67176, 'edge_bytes': 1392691, 'second_dict_bytes': 7792480} second 10
+ten property_landed blocks 10 total mass 31367 {'words': 14849, 'dict_bytes': 5525092, 'token_runs': 20169, 'edge_bytes': 3911432, 'second_dict_bytes': 8999915} second 10
+ten twice_heaviest blocks 10 total mass 31358 {'words': 14843, 'dict_bytes': 5525525, 'token_runs': 20162, 'edge_bytes': 4030238, 'second_dict_bytes': 8999915} second 10
+ten literal_frequent adaptive_frequent equal masses 10 equal intervals 10
+ten property_landed twice_heaviest equal masses 7 equal intervals 0
+admissions compact_quote blocks 228 total mass 30868395 {'words': 728887, 'dict_bytes': 23393313, 'token_runs': 1786472, 'edge_bytes': 19750839, 'second_dict_bytes': 41433719} second 228
+admissions adaptive_frequent blocks 228 total mass 5566401 {'words': 806027, 'dict_bytes': 41433719, 'token_runs': 1433311, 'edge_bytes': 28053831, 'second_dict_bytes': 125949883} second 228
+admissions literal_frequent blocks 228 total mass 5566401 {'words': 806027, 'dict_bytes': 41433719, 'token_runs': 1433311, 'edge_bytes': 28053831, 'second_dict_bytes': 125949883} second 228
+admissions comma_quote blocks 228 total mass 6818277 {'words': 787795, 'dict_bytes': 35694544, 'token_runs': 1435945, 'edge_bytes': 30154411, 'second_dict_bytes': 179361321} second 228
+admissions property_landed blocks 228 total mass 705427 {'words': 326704, 'dict_bytes': 125948034, 'token_runs': 447462, 'edge_bytes': 86388723, 'second_dict_bytes': 205174331} second 228
+admissions twice_heaviest blocks 228 total mass 705337 {'words': 326626, 'dict_bytes': 125949883, 'token_runs': 447380, 'edge_bytes': 89002161, 'second_dict_bytes': 205174331} second 228
+admissions literal_frequent adaptive_frequent equal masses 228 equal intervals 228
+admissions property_landed twice_heaviest equal masses 191 equal intervals 0
+compact_quote VmHWM KiB 8232 retained B 8473542
+adaptive_frequent VmHWM KiB 8500 retained B 8529750
+literal_frequent VmHWM KiB 8496 retained B 8528726
+comma_quote VmHWM KiB 8120 retained B 8396806
+property_landed VmHWM KiB 7916 retained B 8047470
+twice_heaviest VmHWM KiB 7784 retained B 7540590

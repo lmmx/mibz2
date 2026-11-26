@@ -1,0 +1,7 @@
+Singleton primary 0, F=0122, inside={1}: same counts; ordered outputs 102 vs 120.
+s=1 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=2
+s=2 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=6
+s=3 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=20
+s=4 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=70
+s=5 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=252
+s=6 identical pair-mass and single-band-per-type schedules, distinct ordered outputs=924

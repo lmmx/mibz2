@@ -1,0 +1,24 @@
+frozen: 1 blocks, 1 eligible
+  n 899931
+  retained 89874
+  lookups 74595
+  rewritten 44257
+  original_hops 89874
+  final_hops 59511
+  final/original hops 0.662160
+all OpenGated blocks: 228 blocks, 187 eligible
+  n 205197794
+  retained 25484201
+  lookups 15160694
+  rewritten 8909398
+  original_hops 25484201
+  final_hops 19355474
+  final/original hops 0.759509
+with bit capacity: 187 blocks, 187 eligible
+  n 168299082
+  retained 18658864
+  lookups 15160694
+  rewritten 8909398
+  original_hops 18658864
+  final_hops 12530137
+  final/original hops 0.671538

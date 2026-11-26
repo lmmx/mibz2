@@ -1,0 +1,1 @@
+17064 arbitrary stable marked-LF comparisons per kernel across all six implementations, including capped boundary, short width, periodic and wide endpoint cases

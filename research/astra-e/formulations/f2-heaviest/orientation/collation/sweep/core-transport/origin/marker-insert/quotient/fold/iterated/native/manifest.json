@@ -1,0 +1,20 @@
+{
+  "preregistered": "643a38d",
+  "upstream_native": "00cb78bdff05ef9abd8c2d17666bf304346dba63",
+  "joint_constructor": "50b8ecb8946a498601e3fd894ed84a2687df6cc8",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "sha256": {
+    "/tmp/astra-terminal-grammar/control.rs": "e47600e9eec39e8464280309e8ed0ba15a8ab4f47ed1d34dbbd5b529445bdd07",
+    "/tmp/astra-terminal-grammar/second.rs": "523bee3c587e17bda12437918e2b5f45951df64a0435820fe045b05683fda52a",
+    "/tmp/astra-terminal-grammar/main.rs": "90df69189ab46bc4f7ed08b31bd10ae8dbabe8610392c0dfe810dfa7ee0634d4",
+    "/tmp/astra-terminal-grammar/grammar": "6933f3d747a26ecae680f4e0144fa667649eedf4e69150195223e78bba41388e",
+    "target/release/deps/libmibz2.rlib": "26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9",
+    "/tmp/astra-token-all/admissions.bin": "da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26",
+    "/tmp/astra-clipped/ten.bin": "879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb",
+    "/tmp/astra-clipped-final/expected.csv": "371c94a260c2f9a01cca5580cbee43ac687cc7b8d1a2b1a3d3e8b295c4131c10",
+    "/tmp/astra-terminal-grammar/joint/docs/journal/2026-11-18-open-return/segments.rs": "6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7",
+    "/tmp/astra-terminal-grammar/joint/research/astra-e/front-fusion/cap-counter/kernel.rs": "d10946d31ac78284a72c91225fc221b47126edf0b3f8d2385a5d5f5cf13c7d99",
+    "/tmp/astra-terminal-grammar/joint/research/astra-e/front-fusion/cap-counter/narrow.rs": "252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224",
+    "/tmp/astra-terminal-grammar/joint/research/astra-e/short-words/endpoint.rs": "09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d"
+  }
+}

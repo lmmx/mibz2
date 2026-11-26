@@ -1,0 +1,11 @@
+{
+  "training_sha": "e12eba29633f5cb4e81c35a9f0c286243e101be8c1cf42fe65b5274c6c5c8811",
+  "dictionaries_sha": "7f500cbec1ce3af655014a93dd485468eed2870f10b0786b2b21db4a2e16a39f",
+  "words_per_arm": [
+    30740,
+    12879,
+    6527
+  ],
+  "native": "8e3e6732",
+  "training_source": "0eb27930"
+}

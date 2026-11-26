@@ -1,0 +1,14 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+d754f7f181a4b26754397dc4e1d205b9c509e115bb3303643e03d556f9615373  /tmp/astra-marker-insert-native/marker
+26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9  /workspace/work/astra-e/target/release/deps/libmibz2.rlib
+879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb  /tmp/astra-clipped/ten.bin
+da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26  /tmp/astra-token-all/admissions.bin
+371c94a260c2f9a01cca5580cbee43ac687cc7b8d1a2b1a3d3e8b295c4131c10  /tmp/astra-clipped-final/expected.csv
+842c79b37b0b9358a1274deb19d96c38b78f50a3
+400000 100000

@@ -1,0 +1,61 @@
+{
+  "constructor": "990450a2",
+  "checked_prefix_inputs": "dd836e65",
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "builds": {
+    "assert": {
+      "flags": [
+        "-O3",
+        "-std=c++20",
+        "-shared",
+        "-fPIC"
+      ],
+      "sha256": "871d9388f7fc52c81eb0decaee0c1b286ff2fe78aef3c6379ce9271639cf3288",
+      "real": {
+        "cells": 30,
+        "canonical_triples": 498084
+      },
+      "small": {
+        "marked_models": 9789,
+        "physical_returns": 17579
+      }
+    },
+    "release": {
+      "flags": [
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++20",
+        "-shared",
+        "-fPIC"
+      ],
+      "sha256": "5ec77f8e2c8a482adc4f8861fc265a36e6efce194625090bac68d6d5e5da13a8",
+      "real": {
+        "cells": 30,
+        "canonical_triples": 498084
+      },
+      "small": {
+        "marked_models": 9789,
+        "physical_returns": 17579
+      }
+    },
+    "undefined-sanitizer": {
+      "flags": [
+        "-O2",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "-std=c++20",
+        "-shared",
+        "-fPIC"
+      ],
+      "sha256": "35046e48d161946f414767beed011150c1ecc6b414d56c7f249ceb6dcc1610b0",
+      "real": {
+        "cells": 30,
+        "canonical_triples": 498084
+      },
+      "small": {
+        "marked_models": 9789,
+        "physical_returns": 17579
+      }
+    }
+  }
+}

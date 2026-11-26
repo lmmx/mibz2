@@ -1,0 +1,5 @@
+# Direct reconstruction without a singleton anchor
+
+Reconstruct the marked terminal word without splitting the initial marked source or holding any type outside a cut. Keep only an ordinal x and an intra-word offset. A fixed ordinal of LF already spells its complete marked lap, even when many other rows share this type. For ordinary contraction of a chosen oriented cut, reuse the proven mark transport on deleted and surviving ranks. At a power step walk LF backwards within the mark's type to the retained entry; on a run of constant LF displacement jump to the far edge in one operation. Track the weighted offset. Test any claimed bound on the number of pieces used, arbitrary marks inside powers, heterogeneous multiple cycles, nondividing horizons and disjoint fixed rows.
+
+First use the previous selectors and alias builder unchanged. Test complete sorted-LF partners and mark bytes exhaustively on tiny columns, compressible very large cases and recovered Wikidata blocks. A general construction without a distinguished type removes a structural dependence; its local elapsed time will need a separate, fully charged test if it becomes a worker candidate.

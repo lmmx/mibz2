@@ -1,0 +1,7 @@
+original 8036 8473542
+quote 8036 8473542
+frequent 8440 8528726
+raw_quote 8024 8506310
+fifth 10540 11650874
+half 9416 9512582
+quote vs original equal live capacities 228 of 228

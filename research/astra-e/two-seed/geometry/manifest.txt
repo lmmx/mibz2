@@ -1,0 +1,15 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+0f6b11f72a99a495c8f799b9120e43fb87595b93b1c74d1d8f45d3f237db88d8  research/astra-e/two-seed/geometry/census.rs
+d91841eb009ce64e913d9b2bcfbd425aa1ea63281a8457aefb7cad4a939d0999  /workspace/work/astra-two-seed-geometry
+670b97cbe1f6ba513df848ba68e428e9004a80bf74807254e507fb263ebf0697  /workspace/work/astra-edge-displacements/edges.bin
+9195dc5b870bbf620af4e74a369b3b2b52e1ff454e514e1b265b61eeaeabad1b  /workspace/work/astra-edge-spellings/words.bin
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+ca13fef44d69d53f8a93de51087ecc91dd5a741ed1bdd78906aff99d5fd692ac  docs/journal/2026-11-18-astra-d-memory/evidence/corpus-routes.csv
+af5a2407d3db9a7c65e7d6bc18e833673cbc91e6c355c14b6e218db73628233a  research/astra-e/two-seed/geometry/panel.csv
+16a77a6794549ec966f178a7e0bbc25b5d15b319f9d2d4bca631a46f24d62084  research/astra-e/two-seed/geometry/bounded.csv

@@ -1,0 +1,22 @@
+{
+  "recipe": "cafcab595600d1430e67481863f92464b5544a4e",
+  "mode": "dry",
+  "sha256": "9e144969d1912b05adf04fe83d02b259b9af5e0fcaba20557f4146c0f3d6dda9",
+  "scorer_report": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+  "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "binaries": [
+    "2887b2c482d2345e05a525b3563bc8164d5b6ca2bba1d0c5f996ec833557ed3b",
+    "422850d03ef2d4f22c1c3b437fe2854b8128d56012c25b24990580dfdecb46cf"
+  ],
+  "full_gate_each": 338,
+  "reference_gate_each": 98,
+  "planned_samples": 768,
+  "target_cpu": true,
+  "explicit_worker_gates": 16,
+  "affinity_gate_worker_counts": [
+    7,
+    8,
+    9,
+    10
+  ]
+}

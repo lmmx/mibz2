@@ -1,0 +1,78 @@
+{
+  "frozen": {
+    "blocks": 1,
+    "routes": {
+      "open": {
+        "blocks": 1,
+        "output_bytes": 900000
+      },
+      "lazy": {
+        "blocks": 0,
+        "output_bytes": 0
+      },
+      "column": {
+        "blocks": 0,
+        "output_bytes": 0
+      }
+    },
+    "output_bytes": 900000,
+    "admitted_byte_fraction": 1.0
+  },
+  "density-pair": {
+    "blocks": 2,
+    "routes": {
+      "open": {
+        "blocks": 1,
+        "output_bytes": 899988
+      },
+      "lazy": {
+        "blocks": 1,
+        "output_bytes": 899971
+      },
+      "column": {
+        "blocks": 0,
+        "output_bytes": 0
+      }
+    },
+    "output_bytes": 1799959,
+    "admitted_byte_fraction": 0.5000047223297864
+  },
+  "official-16": {
+    "blocks": 16,
+    "routes": {
+      "open": {
+        "blocks": 10,
+        "output_bytes": 8999668
+      },
+      "lazy": {
+        "blocks": 4,
+        "output_bytes": 82
+      },
+      "column": {
+        "blocks": 2,
+        "output_bytes": 18
+      }
+    },
+    "output_bytes": 8999768,
+    "admitted_byte_fraction": 0.9999888886024617
+  },
+  "all": {
+    "blocks": 431,
+    "routes": {
+      "open": {
+        "blocks": 228,
+        "output_bytes": 205191352
+      },
+      "lazy": {
+        "blocks": 155,
+        "output_bytes": 4508379
+      },
+      "column": {
+        "blocks": 48,
+        "output_bytes": 465
+      }
+    },
+    "output_bytes": 209700196,
+    "admitted_byte_fraction": 0.9784986180938048
+  }
+}

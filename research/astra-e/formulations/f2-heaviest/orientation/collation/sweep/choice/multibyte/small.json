@@ -1,0 +1,18 @@
+{
+  "totals": {
+    "positive_assignments": 13016,
+    "sections_and_depths": 2880,
+    "certified": 558,
+    "mixed_better": 14
+  },
+  "witness": {
+    "last": "010001010000",
+    "section": [
+      1,
+      3
+    ],
+    "h": 2,
+    "uniform": 4,
+    "optimum": 3
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "binaries": {
+    "edge": {
+      "sha256": "3c0658868cd865c48cf83944f5f359cf596ff1fb1738e7ec23b04b137a547877",
+      "info": {
+        "candidate": "/workspace/work/astra-two-seed-gate/research/astra-e/two-seed/control.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 4
+      }
+    },
+    "scalar": {
+      "sha256": "7e64fb3fd5cc03542fde1d3a36cc986db7cdcb983ef2e69de321f49092801fdc",
+      "info": {
+        "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/scalar.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 4
+      }
+    },
+    "two": {
+      "sha256": "2eb12b39f1795f975c5dc1a6dd8edbc8958705f2ddc1bc2cd51829bea7d6235e",
+      "info": {
+        "candidate": "/workspace/work/astra-two-seed-gate/research/astra-e/two-seed/candidate.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 4
+      }
+    },
+    "edge-four": {
+      "sha256": "a25115788e665dbe47fae50ff3a57d49a9d2387328c5942fb05954383ee37004",
+      "info": {
+        "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/edge-four.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 4
+      }
+    },
+    "scalar-four": {
+      "sha256": "940766c0f34106ba749ba32e7b2ce0fccfe72fbdf894b4c533d7a868dd9c8531",
+      "info": {
+        "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/scalar-four.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 4
+      }
+    }
+  },
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+}

@@ -1,0 +1,29 @@
+compact_frequent mean ms {'setup_mark_ns': 4.125, 'discover_ns': 10.447, 'merge_only': 2.651, 'publish_ns': 0.0, 'second_index_shift_ns': 0.611, 'second_discover_ns': 3.157, 'second_merge_ns': 0.33, 'second_emit_ns': 0.881, 'second_total': 4.989, 'total_ns': 22.226}
+original_h0 mean ms {'setup_mark_ns': 5.091, 'discover_ns': 11.116, 'merge_only': 2.453, 'publish_ns': 3.032, 'second_index_shift_ns': 0.55, 'second_discover_ns': 3.175, 'second_merge_ns': 0.32, 'second_emit_ns': 0.842, 'second_total': 4.898, 'total_ns': 26.606}
+original_h4 mean ms {'setup_mark_ns': 12.583, 'discover_ns': 10.099, 'merge_only': 2.531, 'publish_ns': 4.028, 'second_index_shift_ns': 0.585, 'second_discover_ns': 3.352, 'second_merge_ns': 0.36, 'second_emit_ns': 0.844, 'second_total': 5.149, 'total_ns': 34.411}
+original_h8 mean ms {'setup_mark_ns': 22.067, 'discover_ns': 8.893, 'merge_only': 2.469, 'publish_ns': 4.463, 'second_index_shift_ns': 0.569, 'second_discover_ns': 2.997, 'second_merge_ns': 0.335, 'second_emit_ns': 0.836, 'second_total': 4.75, 'total_ns': 42.66}
+physical_h0 mean ms {'setup_mark_ns': 5.515, 'discover_ns': 11.301, 'merge_only': 2.453, 'publish_ns': 0.101, 'second_index_shift_ns': 0.558, 'second_discover_ns': 3.193, 'second_merge_ns': 0.337, 'second_emit_ns': 0.845, 'second_total': 4.942, 'total_ns': 24.327}
+physical_h0 / compact_frequent {'total_ns': '1.0860 [1.0425, 1.1313]', 'first_ns': '1.1114 [1.0563, 1.1693]', 'discover_ns': '1.0527 [0.9820, 1.1284]', 'second_total': '0.9934 [0.9393, 1.0507]', 'second_discover_ns': '1.0135 [0.9540, 1.0767]', 'second_emit_ns': '0.9748 [0.8786, 1.0815]'}
+physical_h0 / original_h0 {'total_ns': '0.9132 [0.8655, 0.9635]', 'first_ns': '0.8893 [0.8376, 0.9442]', 'discover_ns': '0.9946 [0.9200, 1.0753]', 'second_total': '1.0121 [0.9642, 1.0624]', 'second_discover_ns': '1.0155 [0.9505, 1.0850]', 'second_emit_ns': '1.0062 [0.9439, 1.0726]'}
+physical_h0 / Compact counterfactual {'matched_setup': '1.0228 [0.9819, 1.0654]', 'free_setup': '0.8361 [0.7978, 0.8762]', 'free_setup_and_publication': '0.8315 [0.7932, 0.8716]'}
+physical_h4 mean ms {'setup_mark_ns': 13.397, 'discover_ns': 10.171, 'merge_only': 2.424, 'publish_ns': 2.384, 'second_index_shift_ns': 0.759, 'second_discover_ns': 3.047, 'second_merge_ns': 0.354, 'second_emit_ns': 0.848, 'second_total': 5.023, 'total_ns': 33.413}
+physical_h4 / compact_frequent {'total_ns': '1.4976 [1.4395, 1.5580]', 'first_ns': '1.6389 [1.5683, 1.7127]', 'discover_ns': '0.9717 [0.9284, 1.0170]', 'second_total': '1.0024 [0.9359, 1.0736]', 'second_discover_ns': '0.9673 [0.9175, 1.0197]', 'second_emit_ns': '0.9726 [0.8874, 1.0660]'}
+physical_h4 / original_h4 {'total_ns': '0.9682 [0.9218, 1.0170]', 'first_ns': '0.9634 [0.9188, 1.0102]', 'discover_ns': '1.0051 [0.9486, 1.0650]', 'second_total': '0.9990 [0.9078, 1.0992]', 'second_discover_ns': '0.9536 [0.8622, 1.0548]', 'second_emit_ns': '1.0117 [0.9332, 1.0968]'}
+physical_h4 / Compact counterfactual {'matched_setup': '1.0862 [1.0524, 1.1211]', 'free_setup': '0.8999 [0.8678, 0.9331]', 'free_setup_and_publication': '0.7924 [0.7625, 0.8234]'}
+physical_h8 mean ms {'setup_mark_ns': 24.197, 'discover_ns': 8.815, 'merge_only': 2.499, 'publish_ns': 2.895, 'second_index_shift_ns': 0.704, 'second_discover_ns': 4.512, 'second_merge_ns': 0.291, 'second_emit_ns': 0.821, 'second_total': 6.336, 'total_ns': 44.758}
+physical_h8 / compact_frequent {'total_ns': '1.9857 [1.8752, 2.1028]', 'first_ns': '2.1896 [2.0580, 2.3295]', 'discover_ns': '0.8435 [0.8150, 0.8731]', 'second_total': '1.2748 [1.2057, 1.3480]', 'second_discover_ns': '1.4352 [1.3547, 1.5205]', 'second_emit_ns': '0.9253 [0.8172, 1.0478]'}
+physical_h8 / original_h8 {'total_ns': '1.0356 [0.9701, 1.1055]', 'first_ns': '0.9961 [0.9283, 1.0687]', 'discover_ns': '0.9951 [0.9479, 1.0445]', 'second_total': '1.3358 [1.2698, 1.4052]', 'second_discover_ns': '1.5063 [1.4265, 1.5906]', 'second_emit_ns': '0.9665 [0.8739, 1.0688]'}
+physical_h8 / Compact counterfactual {'matched_setup': '1.1129 [1.0842, 1.1424]', 'free_setup': '0.9270 [0.9008, 0.9540]', 'free_setup_and_publication': '0.7964 [0.7721, 0.8214]'}
+ten 0 {'live_states': 1296362, 'core_runs': 66373, 'words': 38648, 'physical_runs': 66373, 'max_mass': 31358, 'overlay_fragments': 66373, 'dict_bytes': 1926457} second 10
+ten 4 {'live_states': 1144124, 'core_runs': 65681, 'words': 40250, 'physical_runs': 68529, 'max_mass': 31357, 'overlay_fragments': 69667, 'dict_bytes': 1964071} second 10
+ten 8 {'live_states': 1005990, 'core_runs': 62385, 'words': 42903, 'physical_runs': 70696, 'max_mass': 13341, 'overlay_fragments': 73099, 'dict_bytes': 2028895} second 10
+admissions 0 {'live_states': 28053831, 'core_runs': 1433311, 'words': 806027, 'physical_runs': 1433311, 'max_mass': 705337, 'overlay_fragments': 1433311, 'dict_bytes': 41433719} second 228
+admissions 4 {'live_states': 24876536, 'core_runs': 1418353, 'words': 843349, 'physical_runs': 1472944, 'max_mass': 705334, 'overlay_fragments': 1497403, 'dict_bytes': 42280656} second 228
+admissions 8 {'live_states': 21967795, 'core_runs': 1353336, 'words': 893744, 'physical_runs': 1513088, 'max_mass': 302049, 'overlay_fragments': 1568061, 'dict_bytes': 43711035} second 228
+compact_frequent VmHWM KiB 8492 retained B 8528726
+original_h0 VmHWM KiB 9460 retained B 9686262
+original_h4 VmHWM KiB 12484 retained B 9942358
+original_h8 VmHWM KiB 13084 retained B 9791070
+physical_h0 VmHWM KiB 8760 retained B 8594390
+physical_h4 VmHWM KiB 11392 retained B 9882742
+physical_h8 VmHWM KiB 12488 retained B 9898302

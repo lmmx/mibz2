@@ -1,0 +1,20 @@
+{
+  "sha256": {
+    "strips.hpp": "e82cc84f41adb637b78fba3e63292befa70e8cb366933aabd21b02872ddf86ab",
+    "check.cpp": "f88e1f3cef28162fc2b2e62b16552a9b70477106f77b593827e02d4ee35e912e",
+    "surgery.py": "3ad5e6f5819d9a95fed6eb7c1e6c086b5abb7e1b1dcc1f59a71484ad83b3e2a6",
+    "panel.py": "e397dff1d74c8c6a62ec1b07a407607a498c006827acc8cd7d81aa1f2c583803",
+    "modular.hpp": "4f1dc7f6957c399a34d337ae6e258a26f02afbab0e6845cb0573d58441747cec",
+    "induce.hpp": "7cb641220d1531cbf6560b0bc4457ad2de27eda203c67e70ad6b5c460c60e3ca",
+    "check": "b73003fc54e44852e3fcc61238f640564a44bc68dfda206a415f1e20b5575907"
+  },
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ]
+}

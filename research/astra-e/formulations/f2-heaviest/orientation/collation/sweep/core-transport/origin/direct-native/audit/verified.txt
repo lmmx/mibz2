@@ -1,0 +1,23 @@
+tiny {'columns': 254, 'covered_marks': 10882, 'early_with_literal': 3220, 'early_word_cases': 12192, 'pattern_pairs': 49784, 'uncovered_marks': 10650}
+quote 3 29 26
+quote-colon-quote 11 17 6
+bare-comma 29 37 8
+J1 29 37 8
+old-comma-token 5 11 6
+bare-C 5 11 6
+J2 7 11 4
+third 11 13 2
+old-comma-token shift 1 image_mass_components (6, 1) missing 2
+third shift 8 image_mass_components (2, 1) missing 2
+named {'covered_marks': 208, 'uncovered_marks': 10}
+frozen dense L db8764224ac4980112ddefbe85b8593f5236643fed71bf8f0b739567d4f2ac67 n 899931 p 264045
+quote 3229 138945 135716
+quote-colon-quote 21229 45394 24165
+bare-comma 141903 173020 31117
+J1 141987 172568 30581
+old-comma-token 3977 19821 15844
+bare-C 11107 14339 3232
+J2 11107 14339 3232
+third 39058 42290 3232
+old-comma-token shift 1 image_mass_components (15844, 113) missing 14737
+third shift 8 image_mass_components (3232, 1) missing 0

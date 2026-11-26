@@ -1,0 +1,228 @@
+166 local forecasts, 67 independent results; ratios over 0.5.6's LazyCells
+record | commit | scorer | W | local [95%] | proxy | independent [95%] (host) | log err local / proxy | flags
+anchor | - | v1@8158517 | 1 | 1.033 [0.800, 1.335] | - | - | - / - | 
+anchor | - | v1@8158517 | 4 | 0.826 [0.725, 0.943] | - | - | - / - | 
+anchors-pilot | - | v0 | 1 | 0.938 [0.811, 1.086] | - | - | - / - | 
+anchors-pilot | - | v0 | 4 | 0.877 [0.649, 1.185] | - | - | - / - | 
+astra-e | e293f7c726 | v1@6a8a366 | 1 | 0.876 [0.757, 1.013] | - | - | - / - | 
+astra-e | e293f7c726 | v1@6a8a366 | 1 | 0.970 [0.668, 1.408] | - | 0.942 [0.929, 0.955] (Intel(R) Xeon(R) 6975P-C) | 0.029 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 1 | 0.648 [0.501, 0.838] | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | -0.332 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 1 | 0.648 [0.501, 0.838] | - | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | -0.317 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 1 | 1.165 [0.833, 1.628] | - | - | - / - | 
+astra-e | efbacc6d17 | v1@6a8a366 | 1 | 0.693 [0.286, 1.676] | - | 0.890 [0.882, 0.898] (AMD EPYC 7763 64-Core Processor) | -0.250 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | 2ad93eddd7 | v1@6a8a366 | 1 | 0.745 [0.473, 1.172] | - | - | - / - | 
+astra-e | 543e4e07c1 | v1@6a8a366 | 1 | 0.796 [0.623, 1.017] | - | - | - / - | 
+astra-e | cbacb63d20 | v1@6a8a366 | 1 | 1.505 [0.882, 2.569] | - | - | - / - | 
+astra-e | 252646aec0 | v1@6a8a366 | 1 | 0.932 [0.664, 1.309] | - | 1.025 [1.012, 1.039] (Intel(R) Xeon(R) 6973P-C) | -0.095 / - | host Intel(R) Xeon(R) 6973P-C, not the local host or the i9: not calibration
+astra-e | 252646aec0 | v1@6a8a366 | 1 | 0.772 [0.609, 0.977] | - | - | - / - | 
+astra-e | 1a64358084 | v1@6a8a366 | 1 | 0.894 [0.652, 1.225] | - | - | - / - | 
+astra-e | 3651470cb0 | v1@6a8a366 | 1 | 0.744 [0.634, 0.872] | - | 0.877 [0.868, 0.886] (Intel(R) Xeon(R) 6975P-C) | -0.165 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | ab70765414 | v1@6a8a366 | 1 | 0.825 [0.692, 0.984] | - | - | - / - | 
+astra-e | a651e93f06 | v1@8158517 | 1 | 0.928 [0.782, 1.102] | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | 0.028 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 1 | 0.928 [0.782, 1.102] | - | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | 0.042 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 1 | 0.819 [0.565, 1.188] | - | - | - / - | 
+astra-e | a651e93f06 | v1@8158517 | 1 | 1.067 [0.882, 1.291] | - | 0.942 [0.929, 0.955] (Intel(R) Xeon(R) 6975P-C) | 0.125 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 1 | 1.129 [0.755, 1.689] | - | 0.877 [0.868, 0.886] (Intel(R) Xeon(R) 6975P-C) | 0.253 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 1 | 0.908 [0.770, 1.071] | - | 0.847 [0.834, 0.860] (AMD EPYC 9V74 80-Core Processor) | 0.070 / - | host AMD EPYC 9V74 80-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 1 | 0.866 [0.566, 1.326] | - | - | - / - | 
+astra-e | e69c58476b | v1@8158517 | 1 | 0.808 [0.570, 1.145] | - | 0.956 [0.940, 0.972] (AMD EPYC 9V45 96-Core Processor) | -0.169 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+astra-e | d0a42980e8 | v1@8158517 | 1 | 0.910 [0.818, 1.012] | - | 0.955 [0.946, 0.965] (Intel(R) Xeon(R) 6975P-C) | -0.049 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | f33bbe2941 | v1@8158517 | 1 | 0.933 [0.737, 1.181] | - | 0.909 [0.902, 0.916] (AMD EPYC 7763 64-Core Processor) | 0.026 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | c0e0e657e1 | v1@8158517 | 1 | 0.673 [0.340, 1.332] | - | 0.989 [0.980, 0.999] (AMD EPYC 9V45 96-Core Processor) | -0.385 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+astra-e | 47218b5a90 | v1@8158517 | 1 | 0.990 [0.863, 1.135] | - | 0.944 [0.930, 0.957] (INTEL(R) XEON(R) PLATINUM 8573C) | 0.048 / - | host INTEL(R) XEON(R) PLATINUM 8573C, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 4 | 1.205 [0.838, 1.732] | - | - | - / - | 
+astra-e | e293f7c726 | v1@6a8a366 | 4 | 0.743 [0.621, 0.888] | - | 0.907 [0.903, 0.912] (Intel(R) Xeon(R) 6975P-C) | -0.200 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 4 | 0.888 [0.644, 1.226] | - | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | 0.059 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 4 | 0.888 [0.644, 1.226] | - | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | 0.064 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | e293f7c726 | v1@6a8a366 | 4 | 1.144 [0.826, 1.586] | - | - | - / - | 
+astra-e | efbacc6d17 | v1@6a8a366 | 4 | 1.432 [0.838, 2.446] | - | 0.848 [0.812, 0.884] (AMD EPYC 7763 64-Core Processor) | 0.524 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | 2ad93eddd7 | v1@6a8a366 | 4 | 1.001 [0.575, 1.744] | - | - | - / - | 
+astra-e | 543e4e07c1 | v1@6a8a366 | 4 | 0.718 [0.551, 0.934] | - | - | - / - | 
+astra-e | cbacb63d20 | v1@6a8a366 | 4 | 0.936 [0.642, 1.363] | - | - | - / - | 
+astra-e | 252646aec0 | v1@6a8a366 | 4 | 1.132 [0.780, 1.643] | - | 1.020 [1.002, 1.037] (Intel(R) Xeon(R) 6973P-C) | 0.104 / - | host Intel(R) Xeon(R) 6973P-C, not the local host or the i9: not calibration
+astra-e | 252646aec0 | v1@6a8a366 | 4 | 1.218 [0.857, 1.730] | - | - | - / - | 
+astra-e | 1a64358084 | v1@6a8a366 | 4 | 0.931 [0.743, 1.166] | - | - | - / - | 
+astra-e | 3651470cb0 | v1@6a8a366 | 4 | 0.787 [0.659, 0.940] | - | 0.937 [0.933, 0.941] (Intel(R) Xeon(R) 6975P-C) | -0.174 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | ab70765414 | v1@6a8a366 | 4 | 0.984 [0.685, 1.412] | - | - | - / - | 
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.877 [0.710, 1.085] | - | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | 0.046 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.877 [0.710, 1.085] | - | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | 0.052 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.767 [0.517, 1.139] | - | - | - / - | 
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.943 [0.758, 1.172] | - | 0.907 [0.903, 0.912] (Intel(R) Xeon(R) 6975P-C) | 0.038 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 4 | 1.807 [0.599, 5.458] | - | 0.937 [0.933, 0.941] (Intel(R) Xeon(R) 6975P-C) | 0.657 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.778 [0.590, 1.026] | - | 0.890 [0.888, 0.893] (AMD EPYC 9V74 80-Core Processor) | -0.135 / - | host AMD EPYC 9V74 80-Core Processor, not the local host or the i9: not calibration
+astra-e | a651e93f06 | v1@8158517 | 4 | 0.959 [0.782, 1.176] | - | - | - / - | 
+astra-e | e69c58476b | v1@8158517 | 4 | 0.942 [0.653, 1.360] | - | 0.903 [0.884, 0.922] (AMD EPYC 9V45 96-Core Processor) | 0.043 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+astra-e | d0a42980e8 | v1@8158517 | 4 | 0.878 [0.759, 1.016] | - | 0.907 [0.903, 0.911] (Intel(R) Xeon(R) 6975P-C) | -0.032 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+astra-e | f33bbe2941 | v1@8158517 | 4 | 0.794 [0.732, 0.861] | - | 0.847 [0.844, 0.849] (AMD EPYC 7763 64-Core Processor) | -0.065 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+astra-e | c0e0e657e1 | v1@8158517 | 4 | 0.723 [0.271, 1.930] | - | 0.908 [0.886, 0.931] (AMD EPYC 9V45 96-Core Processor) | -0.228 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+astra-e | 47218b5a90 | v1@8158517 | 4 | 0.865 [0.809, 0.926] | - | 0.917 [0.909, 0.925] (INTEL(R) XEON(R) PLATINUM 8573C) | -0.058 / - | host INTEL(R) XEON(R) PLATINUM 8573C, not the local host or the i9: not calibration
+combined-ahead-pilot | 5c7704b3d1 | v0 | 1 | 0.797 [0.325, 1.950] | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | -0.124 / - | joined by directory; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-ahead-pilot | e53d5e2322 | v0 | 1 | 0.797 [0.325, 1.950] | - | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | -0.110 / - | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-ahead-pilot | 5c7704b3d1 | v0 | 4 | 0.655 [0.360, 1.192] | - | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | -0.246 / - | joined by directory; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-ahead-pilot | e53d5e2322 | v0 | 4 | 0.655 [0.360, 1.192] | - | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | -0.240 / - | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | 5c7704b3d1 | v0 | 1 | - | 0.890 | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | - / -0.014 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | e53d5e2322 | v0 | 1 | - | 0.890 | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | - / 0.000 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | 5c7704b3d1 | v0 | 2 | - | 0.897 | 0.895 [0.890, 0.901] (AMD EPYC 7763 64-Core Processor) | - / 0.001 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | e53d5e2322 | v0 | 2 | - | 0.897 | 0.894 [0.884, 0.903] (AMD EPYC 7763 64-Core Processor) | - / 0.003 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | 5c7704b3d1 | v0 | 4 | - | 0.890 | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | - / 0.061 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | e53d5e2322 | v0 | 4 | - | 0.890 | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | - / 0.066 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-full-proxy | 8c9640d8ab | v0 | 7 | - | 0.894 | 0.898 [0.888, 0.909] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / -0.005 | joined by path only
+combined-full-proxy | 8c9640d8ab | v0 | 8 | - | 0.880 | 0.912 [0.903, 0.920] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / -0.036 | joined by path only
+combined-full-proxy | 8c9640d8ab | v0 | 10 | - | 0.828 | 0.887 [0.880, 0.895] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / -0.069 | joined by path only
+combined-pilot | - | v0 | 1 | 0.816 [0.310, 2.149] | - | - | - / - | 
+combined-pilot | - | v0 | 4 | 0.946 [0.400, 2.236] | - | - | - / - | 
+combined-v1-proxy | 5c7704b3d1 | v1@6a8a366 | 1 | - | 0.860 | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | - / -0.048 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | e53d5e2322 | v1@6a8a366 | 1 | - | 0.860 | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | - / -0.034 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | 5c7704b3d1 | v1@6a8a366 | 2 | - | 0.859 | 0.895 [0.890, 0.901] (AMD EPYC 7763 64-Core Processor) | - / -0.042 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | e53d5e2322 | v1@6a8a366 | 2 | - | 0.859 | 0.894 [0.884, 0.903] (AMD EPYC 7763 64-Core Processor) | - / -0.040 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | 5c7704b3d1 | v1@6a8a366 | 4 | - | 0.857 | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | - / 0.023 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | e53d5e2322 | v1@6a8a366 | 4 | - | 0.857 | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | - / 0.028 | joined by path only; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+combined-v1-proxy | 8c9640d8ab | v1@6a8a366 | 7 | - | 0.910 | 0.898 [0.888, 0.909] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / 0.013 | joined by directory
+combined-v1-proxy | 8c9640d8ab | v1@6a8a366 | 8 | - | 0.912 | 0.912 [0.903, 0.920] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / 0.000 | joined by directory
+combined-v1-proxy | 8c9640d8ab | - | 9 | - | - | 0.903 [0.890, 0.917] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+combined-v1-proxy | 8c9640d8ab | v1@6a8a366 | 10 | - | 0.915 | 0.887 [0.880, 0.895] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / 0.031 | joined by directory
+compact-pilot | - | v0 | 1 | 1.132 [0.567, 2.257] | - | - | - / - | 
+compact-pilot | - | v0 | 4 | 0.844 [0.460, 1.550] | - | - | - / - | 
+conjugate-pilot | e12e5f6317 | v0 | 1 | 0.965 [0.660, 1.413] | - | 1.036 [1.026, 1.046] (Intel Xeon 6975P-C, 2 cores, 4 logical CPUs) | -0.070 / - | joined by directory; host Intel Xeon 6975P-C, 2 cores, 4 logical CPUs, not the local host or the i9: not calibration
+conjugate-pilot | 68e6a57a7a | v0 | 1 | 0.965 [0.660, 1.413] | - | 0.951 [0.935, 0.968] (AMD EPYC 7763, 2 cores, 4 logical CPUs) | 0.015 / - | joined by directory; host AMD EPYC 7763, 2 cores, 4 logical CPUs, not the local host or the i9: not calibration
+conjugate-pilot | e12e5f6317 | - | 2 | - | - | 1.027 [1.022, 1.033] (Intel Xeon 6975P-C, 2 cores, 4 logical CPUs) | - / - | no local forecast at this W
+conjugate-pilot | 68e6a57a7a | - | 2 | - | - | 0.951 [0.927, 0.975] (AMD EPYC 7763, 2 cores, 4 logical CPUs) | - / - | no local forecast at this W
+conjugate-pilot | e12e5f6317 | v0 | 4 | 1.018 [0.705, 1.470] | - | 0.977 [0.974, 0.980] (Intel Xeon 6975P-C, 2 cores, 4 logical CPUs) | 0.041 / - | joined by directory; host Intel Xeon 6975P-C, 2 cores, 4 logical CPUs, not the local host or the i9: not calibration
+conjugate-pilot | 68e6a57a7a | v0 | 4 | 1.018 [0.705, 1.470] | - | 0.893 [0.891, 0.895] (AMD EPYC 7763, 2 cores, 4 logical CPUs) | 0.131 / - | joined by directory; host AMD EPYC 7763, 2 cores, 4 logical CPUs, not the local host or the i9: not calibration
+delimiter-f2b | - | v0 | 1 | 1.460 [1.210, 1.762] | - | - | - / - | 
+delimiter-f2b | - | v0 | 4 | 1.415 [1.176, 1.702] | - | - | - / - | 
+dictionary-pilot | - | v0 | 1 | 0.846 [0.471, 1.518] | - | - | - / - | 
+dictionary-pilot | - | v0 | 4 | 0.922 [0.682, 1.245] | - | - | - / - | 
+endpoint16-pilot | - | v0 | 1 | 1.962 [0.205, 18.788] | - | - | - / - | 
+endpoint16-pilot | - | v0 | 4 | 0.726 [0.551, 0.957] | - | - | - / - | 
+hierarchy-f4 | - | v0 | 1 | 1.940 [1.080, 3.487] | - | - | - / - | 
+hierarchy-f4 | - | v0 | 4 | 2.159 [1.407, 3.313] | - | - | - / - | 
+historical-control | - | v0 | 1 | 0.338 [0.007, 16.528] | - | - | - / - | 
+historical-control | - | v0 | 2 | 0.901 [0.732, 1.109] | - | - | - / - | 
+historical-control | - | v0 | 3 | 1.032 [0.231, 4.601] | - | - | - / - | 
+historical-control | - | v0 | 4 | 0.446 [0.035, 5.641] | - | - | - / - | 
+hybrid-pilot | - | v0 | 1 | 0.627 [0.227, 1.728] | - | - | - / - | 
+hybrid-pilot | - | v0 | 4 | 0.866 [0.353, 2.125] | - | - | - / - | 
+lanes-pilot | - | v0 | 1 | 0.619 [0.173, 2.209] | - | - | - / - | 
+lanes-pilot | - | v0 | 4 | 0.928 [0.665, 1.297] | - | - | - / - | 
+lookahead-pilot | 2dd991699c | v0 | 1 | 0.560 [0.183, 1.714] | - | 0.890 [0.882, 0.898] (AMD EPYC 7763 64-Core Processor) | -0.462 / - | joined by directory; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+lookahead-pilot | 2dd991699c | - | 2 | - | - | 0.896 [0.885, 0.907] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+lookahead-pilot | 2dd991699c | v0 | 4 | 0.829 [0.466, 1.476] | - | 0.848 [0.812, 0.884] (AMD EPYC 7763 64-Core Processor) | -0.022 / - | joined by directory; host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+narrow-pilot | - | v0 | 1 | 0.858 [0.191, 3.843] | - | - | - / - | 
+narrow-pilot | - | v0 | 4 | 1.469 [0.900, 2.397] | - | - | - / - | 
+nov19-edge | 5cefe941ff | - | 2 | - | - | 0.863 [0.853, 0.873] (AMD EPYC 9V74 80-Core Processor) | - / - | no local forecast at this W
+nov19-edge | 0d37dfb03a | - | 2 | - | - | 0.961 [0.946, 0.975] (AMD EPYC 9V45 96-Core Processor) | - / - | no local forecast at this W
+official | 47218b5a90 | v1@8158517 | 1 | 0.990 [0.863, 1.135] | - | 0.944 [0.930, 0.957] (INTEL(R) XEON(R) PLATINUM 8573C) | 0.048 / - | host INTEL(R) XEON(R) PLATINUM 8573C, not the local host or the i9: not calibration
+official | c0e0e657e1 | v1@8158517 | 1 | 0.673 [0.340, 1.332] | - | 0.989 [0.980, 0.999] (AMD EPYC 9V45 96-Core Processor) | -0.385 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+official | 19bb33196c | - | 2 | - | - | 0.937 [0.930, 0.945] (INTEL(R) XEON(R) PLATINUM 8573C) | - / - | no local forecast at this W
+official | 2e7f376741 | - | 2 | - | - | 0.956 [0.944, 0.968] (AMD EPYC 9V45 96-Core Processor) | - / - | no local forecast at this W
+official | 47218b5a90 | v1@8158517 | 4 | 0.865 [0.809, 0.926] | - | 0.917 [0.909, 0.925] (INTEL(R) XEON(R) PLATINUM 8573C) | -0.058 / - | host INTEL(R) XEON(R) PLATINUM 8573C, not the local host or the i9: not calibration
+official | c0e0e657e1 | v1@8158517 | 4 | 0.723 [0.271, 1.930] | - | 0.908 [0.886, 0.931] (AMD EPYC 9V45 96-Core Processor) | -0.228 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+packed-eager-pilot | - | v0 | 1 | 1.263 [0.465, 3.434] | - | - | - / - | 
+packed-eager-pilot | - | v0 | 4 | 0.992 [0.281, 3.499] | - | - | - / - | 
+page-trace-pilot | - | v0 | 1 | 1.190 [0.593, 2.387] | - | - | - / - | 
+page-trace-pilot | - | v0 | 4 | 0.672 [0.175, 2.591] | - | - | - / - | 
+pairs-pilot | - | v0 | 1 | 1.021 [0.757, 1.376] | - | - | - / - | 
+pairs-pilot | - | v0 | 4 | 0.894 [0.743, 1.074] | - | - | - / - | 
+retrospective | 2121829476 | - | 1 | - | - | 0.916 [0.899, 0.933] (AMD EPYC 9V74 80-Core Processor) | - / - | no local forecast at this W
+retrospective | cfe0eb279d | - | 2 | - | - | 0.935 [0.925, 0.945] (Intel(R) Xeon(R) 6975P-C) | - / - | no local forecast at this W
+retrospective | daf8a86f0b | - | 2 | - | - | 1.015 [1.000, 1.031] (Intel(R) Xeon(R) 6973P-C) | - / - | no local forecast at this W
+retrospective | 2121829476 | - | 2 | - | - | 0.924 [0.915, 0.932] (AMD EPYC 9V74 80-Core Processor) | - / - | no local forecast at this W
+retrospective | e3dc2c416f | - | 2 | - | - | 0.889 [0.883, 0.896] (Intel(R) Xeon(R) 6975P-C) | - / - | no local forecast at this W
+retrospective | 2121829476 | - | 4 | - | - | 0.869 [0.861, 0.877] (AMD EPYC 9V74 80-Core Processor) | - / - | no local forecast at this W
+short-words-confirm | - | v0 | 1 | 0.923 [0.659, 1.292] | - | - | - / - | 
+short-words-confirm | - | v0 | 2 | 1.003 [0.735, 1.369] | - | - | - / - | 
+short-words-confirm | - | v0 | 3 | 1.099 [0.664, 1.818] | - | - | - / - | 
+short-words-confirm | - | v0 | 4 | 0.766 [0.610, 0.962] | - | - | - / - | 
+short-words-pilot | - | v0 | 1 | 0.877 [0.682, 1.127] | - | - | - / - | 
+short-words-pilot | - | v0 | 4 | 0.813 [0.567, 1.167] | - | - | - / - | 
+streamed-pilot | - | v0 | 1 | 0.907 [0.538, 1.530] | - | - | - / - | 
+streamed-pilot | - | v0 | 4 | 0.953 [0.811, 1.121] | - | - | - / - | 
+tableless-f1b | - | v0 | 1 | 1.806 [1.448, 2.253] | - | - | - / - | 
+tableless-f1b | - | v0 | 4 | 1.583 [1.305, 1.919] | - | - | - / - | 
+two-ended-pilot | - | v0 | 1 | 1.072 [0.826, 1.392] | - | - | - / - | 
+two-ended-pilot | - | v0 | 4 | 1.152 [0.961, 1.380] | - | - | - / - | 
+two-step-pilot | - | v0 | 1 | 1.123 [0.501, 2.513] | - | - | - / - | 
+two-step-pilot | - | v0 | 4 | 0.956 [0.257, 3.550] | - | - | - / - | 
+two-step-proxy | - | v0 | 1 | - | 0.912 | - | - / - | 
+two-step-proxy | - | v0 | 2 | - | 0.923 | - | - / - | 
+two-step-proxy | - | v0 | 4 | - | 0.924 | - | - / - | 
+two-step-proxy | - | v0 | 7 | - | 0.925 | - | - / - | 
+two-step-proxy | - | v0 | 8 | - | 0.902 | - | - / - | 
+two-step-proxy | - | v0 | 10 | - | 0.859 | - | - / - | 
+v1-combined-confirm | e293f7c726 | v1@6a8a366 | 1 | 0.648 [0.501, 0.838] | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | -0.332 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-combined-confirm | e293f7c726 | v1@6a8a366 | 1 | 0.648 [0.501, 0.838] | - | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | -0.317 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-combined-confirm | e293f7c726 | v1@6a8a366 | 4 | 0.888 [0.644, 1.226] | - | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | 0.059 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-combined-confirm | e293f7c726 | v1@6a8a366 | 4 | 0.888 [0.644, 1.226] | - | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | 0.064 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-compact-eager-confirm | ab70765414 | v1@6a8a366 | 1 | 0.825 [0.692, 0.984] | - | - | - / - | 
+v1-compact-eager-confirm | ab70765414 | v1@6a8a366 | 4 | 0.984 [0.685, 1.412] | - | - | - / - | 
+v1-delimiter-f2c | e293f7c726 | v1@6a8a366 | 1 | 1.165 [0.833, 1.628] | - | - | - / - | 
+v1-delimiter-f2c | e293f7c726 | v1@6a8a366 | 4 | 1.144 [0.826, 1.586] | - | - | - / - | 
+v1-edge-confirm | e293f7c726 | v1@6a8a366 | 1 | 0.970 [0.668, 1.408] | - | 0.942 [0.929, 0.955] (Intel(R) Xeon(R) 6975P-C) | 0.029 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1-edge-confirm | e293f7c726 | v1@6a8a366 | 4 | 0.743 [0.621, 0.888] | - | 0.907 [0.903, 0.912] (Intel(R) Xeon(R) 6975P-C) | -0.200 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1-f2d-learn-confirm | cbacb63d20 | v1@6a8a366 | 1 | 1.505 [0.882, 2.569] | - | - | - / - | 
+v1-f2d-learn-confirm | cbacb63d20 | v1@6a8a366 | 4 | 0.936 [0.642, 1.363] | - | - | - / - | 
+v1-f5-confirm | 2ad93eddd7 | v1@6a8a366 | 1 | 0.745 [0.473, 1.172] | - | - | - / - | 
+v1-f5-confirm | 2ad93eddd7 | v1@6a8a366 | 4 | 1.001 [0.575, 1.744] | - | - | - / - | 
+v1-final-slot-confirm | 543e4e07c1 | v1@6a8a366 | 1 | 0.796 [0.623, 1.017] | - | - | - / - | 
+v1-final-slot-confirm | 543e4e07c1 | v1@6a8a366 | 4 | 0.718 [0.551, 0.934] | - | - | - / - | 
+v1-front-counts-confirm | 252646aec0 | v1@6a8a366 | 1 | 0.772 [0.609, 0.977] | - | - | - / - | 
+v1-front-counts-confirm | 252646aec0 | v1@6a8a366 | 4 | 1.218 [0.857, 1.730] | - | - | - / - | 
+v1-lookahead-confirm | efbacc6d17 | v1@6a8a366 | 1 | 0.693 [0.286, 1.676] | - | 0.890 [0.882, 0.898] (AMD EPYC 7763 64-Core Processor) | -0.250 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-lookahead-confirm | efbacc6d17 | v1@6a8a366 | 4 | 1.432 [0.838, 2.446] | - | 0.848 [0.812, 0.884] (AMD EPYC 7763 64-Core Processor) | 0.524 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1-rank-popcnt-confirm | 3651470cb0 | v1@6a8a366 | 1 | 0.744 [0.634, 0.872] | - | 0.877 [0.868, 0.886] (Intel(R) Xeon(R) 6975P-C) | -0.165 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1-rank-popcnt-confirm | 3651470cb0 | v1@6a8a366 | 4 | 0.787 [0.659, 0.940] | - | 0.937 [0.933, 0.941] (Intel(R) Xeon(R) 6975P-C) | -0.174 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1-refill-confirm | 252646aec0 | v1@6a8a366 | 1 | 0.932 [0.664, 1.309] | - | 1.025 [1.012, 1.039] (Intel(R) Xeon(R) 6973P-C) | -0.095 / - | host Intel(R) Xeon(R) 6973P-C, not the local host or the i9: not calibration
+v1-refill-confirm | 252646aec0 | v1@6a8a366 | 4 | 1.132 [0.780, 1.643] | - | 1.020 [1.002, 1.037] (Intel(R) Xeon(R) 6973P-C) | 0.104 / - | host Intel(R) Xeon(R) 6973P-C, not the local host or the i9: not calibration
+v1-rle-bundle-confirm | 1a64358084 | v1@6a8a366 | 1 | 0.894 [0.652, 1.225] | - | - | - / - | 
+v1-rle-bundle-confirm | 1a64358084 | v1@6a8a366 | 4 | 0.931 [0.743, 1.166] | - | - | - / - | 
+v1-short-confirm | e293f7c726 | v1@6a8a366 | 1 | 0.876 [0.757, 1.013] | - | - | - / - | 
+v1-short-confirm | e293f7c726 | v1@6a8a366 | 4 | 1.205 [0.838, 1.732] | - | - | - / - | 
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | v1@8158517 | 1 | 0.910 [0.818, 1.012] | - | 0.955 [0.946, 0.965] (Intel(R) Xeon(R) 6975P-C) | -0.049 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-cap-batch-scalar-confirm | 5b0512d251 | - | 2 | - | - | 0.944 [0.939, 0.949] (Intel(R) Xeon(R) 6975P-C) | - / - | no local forecast at this W
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | v1@8158517 | 4 | 0.878 [0.759, 1.016] | - | 0.907 [0.903, 0.911] (Intel(R) Xeon(R) 6975P-C) | -0.032 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | - | 7 | - | - | 0.870 [0.867, 0.873] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | - | 8 | - | - | 0.880 [0.874, 0.885] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | - | 9 | - | - | 0.876 [0.868, 0.885] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-batch-scalar-confirm | d0a42980e8 | - | 10 | - | - | 0.859 [0.851, 0.867] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-counter-confirm | f33bbe2941 | v1@8158517 | 1 | 0.933 [0.737, 1.181] | - | 0.909 [0.902, 0.916] (AMD EPYC 7763 64-Core Processor) | 0.026 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-cap-counter-confirm | b399250781 | - | 2 | - | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-cap-counter-confirm | f33bbe2941 | v1@8158517 | 4 | 0.794 [0.732, 0.861] | - | 0.847 [0.844, 0.849] (AMD EPYC 7763 64-Core Processor) | -0.065 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-cap-counter-confirm | 50b8ecb894 | - | 7 | - | - | 0.866 [0.860, 0.871] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-counter-confirm | 50b8ecb894 | - | 8 | - | - | 0.882 [0.877, 0.888] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-counter-confirm | 50b8ecb894 | - | 9 | - | - | 0.883 [0.875, 0.891] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-cap-counter-confirm | 50b8ecb894 | - | 10 | - | - | 0.868 [0.859, 0.877] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-combined-confirm | a651e93f06 | v1@8158517 | 1 | 0.928 [0.782, 1.102] | - | 0.902 [0.888, 0.916] (AMD EPYC 7763 64-Core Processor) | 0.028 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-combined-confirm | a651e93f06 | v1@8158517 | 1 | 0.928 [0.782, 1.102] | - | 0.889 [0.873, 0.906] (AMD EPYC 7763 64-Core Processor) | 0.042 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-combined-confirm | a651e93f06 | v1@8158517 | 4 | 0.877 [0.710, 1.085] | - | 0.838 [0.834, 0.841] (AMD EPYC 7763 64-Core Processor) | 0.046 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-combined-confirm | a651e93f06 | v1@8158517 | 4 | 0.877 [0.710, 1.085] | - | 0.833 [0.802, 0.865] (AMD EPYC 7763 64-Core Processor) | 0.052 / - | host AMD EPYC 7763 64-Core Processor, not the local host or the i9: not calibration
+v1p2-compact-confirm | a651e93f06 | v1@8158517 | 1 | 0.866 [0.566, 1.326] | - | - | - / - | 
+v1p2-compact-confirm | a651e93f06 | v1@8158517 | 4 | 0.959 [0.782, 1.176] | - | - | - / - | 
+v1p2-dose-gate | c783b7820a | - | 1 | - | - | 0.721 [0.711, 0.732] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-dose-gate | ecd26dd331 | - | 1 | - | - | 0.706 [0.696, 0.716] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-dose-gate | c783b7820a | - | 2 | - | - | 0.817 [0.796, 0.839] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-dose-gate | ecd26dd331 | - | 2 | - | - | 0.811 [0.803, 0.820] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-dose-gate | c783b7820a | - | 4 | - | - | 0.835 [0.802, 0.870] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-dose-gate | ecd26dd331 | - | 4 | - | - | 0.829 [0.807, 0.852] (AMD EPYC 7763 64-Core Processor) | - / - | no local forecast at this W
+v1p2-edge-confirm | a651e93f06 | v1@8158517 | 1 | 1.067 [0.882, 1.291] | - | 0.942 [0.929, 0.955] (Intel(R) Xeon(R) 6975P-C) | 0.125 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-edge-confirm | a651e93f06 | v1@8158517 | 4 | 0.943 [0.758, 1.172] | - | 0.907 [0.903, 0.912] (Intel(R) Xeon(R) 6975P-C) | 0.038 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-edge-confirm | badb2aec36 | - | 7 | - | - | 0.867 [0.860, 0.874] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-edge-confirm | badb2aec36 | - | 8 | - | - | 0.884 [0.872, 0.895] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-edge-confirm | badb2aec36 | - | 9 | - | - | 0.897 [0.879, 0.916] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-edge-confirm | badb2aec36 | - | 10 | - | - | 0.876 [0.861, 0.891] (Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz) | - / - | no local forecast at this W
+v1p2-final-slot-confirm | a651e93f06 | v1@8158517 | 1 | 0.819 [0.565, 1.188] | - | - | - / - | 
+v1p2-final-slot-confirm | a651e93f06 | v1@8158517 | 4 | 0.767 [0.517, 1.139] | - | - | - / - | 
+v1p2-front-confirm | e69c58476b | v1@8158517 | 1 | 0.808 [0.570, 1.145] | - | 0.956 [0.940, 0.972] (AMD EPYC 9V45 96-Core Processor) | -0.169 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+v1p2-front-confirm | e69c58476b | v1@8158517 | 4 | 0.942 [0.653, 1.360] | - | 0.903 [0.884, 0.922] (AMD EPYC 9V45 96-Core Processor) | 0.043 / - | host AMD EPYC 9V45 96-Core Processor, not the local host or the i9: not calibration
+v1p2-guarded-confirm | a651e93f06 | v1@8158517 | 1 | 1.129 [0.755, 1.689] | - | 0.877 [0.868, 0.886] (Intel(R) Xeon(R) 6975P-C) | 0.253 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-guarded-confirm | a651e93f06 | v1@8158517 | 4 | 1.807 [0.599, 5.458] | - | 0.937 [0.933, 0.941] (Intel(R) Xeon(R) 6975P-C) | 0.657 / - | host Intel(R) Xeon(R) 6975P-C, not the local host or the i9: not calibration
+v1p2-preload-confirm | a651e93f06 | v1@8158517 | 1 | 0.908 [0.770, 1.071] | - | 0.847 [0.834, 0.860] (AMD EPYC 9V74 80-Core Processor) | 0.070 / - | host AMD EPYC 9V74 80-Core Processor, not the local host or the i9: not calibration
+v1p2-preload-confirm | a651e93f06 | v1@8158517 | 4 | 0.778 [0.590, 1.026] | - | 0.890 [0.888, 0.893] (AMD EPYC 9V74 80-Core Processor) | -0.135 / - | host AMD EPYC 9V74 80-Core Processor, not the local host or the i9: not calibration
+
+ACCURACY, by scorer version: only forecasts whose host and W match their independent result
+  v0: proxy against the i9: 0 cells, mean |log err| -, ranks 0/0  (no i9 result yet)
+  v0: local wall against other hosts (NOT calibration: host differs): 10 cells, mean |log err| 0.146, ranks 5/6
+  v0: proxy against other hosts (NOT calibration: host differs): 9 cells, mean |log err| 0.029, ranks 3/3
+  v1: proxy against the i9: 3 cells, mean |log err| 0.015, ranks 0/0
+  v1: local wall against other hosts (NOT calibration: host differs): 64 cells, mean |log err| 0.152, ranks 144/240
+  v1: proxy against other hosts (NOT calibration: host differs): 6 cells, mean |log err| 0.036, ranks 3/3

@@ -1,0 +1,14 @@
+wall_ns bundle/opend 1.11167 0.93161 1.32652
+wall_ns bundle/laps 1.0138 0.82457 1.24646
+wall_ns laps/opend 1.09654 0.90313 1.33137
+cpu_ns bundle/opend 0.96845 0.90093 1.04103
+cpu_ns bundle/laps 0.94148 0.86625 1.02326
+cpu_ns laps/opend 1.02864 0.93839 1.12757
+bundled outcomes {'0': 227, '1': 1} steps 46241 cap bytes 71760
+1 0 95 0
+134 829 168 0
+397 971 51 0
+laps outcomes {'0': 161, '2': 66, '1': 1} steps 296275 cap bytes 73808
+1 186 95 0
+134 4097 0 2
+397 4097 0 2

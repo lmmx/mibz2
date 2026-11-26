@@ -1,0 +1,7 @@
+clock,comparison,paired_geomean,log_t95_low,log_t95_high,median_first_ms,median_remaining_budget_ms,mean_compiled_token_rows
+first_ns,first/opend,0.65678,0.53260,0.80991,21.43724,8.49676,5109604
+first_ns,first/80pct_lazy_stage,0.59543,0.38985,0.90942,21.43724,9.60245,5109604
+first_ns,first/full_hierarchy,0.20749,0.16760,0.25686,21.43724,70.86589,5109604
+first_cpu_ns,first/opend,0.70524,0.62398,0.79707,21.46231,8.50248,5109604
+first_cpu_ns,first/80pct_lazy_stage,0.60623,0.40092,0.91668,21.46231,8.41950,5109604
+first_cpu_ns,first/full_hierarchy,0.22307,0.19580,0.25413,21.46231,70.77794,5109604

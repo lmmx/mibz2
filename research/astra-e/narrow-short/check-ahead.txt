@@ -1,0 +1,1 @@
+24590 marked comparisons passed with dense stable LF and canonical Open counters/output; 2 exercised the wide fallback.

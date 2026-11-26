@@ -1,0 +1,33 @@
+{
+  "registration": "a7e314a6f433c3ed0b1fb83ec5d9052f56be0f09",
+  "mode": "dry",
+  "bundle_sha256": "7f509e9f8fb1b47e7bd44155bebef476d53177d22d0cc47f0c974d8457bc3f96",
+  "binary_sha256": {
+    "edge": "fa798952028153c572377ea572ce1a7003688f5778b4bf3e02afc94fdb292f8b",
+    "scalar": "105fac2329e94d364855b971782ab7280e888bf38239f256b965415236dc42ec",
+    "both": "6a1401a89ebd29494f09ddf6884c0e8e76577512e83da2a4e8fc756386c233e4"
+  },
+  "target_cpu": true,
+  "scorer_path": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "selected_build": "fresh",
+  "reports": {
+    "edge": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "scalar": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "both": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04"
+  },
+  "release_diff_format": {
+    "edge": "numbered additions",
+    "scalar": "numbered additions",
+    "both": "numbered additions"
+  },
+  "full_gate_each": 338,
+  "quick_gate_each": 98,
+  "explicit_dry_rows": 20,
+  "affinity_gate_worker_counts": [
+    7,
+    8,
+    9,
+    10
+  ],
+  "planned_samples": 800
+}

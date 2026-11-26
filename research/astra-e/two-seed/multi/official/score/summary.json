@@ -1,0 +1,99 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-seed-multi-gate/research/astra-e/two-seed/multi/scalar-four.rs",
+  "candidate_type": "moonshot::candidate::Candidate",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-e/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/two-seed/multi/scalar-four.rs",
+  "corpus": "/workspace/work/astra-e/corpora/wikidata.bz2",
+  "rounds": 9,
+  "settle": 2.0,
+  "repeat": 2,
+  "workers": [
+   1,
+   4
+  ],
+  "with_opend": true,
+  "proxy_blocks": "48+16",
+  "bootstrap": 400,
+  "quick": false,
+  "no_timing": false,
+  "no_proxy": true,
+  "no_build": true,
+  "target_dir": "/workspace/work/astra-seed-multi/scalar-four-target",
+  "out": "/workspace/work/astra-seed-multi/official/score",
+  "record": "/workspace/work/astra-seed-multi/official/register.jsonl"
+ },
+ "scorer": {
+  "version": "v1",
+  "commit": "81585172f5fb9e7a59f330124779ba084fd6bf04"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 338,
+  "failed": [],
+  "exit": 0
+ },
+ "timing": {
+  "1": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.9898059407052872,
+    "lo": 0.8628867209969974,
+    "hi": 1.135393298350326,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.0102990484048309,
+    "peak_rss_ratio": 0.8936318755298459,
+    "wall_s": 1.350515
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.9541638046940002,
+    "lo": 0.832883007264099,
+    "hi": 1.0931049838305107,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.0480380780328378,
+    "peak_rss_ratio": 0.9675360295217673,
+    "wall_s": 1.213764
+   },
+   "lazy_wall_s": 1.385122,
+   "lazy_peak_rss_kb": 80212
+  },
+  "4": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.8652512137793321,
+    "lo": 0.8085624760633551,
+    "hi": 0.9259144285196165,
+    "verdict": "FASTER",
+    "speedup": 1.1557337153358023,
+    "peak_rss_ratio": 0.728741023010406,
+    "wall_s": 0.472466
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.9679642275688849,
+    "lo": 0.7964546261854604,
+    "hi": 1.1764069352456132,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.0330960292939495,
+    "peak_rss_ratio": 0.8468122526747764,
+    "wall_s": 0.517221
+   },
+   "lazy_wall_s": 0.579983,
+   "lazy_peak_rss_kb": 136460
+  }
+ }
+}

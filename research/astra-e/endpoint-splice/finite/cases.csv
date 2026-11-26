@@ -1,0 +1,2 @@
+input_layouts,legal_horizons,group_phases,primitive_steps,self_cuts,equalities,top_groups,bottom_groups,multiloser_groups,whole_turns,whole_multiloser_turns,budget_stops,rule_appends_across_horizons,repeated_turns,longest_group,longest_repeated_turns
+31224,239097,821532,885234,146445,273609,206799,194679,40602,215115,31089,5286,247697,61758,23,49

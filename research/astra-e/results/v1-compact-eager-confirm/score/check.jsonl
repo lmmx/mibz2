@@ -1,0 +1,339 @@
+{"case":"sample empty level 1","bytes":0,"pass":true,"failure":null}
+{"case":"sample empty level 9","bytes":0,"pass":true,"failure":null}
+{"case":"sample one level 1","bytes":1,"pass":true,"failure":null}
+{"case":"sample one level 9","bytes":1,"pass":true,"failure":null}
+{"case":"sample short level 1","bytes":13,"pass":true,"failure":null}
+{"case":"sample short level 9","bytes":13,"pass":true,"failure":null}
+{"case":"sample text level 1","bytes":2500000,"pass":true,"failure":null}
+{"case":"sample text level 9","bytes":2500000,"pass":true,"failure":null}
+{"case":"sample runs level 1","bytes":1214040,"pass":true,"failure":null}
+{"case":"sample runs level 9","bytes":1214040,"pass":true,"failure":null}
+{"case":"sample random level 1","bytes":1100000,"pass":true,"failure":null}
+{"case":"sample random level 9","bytes":1100000,"pass":true,"failure":null}
+{"case":"sample few level 1","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample few level 9","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample zeros level 1","bytes":3000000,"pass":true,"failure":null}
+{"case":"sample zeros level 9","bytes":3000000,"pass":true,"failure":null}
+{"case":"sample abab level 1","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample abab level 9","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample period3 level 1","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample period3 level 9","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample all bytes level 1","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample all bytes level 9","bytes":1000000,"pass":true,"failure":null}
+{"case":"corpus text level 9","bytes":3755938,"pass":true,"failure":null}
+{"case":"corpus random level 9","bytes":2000000,"pass":true,"failure":null}
+{"case":"corpus one byte level 9","bytes":5000000,"pass":true,"failure":null}
+{"case":"corpus pattern level 9","bytes":4900000,"pass":true,"failure":null}
+{"case":"corpus runs level 9","bytes":2500444,"pass":true,"failure":null}
+{"case":"corpus records level 9","bytes":2400000,"pass":true,"failure":null}
+{"case":"text level 5","bytes":1600000,"pass":true,"failure":null}
+{"case":"records level 4","bytes":1700000,"pass":true,"failure":null}
+{"case":"streams of levels 9, 1, 2, empty, 3","bytes":3355045,"pass":true,"failure":null}
+{"case":"crafted 0: periodic, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 1: random column, 203 rows","bytes":203,"pass":true,"failure":null}
+{"case":"crafted 2: random column, 160055 rows","bytes":185290,"pass":true,"failure":null}
+{"case":"crafted 3: random column, 899789 rows","bytes":1003644,"pass":true,"failure":null}
+{"case":"crafted 4: random column, 160165 rows","bytes":185922,"pass":true,"failure":null}
+{"case":"crafted 5: periodic, 54235 rows","bytes":273935,"pass":true,"failure":null}
+{"case":"crafted 6: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 7: random column, 54 rows","bytes":54,"pass":true,"failure":null}
+{"case":"crafted 8: random column, 144577 rows","bytes":168306,"pass":true,"failure":null}
+{"case":"crafted 9: random column, 899392 rows","bytes":899392,"pass":true,"failure":null}
+{"case":"crafted 10: periodic, 150523 rows","bytes":331147,"pass":true,"failure":null}
+{"case":"crafted 11: random column, 134601 rows","bytes":135042,"pass":true,"failure":null}
+{"case":"crafted 12: random column, 7 rows","bytes":6,"pass":true,"failure":null}
+{"case":"crafted 13: random column, 567 rows","bytes":567,"pass":true,"failure":null}
+{"case":"crafted 14: random column, 89876 rows","bytes":103361,"pass":true,"failure":null}
+{"case":"crafted 15: periodic, 899495 rows","bytes":3302883,"pass":true,"failure":null}
+{"case":"crafted 16: random column, 266061 rows","bytes":212849,"pass":true,"failure":null}
+{"case":"crafted 17: random column, 90163 rows","bytes":90221,"pass":true,"failure":null}
+{"case":"crafted 18: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 19: random column, 954 rows","bytes":954,"pass":true,"failure":null}
+{"case":"crafted 20: periodic, 72742 rows","bytes":164637,"pass":true,"failure":null}
+{"case":"crafted 21: random column, 899895 rows","bytes":899895,"pass":true,"failure":null}
+{"case":"crafted 22: random column, 119939 rows","bytes":137713,"pass":true,"failure":null}
+{"case":"crafted 23: random column, 220858 rows","bytes":253472,"pass":true,"failure":null}
+{"case":"crafted 24: random column, 4 rows","bytes":4,"pass":true,"failure":null}
+{"case":"crafted 25: periodic, 945 rows","bytes":14201,"pass":true,"failure":null}
+{"case":"crafted 26: random column, 123530 rows","bytes":98824,"pass":true,"failure":null}
+{"case":"crafted 27: random column, 899900 rows","bytes":900478,"pass":true,"failure":null}
+{"case":"crafted 28: random column, 76690 rows","bytes":61352,"pass":true,"failure":null}
+{"case":"crafted 29: random column, 197680 rows","bytes":197680,"pass":true,"failure":null}
+{"case":"crafted 30: periodic, 5 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 31: random column, 883 rows","bytes":883,"pass":true,"failure":null}
+{"case":"crafted 32: random column, 74766 rows","bytes":59813,"pass":true,"failure":null}
+{"case":"crafted 33: random column, 899472 rows","bytes":899472,"pass":true,"failure":null}
+{"case":"crafted 34: random column, 298082 rows","bytes":356970,"pass":true,"failure":null}
+{"case":"crafted 35: periodic, 295254 rows","bytes":485273,"pass":true,"failure":null}
+{"case":"crafted 36: random column, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 37: random column, 441 rows","bytes":441,"pass":true,"failure":null}
+{"case":"crafted 38: random column, 80408 rows","bytes":64327,"pass":true,"failure":null}
+{"case":"crafted 39: random column, 899197 rows","bytes":913672,"pass":true,"failure":null}
+{"case":"crafted 40: periodic, 58019 rows","bytes":71631,"pass":true,"failure":null}
+{"case":"crafted 41: random column, 288469 rows","bytes":288469,"pass":true,"failure":null}
+{"case":"crafted 42: random column, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 43: random column, 587 rows","bytes":587,"pass":true,"failure":null}
+{"case":"crafted 44: random column, 136121 rows","bytes":155939,"pass":true,"failure":null}
+{"case":"crafted 45: periodic, 899034 rows","bytes":1901048,"pass":true,"failure":null}
+{"case":"crafted 46: random column, 205429 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 47: random column, 21713 rows","bytes":21713,"pass":true,"failure":null}
+{"case":"crafted 48: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 49: random column, 335 rows","bytes":335,"pass":true,"failure":null}
+{"case":"crafted 50: periodic, 128045 rows","bytes":460962,"pass":true,"failure":null}
+{"case":"crafted 51: random column, 899084 rows","bytes":899912,"pass":true,"failure":null}
+{"case":"crafted 52: random column, 62222 rows","bytes":71951,"pass":true,"failure":null}
+{"case":"crafted 53: random column, 270855 rows","bytes":270855,"pass":true,"failure":null}
+{"case":"crafted 54: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 55: periodic, 138 rows","bytes":646,"pass":true,"failure":null}
+{"case":"crafted 56: random column, 84608 rows","bytes":97357,"pass":true,"failure":null}
+{"case":"crafted 57: random column, 899687 rows","bytes":911913,"pass":true,"failure":null}
+{"case":"crafted 58: random column, 144569 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 59: random column, 237079 rows","bytes":237079,"pass":true,"failure":null}
+{"case":"crafted 60: periodic, 7 rows","bytes":6,"pass":true,"failure":null}
+{"case":"crafted 61: random column, 143 rows","bytes":143,"pass":true,"failure":null}
+{"case":"crafted 62: random column, 66007 rows","bytes":52806,"pass":true,"failure":null}
+{"case":"crafted 63: random column, 899567 rows","bytes":903034,"pass":true,"failure":null}
+{"case":"crafted 64: random column, 103146 rows","bytes":118213,"pass":true,"failure":null}
+{"case":"crafted 65: periodic, 15514 rows","bytes":34039,"pass":true,"failure":null}
+{"case":"crafted 66: random column, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 67: random column, 261 rows","bytes":261,"pass":true,"failure":null}
+{"case":"crafted 68: random column, 136529 rows","bytes":157096,"pass":true,"failure":null}
+{"case":"crafted 69: random column, 899382 rows","bytes":899382,"pass":true,"failure":null}
+{"case":"crafted 70: periodic, 281432 rows","bytes":512432,"pass":true,"failure":null}
+{"case":"crafted 71: random column, 41994 rows","bytes":42270,"pass":true,"failure":null}
+{"case":"crafted 72: random column, 5 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 73: random column, 369 rows","bytes":369,"pass":true,"failure":null}
+{"case":"crafted 74: random column, 131222 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 75: periodic, 899934 rows","bytes":1836275,"pass":true,"failure":null}
+{"case":"crafted 76: random column, 28465 rows","bytes":22772,"pass":true,"failure":null}
+{"case":"crafted 77: random column, 207260 rows","bytes":207260,"pass":true,"failure":null}
+{"case":"crafted 78: random column, 5 rows","bytes":4,"pass":true,"failure":null}
+{"case":"crafted 79: random column, 251 rows","bytes":251,"pass":true,"failure":null}
+{"case":"crafted 80: periodic, 100378 rows","bytes":203789,"pass":true,"failure":null}
+{"case":"crafted 81: random column, 899211 rows","bytes":899211,"pass":true,"failure":null}
+{"case":"crafted 82: random column, 48659 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 83: random column, 183003 rows","bytes":183003,"pass":true,"failure":null}
+{"case":"crafted 84: random column, 8 rows","bytes":7,"pass":true,"failure":null}
+{"case":"crafted 85: periodic, 125 rows","bytes":125,"pass":true,"failure":null}
+{"case":"crafted 86: random column, 107559 rows","bytes":124215,"pass":true,"failure":null}
+{"case":"crafted 87: random column, 899918 rows","bytes":904267,"pass":true,"failure":null}
+{"case":"crafted 88: random column, 154701 rows","bytes":178829,"pass":true,"failure":null}
+{"case":"crafted 89: random column, 171188 rows","bytes":171188,"pass":true,"failure":null}
+{"case":"crafted 90: periodic, 10 rows","bytes":22,"pass":true,"failure":null}
+{"case":"crafted 91: random column, 874 rows","bytes":874,"pass":true,"failure":null}
+{"case":"crafted 92: random column, 162683 rows","bytes":187077,"pass":true,"failure":null}
+{"case":"crafted 93: random column, 899142 rows","bytes":899684,"pass":true,"failure":null}
+{"case":"crafted 94: random column, 136839 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 95: periodic, 50310 rows","bytes":40248,"pass":true,"failure":null}
+{"case":"crafted 96: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 97: random column, 222 rows","bytes":222,"pass":true,"failure":null}
+{"case":"crafted 98: random column, 117098 rows","bytes":135420,"pass":true,"failure":null}
+{"case":"crafted 99: random column, 899495 rows","bytes":899495,"pass":true,"failure":null}
+{"case":"crafted 100: periodic, 250906 rows","bytes":551992,"pass":true,"failure":null}
+{"case":"crafted 101: random column, 257830 rows","bytes":257830,"pass":true,"failure":null}
+{"case":"crafted 102: random column, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 103: random column, 510 rows","bytes":510,"pass":true,"failure":null}
+{"case":"crafted 104: random column, 71486 rows","bytes":77261,"pass":true,"failure":null}
+{"case":"crafted 105: periodic, 899501 rows","bytes":1686891,"pass":true,"failure":null}
+{"case":"crafted 106: random column, 151043 rows","bytes":174030,"pass":true,"failure":null}
+{"case":"crafted 107: random column, 239798 rows","bytes":239798,"pass":true,"failure":null}
+{"case":"crafted 108: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 109: random column, 148 rows","bytes":148,"pass":true,"failure":null}
+{"case":"crafted 110: periodic, 117988 rows","bytes":94391,"pass":true,"failure":null}
+{"case":"crafted 111: random column, 899629 rows","bytes":900043,"pass":true,"failure":null}
+{"case":"crafted 112: random column, 157200 rows","bytes":179999,"pass":true,"failure":null}
+{"case":"crafted 113: random column, 141090 rows","bytes":141090,"pass":true,"failure":null}
+{"case":"crafted 114: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 115: periodic, 481 rows","bytes":4069,"pass":true,"failure":null}
+{"case":"crafted 116: random column, 104637 rows","bytes":119420,"pass":true,"failure":null}
+{"case":"crafted 117: random column, 899578 rows","bytes":1032931,"pass":true,"failure":null}
+{"case":"crafted 118: random column, 17438 rows","bytes":20206,"pass":true,"failure":null}
+{"case":"crafted 119: random column, 187042 rows","bytes":187362,"pass":true,"failure":null}
+{"case":"crafted 120: periodic, 8 rows","bytes":7,"pass":true,"failure":null}
+{"case":"crafted 121: random column, 712 rows","bytes":712,"pass":true,"failure":null}
+{"case":"crafted 122: random column, 78826 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 123: random column, 899825 rows","bytes":899825,"pass":true,"failure":null}
+{"case":"crafted 124: random column, 259893 rows","bytes":299429,"pass":true,"failure":null}
+{"case":"crafted 125: periodic, 130107 rows","bytes":323460,"pass":true,"failure":null}
+{"case":"crafted 126: random column, 10 rows","bytes":22,"pass":true,"failure":null}
+{"case":"crafted 127: random column, 1000 rows","bytes":1000,"pass":true,"failure":null}
+{"case":"crafted 128: random column, 131779 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 129: random column, 899368 rows","bytes":899590,"pass":true,"failure":null}
+{"case":"crafted 130: periodic, 133058 rows","bytes":148030,"pass":true,"failure":null}
+{"case":"crafted 131: random column, 269379 rows","bytes":283255,"pass":true,"failure":null}
+{"case":"crafted 132: random column, 6 rows","bytes":6,"pass":true,"failure":null}
+{"case":"crafted 133: random column, 678 rows","bytes":678,"pass":true,"failure":null}
+{"case":"crafted 134: random column, 106978 rows","bytes":123531,"pass":true,"failure":null}
+{"case":"crafted 135: periodic, 899455 rows","bytes":2302200,"pass":true,"failure":null}
+{"case":"crafted 136: random column, 261062 rows","bytes":208850,"pass":true,"failure":null}
+{"case":"crafted 137: random column, 58178 rows","bytes":58178,"pass":true,"failure":null}
+{"case":"crafted 138: random column, 7 rows","bytes":6,"pass":true,"failure":null}
+{"case":"crafted 139: random column, 377 rows","bytes":377,"pass":true,"failure":null}
+{"case":"crafted 140: periodic, 151308 rows","bytes":121047,"pass":true,"failure":null}
+{"case":"crafted 141: random column, 899590 rows","bytes":904603,"pass":true,"failure":null}
+{"case":"crafted 142: random column, 25627 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 143: random column, 55530 rows","bytes":55530,"pass":true,"failure":null}
+{"case":"crafted 144: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 145: periodic, 778 rows","bytes":28833,"pass":true,"failure":null}
+{"case":"crafted 146: random column, 111272 rows","bytes":89018,"pass":true,"failure":null}
+{"case":"crafted 147: random column, 899492 rows","bytes":907663,"pass":true,"failure":null}
+{"case":"crafted 148: random column, 120719 rows","bytes":139323,"pass":true,"failure":null}
+{"case":"crafted 149: random column, 248848 rows","bytes":248848,"pass":true,"failure":null}
+{"case":"crafted 150: periodic, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 151: random column, 364 rows","bytes":364,"pass":true,"failure":null}
+{"case":"crafted 152: random column, 148685 rows","bytes":171385,"pass":true,"failure":null}
+{"case":"crafted 153: random column, 899451 rows","bytes":899451,"pass":true,"failure":null}
+{"case":"crafted 154: random column, 204096 rows","bytes":233840,"pass":true,"failure":null}
+{"case":"crafted 155: periodic, 229344 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 156: random column, 7 rows","bytes":7,"pass":true,"failure":null}
+{"case":"crafted 157: random column, 469 rows","bytes":469,"pass":true,"failure":null}
+{"case":"crafted 158: random column, 148205 rows","bytes":118564,"pass":true,"failure":null}
+{"case":"crafted 159: random column, 899988 rows","bytes":900468,"pass":true,"failure":null}
+{"case":"crafted 160: periodic, 131237 rows","bytes":104990,"pass":true,"failure":null}
+{"case":"crafted 161: random column, 68213 rows","bytes":68213,"pass":true,"failure":null}
+{"case":"crafted 162: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 163: random column, 260 rows","bytes":260,"pass":true,"failure":null}
+{"case":"crafted 164: random column, 120994 rows","bytes":140279,"pass":true,"failure":null}
+{"case":"crafted 165: periodic, 899945 rows","bytes":15479054,"pass":true,"failure":null}
+{"case":"crafted 166: random column, 182900 rows","bytes":210182,"pass":true,"failure":null}
+{"case":"crafted 167: random column, 71198 rows","bytes":71198,"pass":true,"failure":null}
+{"case":"crafted 168: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 169: random column, 363 rows","bytes":363,"pass":true,"failure":null}
+{"case":"crafted 170: periodic, 74898 rows","bytes":107420,"pass":true,"failure":null}
+{"case":"crafted 171: random column, 899063 rows","bytes":904024,"pass":true,"failure":null}
+{"case":"crafted 172: random column, 51548 rows","bytes":41239,"pass":true,"failure":null}
+{"case":"crafted 173: random column, 33301 rows","bytes":33301,"pass":true,"failure":null}
+{"case":"crafted 174: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 175: periodic, 245 rows","bytes":245,"pass":true,"failure":null}
+{"case":"crafted 176: random column, 149828 rows","bytes":119863,"pass":true,"failure":null}
+{"case":"crafted 177: random column, 899479 rows","bytes":899479,"pass":true,"failure":null}
+{"case":"crafted 178: random column, 216354 rows","bytes":250158,"pass":true,"failure":null}
+{"case":"crafted 179: random column, 51523 rows","bytes":41219,"pass":true,"failure":null}
+{"case":"crafted 180: periodic, 7 rows","bytes":7,"pass":true,"failure":null}
+{"case":"crafted 181: random column, 385 rows","bytes":385,"pass":true,"failure":null}
+{"case":"crafted 182: random column, 153568 rows","bytes":177623,"pass":true,"failure":null}
+{"case":"crafted 183: random column, 899671 rows","bytes":899671,"pass":true,"failure":null}
+{"case":"crafted 184: random column, 63745 rows","bytes":73984,"pass":true,"failure":null}
+{"case":"crafted 185: periodic, 244419 rows","bytes":1193670,"pass":true,"failure":null}
+{"case":"crafted 186: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 187: random column, 282 rows","bytes":282,"pass":true,"failure":null}
+{"case":"crafted 188: random column, 116540 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 189: random column, 899112 rows","bytes":899112,"pass":true,"failure":null}
+{"case":"crafted 190: periodic, 138699 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 191: random column, 42362 rows","bytes":42362,"pass":true,"failure":null}
+{"case":"crafted 192: random column, 8 rows","bytes":7,"pass":true,"failure":null}
+{"case":"crafted 193: random column, 420 rows","bytes":420,"pass":true,"failure":null}
+{"case":"crafted 194: random column, 153282 rows","bytes":175703,"pass":true,"failure":null}
+{"case":"crafted 195: periodic, 899043 rows","bytes":1619147,"pass":true,"failure":null}
+{"case":"crafted 196: random column, 139632 rows","bytes":160068,"pass":true,"failure":null}
+{"case":"crafted 197: random column, 278602 rows","bytes":283995,"pass":true,"failure":null}
+{"case":"crafted 198: random column, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 199: random column, 165 rows","bytes":165,"pass":true,"failure":null}
+{"case":"crafted 200: periodic, 78549 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 201: random column, 899952 rows","bytes":899952,"pass":true,"failure":null}
+{"case":"crafted 202: random column, 4853 rows","bytes":3883,"pass":true,"failure":null}
+{"case":"crafted 203: random column, 77329 rows","bytes":77329,"pass":true,"failure":null}
+{"case":"crafted 204: random column, 5 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 205: periodic, 153 rows","bytes":153,"pass":true,"failure":null}
+{"case":"crafted 206: random column, 132074 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 207: random column, 899274 rows","bytes":899274,"pass":true,"failure":null}
+{"case":"crafted 208: random column, 254855 rows","bytes":292834,"pass":true,"failure":null}
+{"case":"crafted 209: random column, 54661 rows","bytes":54661,"pass":true,"failure":null}
+{"case":"crafted 210: periodic, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 211: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 212: random column, 110040 rows","bytes":88032,"pass":true,"failure":null}
+{"case":"crafted 213: random column, 899552 rows","bytes":900395,"pass":true,"failure":null}
+{"case":"crafted 214: random column, 36558 rows","bytes":29247,"pass":true,"failure":null}
+{"case":"crafted 215: periodic, 111444 rows","bytes":951053,"pass":true,"failure":null}
+{"case":"crafted 216: random column, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 217: random column, 142 rows","bytes":142,"pass":true,"failure":null}
+{"case":"crafted 218: random column, 116220 rows","bytes":92976,"pass":true,"failure":null}
+{"case":"crafted 219: random column, 899236 rows","bytes":899236,"pass":true,"failure":null}
+{"case":"crafted 220: periodic, 82389 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 221: random column, 149561 rows","bytes":149559,"pass":true,"failure":null}
+{"case":"crafted 222: random column, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 223: random column, 500 rows","bytes":500,"pass":true,"failure":null}
+{"case":"crafted 224: random column, 94204 rows","bytes":108790,"pass":true,"failure":null}
+{"case":"crafted 225: periodic, 899125 rows","bytes":8400395,"pass":true,"failure":null}
+{"case":"crafted 226: random column, 13223 rows","bytes":16117,"pass":true,"failure":null}
+{"case":"crafted 227: random column, 219861 rows","bytes":220160,"pass":true,"failure":null}
+{"case":"crafted 228: random column, 4 rows","bytes":4,"pass":true,"failure":null}
+{"case":"crafted 229: random column, 947 rows","bytes":947,"pass":true,"failure":null}
+{"case":"crafted 230: periodic, 117996 rows","bytes":259590,"pass":true,"failure":null}
+{"case":"crafted 231: random column, 899772 rows","bytes":899772,"pass":true,"failure":null}
+{"case":"crafted 232: random column, 14809 rows","bytes":17112,"pass":true,"failure":null}
+{"case":"crafted 233: random column, 20900 rows","bytes":20900,"pass":true,"failure":null}
+{"case":"crafted 234: random column, 9 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 235: periodic, 615 rows","bytes":19434,"pass":true,"failure":null}
+{"case":"crafted 236: random column, 142696 rows","bytes":163740,"pass":true,"failure":null}
+{"case":"crafted 237: random column, 899841 rows","bytes":899841,"pass":true,"failure":null}
+{"case":"crafted 238: random column, 200482 rows","bytes":231517,"pass":true,"failure":null}
+{"case":"crafted 239: random column, 205571 rows","bytes":205571,"pass":true,"failure":null}
+{"case":"crafted 240: periodic, 9 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 241: random column, 9 rows","bytes":9,"pass":true,"failure":null}
+{"case":"crafted 242: random column, 124229 rows","bytes":144156,"pass":true,"failure":null}
+{"case":"crafted 243: random column, 899323 rows","bytes":899323,"pass":true,"failure":null}
+{"case":"crafted 244: random column, 109019 rows","bytes":126040,"pass":true,"failure":null}
+{"case":"crafted 245: periodic, 219578 rows","bytes":353082,"pass":true,"failure":null}
+{"case":"crafted 246: random column, 8 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 247: random column, 355 rows","bytes":355,"pass":true,"failure":null}
+{"case":"crafted 248: random column, 116093 rows","bytes":92875,"pass":true,"failure":null}
+{"case":"crafted 249: random column, 899672 rows","bytes":899966,"pass":true,"failure":null}
+{"case":"crafted 250: periodic, 109331 rows","bytes":240527,"pass":true,"failure":null}
+{"case":"crafted 251: random column, 49501 rows","bytes":49501,"pass":true,"failure":null}
+{"case":"crafted 252: random column, 6 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 253: random column, 477 rows","bytes":477,"pass":true,"failure":null}
+{"case":"crafted 254: random column, 71092 rows","bytes":56874,"pass":true,"failure":null}
+{"case":"crafted 255: periodic, 899595 rows","bytes":29686635,"pass":true,"failure":null}
+{"case":"crafted 256: random column, 162668 rows","bytes":130135,"pass":true,"failure":null}
+{"case":"crafted 257: random column, 20899 rows","bytes":20899,"pass":true,"failure":null}
+{"case":"crafted 258: random column, 5 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 259: random column, 856 rows","bytes":856,"pass":true,"failure":null}
+{"case":"crafted 260: periodic, 115578 rows","bytes":92463,"pass":true,"failure":null}
+{"case":"crafted 261: random column, 899813 rows","bytes":900121,"pass":true,"failure":null}
+{"case":"crafted 262: random column, 160117 rows","bytes":185072,"pass":true,"failure":null}
+{"case":"crafted 263: random column, 127827 rows","bytes":127827,"pass":true,"failure":null}
+{"case":"crafted 264: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 265: periodic, 343 rows","bytes":343,"pass":true,"failure":null}
+{"case":"crafted 266: random column, 124933 rows","bytes":144583,"pass":true,"failure":null}
+{"case":"crafted 267: random column, 899555 rows","bytes":899555,"pass":true,"failure":null}
+{"case":"crafted 268: random column, 109824 rows","bytes":126820,"pass":true,"failure":null}
+{"case":"crafted 269: random column, 67024 rows","bytes":67024,"pass":true,"failure":null}
+{"case":"crafted 270: periodic, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 271: random column, 927 rows","bytes":927,"pass":true,"failure":null}
+{"case":"crafted 272: random column, 147431 rows","bytes":167939,"pass":true,"failure":null}
+{"case":"crafted 273: random column, 899778 rows","bytes":899778,"pass":true,"failure":null}
+{"case":"crafted 274: random column, 80318 rows","bytes":92330,"pass":true,"failure":null}
+{"case":"crafted 275: periodic, 226621 rows","bytes":1586341,"pass":true,"failure":null}
+{"case":"crafted 276: random column, 6 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 277: random column, 841 rows","bytes":841,"pass":true,"failure":null}
+{"case":"crafted 278: random column, 140650 rows","bytes":112520,"pass":true,"failure":null}
+{"case":"crafted 279: random column, 899098 rows","bytes":899098,"pass":true,"failure":null}
+{"case":"crafted 280: periodic, 177611 rows","bytes":142089,"pass":true,"failure":null}
+{"case":"crafted 281: random column, 216319 rows","bytes":216319,"pass":true,"failure":null}
+{"case":"crafted 282: random column, 5 rows","bytes":18,"pass":true,"failure":null}
+{"case":"crafted 283: random column, 394 rows","bytes":394,"pass":true,"failure":null}
+{"case":"crafted 284: random column, 79381 rows","bytes":63505,"pass":true,"failure":null}
+{"case":"crafted 285: periodic, 899288 rows","bytes":28237552,"pass":true,"failure":null}
+{"case":"crafted 286: random column, 3046 rows","bytes":3392,"pass":true,"failure":null}
+{"case":"crafted 287: random column, 10263 rows","bytes":10263,"pass":true,"failure":null}
+{"case":"crafted 288: random column, 6 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 289: random column, 399 rows","bytes":399,"pass":true,"failure":null}
+{"case":"crafted 290: periodic, 76074 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 291: random column, 899868 rows","bytes":899868,"pass":true,"failure":null}
+{"case":"crafted 292: random column, 44915 rows","bytes":52160,"pass":true,"failure":null}
+{"case":"crafted 293: random column, 273392 rows","bytes":273392,"pass":true,"failure":null}
+{"case":"crafted 294: random column, 10 rows","bytes":22,"pass":true,"failure":null}
+{"case":"crafted 295: periodic, 476 rows","bytes":1366,"pass":true,"failure":null}
+{"case":"crafted 296: random column, 71738 rows","bytes":81726,"pass":true,"failure":null}
+{"case":"crafted 297: random column, 899919 rows","bytes":899919,"pass":true,"failure":null}
+{"case":"crafted 298: random column, 129611 rows","bytes":150771,"pass":true,"failure":null}
+{"case":"crafted 299: random column, 250827 rows","bytes":250827,"pass":true,"failure":null}
+{"case":"crafted multi-block: periodic and several-cycle columns","bytes":9174412,"pass":true,"failure":null}
+{"case":"Cells witness 0","bytes":8,"pass":true,"failure":null}
+{"case":"Cells witness 1","bytes":9,"pass":true,"failure":null}
+{"case":"Cells witness 2","bytes":101,"pass":true,"failure":null}
+{"case":"Cells witness 3","bytes":20,"pass":true,"failure":null}
+{"case":"wikidata /workspace/work/astra-e-compact-timing/corpora/wikidata.bz2","bytes":209700196,"pass":true,"failure":null}
+{"case":"600 mutated inputs against 0.5.6's kernel","bytes":0,"pass":true,"failure":null}
+{"arm":"candidate","verdict":"PASS","failures":0}
