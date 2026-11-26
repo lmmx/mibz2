@@ -1,9 +1,9 @@
-id = "computational-permutation-structure"
+id = "frontier-checkpoint-freshness"
 holder = "claude-code"
-session = "238e5a0e784a"
-claimed_at = "2026-11-26T23:55:52+00:00"
-expires = "2026-11-27T07:55:52+00:00"
+session = "ea4bf45b6503"
+claimed_at = "2026-11-26T23:55:59+00:00"
+expires = "2026-11-27T07:55:59+00:00"
 owned_paths = []
-mechanisms = ["labelled-permutation-operator-discovery"]
+mechanisms = ["frontier-checkpoint-freshness"]
 base = "8f214b8ac9334eb0022affabfb4c7daf4879c0c2"
 released = false
