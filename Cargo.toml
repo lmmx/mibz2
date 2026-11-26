@@ -120,6 +120,14 @@ ideal-rle1 = []
 # to the caller, measuring the in-order reader and copy cost. Never on a production path.
 # Retain until the ideal-parts matrix is analysed; then remove
 ideal-delivery = []
+# Research only: the MTF-into-construction fold (src/runs/fold.rs, the sink in src/open.rs, the
+# hook in src/lib.rs's decode_owned): on a run-route block for the open kernel, the MTF/RLE2
+# front emits each maximal run straight into construction's first pass (OutQ16 and the thick
+# strips), with no run records, no cut at 127 rows and no re-merge. Exact bytes and errors: any
+# block it cannot finish goes the shipped way. Switchable at run time (`runs::fold::set_enabled`)
+# for the bench's arms. Never a default; frozen registration:
+# docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md. Retain until its run is read
+mtf-fold = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -185,3 +193,8 @@ required-features = ["owned-writer"]
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
+
+# the MTF-into-construction fold on and off through the parallel decoder (research feature)
+[[test]]
+name = "mtf_fold"
+required-features = ["mtf-fold"]

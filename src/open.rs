@@ -820,9 +820,141 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
     }
 }
 
+/// Research only (`mtf-fold`): the open kernel's first pass fed run by run by the MTF/RLE2
+/// front (`runs::fold`), in place of `maximal` over the run records. Adjacent runs of one byte
+/// are merged as `maximal` merges records, so `Pass::take` sees exactly the maximal runs it
+/// sees on the shipped path, in the same order and at the same rows.
+#[cfg(feature = "mtf-fold")]
+struct FoldSink<'a> {
+    pass: Pass<'a>,
+    p: u32,
+    /// the maximal run so far: its byte, first row and rows (none while `width` is 0)
+    c: u8,
+    pos: u32,
+    width: u32,
+}
+
+#[cfg(feature = "mtf-fold")]
+impl FoldSink<'_> {
+    /// The maximal run so far to the first pass
+    #[inline(always)]
+    fn flush(&mut self) {
+        if self.width != 0 {
+            self.pass
+                .take::<true>(self.c, self.pos, self.width, self.p, LIMIT);
+            self.pos += self.width;
+            self.width = 0;
+        }
+    }
+}
+
+#[cfg(feature = "mtf-fold")]
+impl crate::runs::fold::Sink for FoldSink<'_> {
+    #[inline(always)]
+    fn run(&mut self, c: u8, total: u32) {
+        // (the rows of all a block's runs are below 2^32 whatever its symbols: the front's
+        // runs over 127 rows sum to at most `max_len` < 2^31, the others to at most 127 a
+        // symbol, under 2^24 symbols)
+        if c == self.c && self.width != 0 {
+            self.width += total;
+            return;
+        }
+        self.flush();
+        self.c = c;
+        self.width = total;
+    }
+}
+
+#[cfg(feature = "mtf-fold")]
+impl<const FORCED: bool> OpenCellsOf<FORCED> {
+    /// Research only (`mtf-fold`): the block `b` (a run-route block of bound at most 900,000)
+    /// inverted by the open kernel with its first pass fed straight from the MTF/RLE2 front,
+    /// its bytes into `out` (whatever it held). `Done(n)` only where the shipped path,
+    /// `runs::front` and then `invert_runs`, would have taken the open kernel to the same
+    /// bytes; otherwise `out` holds nothing of the block's, and the caller takes the shipped
+    /// path from the start.
+    ///
+    /// **Its buffer before the rows are known:** `out` is sized by the block's bound, and the
+    /// queues laid out over it (`outq::Queues`, chunks from its start); the walk sizes it to
+    /// `n` itself (`emit`). The queues' contents are the shipped pass's: only where their chunks
+    /// lie can differ, which the wiring reads through the same `Heads`.
+    ///
+    /// **Its caps, before the admission's is known:** the retained rows at most the bound
+    /// (every block within its bound has at most that many, so no admitted block meets it) and
+    /// the thick strips at most `bound / 17 + 2` (a strip is wider than `LIMIT`, but for the
+    /// two fragments of the one holding the marked row). They bound what a block past its
+    /// bound can take before the front refuses it. Once `n` and the record count are known,
+    /// `cap` decides as on the shipped path: a block it refuses, or one past a dense cap, is
+    /// `NotOpen`, exactly the blocks the shipped path gives to `LazyCells`.
+    pub(crate) fn fold(
+        &mut self,
+        b: &crate::block::Symbols,
+        scratch: &mut Runs,
+        out: &mut Vec<u8>,
+        k: Kernels,
+    ) -> crate::runs::fold::Outcome {
+        use crate::runs::fold::{self, Outcome};
+        let bound = b.max_len;
+        if bound > fold::MAX_LEN {
+            return Outcome::Bailed;
+        }
+        let p = b.orig_ptr;
+        let strips = bound / (LIMIT as usize + 1) + 2;
+        out.resize(bound + INLINE, 0);
+        let mut sink = FoldSink {
+            pass: self.open.begin(&mut out[..], bound as u32, strips),
+            p,
+            c: 0,
+            pos: 0,
+            width: 0,
+        };
+        let Some((n, records)) = fold::front(b, scratch, k, &mut sink) else {
+            return Outcome::Bailed;
+        };
+        sink.flush();
+        let pass = sink.pass;
+        let ns = pass.ns;
+        let (f, heads, over) = (pass.f, pass.queues.heads(), pass.queues.over());
+        // (the shipped path's BadOrigPtr, and a block past either of the fold's own caps,
+        // which no block within its bound reaches)
+        if p as usize >= n || over || ns > strips {
+            return Outcome::Bailed;
+        }
+        let Some(cap) = Self::cap(records, n, p) else {
+            return Outcome::NotOpen;
+        };
+        if f.m > cap.m || ns > cap.strips {
+            return Outcome::NotOpen;
+        }
+        let (stats, mark, bits) =
+            self.open
+                .finish::<true, true>(&f, ns, &[], n as u32, p, LIMIT, &out[..], &heads);
+        self.open.walk(n, stats.retained, mark, bits, out);
+        #[cfg(test)]
+        {
+            self.opened += 1;
+        }
+        Outcome::Done(n)
+    }
+}
+
 impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     fn reads_runs(&self) -> bool {
         true
+    }
+    #[cfg(feature = "mtf-fold")]
+    fn folds(&self) -> bool {
+        true
+    }
+    #[cfg(feature = "mtf-fold")]
+    fn fold_runs(
+        &mut self,
+        b: &crate::block::Symbols,
+        scratch: &mut Runs,
+        out: &mut Vec<u8>,
+        k: Kernels,
+    ) -> crate::runs::fold::Outcome {
+        self.fold(b, scratch, out, k)
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
         if let Some(cap) = Self::cap(r.records().len(), n, p) {

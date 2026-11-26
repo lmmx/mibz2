@@ -976,3 +976,310 @@ fn miri_runs_of_column_is_the_scan() {
     let (runs, per) = runs_of_column(&ll);
     assert!(r.runs == runs && r.per == per && r.counts == crate::run_fed::counts_of(&ll));
 }
+
+/// Research only (`mtf-fold`): the fold (src/runs/fold.rs and the open kernel's sink) against
+/// the shipped path, block for block: the runs it sends are the records' maximal runs and its
+/// record count theirs; it gives up only where the shipped front errs or its AVX2 kernel leaves
+/// the block to the scalar one (or the marked row is past the block); and where it finishes,
+/// the open kernel's bytes are the shipped path's, and it finishes exactly where the shipped
+/// path takes the open kernel
+#[cfg(feature = "mtf-fold")]
+mod fold_tests {
+    use super::*;
+    use crate::bwt::{ForcedOpenCells, InverseBwt, OpenCellsOf};
+    use crate::runs::fold::{self, Outcome, Sink};
+
+    /// A sink that keeps what it is sent
+    #[derive(Default)]
+    struct Kept(Vec<(u8, u32)>);
+
+    impl Sink for Kept {
+        fn run(&mut self, c: u8, total: u32) {
+            self.0.push((c, total));
+        }
+    }
+
+    /// Adjacent runs of one byte merged
+    fn merged(runs: impl IntoIterator<Item = (u8, u32)>) -> Vec<(u8, u32)> {
+        let mut v: Vec<(u8, u32)> = Vec::new();
+        for (c, w) in runs {
+            match v.last_mut() {
+                Some(last) if last.0 == c => last.1 += w,
+                _ => v.push((c, w)),
+            }
+        }
+        v
+    }
+
+    /// Whether the shipped AVX2 front gives the block up to the scalar one, for kernels `k`
+    fn avx2_gives_up(b: &Symbols, k: Kernels) -> bool {
+        #[cfg(target_arch = "x86_64")]
+        if front_fast(k) {
+            // SAFETY: `front_fast` holds only where the features it needs were detected
+            return unsafe { front_avx2(b, &mut Runs::default()) }.is_none();
+        }
+        let _ = (b, k);
+        false
+    }
+
+    /// The fold's front against the shipped front on one block
+    fn check_front(b: &Symbols, r: &mut Runs, what: &str) -> bool {
+        let mut folded = false;
+        for k in kernels() {
+            let mut kept = Kept::default();
+            let got = fold::front(b, &mut Runs::default(), k, &mut kept);
+            let want = front(b, r, k);
+            match got {
+                Some((n, recs)) => {
+                    assert!(want == Ok(n), "{what}, {k:?}: {n} rows, shipped {want:?}");
+                    assert!(recs == r.runs.len(), "{what}, {k:?}: the record count");
+                    assert!(kept.0.iter().all(|&(_, w)| w > 0), "{what}: an empty run");
+                    let records = r.runs.iter().map(|&x| ((x >> 8) as u8, (x & 0xff) as u32));
+                    assert!(
+                        merged(kept.0) == merged(records),
+                        "{what}, {k:?}: the maximal runs"
+                    );
+                    folded = true;
+                }
+                None => assert!(
+                    want.is_err() || avx2_gives_up(b, k),
+                    "{what}, {k:?}: given up on a block the shipped front takes"
+                ),
+            }
+        }
+        folded
+    }
+
+    /// The fold through the open kernel against the shipped path on one block: the outcomes
+    /// counted in `seen` (done, not open, given up)
+    fn check_invert<const F: bool>(b: &Symbols, k: Kernels, seen: &mut [usize; 3], what: &str) {
+        let (mut ship, mut cells) = (OpenCellsOf::<F>::default(), OpenCellsOf::<F>::default());
+        let (mut r, mut scratch) = (Runs::default(), Runs::default());
+        let mut got = vec![0x5a; 37];
+        let outcome = cells.fold(b, &mut scratch, &mut got, k);
+        let shipped = front(b, &mut r, k);
+        let decodes = matches!(shipped, Ok(n) if (b.orig_ptr as usize) < n);
+        match outcome {
+            Outcome::Done(n) => {
+                assert!(
+                    shipped == Ok(n),
+                    "{what}, {k:?}: {n} rows, shipped {shipped:?}"
+                );
+                let mut want = vec![0xa5; 11];
+                assert!(ship.invert_runs(&r, n, b.orig_ptr, &mut want, k));
+                assert!(
+                    ship.opened == 1,
+                    "{what}, {k:?}: shipped, not the open kernel"
+                );
+                assert!(got == want, "{what}, {k:?}: the bytes");
+                seen[0] += 1;
+            }
+            Outcome::NotOpen => {
+                assert!(decodes, "{what}, {k:?}: not open, shipped {shipped:?}");
+                let n = shipped.unwrap();
+                let mut want = Vec::new();
+                assert!(ship.invert_runs(&r, n, b.orig_ptr, &mut want, k));
+                assert!(
+                    ship.opened == 0,
+                    "{what}, {k:?}: the shipped path opened it"
+                );
+                seen[1] += 1;
+            }
+            Outcome::Bailed => {
+                assert!(
+                    !decodes || avx2_gives_up(b, k),
+                    "{what}, {k:?}: given up on a block the shipped path decodes"
+                );
+                seen[2] += 1;
+            }
+        }
+    }
+
+    /// A bound the open kernel takes: the block's own rows, a row short, or 900,000
+    fn bound(b: &mut Symbols, rng: &mut Rng) {
+        let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+        let n = mtf::mtf_scalar(b, &mut ll, &mut counts).ok();
+        b.max_len = match (rng.below(4), n) {
+            (0, Some(n)) if n <= 900_000 => n,
+            (1, Some(n)) if (1..=900_000).contains(&n) => n - 1,
+            _ => 900_000,
+        };
+        if let Some(n) = n.filter(|&n| n > 0) {
+            if rng.below(8) != 0 {
+                b.orig_ptr = rng.below(n as u64) as u32;
+            }
+        }
+    }
+
+    #[test]
+    fn miri_fold_front_is_the_records_maximal_runs() {
+        let mut rng = Rng(0x51ed_270b_27a5_1ce1);
+        let mut r = Runs::default();
+        let cases = if cfg!(miri) { 8 } else { 6000 };
+        let syms_max = if cfg!(miri) { 80 } else { 3000 };
+        let mut folded = 0;
+        for i in 0..cases {
+            let mut b = synthetic(&mut rng, syms_max);
+            folded += check_front(&b, &mut r, &format!("synthetic {i}")) as usize;
+            bound(&mut b, &mut rng);
+            check_front(&b, &mut r, &format!("synthetic {i} at {}", b.max_len));
+        }
+        assert!(folded > cases / 4, "{folded} of {cases} folded");
+    }
+
+    #[test]
+    fn miri_fold_front_edges() {
+        // runs about the cap, at the block's start, between literals and at its end; deep
+        // literals; 21 and 22 run symbols together
+        let mut r = Runs::default();
+        let mut seq_to_unseq = [0u8; 256];
+        for (i, s) in seq_to_unseq.iter_mut().enumerate() {
+            *s = 255 - i as u8;
+        }
+        for len in [1, 126, 127, 128, 254, 255, 381, (1 << 21) - 1, 1 << 21] {
+            for lit in [2u16, 32, 33, 34, 256] {
+                let mut syms = Vec::new();
+                run_syms(len, &mut syms);
+                syms.push(lit);
+                run_syms(len, &mut syms);
+                syms.extend([3, 2, lit]);
+                run_syms(len, &mut syms);
+                syms.push(257);
+                let b = Symbols {
+                    crc: 0,
+                    orig_ptr: 0,
+                    seq_to_unseq,
+                    syms,
+                    eob: 257,
+                    max_len: 900_000,
+                };
+                check_front(&b, &mut r, &format!("run {len}, literal {lit}"));
+            }
+        }
+    }
+
+    #[test]
+    fn miri_fold_open_kernel_is_the_shipped_path() {
+        let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+        let cases = if cfg!(miri) { 6 } else { 2000 };
+        let syms_max = if cfg!(miri) { 60 } else { 3000 };
+        let (mut forced, mut prod) = ([0usize; 3], [0usize; 3]);
+        for i in 0..cases {
+            let mut b = synthetic(&mut rng, syms_max);
+            bound(&mut b, &mut rng);
+            for k in kernels() {
+                let what = format!("synthetic {i}");
+                check_invert::<true>(&b, k, &mut forced, &what);
+                check_invert::<false>(&b, k, &mut prod, &what);
+            }
+        }
+        eprintln!("forced {forced:?}, production {prod:?}");
+        if !cfg!(miri) {
+            assert!(forced[0] > cases / 4, "forced: {forced:?}");
+            assert!(prod[0] > 0 && prod[1] > 0, "production: {prod:?}");
+        }
+    }
+
+    /// Blocks made from columns of long runs (the open kernel's own kind), through
+    /// production's admission: the fold finishes them all
+    #[test]
+    fn fold_open_kernel_on_columns_of_runs() {
+        let mut rng = Rng(0x0dd_ba11_cafe_f00d);
+        let mut done = [0usize; 3];
+        for i in 0..60 {
+            let n = 1 + rng.below(300_000) as usize;
+            let mut ll = Vec::with_capacity(n);
+            while ll.len() < n {
+                let c = b"abcdefgh"[rng.below(8) as usize];
+                let w = 1 + rng.below([4, 40, 400][i % 3]) as usize;
+                ll.extend(std::iter::repeat_n(c, w.min(n - ll.len())));
+            }
+            let b = symbols_of(&ll, rng.below(n as u64) as u32);
+            for k in kernels() {
+                check_invert::<false>(&b, k, &mut done, &format!("column {i}"));
+            }
+        }
+        assert!(done[2] == 0 && done[0] > 0, "{done:?}");
+    }
+
+    /// A column's MTF/RLE2 symbols (libbzip2's encoder's, its bytes in use in order)
+    fn symbols_of(ll: &[u8], orig_ptr: u32) -> Symbols {
+        let mut used: Vec<u8> = ll.to_vec();
+        used.sort_unstable();
+        used.dedup();
+        let mut seq_to_unseq = [0u8; 256];
+        seq_to_unseq[..used.len()].copy_from_slice(&used);
+        let eob = used.len() as u16 + 1;
+        let mut list = used.clone();
+        let mut syms = Vec::new();
+        let mut zeros = 0u32;
+        for &c in ll {
+            let j = list.iter().position(|&x| x == c).unwrap();
+            if j == 0 {
+                zeros += 1;
+                continue;
+            }
+            run_syms(zeros, &mut syms);
+            zeros = 0;
+            list.remove(j);
+            list.insert(0, c);
+            syms.push(j as u16 + 1);
+        }
+        run_syms(zeros, &mut syms);
+        syms.push(eob);
+        Symbols {
+            crc: 0,
+            orig_ptr,
+            seq_to_unseq,
+            syms,
+            eob,
+            max_len: 900_000,
+        }
+    }
+
+    fn copy(b: &Symbols) -> Symbols {
+        Symbols {
+            syms: b.syms.clone(),
+            ..*b
+        }
+    }
+
+    /// `decode_owned` with the fold (the open kernel's) against `decode_owned` without
+    /// (`Segmented`'s): one output and one error, on blocks of enough symbols to be folded
+    #[test]
+    fn fold_decode_owned_is_the_shipped_decode() {
+        use crate::bwt::Segmented;
+        use crate::{decode_owned, Scratch};
+        let mut rng = Rng(0x9e37_79b9_7f4a_7c15 ^ 0xf01d);
+        let (mut sf, mut ss) = (
+            Scratch::<ForcedOpenCells>::default(),
+            Scratch::<Segmented>::default(),
+        );
+        let mut tried = 0;
+        for i in 0..400 {
+            let mut b = synthetic(&mut rng, 40_000);
+            bound(&mut b, &mut rng);
+            let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+            if let Ok(n) = mtf::mtf_scalar(&b, &mut ll, &mut counts) {
+                if (b.orig_ptr as usize) < n && rng.below(4) != 0 {
+                    let mut tt = bwt::TVector::new();
+                    bwt::build(&ll, &counts, &mut tt);
+                    let mut out = Vec::new();
+                    bwt::walk(&tt, b.orig_ptr, &mut out);
+                    let mut text = Vec::new();
+                    if crate::rle::unrle(&out, &mut text, Kernels::scalar()).is_ok() {
+                        b.crc = crate::crc::crc32(&text, Kernels::scalar());
+                    }
+                }
+            }
+            tried += (fold::wants(&b) && takes_runs(&b)) as usize;
+            for k in kernels() {
+                let (mut bf, mut bs) = (copy(&b), copy(&b));
+                let got = decode_owned(&mut bf, k, &mut sf, |n, _| Vec::with_capacity(n));
+                let want = decode_owned(&mut bs, k, &mut ss, |n, _| Vec::with_capacity(n));
+                assert!(got == want, "case {i}, {k:?}: {got:?} against {want:?}");
+            }
+        }
+        assert!(tried > 50, "{tried} blocks for the fold");
+    }
+}

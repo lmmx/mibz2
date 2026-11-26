@@ -90,6 +90,28 @@ pub trait InverseBwt: Default + Send {
         false
     }
 
+    /// Research only (`mtf-fold`): whether this kernel inverts a run-route block straight
+    /// from its symbols (`fold_runs`, the MTF-into-construction fold)
+    #[cfg(feature = "mtf-fold")]
+    fn folds(&self) -> bool {
+        false
+    }
+
+    /// Research only (`mtf-fold`): the block `b` inverted straight from its symbols into
+    /// `out`, its first pass fed by the MTF/RLE2 front (`runs::fold`), or the outcome that
+    /// sends the caller the shipped way. Called only when `folds` is true.
+    #[cfg(feature = "mtf-fold")]
+    fn fold_runs(
+        &mut self,
+        b: &crate::block::Symbols,
+        scratch: &mut crate::runs::Runs,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> crate::runs::fold::Outcome {
+        let _ = (b, scratch, out, k);
+        crate::runs::fold::Outcome::Bailed
+    }
+
     /// Whether the last `invert_runs` that returned true was done by Cells, in its own
     /// buffers, rather than by the fallback's table: the footprint ledger's route only
     /// (src/trace.rs), so that a Cells block is not charged the fallback's T-vector

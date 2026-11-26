@@ -519,6 +519,80 @@ pub fn decode_block<I: bwt::InverseBwt>(
     column(s, n, b.orig_ptr, b.crc, b.max_len, k, out)
 }
 
+/// Research only (`mtf-fold`): `decode_owned` on a run-route block for a kernel that folds
+/// (`InverseBwt::folds`): the block inverted straight from its symbols, its first pass fed by
+/// the MTF/RLE2 front with no run records (`runs::fold`), then its RLE1 undone in place and its
+/// CRC checked as `decode_owned` does. The bytes and the errors are `decode_owned`'s: where
+/// the fold doesn't finish the block, the shipped front and `invert_runs` run on it from the
+/// start, into the same buffer.
+///
+/// **Two departures, neither in the bytes:** the buffer is taken before the rows are known,
+/// so it is asked for by the block's bound (`take(max_len, ..)`: from the pool); and the
+/// symbols' buffer is not handed over with it (the fold still reads it), so the worker hands
+/// it back after the block, as it does for a block that failed. On a block that fails, the
+/// buffer taken is dropped rather than pooled.
+#[cfg(feature = "mtf-fold")]
+fn decode_folded<I: bwt::InverseBwt>(
+    b: &mut block::Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
+) -> Result<Vec<u8>, ErrorKind> {
+    use runs::fold::{self, Outcome};
+    let (crc, orig_ptr) = (b.crc, b.orig_ptr);
+    let mut out = take(b.max_len, Vec::new());
+    #[cfg(feature = "trace")]
+    trace::mark_sized(
+        trace::Kind::InvertStart,
+        trace::NONE,
+        b.max_len as u64,
+        trace::UNREAD,
+    );
+    let outcome = s.inverse.fold_runs(b, &mut s.runs, &mut out, k);
+    fold::count(outcome);
+    let n = match outcome {
+        Outcome::Done(n) => n,
+        Outcome::Bailed | Outcome::NotOpen => {
+            let n = runs::front(b, &mut s.runs, k)?;
+            if orig_ptr as usize >= n {
+                return Err(ErrorKind::BadOrigPtr);
+            }
+            if !s.inverse.invert_runs(&s.runs, n, orig_ptr, &mut out, k) {
+                debug_assert!(false, "the run records don't tile the block");
+                return Err(ErrorKind::Internal(
+                    "the run records don't tile the block".into(),
+                ));
+            }
+            n
+        }
+    };
+    #[cfg(feature = "trace")]
+    trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    #[cfg(any(test, feature = "trace"))]
+    let ll_before = s.ll.as_ptr();
+    let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+    #[cfg(any(test, feature = "trace"))]
+    {
+        let route = if s.inverse.took_cells() {
+            trace::OutputRoute::Cells
+        } else {
+            trace::OutputRoute::Runs
+        };
+        let staged = s.ll.as_ptr() != ll_before;
+        s.record_owned(route, n, b.max_len, k, Some(&out), staged);
+    }
+    #[cfg(not(any(test, feature = "trace")))]
+    let _ = n;
+    let computed = computed?;
+    if computed != crc {
+        return Err(ErrorKind::BlockCrc {
+            stored: crc,
+            computed,
+        });
+    }
+    Ok(out)
+}
+
 /// `decode_block` into a buffer of the block's own, for the parallel workers: the block's
 /// bytes are the whole of the buffer returned, the bytes and the errors exactly
 /// `decode_block`'s. `take(n, syms)` gives that buffer once the block's `n` rows are known,
@@ -544,6 +618,10 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
 ) -> Result<Vec<u8>, ErrorKind> {
+    #[cfg(feature = "mtf-fold")]
+    if s.inverse.folds() && runs::fold::wants(b) && runs::takes_runs(b) {
+        return decode_folded(b, k, s, take);
+    }
     let (crc, orig_ptr) = (b.crc, b.orig_ptr);
     #[cfg(feature = "ideal-mtf")]
     let replayed_mtf = if ideal::mtf::mode() == ideal::Mode::Replay {
