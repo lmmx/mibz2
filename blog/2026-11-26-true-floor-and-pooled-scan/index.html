@@ -1,0 +1,4381 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../2026-11-26-dropping-the-coordinator/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>The decoder's true floor and the limits of a pooled scan - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=3963db8a25e7">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="The decoder's true floor and the limits of a pooled scan">
+  <meta property="og:description" content="Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-26-true-floor-and-pooled-scan.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The decoder's true floor and the limits of a pooled scan">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The decoder's true floor and the limits of a pooled scan">
+  <meta name="twitter:description" content="Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-26-true-floor-and-pooled-scan.png">
+  <meta name="twitter:image:alt" content="The decoder's true floor and the limits of a pooled scan">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The decoder's true floor and the limits of a pooled scan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder's true floor and a pooled scan
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder's true floor and a pooled scan
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-how-much-of-the-first-matrixs-floor-was-the-decoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. How much of the first matrix's floor was the decoder's?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-remains-when-one-stage-at-a-time-is-real" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What remains when one stage at a time is real?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-designing-a-pooled-scan-and-testing-a-masked-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Designing a pooled scan and testing a masked stage
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-kill-tests-verdict-kill-narrowly-on-k1" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. The kill test's verdict: KILL, narrowly, on K1
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-why-pooling-was-not-enough" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Why pooling was not enough
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-keeping-the-verdict-and-what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Keeping the verdict and what comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-dropping-the-coordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dropping the coordinator
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Complementary bottlenecks
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Complementary bottlenecks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-complementary-bottlenecks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The experiment
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beyond it: the algorithms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_5" id="__nav_7_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder as a queueing network
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  The decoder as a queueing network
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The story
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beneath it: the theory
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-posing-the-inversion-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Posing the inversion problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-the-scanner-hides-the-emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Masked bottlenecks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-what-else-moves-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What else moves together
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-halving-the-single-row-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Halving the single-row steps
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Playing the hand you're dealt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-two-centuries-of-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_22" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_22">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_24" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_24" id="__nav_7_24_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_24_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_24">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_32" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_32">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  A new way back from the BWT
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The post
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Companion: compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_40">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_42" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_42" id="__nav_7_42_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_42_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_42">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-how-much-of-the-first-matrixs-floor-was-the-decoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. How much of the first matrix's floor was the decoder's?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-remains-when-one-stage-at-a-time-is-real" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What remains when one stage at a time is real?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-designing-a-pooled-scan-and-testing-a-masked-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Designing a pooled scan and testing a masked stage
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-kill-tests-verdict-kill-narrowly-on-k1" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. The kill test's verdict: KILL, narrowly, on K1
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-why-pooling-was-not-enough" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Why pooling was not enough
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-keeping-the-verdict-and-what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Keeping the verdict and what comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="the-decoders-true-floor-and-the-limits-of-a-pooled-scan">The decoder's true floor and the limits of a pooled scan<a class="headerlink" href="#the-decoders-true-floor-and-the-limits-of-a-pooled-scan" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.</p>
+<p class="post-meta">26 November 2026 · 19 min read · <a href="#6-keeping-the-verdict-and-what-comes-next">Research result</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>In <a href="../2026-11-26-complementary-bottlenecks/">Complementary bottlenecks</a>, we replaced each stage of
+mibz2's bzip2 decoder with a pre-recorded stand-in called an <em>oracle</em>. That factorial experiment
+showed where new algorithms could still speed up decoding. Its technical companion,
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/">From bottlenecks to better algorithms</a>, turned
+those measurements into four candidate designs, including a
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#9-dissolving-the-serial-scanner">pooled scan</a>.
+Together, those two posts left two empirical questions open before any large redesign could start.
+First, how much of the earlier all-ideal floor belonged to mibz2's pipeline rather than to oracle
+copying? Second, would moving the serial Huffman scan into the worker pool unlock the 36% gain
+measured when scanning and construction improve together?</p>
+<p>A short recap grounds both questions for a reader arriving cold. Decoding a bzip2 file moves each
+compressed block through six stages. One serial thread decodes
+<a href="../2026-11-05-huffman-bit-buffer/">Huffman symbols</a> (<code>S</code>). A pool of parallel workers then undoes
+move-to-front coding and zero-run encoding (<code>M</code>) and builds the
+<a href="../2026-11-10-rauzy-veech-reconstruction/">interval-exchange</a> structures (<code>C</code>). Each worker walks
+those structures and expands their words into bytes (<code>E</code>, called <em>emission</em> in
+<a href="../2026-11-19-open-returns/">Open Returns</a>), then finishes run-length expansion and checksums (<code>R</code>).
+Finally, an in-order reader copies completed blocks to the caller (<code>D</code>). As shown in
+<a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network</a>, adding workers
+speeds decoding up until the
+<a href="../2026-11-25-the-decoder-as-a-queueing-network/#5-the-bottleneck-law">bottleneck knee</a> near 7.7
+workers on earlier code. Below the knee, workers set the pace. At eight workers, where mibz2 ships
+on our 10-core Intel i9-10900K machine, the serial scanner and the workers are almost evenly
+matched.</p>
+<p>Both open questions now have direct measurements on the same four-stream Wikidata file. That
+workload holds 47.4 MB compressed and expands to 838.8 MB uncompressed. Removing oracle copying and
+emission's leftover word expansion drops mibz2's all-ideal floor to roughly 5 ms at every worker
+count. It also refutes the suspected DRAM-bandwidth bottleneck between 8 and 10 workers, while
+revealing that 20 MiB L3 cache capacity <em>does</em> bind there. At the same time, it uncovers two large
+costs the first matrix could not see. Emission's word spelling is measured at 298 ms at 1 worker
+(an upper bound inflated by cold oracle reads; roughly 230 to 245 ms in situ). Real serial delivery
+starts near 29 ms on warm blocks, then climbs to 44–78 ms at 10 workers as unread blocks crowd the
+L3 cache. Testing the pooled scan behind ideal construction then ends in a narrow kill under its
+pre-registered gate. Pooling fails to remove scanning CPU; it merely moves that work onto workers
+that are already busy below nine threads.</p>
+<p>This post reports both experiments and their consequences.
+<a href="#1-how-much-of-the-first-matrixs-floor-was-the-decoders">Section 1</a> separates pipeline plumbing from
+oracle copying and settles the DRAM-bandwidth versus L3-capacity question.
+<a href="#2-what-remains-when-one-stage-at-a-time-is-real">Section 2</a> measures each stage alone real and
+quantifies the newly exposed spelling, delivery and RLE1/CRC costs.
+<a href="#3-designing-a-pooled-scan-and-testing-a-masked-stage">Section 3</a> explains the prototype and why
+we tested it behind ideal construction.
+<a href="#4-the-kill-tests-verdict-kill-narrowly-on-k1">Section 4</a> presents every gate from the kill-test
+run.
+<a href="#5-why-pooling-was-not-enough">Section 5</a> derives the queueing arithmetic behind the 10-worker
+crossover and diagnoses cold-store bias in the paired-oracle test.
+<a href="#6-keeping-the-verdict-and-what-comes-next">Section 6</a> explains why the frozen verdict stands and
+sets out what we build next.</p>
+<p><strong>Takeaways</strong></p>
+<ul>
+<li><strong>Pipeline plumbing is negligible.</strong> With zero-copy stand-ins replacing every stage and word
+  spelling removed too, decoding takes 5.2 to 5.7 ms across every worker count. That is 2.7% of the
+  shipped 194.6 ms wall at 8 workers. Queues, locks and hand-offs need no work.</li>
+<li><strong>DRAM bandwidth did not bind from 8 to 10 workers, though 20 MiB L3 capacity does.</strong> Removing
+  4.9 GB of oracle copying flattened the all-ideal wall with spelling kept to 42.4 ms at 8 workers
+  and 40.5 ms at 10. Live memory traffic stayed at 13 to 17 GB/s. The earlier rise from 112 to
+  142 ms was a copying artifact; however, L3 capacity still binds at 8 to 10 workers for delivery
+  and RLE1/CRC.</li>
+<li><strong>The serial scan caps worker-only gains at 8% at 8 workers, and two hidden costs scale in
+  opposite directions beneath it.</strong> Keeping only the scan real takes 179.1 ms at 8 workers, or 92%
+  of the shipped wall. Beneath it sits emission's parallel word spelling, measured at 298.2 ms at
+  1 worker (a cold-store upper bound; roughly 230 to 245 ms in situ) and shrinking to 37.2 ms at 8.
+  Delivery's real serial copy-out goes the other way: traced at 29.1 ms at 1 worker and 34.0 ms at
+  8, it climbs to 43.7–77.9 ms at 10 workers as unread blocks evict L3.</li>
+<li><strong>The pooled scan missed its frozen gate narrowly, despite clean plumbing.</strong> All 10 exactness
+  tests passed with zero dropped blocks and zero fallbacks. Peak memory stayed within 1.4% (passing
+  K3), and the AVX2 marker finder took 4.82 ms at 9.84 GB/s (under half of K4's limit). Behind ideal
+  construction, pooling captured 52% of the scan's room at 8 workers and 48% at 9. Its 95%
+  confidence ceilings missed K1's half-capture bar by 0.009 and 0.042.</li>
+<li><strong>Pooling moves scanning CPU onto workers instead of removing it, so it wins only from slack.</strong>
+  Pooled workers spent 173 to 193 ms scanning, matching the serial scanner's 171 to 190 ms. That
+  extra load slowed standalone decoding below nine workers and broke even at 9 (<code>1.000</code>). Only at 10
+  workers, where shipped workers sat 20.2% idle, did pooling win (6.4% by geometric mean,
+  <code>P/none = 0.936</code>; median wall fell 5.3% from 197.6 ms to 187.2 ms).</li>
+</ul>
+<h2 id="1-how-much-of-the-first-matrixs-floor-was-the-decoders">1. How much of the first matrix's floor was the decoder's?<a class="headerlink" href="#1-how-much-of-the-first-matrixs-floor-was-the-decoders" title="Permanent link">&para;</a></h2>
+<p>In the first 44-arm matrix, making all six parts ideal left a steep residual wall. It took 391 ms at
+1 worker and 94 ms at 6, then climbed from 112 ms at 8 to 142 ms at 10. Two artifacts contaminated
+those readings. First, the original oracles copied about 4.9 GB of pre-recorded answers into the
+decoder under global locks
+(<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#3-accounting-for-the-remaining-computation">Section 3 of the companion post</a>).
+Second, the emission oracle skipped the graph walk yet left word-to-byte expansion running inside
+each worker. Because those costs were mixed together, the first matrix could not tell whether
+mibz2's pipeline plumbing was slow. It also could not tell whether main memory formed a third
+bottleneck above 8 workers.</p>
+<p>To separate plumbing, copying and word spelling directly, we built zero-copy borrow oracles in
+<a href="https://github.com/lmmx/mibz2/pull/921">PR #921</a>. We then ran a 16-minute floor diagnostic,
+archived in <a href="https://github.com/lmmx/mibz2/pull/931">PR #931</a>
+(<a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">the floor results</a>).
+Instead of copying recorded buffers, each borrow oracle hands the next stage a borrowed slice. We
+also added a setting <code>F</code> (<code>E_full</code>) that skips word spelling alongside the graph walk.</p>
+<aside class="il-gloss">
+<p><strong>Zero-copy borrow oracle.</strong> Rather than cloning recorded buffers under a lock for each block, a
+borrow oracle hands the downstream stage a read-only reference to pre-recorded memory. That strips
+replay traffic off the memory bus, though the downstream stage then reads cache lines that the real
+upstream stage would have warmed.</p>
+</aside>
+<p>The run executed 648 decodes on the i9-10900K at six worker counts (<code>1</code> and <code>6</code> through <code>10</code>). Each
+cell ran across 8 randomised blocks, with traces on the first 4 and the scanner pinned to CPU 6.
+Every validity check passed. Every decode produced byte-identical output, and the scanner pin held
+in all 216 pinned traces. Removed parts kept at most 0.15% of their real busy time, well under the
+5% void threshold. No <code>F</code> arm called word spelling, and live memory-controller counters stayed
+active throughout.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Workers</th>
+<th style="text-align: right;">Residual A (<code>SECMRD</code>, spelling kept)</th>
+<th style="text-align: right;">Residual B (<code>SFCMRD</code>, plumbing alone)</th>
+<th style="text-align: right;">Spelling <code>E_consume</code> (<code>A − B</code>)</th>
+<th style="text-align: right;">Delivery on cold store (<code>SFCMR − B</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">303.9 [302.9, 305.0] ms</td>
+<td style="text-align: right;">5.7 [5.5, 5.8] ms</td>
+<td style="text-align: right;">298.2 [297.0, 299.4] ms</td>
+<td style="text-align: right;">48.5 [46.8, 50.3] ms</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">54.0 [51.2, 56.7] ms</td>
+<td style="text-align: right;">5.3 [5.3, 5.4] ms</td>
+<td style="text-align: right;">48.7 [45.9, 51.4] ms</td>
+<td style="text-align: right;">47.9 [47.1, 48.8] ms</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">46.7 [45.1, 48.2] ms</td>
+<td style="text-align: right;">5.2 [4.9, 5.5] ms</td>
+<td style="text-align: right;">41.5 [40.0, 43.0] ms</td>
+<td style="text-align: right;">48.5 [47.7, 49.3] ms</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>42.4 [40.3, 44.4] ms</strong></td>
+<td style="text-align: right;"><strong>5.2 [5.0, 5.5] ms</strong></td>
+<td style="text-align: right;"><strong>37.2 [35.2, 39.1] ms</strong></td>
+<td style="text-align: right;"><strong>47.3 [46.4, 48.2] ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">42.9 [40.4, 45.3] ms</td>
+<td style="text-align: right;">5.3 [5.1, 5.5] ms</td>
+<td style="text-align: right;">37.6 [35.1, 40.1] ms</td>
+<td style="text-align: right;">49.1 [48.0, 50.2] ms</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><strong>40.5 [37.6, 43.5] ms</strong></td>
+<td style="text-align: right;"><strong>5.4 [5.3, 5.5] ms</strong></td>
+<td style="text-align: right;"><strong>35.2 [32.3, 38.0] ms</strong></td>
+<td style="text-align: right;"><strong>49.3 [46.8, 51.8] ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Two results follow straight from that table. First, mibz2's pipeline plumbing is negligible. Arm
+<code>SFCMRD</code> leaves every stage free and skips word spelling, matching Residual B in
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#3-accounting-for-the-remaining-computation">the companion's accounting</a>.
+Across all worker counts it takes just 5.2 to 5.7 ms. At 8 workers the block mean is 5.2 ms and the
+median is 5.3 ms. That is 2.7% of the shipped 194.6 ms wall. In <code>SECMRD</code> traces, worker handovers
+cost 0.96 ms per thread at 1 worker and 0.15 ms at 8. Both sit under half a percent of Residual A.
+The design analysis had forecast 14 to 19 ms at 1 worker. Measured at 5.7 ms, that prediction is
+scored a clean miss in the right direction, and plumbing is closed as a target.</p>
+<p>Second, DRAM bandwidth did not bind between 8 and 10 workers, though 20 MiB L3 cache capacity does.
+Arm <code>SECMRD</code> removes oracle copying while keeping word spelling (Residual A). Its wall time falls
+from 54.0 ms at 6 workers to 46.7 ms at 7. From 8 to 10 workers it stays flat at 42.4 ms, 42.9 ms
+and 40.5 ms. Live hardware counters confirm why. Total memory traffic stays between 11.9 and
+13.1 GB/s in <code>SFCMRD</code>. In <code>SECMRD</code> it stays between 15.2 and 16.6 GB/s across 8 to 10 workers. The
+shipped decoder draws 15.1 GB/s at 10 workers, far below DRAM saturation. The first matrix's climb
+from 112 to 142 ms was caused by the old copying oracles. Yet L3 capacity still tightens at 8 to 10
+workers. When <code>R</code> (RLE1/CRC) runs real in <code>SECMD</code>, memory traffic climbs from 16.5 GB/s at 8 workers
+to 21.6 GB/s at 9 and 25.4 GB/s at 10. That extra traffic nudges <code>SECMD</code>'s wall slightly upward
+(<code>55.0 → 55.2 → 56.6 ms</code>) while <code>SECMRD</code> stays flat (<code>40.8</code>, <code>42.4</code>, <code>39.7 ms</code>). That same L3 spill
+also slows real delivery copy-out, as Section 2 shows next.</p>
+<figure class="bf-fig" id="taring">
+<p class="bf-title">Taring the scale: removing oracle copying exposes the 5 ms plumbing floor and each stage's isolated cost</p>
+<!-- fig:taring -->
+<svg viewBox="0 0 720 374" role="img" aria-label="Two-panel empirical chart from the zero-copy floor run at 8 workers. Panel A shows the all-ideal wall dropping from 112 ms in the first matrix to 42.4 ms with zero-copy oracles (Residual A), splitting into 37.2 ms of emission word spelling (cold-store upper bound) and 5.2 ms (2.7 percent) of pipeline plumbing (Residual B). An inset shows the 8 to 10 worker trend: the first matrix rose from 112 to 142 ms, whereas zero-copy Residual A stays flat at 42.4, 42.9, and 40.5 ms at 15 to 17 GB/s. Panel B shows each single stage real at 8 workers against the 194.6 ms shipped wall: scan 179.1 ms (92 percent), emission 98.1 ms (cold-store caveat on borrowed C), construction 83.6 ms, delivery 34.0 ms traced copy_out (with 52.3 ms cold-store SFCMR ghost), MTF/RLE2 20.1 ms, RLE1/CRC 14.2 ms wall difference hiding 104.0 ms traced A9 CPU, and nothing 5.3 ms."><text class="bf-t-strong" x="14.0" y="20.0" text-anchor="start" style="font-size:12px">A. Taring the 8-worker all-ideal floor</text><text class="bf-tm" x="14.0" y="35.0" text-anchor="start" style="font-size:10px">Removing 4.9 GB of oracle copies and word spelling (ms)</text><line x1="132.0" y1="48.0" x2="132.0" y2="158.0" style="stroke:var(--bf-vz-axis);stroke-width:1.0"/><text class="bf-tm" x="132.0" y="171.0" text-anchor="middle" style="font-size:9.5px">0</text><line x1="198.7" y1="48.0" x2="198.7" y2="158.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="198.7" y="171.0" text-anchor="middle" style="font-size:9.5px">50</text><line x1="265.3" y1="48.0" x2="265.3" y2="158.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="265.3" y="171.0" text-anchor="middle" style="font-size:9.5px">100</text><line x1="332.0" y1="48.0" x2="332.0" y2="158.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="332.0" y="171.0" text-anchor="middle" style="font-size:9.5px">150</text><text class="bf-tm" x="346.0" y="171.0" text-anchor="start" style="font-size:9.5px">ms</text><text class="bf-t-strong" x="125.0" y="62.0" text-anchor="end" style="font-size:9.8px">1st matrix all-ideal</text><text class="bf-tm" x="125.0" y="73.0" text-anchor="end" style="font-size:8.6px">copying oracles + spelling</text><path d="M132.0,55.0 L277.3,55.0 A4.0,4.0 0 0 1 281.3,59.0 L281.3,67.0 A4.0,4.0 0 0 1 277.3,71.0 L132.0,71.0 Z" style="fill:var(--bf-vz-2)"><title>First matrix all-ideal at 8 workers: 112 ms (includes ~4.9 GB oracle copying + word spelling)</title></path><text class="bf-t-strong" x="275.3" y="67.0" text-anchor="end" style="font-size:9.5px;fill:var(--bf-vz-2-ink)">112 ms</text><text class="bf-t-strong" x="125.0" y="90.0" text-anchor="end" style="font-size:9.8px">Zero-copy (SECMRD)</text><text class="bf-tm" x="125.0" y="101.0" text-anchor="end" style="font-size:8.6px">Residual A, spelling kept</text><path d="M132.0,83.0 L184.5,83.0 A4.0,4.0 0 0 1 188.5,87.0 L188.5,95.0 A4.0,4.0 0 0 1 184.5,99.0 L132.0,99.0 Z" style="fill:var(--bf-vz-1)"><title>Residual A (SECMRD, zero-copy) at 8 workers: 42.4 [40.3, 44.4] ms (15.2 GB/s)</title></path><text class="bf-t-strong" x="182.5" y="95.0" text-anchor="end" style="font-size:9.5px;fill:var(--bf-vz-1-ink)">42.4 ms</text><text class="bf-t-strong" x="125.0" y="118.0" text-anchor="end" style="font-size:9.8px">Word spelling (A-B)</text><text class="bf-tm" x="125.0" y="129.0" text-anchor="end" style="font-size:8.6px">E_consume (cold upper bound)</text><path d="M132.0,111.0 L177.6,111.0 A4.0,4.0 0 0 1 181.6,115.0 L181.6,123.0 A4.0,4.0 0 0 1 177.6,127.0 L132.0,127.0 Z" style="fill:var(--bf-vz-4)"><title>Emission word spelling (E_consume = A - B) at 8 workers: 37.2 [35.2, 39.1] ms (88% of Residual A; cold-store upper bound)</title></path><text class="bf-t-strong" x="186.6" y="123.0" text-anchor="start" style="font-size:9.5px">37.2 ms</text><text class="bf-t-strong" x="125.0" y="146.0" text-anchor="end" style="font-size:9.8px">Plumbing (SFCMRD)</text><text class="bf-tm" x="125.0" y="157.0" text-anchor="end" style="font-size:8.6px">Residual B, all free</text><path d="M132.0,139.0 L134.9,139.0 A4.0,4.0 0 0 1 138.9,143.0 L138.9,151.0 A4.0,4.0 0 0 1 134.9,155.0 L132.0,155.0 Z" style="fill:var(--bf-vz-3)"><title>Residual B (SFCMRD, plumbing alone) at 8 workers: 5.2 [5.0, 5.5] ms (2.7% of shipped 194.6 ms)</title></path><text class="bf-t-strong" x="143.9" y="151.0" text-anchor="start" style="font-size:9.5px">5.2 ms (2.7%)</text><rect x="14.0" y="188.0" width="336.0" height="168.0" rx="7" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.1"></rect><text class="bf-t-strong" x="26.0" y="206.0" text-anchor="start" style="font-size:10.5px">8 to 10 workers: the rising floor vanished</text><text class="bf-tm" x="26.0" y="220.0" text-anchor="start" style="font-size:9.2px">All-ideal wall (ms); bars show 95% intervals</text><line x1="56.0" y1="328.0" x2="232.0" y2="328.0" style="stroke:var(--bf-vz-axis);stroke-width:1.0"/><text class="bf-tm" x="50.0" y="331.0" text-anchor="end" style="font-size:9.0px">0</text><line x1="56.0" y1="297.3" x2="232.0" y2="297.3" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="50.0" y="300.3" text-anchor="end" style="font-size:9.0px">50</text><line x1="56.0" y1="266.7" x2="232.0" y2="266.7" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="50.0" y="269.7" text-anchor="end" style="font-size:9.0px">100</text><line x1="56.0" y1="236.0" x2="232.0" y2="236.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="50.0" y="239.0" text-anchor="end" style="font-size:9.0px">150</text><line x1="56.0" y1="236.0" x2="56.0" y2="328.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="56.0" y="342.0" text-anchor="middle" style="font-size:9.5px">8W</text><line x1="144.0" y1="236.0" x2="144.0" y2="328.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="144.0" y="342.0" text-anchor="middle" style="font-size:9.5px">9W</text><line x1="232.0" y1="236.0" x2="232.0" y2="328.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="232.0" y="342.0" text-anchor="middle" style="font-size:9.5px">10W</text><line x1="56.0" y1="259.3" x2="232.0" y2="240.9" style="stroke:var(--bf-vz-2);stroke-width:2.0;stroke-dasharray:5 3"/><circle cx="56.0" cy="259.3" r="3.5" style="fill:var(--bf-vz-2)"><title>First matrix all-ideal at 8 workers: 112 ms (copying artifact)</title></circle><circle cx="232.0" cy="240.9" r="3.5" style="fill:var(--bf-vz-2)"><title>First matrix all-ideal at 10 workers: 142 ms (copying artifact)</title></circle><text class="bf-t-strong" x="239.0" y="243.9" text-anchor="start" style="font-size:9.2px;fill:var(--bf-amber)">1st matrix</text><text class="bf-tm" x="239.0" y="254.9" text-anchor="start" style="font-size:8.8px">112-&gt;142 ms</text><polyline points="56.0,302.0 144.0,301.7 232.0,303.2" style="fill:none;stroke:var(--bf-vz-1);stroke-width:2.0"/><line x1="56.0" y1="303.3" x2="56.0" y2="300.8" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="56.0" cy="302.0" r="3.5" style="fill:var(--bf-vz-1)"><title>Zero-copy SECMRD at 8 workers: 42.4 [40.3, 44.4] ms</title></circle><line x1="144.0" y1="303.2" x2="144.0" y2="300.2" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="144.0" cy="301.7" r="3.5" style="fill:var(--bf-vz-1)"><title>Zero-copy SECMRD at 9 workers: 42.9 [40.4, 45.3] ms</title></circle><line x1="232.0" y1="304.9" x2="232.0" y2="301.3" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="232.0" cy="303.2" r="3.5" style="fill:var(--bf-vz-1)"><title>Zero-copy SECMRD at 10 workers: 40.5 [37.6, 43.5] ms</title></circle><text class="bf-t-strong" x="239.0" y="290.2" text-anchor="start" style="font-size:9.2px;fill:var(--bf-blue)">Zero-copy (A)</text><text class="bf-tm" x="239.0" y="301.2" text-anchor="start" style="font-size:8.8px">42.4-&gt;40.5 ms</text><text class="bf-tm" x="239.0" y="312.2" text-anchor="start" style="font-size:8.5px">15-17 GB/s</text><polyline points="56.0,324.8 144.0,324.7 232.0,324.7" style="fill:none;stroke:var(--bf-vz-3);stroke-width:1.8"/><circle cx="56.0" cy="324.8" r="3.0" style="fill:var(--bf-vz-3)"><title>Zero-copy SFCMRD (plumbing) at 8 workers: 5.2 [5.0, 5.5] ms</title></circle><circle cx="144.0" cy="324.7" r="3.0" style="fill:var(--bf-vz-3)"><title>Zero-copy SFCMRD (plumbing) at 9 workers: 5.3 [5.1, 5.5] ms</title></circle><circle cx="232.0" cy="324.7" r="3.0" style="fill:var(--bf-vz-3)"><title>Zero-copy SFCMRD (plumbing) at 10 workers: 5.4 [5.3, 5.5] ms</title></circle><text class="bf-t-strong" x="239.0" y="329.7" text-anchor="start" style="font-size:8.8px;fill:var(--bf-green-ink)">Plumbing: 5.2-5.4</text><line x1="362.0" y1="12.0" x2="362.0" y2="368.0" style="stroke:var(--bf-frame);stroke-width:1.0"/><text class="bf-t-strong" x="376.0" y="20.0" text-anchor="start" style="font-size:12px">B. One stage real, all else free (8 workers)</text><text class="bf-tm" x="376.0" y="35.0" text-anchor="start" style="font-size:10px">Median wall time (ms) against shipped 194.6 ms</text><line x1="492.0" y1="50.0" x2="492.0" y2="308.0" style="stroke:var(--bf-vz-axis);stroke-width:1.0"/><text class="bf-tm" x="492.0" y="323.0" text-anchor="middle" style="font-size:9.5px">0</text><line x1="539.0" y1="50.0" x2="539.0" y2="308.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="539.0" y="323.0" text-anchor="middle" style="font-size:9.5px">50</text><line x1="586.0" y1="50.0" x2="586.0" y2="308.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="586.0" y="323.0" text-anchor="middle" style="font-size:9.5px">100</text><line x1="632.9" y1="50.0" x2="632.9" y2="308.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="632.9" y="323.0" text-anchor="middle" style="font-size:9.5px">150</text><line x1="679.9" y1="50.0" x2="679.9" y2="308.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="679.9" y="323.0" text-anchor="middle" style="font-size:9.5px">200</text><text class="bf-tm" x="696.0" y="323.0" text-anchor="start" style="font-size:9.5px">ms</text><line x1="674.8" y1="48.0" x2="674.8" y2="308.0" style="stroke:var(--bf-ink);stroke-width:1.3;stroke-dasharray:4 3"/><text class="bf-t-strong" x="670.8" y="58.0" text-anchor="end" style="font-size:9.0px">shipped 194.6 ms</text><text class="bf-t-strong" x="484.0" y="78.0" text-anchor="end" style="font-size:9.8px">Scan (FCMRD)</text><text class="bf-tm" x="484.0" y="89.0" text-anchor="end" style="font-size:8.6px">serial; 92% of wall</text><path d="M492.0,71.0 L656.3,71.0 A4.0,4.0 0 0 1 660.3,75.0 L660.3,85.0 A4.0,4.0 0 0 1 656.3,89.0 L492.0,89.0 Z" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 8 workers: median 179.1 ms (92% of shipped 194.6 ms; caps worker-only gains at &lt;=8%)</title></path><text class="bf-t-strong" x="654.3" y="84.0" text-anchor="end" style="font-size:9.6px;fill:var(--bf-vz-2-ink)">179.1 ms</text><text class="bf-t-strong" x="484.0" y="112.0" text-anchor="end" style="font-size:9.8px">Emission (SCMRD)*</text><text class="bf-tm" x="484.0" y="123.0" text-anchor="end" style="font-size:8.6px">walk + spelling; cold C</text><path d="M492.0,105.0 L580.2,105.0 A4.0,4.0 0 0 1 584.2,109.0 L584.2,119.0 A4.0,4.0 0 0 1 580.2,123.0 L492.0,123.0 Z" style="fill:var(--bf-vz-1)"><title>Emission alone real (SCMRD, walk + spelling) at 8 workers: median 98.1 ms (overstated because walk A7 reads borrowed C store cold: 98.9 vs 72.4 ms/w)</title></path><text class="bf-t-strong" x="578.2" y="118.0" text-anchor="end" style="font-size:9.6px;fill:var(--bf-vz-1-ink)">98.1 ms*</text><text class="bf-t-strong" x="484.0" y="146.0" text-anchor="end" style="font-size:9.8px">Construction (SFMRD)</text><text class="bf-tm" x="484.0" y="157.0" text-anchor="end" style="font-size:8.6px">parallel worker stage</text><path d="M492.0,139.0 L566.5,139.0 A4.0,4.0 0 0 1 570.5,143.0 L570.5,153.0 A4.0,4.0 0 0 1 566.5,157.0 L492.0,157.0 Z" style="fill:var(--bf-vz-1)"><title>Construction alone real (SFMRD) at 8 workers: median 83.6 ms (A7 is 0.0 ms here)</title></path><text class="bf-t-strong" x="564.5" y="152.0" text-anchor="end" style="font-size:9.6px;fill:var(--bf-vz-1-ink)">83.6 ms</text><text class="bf-t-strong" x="484.0" y="180.0" text-anchor="end" style="font-size:9.8px">Delivery (D)†</text><text class="bf-tm" x="484.0" y="191.0" text-anchor="end" style="font-size:8.6px">traced vs cold SFCMR</text><path d="M492.0,173.0 L519.9,173.0 A4.0,4.0 0 0 1 523.9,177.0 L523.9,187.0 A4.0,4.0 0 0 1 519.9,191.0 L492.0,191.0 Z" style="fill:var(--bf-vz-4)"><title>Delivery real traced copy_out in none at 8 workers: 34.0 ms (dashed outline: 52.3 ms cold-store SFCMR wall artifact)</title></path><rect x="523.9" y="173.0" width="17.2" height="18.0" rx="2" style="fill:var(--bf-vz-4);fill-opacity:0.18;stroke:var(--bf-vz-4);stroke-width:1.1;stroke-dasharray:3 2"><title>Cold-store SFCMR wall at 8W: 52.3 ms (artifact of reading 209.7 MiB oracle store from DRAM)</title></rect><text class="bf-t-strong" x="546.1" y="186.0" text-anchor="start" style="font-size:9.2px">34.0 ms† (52.3 cold)</text><text class="bf-t-strong" x="484.0" y="214.0" text-anchor="end" style="font-size:9.8px">MTF / RLE2 (SFCRD)</text><text class="bf-tm" x="484.0" y="225.0" text-anchor="end" style="font-size:8.6px">parallel worker stage</text><path d="M492.0,207.0 L506.9,207.0 A4.0,4.0 0 0 1 510.9,211.0 L510.9,221.0 A4.0,4.0 0 0 1 506.9,225.0 L492.0,225.0 Z" style="fill:var(--bf-steel)"><title>MTF/RLE2 alone real (SFCRD) at 8 workers: median 20.1 ms</title></path><text class="bf-t-strong" x="515.9" y="220.0" text-anchor="start" style="font-size:9.6px">20.1 ms</text><text class="bf-t-strong" x="484.0" y="248.0" text-anchor="end" style="font-size:9.8px">RLE1 / CRC (wall diff)</text><text class="bf-tm" x="484.0" y="259.0" text-anchor="end" style="font-size:8.6px">104 ms A9 worker CPU</text><path d="M492.0,241.0 L501.3,241.0 A4.0,4.0 0 0 1 505.3,245.0 L505.3,255.0 A4.0,4.0 0 0 1 501.3,259.0 L492.0,259.0 Z" style="fill:var(--bf-steel)"><title>RLE1/CRC at 8 workers: 14.2 ms wall difference (SECMD 55.0 minus SECMRD 40.8 ms), hiding 104.0 ms traced A9 worker CPU (7% of worker CPU)</title></path><text class="bf-t-strong" x="510.3" y="254.0" text-anchor="start" style="font-size:9.6px">14.2 ms diff</text><text class="bf-t-strong" x="484.0" y="282.0" text-anchor="end" style="font-size:9.8px">Nothing (SFCMRD)</text><text class="bf-tm" x="484.0" y="293.0" text-anchor="end" style="font-size:8.6px">plumbing alone (2.7%)</text><path d="M492.0,275.0 L493.0,275.0 A4.0,4.0 0 0 1 497.0,279.0 L497.0,289.0 A4.0,4.0 0 0 1 493.0,293.0 L492.0,293.0 Z" style="fill:var(--bf-vz-3)"><title>All stages free (SFCMRD) at 8 workers: median 5.3 ms (mean 5.2 [5.0, 5.5] ms, 2.7% of shipped)</title></path><text class="bf-t-strong" x="502.0" y="288.0" text-anchor="start" style="font-size:9.6px">5.3 ms</text><text class="bf-tm" x="376.0" y="342.0" text-anchor="start" style="font-size:8.6px">*Walk (A7) reads borrowed C cold (98.9 vs 72.4 ms/w), overstating E.</text><text class="bf-tm" x="376.0" y="356.0" text-anchor="start" style="font-size:8.6px">†Traced real copy_out is 34.0 ms at 8W; 52.3 ms is cold-store SFCMR.</text></svg>
+<figcaption>Measured data (zero-copy floor run, i9-10900K, wikidata ×4; first-matrix baseline from the 44-arm run; traced delivery copy_out and A9 CPU from the pooled-scan traces). Visual analogy: taring a scale removes the shipping crates (4.9 GB of oracle copies and unremoved word spelling), revealing how light the tray itself is (5.2 ms) and how heavy each stage is alone. Where the analogy stops: pipeline stages overlap in time rather than summing like static weights (179 + 98 + 84 ms exceeds the 195 ms shipped wall), zero-copy borrowing leaves construction's store cache-cold for emission's walk, and traced delivery activity is not directly comparable to floor-arm wall differences.</figcaption>
+</figure>
+
+<h2 id="2-what-remains-when-one-stage-at-a-time-is-real">2. What remains when one stage at a time is real?<a class="headerlink" href="#2-what-remains-when-one-stage-at-a-time-is-real" title="Permanent link">&para;</a></h2>
+<p>Once the scale is tared down to 5.3 ms, enabling one real stage at a time exposes its isolated cost.
+The table below lists median wall times at 8 workers and 1 worker beside the shipped decoder. Where
+cold oracle stores or wall differences mask the live cost, traced real figures sit beside them.</p>
+<table>
+<thead>
+<tr>
+<th>Single real stage (all else free)</th>
+<th>Arm</th>
+<th style="text-align: right;">Median wall at 8 workers</th>
+<th style="text-align: right;">Median wall at 1 worker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shipped decoder (all real)</td>
+<td><code>none</code></td>
+<td style="text-align: right;">194.6 ms</td>
+<td style="text-align: right;">1,342.7 ms</td>
+</tr>
+<tr>
+<td>Scan</td>
+<td><code>FCMRD</code></td>
+<td style="text-align: right;">179.1 ms (92% of wall)</td>
+<td style="text-align: right;">169.7 ms</td>
+</tr>
+<tr>
+<td>Emission (walk + spelling; cold-store caveat)</td>
+<td><code>SCMRD</code></td>
+<td style="text-align: right;">98.1 ms</td>
+<td style="text-align: right;">694.2 ms</td>
+</tr>
+<tr>
+<td>Construction</td>
+<td><code>SFMRD</code></td>
+<td style="text-align: right;">83.6 ms</td>
+<td style="text-align: right;">609.5 ms</td>
+</tr>
+<tr>
+<td>Delivery (cold oracle store)</td>
+<td><code>SFCMR</code></td>
+<td style="text-align: right;">52.3 ms (<code>34.0 ms</code> traced)</td>
+<td style="text-align: right;">54.7 ms (<code>29.1 ms</code> traced)</td>
+</tr>
+<tr>
+<td>MTF / RLE2</td>
+<td><code>SFCRD</code></td>
+<td style="text-align: right;">20.1 ms</td>
+<td style="text-align: right;">141.1 ms</td>
+</tr>
+<tr>
+<td>RLE1 / CRC (wall difference)</td>
+<td><code>SECMD − SECMRD</code></td>
+<td style="text-align: right;">14.2 ms (<code>104.0 ms</code> traced CPU)</td>
+<td style="text-align: right;">65.8 ms</td>
+</tr>
+<tr>
+<td>Nothing (plumbing alone)</td>
+<td><code>SFCMRD</code></td>
+<td style="text-align: right;">5.3 ms (2.7% of wall)</td>
+<td style="text-align: right;">5.8 ms</td>
+</tr>
+</tbody>
+</table>
+<p>One caveat belongs right beside emission's row. Arm names list the <em>ideal</em> parts, so in
+construction's isolated arm (<code>SFMRD</code>), emission and its walk are free (<code>A7</code> is 0.0 ms at every
+count). The cold reads happen in emission's isolated arm (<code>SCMRD</code>), where emission runs real against
+a zero-copy borrow of construction. In the shipped decoder, real construction warms its structures
+in the worker's caches right before emission walks them. In <code>SCMRD</code>, the walk (<code>A7</code>) reads
+construction's store cold from main memory. It takes 98.9 ms per worker at 8 workers against
+72.4 ms as shipped, and 697.9 ms against 545.2 ms at 1 worker. Emission's isolated row (<code>SCMRD</code>)
+therefore overstates its standalone cost by roughly that warm-cache benefit. The serial scan's row
+(<code>FCMRD</code>) has no cross-stage cache distortion.</p>
+<p>Four findings from this table and its companion traces reshape our priorities.</p>
+<p>First, the serial scan imposes a hard ceiling at 8 workers. Running only the Huffman scan real
+(<code>FCMRD</code>) takes 179.1 ms at 8 workers. That is 92% of the shipped 194.6 ms wall. Even if every
+worker-side stage became free, 8-worker decoding could drop by at most 8% while scanning stays on
+one thread. This sharpens the first matrix's <code>S × C</code> result into a strict ordering rule. Worker-side
+optimisations cannot show their full gain at 8 workers until scanning leaves its serial station.</p>
+<p>Second, emission's word spelling is a major hidden worker cost, though its oracle number is an upper
+bound. Subtracting Residual B from Residual A isolates <code>E_consume</code>, the loop that expands dictionary
+words into bytes. At 1 worker it measures 298.2 ms. It accounts for 98% of <code>SECMRD</code> at 1 worker and
+87 to 90% from 6 workers up. The trace ledger matches directly at 299.7 ms for 1 worker and 39.8 ms
+per thread at 8 workers. Because workers run spelling in parallel, its wall time drops cleanly to
+37.2 ms at 8 workers and 35.2 ms at 10. However, a cold-store check the same day
+(<a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>) showed that 298.2 ms is inflated by cold oracle
+reads. In <code>SECMRD</code>, workers spell from <code>C</code>'s 120.6 MiB store and 425.1 MiB of recorded <code>u32</code> codes.
+At 1 worker that reads 504.3 MiB from DRAM against 151.1 MiB for the entire shipped decode. In the
+first matrix's arm <code>E</code>, where construction is real and warm, <code>consume_ns</code> is already 41.5 ms lower
+(<code>300.9 → 259.4 ms</code>). Estimating across runs puts true in-situ spelling near 230 to 245 ms, or
+roughly 17 to 18% of the 1,342.7 ms 1-worker wall.</p>
+<p>Third, delivery's real serial copy-out starts cheaper than the floor run suggested, then grows
+exactly as workers speed up. The floor run's flat 47.3 to 49.3 ms (<code>SFCMR − SFCMRD</code>) was a
+cold-store artifact corrected the same day (<a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>).
+There, the reader copied from the <code>R</code> oracle's 209.7 MiB store, over ten times the 20 MiB L3. Every
+worker count paid 5.1 million LLC load misses and 853.5 MiB of DRAM reads at roughly 17 GB/s. On
+real blocks in the pooled-scan bundle's traces (<code>n = 3</code> per cell, ledgers on, medians), delivery
+behaves very differently. These are traced reader activity times rather than wall differences, so
+they are not directly comparable to the floor table's columns:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Workers</th>
+<th style="text-align: right;">Shipped <code>none</code> <code>copy_out</code></th>
+<th style="text-align: right;">Fast workers <code>PC</code> / <code>SC</code> <code>copy_out</code></th>
+<th style="text-align: right;">Ready-queue high-water (<code>none</code> / <code>SC</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">29.1 ms</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">0.9 MiB / —</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">27.6 ms</td>
+<td style="text-align: right;">29.8 / 29.0 ms</td>
+<td style="text-align: right;">5.1 / 6.0 MiB</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">30.6 ms</td>
+<td style="text-align: right;">33.7 / 32.5 ms</td>
+<td style="text-align: right;">5.2 / 7.7 MiB</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>34.0 ms</strong></td>
+<td style="text-align: right;"><strong>40.0 / 39.5 ms</strong></td>
+<td style="text-align: right;">6.9 / 8.6 MiB</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">43.2 ms</td>
+<td style="text-align: right;">51.5 / 54.9 ms</td>
+<td style="text-align: right;">12.0 / 10.3 MiB</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><strong>43.7 ms</strong></td>
+<td style="text-align: right;"><strong>67.4 / 77.9 ms</strong></td>
+<td style="text-align: right;"><strong>14.6 / 16.3 MiB</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Delivery is cheap while workers are slow, and gets dearer precisely as they speed up. At 9 to 10
+workers, the ready queue (<code>READY_BYTES</code> = 12 MiB) holds 12 to 16.3 MiB of unread blocks inside a
+20 MiB L3. Those ready blocks spill to DRAM, where the single reader then competes with all ten
+workers.</p>
+<p>Fourth, RLE1/CRC's modest wall difference hides a growing worker cost. Subtracting <code>SECMRD</code> from
+<code>SECMD</code> gives 14.2 ms at 8 workers and 65.8 ms at 1 worker as wall differences. In the pooled-scan
+traces, however, RLE1/CRC (<code>A9</code>) spends 104.0 ms of worker CPU at 8 workers in <code>none</code>, or 7% of
+worker CPU. At 10 workers that climbs to 133.0 ms in <code>none</code>, and to 191–216 ms in <code>PC</code> and <code>SC</code>.
+Whenever a block expands during run-length decoding, <code>unrle_in_place</code> runs four full-buffer passes,
+including two full writes. Under 8 to 10 workers, those writes spill dirty lines out of the 20 MiB
+L3 alongside ready blocks.</p>
+<figure class="bf-fig" id="reservoir">
+<p class="bf-title">Word spelling drains with workers while real delivery copy-out climbs under L3 pressure</p>
+<!-- fig:reservoir -->
+<svg viewBox="0 0 720 334" role="img" aria-label="Line chart across 1, 6, 7, 8, 9, and 10 workers showing emission word spelling draining as workers increase, from 298.2 ms at 1 worker (cold-store upper bound, roughly 230 to 245 ms in situ) down to 48.7, 41.5, 37.2, 37.6, and 35.2 ms, alongside two flat floor baselines (scan alone at 169.7 to 179.1 ms and pipeline plumbing at 5.2 to 5.7 ms) and traced delivery copy_out rising under 20 MiB L3 eviction: in none from 29.1 ms at 1 worker and 34.0 ms at 8 to 43.7 ms at 10, and with fast workers in SC from 29.0 ms at 6 to 77.9 ms at 10."><text class="bf-t-strong" x="16.0" y="20.0" text-anchor="start" style="font-size:11.8px">Word spelling drains with workers while delivery copy-out rises under L3 pressure</text><text class="bf-tm" x="16.0" y="36.0" text-anchor="start" style="font-size:9.6px">Floor wall times (ms, 95% intervals) beside traced reader copy_out (pooled-scan medians) on wikidata x4</text><line x1="56.0" y1="286.0" x2="554.0" y2="286.0" style="stroke:var(--bf-vz-axis);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="289.5" text-anchor="end" style="font-size:9.8px">0</text><line x1="56.0" y1="249.8" x2="554.0" y2="249.8" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="253.2" text-anchor="end" style="font-size:9.8px">50</text><line x1="56.0" y1="213.5" x2="554.0" y2="213.5" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="217.0" text-anchor="end" style="font-size:9.8px">100</text><line x1="56.0" y1="177.2" x2="554.0" y2="177.2" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="180.8" text-anchor="end" style="font-size:9.8px">150</text><line x1="56.0" y1="141.0" x2="554.0" y2="141.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="144.5" text-anchor="end" style="font-size:9.8px">200</text><line x1="56.0" y1="104.8" x2="554.0" y2="104.8" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="108.2" text-anchor="end" style="font-size:9.8px">250</text><line x1="56.0" y1="68.5" x2="554.0" y2="68.5" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="48.0" y="72.0" text-anchor="end" style="font-size:9.8px">300</text><text class="bf-tm" x="16.0" y="52.0" text-anchor="start" style="font-size:9.8px">ms</text><line x1="145.0" y1="291.0" x2="150.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.2"/><line x1="150.0" y1="291.0" x2="155.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.2"/><line x1="86.0" y1="54.0" x2="86.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-t-strong" x="86.0" y="302.0" text-anchor="middle" style="font-size:10.2px">1W</text><line x1="212.0" y1="54.0" x2="212.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="212.0" y="302.0" text-anchor="middle" style="font-size:10.2px">6W</text><line x1="294.0" y1="54.0" x2="294.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="294.0" y="302.0" text-anchor="middle" style="font-size:10.2px">7W</text><line x1="376.0" y1="54.0" x2="376.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-t-strong" x="376.0" y="302.0" text-anchor="middle" style="font-size:10.2px">8W</text><line x1="458.0" y1="54.0" x2="458.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="458.0" y="302.0" text-anchor="middle" style="font-size:10.2px">9W</text><line x1="540.0" y1="54.0" x2="540.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:0.8"/><text class="bf-tm" x="540.0" y="302.0" text-anchor="middle" style="font-size:10.2px">10W</text><text class="bf-tm" x="310.0" y="318.0" text-anchor="middle" style="font-size:9.8px">Worker threads (break between 1 and 6 workers)</text><polygon points="86.0,286.0 86.0,69.8 212.0,250.7 294.0,255.9 376.0,259.0 458.0,258.7 540.0,260.5 540.0,286.0" style="fill:var(--bf-vz-1);fill-opacity:0.12"/><polyline points="86.0,163.0 212.0,157.7 294.0,157.1 376.0,156.2 458.0,157.2 540.0,156.4" style="fill:none;stroke:var(--bf-vz-2);stroke-width:2.2;stroke-dasharray:6 3"/><circle cx="86.0" cy="163.0" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 1W: median 169.7 ms</title></circle><circle cx="212.0" cy="157.7" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 6W: median 177.0 ms</title></circle><circle cx="294.0" cy="157.1" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 7W: median 177.8 ms</title></circle><circle cx="376.0" cy="156.2" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 8W: median 179.1 ms</title></circle><circle cx="458.0" cy="157.2" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 9W: median 177.6 ms</title></circle><circle cx="540.0" cy="156.4" r="3.8" style="fill:var(--bf-vz-2)"><title>Scan alone real (FCMRD) at 10W: median 178.7 ms</title></circle><text class="bf-t-strong" x="94.0" y="154.0" text-anchor="start" style="font-size:9.4px;fill:var(--bf-amber)">169.7 ms</text><text class="bf-t-strong" x="376.0" y="146.2" text-anchor="middle" style="font-size:9.4px;fill:var(--bf-amber)">179.1 ms</text><polyline points="86.0,69.8 212.0,250.7 294.0,255.9 376.0,259.0 458.0,258.7 540.0,260.5" style="fill:none;stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="86.0" y1="70.7" x2="86.0" y2="68.9" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="86.0" cy="69.8" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 1W: 298.2 [297.0, 299.4] ms (cold-store upper bound)</title></circle><line x1="212.0" y1="252.7" x2="212.0" y2="248.7" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="212.0" cy="250.7" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 6W: 48.7 [45.9, 51.4] ms (cold-store upper bound)</title></circle><line x1="294.0" y1="257.0" x2="294.0" y2="254.8" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="294.0" cy="255.9" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 7W: 41.5 [40.0, 43.0] ms (cold-store upper bound)</title></circle><line x1="376.0" y1="260.5" x2="376.0" y2="257.7" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="376.0" cy="259.0" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 8W: 37.2 [35.2, 39.1] ms (cold-store upper bound)</title></circle><line x1="458.0" y1="260.6" x2="458.0" y2="256.9" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="458.0" cy="258.7" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 9W: 37.6 [35.1, 40.1] ms (cold-store upper bound)</title></circle><line x1="540.0" y1="262.6" x2="540.0" y2="258.4" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="540.0" cy="260.5" r="4.0" style="fill:var(--bf-vz-1)"><title>Emission word spelling (E_consume = A - B) at 10W: 35.2 [32.3, 38.0] ms (cold-store upper bound)</title></circle><text class="bf-t-strong" x="95.0" y="73.8" text-anchor="start" style="font-size:9.4px;fill:var(--bf-blue)">298.2 ms (cold upper bound; ~230-245 in situ)</text><text class="bf-t-strong" x="376.0" y="274.0" text-anchor="middle" style="font-size:9.0px;fill:var(--bf-blue)">37.2 ms</text><polyline points="212.0,265.0 294.0,262.4 376.0,257.4 458.0,246.2 540.0,229.5" style="fill:none;stroke:var(--bf-vz-4);stroke-width:2.0;stroke-dasharray:2 2"/><polygon points="212.0,261.2 215.8,265.0 212.0,268.8 208.2,265.0" style="fill:var(--bf-vz-4);stroke:var(--bf-vz-4);stroke-width:1.4"><title>Traced delivery copy_out in SC (fast workers) at 6W: median 29.0 ms (reader activity time)</title></polygon><polygon points="294.0,258.6 297.8,262.4 294.0,266.2 290.2,262.4" style="fill:var(--bf-vz-4);stroke:var(--bf-vz-4);stroke-width:1.4"><title>Traced delivery copy_out in SC (fast workers) at 7W: median 32.5 ms (reader activity time)</title></polygon><polygon points="376.0,253.6 379.8,257.4 376.0,261.2 372.2,257.4" style="fill:var(--bf-vz-4);stroke:var(--bf-vz-4);stroke-width:1.4"><title>Traced delivery copy_out in SC (fast workers) at 8W: median 39.5 ms (reader activity time)</title></polygon><polygon points="458.0,242.4 461.8,246.2 458.0,250.0 454.2,246.2" style="fill:var(--bf-vz-4);stroke:var(--bf-vz-4);stroke-width:1.4"><title>Traced delivery copy_out in SC (fast workers) at 9W: median 54.9 ms (reader activity time)</title></polygon><polygon points="540.0,225.7 543.8,229.5 540.0,233.3 536.2,229.5" style="fill:var(--bf-vz-4);stroke:var(--bf-vz-4);stroke-width:1.4"><title>Traced delivery copy_out in SC (fast workers) at 10W: median 77.9 ms (reader activity time)</title></polygon><polyline points="86.0,264.9 212.0,266.0 294.0,263.8 376.0,261.4 458.0,254.7 540.0,254.3" style="fill:none;stroke:var(--bf-vz-4);stroke-width:2.2;stroke-dasharray:4 2"/><polygon points="86.0,260.9 90.0,264.9 86.0,268.9 82.0,264.9" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 1W: median 29.1 ms (reader activity time)</title></polygon><polygon points="212.0,262.0 216.0,266.0 212.0,270.0 208.0,266.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 6W: median 27.6 ms (reader activity time)</title></polygon><polygon points="294.0,259.8 298.0,263.8 294.0,267.8 290.0,263.8" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 7W: median 30.6 ms (reader activity time)</title></polygon><polygon points="376.0,257.4 380.0,261.4 376.0,265.4 372.0,261.4" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 8W: median 34.0 ms (reader activity time)</title></polygon><polygon points="458.0,250.7 462.0,254.7 458.0,258.7 454.0,254.7" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 9W: median 43.2 ms (reader activity time)</title></polygon><polygon points="540.0,250.3 544.0,254.3 540.0,258.3 536.0,254.3" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:1.6"><title>Traced delivery copy_out in none (shipped) at 10W: median 43.7 ms (reader activity time)</title></polygon><text class="bf-t-strong" x="94.0" y="256.9" text-anchor="start" style="font-size:9.0px;fill:var(--bf-ultra)">29.1 ms</text><polyline points="86.0,281.9 212.0,282.2 294.0,282.2 376.0,282.2 458.0,282.2 540.0,282.1" style="fill:none;stroke:var(--bf-vz-3);stroke-width:2.0"/><circle cx="86.0" cy="281.9" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 1W: 5.7 [5.5, 5.8] ms</title></circle><circle cx="212.0" cy="282.2" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 6W: 5.3 [5.3, 5.4] ms</title></circle><circle cx="294.0" cy="282.2" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 7W: 5.2 [4.9, 5.5] ms</title></circle><circle cx="376.0" cy="282.2" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 8W: 5.2 [5.0, 5.5] ms</title></circle><circle cx="458.0" cy="282.2" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 9W: 5.3 [5.1, 5.5] ms</title></circle><circle cx="540.0" cy="282.1" r="3.2" style="fill:var(--bf-vz-3)"><title>Pipeline plumbing (SFCMRD) at 10W: 5.4 [5.3, 5.5] ms</title></circle><text class="bf-t-strong" x="558.0" y="153.0" text-anchor="start" style="font-size:9.8px;fill:var(--bf-amber)">Serial scan (FCMRD)</text><text class="bf-tm" x="558.0" y="165.0" text-anchor="start" style="font-size:9.0px">170-179 ms (wall)</text><line x1="545.0" y1="229.5" x2="555.0" y2="214.0" style="stroke:var(--bf-vz-4);stroke-width:0.9"/><text class="bf-t-strong" x="558.0" y="211.0" text-anchor="start" style="font-size:9.6px;fill:var(--bf-ultra)">Delivery copy_out (SC)</text><text class="bf-tm" x="558.0" y="222.0" text-anchor="start" style="font-size:8.8px">29 -&gt; 78 ms (traced)</text><line x1="545.0" y1="254.3" x2="555.0" y2="241.0" style="stroke:var(--bf-vz-4);stroke-width:0.9"/><text class="bf-t-strong" x="558.0" y="239.0" text-anchor="start" style="font-size:9.6px;fill:var(--bf-ultra)">Delivery copy_out (none)</text><text class="bf-tm" x="558.0" y="250.0" text-anchor="start" style="font-size:8.8px">29 -&gt; 44 ms (traced)</text><line x1="545.0" y1="260.5" x2="555.0" y2="268.0" style="stroke:var(--bf-vz-1);stroke-width:0.9"/><text class="bf-t-strong" x="558.0" y="267.0" text-anchor="start" style="font-size:9.6px;fill:var(--bf-blue)">Word spelling (E_consume)</text><text class="bf-tm" x="558.0" y="278.0" text-anchor="start" style="font-size:8.8px">298 -&gt; 35 ms (wall diff)</text><line x1="545.0" y1="282.1" x2="555.0" y2="291.0" style="stroke:var(--bf-vz-3);stroke-width:0.9"/><text class="bf-t-strong" x="558.0" y="294.0" text-anchor="start" style="font-size:9.4px;fill:var(--bf-green-ink)">Plumbing: 5.2-5.7 ms</text><text class="bf-tm" x="258.0" y="198.0" text-anchor="start" style="font-size:9.1px">At 8-10W, 20 MiB L3 eviction pushes</text><text class="bf-tm" x="258.0" y="210.0" text-anchor="start" style="font-size:9.1px">real delivery copy_out above spelling</text><line x1="434.0" y1="206.0" x2="534.0" y2="227.5" style="stroke:var(--bf-vz-axis);stroke-width:1.1"/><polygon points="534.0,227.5 528.4,222.7 526.9,229.6" style="fill:var(--bf-vz-axis)"/></svg>
+<figcaption>Measured wall times and wall differences from the zero-copy floor run (FCMRD medians; 95% intervals on E_consume and plumbing) alongside traced Reader::copy_out activity times from the pooled-scan traces (n = 3 medians for none and SC; activity times are not directly comparable to wall differences). Visual analogy: adding workers drains the parallel word-spelling reservoir down past the 179 ms scan reef toward the 5 ms riverbed, while L3 cache eviction raises delivery's tide from below once 8 to 10 workers outpace the reader. Where the analogy stops: single-thread scan time rises slightly from 169.7 ms at 1 worker to 179.1 ms at 8, partly from lower all-core turbo (5.06 to 4.96 GHz) and the rest unmeasured, and delivery overlaps with worker execution until workers finish faster than the reader can copy out.</figcaption>
+</figure>
+
+<h2 id="3-designing-a-pooled-scan-and-testing-a-masked-stage">3. Designing a pooled scan and testing a masked stage<a class="headerlink" href="#3-designing-a-pooled-scan-and-testing-a-masked-stage" title="Permanent link">&para;</a></h2>
+<p>With the floor settled and the 179.1 ms serial scan confirmed at 8 workers, our first build target
+was clear. We set out to dissolve the serial scanner into the worker pool, as sketched in
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#9-dissolving-the-serial-scanner">Section 9 of the companion post</a>.
+Before writing code, we audited three earlier parallel-scan attempts recorded in
+<a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md">the registration (§2)</a>.
+The first (<code>bench-par-scan</code>, 10 November) proved SIMD marker finding nearly free at 9.3 GB/s, or
+0.19% of decode. On 10-worker level-9 Wikidata it stalled at <code>0.981</code> while workers were still slower
+than the scanner. The second (<a href="https://github.com/lmmx/mibz2/pull/741">PR #741</a>) beat shipped speed
+at 8 and 10 workers (<code>0.935</code> and <code>0.883</code>), yet slowed two to six workers (<code>1.11–1.13</code>). Its peak RSS
+also climbed to <code>1.28×</code> at 10 workers and <code>1.99×</code> at 20, probably from buffering the full input and
+holding <span class="arithmatex">\(4 \times \text{threads}\)</span> blocks in flight. The third
+(<a href="https://github.com/lmmx/mibz2/pull/770">PR #770</a>) bounded memory with a lead scanner and two
+helpers, but serialised them behind one chain head. That nearly doubled scan CPU, slowed 8 to 20
+workers by 54 to 61% (<code>1.605×</code> at 8 workers), and left workers roughly 40% idle.</p>
+<p>Our new prototype (<a href="https://github.com/lmmx/mibz2/pull/932">PR #932</a>) avoided all three traps. As
+compressed chunks arrive, the feeder thread runs an AVX2 nibble filter to locate candidate block
+markers in bounded memory. No scanner thread, helper scanner or joiner thread exists. Each worker
+claims one candidate inside the shipped admission window and runs <code>scan · M · C · E · R</code> end to end.
+That eliminates the 190.6 MiB symbol queue between scanner and workers. The in-order reader accepts
+whichever ready block starts at the chain's exact next bit offset. On any false or missed marker,
+the reader falls back serially so exact bytes and exact errors always hold. At 1 worker, the
+prototype keeps the shipped path unchanged.</p>
+<aside class="il-gloss">
+<p><strong>48-bit block marker.</strong> Every bzip2 block opens with the first twelve digits of <span class="arithmatex">\(\pi\)</span> in
+binary-coded decimal (<code>0x314159265359</code>). Because blocks are bit-packed rather than byte-aligned, a
+boundary finder checks all eight bit shifts. The AVX2 nibble filter screens non-matching bytes at
+nearly 10 GB/s, and the reader verifies every decoded block against the exact bit-offset chain.</p>
+</aside>
+<p>Testing this prototype fairly meant avoiding a measurement trap explained in
+<a href="../2026-11-24-the-scanner-hides-the-emitter/">Masked bottlenecks in a two-stage decoder</a>. The design
+analysis had proposed killing any pooled scan that failed to beat shipped 8-worker decoding by 7%
+standalone. That test was impossible by construction. Even an ideal zero-cost scanner saves only
+3.2% alone at 8 workers, because construction still limits the workers.</p>
+<p>Instead, we froze a paired-oracle kill test in
+<a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md">the registration</a>
+before writing any code (also discussed in
+<a href="../2026-11-26-dropping-the-coordinator/">Dropping the coordinator</a>). We paired the pooled scan <code>P</code>
+with construction's zero-copy oracle <code>C</code>, giving arm <code>PC</code>. We then compared <code>PC/C</code> against an ideal
+zero-copy scan behind <code>C</code> (<code>SC/C</code>). On a log scale, this asks whether pooling captures at least
+half of the multiplicative speedup that an ideal scan achieves once construction is free:</p>
+<div class="arithmatex">\[
+\text{capture} = \frac{\ln(C / PC)}{\ln(C / SC)}, \qquad \text{K1 kills if } \text{UB}_{95\%}\!\left(\frac{PC}{C}\right) &gt; \sqrt{\frac{SC}{C}}.
+\]</div>
+<aside class="il-gloss">
+<p><strong>Log-scale capture.</strong> Because speedups multiply rather than add, half the room between <code>C</code>
+(ratio 1) and <code>SC</code> (ratio <span class="arithmatex">\(SC/C\)</span>) is the geometric mean <span class="arithmatex">\(\sqrt{SC/C}\)</span> rather than the arithmetic
+midpoint. Requiring the 95% confidence ceiling of <code>PC/C</code> to stay at or below <span class="arithmatex">\(\sqrt{SC/C}\)</span> asks for
+statistical evidence of at least 50% capture, not merely a favourable point estimate.</p>
+</aside>
+<p>Three companion gates guarded against earlier failure modes:</p>
+<ul>
+<li><strong>K2 (standalone cost).</strong> Kill if the 95% confidence floor of <code>P/none</code> exceeds <code>1.03</code> at a judged
+  count.</li>
+<li><strong>K3 (memory).</strong> Kill if median peak RSS of <code>P/none</code> exceeds <code>1.10</code> at any count from 6 to 10.</li>
+<li><strong>K4 (finder speed).</strong> Kill if the single-threaded finder takes over <code>10 ms</code> on the 47.4 MB input.</li>
+</ul>
+<p>Section 1's floor run automatically set two switches in the registration before any prototype code
+ran. Because Residual A stayed flat from 8 to 10 workers, both 8 and 9 became judged counts. Both
+had to pass K1 and K2. Because Residual B was 2.7% (under 10%), capture remained capped rather than
+treating plumbing removal as extra scan capture.</p>
+<h2 id="4-the-kill-tests-verdict-kill-narrowly-on-k1">4. The kill test's verdict: KILL, narrowly, on K1<a class="headerlink" href="#4-the-kill-tests-verdict-kill-narrowly-on-k1" title="Permanent link">&para;</a></h2>
+<p>The kill test ran 480 decodes across 12 randomised blocks on the i9-10900K in 15 minutes
+(<a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md">the pooled-scan results</a>).
+The first 3 blocks were traced unpinned, and an 11-pass pinned benchmark timed the finder alone.
+Every validity check passed. All 10 exactness tests passed on the test machine. Every pooled decode
+at 2 or more workers was wholly pooled, with zero dropped blocks, zero fallbacks and zero degraded
+decodes.</p>
+<p>Every resource and plumbing gate passed as well. Peak memory stayed within 1.4% of shipped across
+6 to 10 workers (<code>0.988</code> to <code>1.014</code>), passing <strong>K3</strong> cleanly. On CPU 4, the AVX2 marker finder
+scanned the 47.4 MB input in a median 4.82 ms (interval <code>[4.81, 5.00] ms</code>). It processed 9.842 GB/s
+and located all 1,724 block markers plus 48 stream-end markers, under half of <strong>K4</strong>'s 10 ms limit.
+Standalone cost passed <strong>K2</strong> at both judged counts. At 8 workers <code>P/none</code> was <code>1.052</code>, yet its 95%
+confidence floor (<code>1.023</code>) remained under <code>1.03</code>. At 9 workers <code>P/none</code> hit exact break-even
+(<code>1.000</code>). In traces, candidate copying moved 45.2 MiB in 4.32 to 7.24 ms against a ~5 ms estimate.
+In-decode marker finding took 4.97 to 7.35 ms. The 190.6 MiB symbol queue disappeared, and at 8 to
+10 workers the worker idle share (<code>job_wait / life</code>) fell from 6.5–20.2% in <code>none</code> down to 1.2–2.5%
+in <code>P</code>.</p>
+<p>Yet <strong>K1 fired at both judged counts</strong>, killing the prototype narrowly under the frozen rule.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Workers</th>
+<th>Status</th>
+<th style="text-align: right;"><code>PC/C</code> [95% CI]</th>
+<th style="text-align: right;">Bar <span class="arithmatex">\(\sqrt{SC/C}\)</span></th>
+<th style="text-align: right;">Ideal <code>SC/C</code></th>
+<th style="text-align: right;">Capture</th>
+<th style="text-align: right;">Standalone <code>P/none</code> [95% CI]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td>reported</td>
+<td style="text-align: right;">1.065 [1.040, 1.090]</td>
+<td style="text-align: right;">0.940</td>
+<td style="text-align: right;">0.884</td>
+<td style="text-align: right;">−0.51</td>
+<td style="text-align: right;">1.105 [1.094, 1.115]</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td>reported</td>
+<td style="text-align: right;">0.935 [0.922, 0.948]</td>
+<td style="text-align: right;">0.891</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">1.100 [1.087, 1.114]</td>
+</tr>
+<tr>
+<td style="text-align: right;"><strong>8</strong></td>
+<td><strong>judged (K1)</strong></td>
+<td style="text-align: right;"><strong>0.862 [0.848, 0.876]</strong></td>
+<td style="text-align: right;"><strong>0.867</strong></td>
+<td style="text-align: right;">0.752</td>
+<td style="text-align: right;"><strong>0.52</strong></td>
+<td style="text-align: right;">1.052 [1.023, 1.081]</td>
+</tr>
+<tr>
+<td style="text-align: right;"><strong>9</strong></td>
+<td><strong>judged (K1)</strong></td>
+<td style="text-align: right;"><strong>0.869 [0.833, 0.906]</strong></td>
+<td style="text-align: right;"><strong>0.864</strong></td>
+<td style="text-align: right;">0.746</td>
+<td style="text-align: right;"><strong>0.48</strong></td>
+<td style="text-align: right;">1.000 [0.983, 1.017]</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td>reported</td>
+<td style="text-align: right;">0.848 [0.825, 0.873]</td>
+<td style="text-align: right;">0.877</td>
+<td style="text-align: right;">0.769</td>
+<td style="text-align: right;"><strong>0.63</strong></td>
+<td style="text-align: right;"><strong>0.936 [0.909, 0.964]</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The margin was tight. Behind ideal construction at 8 workers, pooling cut median wall time from
+183.2 ms down to 158.1 ms, against 135.3 ms for an ideal scan. Its point estimate captured 52.1% of
+the scan's room. Even so, its 95% ceiling (<code>0.8758</code>) sat 0.009 above the <code>0.8670</code> bar. At 9 workers
+(<code>C = 184.2 ms</code>, <code>PC = 159.9 ms</code>, <code>SC = 140.2 ms</code>), capture fell to 48.1%. Its ceiling (<code>0.9058</code>)
+missed the <code>0.8636</code> bar by 0.042. Only at 10 workers did pooling clear the bar cleanly. There it
+achieved 62.7% capture behind <code>C</code> and a 6.4% standalone win by geometric mean (<code>P/none = 0.9357</code>;
+median wall fell 5.3% from 197.6 ms to 187.2 ms).</p>
+<p>Standalone walls also missed the companion post's unscored forecast. The design analysis had
+projected 172 to 175 ms at eight and nine workers. Measured block means were 207.5 ms at 8 workers
+(<code>206.5</code> to <code>208.6</code> ms) and 195.2 ms at 9 workers (<code>192.3</code> to <code>198.1</code> ms).</p>
+<figure class="bf-fig" id="killtest">
+<p class="bf-title">The pooled-scan kill test: paired-oracle capture (K1) and standalone crossover (K2)</p>
+<!-- fig:killtest -->
+<svg viewBox="0 0 720 324" role="img" aria-label="Two-panel interval strip chart of the pooled-scan kill test across 6 to 10 workers, with 8 and 9 workers highlighted as judged and 6, 7, and 10 marked reported. Panel A shows PC/C with 95 percent intervals against the ideal SC/C floor and K1 threshold sqrt(SC/C): at 8 workers PC/C is 0.862 [0.848, 0.876] versus bar 0.867 (capture 0.52, upper bound misses by 0.009, K1); at 9 workers 0.869 [0.833, 0.906] versus bar 0.864 (capture 0.48, upper bound misses by 0.042, K1); at 10 workers 0.848 [0.825, 0.873] (capture 0.63). Panel B shows standalone P/none: 1.105 at 6, 1.100 at 7, 1.052 [1.023, 1.081] at 8 (passes K2 1.03 lower-bound gate), 1.000 [0.983, 1.017] at 9, and 0.936 [0.909, 0.964] (-6.4 percent) at 10. K3 peak RSS stays within 1.4 percent and K4 finder is 4.82 ms."><text class="bf-t-strong" x="14.0" y="20.0" text-anchor="start" style="font-size:12px">A. Paired-oracle test behind ideal C (K1)</text><text class="bf-tm" x="14.0" y="35.0" text-anchor="start" style="font-size:9.8px">Ratio PC/C (95% CI) vs K1 bar sqrt(SC/C) and ideal SC/C</text><line x1="113.2" y1="52.0" x2="113.2" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="113.2" y="258.0" text-anchor="middle" style="font-size:9.2px">0.75</text><line x1="175.6" y1="52.0" x2="175.6" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="175.6" y="258.0" text-anchor="middle" style="font-size:9.2px">0.85</text><line x1="238.0" y1="52.0" x2="238.0" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="238.0" y="258.0" text-anchor="middle" style="font-size:9.2px">0.95</text><line x1="269.1" y1="52.0" x2="269.1" y2="244.0" style="stroke:var(--bf-ink);stroke-width:1.2;stroke-dasharray:4 3"/><text class="bf-t-strong" x="269.1" y="258.0" text-anchor="middle" style="font-size:9.2px">1.00</text><line x1="300.3" y1="52.0" x2="300.3" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="300.3" y="258.0" text-anchor="middle" style="font-size:9.2px">1.05</text><line x1="368.0" y1="12.0" x2="368.0" y2="274.0" style="stroke:var(--bf-frame);stroke-width:1.0"/><text class="bf-t-strong" x="382.0" y="20.0" text-anchor="start" style="font-size:12px">B. Standalone wall ratio P/none (K2)</text><text class="bf-tm" x="382.0" y="35.0" text-anchor="start" style="font-size:9.8px">Ratio P/none (95% CI); K2 kills if LB &gt; 1.03 at 8 or 9</text><line x1="440.4" y1="52.0" x2="440.4" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="440.4" y="258.0" text-anchor="middle" style="font-size:9.2px">0.90</text><line x1="491.6" y1="52.0" x2="491.6" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="491.6" y="258.0" text-anchor="middle" style="font-size:9.2px">0.95</text><line x1="542.7" y1="52.0" x2="542.7" y2="244.0" style="stroke:var(--bf-ink);stroke-width:1.2;stroke-dasharray:4 3"/><text class="bf-t-strong" x="542.7" y="258.0" text-anchor="middle" style="font-size:9.2px">1.00</text><line x1="573.3" y1="52.0" x2="573.3" y2="244.0" style="stroke:var(--bf-vz-2);stroke-width:1.4;stroke-dasharray:3 2"/><text class="bf-t-strong" x="575.3" y="49.0" text-anchor="start" style="font-size:8.8px;fill:var(--bf-amber)">K2 1.03</text><line x1="593.8" y1="52.0" x2="593.8" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="593.8" y="258.0" text-anchor="middle" style="font-size:9.2px">1.05</text><line x1="644.9" y1="52.0" x2="644.9" y2="244.0" style="stroke:var(--bf-vz-grid);stroke-width:1.0"/><text class="bf-tm" x="644.9" y="258.0" text-anchor="middle" style="font-size:9.2px">1.10</text><text class="bf-tm" x="74.0" y="71.0" text-anchor="end" style="font-size:10.0px">6 workers</text><text class="bf-tm" x="74.0" y="83.0" text-anchor="end" style="font-size:8.5px">reported</text><polygon points="196.5,67.8 200.7,72.0 196.5,76.2 192.3,72.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.6"><title>6W ideal scan behind C (SC/C): 0.8836</title></polygon><line x1="231.7" y1="62.0" x2="231.7" y2="82.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><rect x="229.7" y="62.0" width="4.0" height="20.0" rx="0" style="fill:transparent"><title>6W K1 bar sqrt(SC/C): 0.9400</title></rect><line x1="294.2" y1="72.0" x2="325.2" y2="72.0" style="stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="294.2" y1="68.0" x2="294.2" y2="76.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><line x1="325.2" y1="68.0" x2="325.2" y2="76.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="309.4" cy="72.0" r="4.2" style="fill:var(--bf-vz-1)"><title>6W PC/C: 1.0646 [1.0401, 1.0898] vs bar 0.9400 (capture -0.51)</title></circle><text class="bf-tm" x="288.2" y="75.0" text-anchor="end" style="font-size:8.8px">cap -0.51</text><text class="bf-tm" x="412.0" y="75.0" text-anchor="end" style="font-size:9.6px">6W</text><line x1="639.0" y1="72.0" x2="660.0" y2="72.0" style="stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="639.0" y1="68.0" x2="639.0" y2="76.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><line x1="660.0" y1="68.0" x2="660.0" y2="76.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="649.5" cy="72.0" r="4.2" style="fill:var(--bf-vz-1)"><title>6W standalone P/none: 1.1045 [1.0942, 1.1148]</title></circle><text class="bf-tm" x="633.0" y="75.0" text-anchor="end" style="font-size:8.8px">1.105</text><text class="bf-tm" x="74.0" y="109.0" text-anchor="end" style="font-size:10.0px">7 workers</text><text class="bf-tm" x="74.0" y="121.0" text-anchor="end" style="font-size:8.5px">reported</text><polygon points="140.8,105.8 145.0,110.0 140.8,114.2 136.6,110.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.6"><title>7W ideal scan behind C (SC/C): 0.7942</title></polygon><line x1="201.3" y1="100.0" x2="201.3" y2="120.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><rect x="199.3" y="100.0" width="4.0" height="20.0" rx="0" style="fill:transparent"><title>7W K1 bar sqrt(SC/C): 0.8912</title></rect><line x1="220.5" y1="110.0" x2="237.0" y2="110.0" style="stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="220.5" y1="106.0" x2="220.5" y2="114.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><line x1="237.0" y1="106.0" x2="237.0" y2="114.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="228.7" cy="110.0" r="4.2" style="fill:var(--bf-vz-1)"><title>7W PC/C: 0.9351 [0.9221, 0.9484] vs bar 0.8912 (capture +0.29)</title></circle><text class="bf-tm" x="243.0" y="113.0" text-anchor="start" style="font-size:8.8px">cap +0.29</text><text class="bf-tm" x="412.0" y="113.0" text-anchor="end" style="font-size:9.6px">7W</text><line x1="631.7" y1="110.0" x2="659.2" y2="110.0" style="stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="631.7" y1="106.0" x2="631.7" y2="114.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><line x1="659.2" y1="106.0" x2="659.2" y2="114.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="645.3" cy="110.0" r="4.2" style="fill:var(--bf-vz-1)"><title>7W standalone P/none: 1.1004 [1.0871, 1.1140]</title></circle><text class="bf-tm" x="625.7" y="113.0" text-anchor="end" style="font-size:8.8px">1.100</text><rect x="10.0" y="131.0" width="348.0" height="34.0" rx="4" style="fill:var(--bf-amber-tint);fill-opacity:0.55"></rect><rect x="378.0" y="131.0" width="332.0" height="34.0" rx="4" style="fill:var(--bf-amber-tint);fill-opacity:0.55"></rect><text class="bf-t-strong" x="74.0" y="147.0" text-anchor="end" style="font-size:10.0px">8 workers</text><text class="bf-t-strong" x="74.0" y="159.0" text-anchor="end" style="font-size:8.5px;fill:var(--bf-amber)">judged</text><polygon points="114.2,143.8 118.4,148.0 114.2,152.2 110.0,148.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.6"><title>8W ideal scan behind C (SC/C): 0.7516</title></polygon><line x1="186.2" y1="138.0" x2="186.2" y2="158.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><rect x="184.2" y="138.0" width="4.0" height="20.0" rx="0" style="fill:transparent"><title>8W K1 bar sqrt(SC/C): 0.8670</title></rect><line x1="174.4" y1="148.0" x2="191.7" y2="148.0" style="stroke:var(--bf-vz-2);stroke-width:2.4"/><line x1="174.4" y1="144.0" x2="174.4" y2="152.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><line x1="191.7" y1="144.0" x2="191.7" y2="152.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><circle cx="182.9" cy="148.0" r="4.2" style="fill:var(--bf-vz-2)"><title>8W PC/C: 0.8618 [0.8481, 0.8758] vs bar 0.8670 (capture +0.52)</title></circle><text class="bf-t-strong" x="197.7" y="146.0" text-anchor="start" style="font-size:8.8px;fill:var(--bf-amber)">cap 0.52</text><text class="bf-t-strong" x="197.7" y="157.0" text-anchor="start" style="font-size:8.4px;fill:var(--bf-amber)">UB +0.009 (K1)</text><text class="bf-t-strong" x="412.0" y="151.0" text-anchor="end" style="font-size:9.6px">8W</text><line x1="566.5" y1="148.0" x2="625.7" y2="148.0" style="stroke:var(--bf-vz-2);stroke-width:2.4"/><line x1="566.5" y1="144.0" x2="566.5" y2="152.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><line x1="625.7" y1="144.0" x2="625.7" y2="152.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><circle cx="595.7" cy="148.0" r="4.2" style="fill:var(--bf-vz-2)"><title>8W standalone P/none: 1.0519 [1.0233, 1.0812]</title></circle><text class="bf-t-strong" x="630.7" y="151.0" text-anchor="start" style="font-size:8.8px">1.052 (K2 ok)</text><rect x="10.0" y="169.0" width="348.0" height="34.0" rx="4" style="fill:var(--bf-amber-tint);fill-opacity:0.55"></rect><rect x="378.0" y="169.0" width="332.0" height="34.0" rx="4" style="fill:var(--bf-amber-tint);fill-opacity:0.55"></rect><text class="bf-t-strong" x="74.0" y="185.0" text-anchor="end" style="font-size:10.0px">9 workers</text><text class="bf-t-strong" x="74.0" y="197.0" text-anchor="end" style="font-size:8.5px;fill:var(--bf-amber)">judged</text><polygon points="110.6,181.8 114.8,186.0 110.6,190.2 106.4,186.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.6"><title>9W ideal scan behind C (SC/C): 0.7459</title></polygon><line x1="184.1" y1="176.0" x2="184.1" y2="196.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><rect x="182.1" y="176.0" width="4.0" height="20.0" rx="0" style="fill:transparent"><title>9W K1 bar sqrt(SC/C): 0.8636</title></rect><line x1="164.8" y1="186.0" x2="210.4" y2="186.0" style="stroke:var(--bf-vz-2);stroke-width:2.4"/><line x1="164.8" y1="182.0" x2="164.8" y2="190.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><line x1="210.4" y1="182.0" x2="210.4" y2="190.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><circle cx="187.1" cy="186.0" r="4.2" style="fill:var(--bf-vz-2)"><title>9W PC/C: 0.8685 [0.8328, 0.9058] vs bar 0.8636 (capture +0.48)</title></circle><text class="bf-t-strong" x="216.4" y="184.0" text-anchor="start" style="font-size:8.8px;fill:var(--bf-amber)">cap 0.48</text><text class="bf-t-strong" x="216.4" y="195.0" text-anchor="start" style="font-size:8.4px;fill:var(--bf-amber)">UB +0.042 (K1)</text><text class="bf-t-strong" x="412.0" y="189.0" text-anchor="end" style="font-size:9.6px">9W</text><line x1="525.5" y1="186.0" x2="560.0" y2="186.0" style="stroke:var(--bf-vz-2);stroke-width:2.4"/><line x1="525.5" y1="182.0" x2="525.5" y2="190.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><line x1="560.0" y1="182.0" x2="560.0" y2="190.0" style="stroke:var(--bf-vz-2);stroke-width:1.5"/><circle cx="542.6" cy="186.0" r="4.2" style="fill:var(--bf-vz-2)"><title>9W standalone P/none: 0.9999 [0.9832, 1.0170]</title></circle><text class="bf-t-strong" x="566.0" y="189.0" text-anchor="start" style="font-size:9.0px">1.000 (even)</text><text class="bf-tm" x="74.0" y="223.0" text-anchor="end" style="font-size:10.0px">10 workers</text><text class="bf-tm" x="74.0" y="235.0" text-anchor="end" style="font-size:8.5px">reported</text><polygon points="125.3,219.8 129.5,224.0 125.3,228.2 121.1,224.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.6"><title>10W ideal scan behind C (SC/C): 0.7694</title></polygon><line x1="192.5" y1="214.0" x2="192.5" y2="234.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><rect x="190.5" y="214.0" width="4.0" height="20.0" rx="0" style="fill:transparent"><title>10W K1 bar sqrt(SC/C): 0.8772</title></rect><line x1="159.9" y1="224.0" x2="189.6" y2="224.0" style="stroke:var(--bf-vz-1);stroke-width:2.4"/><line x1="159.9" y1="220.0" x2="159.9" y2="228.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><line x1="189.6" y1="220.0" x2="189.6" y2="228.0" style="stroke:var(--bf-vz-1);stroke-width:1.5"/><circle cx="174.6" cy="224.0" r="4.2" style="fill:var(--bf-vz-1)"><title>10W PC/C: 0.8484 [0.8249, 0.8725] vs bar 0.8772 (capture +0.63)</title></circle><text class="bf-tm" x="195.6" y="227.0" text-anchor="start" style="font-size:8.8px">cap +0.63</text><text class="bf-tm" x="412.0" y="227.0" text-anchor="end" style="font-size:9.6px">10W</text><line x1="449.2" y1="224.0" x2="505.6" y2="224.0" style="stroke:var(--bf-vz-3);stroke-width:2.4"/><line x1="449.2" y1="220.0" x2="449.2" y2="228.0" style="stroke:var(--bf-vz-3);stroke-width:1.5"/><line x1="505.6" y1="220.0" x2="505.6" y2="228.0" style="stroke:var(--bf-vz-3);stroke-width:1.5"/><circle cx="476.9" cy="224.0" r="4.2" style="fill:var(--bf-vz-3)"><title>10W standalone P/none: 0.9357 [0.9086, 0.9637]</title></circle><text class="bf-t-strong" x="511.6" y="227.0" text-anchor="start" style="font-size:9.0px;fill:var(--bf-green-ink)">0.936 (-6.4%)</text><polygon points="22.0,272.0 26.0,276.0 22.0,280.0 18.0,276.0" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:1.5"></polygon><text class="bf-tm" x="31.0" y="279.0" text-anchor="start" style="font-size:8.8px">SC/C (ideal scan)</text><line x1="128.0" y1="271.0" x2="128.0" y2="281.0" style="stroke:var(--bf-vz-2);stroke-width:2.0"/><text class="bf-tm" x="134.0" y="279.0" text-anchor="start" style="font-size:8.8px">K1 bar sqrt(SC/C)</text><circle cx="232.0" cy="276.0" r="3.8" style="fill:var(--bf-vz-1)"></circle><text class="bf-tm" x="240.0" y="279.0" text-anchor="start" style="font-size:8.8px">PC/C (95% CI)</text><rect x="14.0" y="290.0" width="692.0" height="26.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.0"></rect><text class="bf-t-strong" x="360.0" y="307.0" text-anchor="middle" style="font-size:9.1px">Passing gates:  K2 standalone LB &lt;= 1.03 (1.023 at 8W)  ·  K3 peak RSS 0.988-1.014 (&lt;= 1.10)  ·  K4 finder 4.82 ms / 9.84 GB/s (&lt;= 10 ms)  ·  0 fallbacks</text></svg>
+<figcaption>Measured data (pooled-scan kill test, i9-10900K, wikidata ×4, 12 randomised blocks). Shaded rows mark the two pre-registered judged counts (8 and 9 workers); unshaded rows (6, 7, 10) are reported only. Left: PC/C ratios and 95% intervals against the ideal-scan floor SC/C (hollow diamonds) and K1 threshold sqrt(SC/C) (amber bars). Right: standalone P/none ratios against break-even (1.00) and K2's 1.03 lower-bound gate.</figcaption>
+</figure>
+
+<h2 id="5-why-pooling-was-not-enough">5. Why pooling was not enough<a class="headerlink" href="#5-why-pooling-was-not-enough" title="Permanent link">&para;</a></h2>
+<p>At first glance, missing K1 by 0.009 at 8 workers looks like noise or a small implementation tax.
+The per-thread traces show a much clearer picture. Pooling worked as engineered, with zero
+duplicated work, tiny worker idleness and roughly 5 ms of chain overhead. Two effects explain the
+results in Section 4: a conservation law on CPU time drives the standalone crossover, while an
+asymmetric cold-store bias distorted the paired-oracle capture denominator.</p>
+<p>In traced decodes, the workers' summed scanning CPU (<code>A2 + A3</code>) in <code>P</code> matched the dedicated
+scanner's CPU in <code>none</code> at every worker count:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Workers</th>
+<th style="text-align: right;">Pooled workers' scan CPU (<code>P</code>)</th>
+<th style="text-align: right;">Dedicated scanner CPU (<code>none</code>)</th>
+<th style="text-align: right;">Worker idle share (<code>none → P</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">172.9 [172.2, 173.6] ms</td>
+<td style="text-align: right;">171.3 [170.2, 172.3] ms</td>
+<td style="text-align: right;">1.4% → 0.9%</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">174.1 [172.5, 175.7] ms</td>
+<td style="text-align: right;">170.6 [170.3, 171.0] ms</td>
+<td style="text-align: right;">1.9% → 1.2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>177.7 [175.1, 180.3] ms</strong></td>
+<td style="text-align: right;"><strong>177.5 [148.2, 206.8] ms</strong></td>
+<td style="text-align: right;"><strong>6.5% → 1.2%</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">182.8 [171.9, 193.8] ms</td>
+<td style="text-align: right;">173.4 [160.6, 186.3] ms</td>
+<td style="text-align: right;">10.1% → 1.6%</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">192.7 [181.9, 203.6] ms</td>
+<td style="text-align: right;">189.6 [184.1, 195.2] ms</td>
+<td style="text-align: right;"><strong>20.2% → 2.5%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Unlike <a href="https://github.com/lmmx/mibz2/pull/770">PR #770</a>, which nearly doubled scanning CPU, this
+prototype wasted nothing. It simply moved roughly 178 ms of scanning CPU off the dedicated scanner
+core and spread it across the <span class="arithmatex">\(k\)</span> worker cores.</p>
+<p>That move turns the two-station bottleneck model from
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#9-dissolving-the-serial-scanner">Section 9 of the companion post</a>
+into a sharp wall-time comparison. Let <span class="arithmatex">\(s\)</span> denote total scanning CPU per decode and <span class="arithmatex">\(w\)</span> denote total
+parallel worker CPU. Let <span class="arithmatex">\(\epsilon\)</span> denote the small residual from marker finding, candidate copying
+and tail imbalance:</p>
+<div class="arithmatex">\[
+T_{\text{serial}}(k) \approx \max\!\left(s,\ \frac{w}{k}\right), \qquad T_{\text{pooled}}(k) \approx \frac{s + w}{k} + \epsilon.
+\]</div>
+<p>The model's first-order arithmetic accounts for the direction and the crossover. It is only a
+first-order guide, because <span class="arithmatex">\(w\)</span> itself grows with <span class="arithmatex">\(k\)</span>. In <code>none</code>, total CPU climbs from 1.714 s at
+8 workers to 2.007 s at 10. Likewise, <code>S</code>'s wall implies <span class="arithmatex">\(w\)</span> rising from roughly 1,480 ms at 8
+workers to 1,700 ms at 10. Part of that climb is RLE1/CRC (<code>A9</code>) under L3 pressure. Its traced CPU
+in <code>none</code> rises from 89.5 ms at 6 workers to 104.0 ms at 8 and 133.0 ms at 10. Holding <span class="arithmatex">\(w\)</span> constant
+therefore overpredicts the 10-worker gain.</p>
+<p><strong>Below the knee (<span class="arithmatex">\(w/k \ge s\)</span>), pooling must lose.</strong> Workers already set the wall clock. Adding
+<span class="arithmatex">\(s/k\)</span> of scanning to each worker lengthens the decode by 22 to 30 ms. Deleting the 190.6 MiB symbol
+queue cannot offset that, because Section 1 proved that all inter-stage plumbing costs only ~5 ms.
+In this run, the <code>S</code> arm (ideal scan, real workers) took 184.9 ms at 8 workers against <span class="arithmatex">\(s \approx
+178\text{ ms}\)</span>. Workers therefore still bind at 8 workers here. Adding <span class="arithmatex">\(s/8\)</span> onto that 184.9 ms
+worker load gives about 207 ms, matching the measured 207.5 ms mean. Standalone <code>P</code> slowed 6 and 7
+workers by 10% and slowed 8 workers by 5.2%.</p>
+<p><strong>Above the knee (<span class="arithmatex">\(w/k &lt; s\)</span>), pooling wins only when workers have slack to absorb <span class="arithmatex">\(s/k\)</span>.</strong> Setting
+<span class="arithmatex">\((s + w)/k &lt; s\)</span> yields the zero-overhead break-even point:</p>
+<div class="arithmatex">\[
+k &gt; 1 + \frac{w}{s}.
+\]</div>
+<p>From this run's <code>S</code> arm at 8 workers (<span class="arithmatex">\(w/8 \approx 184.9\text{ ms}\)</span> against <span class="arithmatex">\(s \approx 178\text{ ms}\)</span>),
+the knee sits at <span class="arithmatex">\(w/s \approx 8.3\)</span>. That puts zero-overhead break-even near <span class="arithmatex">\(k \approx 9.3\)</span>. The
+earlier 25 November queueing post measured <span class="arithmatex">\(w/s \approx 7.67\)</span> on older code, putting break-even near
+8.7. Both agree within a worker: pooling loses at 8 workers and breaks even near 9, where <code>P/none</code>
+measured <code>1.000</code>. At <span class="arithmatex">\(k = 10\)</span>, shipped workers sat 20.2% idle waiting on the serial scanner.
+Absorbing <span class="arithmatex">\(192.7 / 10 \approx 19.3\text{ ms}\)</span> of scanning per worker fit inside that slack. Worker
+idleness fell to 2.5%, delivering a 6.4% win by geometric mean (<code>P/none = 0.9357</code>). Median wall time
+fell 5.3% from 197.6 ms to 187.2 ms.</p>
+<p><strong>Behind ideal construction, <span class="arithmatex">\(s/k\)</span> explains the <code>PC − SC</code> gap, while a cold-store bias depressed
+capture.</strong> Making construction ideal (<code>C</code>) shrinks <span class="arithmatex">\(w\)</span> enough that <code>PC</code> beats <code>C</code> by 14% at 8
+workers. An ideal scan (<code>SC</code>) deletes scanning CPU completely, whereas a pooled scan still pays
+<span class="arithmatex">\(s/k\)</span>. At 8 workers, adding <span class="arithmatex">\(177.7 / 8 = 22.2\text{ ms}\)</span> to <code>SC</code>'s 135.3 ms predicts 157.5 ms
+against a measured <code>PC</code> of 158.1 ms. At 9 workers, adding <span class="arithmatex">\(182.8 / 9 = 20.3\text{ ms}\)</span> to <code>SC</code>'s
+140.2 ms predicts 160.5 ms against <code>PC</code> at 159.9 ms. Both <code>PC</code> and <code>SC</code> pay that difference cleanly.
+Yet the ~50% capture figure itself was depressed by an asymmetric cold-store bias uncovered in
+<a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>. Zero-copy <code>C</code> forces the emission walk (<code>A7</code>) to
+read construction's store cold in every <code>C</code> arm. At 8 workers, traced <code>A7</code> rose by +220.4 ms
+(<code>PC − P</code>) and +196.2 ms (<code>SC − S</code>). At 9 workers those jumps reached +293.9 ms and +257.7 ms. <code>PC</code>
+and <code>SC</code> are worker-bound (<code>job_wait</code> just 3.6 and 0.2 ms per worker at 8), so their walls pay that
+entire bloat. <code>C</code> alone is scanner-bound (<code>job_wait</code> 50.6 ms per worker at 8 and 91.8 ms at 9), so
+its wall absorbs the bloat completely. That asymmetry shrinks the <code>C − SC</code> denominator that capture
+divides by. Subtracting the traced bloat shifts 8-worker capture from 0.52 to roughly 0.73. That
+diagnostic bound shows pooling is not structurally capped near 50%, though it is not a re-grade of
+K1.</p>
+<figure class="bf-fig" id="redistribution">
+<p class="bf-title">Moving work vs. stealing slack: dedicated scanner, full pool, and slack-only hybrid</p>
+<!-- fig:redistribution -->
+<svg viewBox="0 0 720 376" role="img" aria-label="Capacity breakdown comparing dedicated scanning, full worker pooling, and a proposed slack-only hybrid at 8 and 10 workers. At 8 workers, shipped workers sit only 6.5 percent idle (192.9 ms median), so moving 177.7 ms of scan CPU onto 8 workers adds 22.2 ms per worker and slows standalone decoding to 207.7 ms median (P/none geometric mean 1.052); behind ideal construction, the same 22.8 ms separates PC (158.1 ms) from SC (135.3 ms). At 10 workers, shipped workers sit 20.2 percent idle (197.6 ms median), so absorbing 19.3 ms per worker of scan work into slack speeds decoding to 187.2 ms median (-5.3 percent; P/none geometric mean 0.936, -6.4 percent). A proposed slack-only hybrid keeps the serial scanner and lets idle workers scan ahead only when waiting."><text class="bf-t-strong" x="14.0" y="20.0" text-anchor="start" style="font-size:12px">Moving work vs. stealing slack: why pooling loses at 8 workers and wins at 10</text><text class="bf-tm" x="14.0" y="35.0" text-anchor="start" style="font-size:9.8px">Per-decode wall-time budgets (ms) from pooled-scan medians and traces; workers spend the same 173-193 ms scanning</text><rect x="10.0" y="48.0" width="700.0" height="148.0" rx="7" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.1"></rect><text class="bf-t-strong" x="22.0" y="66.0" text-anchor="start" style="font-size:10.5px">At 8 workers (balanced knee: dedicated scanner 177.5 ms, workers ~185 ms, only 6.5% idle)</text><line x1="152.0" y1="74.0" x2="152.0" y2="184.0" style="stroke:var(--bf-vz-axis);stroke-width:0.9"/><line x1="255.0" y1="74.0" x2="255.0" y2="184.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><line x1="358.1" y1="74.0" x2="358.1" y2="184.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><line x1="461.1" y1="74.0" x2="461.1" y2="184.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><line x1="564.2" y1="74.0" x2="564.2" y2="184.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><text class="bf-t-strong" x="144.0" y="89.0" text-anchor="end" style="font-size:9.6px">Shipped (none)</text><text class="bf-tm" x="144.0" y="100.0" text-anchor="end" style="font-size:8.5px">1 scanner + 8 workers</text><path d="M152.0,80.0 L519.8,80.0 A4.0,4.0 0 0 1 523.8,84.0 L523.8,94.0 A4.0,4.0 0 0 1 519.8,98.0 L152.0,98.0 Z" style="fill:var(--bf-vz-1)"><title>Shipped 8W workers busy: ~180 ms; worker idle share 6.5%</title></path><rect x="523.8" y="80.0" width="25.8" height="18.0" rx="0" style="fill:var(--bf-track);stroke:var(--bf-vz-axis);stroke-width:1.0;stroke-dasharray:3 2"><title>6.5% worker idle share waiting on serial scanner (none, 8W)</title></rect><text class="bf-t-strong" x="160.0" y="93.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-vz-1-ink)">workers: M · C · E · R (in parallel with 177.5 ms serial scan)</text><text class="bf-t-strong" x="555.5" y="93.0" text-anchor="start" style="font-size:9.6px">192.9 ms</text><text class="bf-t-strong" x="144.0" y="123.0" text-anchor="end" style="font-size:9.6px">Full pool (P)</text><text class="bf-tm" x="144.0" y="134.0" text-anchor="end" style="font-size:8.5px">8 workers absorb s/8</text><path d="M152.0,114.0 L519.0,114.0 A4.0,4.0 0 0 1 523.0,118.0 L523.0,128.0 A4.0,4.0 0 0 1 519.0,132.0 L152.0,132.0 Z" style="fill:var(--bf-vz-1)"><title>Worker M, C, E, R share at 8 workers</title></path><rect x="523.0" y="114.0" width="45.8" height="18.0" rx="0" style="fill:var(--bf-vz-2)"><title>Scan CPU moved onto 8 workers: 177.7 / 8 = 22.2 ms per worker</title></rect><path d="M568.7,114.0 L576.0,114.0 A4.0,4.0 0 0 1 580.0,118.0 L580.0,128.0 A4.0,4.0 0 0 1 576.0,132.0 L568.7,132.0 Z" style="fill:var(--bf-vz-4)"><title>Finder/copy/tail overhead (~5-6 ms)</title></path><text class="bf-t-strong" x="160.0" y="127.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-vz-1-ink)">workers: M · C · E · R</text><text class="bf-t-strong" x="545.8" y="127.0" text-anchor="middle" style="font-size:8.8px;fill:var(--bf-vz-2-ink)">+s/8</text><text class="bf-t-strong" x="586.0" y="127.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-amber)">207.7 ms (1.052 gm)</text><text class="bf-t-strong" x="144.0" y="157.0" text-anchor="end" style="font-size:9.6px">Behind ideal C</text><text class="bf-tm" x="144.0" y="168.0" text-anchor="end" style="font-size:8.5px">SC vs PC (+s/8 gap)</text><path d="M152.0,148.0 L426.8,148.0 A4.0,4.0 0 0 1 430.8,152.0 L430.8,162.0 A4.0,4.0 0 0 1 426.8,166.0 L152.0,166.0 Z" style="fill:var(--bf-vz-3)"><title>SC (ideal scan + ideal C) at 8 workers: median 135.3 ms</title></path><path d="M430.8,148.0 L473.8,148.0 A4.0,4.0 0 0 1 477.8,152.0 L477.8,162.0 A4.0,4.0 0 0 1 473.8,166.0 L430.8,166.0 Z" style="fill:var(--bf-vz-2)"><title>PC minus SC at 8 workers: 158.1 - 135.3 = 22.8 ms (matches s/8 = 177.7/8 = 22.2 ms; raw capture 0.52, diagnostic ~0.73 after cold-store A7 adjustment)</title></path><text class="bf-t-strong" x="160.0" y="161.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-vz-3-ink)">SC ideal: 135.3 ms</text><text class="bf-t-strong" x="454.3" y="161.0" text-anchor="middle" style="font-size:8.6px;fill:var(--bf-vz-2-ink)">+22.8</text><text class="bf-t-strong" x="483.8" y="161.0" text-anchor="start" style="font-size:9.2px">PC 158.1 ms (0.52 raw cap)</text><rect x="10.0" y="206.0" width="700.0" height="148.0" rx="7" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.1"></rect><text class="bf-t-strong" x="22.0" y="224.0" text-anchor="start" style="font-size:10.5px">At 10 workers (20.2% worker slack) — and the slack-only hybrid for all counts</text><line x1="152.0" y1="232.0" x2="152.0" y2="342.0" style="stroke:var(--bf-vz-axis);stroke-width:0.9"/><text class="bf-tm" x="152.0" y="366.0" text-anchor="middle" style="font-size:9.4px">0 ms</text><line x1="255.0" y1="232.0" x2="255.0" y2="342.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><text class="bf-tm" x="255.0" y="366.0" text-anchor="middle" style="font-size:9.4px">50 ms</text><line x1="358.1" y1="232.0" x2="358.1" y2="342.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><text class="bf-tm" x="358.1" y="366.0" text-anchor="middle" style="font-size:9.4px">100 ms</text><line x1="461.1" y1="232.0" x2="461.1" y2="342.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><text class="bf-tm" x="461.1" y="366.0" text-anchor="middle" style="font-size:9.4px">150 ms</text><line x1="564.2" y1="232.0" x2="564.2" y2="342.0" style="stroke:var(--bf-vz-grid);stroke-width:0.9"/><text class="bf-tm" x="564.2" y="366.0" text-anchor="middle" style="font-size:9.4px">200 ms</text><text class="bf-t-strong" x="144.0" y="247.0" text-anchor="end" style="font-size:9.6px">Shipped (none)</text><text class="bf-tm" x="144.0" y="258.0" text-anchor="end" style="font-size:8.5px">10W sit 20.2% idle</text><path d="M152.0,238.0 L473.0,238.0 A4.0,4.0 0 0 1 477.0,242.0 L477.0,252.0 A4.0,4.0 0 0 1 473.0,256.0 L152.0,256.0 Z" style="fill:var(--bf-vz-1)"><title>Shipped 10W workers busy (~79.8% of 197.6 ms wall)</title></path><rect x="477.0" y="238.0" width="82.2" height="18.0" rx="0" style="fill:var(--bf-track);stroke:var(--bf-vz-axis);stroke-width:1.1;stroke-dasharray:3 2"><title>20.2% worker idle share waiting on 189.6 ms serial scanner (none, 10W)</title></rect><text class="bf-t-strong" x="160.0" y="251.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-vz-1-ink)">10 workers busy (79.8%)</text><text class="bf-tm" x="518.0" y="251.0" text-anchor="middle" style="font-size:8.6px">20.2% idle</text><text class="bf-t-strong" x="565.2" y="251.0" text-anchor="start" style="font-size:9.6px">197.6 ms</text><text class="bf-t-strong" x="144.0" y="281.0" text-anchor="end" style="font-size:9.6px">Full pool (P)</text><text class="bf-tm" x="144.0" y="292.0" text-anchor="end" style="font-size:8.5px">scan fits inside slack</text><path d="M152.0,272.0 L481.9,272.0 A4.0,4.0 0 0 1 485.9,276.0 L485.9,286.0 A4.0,4.0 0 0 1 481.9,290.0 L152.0,290.0 Z" style="fill:var(--bf-vz-1)"><title>Worker M, C, E, R share at 10 workers</title></path><path d="M485.9,272.0 L521.6,272.0 A4.0,4.0 0 0 1 525.6,276.0 L525.6,286.0 A4.0,4.0 0 0 1 521.6,290.0 L485.9,290.0 Z" style="fill:var(--bf-vz-2)"><title>Scan CPU moved onto 10 workers: 192.7 / 10 = 19.3 ms per worker</title></path><path d="M525.6,272.0 L533.8,272.0 A4.0,4.0 0 0 1 537.8,276.0 L537.8,286.0 A4.0,4.0 0 0 1 533.8,290.0 L525.6,290.0 Z" style="fill:var(--bf-vz-4)"><title>Finder/copy/idle residual (2.5% idle; median 187.2 ms vs 197.6 ms, -5.3%; P/none geometric mean 0.936, -6.4%)</title></path><text class="bf-t-strong" x="160.0" y="285.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-vz-1-ink)">10 workers: M · C · E · R</text><text class="bf-t-strong" x="505.6" y="285.0" text-anchor="middle" style="font-size:8.4px;fill:var(--bf-vz-2-ink)">+s/10</text><text class="bf-t-strong" x="543.8" y="285.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-green-ink)">187.2 ms (0.936 gm)</text><text class="bf-t-strong" x="144.0" y="315.0" text-anchor="end" style="font-size:9.6px">Hybrid (proposed)</text><text class="bf-tm" x="144.0" y="326.0" text-anchor="end" style="font-size:8.5px;font-style:italic">design, not measured</text><rect x="152.0" y="306.0" width="346.2" height="18.0" rx="4" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.3;stroke-dasharray:4 2"><title>Proposed slack-only hybrid: keep dedicated scanner; workers scan ahead only from idle job_wait slack</title></rect><text class="bf-t-strong" x="160.0" y="319.0" text-anchor="start" style="font-size:9.1px;fill:var(--bf-green-ink)">keep serial scanner; idle workers scan ahead only when waiting</text><text class="bf-t-strong" x="504.2" y="319.0" text-anchor="start" style="font-size:9.2px;fill:var(--bf-green-ink)">no &lt;=8W tax</text></svg>
+<figcaption>Measured budgets at 8 and 10 workers (pooled-scan timed medians and traces; gm denotes per-block geometric-mean P/none ratios) beside the proposed slack-only hybrid (design, not measured). Visual analogy: a kitchen with one prep cook (S) and k line cooks (W). Dismissing the prep cook and splitting prep across the line cooks cuts waiting between courses (idle time at 8 to 10 workers falls from 6.5–20.2% to 1.2–2.5%), yet slows service whenever the line cooks are already flat out (k ≤ 8); service speeds up only when line cooks are waiting for prep (k = 10), or when only idle cooks step in to help (the hybrid). Where the analogy stops: CPU cores share a 20 MiB L3 cache, pay ~5 ms each for boundary finding and candidate copying, and still commit finished blocks strictly in order.</figcaption>
+</figure>
+
+<h2 id="6-keeping-the-verdict-and-what-comes-next">6. Keeping the verdict and what comes next<a class="headerlink" href="#6-keeping-the-verdict-and-what-comes-next" title="Permanent link">&para;</a></h2>
+<p>Even knowing that cold-store <code>C</code> biased K1 downward, honouring the frozen KILL verdict is both sound
+method and the right engineering decision.</p>
+<aside class="il-gloss">
+<p><strong>Pre-registered kill test.</strong> Freezing the decision rule before running the benchmark stops a team
+from moving the goalposts after seeing data. When a prototype misses a frozen gate or uncovers a
+measurement bias, the right move is to diagnose the cause and register a better test or design, not
+to re-grade the old run.</p>
+</aside>
+<p>Even setting K1 aside, standalone <code>P/none</code> measured <code>1.052</code> at 8 workers. Shipping the prototype
+behind an 8-worker flag would therefore ship a 5% slowdown where mibz2 defaults. Dissolving the
+dedicated scanner forces <span class="arithmatex">\(k\)</span> workers to absorb <span class="arithmatex">\(s\)</span> on top of <span class="arithmatex">\(w\)</span>, which taxes any worker count
+without slack. The same rule governs any streaming pipeline with a dedicated serial parser costing
+<span class="arithmatex">\(s\)</span> and a worker pool costing <span class="arithmatex">\(w\)</span>. Removing the parser breaks even at <span class="arithmatex">\(k^* = 1 + w/s\)</span> before
+overhead. It loses whenever <span class="arithmatex">\(k &lt; 1 + w/s\)</span> and wins only when <span class="arithmatex">\(k &gt; 1 + w/s\)</span>. To win on both sides of
+the knee, a pipeline has two clean options. It can shrink <span class="arithmatex">\(w\)</span> until <span class="arithmatex">\(1 + w/s\)</span> drops below the target
+worker count. Alternatively, it can keep the dedicated parser alive and let workers help only from
+idle slack. There is also a clear experimental lesson for future gates. A paired-oracle kill test
+must not set a worker-bound candidate against a scanner-bound cold-store baseline, or asymmetric
+cache bloat will bias capture against the candidate.</p>
+<p>Together, the zero-copy floor run, the pooled-scan kill test and the cold-store analysis close three
+blind alleys and lay out a clear order for our next work:</p>
+<ul>
+<li><strong>Closed targets.</strong> Pipeline plumbing (~5 ms, 2.7% of wall) needs no attention. The three-station
+  DRAM-bandwidth hypothesis is not supported at 8–10 workers, though 20 MiB L3 capacity does bind for
+  delivery and RLE1/CRC. Unconditional full pooling stops as built under its frozen K1 verdict.</li>
+<li><strong>Shrink worker demand <span class="arithmatex">\(w\)</span> first.</strong> Lowering worker CPU speeds up 1–7 workers at once and pulls
+  <span class="arithmatex">\(1 + w/s\)</span> below 8 workers so scanning relief pays off where mibz2 ships. Four worker-side targets
+  are open. Emission's word spelling (~230–245 ms estimated in situ) leads the list; its parts have
+  since been measured by the spelling census (<a href="https://github.com/lmmx/mibz2/pull/951">PR #951</a>) and
+  the Rauzy output census (<a href="https://github.com/lmmx/mibz2/pull/958">PR #958</a>). Beside it sit folding
+  move-to-front into construction's first pass and forward wiring with multi-lane emission. The
+  fourth target is single-pass RLE1/CRC to end <code>unrle_in_place</code>'s four-pass L3 spill (104 ms of
+  traced CPU at 8 workers).</li>
+<li><strong>Test a slack-only hybrid scanner under a warm paired baseline.</strong> Keep the dedicated scanner
+  thread so saturated workers at six to eight cores never pay a scanning tax. Let workers claim
+  look-ahead candidates with the proven 4.82 ms AVX2 marker finder <em>only</em> when they would otherwise
+  wait in <code>job_wait</code>. Scanning CPU is then spent strictly from slack. Full pooling can also be
+  re-tested under a fresh registration once worker-side cuts lower <span class="arithmatex">\(w\)</span> and a warm baseline removes
+  cold-store bias.</li>
+<li><strong>Contain L3 eviction in delivery and consider exposing zero-copy lending.</strong> Real delivery copy-out
+  already climbs from 34.0 ms at 8 workers to 67.4–77.9 ms at 10 when faster workers pile 12–16 MiB
+  of ready blocks into the 20 MiB L3. Zero-copy block lending already exists internally at
+  <code>StreamDecoder::read_block</code> (<code>src/parallel.rs:880</code>, <code>#[doc(hidden)]</code>) and publicly through
+  <code>BzReader</code>'s <code>BufRead</code> (characterised in <a href="https://github.com/lmmx/mibz2/pull/966">PR #966</a>). The
+  immediate no-API lever is tightening the <code>READY_BYTES</code> working-set cap so ready blocks stay
+  L3-hot. Exposing <code>read_block</code> publicly remains an open API decision beside it.</li>
+</ul>
+<hr />
+<p><strong>Sources:</strong></p>
+<ul>
+<li>Zero-copy floor (<a href="https://github.com/lmmx/mibz2/pull/921">PR #921</a>, <a href="https://github.com/lmmx/mibz2/pull/931">PR #931</a>): <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">floor results</a>, <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/report.txt">report</a> and <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/zero-copy-floor.tsv">raw table</a>.</li>
+<li>Pooled-scan kill test (<a href="https://github.com/lmmx/mibz2/pull/932">PR #932</a>, <a href="https://github.com/lmmx/mibz2/pull/942">PR #942</a>): <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md">registration</a>, <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md">results</a> and <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/report.txt">report</a>.</li>
+<li>Cold-store and L3 analysis (<a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>, <a href="https://github.com/lmmx/mibz2/pull/954">PR #954</a>, <a href="https://github.com/lmmx/mibz2/pull/966">PR #966</a>): <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md">cold-store and RLE1 LLC report</a>, <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/delivery/README.md">delivery characterisation</a>, <a href="https://github.com/lmmx/mibz2/pull/951">spelling census</a> and <a href="https://github.com/lmmx/mibz2/pull/958">Rauzy output census</a>.</li>
+<li>Earlier parallel scans: <a href="https://github.com/lmmx/mibz2/pull/741">PR #741</a> and <a href="https://github.com/lmmx/mibz2/pull/770">PR #770</a>, summarised in <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/journal/2026-11-24-algorithm-level/pooled-scan/registration.md">the registration</a>.</li>
+<li>Preceding posts: <a href="../2026-11-26-complementary-bottlenecks/">Complementary bottlenecks</a> and <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/">From bottlenecks to better algorithms</a>.</li>
+<li>Earlier decoder posts: <a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network</a>, <a href="../2026-11-24-the-scanner-hides-the-emitter/">Masked bottlenecks</a>, <a href="../2026-11-19-open-returns/">Open Returns</a> and <a href="../2026-11-05-huffman-bit-buffer/">Huffman decoding</a>.</li>
+<li>Reproducible figures and measured surface: <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/docs/scripts/figures_floor_and_pooled_scan.py">figures_floor_and_pooled_scan.py</a>, <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/frontier/surface.tsv">surface.tsv</a> and <a href="https://github.com/lmmx/mibz2/blob/e88ce7375206097cad61658f8e25d146a248df13/frontier/dead-ends.tsv">dead-ends.tsv</a>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Blog">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Blog
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-26-dropping-the-coordinator/" class="md-footer__link md-footer__link--next" aria-label="Next: Dropping the coordinator">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Dropping the coordinator
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" title="Behind the scenes" aria-label="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=3963db8a25e7"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=3963db8a25e7"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=3963db8a25e7"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=3963db8a25e7"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=3963db8a25e7"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=3963db8a25e7"></script>
+      
+    
+  </body>
+</html>
