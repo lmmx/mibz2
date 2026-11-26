@@ -7,6 +7,9 @@
     frontier.py verify ID --session S               exit 0 iff S holds ID live and no open flag names it
     frontier.py renew ID --session S [--hours N]    extend your hold
     frontier.py release ID --session S              end your hold (after your PR has merged)
+    frontier.py take-review ID --pr N --head SHA --by AGENT   transfer submitted reservation
+    frontier.py yield-review ID --session S          park an unfinished integration
+    frontier.py finish-review ID --pr N --head SHA   recover/release verified merged reservation
     frontier.py holds                               list the holds on origin
     frontier.py mark ID --status open|idea|done|dropped|blocked   edit a claim's state (goes in your PR)
 
@@ -163,7 +166,9 @@ def holds(fetch=True, strict=True):
 def live(lease):
     """Whether a lease is in force: not released and not expired."""
     exp = dt.datetime.fromisoformat(lease.get("expires", "1970-01-01T00:00:00+00:00"))
-    return not lease.get("released") and exp > now()
+    return not lease.get("released") and (
+        lease.get("phase") in ("integration", "parked") or exp > now()
+    )
 
 
 def conflicts(cid, owned_paths, mechanisms, all_holds):
@@ -341,6 +346,156 @@ def read_open_prs():
     except (OSError, ValueError, urllib.error.URLError):
         pass
     return None, "GitHub open-PR query failed or was incomplete"
+
+
+def read_pr(number):
+    """Read a single PR, including merge state; never trust stale local review metadata."""
+    repo = github_repository()
+    if not repo or not isinstance(number, int) or number < 1:
+        sys.exit("cannot identify pull request")
+    endpoint = f"repos/{repo}/pulls/{number}"
+    if shutil.which("gh"):
+        try:
+            proc = subprocess.run(
+                ["gh", "api", "--hostname", "github.com", endpoint],
+                cwd=REPO, capture_output=True, text=True, timeout=12,
+            )
+            if proc.returncode == 0:
+                pr = json.loads(proc.stdout)
+                if isinstance(pr, dict):
+                    return pr
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            pass
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "frontier-review"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        req = urllib.request.Request(f"https://api.github.com/{endpoint}", headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as response:
+            pr = json.load(response)
+        if isinstance(pr, dict):
+            return pr
+    except (OSError, ValueError):
+        pass
+    sys.exit(f"cannot read current PR #{number}; refusing integration transition")
+
+
+def check_review_pr(cid, number, head, *, merged=False):
+    """Validate exact PR lineage and state before an integration transition."""
+    if not re.fullmatch(r"[0-9a-f]{40}", head or ""):
+        sys.exit("integration requires the exact 40-character PR head")
+    pr = read_pr(number)
+    try:
+        valid = (
+            pr["number"] == number
+            and pr["head"]["sha"] == head
+            and pr["base"]["ref"] == "master"
+            and claim_header(pr["body"]) == cid
+            and (
+                (pr["state"] == "closed" and pr["merged"] is True)
+                if merged else (pr["state"] == "open" and pr["draft"] is False)
+            )
+        )
+    except (KeyError, TypeError, ValueError):
+        valid = False
+    if not valid:
+        sys.exit(f"PR #{number} is not the expected {'merged' if merged else 'open'} claim/head")
+    return pr
+
+
+def review_card(cid, number, head):
+    """Fetch the immutable PR head and require the producer's existing review declaration."""
+    rc, out = git("fetch", "-q", "--no-tags", "origin", f"refs/pull/{number}/head")
+    if rc or git("rev-parse", "FETCH_HEAD")[1] != head:
+        sys.exit(f"cannot fetch exact PR #{number} head: {out}")
+    for dirname in ("claims", "blog"):
+        rc, body = git("show", f"{head}:frontier/{dirname}/{cid}.toml")
+        if rc == 0:
+            c = tomllib.loads(body)
+            if c.get("id") == cid and c.get("status") == "review" and c.get("pr") == number:
+                return c
+    sys.exit(f"PR #{number} has not declared this claim ready for handoff")
+
+
+def take_review(cid, number, head, by, hours):
+    """Transfer a submitted claim's existing reservation, without acquiring another work slot."""
+    if not by or by == "unknown" or hours <= 0:
+        sys.exit("integration requires a named participant and positive lease duration")
+    check_review_pr(cid, number, head)
+    c = review_card(cid, number, head)
+    _fetch_master(strict=True)
+    trunk = item(cid, fetch=False, required=False)
+    if not trunk or trunk.get("status") not in ("open", "review") or trunk.get("needs_louis"):
+        sys.exit(f"{cid} is not an admitted, unreserved integration candidate")
+    if c.get("needs_louis"):
+        sys.exit(f"{cid} requires an owner decision")
+    all_holds = holds()
+    sha, lease = all_holds.get(cid, (None, None))
+    if not lease or lease.get("released"):
+        sys.exit(f"{cid} has no existing reservation to transfer")
+    if lease.get("phase") == "integration" and dt.datetime.fromisoformat(lease["expires"]) > now():
+        sys.exit(f"{cid} already has an integration holder; wait for yield or expiry")
+    if lease.get("phase") in ("integration", "parked") and lease.get("pr") != number:
+        sys.exit(f"{cid} is reserved for a different PR")
+    producer = lease.get("producer", lease.get("holder"))
+    if not producer or by == producer:
+        sys.exit("integration handoff requires a participant different from the producer")
+    if not lease.get("base") or git("merge-base", "--is-ancestor", lease["base"], head)[0]:
+        sys.exit("PR head does not descend from the reserved work base")
+    hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
+    if hit:
+        sys.exit(f"{cid} overlaps another live reservation: {hit[0]}")
+    check_review_pr(cid, number, head)
+    updated = {
+        **lease, "holder": by, "producer": producer, "session": secrets.token_hex(6),
+        "phase": "integration", "pr": number, "pr_head": head,
+        "expires": (now() + dt.timedelta(hours=hours)).isoformat(), "released": False,
+    }
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"integration not acquired: {out}")
+    print(f"acquired integration {cid} for PR #{number}; your session is {updated['session']}")
+    print("Existing reservation transferred; verify exact head and all normal merge gates.")
+
+
+def yield_review(cid, session):
+    """Return an integration reservation to the environment without releasing its paths."""
+    sha, lease = mine(cid, session)
+    if lease.get("phase") != "integration":
+        sys.exit("only an integration holder may yield its review")
+    updated = {**lease, "phase": "parked", "session": secrets.token_hex(6)}
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"integration not yielded: {out}")
+    print(f"{cid}: integration yielded; any independent participant can take it")
+
+
+def finish_review(cid, number, head):
+    """Release exactly a verified merged reservation, even if its reviewer has terminated."""
+    sha, lease = holds().get(cid, (None, None))
+    if (
+        not lease or lease.get("phase") not in ("integration", "parked")
+        or lease.get("pr") != number or lease.get("pr_head") != head
+    ):
+        sys.exit("no matching integration reservation")
+    pr = check_review_pr(cid, number, head, merged=True)
+    merge = pr.get("merge_commit_sha")
+    if not re.fullmatch(r"[0-9a-f]{40}", merge or ""):
+        sys.exit("missing exact merge commit")
+    _fetch_master(strict=True)
+    if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
+        sys.exit("merge commit is not on origin/master")
+    if lease.get("released"):
+        if lease.get("merge_commit") != merge:
+            sys.exit("release record disagrees with merged PR")
+        print(f"{cid}: already released for PR #{number}")
+        return
+    updated = {**lease, "released": True, "merge_commit": merge}
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"integration not released: {out}")
+    print(f"{cid}: merged PR #{number}; reservation released")
 
 
 def review_projection(items, prs, error):
@@ -680,6 +835,8 @@ def brief(can):
     prs, pr_error = read_open_prs()
     review_lines, pending = review_projection(claims + cards, prs, pr_error)
     print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(review_lines))
+    print("Independent integration: take-review ID --pr N --head SHA --by AGENT; "
+          "yield-review or finish-review. No additional work slot required.")
     git("fetch", "-q", "origin", "evidence")
     rc, ev = git("log", "-5", "--format=%h %cs %s", "origin/evidence")
     print(
@@ -726,6 +883,13 @@ def claim(cid, by, hours):
         sys.exit(f"{cid} needs Louis: {c['needs_louis']}")
     if open_flags(cid, claim_data=c, fetch=False, strict=True):
         sys.exit(f"{cid} has an open flag; resolve it first")
+    if github_repository():
+        prs, error = read_open_prs()
+        lines, pending = review_projection([c], prs, error)
+        if lines[0].startswith("- UNAVAILABLE:"):
+            sys.exit("cannot verify pending work before acquisition")
+        if cid in pending:
+            sys.exit(f"{cid} already has a pending PR; finish it before starting again")
     all_holds = holds()
     if sum(live(v) for _, v in all_holds.values()) >= config("origin/master").get(
         "max_live_holds", 6
@@ -768,7 +932,9 @@ def mine(cid, session, all_holds=None):
     sha, lease = src.get(cid, (None, None))
     if not lease or lease.get("session") != session:
         sys.exit(f"{cid} is not held by session {session}")
-    if not live(lease):
+    if not live(lease) or lease.get("phase") == "parked" or (
+        dt.datetime.fromisoformat(lease["expires"]) <= now()
+    ):
         sys.exit(
             f"{cid}'s hold by {session} has lapsed: re-claim it before any consequential action"
         )
@@ -795,10 +961,18 @@ def main(argv):
             )
     elif cmd == "claim":
         claim(argv[2], opt("--by", "unknown"), hours)
+    elif cmd == "take-review":
+        take_review(argv[2], int(opt("--pr", "0")), opt("--head"), opt("--by", "unknown"), hours)
+    elif cmd == "yield-review":
+        yield_review(argv[2], opt("--session"))
+    elif cmd == "finish-review":
+        finish_review(argv[2], int(opt("--pr", "0")), opt("--head"))
     elif cmd == "verify":
         cid = argv[2]
         all_holds = holds()
         _, lease = mine(cid, opt("--session"), all_holds)
+        if lease.get("phase") == "integration":
+            check_review_pr(cid, lease["pr"], lease["pr_head"])
         hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
         if hit:
             k, holder, shared = hit[0]
@@ -824,6 +998,8 @@ def main(argv):
         sha, lease = holds().get(argv[2], (None, None))
         if not lease or lease.get("session") != opt("--session"):
             sys.exit(f"{argv[2]} is not held by session {opt('--session')}")
+        if lease.get("phase") in ("integration", "parked"):
+            sys.exit("use finish-review after merge, or yield-review before leaving")
         updated = {**lease, "released": True}
         ok, out = write_lease(argv[2], updated, sha, sha)
         if not ok:
