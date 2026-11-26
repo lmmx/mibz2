@@ -2,7 +2,7 @@
 """Checks of zero_copy_floor.py on synthetic runs with known walls. All real is 200 ms at every count
 (1300 ms at 1 worker); SECMRD is 60 ms (273 at 1), SFCMRD 16 ms (at 1: inside Antigravity's 14-19),
 SFCMR 30 ms, and the all-but-X arms (S real 40, E real 56, C real 16.2, M
-real 16, R real 20 ms). The handovers and the spelling are in SECMRD's traces. Every measure is recovered, the
+real 16, R real with the spelling 75 ms, against SECMRD's 60). The handovers and the spelling are in SECMRD's traces. Every measure is recovered, the
 prediction is scored both ways, and each VOID and INCOMPLETE fires.
 
     python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/test_zero_copy_floor.py
@@ -36,9 +36,9 @@ ACTS = [
     "copy_out", "resid",
 ]  # fmt: skip
 WALL = {"none": 0.200, "SECMRD": 0.060, "SFCMRD": 0.016, "SFCMR": 0.030,
-        "FCMRD": 0.040, "SCMRD": 0.056, "SFMRD": 0.0162, "SFCRD": 0.016, "SFCMD": 0.020}  # fmt: skip
+        "FCMRD": 0.040, "SCMRD": 0.056, "SFMRD": 0.0162, "SFCRD": 0.016, "SECMD": 0.075}  # fmt: skip
 WALL1 = {"none": 1.300, "SECMRD": 0.273, "SFCMRD": 0.016, "SFCMR": 0.040,
-         "FCMRD": 0.030, "SCMRD": 0.270, "SFMRD": 0.0162, "SFCRD": 0.016, "SFCMD": 0.020}  # fmt: skip
+         "FCMRD": 0.030, "SCMRD": 0.270, "SFMRD": 0.0162, "SFCRD": 0.016, "SECMD": 0.075}  # fmt: skip
 
 
 def plan():
@@ -164,7 +164,7 @@ def main():
         room(8, "C", "label") == "NO ROOM" and room(8, "M", "label") == "NO ROOM",
     )
     check(
-        "k 8: R's room 0.80 and D's 16/30, both ROOM",
+        "k 8: R's room 60/75 against SECMRD, and D's 16/30, both ROOM",
         abs(room(8, "R") - 0.80) < 0.01 and room(8, "D", "label") == "ROOM",
     )
     ew = get(rows, 8, "E walk against SECMRD")

@@ -33,9 +33,10 @@ The recipe refuses a head without the zero-copy modes (a `git grep` for `E_full`
 | `SECMRD` | all six parts. Emission ideal on the supplied codes: its chase removed, its word spelling (`E_consume`) run |
 | `SFCMRD` | all six, emission in `E_full`: its word spelling removed too |
 | `SFCMR` | as `SFCMRD`, with delivery real (all but D) |
-| `FCMRD`, `SCMRD`, `SFMRD`, `SFCRD`, `SFCMD` | as `SFCMRD`, with the scan, emission, construction, MTF/RLE2 or RLE1/CRC real in turn (all but S, E, C, M, R) |
+| `FCMRD`, `SCMRD`, `SFMRD`, `SFCRD` | as `SFCMRD`, with the scan, emission, construction or MTF/RLE2 real in turn (all but S, E, C, M) |
+| `SECMD` | all but R: as `SECMRD`, with RLE1/CRC real |
 
-The all-but-X arms were added at the Coordinator's decision of 26 November, before any data. Against a zero-copy floor, they give each part's room net of its handover as a measurement, where the full matrix could only bound it (`results/full/README.md` §4).
+The all-but-X arms were added at the Coordinator's decision of 26 November, before any data. **All but R is `SECMD`, not `SFCMD`.** The zero-copy oracles' `E_full` removes the spelling only where R replays the block (`supplied_codes::Mode::SuppliedFull`, PR 921). With R real, RLE1 needs emission's bytes, so the spelling runs, and `SFCMD` would be `SECMD` under another name. R's room is therefore read against `SECMRD`, with the spelling run on both sides. This was found on a trial build of PR 921, before any data. Against a zero-copy floor, they give each part's room net of its handover as a measurement, where the full matrix could only bound it (`results/full/README.md` §4).
 
 **Fixed across every cell, as in the full matrix:**
 - the scanner is pinned to the first CPU of the core whose pinned calibration runs fastest, with every other thread masked off that core;
@@ -66,7 +67,7 @@ At each count k, the arms are paired within a block. Every figure is given with 
 4. **E_consume** on the wall: `SECMRD` − `SFCMRD`, paired by block (ms). Also, from the `SECMRD` traces, the `E_consume` ledger entry, summed and per worker.
 5. **Delivery's share with everything else free:** `SFCMR` − `SFCMRD`, paired by block (ms).
 6. **The handover,** from the `SECMRD` traces, each oracle's own ledger entry, summed over its threads and per thread: `hand_S`, `HandE_deliver`, `hand_C`, `hand_M` and `hand_R`. Also their per-thread sum on the workers, and its share of Residual A.
-7. **Each part's room against the zero-copy floor:** `SFCMRD` over the arm with that part alone real (all but it ideal), the geometric mean of the blocks' ratios. It is labelled as `registration.md` labels a room:
+7. **Each part's room against the zero-copy floor:** `SFCMRD` over the arm with that part alone real (all but it ideal), the geometric mean of the blocks' ratios. For R, it is `SECMRD` over `SECMD`. It is labelled as `registration.md` labels a room:
    - **ROOM** iff its interval's upper bound is ≤ 0.95;
    - **NO ROOM** iff the interval lies within [0.98, 1.02];
    - **UNRESOLVED** otherwise.

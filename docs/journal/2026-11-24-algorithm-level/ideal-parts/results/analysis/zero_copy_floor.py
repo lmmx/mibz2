@@ -8,7 +8,8 @@ Its input is bench-zero-copy-floor's bundle: the plan (bench/ideal_parts.py plan
 runs.jsonl (examples/character.rs `--one`, one record a decode). The arms: `none`; `SECMRD`, every
 part ideal with zero-copy handovers (emission's word spelling run); `SFCMRD`, emission in E_full
 (the spelling removed too); `SFCMR`, that with delivery real; and SFCMRD with each other part real
-in turn (`FCMRD`, `SCMRD`, `SFMRD`, `SFCRD`, `SFCMD`).
+in turn (`FCMRD`, `SCMRD`, `SFMRD`, `SFCRD`; all but R is `SECMD`, R's room read against SECMRD,
+since E_full removes the spelling only where R replays).
 
 At each count k, the arms paired within a block, each figure with its 95% t-interval:
 1. the floor, SECMRD over none (geometric mean of the blocks' ratios);
@@ -46,7 +47,10 @@ from ideal_parts import clock, gm, interval  # noqa: E402
 
 A, B, BD = "SECMRD", "SFCMRD", "SFCMR"
 # the all-but-X arms: B with each part real in turn (all-but-D is BD)
-ALL_BUT = {"S": "FCMRD", "E": "SCMRD", "C": "SFMRD", "M": "SFCRD", "R": "SFCMD", "D": BD}
+ALL_BUT = {"S": "FCMRD", "E": "SCMRD", "C": "SFMRD", "M": "SFCRD", "R": "SECMD", "D": BD}
+# each room's floor: SFCMRD, but R's is SECMRD (E_full removes the spelling only where R replays,
+# so with R real emission spells: SECMD against SECMRD keeps the spelling on both sides)
+FLOOR_OF = {p: (A if p == "R" else B) for p in ALL_BUT}
 ARMS = ("none", A, B, BD, *(ALL_BUT[p] for p in "SECMR"))
 # registration.md's room labels, here on each part's room against the zero-copy floor
 ROOM_UPPER, NO_ROOM = 0.95, (0.98, 1.02)
@@ -248,7 +252,7 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
     for k, w in walls.items():
         cells_ = []
         for part, arm in ALL_BUT.items():
-            r = gm([math.log(w[B][b] / w[arm][b]) for b in range(blocks)])
+            r = gm([math.log(w[FLOOR_OF[part]][b] / w[arm][b]) for b in range(blocks)])
             if r[2] <= ROOM_UPPER:
                 lab = "ROOM"
             elif NO_ROOM[0] <= r[1] and r[2] <= NO_ROOM[1]:

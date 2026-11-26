@@ -105,8 +105,9 @@ def fastest(byc, cores_json):
 # Every decode counts its last level's
 # misses (pmu group 5) and the memory controllers' traffic where it can (imc)
 # the all-but-X arms: SFCMRD with each part real in turn (all-but-D is SFCMR), each part's room
-# against the zero-copy floor
-FLOOR_ALL_BUT = ("FCMRD", "SCMRD", "SFMRD", "SFCRD", "SFCMD")
+# against the zero-copy floor. All but R is SECMD: E_full removes the spelling only where R
+# replays the block, so with R real emission spells (R's room is read against SECMRD)
+FLOOR_ALL_BUT = ("FCMRD", "SCMRD", "SFMRD", "SFCRD", "SECMD")
 FLOOR_ARMS = ("none", ALL, "SFCMRD", "SFCMR", *FLOOR_ALL_BUT)
 FLOOR_COUNTS = (1, 6, 7, 8, 9, 10)
 FLOOR_TRACE_BLOCKS = 4
