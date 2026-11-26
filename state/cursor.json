@@ -1727,6 +1727,19 @@
       "status": "finished",
       "disposition": "PROCEED: B5 sufficient to freeze #631 registration; adoption separate.",
       "comment": 7007260113
+    },
+    {
+      "id": "D116",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 7205093921,
+      "pr": 161,
+      "sha": "db83e59b2e3931da4623c168530d2f3e62179b28",
+      "evidence_digest": "sha256:b8e8a0809710945948d2893897caf8196bfa3b50fa4ec8989430812d54746435",
+      "commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c",
+      "status": "complete",
+      "disposition": "Archival claim supported; no automatic role or pin transfer."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2319,8 +2332,9 @@
   },
   "current_execution": {
     "active_comment": 7205093921,
-    "status": "in progress",
-    "decision": "D116"
+    "status": "complete",
+    "decision": "D116",
+    "work_commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c"
   },
   "duplicate_events": [
     {
@@ -3200,6 +3214,13 @@
       "evidence_digest": "sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852",
       "incoming_comment": 7007091766,
       "decision": "D115"
+    },
+    {
+      "pr": 977,
+      "sha": "db83e59b2e3931da4623c168530d2f3e62179b28",
+      "evidence_digest": "sha256:b8e8a0809710945948d2893897caf8196bfa3b50fa4ec8989430812d54746435",
+      "incoming_comment": 7205093921,
+      "decision": "D116"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -4166,9 +4187,11 @@
     {
       "comment_id": 7205093921,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D116",
-      "progress": "Retirement notice; migration head and manifest digest verified."
+      "progress": "Archival claim verified; no mandate transfer. Closing REVIEW pending.",
+      "receipt_commit": "c418a1a392c1d83d2fad10f646d2e84260d46e45",
+      "work_commit": "1dc764f32fa54a7a24e162d2a5f94db31382653c"
     }
   ],
   "migrated_from": {
