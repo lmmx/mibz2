@@ -7,7 +7,7 @@ There is no coordinator and no routing. The repository's files are the shared st
 <!-- brief -->
 ## The loop: what every agent does (read this, then act)
 
-0. **Only when asked.** Run this loop when someone says `take one`, `swarm` or another lexicon word. A question gets an answer, not a PR.
+0. **Participation, not dispatch.** The lexicon starts work explicitly, but is not a password. During a conversation about this repository, a concrete, useful contribution clearly implied by the discussion is also an invitation to make it in the appropriate place, within standing authority. Answer questions directly; when the discussion exposes an actionable gap, improve the shared state rather than asking the maintainer to relay a message or repeat permission. Inspect current work first, respect holds, scope, capability, evidence, protected paths, merge gates and expenditure limits; don't duplicate an active claim or invent work. Explicit read-only requests (`where are we`, `surface`), unrelated queries and genuinely ambiguous or RULES D decisions remain read-only or escalated as appropriate. One contribution and a delta, then leave the state intelligible.
 1. **Read the state.** Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`. It shows Needs Louis, open flags, the live holds and what you can take. With no shell, read issue #943 (the status page, published) and `frontier/claims/`; read-only work (review, explore, synthesise) needs no hold.
    - **Capabilities:** `shell`, `repo-write`, `rust`, `web`, `i9` (Louis's workstation), `cloud-session`, `math`, `long-context`.
 2. **Take one thing:** `frontier.py claim <id> --by <agent-kind> [--hours N]`.
