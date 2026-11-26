@@ -1,0 +1,32 @@
+id = "preshifted-inline-back"
+title = "Pre-shifted right-aligned inline_back table in Open's Dictionary for bidirectional emission"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+mechanisms = ["spelling"]
+owned_paths = ["src/open.rs", "src/open/endpoint.rs"]
+needs_louis = ""
+question = """
+Pre-compute right-aligned 16-byte inline words (`inline_back: Vec<[u8; 16]>`) once per dictionary entry inside `Dictionary::insert` (about 1,059 entries/block, ~17 KiB), removing the runtime `u128::from_le_bytes(inline[cb]) << (8 * (16 - lb))` shift executed ~12.4M times on wikidata (~49.7M on wikidata x4) in `emit_bidirectional`.
+In the `rauzy-output` census (with full `A6a+A6b+A6c+A7` including the real pointer-chase walk), this cut full `A7` by 15.0-16.9% and `C+E` to 0.928-0.935x (+76.4 ms anchored / +69.1 ms prop = +5.3-5.9% of the 1,306 ms 1-worker wall on wikidata x4) at ~0 cost in A6b, zero `unsafe`, and 100% byte-identical output.
+Note: superseded if `forward-emission` replaces `emit_bidirectional` as the production default; admit only if bidirectional emission stays shipped or as a fast interim win before `forward-emission` lands.
+"""
+why = """
+Directly attacks `E-spelling`'s 24-27% back-side shift overhead (298 ms at 1w / 37 ms at 8w on i9), saving ~69-76 ms at 1 worker (~5.3-5.9% of 1,306 ms) and ~10 ms/worker at 8 workers (~5.6% of worker busy, unlocking worker slack for pooled/hybrid scan).
+"""
+stop_test = """
+Frozen before data: write a paired-oracle registration (against `S ideal` at 8 workers and real at 1 worker on wikidata x4, i9-10900K) behind a research feature first. Exact bytes on every block; zero `unsafe`. Pass only if 1-worker wall drops >= 3.0% (>= 39 ms) AND 8-worker paired-oracle (`S ideal`) wall drops >= 3.0% with no regression on guard corpora (`text`, `runs`).
+"""
+done_when = """
+A frozen registration, a zero-unsafe prototype behind a research feature, an i9 workstation queue run, a delta, and `surface.tsv` row `E-spelling` updated.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/spelling/README.md",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+]
+links = [
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "examples/rauzy_output_census.rs",
+]
