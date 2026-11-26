@@ -1,9 +1,9 @@
 id = "floor-and-pooled-scan"
 holder = "antigravity"
-session = "a8f79e85de90"
-claimed_at = "2026-11-26T15:54:29+00:00"
-expires = "2026-11-26T23:54:29+00:00"
+session = "705c6710e34c"
+claimed_at = "2026-11-26T18:54:57+00:00"
+expires = "2026-11-27T02:54:57+00:00"
 owned_paths = []
 mechanisms = []
-base = "daf022450e56b08b5dc1ed400e09baf94981b559"
-released = true
+base = "e88ce7375206097cad61658f8e25d146a248df13"
+released = false
