@@ -23,6 +23,35 @@
   --bf-xh-tint: #f8ead0;
   --bf-ultra: #7b4fd6;
   --bf-ultra-tint: #ece4fb;
+  /* Chart roles (the dataviz method; validated with its palette checker against #ffffff and
+     #0b0c0f, the page's surfaces). vz-1..4 categorical, in this order; f1..f5 the faster arm and
+     s1..s5 the slower arm of a diverging scale about vz-mid; q1..q5 sequential; o1..o3 ordinal.
+     Each fill has an -ink: the text colour that reads inside it. */
+  --bf-vz-1: #4a8fe8; --bf-vz-1-ink: #191919;
+  --bf-vz-2: #b26b00; --bf-vz-2-ink: #ffffff;
+  --bf-vz-3: #1f9a72; --bf-vz-3-ink: #191919;
+  --bf-vz-4: #7b4fd6; --bf-vz-4-ink: #ffffff;
+  --bf-vz-grid: #e7e7e7;
+  --bf-vz-axis: #c2c2c2;
+  --bf-vz-mid: #efefef; --bf-vz-mid-ink: #191919;
+  --bf-vz-f1: #b6d5f8; --bf-vz-f1-ink: #191919;
+  --bf-vz-f2: #84b9f3; --bf-vz-f2-ink: #191919;
+  --bf-vz-f3: #519ced; --bf-vz-f3-ink: #191919;
+  --bf-vz-f4: #2370cd; --bf-vz-f4-ink: #ffffff;
+  --bf-vz-f5: #0f4a96; --bf-vz-f5-ink: #ffffff;
+  --bf-vz-s1: #fbe0c8; --bf-vz-s1-ink: #191919;
+  --bf-vz-s2: #f6bf8e; --bf-vz-s2-ink: #191919;
+  --bf-vz-s3: #ee9a52; --bf-vz-s3-ink: #191919;
+  --bf-vz-s4: #cf7420; --bf-vz-s4-ink: #191919;
+  --bf-vz-s5: #9c520e; --bf-vz-s5-ink: #ffffff;
+  --bf-vz-q1: #eef5fe; --bf-vz-q1-ink: #191919;
+  --bf-vz-q2: #cce3fd; --bf-vz-q2-ink: #191919;
+  --bf-vz-q3: #9dc8f7; --bf-vz-q3-ink: #191919;
+  --bf-vz-q4: #519ced; --bf-vz-q4-ink: #191919;
+  --bf-vz-q5: #2370cd; --bf-vz-q5-ink: #ffffff;
+  --bf-vz-o1: #84b9f3;
+  --bf-vz-o2: #2370cd;
+  --bf-vz-o3: #0e3d7e;
 }
 [data-md-color-scheme="slate"] .bf-fig {
   --bf-frame: #34342f;
@@ -45,6 +74,31 @@
   --bf-xh-tint: #3b3020;
   --bf-ultra: #b195f2;
   --bf-ultra-tint: #2d2543;
+  --bf-vz-1: #3d86e0; --bf-vz-1-ink: #191919;
+  --bf-vz-2: #cf8e1c; --bf-vz-2-ink: #191919;
+  --bf-vz-3: #1f9a72; --bf-vz-3-ink: #191919;
+  --bf-vz-4: #9483ec; --bf-vz-4-ink: #191919;
+  --bf-vz-grid: #26282d;
+  --bf-vz-axis: #44474e;
+  --bf-vz-mid: #24262b; --bf-vz-mid-ink: #ffffff;
+  --bf-vz-f1: #172b48; --bf-vz-f1-ink: #ffffff;
+  --bf-vz-f2: #1d4580; --bf-vz-f2-ink: #ffffff;
+  --bf-vz-f3: #2a68bf; --bf-vz-f3-ink: #ffffff;
+  --bf-vz-f4: #5c9eec; --bf-vz-f4-ink: #191919;
+  --bf-vz-f5: #a3cbf6; --bf-vz-f5-ink: #191919;
+  --bf-vz-s1: #33230f; --bf-vz-s1-ink: #ffffff;
+  --bf-vz-s2: #5a3a12; --bf-vz-s2-ink: #ffffff;
+  --bf-vz-s3: #8a5719; --bf-vz-s3-ink: #ffffff;
+  --bf-vz-s4: #c57e2b; --bf-vz-s4-ink: #191919;
+  --bf-vz-s5: #eaa95a; --bf-vz-s5-ink: #191919;
+  --bf-vz-q1: #12161d; --bf-vz-q1-ink: #ffffff;
+  --bf-vz-q2: #15294a; --bf-vz-q2-ink: #ffffff;
+  --bf-vz-q3: #1d4580; --bf-vz-q3-ink: #ffffff;
+  --bf-vz-q4: #2f70c8; --bf-vz-q4-ink: #ffffff;
+  --bf-vz-q5: #6aabf1; --bf-vz-q5-ink: #191919;
+  --bf-vz-o1: #1b64be;
+  --bf-vz-o2: #338ced;
+  --bf-vz-o3: #9dc8f7;
 }
 
 .md-typeset .bf-fig {

@@ -31,7 +31,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [Complementary bottlenecks: reading the ideal-parts matrix](<https://lmmx.github.io/mibz2/blog/2026-11-26-complementary-bottlenecks/index.md>): At eight workers the scanner and construction must be relieved together, and the matrix is enough to start designing for that.
+- [The experiment](<https://lmmx.github.io/mibz2/blog/2026-11-26-complementary-bottlenecks/index.md>): Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together.
+- [Beyond it: the algorithms](<https://lmmx.github.io/mibz2/blog/2026-11-26-from-bottlenecks-to-better-algorithms/index.md>): How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them.
 - [The story](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>): Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next.
 - [Beneath it: the theory](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network-notes/index.md>): The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built.
 - [Posing the inversion problem](<https://lmmx.github.io/mibz2/blog/2026-11-24-posing-the-inversion-problem/index.md>): The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits.
