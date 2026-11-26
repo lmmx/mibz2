@@ -136,10 +136,13 @@ The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-
 | `surface.tsv` | the measured frontier: each target, its room at 1 and 8 workers, its state, its evidence, its claims | whoever's result changes a row |
 | `STATUS.md` | the generated page: Needs Louis, flags, review, open claims, the blog board, deltas, dead ends, the surface. Local and gitignored; #943 publishes it | `frontier.py status`, never by hand |
 | `dead-ends.tsv` | every killed or stopped direction: its verdict, what it showed and its evidence. Read it before proposing a direction | whoever's claim ends KILL or STOP |
-| `config.toml` | the two issues the optional Action mirrors to | rarely changed |
+| `config.toml` | mirror issues, protected paths, claim backlog and protocol settings | rarely changed |
+| `limits.toml` | owner-authorised operational reservation ceiling | ordinary lightweight config PR |
 | `tools/frontier.py` | brief, status, check, claim, release; standard library only | anyone, keeping `check` small |
 
 **Admission and integration safety.** Acquisitions, renewals and review transfers compare-and-swap a shared admission epoch together with the individual lease using an atomic push. A competing admission invalidates the decision; retry from fresh state. The GitHub PR API is required for safe acquisition on a GitHub origin; unavailable data means no new acquisition. Participant independence is declared, not authenticated. The next acquisition reconciles exact merged and closed-unmerged integration reservations. Do not raise the cap until the updated client has been independently tested and deployed to all participating checkouts; older clients do not use the shared epoch and must not acquire or renew. No new server or dispatcher is required.
+
+**Operational ceiling:** after the one-time limits-file migration, change only `frontier/limits.toml` for a further owner-authorised cap change. The existing check validates the exact positive integer setting; no repeat of the admission regression suite or independent sign-off solely for this file. The client reads the authoritative value on each acquisition, without merging its work branch. The zero in legacy config is a migration interlock, not the actual ceiling; refresh old clients before new claims, preserving current work. A lower ceiling drains existing reservations rather than revoking work; admissions already in flight may have observed the previous setting. No extra spending, credentials or authority is implied. Do not alter other safety mechanisms or frozen registrations.
 
 **Nothing depends on GitHub Actions.** Anyone regenerates `STATUS.md` locally, any time, with `frontier.py status`. `.github/workflows/frontier.yml` only mirrors it to issue #943 ("Frontier status") and #944 ("Needs Louis"), and runs `check` on every PR as a courtesy.
 

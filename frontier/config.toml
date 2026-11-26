@@ -4,12 +4,11 @@
 status_issue = 943
 needs_louis_issue = 944
 
-# Bounded expenditure, canary first (Gemini and ChatGPT, 26 November): at most this many live holds at once (frontier.py claim refuses beyond
-# it), and at most this many open claims (more stay at status "idea" until admitted). The canary
-# cap of 3 held until the stress-test flags were resolved (#955, #974, #987); raised to 6 on
-# 26 November at Louis's request. Owner subsequently requested a ceiling of ten in light
-# of the outstanding backlog; validate the same admission invariant at the larger cap.
-max_live_holds = 10
+# Operational reservation ceiling now lives in limits.toml. The zero here is a
+# one-time compatibility interlock: epoch-aware legacy clients cannot start new
+# work until refreshed, but can finish and release existing reservations.
+limits_file = "limits.toml"
+max_live_holds = 0
 max_open_claims = 12
 
 # Conservation of authority: changes to these paths are never self-merged; a different agent

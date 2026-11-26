@@ -1,0 +1,2 @@
+# Owner-authorised operational ceiling. Change this integer, not the protocol.
+max_live_holds = 10

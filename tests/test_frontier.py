@@ -1165,6 +1165,58 @@ class TestFrontierStress(unittest.TestCase):
         self.assertEqual(sum(results), 1)
         self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 3)
 
+    def test_operational_limit_refresh_without_worktree_merge(self):
+        """An existing updated client reads new settings from trunk, not its worktree."""
+        seed = self.sb.seed
+        fr = seed / "frontier"
+        (fr / "config.toml").write_text(
+            BASE_CONFIG.replace("max_live_holds = 3", 'limits_file = "limits.toml"\nmax_live_holds = 0')
+        )
+        (fr / "limits.toml").write_text("max_live_holds = 1\n")
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "separate operational limit")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("limits-author")
+        first = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        blocked = self.sb.run_frontier(author, "claim", "c2", "--by", "author")
+        self.assertNotEqual(blocked.returncode, 0)
+        (fr / "limits.toml").write_text("max_live_holds = 2\n")
+        _git(seed, "commit", "-am", "owner raises operational limit")
+        _git(seed, "push", "origin", "master")
+        second = self.sb.run_frontier(author, "claim", "c2", "--by", "author")
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertEqual((author / "frontier/limits.toml").read_text(), "max_live_holds = 1\n")
+
+    def test_operational_limit_invalid_and_missing_refuse(self):
+        """Never use a permissive default if the authoritative setting is absent or invalid."""
+        seed = self.sb.seed
+        fr = seed / "frontier"
+        (fr / "config.toml").write_text(
+            BASE_CONFIG.replace("max_live_holds = 3", 'limits_file = "limits.toml"\nmax_live_holds = 0')
+        )
+        limit = fr / "limits.toml"
+        limit.write_text("max_live_holds = 0\n")
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "invalid limit")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("invalid-limit")
+        for value in ("0", "true", '"10"', "-1"):
+            limit.write_text(f"max_live_holds = {value}\n")
+            _git(seed, "add", "frontier")
+            if subprocess.run(["git", "-C", str(seed), "diff", "--cached", "--quiet"]).returncode:
+                _git(seed, "commit", "-m", "invalid limit value")
+                _git(seed, "push", "origin", "master")
+            result = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("cannot read reservation limit", result.stderr)
+        _git(seed, "rm", "frontier/limits.toml")
+        _git(seed, "commit", "-m", "missing limit")
+        _git(seed, "push", "origin", "master")
+        result = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing authoritative frontier/limits.toml", result.stderr)
+
     def test_ten_slot_admission_and_reuse(self):
         """At the proposed ceiling, racing distinct IDs cannot overshoot; release reopens a slot."""
         seed = self.sb.seed

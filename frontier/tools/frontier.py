@@ -61,13 +61,42 @@ SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "eviden
 
 
 def config(ref=None):
-    """frontier/config.toml, optionally from a git ref such as origin/master."""
+    """Read settings and the reservation ceiling from one immutable snapshot."""
     if ref:
-        rc, body = git("show", f"{ref}:frontier/config.toml")
-        if rc == 0:
+        rc, sha = git("rev-parse", "--verify", f"{ref}^{{commit}}")
+        if rc or not re.fullmatch(r"[0-9a-f]{40}", sha):
+            raise ValueError(f"cannot resolve authoritative configuration at {ref}")
+
+        def read(name):
+            rc, body = git("show", f"{sha}:frontier/{name}")
+            if rc:
+                raise ValueError(f"missing authoritative frontier/{name}")
             return tomllib.loads(body)
-    with open(ROOT / "config.toml", "rb") as f:
-        return tomllib.load(f)
+    else:
+        def read(name):
+            return tomllib.loads((ROOT / name).read_text(encoding="utf-8"))
+
+    cfg = read("config.toml")
+    if "limits_file" in cfg:
+        if cfg["limits_file"] != "limits.toml" or cfg.get("max_live_holds") != 0:
+            raise ValueError("invalid operational-limits migration marker")
+        limits = read("limits.toml")
+        if set(limits) != {"max_live_holds"}:
+            raise ValueError("limits.toml must contain only max_live_holds")
+        cfg["max_live_holds"] = limits["max_live_holds"]
+    # Legacy config is supported for pre-migration commits and hermetic fixtures.
+    cap = cfg.get("max_live_holds")
+    if type(cap) is not int or cap < 1:
+        raise ValueError("max_live_holds must be a positive integer")
+    return cfg
+
+
+def reservation_limit():
+    """Fail closed if authoritative operational settings cannot be read."""
+    try:
+        return config("origin/master")["max_live_holds"]
+    except (OSError, ValueError) as exc:
+        sys.exit(f"cannot read reservation limit: {exc}")
 
 
 def git(*args, inp=None, env=None):
@@ -492,9 +521,7 @@ def take_review(cid, number, head, by, hours):
     sha, lease = all_holds.get(cid, (None, None))
     if not lease or lease.get("released"):
         sys.exit(f"{cid} has no existing reservation to transfer")
-    if not live(lease) and sum(live(v) for _, v in all_holds.values()) >= config(
-        "origin/master"
-    )["max_live_holds"]:
+    if not live(lease) and sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
         sys.exit("expired reservation cannot be revived at capacity")
     if lease.get("phase") == "integration" and dt.datetime.fromisoformat(lease["expires"]) > now():
         sys.exit(f"{cid} already has an integration holder; wait for yield or expiry")
@@ -869,8 +896,12 @@ def check(pr_event=None):
         if len(r) != len(DEAD_COLS)
     ]
     # 5. the admission budget and protected files (warnings, using origin/master config)
-    base_cfg = config("origin/master") if base else config()
-    local_cfg = config()
+    try:
+        base_cfg = config("origin/master") if base else config()
+        local_cfg = config()
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid frontier configuration: {exc}")
+        return 1
     n_open = sum(c.get("status") == "open" for c in claims)
     if n_open > base_cfg.get("max_open_claims", 12):
         warn.append(f"{n_open} open claims, over max_open_claims: leave new ones at status idea")
@@ -985,11 +1016,9 @@ def claim(cid, by, hours):
     all_holds = holds()
     if any(v.get("phase") in ("integration", "parked") and not v.get("released") for _, v in all_holds.values()):
         all_holds = reconcile_integrations(all_holds)
-    if sum(live(v) for _, v in all_holds.values()) >= config("origin/master").get(
-        "max_live_holds", 6
-    ):
+    if sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
         sys.exit(
-            "the live-hold budget is full (config.toml max_live_holds); take nothing, or help finish something held"
+            "the live-hold budget is full (max_live_holds); take nothing, or help finish something held"
         )
     sha, lease = all_holds.get(cid, (None, None))
     if lease and live(lease):
