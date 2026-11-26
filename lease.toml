@@ -1,0 +1,9 @@
+id = "single-pass-rle1-crc"
+holder = "antigravity"
+session = "9e7c07cefee8"
+claimed_at = "2026-11-26T21:00:44+00:00"
+expires = "2026-11-27T05:00:44+00:00"
+owned_paths = []
+mechanisms = ["rle1-crc"]
+base = "b2553be6b5520667d77bf480e1fa05912a36f869"
+released = false
