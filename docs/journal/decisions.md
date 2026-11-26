@@ -333,3 +333,20 @@ And later in the same session:
 - **Proposed in a separate setup PR; not active until merged:** the new `codex` implementation delegate uses issue #363, `team-state/codex` and `coord.py` routing; actual Codex sessions remain manually launched. The existing Coordinator may be operated by an expressly owner-activated ChatGPT Work session during a Claude outage, with a visible `ACTOR:` attribution, no concurrent operator, and a return-of-control LOG. See `docs/team/CODEX-PILOT.md` and `docs/team/COORDINATOR-FAILOVER.md`.
 - **Not authorised by this decision:** new mathematical authority, self-review of unsafe Rust, relaxed B5 or evidence gates, autonomous workstation runs, automatic paid compute, bypassed merge checks or silent default flips.
 - **Activation check:** the change takes effect only when this setup PR has merged into master; an actual Work task and Codex run must be started and acknowledged separately. No automatic event-trigger has been installed by this PR.
+
+
+## 2026-11-26: scoped branch protection
+
+- **Source:** repository owner, directly in the ChatGPT conversation, authorising recording in the frontier rather than relaying messages to agents.
+- **Observed:** 2026-11-26 UTC (exact message timestamp not available).
+- **Owner's words, verbatim:** "Send" (in response to the proposed two decisions and offer to record them).
+- **Applies:** RULES A4/D, `frontier/claims/branch-protection.toml`.
+- **Decision:** approve mechanical safeguards on master without introducing mandatory human reviews or obstructing autonomous integration. The detailed approved scope and limitations are recorded in `frontier/deltas/2026-11-26-owner-decisions.md`. Implementation remains subject to the existing striated merge and review rules.
+
+## 2026-11-26: three-arm experiment deferred
+
+- **Source:** same direct owner conversation and confirmation as the preceding entry.
+- **Observed:** 2026-11-26 UTC.
+- **Owner's words, verbatim:** "Send" (confirming the two decisions offered for recording).
+- **Applies:** RULES D, C2; `frontier/claims/three-arm-experiment.toml`.
+- **Decision:** defer expenditure until the frontier has stabilised and the design has been refined; no new token or workstation expenditure is authorised. Fresh approval is required for a revised, bounded pilot. See `frontier/deltas/2026-11-26-owner-decisions.md`.

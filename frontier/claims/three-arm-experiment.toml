@@ -4,9 +4,9 @@ kind = "decision"
 zone = "striated"
 needs = ["cloud-session", "i9"]
 priority = 5
-status = "open"
+status = "blocked"
 owned_paths = []
-needs_louis = "spending: about 20M tokens plus three i9 runs (RULES D)"
+needs_louis = "Deferred by owner; fresh spending approval required only after hardening and a revised, capped pilot proposal (RULES D)"
 question = """
 The rhizomatic cross-reading's §3.4: three arms at matched token spend (the orchestrated workflow, a fresh-context restarted solo agent, and the flat frontier) on real worker-side work. Frozen adoption rules. A single run per arm is a pilot, not a verdict (Paradigm 3 saw large variance). Score each arm on ChatGPT's nine dimensions (rhizome/06, section 9): validated research productivity per million tokens, duplication, intellectual diversity, experimental integrity, integration latency, fragmentation, Louis's overhead, reliability, and governance overhead in tokens and time.
 """
@@ -19,4 +19,4 @@ As registered in docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md §3.
 done_when = """
 The three arms run, scored, and a delta.
 """
-links = ["docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md"]
+links = ["docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md", "frontier/deltas/2026-11-26-owner-decisions.md"]
