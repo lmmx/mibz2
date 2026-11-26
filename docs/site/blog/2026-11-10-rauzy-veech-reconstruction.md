@@ -25,6 +25,14 @@ An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from
 
 </div>
 
+<div class="post-companion" data-role="has-companion" markdown>
+
+**A technical companion** develops this post's reconstruction programme in full: how compact word
+rules recover the text, what building and expanding them costs, and what the evidence means for a
+complete decoder. [Reconstructing text from compact programs&nbsp;→](2026-11-12-rauzy-technical-companion.md)
+
+</div>
+
 mibz2 is our bzip2 decoder, written in Rust. This post follows [The mathematical structure of inverse-BWT navigation](2026-11-08-inverse-bwt-navigation.md), from 8 November. That post showed that the table mibz2 walks to decode each block has a simple structure, and left open whether anything built on it could beat the table. This post reports the first experiment that does, for one stage of the decoder on one thread.
 
 **The walk.** bzip2 stores each block as the last column of the block's sorted rotations: the Burrows–Wheeler transform (BWT). [An earlier post](2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md) works through the transform and its inverse on `banana`. To undo it, mibz2 builds a table with one entry per row and walks it. The step from one row to the next is a map called **LF**, for last-to-first. Each entry gives one byte and the address of the next row, so the walk makes one dependent memory lookup per byte. Walking the table takes about 53–60% of a decode ([the concepts page on memory-level parallelism](../concepts/couriers.md)), and building it adds more.

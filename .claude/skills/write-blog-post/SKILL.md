@@ -985,6 +985,31 @@ section that says where things stand. Something that will change, such as a PR's
 goes in one sentence on its own line in that section, not in the dek, so the cards don't
 need redrawing.
 
+### Companion posts
+
+When a post needs prerequisites or context that would stall its story (the theory it applies, the
+derivations, the reading behind it), put them in a **technical companion**: a post in its own right,
+chained to the main one (Louis, 25 November 2026). The main post then tells the mibz2 effort on its
+own terms and links each topic to its place in the companion.
+
+- **Its own title and dek.** Never "Technical appendix". The title names what is inside and shows the
+  tie, e.g. "Beneath the queueing network: operational laws, modification analysis and product
+  form"; the dek says plainly what it covers and passes check_prose like any dek.
+- **The same kind as its main post.** A kind is a post's standing; "companion" is a relation. The
+  relation is marked by the card's `post-card-rel--companion` line and the hero's kicker,
+  `[mibz2 · Research blog](index.md) · Companion to [Main title](main.md)`.
+- **The listing:** the two cards adjacent inside `<div class="post-chain">`, main first. The
+  companion's card keeps the class exactly `post-card` (the checks and release notes match it),
+  names its main post with `data-companion-of="main.md"`, and ends its text with
+  `<span class="post-card-rel post-card-rel--companion">Technical companion</span>`.
+- **On both pages:** a `<div class="post-companion" data-role="has-companion" markdown>` in the main
+  post and `data-role="companion-of"` in the companion, right after the hero. Each is one paragraph:
+  a bold lead, then the link, written `[Title&nbsp;→](other.md)` so the arrow never wraps alone.
+- **The nav:** a group named for the main post, holding the main post and then the companion.
+- **The check:** `check_site.py`'s companion check fails a chain out of order, a
+  `data-companion-of` that names the wrong card, a panel that doesn't link its partner, or either
+  outside a chain.
+
 ## Reporting measurements
 
 Each of these rules is traced to the posts, to the maintainer's edits, or to the

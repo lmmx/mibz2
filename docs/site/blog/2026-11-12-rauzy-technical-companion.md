@@ -7,7 +7,7 @@ description: "This technical companion traces how compact word programs reconstr
 <div class="post-hero" markdown>
 <div class="post-hero-text" markdown>
 
-[mibz2 · Research blog](index.md)
+[mibz2 · Research blog](index.md) · Companion to [A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md)
 {: .post-kicker }
 
 # Reconstructing text from compact programs
@@ -20,6 +20,13 @@ This technical companion traces how compact word programs reconstruct text from 
 
 </div>
 <div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
+</div>
+
+<div class="post-companion" data-role="companion-of" markdown>
+
+**The post this companion develops** introduced the interval-exchange structure and Rauzy–Veech
+machinery behind Cells, an experimental inverse transform. [A new way back from the BWT&nbsp;→](2026-11-10-rauzy-veech-reconstruction.md)
+
 </div>
 
 [A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md) already introduced the interval-exchange structure and Rauzy–Veech machinery behind Cells, an experimental inverse transform. This technical companion develops the reconstruction programme in full: how compact word rules can recover the original text, what building and expanding those rules costs, and what the evidence means for a complete decoder. It preserves the 12 November report’s worked constructions, memory analysis and qualifications, keeping endpoint Cells separate from delimiter-based first-return research. The [8 November mathematical article](2026-11-08-inverse-bwt-navigation.md) established the underlying run translations.

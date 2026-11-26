@@ -7,7 +7,8 @@
 
    The fonts in ../fonts/ are the Latin subsets Google Fonts serves, all under the SIL Open
    Font License 1.1: EB Garamond (Georg Duffner, Octavio Pardo), Cinzel Decorative (Natanael
-   Gama), Cinzel (Natanael Gama) and Manufacturing Consent (Fredrick Brennan). */
+   Gama), Cinzel (Natanael Gama) and Manufacturing Consent (Fredrick Brennan); and EB Garamond's
+   three fleurons, subset alone (eb-garamond-fleurons.woff2). */
 
 @font-face {
   font-family: "EB Garamond";
@@ -22,6 +23,25 @@
   font-weight: 400;
   font-display: swap;
   src: url("../fonts/eb-garamond-italic-latin.woff2") format("woff2");
+}
+/* EB Garamond's own fleurons, which the Latin subsets leave out: ❦ U+2766, ❧ U+2767 and its
+   reverse ☙ U+2619 (Google Fonts' subset for just these, 1.6 KB). Declared after the Latin faces,
+   so the browser takes these three from here instead of from whatever system font has them. */
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fonts/eb-garamond-fleurons.woff2") format("woff2");
+  unicode-range: U+2619, U+2766-2767;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fonts/eb-garamond-fleurons.woff2") format("woff2");
+  unicode-range: U+2619, U+2766-2767;
 }
 @font-face {
   font-family: "Cinzel Decorative";

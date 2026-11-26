@@ -148,3 +148,7 @@
 - **It needs reopening:** reopening it was refused by this session's permission check, twice: once for the heads agent and once for me. I did not work around that.
 - **Louis, in the morning:** please reopen #861, so CI runs on its new head 3ab91bf9 (master merged in). §84's test 2 waits for it; test 3 goes ahead in its place.
 - **Rule from now on:** no PR title or commit message names a PR or issue number directly after "fix", "fixes", "fixed", "close", "closes", "closed", "resolve", "resolves" or "resolved". Write "(#861)" or "PR #861" instead.
+
+## Prompts carry every plainly useful addition (Louis, 26 November 2026)
+
+When something plainly belongs in a prompt or a task, put it in. That includes a cheap test, a follow-up the last result proposed, or a check that makes the result more useful. Never hold it back as a question for Louis. "You are making me micromanage when i asked for autonomy." The two pre-port tests from the software survey were asked about after he had already pasted the prompt that should have carried them. Ask only about what is genuinely his to decide (RULES D), or what changes the task's direction.
