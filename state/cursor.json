@@ -2318,11 +2318,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D115",
-    "incoming_comment": 7007091766,
-    "review_comment_id": 7007260113
+    "active_comment": 7205093921,
+    "status": "in progress",
+    "decision": "D116"
   },
   "duplicate_events": [
     {
@@ -4164,6 +4162,13 @@
       "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280",
       "review_comment_id": 7007260113,
       "complete_cursor_commit": "44a8fe4c3fcd7a2d41a174d6ea51b74c57705fb7"
+    },
+    {
+      "comment_id": 7205093921,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D116",
+      "progress": "Retirement notice; migration head and manifest digest verified."
     }
   ],
   "migrated_from": {
