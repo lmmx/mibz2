@@ -1,0 +1,31 @@
+id = "permutation-compression-incubation"
+title = "Incubate independent adaptive permutation compression software"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "math", "long-context"]
+priority = 2
+status = "open"
+owned_paths = ["research/permutation-compression/", "research/permutation-compression-data/"]
+mechanisms = ["standalone-permutation-compression"]
+needs_louis = ""
+question = """
+Build the first bounded slice in research/permutation-compression/DESIGN.md. Apply the Nanda-style operation-first approach: discover, construct and select exact compressed permutation representations using structural certificates, executable complexity metadata and measured workload costs. Start with array/packed baselines, one justified structural representation, a generic query consumer, and a small adaptive policy. Survey/measure original mathematical tools where useful, not a wholesale port. Use generic permutation interchange and synthetic/real datasets, including LF from Wikidata and ordinary text if available. No timed decoder or induction work. Keep the crate, its tests, generic benches and dependencies entirely independent from mibz2; any corpus exporter lives outside the package in the separately owned data directory. No root manifest, production, CI or release changes. Read full design and freeze concrete first experiment before data.
+"""
+why = """
+The owner wants reusable software for permutation compression, not another bzip2 optimisation. The precedents are Nanda's mathematical-software rewrites and mibz2's own independent incubation in reshape. Pattern and succinct-representation literature offer concrete candidates; the open software question is whether structure discovery, construction and operation-aware selection can be composed effectively and cheaply. Complexity metadata is input to the algorithm, not just documentation. Existing ideal-permutation-structures and permutation-patterns claims remain separate decoder-specific applications; neither is a prerequisite and no decoder gate governs this package.
+"""
+stop_test = """
+Before timing register families, workloads, sizes, distinct held-out splits, repeats and bounded existing local compute. Exact forward/inverse and supported operations against array on exhaustive small and deterministic large, invalid and multicycle cases. Copied crate builds/tests outside repo; no mibz2 or parent-path dependency and root graph unchanged. Report root packaging boundary; separate reviewed exclusions if needed. Separate prebuilt consumer, materialisation, discovery/selection and paid total, full metadata and peak scratch. Compare fixed baselines, finite-family free selection oracle and actual adaptive selection on held-out structured/random controls; include real Wikidata/text LF if available or disclose gap. Viable regime: >=20% persistent-byte saving with <=10% paid time regression, or >=10% paid time gain at no higher persistent/peak memory against strongest matched baseline; report held-out regret and random fallback overhead (target <=5% on designated profile). Otherwise scoped exclusion and reusable harness; new family only with justified mechanism. No root dependency, external release, new workstation run or spending.
+"""
+done_when = """
+Standalone tested crate scaffold with exact baseline and at least one candidate, source/complexity registry and selector, reproducible generic benchmark and corpus manifest, paid/prebuilt/selector comparisons, extraction test and delta. Later representation, constructor, calibration or binding work separately admitted on evidence. Publication or adoption is a separate decision.
+"""
+premises = [
+  "research/permutation-compression/README.md",
+  "research/permutation-compression/DESIGN.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/chatgpt-response.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/README.md",
+  "docs/journal/2026-11-24-algorithm-level/leads/research-software.md",
+  "docs/journal/2026-10-27-bz2-decoder.md",
+]
+links = ["frontier/claims/ideal-permutation-structures.toml", "frontier/claims/permutation-patterns.toml", "https://github.com/PermutaTriangle/Permuta", "https://people.maths.ox.ac.uk/nanda/perseus/index.html"]
