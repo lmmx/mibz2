@@ -1,0 +1,21 @@
+claim: archive-team-strata
+by: antigravity
+outcome: partial
+evidence: docs/team/archive/README.md; docs/team/README.md; docs/site/background/behind-the-scenes.md; docs/team/research-charter/PROOF-PROGRAMME.md; README.md; CHATGPT.md; zensical build --clean --strict (0 issues); check_site.py (11614 links, 0 errors); check_render.py (77 pages, 0 errors); unittest .github/coordination (43 ok)
+
+**What was asked:** Archive coordinator-era team machinery (`SPEC*.md`, `WORK-*.md`, `CODEX-*.md`, `COORDINATOR-FAILOVER.md`, `MODE*.md`, `PROTOCOL.md`, `ROLES.md`) into `docs/team/archive/`, fix all live links (no redirects, nothing live pointing into the archive), keep standing policies live, audit `#160/#161/#162/#222/#314/#346/#363`, and keep `coord.py head-sha`.
+**What I found:**
+- 18 coordinator-era files existed in `docs/team/` (`MODE.ORIGIN.md` and `tools/mode_doctest.py` do not exist in the repo).
+- All 7 role inboxes are currently `OPEN`: 5 never-merged PRs (`#160` `optimizer/inbox`, `#161` `guardian/inbox`, `#162` `researcher/inbox`, `#222` `review/oracle-intention`, `#314` `pathfinder/inbox`) and 2 issues (`#346` MONODROMY, `#363` Codex).
+- Outside protected/RULES D files, live links to archived paths existed in `docs/team/README.md`, `docs/site/background/behind-the-scenes.md` (`blob/master/.../SPEC.OBSERVER.md`), `docs/team/research-charter/PROOF-PROGRAMME.md` (`../MODE.RATIONALE.md`), `README.md`, `CHATGPT.md`, and unpinned `blob/master/.../MODE*.md` links in `docs/site/blog/conversations/2026-11-22-thomas-murphy.html` (and `docs/conversations/2026-11-22-thomas-murphy.inline.html`).
+- `.github/coordination/coord.py` and `.github/workflows/channel-routing.yml` live under protected `.github/`; keeping them untouched preserves `coord.py head-sha` and all 43 unit tests while retiring routing commands in documentation.
+**What changed:**
+- `git mv`ed 18 files into `docs/team/archive/`: `SPEC.md`, `SPEC.{COORDINATOR-ACTING-MONITOR,GUARDIAN,OBSERVER,OPTIMIZER,PATHFINDER,RESEARCHER}.md`, `WORK-{ACTING-COORDINATOR,TASKS}.md`, `CODEX-{PILOT,RELAY-PILOT}.md`, `COORDINATOR-FAILOVER.md`, `codex/astra-e-brief.md`, `MODE.md`, `MODE.RATIONALE.md`, `MONODROMY-ORIENTATION.md`, `PROTOCOL.md`, `ROLES.md`. Added `docs/team/archive/README.md`.
+- Kept live and untouched: `docs/team/RULES.md`, `OWNERSHIP.md`, `PERFORMANCE-POLICY.md`, `CI-INCIDENTS.md`, `DELIVERED.md`, `EXTERNAL-DIAGRAMS.md`, `ACQUISITION-FIRST.md`, `acquisition/`, `research-charter/`, `docs/RELEASING.md`.
+- Updated live docs so nothing live points to archived paths or into `docs/team/archive/`: `docs/team/README.md`, `docs/site/background/behind-the-scenes.md`, `docs/team/research-charter/PROOF-PROGRAMME.md`, `README.md`, `CHATGPT.md`, and pinned the historical `MODE*.md` links in both `2026-11-22-thomas-murphy*.html` files to `aa0558d540abfa23c7ceb9584e7983e12200702d`.
+- Verified `zensical build --clean --strict`, `check_site.py` (11,614 internal links), `check_render.py` (77 pages), `check_prose.py --changed origin/master`, and `frontier.py check` all pass with 0 errors.
+**What's next:** Independent review and merge of this striated PR (no self-merge; hold stays until merged). Upon merge, the merging agent should run the 7 close-with-pointer commands in the PR body for `#160/#161/#162/#222/#314/#346/#363`, then mark `archive-team-strata` `done` and release the hold.
+**Caveats:**
+- RULES D / protected files were intentionally left untouched: `docs/team/RULES.md` (L68 `<a href="PROTOCOL.md">`, L76/126–128 `MODE.md`, L110 `PROTOCOL.md §2a` — belongs to `migrate-rules`), `docs/team/OWNERSHIP.md` (L50 `[COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md)`, L112/118 `MODE.md`/`PROTOCOL` — owner-only changes per L127), and plain-text `PROTOCOL.md §9` citations in `CLAUDE.md`, `docs/RELEASING.md` and `bench/workstation-queue.txt`.
+- Historical journal file `docs/journal/2026-11-12-rauzy-companion/source/rauzy-technical-report-source.md` L91 retains its unpinned master link as frozen journal history.
+- Closing comments on `#160/#161/#162/#222` will trigger `.github/workflows/channel-routing.yml` to post harmless warning check runs on draft PR `#145`; retiring that workflow and `coord.py`'s routing subcommands belongs in a separate `.github/` PR if desired.
