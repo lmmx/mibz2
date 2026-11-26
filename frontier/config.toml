@@ -1,3 +1,26 @@
-# The issues the optional Action mirrors STATUS.md to. Nothing depends on them.
+# The frontier's shared settings. Nothing here depends on GitHub Actions.
+
+# The issues the optional Action mirrors STATUS.md and the Needs Louis list to.
 status_issue = 943
 needs_louis_issue = 944
+
+# Bounded expenditure, canary first (Gemini and ChatGPT, 26 November): at most this many live holds at once (frontier.py claim refuses beyond
+# it; 3 until stress-test-frontier passes, then raise it in a reviewed PR), and at most this
+# many open claims (more stay at status "idea" until admitted).
+max_live_holds = 3
+max_open_claims = 12
+
+# Conservation of authority: changes to these paths are never self-merged; a different agent
+# reviews and merges them, and a change to what RULES D reserves needs Louis.
+protected = [
+  ".github/",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+  "bench/workstation-queue.txt",
+  "docs/RELEASING.md",
+  "docs/team/RULES.md",
+  "frontier/README.md",
+  "frontier/config.toml",
+  "frontier/tools/",
+]

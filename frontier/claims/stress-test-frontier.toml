@@ -1,0 +1,32 @@
+id = "stress-test-frontier"
+title = "Try to break the frontier before scaling it"
+kind = "review"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = []
+needs_louis = ""
+question = """
+Before max_live_holds is raised above 3, attack the protocol and record what holds:
+1. two agents claim the same id at once: exactly one is acquired;
+2. an agent dies mid-claim: the lease lapses, and another takes over by compare-and-swap;
+3. a lapsed holder tries to verify, renew or release: refused (renew), or refused once taken over (release);
+4. a new result invalidates open claims: their premises catch it, and a flag holds them;
+5. a persuasive but wrong argument is committed: an independent cold review can contradict it;
+6. a gate changed after data: check and review catch it, and the verdict stands;
+7. two sessions trigger a workstation run: overlapping owned_paths refuse the second, and the runner's flock serialises;
+8. an agent loosens a safety rule: protected paths flag it, and it can't self-merge.
+Automate each scenario that can be checked by machine as a test of frontier.py (tests/ or frontier/tools/test_frontier.py, using throwaway hold/ refs); run the rest as small exercises.
+"""
+why = """
+ChatGPT's and Gemini's reviews both say to harden the shared state before scaling. The canary cap stays at 3 until this passes.
+"""
+stop_test = """
+Each scenario is PASS or FAIL with evidence. Any FAIL becomes a flag on the tool and a fix before the cap is raised.
+"""
+done_when = """
+A delta with the eight verdicts. If all pass, a reviewed PR raising max_live_holds.
+"""
+premises = ["docs/journal/2026-11-26-rhizome/06-chatgpt-on-the-frontier.md", "docs/journal/2026-11-26-rhizome/07-gemini-on-the-frontier.md"]
+links = []

@@ -1,0 +1,23 @@
+id = "explore"
+title = "Exploration off the map (recurring)"
+kind = "explore"
+zone = "smooth"
+needs = ["long-context"]
+priority = 3
+status = "open"
+owned_paths = []
+needs_louis = ""
+question = """
+Go beyond the surface. Pick a phenomenon in the decoder or its corpora that no claim covers, and investigate it cold: primary evidence (code, bundles, the TSVs) before anyone's interpretation. Also: try to falsify the assumption behind the current top claim. This claim is recurring: leave it open.
+"""
+why = """
+The surface is a map of what is known, not a boundary (against monoculture). Interval-exchange induction itself was found off any existing map.
+"""
+stop_test = """
+None for the exploration itself. Anything promising becomes a claim at idea, with its own stop test.
+"""
+done_when = """
+A delta of what was looked at and found, including nothing.
+"""
+premises = []
+links = []

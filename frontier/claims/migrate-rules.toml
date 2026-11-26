@@ -1,0 +1,27 @@
+id = "migrate-rules"
+title = "Migrate RULES.md off the coordinator, by meaning"
+kind = "write"
+zone = "striated"
+needs = ["long-context", "repo-write"]
+priority = 2
+status = "open"
+owned_paths = ["docs/team/RULES.md"]
+needs_louis = ""
+question = """
+docs/team/RULES.md still gives the coordinator authority in several places: authorisation, safety objections, decisions. Rewrite each by meaning for the frontier:
+- an authorisation becomes a frozen registration plus review by a different agent;
+- a safety objection becomes a flag that holds its scope until a different agent resolves it;
+- a decision becomes the acting agent's delta.
+Keep A1 and A4 (shared knowledge is not shared authority) and all of RULES D.
+"""
+why = """
+Conservation of authority: the rules must not silently lapse with the role they named.
+"""
+stop_test = """
+A rule change: RULES D reserves rule changes to Louis. Propose the PR; it merges only with his approval.
+"""
+done_when = """
+A PR to docs/team/RULES.md, reviewed by a different agent, awaiting Louis.
+"""
+premises = []
+links = []
