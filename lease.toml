@@ -1,0 +1,9 @@
+id = "delivery-copyout"
+holder = "antigravity"
+session = "cd41d522fb2e"
+claimed_at = "2026-11-26T17:44:09+00:00"
+expires = "2026-11-27T01:44:09+00:00"
+owned_paths = []
+mechanisms = ["delivery"]
+base = "c1915fd4e3f6c18d5626ba6acf1965e9061689e6"
+released = false
