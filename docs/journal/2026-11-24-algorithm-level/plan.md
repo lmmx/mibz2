@@ -35,10 +35,10 @@ Walls are on wikidata ×4, with the scanner pinned and the clock pre-spun.
 
 | workers | today's wall | best single part made free | the pair S + C made free | everything free (the floor) |
 |---|---|---|---|---|
-| 1 | 1,306 ms | C: 756 ms (−42%) | 743 ms | 391 ms, mostly the oracles' own cost |
+| 1 | 1,306 ms | C: 756 ms (−42%) | 751 ms | 391 ms, mostly the oracles' own cost |
 | 6 | 243 ms | C: 183 ms (−25%) | 143 ms (−41%) | 94 ms |
 | **8 (what ships)** | **195 ms** | C: 184 ms (−6%); S: 189 ms (−3%) | **125 ms (−36%)** | 112 ms |
-| 10 | 196 ms | S: 180 ms (−8%) | 154 ms | 142 ms |
+| 10 | 196 ms | S: 180 ms (−8%) | 149 ms (−24%) | 142 ms |
 
 **What this says:**
 1. **At one or a few workers, construction (C) is the cost.** It is 80% of the explainable variation at 1 worker, and making it free takes 42% off.
