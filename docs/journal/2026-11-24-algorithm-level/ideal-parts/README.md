@@ -46,4 +46,5 @@ A mathematical idea pays only if the part it improves has room. So before lookin
 | 3 | the full matrix run | Pathfinder (recipe), Louis's workstation | after step 2 |
 | 4 | the analysis: main effects, interactions and the ceiling table | Coordinator, MONODROMY | after each run |
 | 5 | Antigravity, first pass: mathematics against the shape we have, gaps marked | Louis runs it | prompt ready (`antigravity/prompt-1.md`) |
-| 6 | Antigravity, second pass: mathematics against the full ceiling table | Louis runs it | prompt ready (`antigravity/prompt-2.md`) |
+| 6 | Antigravity, second pass: mathematics against the full ceiling table | Antigravity | done: `IDEAL-PARTS-2.md` at 7fab624e |
+| 7 | the decoder's own residual: zero-copy oracles (Antigravity, `antigravity/prompt-build-zero-copy.md`), then a short floor run at 1, 6, 7, 8, 9 and 10 workers (the Pathfinder) | Antigravity, Pathfinder | prompt ready |
