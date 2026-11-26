@@ -7,9 +7,9 @@ priority = 3
 status = "open"
 owned_paths = []
 needs_louis = ""
-stage = "outline"
+stage = "draft"
 post = "docs/site/blog/2026-11-26-complementary-bottlenecks.md"
-drafted_by = ""
+drafted_by = "antigravity"
 reviewed_by = ""
 question = """
 The complementary-bottlenecks post and its companion quote the design analysis's 14–19 ms plumbing forecast. The floor run measured 5.2–5.7 ms. Add the measurement beside the forecast, without rewriting the posts.
@@ -28,4 +28,6 @@ links = [
   "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
   "docs/journal/2026-11-24-algorithm-level/delivery/README.md",
   "docs/journal/2026-11-24-algorithm-level/bottlenecks-floor-correction-outline.md",
+  "docs/site/blog/2026-11-26-from-bottlenecks-to-better-algorithms.md",
+  "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md",
 ]
