@@ -333,3 +333,36 @@ And later in the same session:
 - **Proposed in a separate setup PR; not active until merged:** the new `codex` implementation delegate uses issue #363, `team-state/codex` and `coord.py` routing; actual Codex sessions remain manually launched. The existing Coordinator may be operated by an expressly owner-activated ChatGPT Work session during a Claude outage, with a visible `ACTOR:` attribution, no concurrent operator, and a return-of-control LOG. See `docs/team/CODEX-PILOT.md` and `docs/team/COORDINATOR-FAILOVER.md`.
 - **Not authorised by this decision:** new mathematical authority, self-review of unsafe Rust, relaxed B5 or evidence gates, autonomous workstation runs, automatic paid compute, bypassed merge checks or silent default flips.
 - **Activation check:** the change takes effect only when this setup PR has merged into master; an actual Work task and Codex run must be started and acknowledged separately. No automatic event-trigger has been installed by this PR.
+
+
+## 2026-11-26: scoped branch protection
+
+- **Source:** repository owner, directly in the ChatGPT conversation, authorising recording in the frontier rather than relaying messages to agents.
+- **Observed:** 2026-11-26 UTC (exact message timestamp not available).
+- **Owner's words, verbatim:** "Send" (in response to the proposed two decisions and offer to record them).
+- **Applies:** RULES A4/D, `frontier/claims/branch-protection.toml`.
+- **Decision:** approve mechanical safeguards on master without introducing mandatory human reviews or obstructing autonomous integration. The detailed approved scope and limitations are recorded in `frontier/deltas/2026-11-26-owner-decisions.md`. Implementation remains subject to the existing striated merge and review rules.
+
+## 2026-11-26: three-arm experiment deferred
+
+- **Source:** same direct owner conversation and confirmation as the preceding entry.
+- **Observed:** 2026-11-26 UTC.
+- **Owner's words, verbatim:** "Send" (confirming the two decisions offered for recording).
+- **Applies:** RULES D, C2; `frontier/claims/three-arm-experiment.toml`.
+- **Decision:** defer expenditure until the frontier has stabilised and the design has been refined; no new token or workstation expenditure is authorised. Fresh approval is required for a revised, bounded pilot. See `frontier/deltas/2026-11-26-owner-decisions.md`.
+
+## 2026-11-26: autonomous blog publication
+
+- **Source:** repository owner, directly in conversation following the merge of #959.
+- **Observed:** 2026-11-26 UTC.
+- **Owner's words, verbatim:**
+  > i think a standing rule that we should just get new blog merges out and not wait to approve is worth having, it’s just a blog, the ‘deploy’ is not something worth gating at all. it is pathological to introduce some manual step, if it needs modifying we will just do a further pass
+- **Applies:** ordinary blog-only PRs and the frontier's blog board; standing publishing authority.
+- **Decision:** publish without waiting for owner or independent editorial approval or for deployment/preview/visual polish; merge on the existing minimum mechanical publication checks and make corrections as follow-up PRs. No change to production, protected-rule, release, experimental or spending gates. See `frontier/deltas/2026-11-26-blog-publishing-authority.md`.
+
+## 2026-11-26: conversational participation in the frontier
+
+- **Source:** repository owner, directly in conversation about the frontier and its first blog post.
+- **Owner's words, excerpt:** “if we're having a chat and you think that, you know, the implicature of the conversation is to go and provide some, you know, substantive change to the repo, that's the entire point, isn't it?”
+- **Decision:** Conversation about this repository can itself imply permission for a concrete, relevant contribution within the participant's existing authority. Do not require a lexicon incantation or ask the maintainer to relay observations when an appropriate edit, delta, or claim is available. Humans and agents participate in the same shared state. Explicit read-only requests, genuine ambiguity, existing holds, protected-path gates, scope and expenditure boundaries, and RULES D reservations remain unchanged.
+- **Implementation:** the entry to the frontier loop, not a new role or autonomous background process. Record a substantive contribution when warranted; don't manufacture one for every question.

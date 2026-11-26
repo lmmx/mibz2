@@ -4,13 +4,13 @@ kind = "blog"
 zone = "smooth"
 needs = ["long-context"]
 priority = 2
-status = "open"
+status = "done"
 owned_paths = []
 needs_louis = ""
-stage = "draft"
+stage = "published"
 post = "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md"
 drafted_by = "antigravity"
-reviewed_by = ""
+reviewed_by = "claude-code"
 question = """
 A post on the zero-copy floor (plumbing about 5 ms; the scan alone 179 ms at 8; spelling 298 ms at 1 worker; delivery 48 ms) and the pooled scan's narrow kill (it moves the scan's work rather than removing it). It follows the complementary-bottlenecks post and its companion.
 """
@@ -29,4 +29,6 @@ links = [
   "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-outline.md",
   "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-draft.md",
   "docs/scripts/figures_floor_and_pooled_scan.py",
+  "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-review.md",
+  "docs/site/blog/2026-11-26-true-floor-and-pooled-scan.md",
 ]

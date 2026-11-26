@@ -321,6 +321,12 @@ from 125 ms to 149 ms. Memory as a third station is the natural repair, still a 
 this experiment cannot separate the decoder's own contention from the traffic of the oracles' stores;
 [the companion](2026-11-26-from-bottlenecks-to-better-algorithms.md#2-quantifying-complementary-bottlenecks) sets it out.
 
+Measured on 26 November, the zero-copy floor run found no sign of a memory-bandwidth third station
+between eight and ten workers. Memory traffic stayed at 13–17 GB/s, far below the machine's
+bandwidth. The earlier rise to 142 ms was the old oracles' copying
+([§6](#6-what-the-experiment-could-not-remove);
+[the true-floor post](2026-11-26-true-floor-and-pooled-scan.md#1-how-much-of-the-first-matrixs-floor-was-the-decoders)).
+
 ## 6. What the experiment could not remove
 
 The configuration with every part ideal should reveal what remains of the decoder when all of its
@@ -360,6 +366,19 @@ workers, a forecast for the run to test rather than a measurement, and not a dec
 a real decoder must still compute the answers the oracles supply; the arithmetic is in
 [the companion](2026-11-26-from-bottlenecks-to-better-algorithms.md#3-accounting-for-the-remaining-computation). The run's purpose is narrow, to keep experimental copying and leftover emission work from being mistaken
 for a limit of the decoder, and it leaves the scanner–construction result untouched.
+
+Measured on 26 November, the zero-copy floor run put the pipeline alone at 5.2–5.7 ms across one to
+ten workers, with every part supplied and the words not expanded. At eight workers it took
+5.2 [5.0, 5.5] ms, which is 2.7% of the shipped 194.6 ms decode. That is about a third of the
+design analysis's 12–19 ms forecast, kept above beside the measurement as registered before the
+data. Under the run's frozen rule, the forecast scored a miss on the low side, closing pipeline
+plumbing as a target. With word expansion kept and oracle copying removed, the decode took 42.4 ms
+at eight workers. It did not rise towards ten (42.9 ms at nine, 40.5 ms at ten), confirming that
+the climb to 142 ms was the old oracles' copying. Full figures and intervals are in
+[the floor results](https://github.com/lmmx/mibz2/blob/311923efd5ac7b113a9f944db34f41172c096816/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md),
+[the true-floor post](2026-11-26-true-floor-and-pooled-scan.md#1-how-much-of-the-first-matrixs-floor-was-the-decoders)
+and
+[the companion's table](2026-11-26-from-bottlenecks-to-better-algorithms.md#3-accounting-for-the-remaining-computation).
 
 ## 7. What mathematics could change
 
@@ -454,6 +473,12 @@ third. Above it, the scanner does, and at eight workers the scanner and construc
 complementary pair whose joint value is many times what either shows alone. The last stages hold
 little. The decoder's true floor is still unknown, because the experiment's emission oracle left the
 word expansion in place.
+
+Measured on 26 November, that floor is now known
+([§6](#6-what-the-experiment-could-not-remove)). The pipeline alone takes 5.2–5.7 ms across one to
+ten workers. Once every other part is supplied, what binds at eight workers is the serial scan
+alone: 179.1 ms of 194.6 ms, or 92% of the wall
+([the true-floor post](2026-11-26-true-floor-and-pooled-scan.md#2-what-remains-when-one-stage-at-a-time-is-real)).
 
 Each measurement that remains has a single decision to make, and then it stops
 ([the plan](https://github.com/lmmx/mibz2/blob/37ffea9e5980f2685053a730f7e7c9014217776f/docs/journal/2026-11-24-algorithm-level/plan.md)).

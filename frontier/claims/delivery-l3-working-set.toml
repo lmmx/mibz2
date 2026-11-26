@@ -1,0 +1,36 @@
+id = "delivery-l3-working-set"
+title = "Bounding the ready-block L3 working set (READY_BYTES and SLOTS_PER_THREAD at 8-10W)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+mechanisms = ["delivery", "admission-window"]
+owned_paths = []
+needs_louis = ""
+question = """
+Primary evidence in #952 (`c71c4a56`, `cc8ba137`) and the 26 November synthesis shows that `READY_BYTES = 12 MiB` (`src/parallel.rs:74`) and `SLOTS_PER_THREAD = 4` (`src/parallel.rs:47`) let 12.0-16.3 MiB of unread decoded blocks sit in `Ready` out of the i9-10900K's 20 MiB L3 at `k = 9..10`.
+As workers speed up (`none -> PC -> SC`), `ready_bytes` climbs (`14.6 -> 16.3 MiB`) and BOTH `D` (`copy_out`: `43.7 -> 67.4 -> 77.9 ms`) and `R` (`A9`: `133.0 -> 191.2 -> 215.6 ms`) blow up together under L3 eviction — threatening to give back future `C`/`E`/`M` speedups at 8-10 workers.
+Characterise the admission-window tradeoff across `READY_BYTES` (e.g. 2, 4, 6, 8, 12 MiB) and `SLOTS_PER_THREAD` (2, 3, 4) at `k = 1, 6, 8, 9, 10` on both shipped `none` and fast-worker (`S`-ideal or `SC`) regimes, recording wall, `copy_out`, `A9`, `ready_bytes` hwm, `job_wait`, and LLC misses.
+Note (synthesis second-pass §2, derived from `Shared::full` and #962's runt count, before data): on wikidata 12 MiB ready is about 27 places with the runts, so the 4k slot window binds before the byte cap up to about k = 6, and the cap only above. At 3 slots a thread the window binds through about k = 8, at 2 through about k = 13, so those grid rows test the window. The cap's floor (k + 2 places, about 5.4 MiB at k = 10) overrides a cap below about 5-6 MiB. Report which condition stopped the scanner in each cell.
+Note (synthesis third-pass §1, derived from c71c4a56 before data; stop test untouched): the S arm (real C) has the same 16.3 MiB ready high-water mark as SC at k = 10 but A9 127.7 against 213.4 ms and copy_out 47.8 against 76.7; the SC/PC blow-up needs the C oracle's cold store. The ready time-average is 0.3-4.3 MiB. Removing all of none's A9 growth over k = 6 would be 0.9% of the wall at 8 and 2.2% at 10, and 2.5% in S at 10, so both gates sit at or above R's whole inflation. Take worker-l3-footprint first.
+"""
+why = """
+Separate from `delivery-copyout`'s API question (`StreamDecoder::read_block` already exists) and `single-pass-rle1-crc`'s `src/rle.rs` pass count: tightening the in-flight ready-block footprint directly attacks the shared 20 MiB L3 bottleneck that couples `D` and `R` at high worker counts.
+"""
+stop_test = """
+Frozen before data: smooth probe only. Admit a striated build/tuning claim only if a tighter `(READY_BYTES, SLOTS_PER_THREAD)` setting cuts `copy_out + A9/k` enough to reduce 8-10W wall by >= 2.0% on shipped `none` OR >= 4.0% on fast-worker (`S`/`SC`), without regressing `k = 6..8` wall by > 0.5% via scanner backpressure stalls, exact bytes on all blocks.
+"""
+done_when = """
+A results note under `docs/journal/2026-11-26-synthesis/` or `delivery-l3/`, a delta, `surface.tsv` row `D` updated, and either a striated tuning claim at `idea` or a `dead-ends.tsv` row.
+"""
+premises = [
+  "docs/journal/2026-11-26-synthesis/third-pass.md",
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+  "src/parallel.rs",
+]
+links = [
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+]

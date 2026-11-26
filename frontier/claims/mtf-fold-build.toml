@@ -4,21 +4,30 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "idea"
+status = "open"
 mechanisms = ["mtf", "construction-first-pass"]
 owned_paths = ["src/runs.rs", "src/open.rs"]
 needs_louis = ""
 question = """
 MTF/RLE2 emits runs capped at 127, and construction's first pass (A6a, 200 ms at 1 worker) recombines them into maximal runs. Can MTF emit maximal runs straight into construction's accumulators?
-After mtf-fold-census: the prototype behind a research feature, exact, with its registration frozen before data. The i9 run is queued through the workstation queue (standing authorisation) as a follow-on claim, not done in this session.
+Admitted after mtf-fold-census (27.6% Pass-2 fold savings on wikidata x4, 124.5 MiB runs traffic removed, OutQ16 46% overlapped with MTF's serial register chain): build the AVX2-folded prototype behind research feature `mtf-fold`, 100% byte- and error-identical, under the frozen registration at `docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md`. The i9 run is queued through the workstation queue (standing authorisation) as a follow-on claim, not done in this session.
 """
 why = """
-MTF/RLE2 has 7.5–8.4% room below the knee, and C 42% at 1 worker. Together they are the main worker-side lever once the scan has slack (pooled-scan/results).
+MTF/RLE2 (132.4 ms traced / ~98 ms M-ideal at 1w) + A6a (200.3 ms at 1w) total 332.7 ms at 1w (26.0% worker busy) and 47.5 ms/w at 8w (25.7% worker busy). Realistic AVX2-folded i9 expectation: ~40–85 ms at 1w (~3.1–6.6% wall) and ~6–13 ms at 8w behind ideal S (~3.2–7.0% wall).
 """
 stop_test = """
-The census is ungated. The prototype's kill test is registered before data, using the paired-oracle form (against S ideal at 8 workers, as pooled-scan/registration.md). Exact bytes; Miri if any unsafe.
+Frozen at docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md (paired against S ideal at k=8, L3-aware logging of A9/copy_out/ready_bytes). KILL if: K1 F/none 95% upper bound > 0.975 at k=1; K2 FS/S 95% upper bound > 0.975 at k=8; K3 F/none 95% lower bound > 1.01 at k=6 or k=8; or K4 median RSS F/none > 1.05 at any k in {1,6,8,9,10}. Exact bytes & errors; Miri clean on scalar folded path; zero Open-block fallbacks on wikidata x4.
 """
 done_when = """
-A registration, a prototype PR, a workstation run, a delta, and surface rows C-A6a and M updated.
+Prototype behind `mtf-fold` feature green in CI and Miri, exactness verified, follow-on workstation run claim opened (or queued per standing authorisation), delta written, and surface rows C-A6a and M updated.
 """
-links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 1"]
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/README.md",
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+]
+links = [
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/README.md",
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md",
+  "research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 1",
+]

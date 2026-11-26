@@ -187,7 +187,29 @@ def conflicts(cid, owned_paths, mechanisms, all_holds):
     return found
 
 
-def write_lease(cid, lease, parent, expected):
+ADMISSION_REF = "refs/heads/frontier-admission"
+
+
+def admission_snapshot():
+    """Read the admission epoch before holds; failure is not absence."""
+    rc, out = git("ls-remote", "origin", ADMISSION_REF)
+    if rc:
+        sys.exit(f"cannot read admission epoch: {out}")
+    if not out:
+        return ""
+    fields = out.split()
+    if len(fields) != 2 or fields[1] != ADMISSION_REF:
+        sys.exit("invalid remote admission epoch")
+    epoch = fields[0]
+    if not re.fullmatch(r"[0-9a-f]{40}", epoch):
+        sys.exit("invalid remote admission SHA")
+    rc, out = git("fetch", "-q", "--no-tags", "--no-write-fetch-head", "origin", epoch)
+    if rc:
+        sys.exit(f"cannot fetch admission epoch: {out}")
+    return epoch
+
+
+def write_lease(cid, lease, parent, expected, admission=None):
     """Commit `lease` onto hold/<cid> (child of `parent`) and push it, guarded by `expected`."""
     body = "".join(
         f"{k} = {str(v).lower() if isinstance(v, bool) else repr(v).replace(chr(39), chr(34))}\n"
@@ -199,13 +221,19 @@ def write_lease(cid, lease, parent, expected):
     args += ["-p", parent] if parent else []
     _, sha = git(*args, env=ME)
     ref = f"refs/heads/hold/{cid}"
-    rc, out = git(
-        "push",
-        "--porcelain",
-        f"--force-with-lease={ref}:{expected or ''}",
-        "origin",
-        f"{sha}:{ref}",
-    )
+    args = ["push", "--porcelain", f"--force-with-lease={ref}:{expected or ''}"]
+    updates = [f"{sha}:{ref}"]
+    if admission is not None:
+        # Both refs advance or neither does. Distinct IDs share this epoch.
+        epoch_args = ["commit-tree", tree, "-m", f"admission {secrets.token_hex(16)}"]
+        if admission:
+            epoch_args += ["-p", admission]
+        rc, epoch = git(*epoch_args, env=ME)
+        if rc:
+            return False, epoch
+        args += ["--atomic", f"--force-with-lease={ADMISSION_REF}:{admission}"]
+        updates.append(f"{epoch}:{ADMISSION_REF}")
+    rc, out = git(*args, "origin", *updates)
     return rc == 0, out
 
 
@@ -438,10 +466,15 @@ def take_review(cid, number, head, by, hours):
         sys.exit(f"{cid} is not an admitted, unreserved integration candidate")
     if c.get("needs_louis"):
         sys.exit(f"{cid} requires an owner decision")
+    admission = admission_snapshot()
     all_holds = holds()
     sha, lease = all_holds.get(cid, (None, None))
     if not lease or lease.get("released"):
         sys.exit(f"{cid} has no existing reservation to transfer")
+    if not live(lease) and sum(live(v) for _, v in all_holds.values()) >= config(
+        "origin/master"
+    )["max_live_holds"]:
+        sys.exit("expired reservation cannot be revived at capacity")
     if lease.get("phase") == "integration" and dt.datetime.fromisoformat(lease["expires"]) > now():
         sys.exit(f"{cid} already has an integration holder; wait for yield or expiry")
     if lease.get("phase") in ("integration", "parked") and lease.get("pr") != number:
@@ -460,7 +493,7 @@ def take_review(cid, number, head, by, hours):
         "phase": "integration", "pr": number, "pr_head": head,
         "expires": (now() + dt.timedelta(hours=hours)).isoformat(), "released": False,
     }
-    ok, out = write_lease(cid, updated, sha, sha)
+    ok, out = write_lease(cid, updated, sha, sha, admission)
     if not ok:
         sys.exit(f"integration not acquired: {out}")
     print(f"acquired integration {cid} for PR #{number}; your session is {updated['session']}")
@@ -522,14 +555,14 @@ def finish_review(cid, number, head, *, cancelled=False):
 
 
 def reconcile_integrations(all_holds):
-    """Recover merged reservations before admitting new work; never release on uncertainty."""
+    """Recover terminal reservations before admitting new work; never release on uncertainty."""
     for cid, (_, lease) in sorted(all_holds.items()):
         if lease.get("released") or lease.get("phase") not in ("integration", "parked"):
             continue
         try:
             pr = read_pr(lease["pr"])
-            if pr.get("merged") is True and pr.get("state") == "closed":
-                finish_review(cid, lease["pr"], lease["pr_head"])
+            if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
+                finish_review(cid, lease["pr"], lease["pr_head"], cancelled=not pr["merged"])
         except (SystemExit, KeyError, TypeError, ValueError):
             print(f"{cid}: integration reconciliation unavailable; reservation retained", file=sys.stderr)
     return holds()
@@ -927,6 +960,7 @@ def claim(cid, by, hours):
             sys.exit("cannot verify pending work before acquisition")
         if cid in pending:
             sys.exit(f"{cid} already has a pending PR; finish it before starting again")
+    admission = admission_snapshot()
     all_holds = holds()
     if any(v.get("phase") in ("integration", "parked") and not v.get("released") for _, v in all_holds.values()):
         all_holds = reconcile_integrations(all_holds)
@@ -956,7 +990,7 @@ def claim(cid, by, hours):
         "base": git("rev-parse", "origin/master")[1],
         "released": False,
     }
-    ok, out = write_lease(cid, new, sha, sha)
+    ok, out = write_lease(cid, new, sha, sha, admission)
     if not ok:
         sys.exit(f"not acquired (someone else moved hold/{cid} first, or the push failed):\n{out}")
     print(f"acquired {cid} until {new['expires']}; your session is {new['session']}")
@@ -1026,9 +1060,10 @@ def main(argv):
             sys.exit(f"{cid} has an open flag")
         print(f"{cid}: held live by this session; no open flag")
     elif cmd == "renew":
+        admission = admission_snapshot()
         sha, lease = mine(argv[2], opt("--session"))
         updated = {**lease, "expires": (now() + dt.timedelta(hours=hours)).isoformat()}
-        ok, out = write_lease(argv[2], updated, sha, sha)
+        ok, out = write_lease(argv[2], updated, sha, sha, admission)
         if not ok:
             print(f"not renewed:\n{out}", file=sys.stderr)
             return 1

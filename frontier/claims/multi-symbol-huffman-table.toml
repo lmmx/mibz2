@@ -1,0 +1,30 @@
+id = "multi-symbol-huffman-table"
+title = "Three or four symbols a root-table entry in the scanner's Huffman decode"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "done"
+mechanisms = ["scan"]
+owned_paths = []
+needs_louis = ""
+question = """
+The scanner binds above about 8 workers, and 81% of its work is the Huffman decode (A3), at 1.41 ns a symbol on the i9 (§57). The shipped root table (src/huff.rs: 10 bits, one or two whole codes an entry, branchless on the count) already needs only 0.5556 lookups a symbol on wikidata (examples/huff_lookup_census.rs). That is about 13 cycles a lookup. Entries holding up to 3 or 4 codes at the same 10 bits would need 0.4876 or 0.4712 (-12.2% or -15.2% lookups). Wider roots gain more lookups but leave the L1d, since a block's six tables are hot and each is touched nearly everywhere.
+Prototype in examples/ (no src/ change): a K = 3 entry packed into 4 bytes (today's 24 KiB of tables) and a K = 4 entry in 8 bytes (48 KiB), each in the shipped group loop's shape, against a copy of the shipped K = 2 loop. Time ns a symbol on wikidata's full blocks, and the table build a block. Gate the build on the block's selector count, so that the 198 runts keep a cheap table.
+"""
+why = """
+§75 made multi-symbol decoding the first engineering lead for the top speed, on record 129's conjecture of 13-17% off the best wall. That conjecture assumed one lookup a symbol, but pairs already ship. The census puts the K = 3-4 ceiling at about 10-12% of the scanner, roughly 5-7% of the 8-worker wall by course-opportunities' bottleneck migration. That is still the largest scanner-side lever not on the frontier.
+"""
+stop_test = """
+Frozen before data. On wikidata's full blocks, byte-identical symbols to the shipped decoder on every block, 7 interleaved repeats: admit a build claim only if the better prototype's group loop plus its table builds cut A3's time (decode + tables, summed over the corpus's 431 blocks) by at least 8% against the shipped loop measured the same way, with no repeat's spread overlapping. Otherwise STOP, with a dead-ends.tsv row. Below 8% of A3 (about 6.5% of the scanner) the 8-worker wall gain falls under the 3% line.
+"""
+done_when = """
+A results note beside docs/journal/2026-11-26-explore/scan-lookups-and-runts.md, a delta, surface.tsv row S updated, and a build claim admitted or a dead-ends.tsv row.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/scan-lookups-and-runts.md",
+  "examples/huff_lookup_census.rs",
+  "src/huff.rs",
+  "docs/journal/2026-11-24-algorithm-level.md",
+]
+links = ["docs/journal/2026-11-26-explore/scan-lookups-and-runts.md"]

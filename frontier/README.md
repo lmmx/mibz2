@@ -7,7 +7,7 @@ There is no coordinator and no routing. The repository's files are the shared st
 <!-- brief -->
 ## The loop: what every agent does (read this, then act)
 
-0. **Only when asked.** Run this loop when someone says `take one`, `swarm` or another lexicon word. A question gets an answer, not a PR.
+0. **Participation, not dispatch.** The lexicon starts work explicitly, but is not a password. During a conversation about this repository, a concrete, useful contribution clearly implied by the discussion is also an invitation to make it in the appropriate place, within standing authority. Answer questions directly; when the discussion exposes an actionable gap, improve the shared state rather than asking the maintainer to relay a message or repeat permission. Inspect current work first, respect holds, scope, capability, evidence, protected paths, merge gates and expenditure limits; don't duplicate an active claim or invent work. Explicit read-only requests (`where are we`, `surface`), unrelated queries and genuinely ambiguous or RULES D decisions remain read-only or escalated as appropriate. One contribution and a delta, then leave the state intelligible.
 1. **Read the state.** Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`. It shows Needs Louis, open flags, the live holds and what you can take. With no shell, read issue #943 (the status page, published) and `frontier/claims/`; read-only work (review, explore, synthesise) needs no hold.
    - **Capabilities:** `shell`, `repo-write`, `rust`, `web`, `i9` (Louis's workstation), `cloud-session`, `math`, `long-context`.
 2. **Take one thing:** `frontier.py claim <id> --by <agent-kind> [--hours N]`.
@@ -138,6 +138,8 @@ The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-
 | `config.toml` | the two issues the optional Action mirrors to | rarely changed |
 | `tools/frontier.py` | brief, status, check, claim, release; standard library only | anyone, keeping `check` small |
 
+**Admission and integration safety.** Acquisitions, renewals and review transfers compare-and-swap a shared admission epoch together with the individual lease using an atomic push. A competing admission invalidates the decision; retry from fresh state. The GitHub PR API is required for safe acquisition on a GitHub origin; unavailable data means no new acquisition. Participant independence is declared, not authenticated. The next acquisition reconciles exact merged and closed-unmerged integration reservations. Do not raise the cap until the updated client has been independently tested and deployed to all participating checkouts; older clients do not use the shared epoch and must not acquire or renew. No new server or dispatcher is required.
+
 **Nothing depends on GitHub Actions.** Anyone regenerates `STATUS.md` locally, any time, with `frontier.py status`. `.github/workflows/frontier.yml` only mirrors it to issue #943 ("Frontier status") and #944 ("Needs Louis"), and runs `check` on every PR as a courtesy.
 
 ## The claim schema
@@ -168,13 +170,19 @@ Blog cards add `stage` (idea → outline → draft → review → revise → rea
 
 **One claim, one session.** Work that spans sessions (a census, then a build, then a workstation run) is several claims, each admitting the next. Don't put the i9 in a claim's `needs` unless that session itself runs on the workstation; runs go through the queue.
 
-Any agent moves any card forward one stage, and records the move in a delta:
-- **outline:** the claim, the reader, the takeaways first (`write-blog-post`);
-- **draft:** the post, with figures made by the `dataviz` method;
-- **review:** done by a different agent from the drafter. It is a simulated-reader pass, and every number is checked against its source;
-- **revise;**
-- **ready:** `publish-page` has passed on the final head (this stage needs `shell`);
-- **published:** merged.
+**Standing publishing authority (Louis, 26 November 2026): publish, then iterate.** Any agent may
+merge its own or another agent's blog-only PR once the applicable mechanical merge checks and
+the strict site build and `check_render.py` pass. No owner approval, independent editorial approval,
+extra review round, preview inspection, or deployment completion is a prerequisite. Never leave a
+ready blog PR for the maintainer to merge. Correct or improve the live post in subsequent small
+PRs; deployment checks are observations after merging, not gates.
+
+The card stages are useful records of work, not a mandatory serial approval pipeline:
+- **outline/draft:** the claim, reader, takeaways, sourced numbers and a first figure (`write-blog-post`, `dataviz`);
+- **ready/published:** put the first version through `publish-page` and merge promptly; record publication and release the hold;
+- **review/revise:** independent simulated-reader and source-checking passes are valuable and may happen before or after publication, but must not hold an otherwise publishable post. A follow-up review does not unpublish a card.
+
+The blog-only exception covers ordinary site content, its figures, navigation and blog-card/delta updates. It does not cover protected instructions, CI workflows, production code, releases, spending or experimental adoption gates. Exact-head merge, attribution and the other applicable mechanical checks still hold.
 
 **The site's rules still hold:**
 - no agent names in a post;

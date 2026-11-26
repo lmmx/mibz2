@@ -1103,6 +1103,60 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(mod.holds()["c1"][1]["released"])
 
 
+    def test_atomic_admission_distinct_ids_at_last_slot(self):
+        """Distinct claims cannot both acquire the last slot."""
+        seed = self.sb.clone("capacity-seed")
+        for cid in ("c1", "c2"):
+            result = self.sb.run_frontier(seed, "claim", cid, "--by", "seed")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        mods = [_load_frontier_module(self.sb.clone(f"contender-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i):
+            mod = mods[i]
+            original = mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with mock.patch.object(mod, "write_lease", side_effect=write):
+                try:
+                    mod.claim(("c3", "c4")[i], f"agent-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 3)
+
+    def test_expired_producer_cannot_revive_at_capacity(self):
+        _, _, head, pr = self._submitted_review()
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+        sha, lease = mod.holds()["c1"]
+        expired = {**lease, "expires": "2000-01-01T00:00:00+00:00"}
+        self.assertTrue(mod.write_lease("c1", expired, sha, sha)[0])
+        mod.claim("c4", "fresh", 1)
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, head, "reviewer", 1)
+        self.assertEqual(sum(mod.live(v) for _, v in mod.holds().values()), 3)
+
+    def test_next_acquisition_recovers_closed_unmerged_integration(self):
+        _, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        closed = {**pr, "state": "closed", "merged": False}
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=closed):
+            fresh.claim("c4", "fresh", 1)
+        lease = fresh.holds()["c1"][1]
+        self.assertTrue(lease["released"])
+        self.assertEqual(lease["terminal"], "closed-unmerged")
+
     def test_next_acquisition_recovers_abandoned_merged_integration(self):
         """A new swarm iteration need not ask the old reviewer to release a merged PR."""
         author, _, head, pr = self._submitted_review()

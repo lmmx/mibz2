@@ -1,10 +1,10 @@
 id = "delivery-copyout"
-title = "Delivery's 48 ms serial copy-out"
+title = "Delivery's serial copy-out (29-34 ms to 8 workers, 44-78 ms at 10; the 48 ms was a cold-store artifact)"
 kind = "probe"
 zone = "smooth"
 needs = ["shell", "rust"]
 priority = 3
-status = "open"
+status = "done"
 mechanisms = ["delivery"]
 owned_paths = []
 needs_louis = ""
@@ -24,4 +24,9 @@ Characterisation only. A design proposal comes with costs; any API change is a l
 done_when = """
 A note with measurements, a delta, and surface row D updated.
 """
+premises = [
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+  "docs/journal/2026-11-26-synthesis/second-pass.md",
+]
 links = []

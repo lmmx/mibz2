@@ -1,0 +1,34 @@
+id = "bidi-preshifted-inline"
+title = "Pre-shifted back-side inline table inside full bidirectional emission"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "dropped"   # superseded: #958 idea 2c measured this end-to-end (synthesis second-pass §4)
+mechanisms = ["spelling"]
+owned_paths = []
+needs_louis = ""
+question = """
+spelling-census (#951) showed that pre-storing right-aligned back-side 16 B inline words (`inline_back`) in A6b recovers 26.3-26.8% of decoupled `E_consume` (`0.732-0.737x`, ~61-66 ms on #952's warm-cache ~230-245 ms i9 baseline) on 232/233 Wikidata blocks without leaving bidirectional traversal or changing A6c wiring.
+However, #951 measured `bidi_pre_shifted` only on decoupled `E_consume` (without `edges[]` pointer chasing). Inside full `emit_bidirectional`, random edge-walk load latency may partially overlap the `u128 << 8*(16 - lb)` shift ALU cost, and doubling the inline table (~18 KiB -> ~35 KiB median) may affect L1d behavior when `edges[]` is live.
+Measure `bidi_pre_shifted` end-to-end inside a full `A6b + emit_bidirectional` mirror (`examples/`) on `wikidata`, `wikidata x4`, and `ab gen` corpora (at least 5 interleaved repeats, byte-identical to `bwt::walk`).
+"""
+why = """
+If the saving survives inside full `emit_bidirectional`, it yields ~4-5% of 1-worker wall (~61-66 ms) with a minimal, low-risk dictionary table addition while the larger `forward-emission` rewrite is designed and built.
+"""
+stop_test = """
+Frozen before data: smooth probe only. Admit a striated build claim only if net `(A6b + A7)` time drops by at least 2.5% of 1-worker wall (at least 6.0% of combined `A6b + A7` on the mirror, equivalent to >= ~33 ms on i9) across `wikidata` and `wikidata x4`, with 100% byte-identical output to `bwt::walk` and no regression > 1% on `runs`/`text`. Otherwise record a dead-ends.tsv entry and leave bidirectional spelling removal to `forward-emission`.
+"""
+done_when = """
+A short results note under `docs/journal/2026-11-24-algorithm-level/spelling/`, a delta, and either a build claim at `idea` or a `dead-ends.tsv` row.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/spelling/README.md",
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+  "src/open.rs",
+]
+links = [
+  "docs/journal/2026-11-24-algorithm-level/spelling/README.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+]

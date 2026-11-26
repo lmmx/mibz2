@@ -314,12 +314,26 @@
     "section": " · Research blog",
     "title": "Complementary bottlenecks: reading the ideal-parts matrix"
   },
+  "assets/social/blog-2026-11-26-dropping-the-coordinator.png": {
+    "description": "Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.",
+    "foot": "lmmx.github.io/mibz2 · 26 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Dropping the coordinator: atomic file locks on a measured frontier"
+  },
   "assets/social/blog-2026-11-26-from-bottlenecks-to-better-algorithms.png": {
     "description": "How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them.",
     "foot": "lmmx.github.io/mibz2 · 26 November 2026",
     "kind": "synthesis",
     "section": " · Companion to Complementary bottlenecks: reading the ideal-parts matrix",
     "title": "From bottlenecks to better algorithms: induction schedules, deforestation, forward lanes and a pooled scan"
+  },
+  "assets/social/blog-2026-11-26-true-floor-and-pooled-scan.png": {
+    "description": "Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.",
+    "foot": "lmmx.github.io/mibz2 · 26 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "The decoder's true floor and the limits of a pooled scan"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

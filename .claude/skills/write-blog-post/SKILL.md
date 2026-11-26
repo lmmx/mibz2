@@ -27,15 +27,18 @@ The rules come from three sources, cited by tag:
 **Iterate, ship, re-ship** (Louis, 22 November 2026, after four posts went out big bang and each
 took three full rewrites before anything was live). A post is live first and right second:
 - **Version 1 within minutes.** Read the sources, write the result, the key numbers and one
-  figure, run the strict build and `check_render.py`, open the PR, and have it merged. No
-  screenshot loop, no prose-share trimming and no second figure before version 1 is live.
+  figure, run the strict build and `check_render.py`, open the PR, and merge it yourself once
+  the applicable mechanical checks pass. Standing authority (Louis, 26 November): no human
+  approval, independent editorial sign-off, screenshot loop, prose-share trimming, preview
+  or deployment wait before publication. This applies to subsequent blog-only PRs too.
 - **Then re-ship in small PRs,** each merged as soon as it builds: the framing, further
   figures, fact-check corrections, prose trims, the reader's corrections. Each PR is one
   change, and each one goes out.
 - **Never hold a draft to perfect it.** A correction from Louis or the Coordinator lands on a
   live post as the next small PR, not as another unpublished rewrite.
-- **Live means deployed.** After a merge, check the page at https://lmmx.github.io/mibz2/ and
-  report it live only once it serves the new version.
+- **Live means deployed.** Check the page at https://lmmx.github.io/mibz2/ after merging and
+  report it live only once it serves the new version. Deployment is an observation, never a
+  gate or a reason to hold a blog claim or wait for the maintainer.
 
 The steps below are what each version improves toward, not gates before the first one.
 
@@ -324,7 +327,7 @@ the news plainly and well.
 - at most two figures;
 - Flesch reading ease from 35 to 70: below 35 is dense, above 70 reads as a primer.
 
-Joy can't be measured, so the reviewer and the coordinator judge it, and say so in the PR.
+Joy can't be measured, so a reader judges it and records useful findings; this does not hold publication.
 Defensive caveats ("it is not the default") never go in the dek. In the body, frame them as
 what comes next, not as an apology.
 
