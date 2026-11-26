@@ -1,9 +1,9 @@
-id = "worker-l3-footprint"
+id = "warm-paired-oracle-k1"
 holder = "antigravity"
-session = "d9d729c8dcdf"
-claimed_at = "2026-11-26T23:09:21+00:00"
-expires = "2026-11-27T07:09:21+00:00"
+session = "8385f8fc5006"
+claimed_at = "2026-11-26T23:09:41+00:00"
+expires = "2026-11-27T07:09:41+00:00"
 owned_paths = []
-mechanisms = ["delivery", "rle1-crc"]
+mechanisms = ["bench-methodology"]
 base = "4083fd0266e1c5f771ae85fb98222c13986ad397"
 released = false
