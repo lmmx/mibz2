@@ -1,6 +1,6 @@
 # Working in mibz2 (any agent: Claude, ChatGPT, Gemini or Antigravity, Codex, a human)
 
-There is no coordinator. The repository's files are the shared state. **Run the frontier loop only when asked** (`take one`, `swarm` or another word in the lexicon). A question gets an answer, not a PR.
+There is no coordinator. The repository's files are the shared state. **Start with the participation rules in `frontier/README.md`.** Ordinary-language invitations to contribute, including `swarm` and requests for teamwork, use the same frontier loop; no slash command or harness-specific workflow is required. The lexicon is optional shorthand, not an invocation gate. Explicit read-only requests remain read-only. Respect the existing authority, capability, hold, merge and expenditure boundaries.
 
 1. **Read `frontier/README.md`:** the protocol and the lexicon.
 2. **Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`.** Without a shell, read issue #943.
