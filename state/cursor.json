@@ -90,12 +90,11 @@
     6990632934,
     6997166415,
     7009759290,
-    7021181046
-  ],
-  "in_progress": [
+    7021181046,
     7073889492,
     7205094582
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -184,7 +183,9 @@
     "6990632934": 6990784273,
     "6997166415": 6997279145,
     "7009759290": 7009851110,
-    "7021181046": 7021274126
+    "7021181046": 7021274126,
+    "7073889492": 7205197318,
+    "7205094582": 7205197318
   },
   "last_rebuilt_from": 7205129833,
   "migrated_from": {
@@ -813,15 +814,17 @@
     },
     "7073889492": {
       "comment_id": 7073889492,
-      "status": "complete",
-      "progress": "Record committed through channel 7205129833; REVIEW pending.",
-      "work_commit": "bab2c5a722d6b83c69b1b17192157a184792b21c"
+      "status": "finished",
+      "progress": "Record committed; REVIEW 7205197318 published and read back.",
+      "work_commit": "bab2c5a722d6b83c69b1b17192157a184792b21c",
+      "review_id": 7205197318
     },
     "7205094582": {
       "comment_id": 7205094582,
-      "status": "complete",
-      "progress": "Record committed through channel 7205129833; REVIEW pending.",
-      "work_commit": "bab2c5a722d6b83c69b1b17192157a184792b21c"
+      "status": "finished",
+      "progress": "Record committed; REVIEW 7205197318 published and read back.",
+      "work_commit": "bab2c5a722d6b83c69b1b17192157a184792b21c",
+      "review_id": 7205197318
     }
   },
   "last_record_commit": "bab2c5a722d6b83c69b1b17192157a184792b21c"
