@@ -101,9 +101,13 @@ def fastest(byc, cores_json):
 
 # the zero-copy floor (ideal-parts/registration-floor.md): all real; all ideal with zero-copy
 # handovers (E as supplied codes, its word spelling run); all ideal with E_full (F: emission's
-# word spelling removed too); and that with delivery real. Every decode counts its last level's
+# word spelling removed too); that with delivery real; and that with each other part real in turn.
+# Every decode counts its last level's
 # misses (pmu group 5) and the memory controllers' traffic where it can (imc)
-FLOOR_ARMS = ("none", ALL, "SFCMRD", "SFCMR")
+# the all-but-X arms: SFCMRD with each part real in turn (all-but-D is SFCMR), each part's room
+# against the zero-copy floor
+FLOOR_ALL_BUT = ("FCMRD", "SCMRD", "SFMRD", "SFCRD", "SFCMD")
+FLOOR_ARMS = ("none", ALL, "SFCMRD", "SFCMR", *FLOOR_ALL_BUT)
 FLOOR_COUNTS = (1, 6, 7, 8, 9, 10)
 FLOOR_TRACE_BLOCKS = 4
 FLOOR_TREAT = ["pmu 5", "imc 1"]

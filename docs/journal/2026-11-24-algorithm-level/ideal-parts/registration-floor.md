@@ -25,14 +25,17 @@ The recipe refuses a head without the zero-copy modes (a `git grep` for `E_full`
 
 ## The design
 
-**Four arms,** every handover zero-copy, at 1, 6, 7, 8, 9 and 10 workers:
+**Nine arms,** every handover zero-copy, at 1, 6, 7, 8, 9 and 10 workers:
 
 | arm | what is ideal |
 |---|---|
 | `none` | nothing: the decoder as shipped |
 | `SECMRD` | all six parts. Emission ideal on the supplied codes: its chase removed, its word spelling (`E_consume`) run |
 | `SFCMRD` | all six, emission in `E_full`: its word spelling removed too |
-| `SFCMR` | as `SFCMRD`, with delivery real |
+| `SFCMR` | as `SFCMRD`, with delivery real (all but D) |
+| `FCMRD`, `SCMRD`, `SFMRD`, `SFCRD`, `SFCMD` | as `SFCMRD`, with the scan, emission, construction, MTF/RLE2 or RLE1/CRC real in turn (all but S, E, C, M, R) |
+
+The all-but-X arms were added at the Coordinator's decision of 26 November, before any data. Against a zero-copy floor, they give each part's room net of its handover as a measurement, where the full matrix could only bound it (`results/full/README.md` §4).
 
 **Fixed across every cell, as in the full matrix:**
 - the scanner is pinned to the first CPU of the core whose pinned calibration runs fastest, with every other thread masked off that core;
@@ -40,19 +43,18 @@ The recipe refuses a head without the zero-copy modes (a `git grep` for `E_full`
 - the record pass (all six stores, held in every arm) and the check pass, outside every clock.
 
 **Size and order:**
-- 24 cells, each once a block in 8 randomised blocks;
+- 54 cells, each once a block in 8 randomised blocks;
 - the ledgers are on in an extra decode of each cell in the first 4 blocks;
-- 288 decodes in all, every wall a decode with the ledgers off;
+- 648 decodes in all, every wall a decode with the ledgers off;
 - each decode is limited to 120 s, and one past it is killed and recorded as failed.
-- **Estimated time:** 10 to 14 minutes on the i9 (about 2.3 s a process; the first full run came in a third over its estimate).
+- **Estimated time:** 25 to 35 minutes on the i9 (about 2.3 s a process; the first full run came in a third over its estimate).
 
 **The counters, every decode:**
 - cycles, reference cycles, and the last level's load and store misses (perf group 5);
 - the memory controllers' read and write traffic (the uncore IMC's `data_reads` and `data_writes`), system-wide over the timed decode, where the machine allows it. Where it can't be opened (no such PMU, or `perf_event_paranoid` above 0 without CAP_PERFMON), each decode records why, and the last level's misses and the clock (cycles over reference cycles) stand in.
+- The recipe says at its start that `sudo sysctl kernel.perf_event_paranoid=0` enables the IMC counters, and carries on without them otherwise. Whether to set it is Louis's call.
 
-**Left out, for the budget:**
-- the all-but-X arms, each part's share of the zero-copy floor (6 more arms, about 2½ times the run);
-- the unpinned link.
+**Left out, for the budget:** the unpinned link.
 
 ## The measures (all reported, none decided on)
 
@@ -64,8 +66,14 @@ At each count k, the arms are paired within a block. Every figure is given with 
 4. **E_consume** on the wall: `SECMRD` − `SFCMRD`, paired by block (ms). Also, from the `SECMRD` traces, the `E_consume` ledger entry, summed and per worker.
 5. **Delivery's share with everything else free:** `SFCMR` − `SFCMRD`, paired by block (ms).
 6. **The handover,** from the `SECMRD` traces, each oracle's own ledger entry, summed over its threads and per thread: `hand_S`, `HandE_deliver`, `hand_C`, `hand_M` and `hand_R`. Also their per-thread sum on the workers, and its share of Residual A.
-7. **The decomposition** at each k: Residual A = E_consume (on the wall) + Residual B, with the handover (6) reported beside it as the copies' part of the plumbing.
-8. **Beside them:**
+7. **Each part's room against the zero-copy floor:** `SFCMRD` over the arm with that part alone real (all but it ideal), the geometric mean of the blocks' ratios. It is labelled as `registration.md` labels a room:
+   - **ROOM** iff its interval's upper bound is ≤ 0.95;
+   - **NO ROOM** iff the interval lies within [0.98, 1.02];
+   - **UNRESOLVED** otherwise.
+
+   MASKED needs the pairs, which this run lacks. For E, the arm with emission real (`SCMRD`) runs both the walk and the spelling, so E's room here is the whole of emission's work against `E_full`.
+8. **The decomposition** at each k: Residual A = E_consume (on the wall) + Residual B, with the handover (6) reported beside it as the copies' part of the plumbing.
+9. **Beside them:**
    - each arm's clock (cycles over reference cycles × 3.7 GHz);
    - the last level's misses per decode;
    - the memory controllers' traffic per decode and over its wall (GB/s), where read;
@@ -86,6 +94,7 @@ At each count k, the arms are paired within a block. Every figure is given with 
   - M, A5;
   - R, A9;
   - D, the reader's `copy_out` (in the arms with D ideal);
+  - each part's ideal arms are every arm but `none` with it ideal, the all-but-X arms included;
 - the pin is broken in more than 10% of the pinned traces.
 
 **INCOMPLETE** if any traced decode fails an identity.
@@ -100,5 +109,5 @@ Its other estimates are shown beside the results, unscored: Residual A of about 
 
 ## Checks before the data
 
-- **`results/analysis/test_zero_copy_floor.py`:** the analysis on synthetic runs with known walls. Every measure is recovered, the prediction is scored both ways, and each VOID and INCOMPLETE fires.
+- **`results/analysis/test_zero_copy_floor.py`:** the analysis on synthetic runs with known walls, 26 checks. Every measure is recovered, the rooms against the floor among them (ROOM and NO ROOM both shown), the prediction is scored both ways, and each VOID and INCOMPLETE fires.
 - **The recipe's DRY on the container:** one block, after rebasing onto Antigravity's merged PR.

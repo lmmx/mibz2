@@ -2305,13 +2305,13 @@ bench-ideal-matrix DRY="":
 # frozen before the data): the decoder's residual with the oracles' handover copies removed, on
 # Antigravity's zero-copy oracles and #909's harness. Characterisation: it decides nothing, and
 # nothing is adopted.
-# - Four arms (all real; all six ideal, zero-copy; that with E_full; that with delivery real) at
-#   1, 6, 7, 8, 9 and 10 workers, the scanner pinned to its fastest core and the rest masked off,
-#   the 100 ms pre-spin, 8 randomised blocks with traces in the first 4.
+# - Nine arms (all real; all six ideal, zero-copy; that with E_full; and that with each part real
+#   in turn) at 1, 6, 7, 8, 9 and 10 workers, the scanner pinned to its fastest core and the rest
+#   masked off, the 100 ms pre-spin, 8 randomised blocks with traces in the first 4.
 # - Every decode counts its last level's misses and, where the machine allows it, the memory
 #   controllers' traffic (else the reason is recorded); each is limited to 120 s.
 # - The analysis: ideal-parts/results/analysis/zero_copy_floor.py.
-# About 10 to 14 minutes. DRY (one block, a 2 s pre-warm; not evidence) checks the wiring.
+# About 25 to 35 minutes. DRY (one block, a 2 s pre-warm; not evidence) checks the wiring.
 #   just submit bench-zero-copy-floor
 bench-zero-copy-floor DRY="":
     #!/usr/bin/env bash
@@ -2336,6 +2336,10 @@ bench-zero-copy-floor DRY="":
     echo "bench-zero-copy-floor (docs/journal/2026-11-24-algorithm-level/ideal-parts/registration-floor.md; diagnostic) at $(git rev-parse HEAD): master $PIN with the zero-copy oracles, the character, scan-oracle and ideal-* features, $BLOCKS blocks (traces in the first 4), the 100 ms pre-spin, a ${TIMEOUT} s limit a decode, seed $SEED; the scanner pinned to a core of its own"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$dry" ] || echo "bench-zero-copy-floor: DRY RUN: one block, no settle; the wiring only, not evidence" | tee "$O/DRY-RUN.txt"
+    # the memory controllers' counters need perf_event_paranoid <= 0 (Louis's call); without it the
+    # run carries on with the last level's misses and the clock
+    [ "$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo 2)" -le 0 ] 2>/dev/null \
+      || echo "bench-zero-copy-floor: the IMC (memory bandwidth) counters are off: 'sudo sysctl kernel.perf_event_paranoid=0' enables them; carrying on without them"
     CH=$PWD/target/release/examples/character
     AB=$PWD/target/release/examples/ab
     X4=$W/wikidata-x$COPIES.bz2

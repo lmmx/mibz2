@@ -7,7 +7,8 @@ diagnostic; it decides nothing, and nothing is adopted).
 Its input is bench-zero-copy-floor's bundle: the plan (bench/ideal_parts.py plan --design floor) and
 runs.jsonl (examples/character.rs `--one`, one record a decode). The arms: `none`; `SECMRD`, every
 part ideal with zero-copy handovers (emission's word spelling run); `SFCMRD`, emission in E_full
-(the spelling removed too); `SFCMR`, that with delivery real.
+(the spelling removed too); `SFCMR`, that with delivery real; and SFCMRD with each other part real
+in turn (`FCMRD`, `SCMRD`, `SFMRD`, `SFCRD`, `SFCMD`).
 
 At each count k, the arms paired within a block, each figure with its 95% t-interval:
 1. the floor, SECMRD over none (geometric mean of the blocks' ratios);
@@ -16,7 +17,9 @@ At each count k, the arms paired within a block, each figure with its 95% t-inte
 4. E_consume on the wall, SECMRD - SFCMRD (ms, paired), and its ledger entry in SECMRD's traces;
 5. delivery's share with everything else free, SFCMR - SFCMRD (ms, paired);
 6. the handover, each oracle's ledger entry in SECMRD's traces, summed and per thread; the workers'
-   per-thread sum and its share of Residual A.
+   per-thread sum and its share of Residual A;
+7. each part's room against the zero-copy floor, SFCMRD over the arm with it alone real, labelled
+   as registration.md labels a room (ROOM, NO ROOM, UNRESOLVED).
 
 **VOID** (exit 1), registration.md's rules: not the i9-10900K; a decode missing, duplicated or failed
 (a timeout, or ideal parts not wholly replayed, included); an output not the registered size or a
@@ -41,8 +44,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ideal_parts import clock, gm, interval  # noqa: E402
 
-ARMS = ("none", "SECMRD", "SFCMRD", "SFCMR")
 A, B, BD = "SECMRD", "SFCMRD", "SFCMR"
+# the all-but-X arms: B with each part real in turn (all-but-D is BD)
+ALL_BUT = {"S": "FCMRD", "E": "SCMRD", "C": "SFMRD", "M": "SFCRD", "R": "SFCMD", "D": BD}
+ARMS = ("none", A, B, BD, *(ALL_BUT[p] for p in "SECMR"))
+# registration.md's room labels, here on each part's room against the zero-copy floor
+ROOM_UPPER, NO_ROOM = 0.95, (0.98, 1.02)
 # the zero-copy oracles' ledger entries for emission's two halves (Antigravity's names; the
 # recipe's guard checks the binary has them)
 HAND_E_DELIVER = "hand_E_deliver"
@@ -165,7 +172,7 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
                     )
         # E_full removes the spelling: E_consume in the F arms against SECMRD's
         r = [busy(x, "Worker", (E_CONSUME,)) for x in traces(k, A)]
-        i = [busy(x, "Worker", (E_CONSUME,)) for a in (B, BD) for x in traces(k, a)]
+        i = [busy(x, "Worker", (E_CONSUME,)) for a in ARMS if "F" in a for x in traces(k, a)]
         if r and i and statistics.fmean(r) > 0:
             share = statistics.fmean(i) / statistics.fmean(r)
             removed.append((k, "E_consume", share))
@@ -229,6 +236,28 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
         row(k, "residual B ms", rb)
         row(k, "E_consume wall ms", ec)
         row(k, "D share ms", ds)
+
+    pr(
+        "\n## Each part's room against the zero-copy floor (SFCMRD over all but it ideal; geometric means, 95% intervals)\n"
+    )
+    pr(
+        "registration.md's labels: ROOM iff the upper bound <= 0.95; NO ROOM iff within [0.98, 1.02]; else UNRESOLVED"
+    )
+    pr("(MASKED needs the pairs, which this run lacks)\n")
+    pr("k    " + "".join(f"{p:<36}" for p in ALL_BUT))
+    for k, w in walls.items():
+        cells_ = []
+        for part, arm in ALL_BUT.items():
+            r = gm([math.log(w[B][b] / w[arm][b]) for b in range(blocks)])
+            if r[2] <= ROOM_UPPER:
+                lab = "ROOM"
+            elif NO_ROOM[0] <= r[1] and r[2] <= NO_ROOM[1]:
+                lab = "NO ROOM"
+            else:
+                lab = "UNRESOLVED"
+            cells_.append(f"{r[0]:.4f} [{r[1]:.4f}, {r[2]:.4f}] {lab:<10}")
+            row(k, f"room {part} against the floor", r, lab)
+        pr(f"{k:<4} " + " ".join(cells_))
 
     pr(
         "\n## The handover and the spelling in SECMRD's traces (ms; summed over the part's threads, and per thread; 95% over the traces)\n"

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Checks of zero_copy_floor.py on synthetic runs with known walls. All real is 200 ms at every count
 (1300 ms at 1 worker); SECMRD is 60 ms (273 at 1), SFCMRD 16 ms (at 1: inside Antigravity's 14-19),
-SFCMR 30 ms. The handovers and the spelling are in SECMRD's traces. Every measure is recovered, the
+SFCMR 30 ms, and the all-but-X arms (S real 40, E real 56, C real 16.2, M
+real 16, R real 20 ms). The handovers and the spelling are in SECMRD's traces. Every measure is recovered, the
 prediction is scored both ways, and each VOID and INCOMPLETE fires.
 
     python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/test_zero_copy_floor.py
@@ -34,8 +35,10 @@ ACTS = [
     "lock_jobs", "hand_S", zf.HAND_E_DELIVER, zf.E_CONSUME, "hand_C", "hand_M", "hand_R",
     "copy_out", "resid",
 ]  # fmt: skip
-WALL = {"none": 0.200, "SECMRD": 0.060, "SFCMRD": 0.016, "SFCMR": 0.030}
-WALL1 = {"none": 1.300, "SECMRD": 0.273, "SFCMRD": 0.016, "SFCMR": 0.040}
+WALL = {"none": 0.200, "SECMRD": 0.060, "SFCMRD": 0.016, "SFCMR": 0.030,
+        "FCMRD": 0.040, "SCMRD": 0.056, "SFMRD": 0.0162, "SFCRD": 0.016, "SFCMD": 0.020}  # fmt: skip
+WALL1 = {"none": 1.300, "SECMRD": 0.273, "SFCMRD": 0.016, "SFCMR": 0.040,
+         "FCMRD": 0.030, "SCMRD": 0.270, "SFMRD": 0.0162, "SFCRD": 0.016, "SFCMD": 0.020}  # fmt: skip
 
 
 def plan():
@@ -81,7 +84,7 @@ def records(fail=None, seed=3):
                 w = (WALL1 if c["k"] == 1 else WALL)[c["arm"]]
                 d = "D" in c["arm"]
                 x = {"kind": "decode", "k": c["k"], "on": on, "on_arm": on, "cell": ci, "block": b,
-                     "section": "pinned", "arm": c["arm"], "wall_s": w * math.exp(rnd.gauss(0, 0.01)),
+                     "section": "pinned", "arm": c["arm"], "wall_s": w * math.exp(rnd.gauss(0, 0.005)),
                      "bytes": 0 if d else zf.OUT_BYTES, "replays": {"D_discarded_bytes": zf.OUT_BYTES if d else 0},
                      "majflt": 0, "peak_kb": 800_000, "identities_ok": True, "check_pass": {"identical": True},
                      "pmu": {"cycles": [4.9e8], "ref-cycles": [3.7e8], "LLC-load-misses": [2e6]},
@@ -150,6 +153,19 @@ def main():
     check(
         "k 8: S's handover 3 ms on its one thread",
         abs(get(rows, 8, "handover S ms per thread") - 3) < 1e-6,
+    )
+    room = lambda k, p, key="value": get(rows, k, f"room {p} against the floor", key)  # noqa: E731
+    check(
+        "k 8: S's room against the floor 16/40, ROOM",
+        abs(room(8, "S") - 0.40) < 0.01 and room(8, "S", "label") == "ROOM",
+    )
+    check(
+        "k 8: C's room 16/16.2, NO ROOM; M's NO ROOM",
+        room(8, "C", "label") == "NO ROOM" and room(8, "M", "label") == "NO ROOM",
+    )
+    check(
+        "k 8: R's room 0.80 and D's 16/30, both ROOM",
+        abs(room(8, "R") - 0.80) < 0.01 and room(8, "D", "label") == "ROOM",
     )
     check(
         "the prediction: Residual B 16 ms at 1 worker is a HIT",
