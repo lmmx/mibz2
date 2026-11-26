@@ -243,6 +243,15 @@ jobs:
         run: python3 bench/test_service_guarded_recipe.py
       - name: The target-gated registration's recipe end to end, every exit (stand-ins, untimed)
         run: python3 bench/test_service_tg_recipe.py
+      # the ideal-parts matrix's slice-A analysis (its labels to registration.md) on synthetic runs
+      - name: The ideal-parts analysis (synthetic runs)
+        run: python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/test_ideal_parts.py
+      # the full matrix's analysis (SECMRD, I = +SECMRD augmented; registration.md 1-8)
+      - name: The ideal-parts matrix analysis (synthetic runs)
+        run: python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/test_ideal_matrix.py
+      # the zero-copy floor's analysis (registration-floor.md)
+      - name: The zero-copy floor analysis (synthetic runs)
+        run: python3 docs/journal/2026-11-24-algorithm-level/ideal-parts/results/analysis/test_zero_copy_floor.py
 
   get-python-versions:
     runs-on: ubuntu-latest

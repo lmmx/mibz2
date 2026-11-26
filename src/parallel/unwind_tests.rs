@@ -329,7 +329,7 @@ fn check(
     for (at, r) in st.ready.iter() {
         if let Ok(v) = r {
             assert!(
-                *v == chunks[*at as usize],
+                v[..] == chunks[*at as usize][..],
                 "{what}: block {at}'s bytes after the reset"
             );
         }
