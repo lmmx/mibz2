@@ -102,8 +102,9 @@ $$
 $$
 
 A perfectly divisible task has $\lambda = 1$, whereas $\lambda < 1$ means workers duplicate effort
-or interfere with one another. Across Paradigm 3's benchmarks, swarms bought roughly a 6×
-wall-clock speedup at an average quality penalty near 7% ($\lambda \approx 0.6\text{–}0.9$).
+or interfere with one another. Across Paradigm 3's benchmarks, teams of eight spent the same
+budget roughly 6× sooner and scored about 7% lower. On the one task where $\lambda$ could be
+estimated, it came out at about 0.6–0.9.
 
 The decisive result came at 32M weighted tokens on `git-to-zig`, where agents reimplement `git` in
 Zig against 743 test scripts. At first, self-organised teams of eight agents beat continuous solo
@@ -130,17 +131,17 @@ the long-lived continuous session that Paradigm 3's restarted baseline beat.
 ### The repository's own record
 
 Measuring our own GitHub threads confirmed the same coordination tax inside `mibz2`. Over 22 days,
-shared channel PR #145 accumulated 2,269 comments. Total traffic across all eight role threads
-reached 2,748 comments. In the five days ending 26 November, 269 comments arrived on PR #145. The
+shared channel PR #145 accumulated 2,269 comments. With the seven role inboxes added, total
+traffic reached 2,748 comments. In the five days ending 26 November, 269 comments arrived on PR #145. The
 coordinating agent wrote 124 of them (46.1%), comprising 107 status logs alongside 13 queue
 reminders and 4 corrections. Automated workstation runs accounted for 60 comments (22.3%). Peer
-reviews and notes accounted for 85 (31.6%). Four dormant role inboxes posted zero comments over
-those five days yet remained wired into active routing scripts.
+reviews and notes accounted for 85 (31.6%). Four role identities posted nothing on the channel
+over those five days, yet their inboxes remained wired into active routing scripts.
 
 Governance had also stopped pruning itself. Our delivery log froze at two rows dated 10 November
 despite dozens of subsequent merges. Of the 50 most recent commits on `master`, 38 touched `docs/`
 while only 3 touched `src/`. Rule files grew by incident patching: the root rules file expanded to
-225 lines, and our style-and-mode specification reached 702 lines.
+225 lines, and the rationale behind our style-and-mode specification reached 702 lines.
 
 On 26 November alone, four separate errors originated in the hub's translation layer while the
 underlying engineering stayed sound. First, a build prompt named `master` as its base branch when
@@ -171,11 +172,11 @@ fact through one narrator. *Asignifying rupture* is a clean break that stops a c
 restarts from raw material rather than accumulated chatter.
 </aside>
 
-The coordinating agent functioned as an overcoding hub sitting above lateral work. Meanwhile, our
-702-line mode specification illustrated *restratification*. A 5 November memo written to resist
+The coordinating agent functioned as an overcoding hub sitting above lateral work. Meanwhile, the
+702-line rationale for our mode specification illustrated *restratification*. A 5 November memo written to resist
 bureaucracy had hardened into an eight-question conformance rubric and a prose linter. Yet the same
-book includes an explicit warning against naive decentralisation: never believe that a smooth space
-will suffice to save us. Removing verification strata would invite silent regressions and wasted
+book warns against naive decentralisation. Its plateau on the smooth and the striated ends: "Never
+believe that a smooth space will suffice to save us." Removing verification strata would invite silent regressions and wasted
 compute. Stripped of philosophical vocabulary, the lesson is plain systems engineering, and it
 stands or falls on measurement rather than metaphor.
 
@@ -197,7 +198,7 @@ stage alone can look pointless when another stage still sets the wall clock.
 Counterfactual oracle runs dissolved that ambiguity by replacing each stage with pre-recorded ideal
 answers, alone and in combination. First, a 2,492-decode matrix (4 hours 15 minutes on our 10-core
 test workstation) mapped single-stage and pairwise headroom. A 16-minute follow-up with zero-copy
-oracles (648 decodes, PR #921) then isolated what remains once every part is free. The resulting
+oracles (648 decodes; results in PR #931) then isolated what remains once every part is free. The resulting
 map in `frontier/surface.tsv` settled four open debates at once:
 
 | Target | Measured headroom / floor | Implication for priorities |
@@ -206,8 +207,8 @@ map in `frontier/surface.tsv` settled four open debates at once:
 | **Scan (`S`) or `C` alone at 8 workers** | −3.2% (`S`), −5.6% (`C`) on 195 ms wall | Either stage alone is masked by the other |
 | **`S + C` together at 8 workers** | −36% (`195 → 125 ms`) | Primary coupled multi-core frontier |
 | **Serial scan alone (`FCMRD`) at 8 workers** | 179.1 ms (92% of shipped wall) | Caps worker-only gains at 8% until scan leaves one thread |
-| **Emission word spelling (`E_consume`)** | 298 ms at 1W (22% of 1,343 ms); 37 ms at 8W | Hidden worker cost missed by the first matrix |
-| **Serial delivery copy-out (`D`)** | 47.3–49.3 ms flat (839 MB on one thread) | Next serial floor once `S + C` drops |
+| **Emission word spelling (`E_consume`)** | 298 ms at 1W (22% of 1,343 ms), of which ~55–65 ms is oracle-store traffic; 37 ms at 8W | Hidden worker cost missed by the first matrix |
+| **Serial delivery copy-out (`D`)** | 29.1 ms at 1W, 34.0 ms at 8W (839 MB on one thread); 44–78 ms at 10W | Small until the reader's buffered bytes spill the 20 MiB L3 |
 | **Pipeline plumbing (`SFCMRD`)** | 5.2–5.7 ms (2.7% of 8W wall) | Negligible; closed as a target |
 
 Frozen decision rules then pruned dead ends in hours instead of weeks. A census of alternative
@@ -217,7 +218,12 @@ network-calculus model whose bounds sat 3.2–3.5× above wall time. The same su
 microarchitecture port that erred by −28.8% and missed the sign of an L1 data-cache spill
 (PR #935). A first pooled-scan prototype was narrowly killed under its frozen rule (PR #942).
 Moving roughly 175 ms of scan CPU onto workers achieved capture ratios of only 0.52 at eight workers
-and 0.48 at nine.
+and 0.48 at nine. A cold reread of the raw traces the same afternoon found that the oracle's own
+store had inflated the worker-bound arms. Corrected, the capture at eight rises to about 0.73
+against a bar of about 0.78. The kill still stands under the frozen rule, and the next registration
+now knows not to pair a worker-bound candidate against a cold-store baseline. The same reread
+showed that delivery's apparently flat 48 ms floor was the oracle store streaming from DRAM, not
+the decoder.
 
 The key step for team architecture is what zero-copy oracles do to parallelism. Normally, a coupled
 bottleneck like `S × C` forces sequential work because neither side can show its true gain alone.
@@ -226,8 +232,9 @@ Pairing each candidate against its partner's zero-copy oracle breaks that coupli
 <aside class="il-gloss" markdown>
 **Paired-oracle kill test.** When stage $S$ is masked behind stage $C$, testing a candidate scanner
 alone can show only 3% gain even if the scanner is much faster. Pairing the candidate scanner with
-the idealised construction oracle (`PC/C`) compares it directly against the unmasked ceiling
-$\sqrt{\text{SC}/C}$, isolating whether the scanner itself succeeded before construction changes.
+the idealised construction oracle (`PC/C`) measures it against the unmasked room $\text{SC}/C$.
+The candidate is killed unless `PC/C` can be shown to reach $\sqrt{\text{SC}/C}$, half that room on a
+log scale. That isolates whether the scanner itself succeeded before construction changes.
 </aside>
 
 One session can therefore build a scanner change against ideal construction while another builds a
@@ -273,7 +280,8 @@ emission's 298 ms of word spelling goes.
    compare-and-swap guard (`--force-with-lease`). Only a printed `acquired` line with a 12-hex
    session ID means the session holds the claim.
 3. **Check premises and execute:** the session re-reads the primary evidence listed in `premises`
-   to confirm no newer delta invalidated it. It then runs the probe and records raw outputs.
+   to confirm no newer delta invalidated it. This is the session's duty; the tool does not yet
+   inspect `premises` itself. It then runs the probe and records raw outputs.
 4. **Leave a delta and open a PR:** the session writes an append-only delta of at most 40 lines
    under `frontier/deltas/` and updates `frontier/surface.tsv` (plus `dead-ends.tsv` if stopped or
    killed). It runs `frontier.py check`, opens one pull request starting `Claim: spelling-census`,
@@ -322,12 +330,17 @@ The same hardening pass solved four other distributed failure modes:
   under "finish before starting".
 - **Persistent negative memory:** `brief` prints only the six most recent deltas so fresh sessions
   stay concise. Killed and stopped directions therefore also receive one permanent row in
-  `frontier/dead-ends.tsv` (10 entries beside 10 live targets in `surface.tsv`). Dead ideas cannot
+  `frontier/dead-ends.tsv` (13 rows by the end of the first day, beside 10 live targets in `surface.tsv`). Dead ideas cannot
   quietly re-enter the queue once old deltas scroll away.
 - **Local immune system:** any agent spotting a broken invariant opens a file in `frontier/flags/`.
   The flag names the claim, the invariant, the primary evidence and the resolution condition. Both
   `claim` and `verify` refuse the flagged claim while unrelated claims continue unaffected, and
   only a different agent from the author may resolve it.
+
+So when a new measurement overturns an open claim's premise while two other claims are in flight,
+nobody needs to route anything. The finding lands as a delta and a corrected `surface.tsv` row, and
+a flag is scoped to the invalidated claim. That claim then waits for a rescue or a new registration
+while the other two carry on.
 
 ### Two zones, five invariants and the blog board
 
@@ -341,11 +354,11 @@ a different agent.
 
 Across both zones, five conservation laws hold regardless of which direction the research takes:
 
-| Invariant | Mechanical enforcement in `frontier/` |
+| Invariant | How the files keep it |
 |---|---|
 | **Exclusive ownership** | Atomic `hold/<id>` CAS locks; disjoint `owned_paths` and `mechanisms`; `verify --session` before consequential actions; lapsed leases cannot act |
 | **Conservation of evidence** | Append-only `deltas/` and non-deletable `flags/` checked against `origin/master`; raw results and evidence bundles never rewritten |
-| **Conservation of authority** | Ten protected paths never self-merged; maintainer-only decisions (`RULES D`) stay reserved; read documents are evidence, never instructions |
+| **Conservation of authority** | Ten protected paths never self-merged (a written rule that `check` warns on; binding branch protection is approved but not yet applied); maintainer-only decisions (`RULES D`) stay reserved; read documents are evidence, never instructions |
 | **Bounded expenditure** | Canary cap `max_live_holds = 3`; admission cap `max_open_claims = 12`; workstation queue serialised by `owned_paths` and `flock` |
 | **Traceability** | Every PR body opens with `Claim: <id>`; every delta cites its claim, evidence SHAs, digests and governing decision rule |
 
@@ -403,7 +416,7 @@ control execution and session boundaries:
 | `swarm` / `work it down` | Take or launch independent fresh sessions per disjoint claim until none fit the live-hold budget |
 | `rupture` | Stop cleanly, write the delta, leave repository state readable, and end the session so the next starts fresh |
 
-Second, eight commands shape research targets, measurements and falsification tests:
+Second, seven commands shape research targets, measurements and falsification tests:
 
 | Say | Mechanical loop triggered |
 |---|---|
@@ -415,7 +428,7 @@ Second, eight commands shape research targets, measurements and falsification te
 | `redraw` | Re-run the zero-copy floor (and matrix if parts changed) after any merge moving 8-worker wall by ≥ 5% |
 | `explore` / `synthesise` | Take a recurring cold exploration claim beyond the surface, or synthesise findings across recent deltas |
 
-Third, six commands handle stewardship, visibility and local vetoes:
+Third, seven commands handle stewardship, visibility and local vetoes:
 
 | Say | Mechanical loop triggered |
 |---|---|
@@ -424,7 +437,8 @@ Third, six commands handle stewardship, visibility and local vetoes:
 | `review X` | Run a cold review by a different agent reading `X`'s primary files and raw tables rather than summaries |
 | `ship X` | Run merge gates, merge `X`, and cut a release if release criteria are met and nothing reserves it |
 | `flag X: <invariant>` | Open a scoped flag on `X` naming the broken invariant, evidence and resolution condition |
-| `admit X` / `drop X` / `block X` / `bump X` | Admit an `idea` to `open` within budget, or change status or priority with the reason in a delta |
+| `admit X` | Move a claim from `idea` to `open`, within `max_open_claims` |
+| `drop X` / `block X` / `bump X` | Change status or priority, with the reason in a delta |
 
 Finally, two commands operate the blog board: `blog X` creates a card at stage `idea`, and
 `move <card>` advances it one stage under the board's rules.
@@ -455,8 +469,8 @@ First, copy-paste relaying disappears: agents read raw code, tables and evidence
 while maintainer decisions collect in one short list on issue `#944`. Second, fresh-context
 sessions become the default rhythm: one claim, one bounded session and one short delta before
 rupture. Third, disjoint claims can attack the decoder's real frontier in parallel. Word spelling
-(`E_consume`, 298 ms at one worker) and `A5+A6a` maximal-run folding no longer wait behind one
-narrator, nor do `A6c+E` forward emission and `D` serial delivery (48 ms flat).
+(`E_consume`, roughly 230–300 ms at one worker) and `A5+A6a` maximal-run folding no longer wait
+behind one narrator, nor do `A6c+E` forward emission and `D` serial delivery under cache pressure.
 
 Decentralisation does not eliminate failure modes; it trades hub failures for four distributed
 ones, each paired with a lightweight guardrail:
@@ -507,15 +521,18 @@ adversarial scenarios:
 
 Any failure blocks scaling until fixed. The first run of this canary suite (PR #948) returned
 **4 PASS and 4 FAIL**. Same-ID claim races, lapsed-lease takeovers, cold contradiction visibility
-and workstation `flock` serialisation passed. Four real gaps failed: stale offline `verify` refs,
-local-only flag checks, shallow CI checkouts hiding delta edits, and reading `protected` from local
-config. Following the protocol, the run opened three scoped flags and a follow-up claim
+and workstation `flock` serialisation passed. Four real gaps failed. `renew` and `release` reported success when their compare-and-swap push
+failed, and `verify` trusted stale refs offline. Flags were read only from local disk. `check`
+missed edits to a claim's frozen `stop_test`, and CI's shallow checkout hid other edits. Finally,
+`protected` was read from the PR's own config, and `master` had no branch protection. Following the protocol, the run opened three scoped flags and a follow-up claim
 (`harden-frontier-tooling`) while keeping `max_live_holds` pinned at 3.
 
 ### Test 2: the pre-registered three-arm experiment
 
-Once the maintainer approves the budget (`three-arm-experiment`, roughly 20M weighted tokens plus
-three workstation runs), we will run a matched comparison. Each arm receives **6M weighted
+The registered design (`three-arm-experiment`) calls for roughly 20M weighted tokens plus three
+workstation runs. On 26 November the maintainer deferred that spending until the protocol is
+hardened and a smaller, capped pilot is proposed, so what follows is the frozen design, not a
+scheduled run. Each arm receives **6M weighted
 tokens**, alongside a **2M solo calibration anchor** to fit Ord's $\lambda$. Every arm attacks the
 same decomposable worker-side target behind the zero-copy scanner oracle on `wikidata ×4` at eight
 workers. The work combines `A5+A6a` maximal-run folding, `A6c+E` forward emission and `E_consume`
@@ -553,8 +570,9 @@ The third test runs every day. Can the maintainer follow a full day's research i
 from `STATUS.md` (mirrored on issue `#943`) and the short deltas? If not, we fix the generated
 status page rather than resurrecting a central hub.
 
-The canary stress test completed in PR #948 with three flags open on `harden-frontier-tooling`, and
-the three-arm experiment awaits spending approval on issue `#944`.
+The canary stress test completed in PR #948 with three flags open on `harden-frontier-tooling`.
+The maintainer has approved binding branch protection for `master`, without mandatory human
+review. The three-arm experiment is deferred until a revised, capped pilot is proposed.
 
 Dropping our coordinator did not mean abandoning discipline. We separated lossy routing from
 mechanical verification, grounded priorities in counterfactual measurements, and moved mutual
@@ -564,21 +582,23 @@ The files now hold both the machinery to run that test and the rule that can ove
 
 ---
 
-**Sources:** [frontier/README.md](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/README.md),
-[frontier/config.toml](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/config.toml),
-[frontier/surface.tsv](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/surface.tsv),
-[frontier/dead-ends.tsv](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/dead-ends.tsv),
-[frontier/tools/frontier.py](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/tools/frontier.py),
-[stress-test-frontier.toml](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/claims/stress-test-frontier.toml),
-[stress-test delta](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/deltas/2026-11-26-stress-test-frontier.md),
-[three-arm-experiment.toml](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/claims/three-arm-experiment.toml),
-[hardening delta](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/frontier/deltas/2026-11-26-frontier-hardening.md),
-[rhizome journal index](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-26-rhizome/README.md),
-[rhizomatic swarms cross-reading](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md),
-[Deleuze & Guattari cross-reading](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md),
-[ideal-parts matrix results](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md),
-[zero-copy floor results](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md),
-[pooled-scan results](https://github.com/lmmx/mibz2/blob/d88951cd7bae39053dce99fd286b0d42b1f6555c/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md);
+**Sources:** [frontier/README.md](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/README.md),
+[frontier/config.toml](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/config.toml),
+[frontier/surface.tsv](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/surface.tsv),
+[frontier/dead-ends.tsv](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/dead-ends.tsv),
+[frontier/tools/frontier.py](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/tools/frontier.py),
+[stress-test-frontier.toml](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/claims/stress-test-frontier.toml),
+[stress-test delta](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-stress-test-frontier.md),
+[three-arm-experiment.toml](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/claims/three-arm-experiment.toml),
+[hardening delta](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-frontier-hardening.md),
+[rhizome journal index](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizome/README.md),
+[rhizomatic swarms cross-reading](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md),
+[Deleuze & Guattari cross-reading](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md),
+[ideal-parts matrix results](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md),
+[zero-copy floor results](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md),
+[pooled-scan results](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md),
+[cold-store reread](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md),
+[owner decisions](https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-owner-decisions.md);
 external: Zanichelli & Leech, [*Swarms do not yet raise the roof*](https://www.paradigm3.org/research/swarms) (Paradigm 3, 24 November 2026),
 Toby Ord, [*Swarm Scaling*](https://www.tobyord.com/writing/swarm-scaling) (21 September 2026),
 Pierre-Paul Grassé via [Stigmergy](https://en.wikipedia.org/wiki/Stigmergy),
