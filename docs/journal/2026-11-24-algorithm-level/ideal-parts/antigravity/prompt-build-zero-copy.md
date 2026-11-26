@@ -4,7 +4,7 @@ Given to Louis to paste, 26 November 2026. This is a build task, characterisatio
 
 ---
 
-Work in the lmmx/mibz2 repository on a new branch `research/ideal-zero-copy`, from `origin/master`. Use Louis's identity (`git config user.name "Louis Maddox"`, `git config user.email louismmx@gmail.com`), with no AI attribution anywhere. Never put a PR or issue number straight after fix, close or resolve.
+Work in the lmmx/mibz2 repository on a new branch `research/ideal-zero-copy`, **from `origin/bench/ideal-matrix-next`** (PR 909), not master. S's and E's oracles (`src/scan_oracle.rs`, `src/supplied_codes.rs`, `src/open/supplied.rs`) and the ledgers (`src/character.rs`) live only there. Open the PR **against `bench/ideal-matrix-next`**. *(Corrected 26 November: the first version said master, where those files don't exist.)* Use Louis's identity (`git config user.name "Louis Maddox"`, `git config user.email louismmx@gmail.com`), with no AI attribution anywhere. Never put a PR or issue number straight after fix, close or resolve.
 
 **The task.** Implement the zero-copy oracle change from your `research/neon-movement/IDEAL-PARTS-2.md` §3:
 - lock-free stores (`OnceLock`);
@@ -25,6 +25,6 @@ Work in the lmmx/mibz2 repository on a new branch `research/ideal-zero-copy`, fr
 - `cargo test`, `clippy --all-targets --all-features -D warnings` and `fmt --check`.
 
 **Deliver:**
-- one PR against master, its body giving each hand-over's cost before and after on wikidata ×4;
+- one PR against `bench/ideal-matrix-next`, its body giving each hand-over's cost before and after on wikidata ×4;
 - `ideal-parts/status.tsv` updated;
 - a short `FROM: neon / TO: coordinator / TYPE: REVIEW` on #145 linking the PR at its head.
