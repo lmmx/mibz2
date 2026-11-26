@@ -1,5 +1,7 @@
 # The programme: from a toy problem to where new mathematics fits
 
+> **What we are doing now, and why: [`plan.md`](plan.md).** Read it before picking up any thread.
+
 *Louis, 24 November 2026: "my recollection was that we were doing this to define a good task to identify a toy problem (simulation setup) so as to basically do something like this https://www.cs.wustl.edu/~jain/iucee/index.html so as to then identify the 'systems biology' style model of the program so as to establish where exactly new mathematical devices would fit". This page holds that chain and its status. It is the first place to look.*
 
 The reference is Raj Jain's course, *Computer Systems Performance Analysis: Techniques for Experimental Design, Measurement, Simulation, and Modeling*, based on *The Art of Computer Systems Performance Analysis* (Wiley, 1991). Its modules are:

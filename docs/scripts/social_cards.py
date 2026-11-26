@@ -206,6 +206,10 @@ def cards(root=Path(".")):
             section="", title=config["site_description"], description=DEFAULT_DESCRIPTION, foot=host
         )
     }
+    # A technical companion's kicker names its main post: the index chains the pair, the
+    # companion's card naming its main post in data-companion-of (check_site.py check_companions).
+    index = (root / SITE / "blog" / "index.md").read_text()
+    companion_of = dict(re.findall(r'<a class="post-card" href="([^"]+)" data-companion-of="([^"]+)">', index))
     for post in sorted((root / SITE / "blog").glob("*.md")):
         meta, title = front_matter(post)
         image = meta.get("image")
@@ -215,7 +219,11 @@ def cards(root=Path(".")):
             sys.exit(f"{post}: the card must be under assets/social/, not {image}")
         day = date.fromisoformat(post.name[:10])
         out[image] = dict(
-            section=" · Research blog",
+            section=(
+                f" · Companion to {front_matter(post.parent / companion_of[post.name])[1]}"
+                if post.name in companion_of
+                else " · Research blog"
+            ),
             title=title,
             description=meta["description"],
             foot=f"{host} · {day.day} {day:%B %Y}",

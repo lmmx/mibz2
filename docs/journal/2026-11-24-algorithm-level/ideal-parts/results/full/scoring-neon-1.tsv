@@ -1,0 +1,29 @@
+part	k	predicted	predicted_range	measured	measured_95	value	net_of_handover	value_vs_net	predicted_label	measured_label	label
+S	1	0.996		1.0101	[0.9924, 1.0282]	hit	0.9984	hit		UNRESOLVED	
+S	6	0.982		0.974	[0.9651, 0.9829]	hit	0.8907	miss		UNRESOLVED	
+S	8	0.95	[0.920, 0.975]	0.9683	[0.9556, 0.9812]	hit	0.8413	miss		UNRESOLVED	
+S	10	0.885	[0.845, 0.925]	0.9193	[0.9033, 0.9356]	hit	0.7485	miss		ROOM	
+C	1	0.57	[0.545, 0.600]	0.5792	[0.5733, 0.5851]	hit	0.5561	hit		ROOM	
+C	6	0.785	[0.760, 0.815]	0.754	[0.7447, 0.7635]	hit	0.7291	miss		ROOM	
+C	8	0.973		0.9437	[0.9313, 0.9564]	miss	0.9181	miss	MASKED	UNRESOLVED	miss
+C	10	0.98		0.9467	[0.9384, 0.955]	miss	0.924	miss	MASKED	UNRESOLVED	miss
+E	1	0.83		0.8345	[0.8226, 0.8466]	hit	0.6165	miss		ROOM	
+E	6	0.85		0.8507	[0.8379, 0.8637]	hit	0.6343	miss		ROOM	
+E	8	0.98		0.9652	[0.946, 0.9848]	hit	0.7519	miss	MASKED	UNRESOLVED	miss
+E	10	0.99		0.978	[0.9664, 0.9897]	miss	0.7844	miss	MASKED	UNRESOLVED	miss
+M	1	0.905		0.9248	[0.9065, 0.9435]	miss	0.9178	hit		ROOM	
+M	6	0.916		0.916	[0.9049, 0.9272]	hit	0.908	hit		ROOM	
+M	8	0.983		0.9755	[0.9568, 0.9944]	hit	0.9663	hit	MASKED	UNRESOLVED	miss
+M	10	0.992		0.9794	[0.971, 0.9878]	miss	0.9704	miss	MASKED	UNRESOLVED	miss
+R	1	0.942		0.9828	[0.9691, 0.9966]	miss	0.9428	hit		UNRESOLVED	
+R	6	0.941		0.9959	[0.9735, 1.0189]	miss	0.9523	hit		UNRESOLVED	
+R	8	0.985		1.0093	[0.993, 1.026]	miss	0.9563	miss	MASKED	UNRESOLVED	miss
+R	10	0.992		1.0212	[1.0095, 1.0331]	miss	0.9619	miss	MASKED	UNRESOLVED	miss
+D	1	0.999		1.0106	[0.9916, 1.03]	hit			NO ROOM	UNRESOLVED	miss
+D	6	0.995		0.9892	[0.9805, 0.998]	hit			NO ROOM	NO ROOM	hit
+D	8	0.99		0.9916	[0.9705, 1.0133]	hit			NO ROOM	UNRESOLVED	miss
+D	10	0.985		0.9938	[0.9875, 1.0002]	miss			NO ROOM	NO ROOM	hit
+all	1	0.245		0.2992	[0.2956, 0.3029]	miss					
+all	6	0.3		0.387	[0.3797, 0.3945]	miss					
+all	8	0.305		0.5783	[0.56, 0.5972]	miss					
+all	10	0.33		0.7213	[0.7169, 0.7256]	miss					

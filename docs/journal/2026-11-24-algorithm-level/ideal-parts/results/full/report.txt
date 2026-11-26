@@ -1,0 +1,188 @@
+# The ideal-parts matrix (SECMRD; I = +SECMRD augmented): a diagnostic, deciding nothing
+
+counts [1, 6, 8, 10]; 44 arms (32 in the fraction, 12 added); 12 blocks; traces in the first 2; the scanner pinned to CPU 5
+the pin: the scanner on CPU 5 alone in 352 of 352 pinned traces
+
+the removed parts' busy time in their ideal arms' traces, over the real arms' (VOID over 5%):
+  k 1   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.11%  R: 0.18%  D: 0.00%
+  k 6   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.13%  R: 0.19%  D: 0.00%
+  k 8   S: 0.00%  E: 0.00%  C: 0.00%  M: 0.15%  R: 0.17%  D: 0.00%
+  k 10  S: 0.00%  E: 0.00%  C: 0.00%  M: 0.15%  R: 0.15%  D: 0.00%
+
+## The effects (Jain's sign table on the 32 fraction arms, log wall; mean over blocks, 95% t-interval)
+
+k 1: main effects
+  q_S   -0.0040 [-0.0062, -0.0017]   variation 0.0%
+  q_E   -0.1485 [-0.1510, -0.1460]   variation 14.4%
+  q_C   -0.3494 [-0.3514, -0.3474]   variation 79.6%
+  q_M   -0.0731 [-0.0757, -0.0705]   variation 3.5%
+  q_R   -0.0169 [-0.0195, -0.0143]   variation 0.2%
+  q_D   -0.0024 [-0.0047, -0.0001]   variation 0.0%
+k 1: two-factor interactions (q; 4q, the difference of differences, beside it)
+  q_SE  -0.0019 [-0.0038, +0.0000]   4q -0.0074 [-0.0150, +0.0002]   ADDITIVE     variation 0.0%
+  q_SC  -0.0017 [-0.0040, +0.0005]   4q -0.0070 [-0.0161, +0.0021]   ADDITIVE     variation 0.0%
+  q_SM  -0.0000 [-0.0025, +0.0025]   4q -0.0001 [-0.0101, +0.0099]   ADDITIVE     variation 0.0%
+  q_SR  +0.0009 [-0.0011, +0.0029]   4q +0.0037 [-0.0043, +0.0117]   ADDITIVE     variation 0.0%
+  q_SD  -0.0020 [-0.0042, +0.0001]   4q -0.0081 [-0.0167, +0.0005]   ADDITIVE     variation 0.0%
+  q_EC  -0.0481 [-0.0505, -0.0457]   4q -0.1923 [-0.2019, -0.1827]   INTERACTS    variation 1.5%
+  q_EM  -0.0101 [-0.0123, -0.0079]   4q -0.0405 [-0.0493, -0.0316]   INTERACTS    variation 0.1%
+  q_ER  -0.0027 [-0.0057, +0.0002]   4q -0.0109 [-0.0227, +0.0009]   ADDITIVE     variation 0.0%
+  q_ED  +0.0011 [-0.0008, +0.0030]   4q +0.0046 [-0.0030, +0.0121]   ADDITIVE     variation 0.0%
+  q_CM  -0.0256 [-0.0270, -0.0241]   4q -0.1023 [-0.1082, -0.0964]   INTERACTS    variation 0.4%
+  q_CR  -0.0068 [-0.0093, -0.0042]   4q -0.0272 [-0.0374, -0.0170]   INTERACTS    variation 0.0%
+  q_CD  -0.0027 [-0.0045, -0.0008]   4q -0.0108 [-0.0182, -0.0034]   INTERACTS    variation 0.0%
+  q_MR  -0.0007 [-0.0029, +0.0016]   4q -0.0026 [-0.0114, +0.0062]   ADDITIVE     variation 0.0%
+  q_MD  -0.0006 [-0.0022, +0.0009]   4q -0.0026 [-0.0087, +0.0035]   ADDITIVE     variation 0.0%
+  q_RD  -0.0007 [-0.0026, +0.0013]   4q -0.0026 [-0.0104, +0.0051]   ADDITIVE     variation 0.0%
+k 1: variation: main 97.7%, two-factor 2.0%, three-factor (aliased pairs) 0.0%, residual 0.2%
+k 6: main effects
+  q_S   -0.1252 [-0.1274, -0.1230]   variation 21.7%
+  q_E   -0.0747 [-0.0761, -0.0732]   variation 7.7%
+  q_C   -0.1828 [-0.1848, -0.1809]   variation 46.3%
+  q_M   -0.0416 [-0.0442, -0.0389]   variation 2.4%
+  q_R   +0.0008 [-0.0013, +0.0028]   variation 0.0%
+  q_D   -0.0076 [-0.0096, -0.0055]   variation 0.1%
+k 6: two-factor interactions (q; 4q, the difference of differences, beside it)
+  q_SE  -0.0376 [-0.0399, -0.0354]   4q -0.1506 [-0.1595, -0.1416]   INTERACTS    variation 2.0%
+  q_SC  -0.1103 [-0.1124, -0.1083]   4q -0.4413 [-0.4495, -0.4331]   INTERACTS    variation 16.9%
+  q_SM  -0.0185 [-0.0200, -0.0170]   4q -0.0740 [-0.0802, -0.0679]   INTERACTS    variation 0.5%
+  q_SR  +0.0023 [+0.0002, +0.0045]   4q +0.0092 [+0.0006, +0.0179]   INTERACTS    variation 0.0%
+  q_SD  -0.0047 [-0.0070, -0.0024]   4q -0.0188 [-0.0280, -0.0095]   INTERACTS    variation 0.0%
+  q_EC  +0.0108 [+0.0095, +0.0122]   4q +0.0433 [+0.0379, +0.0488]   INTERACTS    variation 0.2%
+  q_EM  +0.0004 [-0.0018, +0.0026]   4q +0.0015 [-0.0073, +0.0104]   ADDITIVE     variation 0.0%
+  q_ER  +0.0036 [+0.0016, +0.0056]   4q +0.0143 [+0.0063, +0.0223]   INTERACTS    variation 0.0%
+  q_ED  +0.0001 [-0.0020, +0.0021]   4q +0.0003 [-0.0080, +0.0086]   ADDITIVE     variation 0.0%
+  q_CM  +0.0038 [+0.0013, +0.0064]   4q +0.0153 [+0.0051, +0.0255]   INTERACTS    variation 0.0%
+  q_CR  +0.0058 [+0.0036, +0.0079]   4q +0.0231 [+0.0146, +0.0316]   INTERACTS    variation 0.0%
+  q_CD  -0.0009 [-0.0030, +0.0012]   4q -0.0037 [-0.0122, +0.0049]   ADDITIVE     variation 0.0%
+  q_MR  -0.0015 [-0.0031, +0.0001]   4q -0.0058 [-0.0122, +0.0006]   ADDITIVE     variation 0.0%
+  q_MD  +0.0039 [+0.0023, +0.0054]   4q +0.0154 [+0.0093, +0.0216]   INTERACTS    variation 0.0%
+  q_RD  +0.0024 [+0.0003, +0.0046]   4q +0.0098 [+0.0011, +0.0184]   INTERACTS    variation 0.0%
+k 6: variation: main 78.2%, two-factor 19.6%, three-factor (aliased pairs) 1.7%, residual 0.4%
+k 8: main effects
+  q_S   -0.1320 [-0.1366, -0.1274]   variation 45.8%
+  q_E   -0.0165 [-0.0207, -0.0124]   variation 0.7%
+  q_C   -0.0856 [-0.0885, -0.0827]   variation 19.2%
+  q_M   -0.0163 [-0.0199, -0.0127]   variation 0.7%
+  q_R   +0.0196 [+0.0163, +0.0229]   variation 1.0%
+  q_D   -0.0364 [-0.0391, -0.0337]   variation 3.5%
+k 8: two-factor interactions (q; 4q, the difference of differences, beside it)
+  q_SE  -0.0108 [-0.0150, -0.0066]   4q -0.0432 [-0.0599, -0.0266]   INTERACTS    variation 0.3%
+  q_SC  -0.0705 [-0.0733, -0.0677]   4q -0.2821 [-0.2933, -0.2708]   INTERACTS    variation 13.1%
+  q_SM  -0.0054 [-0.0094, -0.0014]   4q -0.0216 [-0.0377, -0.0055]   INTERACTS    variation 0.1%
+  q_SR  +0.0148 [+0.0120, +0.0176]   4q +0.0592 [+0.0479, +0.0704]   INTERACTS    variation 0.6%
+  q_SD  -0.0320 [-0.0353, -0.0287]   4q -0.1280 [-0.1410, -0.1150]   INTERACTS    variation 2.7%
+  q_EC  +0.0262 [+0.0226, +0.0298]   4q +0.1048 [+0.0903, +0.1193]   INTERACTS    variation 1.8%
+  q_EM  +0.0040 [+0.0018, +0.0062]   4q +0.0160 [+0.0072, +0.0249]   INTERACTS    variation 0.0%
+  q_ER  +0.0010 [-0.0022, +0.0041]   4q +0.0039 [-0.0087, +0.0164]   ADDITIVE     variation 0.0%
+  q_ED  -0.0130 [-0.0163, -0.0098]   4q -0.0522 [-0.0651, -0.0393]   INTERACTS    variation 0.4%
+  q_CM  +0.0094 [+0.0063, +0.0124]   4q +0.0375 [+0.0253, +0.0498]   INTERACTS    variation 0.2%
+  q_CR  +0.0137 [+0.0101, +0.0172]   4q +0.0546 [+0.0406, +0.0687]   INTERACTS    variation 0.5%
+  q_CD  -0.0274 [-0.0303, -0.0245]   4q -0.1097 [-0.1213, -0.0982]   INTERACTS    variation 2.0%
+  q_MR  -0.0122 [-0.0155, -0.0089]   4q -0.0487 [-0.0619, -0.0355]   INTERACTS    variation 0.4%
+  q_MD  +0.0012 [-0.0009, +0.0032]   4q +0.0046 [-0.0037, +0.0129]   ADDITIVE     variation 0.0%
+  q_RD  +0.0041 [+0.0003, +0.0078]   4q +0.0162 [+0.0011, +0.0313]   INTERACTS    variation 0.0%
+k 8: variation: main 70.9%, two-factor 22.1%, three-factor (aliased pairs) 4.8%, residual 2.2%
+k 10: main effects
+  q_S   -0.0941 [-0.0957, -0.0924]   variation 52.5%
+  q_E   -0.0022 [-0.0045, +0.0001]   variation 0.0%
+  q_C   -0.0395 [-0.0418, -0.0372]   variation 9.2%
+  q_M   -0.0111 [-0.0133, -0.0090]   variation 0.7%
+  q_R   +0.0214 [+0.0198, +0.0230]   variation 2.7%
+  q_D   -0.0401 [-0.0411, -0.0391]   variation 9.5%
+k 10: two-factor interactions (q; 4q, the difference of differences, beside it)
+  q_SE  +0.0035 [+0.0014, +0.0056]   4q +0.0140 [+0.0058, +0.0223]   INTERACTS    variation 0.1%
+  q_SC  -0.0187 [-0.0200, -0.0174]   4q -0.0748 [-0.0802, -0.0694]   INTERACTS    variation 2.1%
+  q_SM  -0.0040 [-0.0053, -0.0026]   4q -0.0159 [-0.0211, -0.0106]   INTERACTS    variation 0.1%
+  q_SR  +0.0159 [+0.0142, +0.0176]   4q +0.0636 [+0.0569, +0.0704]   INTERACTS    variation 1.5%
+  q_SD  -0.0353 [-0.0370, -0.0336]   4q -0.1411 [-0.1480, -0.1342]   INTERACTS    variation 7.4%
+  q_EC  +0.0214 [+0.0191, +0.0236]   4q +0.0855 [+0.0765, +0.0944]   INTERACTS    variation 2.7%
+  q_EM  +0.0025 [+0.0002, +0.0048]   4q +0.0101 [+0.0009, +0.0193]   INTERACTS    variation 0.0%
+  q_ER  +0.0037 [+0.0022, +0.0051]   4q +0.0147 [+0.0087, +0.0206]   INTERACTS    variation 0.1%
+  q_ED  -0.0061 [-0.0079, -0.0044]   4q -0.0246 [-0.0316, -0.0176]   INTERACTS    variation 0.2%
+  q_CM  +0.0112 [+0.0097, +0.0126]   4q +0.0447 [+0.0388, +0.0506]   INTERACTS    variation 0.7%
+  q_CR  +0.0061 [+0.0041, +0.0081]   4q +0.0244 [+0.0166, +0.0322]   INTERACTS    variation 0.2%
+  q_CD  -0.0203 [-0.0217, -0.0189]   4q -0.0811 [-0.0869, -0.0754]   INTERACTS    variation 2.4%
+  q_MR  -0.0024 [-0.0039, -0.0009]   4q -0.0097 [-0.0157, -0.0036]   INTERACTS    variation 0.0%
+  q_MD  -0.0060 [-0.0071, -0.0050]   4q -0.0241 [-0.0284, -0.0198]   INTERACTS    variation 0.2%
+  q_RD  -0.0001 [-0.0021, +0.0019]   4q -0.0005 [-0.0084, +0.0074]   ADDITIVE     variation 0.0%
+k 10: variation: main 74.7%, two-factor 17.8%, three-factor (aliased pairs) 6.1%, residual 1.3%
+
+## The ceiling table (measured arms; ratios of wall, geometric means over blocks, 95% intervals)
+
+k   part  room: alone over all real       label        share of the floor (all but it over all ideal)   room with Q ideal
+1   S     1.0101 [0.9924, 1.0282]   UNRESOLVED   1.0220 [1.0107, 1.0334]          E:0.988 C:0.992 M:0.994 R:1.002 D:0.987
+1   E     0.8345 [0.8226, 0.8466]   ROOM         1.5618 [1.5339, 1.5902]          S:0.816 C:0.704 M:0.807 R:0.822 D:0.826
+1   C     0.5792 [0.5733, 0.5851]   ROOM         2.4233 [2.3772, 2.4703]          S:0.569 E:0.489 M:0.531 R:0.566 D:0.575
+1   M     0.9248 [0.9065, 0.9435]   ROOM         1.2646 [1.2546, 1.2746]          S:0.910 E:0.894 C:0.847 R:0.925 D:0.906
+1   R     0.9828 [0.9691, 0.9966]   UNRESOLVED   1.0672 [1.0613, 1.0732]          S:0.975 E:0.968 C:0.961 M:0.982 D:0.969
+1   D     1.0106 [0.9916, 1.0300]   UNRESOLVED   1.0077 [0.9993, 1.0161]          S:0.987 E:1.000 C:1.003 M:0.990 R:0.996
+1   floor 0.2992 [0.2956, 0.3029]   (all ideal over all real: the decoder's residual)
+6   S     0.9740 [0.9651, 0.9829]   UNRESOLVED   1.9645 [1.9246, 2.0052]          E:0.968 C:0.781 M:0.981 R:0.979 D:0.978
+6   E     0.8507 [0.8379, 0.8637]   ROOM         1.2732 [1.2604, 1.2860]          S:0.845 C:1.008 M:0.851 R:0.844 D:0.848
+6   C     0.7540 [0.7447, 0.7635]   ROOM         1.8767 [1.8278, 1.9269]          S:0.605 E:0.893 M:0.814 R:0.762 D:0.758
+6   M     0.9160 [0.9049, 0.9272]   ROOM         1.1430 [1.1154, 1.1713]          S:0.923 E:0.917 C:0.989 R:0.908 D:0.916
+6   R     0.9959 [0.9735, 1.0189]   UNRESOLVED   0.9272 [0.9007, 0.9544]          S:1.002 E:0.988 C:1.006 M:0.988 D:0.980
+6   D     0.9892 [0.9805, 0.9980]   NO ROOM      1.1578 [1.1197, 1.1973]          S:0.994 E:0.986 C:0.995 M:0.990 R:0.974
+6   floor 0.3870 [0.3797, 0.3945]   (all ideal over all real: the decoder's residual)
+8   S     0.9683 [0.9556, 0.9812]   UNRESOLVED   1.6167 [1.5772, 1.6572]          E:0.868 C:0.679 M:0.907 R:0.963 D:0.956
+8   E     0.9652 [0.9460, 0.9848]   UNRESOLVED   1.0172 [0.9781, 1.0578]          S:0.866 C:1.013 M:0.971 R:0.969 D:0.960
+8   C     0.9437 [0.9313, 0.9564]   UNRESOLVED   1.2856 [1.2419, 1.3309]          S:0.661 E:0.990 M:0.954 R:0.944 D:0.946
+8   M     0.9755 [0.9568, 0.9944]   UNRESOLVED   1.0235 [0.9888, 1.0595]          S:0.914 E:0.981 C:0.986 R:0.977 D:0.968
+8   R     1.0093 [0.9930, 1.0260]   UNRESOLVED   0.8414 [0.8065, 0.8779]          S:1.004 E:1.014 C:1.009 M:1.010 D:1.008
+8   D     0.9916 [0.9705, 1.0133]   UNRESOLVED   1.4523 [1.4163, 1.4892]          S:0.979 E:0.986 C:0.994 M:0.984 R:0.990
+8   floor 0.5783 [0.5600, 0.5972]   (all ideal over all real: the decoder's residual)
+10  S     0.9193 [0.9033, 0.9356]   ROOM         1.3003 [1.2850, 1.3158]          E:0.855 C:0.801 M:0.872 R:0.916 D:0.891
+10  E     0.9780 [0.9664, 0.9897]   UNRESOLVED   0.9136 [0.9057, 0.9215]          S:0.909 C:0.993 M:0.978 R:0.977 D:0.973
+10  C     0.9467 [0.9384, 0.9550]   UNRESOLVED   1.0696 [1.0615, 1.0778]          S:0.825 E:0.961 M:0.958 R:0.929 D:0.944
+10  M     0.9794 [0.9710, 0.9878]   UNRESOLVED   1.0138 [1.0051, 1.0227]          S:0.929 E:0.979 C:0.992 R:0.978 D:0.975
+10  R     1.0212 [1.0095, 1.0331]   UNRESOLVED   0.8882 [0.8776, 0.8989]          S:1.018 E:1.020 C:1.002 M:1.020 D:1.005
+10  D     0.9938 [0.9875, 1.0002]   NO ROOM      1.2868 [1.2780, 1.2957]          S:0.963 E:0.989 C:0.991 M:0.989 R:0.978
+10  floor 0.7213 [0.7169, 0.7256]   (all ideal over all real: the decoder's residual)
+
+## Reported beside the labels (never part of them)
+
+each oracle's handover (its own ledger entry, in the traces of the part alone ideal) and the room net of it:
+k   part  handover: summed ms  per thread ms   room (measured)   net of handover (wall - handover per thread) / all real
+1   S           15.3            15.3   1.0101            0.9984 [0.9807, 1.0164]
+1   E          285.5           285.5   0.8345            0.6165 [0.6059, 0.6272]
+1   C           30.2            30.2   0.5792            0.5561 [0.5502, 0.5621]
+1   M            9.2             9.2   0.9248            0.9178 [0.8995, 0.9364]
+1   R           52.4            52.4   0.9828            0.9428 [0.9293, 0.9565]
+1   D     (no handover: delivery discarded)   room 1.0106
+6   S           20.3            20.3   0.9740            0.8907 [0.8826, 0.8989]
+6   E          316.8            52.8   0.8507            0.6343 [0.6231, 0.6458]
+6   C           36.5             6.1   0.7540            0.7291 [0.7199, 0.7383]
+6   M           11.7             1.9   0.9160            0.9080 [0.8970, 0.9192]
+6   R           63.8            10.6   0.9959            0.9523 [0.9302, 0.9750]
+6   D     (no handover: delivery discarded)   room 0.9892
+8   S           24.9            24.9   0.9683            0.8413 [0.8290, 0.8537]
+8   E          334.6            41.8   0.9652            0.7519 [0.7349, 0.7692]
+8   C           40.2             5.0   0.9437            0.9181 [0.9059, 0.9304]
+8   M           14.4             1.8   0.9755            0.9663 [0.9477, 0.9852]
+8   R           83.2            10.4   1.0093            0.9563 [0.9402, 0.9727]
+8   D     (no handover: delivery discarded)   room 0.9916
+10  S           33.6            33.6   0.9193            0.7485 [0.7329, 0.7644]
+10  E          380.8            38.1   0.9780            0.7844 [0.7734, 0.7956]
+10  C           44.6             4.5   0.9467            0.9240 [0.9158, 0.9323]
+10  M           17.7             1.8   0.9794            0.9704 [0.9620, 0.9788]
+10  R          116.7            11.7   1.0212            0.9619 [0.9503, 0.9738]
+10  D     (no handover: delivery discarded)   room 0.9938
+
+the clock split against all real: the clock ratio; the wall at a common clock
+  k 1   S 1.000/1.010; E 1.000/0.834; C 0.995/0.576; M 1.000/0.925; R 1.000/0.983; D 1.001/1.011; SECMRD 0.958/0.287
+  k 6   S 1.000/0.974; E 1.000/0.851; C 1.001/0.754; M 1.000/0.916; R 1.000/0.996; D 1.000/0.989; SECMRD 1.000/0.387
+  k 8   S 1.000/0.968; E 1.000/0.965; C 1.001/0.944; M 1.000/0.975; R 1.000/1.009; D 1.000/0.992; SECMRD 1.000/0.578
+  k 10  S 1.000/0.919; E 1.000/0.978; C 1.001/0.948; M 1.000/0.979; R 1.000/1.021; D 1.000/0.994; SECMRD 1.000/0.721
+
+the stores (every arm holds all six) and peak RSS (medians over the timed decodes):
+  k 1   stores: S 48 MiB, E 101, C 114, M 32, R 200; total 495 MiB
+  k 1   peak RSS: all real 610 MiB, all ideal 594, over the arms 593 to 611
+  k 6   stores: S 48 MiB, E 101, C 114, M 32, R 200; total 495 MiB
+  k 6   peak RSS: all real 630 MiB, all ideal 608, over the arms 607 to 630
+  k 8   stores: S 48 MiB, E 101, C 114, M 32, R 200; total 495 MiB
+  k 8   peak RSS: all real 635 MiB, all ideal 620, over the arms 615 to 636
+  k 10  stores: S 48 MiB, E 101, C 114, M 32, R 200; total 495 MiB
+  k 10  peak RSS: all real 642 MiB, all ideal 624, over the arms 620 to 644
+
+the unpinned link at 8: all ideal over all real 0.5710 [0.5556, 0.5867]; pinned all real over unpinned 0.9943 [0.9699, 1.0193]

@@ -57,7 +57,11 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "The decoder as a queueing network" = "blog/2026-11-25-the-decoder-as-a-queueing-network.md" },
+    { "Complementary bottlenecks: reading the ideal-parts matrix" = "blog/2026-11-26-complementary-bottlenecks.md" },
+    { "The decoder as a queueing network" = [
+      { "The story" = "blog/2026-11-25-the-decoder-as-a-queueing-network.md" },
+      { "Beneath it: the theory" = "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" },
+    ] },
     { "Posing the inversion problem" = "blog/2026-11-24-posing-the-inversion-problem.md" },
     { "Masked bottlenecks" = "blog/2026-11-24-the-scanner-hides-the-emitter.md" },
     { "What else moves together" = "blog/2026-11-24-what-else-moves-together.md" },
@@ -90,8 +94,10 @@ nav = [
     { "The width of an induction" = "blog/2026-11-15-induction-width.md" },
     { "Removing duplicated interval lengths and text references" = "blog/2026-11-15-bottom-slots.md" },
     { "Reduce, reuse, recycle" = "blog/2026-11-15-slot-recycling.md" },
-    { "Reconstructing text from compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
-    { "A new way back from the BWT" = "blog/2026-11-10-rauzy-veech-reconstruction.md" },
+    { "A new way back from the BWT" = [
+      { "The post" = "blog/2026-11-10-rauzy-veech-reconstruction.md" },
+      { "Companion: compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
+    ] },
     { "mibz2 gets a pit crew" = "blog/2026-11-09-pit-crew-service-threads.md" },
     { "Reading the BWT's runs off the MTF codes" = "blog/2026-11-08-bwt-runs-from-mtf-codes.md" },
     { "Inverse-BWT navigation: the mathematics" = [
@@ -283,7 +289,9 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-26-complementary-bottlenecks.md" = "At eight workers the scanner and construction must be relieved together, and the matrix is enough to start designing for that." },
   { "blog/2026-11-25-the-decoder-as-a-queueing-network.md" = "Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next." },
+  { "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" = "The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built." },
   { "blog/2026-11-24-posing-the-inversion-problem.md" = "The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits." },
   { "blog/2026-11-24-the-scanner-hides-the-emitter.md" = "Supplying both the serial scanner's output and the emission codes cuts whole-decoder time by 26% at ten workers, more than either stage supplied alone." },
   { "blog/2026-11-24-what-else-moves-together.md" = "The next decoder for bzip2's block sort will come from rows that move together in a new sense, or from inversion steps that yield more information." },
