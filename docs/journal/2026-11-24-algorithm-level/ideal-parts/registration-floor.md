@@ -123,4 +123,10 @@ Its other estimates are shown beside the results, unscored: Residual A of about 
 ## Checks before the data
 
 - **`results/analysis/test_zero_copy_floor.py`:** the analysis on synthetic runs with known walls, 28 checks. Every measure is recovered, the rooms against the floor among them (ROOM and NO ROOM both shown), the prediction is scored both ways, and each VOID and INCOMPLETE fires.
-- **The recipe's DRY on the container:** one block, after rebasing onto Antigravity's merged PR.
+- **The recipe's DRY** (`just bench-zero-copy-floor dry` at f633303f, after PR 921 merged): one block, on a 4-CPU container with no PMU, so not the i9 and not evidence. It is archived as `results/dry/floor-run-20261126T104836Z.tar.gz` (sha256 2b775502…46959c4b).
+  - Every phase from checks to run passed. That is 54 cells and 108 decodes, about 4.9 s a process here.
+  - Every check pass was byte-identical, every ideal part was wholly replayed, and every trace's identities held. The pin held in 54 of 54 traces.
+  - The removed parts read at most 0.57% of their real busy time. `E_consume` read 0.00% in every `F` arm, with no calls.
+  - The zero-copy handovers were each under 4 ms summed (under 1 ms per thread at 6 workers and up), against 30–286 ms copied in the full matrix.
+  - The report was VOID on the machine alone. The clock, the last level's misses and the IMC were all unread here (no PMU, no uncore).
+  - Since the DRY: the prediction is left unscored when there is no interval (one block), where it had read as a miss.

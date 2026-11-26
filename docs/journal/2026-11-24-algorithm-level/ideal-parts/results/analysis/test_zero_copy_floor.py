@@ -195,6 +195,14 @@ def main():
         get(rows, 1, "prediction residual B", "label") == "miss" and "MISS" in text,
     )
 
+    p1, r1 = records()
+    buf = io.StringIO()
+    _, rows1 = zf.analyse(p1, [x for x in r1 if x["block"] == 0], I9, 1, out=buf)
+    check(
+        "one block (a DRY): the prediction is unscored, not a miss",
+        get(rows1, 1, "prediction residual B", "label") == "unscored",
+    )
+
     def spelling_left(r):
         for x in r:
             if x.get("on") == 1 and x["arm"] in ("SFCMRD", "SFCMR") and x["k"] == 6:

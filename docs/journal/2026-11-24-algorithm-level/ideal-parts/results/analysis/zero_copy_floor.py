@@ -345,7 +345,11 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
     if 1 in walls:
         rb = ms(walls[1][B])
         lo, hi = PREDICT_B1
-        label = "hit" if rb[1] <= hi and rb[2] >= lo else "miss"
+        # (no interval, as with one block: not scored)
+        if not (math.isfinite(rb[1]) and math.isfinite(rb[2])):
+            label = "unscored"
+        else:
+            label = "hit" if rb[1] <= hi and rb[2] >= lo else "miss"
         pr(
             f"Antigravity's Residual B at 1 worker, {lo:.0f}-{hi:.0f} ms: measured {rb[0]:.1f} [{rb[1]:.1f}, {rb[2]:.1f}] ms: {label.upper()}"
         )
