@@ -13,7 +13,7 @@ fn run<I: InverseBwt + Default>(data: &[u8], mut after: impl FnMut(&Scratch<I>))
         out.clear();
         decode_block(&b, k, &mut s, &mut out).unwrap();
         after(&s);
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
     s
 }

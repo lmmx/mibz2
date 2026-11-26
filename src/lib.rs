@@ -594,7 +594,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
         if orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
-        let mut out = take(n, std::mem::take(&mut b.syms));
+        let mut out = take(n, std::mem::take(&mut b.syms).into_buffer());
         #[cfg(feature = "trace")]
         trace::mark_sized(
             trace::Kind::InvertStart,
@@ -693,7 +693,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     if orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
-    let mut out = take(n, std::mem::take(&mut b.syms));
+    let mut out = take(n, std::mem::take(&mut b.syms).into_buffer());
     out.clear();
     column(s, n, orig_ptr, crc, b.max_len, k, &mut out)?;
     Ok(out)
@@ -846,7 +846,7 @@ pub fn decode_with<I: bwt::InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8
                     block: Some(index),
                     bit: Some(bit),
                 })?;
-                syms = symbols.syms;
+                syms = symbols.syms.into_buffer();
             }
             stream::Event::Done => return Ok(out),
         }
@@ -914,7 +914,7 @@ pub fn decode_blocks(
                 }
                 let crc = decode_block(&b, k, &mut s, out).map_err(at)?;
                 range.blocks.push((bit, next, crc));
-                syms = b.syms;
+                syms = b.syms.into_buffer();
             }
         }
         bit = next;

@@ -423,7 +423,7 @@ impl<R: Read> Seq<R> {
                             bit: Some(bit),
                         });
                     }
-                    self.syms = symbols.syms;
+                    self.syms = symbols.syms.into_buffer();
                 }
                 Ok(Event::Done) => self.done = true,
                 Err(e) => {
@@ -548,7 +548,7 @@ impl Iterator for Scan<'_> {
                     stream,
                     level,
                 };
-                self.syms = symbols.syms;
+                self.syms = symbols.syms.into_buffer();
                 Some(Ok(span))
             }
             Ok(Event::Done) => {

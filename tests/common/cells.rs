@@ -22,7 +22,7 @@ pub fn decode<I: InverseBwt>(data: &[u8], k: Kernels) -> (Vec<u8>, Result<(), Er
                     block: Some(index),
                     bit: Some(bit),
                 })?;
-                syms = symbols.syms;
+                syms = symbols.syms.into_buffer();
             }
             Event::Done => return Ok(()),
         }

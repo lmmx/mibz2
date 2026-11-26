@@ -73,7 +73,7 @@ fn main() {
             }
             seq += 1;
         }
-        syms = b.syms;
+        syms = b.syms.into_buffer();
     }
 }
 
