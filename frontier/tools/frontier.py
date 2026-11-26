@@ -1,7 +1,7 @@
 """The frontier: claims, holds, blog cards, deltas, flags and the surface.
 
     frontier.py brief [--can shell,rust,...]        what to read, what is held, what you can take
-    frontier.py status                              rewrite frontier/STATUS.md from the files alone
+    frontier.py status                              rewrite frontier/STATUS.md from files and open PRs
     frontier.py check                               validate the frontier's files
     frontier.py claim ID --by AGENT [--hours N]     acquire a hold, atomically, on origin
     frontier.py verify ID --session S               exit 0 iff S holds ID live and no open flag names it
@@ -434,7 +434,7 @@ def check_pr_lineage(event_path, items):
 
 
 def render():
-    """The whole of STATUS.md, from the files alone (live holds are in `brief` and `holds`)."""
+    """STATUS.md from files and live PRs (live holds are in `brief` and `holds`)."""
     claims, cards = load("claims"), load("blog")
     every = claims + cards
     prs, pr_error = read_open_prs()
@@ -698,7 +698,7 @@ def brief(can):
     ]
     take.sort(key=lambda c: (c["priority"], c["id"]))
     print("\n## What you can take (highest priority first)")
-    if prs is None:
+    if review_lines[0].startswith("- UNAVAILABLE:"):
         print("- Review discovery unavailable: these local suggestions are not a verified queue.")
     for c in take:
         print(row(c) + (f", stage {c['stage']}" if "stage" in c else ""))
