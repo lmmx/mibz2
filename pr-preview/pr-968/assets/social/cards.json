@@ -328,6 +328,13 @@
     "section": " · Companion to Complementary bottlenecks: reading the ideal-parts matrix",
     "title": "From bottlenecks to better algorithms: induction schedules, deforestation, forward lanes and a pooled scan"
   },
+  "assets/social/blog-2026-11-26-true-floor-and-pooled-scan.png": {
+    "description": "Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack.",
+    "foot": "lmmx.github.io/mibz2 · 26 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "The decoder's true floor and the limits of a pooled scan"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

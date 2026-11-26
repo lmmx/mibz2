@@ -15,7 +15,7 @@ This post records the evidence that forced the redesign and the mechanism that r
 - **Central routing was the bottleneck, not verification.** Over five days on our shared channel, the coordinating agent wrote 46.1% of all comments and introduced four translation-layer defects in one day. Automated checks—CI, exact-head merge gates, byte-exact tests and frozen decision rules—worked cleanly without a hub.
 - **Fresh contexts beat long-lived swarms.** Matched-token experiments from Paradigm 3 showed that an apparent eight-agent advantage vanished once a single agent restarted with fresh context windows. Retiring a permanent hub turns multi-session work into bounded, disposable sessions sharing lossless files.
 - **A measured frontier lets parallel sessions self-route.** Counterfactual oracle runs mapped every decoder stage's unmasked headroom onto `frontier/surface.tsv`. Independent sessions now pull disjoint work through atomic git holds and leave append-only deltas of at most 40 lines. A generated status page replaces chat.
-- **One word suffices to request work.** A small lexicon (`take one`, `swarm`, `probe` and sixteen more) works because repository files hold the procedures, capability tags, stop tests and merge gates.
+- **One word suffices, but no special words are required.** The vocabulary names activities the participants already understand. Repository files supply the procedures, capability tags, stop tests and merge gates, so the maintainer can speak naturally rather than dispatch tasks.
 - **The mode is an experiment, not dogma.** Live concurrency stays capped at three holds until eight adversarial stress tests pass. A pre-registered three-arm experiment and a daily human readability check will decide whether the flat mode stays or yields to a restarted solo workflow.
 
 ## 1\. Why drop a coordinator that seemed to be working?
@@ -162,19 +162,23 @@ Blog posts use the same schema under `frontier/blog/*.toml` (three cards at laun
 
 ## 4\. Asking for work in a word: the lexicon and its figures of speech
 
-Retiring a central prompt-writer might sound as though the human maintainer now has to write longer instructions. In practice the opposite happens. Under the old hub, a 100-line brief had to repeat base branches, header syntax, stop tests and merge rules, yet still got them wrong. On the frontier, asking for work shrinks to one or two words. The repository's own files—`frontier.py brief`, `surface.tsv`, `dead-ends.tsv`, the root rules and each claim's stop test—supply every operational detail deterministically.
+Retiring a central prompt-writer might sound as though the human maintainer now has to write longer instructions. In practice the opposite happens. Under the old hub, a 100-line brief had to repeat base branches, header syntax, stop tests and merge rules, yet still got them wrong. On the frontier, one or two words can suffice. The repository's own files supply the operational details, not a central prompt-writer.
 
-The lexicon in `frontier/README.md` groups 19 short commands into four loops. First, three commands control execution and session boundaries:
+**The vocabulary is not a user interface.** A fresh session can begin with `swarm`; there is no need to memorise the other expressions. Participants can select and move between activities themselves, and a conversation can uncover a useful contribution without an explicit command. If the maintainer asks why a measurement looks strange, the session can follow the evidence and record a discovery rather than wait to be told to `explore` or `probe`. No separate dispatcher translates ordinary language into commands.
 
-| Say | Mechanical loop triggered |
+There is one practical limit to starting a swarm. The initial configuration allows at most three live claims across the repository, not three running model processes. A hold awaiting a PR merge still occupies a slot even if its worker has stopped. A fresh session can read or review without taking a new hold. The three-slot canary stays in place until the protocol's stress tests and handoff defects are addressed; it is not a target number of agents to spawn. The separate admission limit is twelve open claims. New ideas can still be recorded without being admitted.
+
+The lexicon in `frontier/README.md` names several families of activity. The first concerns participation and session boundaries:
+
+| Shorthand | Activity |
 | --- | --- |
 | `take one` / `work the frontier` | Run `brief`, claim the top matching item, execute under its stop test, leave a delta, open one PR, stop |
 | `swarm` / `work it down` | Take or launch independent fresh sessions per disjoint claim until none fit the live-hold budget |
-| `rupture` | Stop cleanly, write the delta, leave repository state readable, and end the session so the next starts fresh |
+| `rupture` | Request a clean stop now, even if further work is available; no special closing prompt is needed when a session finishes normally |
 
-Second, seven commands shape research targets, measurements and falsification tests:
+The second family concerns research targets, measurements and falsification tests:
 
-| Say | Mechanical loop triggered |
+| Shorthand | Activity |
 | --- | --- |
 | `claim: <one line>` | Author a claim TOML file from that line with kind, zone, capabilities, evidence links and stop test |
 | `probe X` | Run a smooth-zone census of `X` on real blocks and hardware in at most one day before building theory |
@@ -184,9 +188,9 @@ Second, seven commands shape research targets, measurements and falsification te
 | `redraw` | Re-run the zero-copy floor (and matrix if parts changed) after any merge moving 8-worker wall by ≥ 5% |
 | `explore` / `synthesise` | Take a recurring cold exploration claim beyond the surface, or synthesise findings across recent deltas |
 
-Third, seven commands handle stewardship, visibility and local vetoes:
+The third concerns stewardship, visibility and local vetoes:
 
-| Say | Mechanical loop triggered |
+| Shorthand | Activity |
 | --- | --- |
 | `where are we` / `surface` | Summarise `STATUS.md` and recent deltas in plain words in a few minutes of reading; change nothing |
 | `needs me` | List every open `needs_louis` item and the exact decision required from the maintainer |
@@ -196,7 +200,9 @@ Third, seven commands handle stewardship, visibility and local vetoes:
 | `admit X` | Move a claim from `idea` to `open`, within `max_open_claims` |
 | `drop X` / `block X` / `bump X` | Change status or priority, with the reason in a delta |
 
-Finally, two commands operate the blog board: `blog X` creates a card at stage `idea`, and `move <card>` advances it one stage under the board's rules.
+Finally, `blog X` and `move <card>` name the introduction and development of a blog topic. The participants need no instruction from the maintainer to make successive editorial passes.
+
+A session leaves its result and state readable as part of normal completion, not as a special ceremony invoked by the maintainer. Asignifying rupture is about breaking dependence on the session's accumulated context, not requiring another human instruction to close it.
 
 Beside the lexicon sit five compact figures of speech that act as everyday design rules:
 
@@ -206,7 +212,7 @@ Beside the lexicon sit five compact figures of speech that act as everyday desig
 4. **Smooth to explore, striated to ship.** Keep discovery cheap and production changes strictly gated.
 5. **Every number has a home.** Every cited figure traces to an evidence digest, a results folder or a table row—never an unsourced prose claim.
 
-Knowing when *not* to act autonomously is just as explicit. An agent answers questions directly without opening a pull request. It escalates via `needs_louis` only for genuine ambiguity or the four matters reserved to the maintainer under `RULES D`: spending and new infrastructure, rule or role changes, physical workstation runs outside standing authorisation, and facts only the maintainer knows.
+Knowing when *not* to act autonomously is equally important. A purely informational question gets an answer; a concrete contribution clearly implied by the discussion can be made within standing authority (the conversational participation amendment, [\#964](<https://github.com/lmmx/mibz2/pull/964>)). Explicit read-only requests stay read-only. Genuine ambiguity and matters reserved under `RULES D`—spending and new infrastructure, rule or role changes, physical workstation runs outside standing authorisation, and facts only the maintainer knows—still require clarification.
 
 ## 5\. How this should change the work — and what could still go wrong
 
@@ -216,8 +222,22 @@ Decentralisation does not eliminate failure modes; it trades hub failures for fo
 
 - **Backlog runaway.** If every finished claim spawns \\(b\\) new claims on average, the expected change in backlog size after \\(n\\) completions is \\(\\mathbb{E}\[Q\_n - Q\_0\] = n(b - 1)\\). Whenever \\(b \> 1\\), an open queue turns into an unnavigable graveyard. Keeping `idea` creation free while capping active admissions at `max_open_claims = 12` separates cheap discovery from active work in progress.
 - **Intellectual monoculture.** Shared state can still produce centralised thinking if every session greedily picks the highest-priority known target. Reserving roughly one session in five for cold `explore` or `synthesise` protects work not yet on `surface.tsv`. Competing hypotheses may also coexist as separate claims.
-- **Orphaned pull requests.** If sessions release locks upon opening a pull request, striated changes stall unmerged. Holding leases until merge and putting `status = "review"` at the top of `brief` enforces finishing before starting.
+- **Orphaned pull requests.** Releasing locks upon opening a pull request can leave striated changes unmerged. Holding leases until merge and putting `status = "review"` at the top of `brief` is intended to prioritise finishing before starting. The first day's live operation exposed a gap in this mechanism, described below.
 - **Axiom creep.** Removing a coordinator creates a temptation to rebuild one as a sprawling linter. Under our anti-restratification rule (`C7`), `frontier.py check` stays capped at five checks. The root rules file also targets roughly 120 lines, so adding a rule means deleting one. Governance overhead is tracked in tokens and time rather than gameable commit counts.
+
+### First-day feedback: finishing must not require starting
+
+The first afternoon supplied a counterexample to our lock lifecycle. All three holds were occupied, two by work already awaiting integration (PRs [\#955](<https://github.com/lmmx/mibz2/pull/955>) and [\#957](<https://github.com/lmmx/mibz2/pull/957>)). A fresh session could read and review but could not acquire another claim. The existing verification bound authority to the original session, and the review state lived on the unmerged branch rather than the default branch. A limit on outstanding claims had become a limit on useful participation even when workers were idle.
+
+A one-off recovery transferred the existing triage lease by compare-and-swap, merged its reviewed head and recorded the release ([merge record](<https://github.com/lmmx/mibz2/commit/f88024a9ae9091d04afa2cd244b5d84283c5e8d9>), [release record](<https://github.com/lmmx/mibz2/commit/9f046c4018b644240b08578c383b74636a315209>)). The cap stayed at three. This demonstrates a possible recovery, not an automated repair. A normal integration handoff must preserve exclusivity, bind the reviewer to the exact PR head, and work at saturation without opening a new claim. The repair is still under review in PR \#955.
+
+The first blog also needed the maintainer to request its merge. This is unnecessary for reversible prose edits. The maintainer has now directed that blog-only work should publish on the basic mechanical checks, then improve through follow-up PRs, without waiting for approval or deployment. The instruction is recorded in [PR \#964](<https://github.com/lmmx/mibz2/pull/964>); the rule amendment itself is not yet integrated. The board should describe progress rather than prescribe a chain of editorial permission.
+
+### A complementary experiment in learned cooperation
+
+On the same day, Burtenshaw and Rasul published [*Swarms, Flocks, Gangs*](<https://huggingface.co/blog/training-swarms>). Their four peers share a trainable policy but each holds a private integer. After 75 training updates, mean team success rose from 6.6% to 82.3% (first and last five updates), while generated tokens per attempt fell 37.4%. Broadcasts became more common. The held-out endpoint solved 26 of 32 problems; held-out token efficiency was not measured. Since no isolated peer has all the inputs, the task tests learning to communicate, not superiority over a matched-budget solo solver.
+
+Our experiment changes the environment rather than the weights: shared measurements, claims and negative results accumulate across sessions. Agents need not learn a new communication policy or rely on a private inbox. The two approaches are complementary. More useful communication can reduce computation; fewer messages alone are not evidence of efficiency. The eventual comparison must account for the cost of writing, discovering and integrating durable evidence, not merely count messages or agents.
 
 ## 6\. What will test it
 
