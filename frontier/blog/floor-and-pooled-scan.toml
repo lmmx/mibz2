@@ -7,7 +7,7 @@ priority = 2
 status = "open"
 owned_paths = []
 needs_louis = ""
-stage = "idea"
+stage = "outline"
 post = ""
 drafted_by = ""
 reviewed_by = ""
@@ -23,4 +23,4 @@ The site's rules, as above; every number traced to results/floor and pooled-scan
 done_when = """
 Published.
 """
-links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md", "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md"]
+links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md", "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md", "docs/journal/2026-11-24-algorithm-level/floor-and-pooled-scan-outline.md"]
