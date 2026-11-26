@@ -1,5 +1,8 @@
-//! (research only, `ideal-*`) Byte-identity, store deduplication, work-removal counters and
-//! activity-ledger checks for the four ideal-parts oracles:
+//! (research only, `scan-oracle`, `supplied-codes`, `ideal-*`) Byte-identity, store
+//! deduplication, lock-free `OnceLock` snapshot verification, zero-copy handover accounting,
+//! work-removal counters and activity-ledger checks for all six ideal-parts oracles:
+//! - S (`scan-oracle`)
+//! - E (`supplied-codes`: `Supplied` / `E_chase` and `SuppliedFull` / `E_full`)
 //! - C (`ideal-construction`, target T2)
 //! - M (`ideal-mtf`, target T3)
 //! - R (`ideal-rle1`, target T6)
@@ -9,6 +12,8 @@
 //! and multi-stream repeated inputs; plus an env-driven (`MIBZ2_WIKIDATA`) test on
 //! `wikidata.bz2` and `wikidata x4` (`bench/wikidata.py` from `bench-data`).
 #![cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -130,8 +135,17 @@ fn sha256(data: &[u8]) -> [u8; 32] {
     h.finish()
 }
 
-/// Reset every compiled ideal oracle to Real so tests never bleed state into each other.
+/// Reset every compiled ideal oracle to Real/Open/Scan and turn accounting off so tests never
+/// bleed state into each other.
 fn reset_all_modes() {
+    #[cfg(feature = "scan-oracle")]
+    mibz2::scan_oracle::set_mode(mibz2::scan_oracle::Mode::Scan);
+    #[cfg(feature = "supplied-codes")]
+    {
+        mibz2::supplied_codes::set_mode(mibz2::supplied_codes::Mode::Open);
+        mibz2::supplied_codes::set_condition(false);
+        mibz2::supplied_codes::set_record_recs(true);
+    }
     #[cfg(feature = "ideal-construction")]
     mibz2::ideal::construction::set_mode(mibz2::ideal::Mode::Real);
     #[cfg(feature = "ideal-mtf")]
@@ -140,6 +154,171 @@ fn reset_all_modes() {
     mibz2::ideal::rle1::set_mode(mibz2::ideal::Mode::Real);
     #[cfg(feature = "ideal-delivery")]
     mibz2::ideal::delivery::set_mode(mibz2::ideal::delivery::Mode::Real);
+    mibz2::ideal::accounting::set_enabled(false);
+    mibz2::ideal::accounting::reset();
+}
+
+#[cfg(feature = "scan-oracle")]
+#[test]
+fn scan_oracle_zero_copy_byte_identical_and_skips_work() {
+    use mibz2::ideal::accounting;
+    use mibz2::scan_oracle as so;
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    reset_all_modes();
+
+    for CorpusInput {
+        name,
+        z,
+        len: want_len,
+        sha: want_sha,
+        blocks: total_blocks,
+    } in ab_corpora_inputs()
+    {
+        so::clear_store();
+        let _ = so::take_scanned();
+        let _ = so::take_replayed();
+
+        so::set_mode(so::Mode::Record);
+        let (rec_len, rec_sha) = decode_workers_sha256(z, 4);
+        assert_eq!((rec_len, rec_sha), (want_len, want_sha), "{name} S record");
+        assert_eq!(so::take_scanned(), total_blocks, "{name} S record scanned");
+        assert_eq!(so::take_replayed(), 0, "{name} S record replayed");
+        let (blocks, _syms, _bytes, conflicts, missing) = so::store_size();
+        assert_eq!((blocks, conflicts, missing), (total_blocks, 0, 0), "{name}");
+
+        for w in WORKERS {
+            let _ = so::take_scanned();
+            let _ = so::take_replayed();
+            let _ = so::take_lock_acquires();
+            accounting::reset();
+            accounting::set_enabled(true);
+            so::set_mode(so::Mode::Replay);
+            let (got_len, got_sha) = decode_workers_sha256(z, w);
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!(
+                (got_len, got_sha),
+                (want_len, want_sha),
+                "{name} S replay w={w}: got {} want {}",
+                hex(got_sha),
+                hex(want_sha)
+            );
+            assert_eq!(
+                so::take_scanned(),
+                0,
+                "{name} S replay w={w}: Huffman scan must not run"
+            );
+            assert_eq!(
+                so::take_replayed(),
+                total_blocks,
+                "{name} S replay w={w}: every block must replay"
+            );
+            assert_eq!(
+                acc.hand_s.calls, total_blocks,
+                "{name} S hand_s calls w={w}"
+            );
+            assert_eq!(
+                acc.hand_s.bytes, 0,
+                "{name} S zero-copy handover bytes w={w}"
+            );
+            if so::is_frozen_lock_free() {
+                assert_eq!(so::take_lock_acquires(), 0, "{name} S OnceLock 0 locks");
+            }
+        }
+        so::set_mode(so::Mode::Scan);
+    }
+    so::clear_store();
+}
+
+#[cfg(feature = "supplied-codes")]
+#[test]
+fn supplied_codes_zero_copy_and_e_full_fallback_byte_identical() {
+    use mibz2::ideal::accounting;
+    use mibz2::supplied_codes as sup;
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    reset_all_modes();
+
+    for CorpusInput {
+        name,
+        z,
+        len: want_len,
+        sha: want_sha,
+        blocks: _total_blocks,
+    } in ab_corpora_inputs()
+    {
+        sup::clear_store();
+        let _ = sup::take();
+        let _ = sup::take_counts();
+        sup::set_record_recs(false);
+
+        sup::set_mode(sup::Mode::Record);
+        let (rec_len, rec_sha) = decode_workers_sha256(z, 4);
+        assert_eq!((rec_len, rec_sha), (want_len, want_sha), "{name} E record");
+        let rec_counts = sup::take_counts();
+        assert_eq!(rec_counts.supplied_chase, 0, "{name} E record supplied");
+        assert_eq!(rec_counts.supplied_full, 0, "{name} E record supplied_full");
+        assert!(
+            sup::take().is_empty(),
+            "{name} record_recs=false keeps RECS empty"
+        );
+
+        for w in WORKERS {
+            // Mode::Supplied (E_chase): borrows &[u32] zero-copy, splits HandEDeliver from EConsume.
+            let _ = sup::take_counts();
+            let _ = sup::take_lock_acquires();
+            accounting::reset();
+            accounting::set_enabled(true);
+            sup::set_mode(sup::Mode::Supplied);
+            let (got_len, got_sha) = decode_workers_sha256(z, w);
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert_eq!(
+                (got_len, got_sha),
+                (want_len, want_sha),
+                "{name} E Supplied w={w}: got {} want {}",
+                hex(got_sha),
+                hex(want_sha)
+            );
+            assert_eq!(
+                cts.supplied_chase, rec_counts.open,
+                "{name} E supplied w={w}"
+            );
+            assert_eq!(cts.consumed, rec_counts.open, "{name} E consumed w={w}");
+            assert_eq!(cts.supplied_full, 0, "{name} E supplied_full w={w}");
+            assert_eq!(acc.hand_e_deliver.calls, rec_counts.open);
+            assert_eq!(
+                acc.hand_e_deliver.bytes, 0,
+                "{name} E deliver zero-copy w={w}"
+            );
+            assert_eq!(acc.e_consume.calls, rec_counts.open);
+            if sup::is_frozen_lock_free() {
+                assert_eq!(sup::take_lock_acquires(), 0, "{name} E OnceLock 0 locks");
+            }
+
+            // Mode::SuppliedFull (E_full) standalone without R replaying must fall back safely so
+            // output stays byte-identical.
+            let _ = sup::take_counts();
+            accounting::reset();
+            accounting::set_enabled(true);
+            sup::set_mode(sup::Mode::SuppliedFull);
+            let (got_len, got_sha) = decode_workers_sha256(z, w);
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert_eq!(
+                (got_len, got_sha),
+                (want_len, want_sha),
+                "{name} E SuppliedFull standalone fallback w={w}"
+            );
+            assert_eq!(cts.supplied_chase, rec_counts.open);
+            assert_eq!(cts.consumed, rec_counts.open);
+            assert_eq!(cts.supplied_full, 0);
+            assert_eq!(acc.e_consume.calls, rec_counts.open);
+        }
+        reset_all_modes();
+    }
+    sup::clear_store();
 }
 
 #[cfg(feature = "ideal-construction")]
@@ -512,6 +691,511 @@ fn all_four_oracles_compose_byte_identically() {
     ic::clear_store();
     im::clear_store();
     ir::clear_store();
+}
+
+#[cfg(all(
+    feature = "scan-oracle",
+    feature = "ideal-construction",
+    feature = "ideal-mtf",
+    feature = "ideal-rle1",
+    feature = "ideal-delivery",
+))]
+#[test]
+fn all_six_oracles_zero_copy_e_full_and_accounting() {
+    use mibz2::ideal::{
+        accounting, construction as ic, delivery as id, mtf as im, rle1 as ir, Mode,
+    };
+    use mibz2::scan_oracle as so;
+    use mibz2::supplied_codes as sup;
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    reset_all_modes();
+
+    for CorpusInput {
+        name,
+        z,
+        len: want_len,
+        sha: want_sha,
+        blocks: total_blocks,
+    } in ab_corpora_inputs()
+    {
+        so::clear_store();
+        sup::clear_store();
+        ic::clear_store();
+        im::clear_store();
+        ir::clear_store();
+        let _ = so::take_scanned();
+        let _ = sup::take_counts();
+        let _ = ic::take_constructed();
+        let _ = im::take_executed();
+        let _ = ir::take_executed();
+
+        // Single record pass fills all five stores (S, E, C, M, R).
+        so::set_mode(so::Mode::Record);
+        sup::set_mode(sup::Mode::Record);
+        sup::set_record_recs(false);
+        ic::set_mode(Mode::Record);
+        im::set_mode(Mode::Record);
+        ir::set_mode(Mode::Record);
+        id::set_mode(id::Mode::Real);
+        let (rec_len, rec_sha) = decode_workers_sha256(z, 4);
+        assert_eq!((rec_len, rec_sha), (want_len, want_sha), "{name} record");
+        let rec_open = ic::take_constructed();
+        let sup_rec = sup::take_counts();
+
+        for w in WORKERS {
+            // 1) SE(chase)CMRD with D=Check: every oracle replayed zero-copy, E_consume runs.
+            let _ = so::take_scanned();
+            let _ = so::take_replayed();
+            let _ = sup::take_counts();
+            let _ = ic::take_constructed();
+            let _ = ic::take_replayed();
+            let _ = ic::take_refused_replayed();
+            let _ = im::take_executed();
+            let _ = im::take_replayed();
+            let _ = ir::take_executed();
+            let _ = ir::take_replayed();
+            let _ = id::take_stats();
+            id::clear_check();
+            accounting::reset();
+            accounting::set_enabled(true);
+
+            so::set_mode(so::Mode::Replay);
+            sup::set_mode(sup::Mode::Supplied);
+            sup::set_record_recs(false);
+            ic::set_mode(Mode::Replay);
+            im::set_mode(Mode::Replay);
+            ir::set_mode(Mode::Replay);
+            id::set_mode(id::Mode::Check);
+
+            let t0 = std::time::Instant::now();
+            let out = decode_workers(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert!(out.is_empty());
+            assert_eq!(
+                id::take_check_sha256(),
+                want_sha,
+                "{name} SE(chase)CMRD w={w}"
+            );
+            assert_eq!(so::take_scanned(), 0);
+            assert_eq!(so::take_replayed(), total_blocks);
+            assert_eq!(ic::take_constructed(), 0);
+            assert_eq!(ic::take_replayed() + ic::take_refused_replayed(), rec_open);
+            assert_eq!(im::take_executed(), 0);
+            assert_eq!(im::take_replayed(), total_blocks);
+            assert_eq!(ir::take_executed(), 0);
+            assert_eq!(ir::take_replayed(), total_blocks);
+            assert_eq!(cts.supplied_chase, sup_rec.open);
+            assert_eq!(cts.consumed, sup_rec.open);
+            assert_eq!(cts.supplied_full, 0);
+            assert_eq!(acc.hand_s.bytes, 0);
+            assert_eq!(acc.hand_c.bytes, 0);
+            assert_eq!(acc.hand_e_deliver.bytes, 0);
+            assert_eq!(acc.hand_r.bytes, 0);
+            assert_eq!(acc.e_consume.calls, sup_rec.open);
+            let _sum = acc.floor_summary(wall_ns, w);
+
+            // 2) SE(full)CMRD with D=Check: E_consume completely skipped (0 calls, 0 ns),
+            //    still SHA-256 byte-identical via R's BlockBuf::Shared.
+            let _ = sup::take_counts();
+            let _ = id::take_stats();
+            id::clear_check();
+            accounting::reset();
+            accounting::set_enabled(true);
+            sup::set_mode(sup::Mode::SuppliedFull);
+            id::set_mode(id::Mode::Check);
+            let t0 = std::time::Instant::now();
+            let out = decode_workers(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert!(out.is_empty());
+            assert_eq!(
+                id::take_check_sha256(),
+                want_sha,
+                "{name} SE(full)CMRD w={w}"
+            );
+            assert_eq!(cts.supplied_chase, 0);
+            assert_eq!(cts.supplied_full, sup_rec.open);
+            assert_eq!(cts.consumed, 0, "{name} E_full skips E_consume w={w}");
+            assert_eq!(acc.e_consume.calls, 0);
+            assert_eq!(acc.e_consume.ns, 0);
+            assert_eq!(acc.hand_e_deliver.calls, sup_rec.open);
+            assert_eq!(acc.hand_e_deliver.bytes, 0);
+            assert_eq!(acc.hand_r.bytes, 0);
+            let sum = acc.floor_summary(wall_ns, w);
+            assert_eq!(sum.e_consume_ms_per_thread, 0.0);
+
+            // 3) SE(full)CMR with D=Real: full output delivered to caller byte-identically.
+            let _ = sup::take_counts();
+            accounting::reset();
+            accounting::set_enabled(true);
+            id::set_mode(id::Mode::Real);
+            let (got_len, got_sha) = decode_workers_sha256(z, w);
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert_eq!(
+                (got_len, got_sha),
+                (want_len, want_sha),
+                "{name} SE(full)CMR w={w}"
+            );
+            assert_eq!(cts.supplied_full, sup_rec.open);
+            assert_eq!(cts.consumed, 0);
+            assert_eq!(acc.e_consume.calls, 0);
+            assert_eq!(acc.delivery_copy.bytes, want_len);
+        }
+        reset_all_modes();
+    }
+    so::clear_store();
+    sup::clear_store();
+    ic::clear_store();
+    im::clear_store();
+    ir::clear_store();
+}
+
+/// Full 6-oracle zero-copy verification + OnceLock lock-free assertion + FloorAccounting report
+/// on `wikidata x4` (frozen first so all 5 stores use the `OnceLock` fast path with 0 lock
+/// acquires) and `wikidata` at 1, 4, and 8 workers.
+/// Run with:
+/// `MIBZ2_WIKIDATA=/path/to/wikidata.bz2 cargo test --release --features "scan-oracle ideal-construction ideal-mtf ideal-rle1 ideal-delivery" --test ideal_oracles wikidata_and_x4_zero_copy_floor_verified -- --ignored --nocapture`
+#[cfg(all(
+    feature = "scan-oracle",
+    feature = "ideal-construction",
+    feature = "ideal-mtf",
+    feature = "ideal-rle1",
+    feature = "ideal-delivery",
+))]
+#[test]
+#[ignore]
+fn wikidata_and_x4_zero_copy_floor_verified() {
+    use mibz2::ideal::{
+        accounting, construction as ic, delivery as id, mtf as im, rle1 as ir, Mode,
+    };
+    use mibz2::scan_oracle as so;
+    use mibz2::supplied_codes as sup;
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    reset_all_modes();
+
+    let path = std::env::var("MIBZ2_WIKIDATA")
+        .expect("set MIBZ2_WIKIDATA to the wikidata.bz2 built by bench/wikidata.py");
+    let one_bytes = std::fs::read(&path).expect("read wikidata.bz2");
+    let mut x4_bytes = Vec::with_capacity(one_bytes.len() * 4);
+    for _ in 0..4 {
+        x4_bytes.extend_from_slice(&one_bytes);
+    }
+    let one: &'static [u8] = one_bytes.leak();
+    let x4: &'static [u8] = x4_bytes.leak();
+
+    // Run `wikidata x4` first so the initial freeze populates `OnceLock` directly for all 5
+    // stores and proves lock_acquires == 0 on the full benchmark corpus.
+    for (idx, (label, z)) in [("wikidata x4", x4), ("wikidata", one)]
+        .into_iter()
+        .enumerate()
+    {
+        let total_blocks = count_blocks(z);
+        reset_all_modes();
+        let (want_len, want_sha) = decode_workers_sha256(z, 4);
+        println!(
+            "\n=== ZERO-COPY {label}: blocks={total_blocks} decoded_bytes={want_len} sha256={} ===",
+            hex(want_sha)
+        );
+
+        so::clear_store();
+        sup::clear_store();
+        ic::clear_store();
+        im::clear_store();
+        ir::clear_store();
+        let _ = so::take_scanned();
+        let _ = sup::take_counts();
+        let _ = ic::take_constructed();
+        let _ = im::take_executed();
+        let _ = ir::take_executed();
+
+        so::set_mode(so::Mode::Record);
+        sup::set_mode(sup::Mode::Record);
+        sup::set_record_recs(false);
+        ic::set_mode(Mode::Record);
+        im::set_mode(Mode::Record);
+        ir::set_mode(Mode::Record);
+        let (rec_len, rec_sha) = decode_workers_sha256(z, 4);
+        assert_eq!((rec_len, rec_sha), (want_len, want_sha));
+        let rec_open = ic::take_constructed();
+        let sup_rec = sup::take_counts();
+        reset_all_modes();
+
+        let ss = so::store_size();
+        let es = sup::store_size();
+        let cs = ic::store_size();
+        let ms = im::store_size();
+        let rs = ir::store_size();
+        println!(
+            "STORES {label}: S={:.2}MiB({}) E={:.2}MiB({}) C={:.2}MiB({}/{}) M={:.2}MiB({}/{}) R={:.2}MiB({}/{})",
+            ss.2 as f64 / 1048576.0, ss.0,
+            es.2 as f64 / 1048576.0, es.0,
+            cs.2 as f64 / 1048576.0, cs.1, cs.0,
+            ms.2 as f64 / 1048576.0, ms.1, ms.0,
+            rs.2 as f64 / 1048576.0, rs.1, rs.0,
+        );
+
+        // Verify every individual factor + combined floor arms at w=1, 4, 8 (SHA-256 byte-identical).
+        for w in WORKERS {
+            // S alone
+            reset_all_modes();
+            let _ = so::take_scanned();
+            let _ = so::take_replayed();
+            let _ = so::take_lock_acquires();
+            accounting::set_enabled(true);
+            so::set_mode(so::Mode::Replay);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!((len, sha), (want_len, want_sha), "{label} S w={w}");
+            assert_eq!(so::take_scanned(), 0);
+            assert_eq!(so::take_replayed(), total_blocks);
+            assert_eq!(acc.hand_s.bytes, 0);
+            if idx == 0 {
+                assert!(so::is_frozen_lock_free(), "S OnceLock active on x4");
+                assert_eq!(so::take_lock_acquires(), 0, "S 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} S             wall={:7.2}ms hand_S={:5.2}ms bytes={} sha=ok",
+                wall_ns as f64 / 1e6,
+                acc.hand_s.ms(),
+                acc.hand_s.bytes
+            );
+
+            // E(chase) alone
+            reset_all_modes();
+            sup::set_record_recs(false);
+            let _ = sup::take_counts();
+            let _ = sup::take_lock_acquires();
+            accounting::set_enabled(true);
+            sup::set_mode(sup::Mode::Supplied);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert_eq!((len, sha), (want_len, want_sha), "{label} E w={w}");
+            assert_eq!(cts.supplied_chase, sup_rec.open);
+            assert_eq!(cts.consumed, sup_rec.open);
+            assert_eq!(acc.hand_e_deliver.bytes, 0);
+            if idx == 0 {
+                assert!(sup::is_frozen_lock_free(), "E OnceLock active on x4");
+                assert_eq!(sup::take_lock_acquires(), 0, "E 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} E(chase)      wall={:7.2}ms hand_E_deliv={:5.2}ms E_consume={:6.2}ms bytes={} sha=ok",
+                wall_ns as f64 / 1e6, acc.hand_e_deliver.ms(), acc.e_consume.ms(), acc.hand_e_deliver.bytes
+            );
+
+            // E(full) standalone fallback (R=Real) -> still byte-identical
+            reset_all_modes();
+            sup::set_record_recs(false);
+            sup::set_mode(sup::Mode::SuppliedFull);
+            let (len, sha) = decode_workers_sha256(z, w);
+            assert_eq!(
+                (len, sha),
+                (want_len, want_sha),
+                "{label} E(full) fallback w={w}"
+            );
+
+            // C alone
+            reset_all_modes();
+            let _ = ic::take_constructed();
+            let _ = ic::take_replayed();
+            let _ = ic::take_refused_replayed();
+            let _ = ic::take_lock_acquires();
+            accounting::set_enabled(true);
+            ic::set_mode(Mode::Replay);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!((len, sha), (want_len, want_sha), "{label} C w={w}");
+            assert_eq!(ic::take_constructed(), 0);
+            assert_eq!(ic::take_replayed() + ic::take_refused_replayed(), rec_open);
+            assert_eq!(acc.hand_c.bytes, 0);
+            if idx == 0 {
+                assert!(ic::is_frozen_lock_free(), "C OnceLock active on x4");
+                assert_eq!(ic::take_lock_acquires(), 0, "C 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} C             wall={:7.2}ms hand_C={:5.2}ms bytes={} sha=ok",
+                wall_ns as f64 / 1e6,
+                acc.hand_c.ms(),
+                acc.hand_c.bytes
+            );
+
+            // M alone
+            reset_all_modes();
+            let _ = im::take_executed();
+            let _ = im::take_replayed();
+            let _ = im::take_lock_acquires();
+            accounting::set_enabled(true);
+            im::set_mode(Mode::Replay);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!((len, sha), (want_len, want_sha), "{label} M w={w}");
+            assert_eq!(im::take_executed(), 0);
+            assert_eq!(im::take_replayed(), total_blocks);
+            if idx == 0 {
+                assert!(im::is_frozen_lock_free(), "M OnceLock active on x4");
+                assert_eq!(im::take_lock_acquires(), 0, "M 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} M             wall={:7.2}ms hand_M={:5.2}ms bytes={} sha=ok",
+                wall_ns as f64 / 1e6,
+                acc.hand_m.ms(),
+                acc.hand_m.bytes
+            );
+
+            // R alone
+            reset_all_modes();
+            let _ = ir::take_executed();
+            let _ = ir::take_replayed();
+            let _ = ir::take_lock_acquires();
+            accounting::set_enabled(true);
+            ir::set_mode(Mode::Replay);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!((len, sha), (want_len, want_sha), "{label} R w={w}");
+            assert_eq!(ir::take_executed(), 0);
+            assert_eq!(ir::take_replayed(), total_blocks);
+            assert_eq!(acc.hand_r.bytes, 0);
+            if idx == 0 {
+                assert!(ir::is_frozen_lock_free(), "R OnceLock active on x4");
+                assert_eq!(ir::take_lock_acquires(), 0, "R 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} R             wall={:7.2}ms hand_R={:5.2}ms bytes={} sha=ok",
+                wall_ns as f64 / 1e6,
+                acc.hand_r.ms(),
+                acc.hand_r.bytes
+            );
+
+            // SE(chase)CMRD (D=Check for SHA-256, then D=Discard for pure floor timing)
+            reset_all_modes();
+            sup::set_record_recs(false);
+            so::set_mode(so::Mode::Replay);
+            sup::set_mode(sup::Mode::Supplied);
+            ic::set_mode(Mode::Replay);
+            im::set_mode(Mode::Replay);
+            ir::set_mode(Mode::Replay);
+            id::clear_check();
+            id::set_mode(id::Mode::Check);
+            assert!(decode_workers(z, w).is_empty());
+            assert_eq!(
+                id::take_check_sha256(),
+                want_sha,
+                "{label} SE(chase)CMRD w={w}"
+            );
+
+            let _ = so::take_lock_acquires();
+            let _ = sup::take_lock_acquires();
+            let _ = ic::take_lock_acquires();
+            let _ = im::take_lock_acquires();
+            let _ = ir::take_lock_acquires();
+            let _ = sup::take_counts();
+            accounting::reset();
+            accounting::set_enabled(true);
+            id::set_mode(id::Mode::Discard);
+            let t0 = std::time::Instant::now();
+            assert!(decode_workers(z, w).is_empty());
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let sum = acc.floor_summary(wall_ns, w);
+            let locks = so::take_lock_acquires()
+                + sup::take_lock_acquires()
+                + ic::take_lock_acquires()
+                + im::take_lock_acquires()
+                + ir::take_lock_acquires();
+            if idx == 0 {
+                assert_eq!(locks, 0, "SE(chase)CMRD 0 locks on x4");
+            }
+            println!(
+                "ARM {label:11} w={w} SE(chase)CMRD wall={:7.2}ms hand_S={:5.2}ms w_hand={:5.2}ms/t E_cons={:6.2}ms/t resB={:6.2}ms copied={} locks={locks} sha=ok",
+                sum.wall_ms, sum.hand_s_ms, sum.worker_handover_ms_per_thread,
+                sum.e_consume_ms_per_thread, sum.implied_residual_b_ms, sum.total_handover_copied_bytes
+            );
+
+            // SE(full)CMRD (D=Check for SHA-256, then D=Discard for pure Residual B floor timing)
+            sup::set_mode(sup::Mode::SuppliedFull);
+            id::clear_check();
+            id::set_mode(id::Mode::Check);
+            assert!(decode_workers(z, w).is_empty());
+            assert_eq!(
+                id::take_check_sha256(),
+                want_sha,
+                "{label} SE(full)CMRD w={w}"
+            );
+
+            let _ = sup::take_counts();
+            accounting::reset();
+            accounting::set_enabled(true);
+            id::set_mode(id::Mode::Discard);
+            let t0 = std::time::Instant::now();
+            assert!(decode_workers(z, w).is_empty());
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            let cts = sup::take_counts();
+            assert_eq!(cts.supplied_full, sup_rec.open);
+            assert_eq!(cts.consumed, 0);
+            assert_eq!(acc.e_consume.calls, 0);
+            let sum = acc.floor_summary(wall_ns, w);
+            println!(
+                "ARM {label:11} w={w} SE(full)CMRD  wall={:7.2}ms hand_S={:5.2}ms w_hand={:5.2}ms/t E_cons={:6.2}ms/t resB={:6.2}ms copied={} sha=ok",
+                sum.wall_ms, sum.hand_s_ms, sum.worker_handover_ms_per_thread,
+                sum.e_consume_ms_per_thread, sum.implied_residual_b_ms, sum.total_handover_copied_bytes
+            );
+
+            // SE(full)CMR (D=Real -> output delivered to caller byte-identically)
+            accounting::reset();
+            accounting::set_enabled(true);
+            id::set_mode(id::Mode::Real);
+            let t0 = std::time::Instant::now();
+            let (len, sha) = decode_workers_sha256(z, w);
+            let wall_ns = t0.elapsed().as_nanos() as u64;
+            accounting::set_enabled(false);
+            let acc = accounting::take();
+            assert_eq!(
+                (len, sha),
+                (want_len, want_sha),
+                "{label} SE(full)CMR w={w}"
+            );
+            assert_eq!(acc.e_consume.calls, 0);
+            let sum = acc.floor_summary(wall_ns, w);
+            println!(
+                "ARM {label:11} w={w} SE(full)CMR   wall={:7.2}ms hand_S={:5.2}ms w_hand={:5.2}ms/t deliv_copy={:5.2}ms resB={:6.2}ms sha=ok",
+                sum.wall_ms, sum.hand_s_ms, sum.worker_handover_ms_per_thread,
+                sum.delivery_copy_ms, sum.implied_residual_b_ms
+            );
+        }
+        reset_all_modes();
+    }
+
+    so::clear_store();
+    sup::clear_store();
+    ic::clear_store();
+    im::clear_store();
+    ir::clear_store();
+    reset_all_modes();
 }
 
 /// Wikidata and wikidata x4 verification + store sizes + activity ledger check.

@@ -1,25 +1,39 @@
-//! Research only (`ideal-construction`, `ideal-mtf`, `ideal-rle1`, `ideal-delivery`):
-//! the ideal-parts matrix's oracles (`docs/journal/2026-11-24-algorithm-level/ideal-parts/`).
+//! Research only (`scan-oracle`, `supplied-codes`, `ideal-construction`, `ideal-mtf`,
+//! `ideal-rle1`, `ideal-delivery`): zero-copy lock-free oracles and floor accounting for the
+//! ideal-parts matrix (`docs/journal/2026-11-24-algorithm-level/ideal-parts/`, `IDEAL-PARTS-2.md` §3).
 //!
-//! Each oracle follows `scan_oracle`'s shape:
+//! Each oracle follows the same zero-copy lock-free shape:
 //! - a process-global mode set between decodes (`Real`, `Record` or `Replay`; for delivery,
 //!   `Real`, `Discard` or `Check`);
 //! - a `Record` pass that runs the part as shipped and stores its output by block index,
-//!   sharing repeated blocks;
-//! - a `Replay` mode that skips the part's own work and copies its recorded output once
-//!   (charged to the handover) into the next stage's buffers;
-//! - store byte counts and execution/replay counters.
+//!   deduplicating repeated blocks across streams;
+//! - switching to `Replay` freezes the store into a lock-free `OnceLock` snapshot
+//!   ([`frozen::FrozenSlot`]) so workers read entries with zero locks and zero `Arc` refcount
+//!   churn;
+//! - zero-copy borrowed or shared hand-overs (`&[u16]` for S/M, `&Built` for C, `&[u32]` for E,
+//!   `BlockBuf::Shared(Arc<[u8]>)` for R) and zero-lock per-phase accounting ([`accounting`]).
 
+pub mod accounting;
 #[cfg(feature = "ideal-construction")]
 pub mod construction;
 #[cfg(feature = "ideal-delivery")]
 pub mod delivery;
+#[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
+    feature = "ideal-construction",
+    feature = "ideal-mtf",
+    feature = "ideal-rle1",
+))]
+pub(crate) mod frozen;
 #[cfg(feature = "ideal-mtf")]
 pub mod mtf;
 #[cfg(feature = "ideal-rle1")]
 pub mod rle1;
 
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -73,6 +87,8 @@ impl Mode {
 }
 
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -84,6 +100,8 @@ thread_local! {
 
 /// Restores the worker thread's previous block index on drop (including on panic)
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -91,6 +109,8 @@ thread_local! {
 pub(crate) struct BlockGuard(Option<u64>);
 
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -103,6 +123,8 @@ impl Drop for BlockGuard {
 
 /// Bind `index` as the block this worker thread is currently decoding
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -114,10 +136,14 @@ pub(crate) fn enter_block(index: u64) -> BlockGuard {
 
 /// The block index bound to this worker thread, if any
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
 ))]
+#[inline]
+#[allow(dead_code)]
 pub(crate) fn current_block() -> Option<u64> {
     BLOCK.with(Cell::get)
 }

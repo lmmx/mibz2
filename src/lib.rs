@@ -77,10 +77,40 @@
 //! - a block whose **compressed form passes 64 MiB** is an error (a real block is at most
 //!   about 4.2 MB; only a code-length table padded with no-op steps could be longer).
 
+/// (research, `character`) an activity begun or ended on this thread, or a point
+/// (src/character.rs), with the `character` feature only
+macro_rules! ch {
+    (begin $t:ident) => {
+        #[cfg(feature = "character")]
+        crate::character::begin(crate::character::Tag::$t);
+    };
+    (end $t:ident) => {
+        #[cfg(feature = "character")]
+        crate::character::end(crate::character::Tag::$t);
+    };
+    (point $t:ident, $place:expr, $x:expr) => {
+        #[cfg(feature = "character")]
+        crate::character::point(crate::character::Tag::$t, $place as u64, $x as u64);
+    };
+    (occ $t:ident, $place:expr, $x:expr; $($b:ident $d:expr),+) => {
+        #[cfg(feature = "character")]
+        crate::character::occ_point(
+            &[$((crate::character::Buffer::$b, $d as i64)),+],
+            crate::character::Tag::$t,
+            $place as u64,
+            $x as u64,
+        );
+    };
+}
+
 pub mod bits;
 pub mod block;
 pub mod bwt;
 mod cells;
+// (research only, `character`: the decoder's character, its activities' ledgers)
+#[cfg(feature = "character")]
+#[doc(hidden)]
+pub mod character;
 // (research only: the grammar replay harness, with `grammar-replay`)
 #[cfg(feature = "grammar-replay")]
 #[doc(hidden)]
@@ -109,8 +139,11 @@ mod open;
 #[cfg(feature = "census")]
 #[doc(hidden)]
 pub mod census;
-// (research only: the ideal-parts matrix's oracles C, M, R and delivery mode D)
+// (research only: the ideal-parts matrix's oracles C, M, R, delivery mode D, shared lock-free
+// store container and floor accounting)
 #[cfg(any(
+    feature = "scan-oracle",
+    feature = "supplied-codes",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -125,6 +158,16 @@ pub mod phase;
 mod read;
 pub mod rle;
 pub mod runs;
+// (research only, `supplied-codes`: the open kernel's emitter handed its word codes in output
+// order, the bench-supplied-codes diagnostic's switch, store and records)
+#[cfg(feature = "supplied-codes")]
+#[doc(hidden)]
+pub mod supplied_codes;
+// (research only, `scan-oracle`: the parallel decoder's scanner recorded or replayed, the
+// bench-four-arm diagnostic's scanner side)
+#[cfg(feature = "scan-oracle")]
+#[doc(hidden)]
+pub mod scan_oracle;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;
@@ -376,6 +419,10 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     runs: runs::Runs,
     /// the runs `decode_owned`'s in-place RLE1 found in a block (`rle::unrle_in_place`)
     rle_runs: Vec<rle::Run>,
+    /// (research only, `ideal-rle1`) worker-local reusable output buffer kept when `rle1`
+    /// returns `BlockBuf::Shared` so `out` is not dropped and re-allocated per block
+    #[cfg(feature = "ideal-rle1")]
+    rle1_spare: Vec<u8>,
     #[cfg(any(test, feature = "trace"))]
     allocation_history: Vec<trace::AllocationSample>,
 }
@@ -458,6 +505,8 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             rle: Vec::new(),
             runs: runs::Runs::default(),
             rle_runs: Vec::new(),
+            #[cfg(feature = "ideal-rle1")]
+            rle1_spare: Vec::new(),
             #[cfg(any(test, feature = "trace"))]
             allocation_history: Vec::new(),
         }
@@ -519,6 +568,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
     column(s, n, b.orig_ptr, b.crc, b.max_len, k, out)
 }
 
+/// The block buffer `decode_owned` returns: `Vec<u8>` as shipped, or `ideal::rle1::BlockBuf`
+/// under `ideal-rle1` so R replays zero-copy `BlockBuf::Shared(Arc<[u8]>)`.
+#[cfg(feature = "ideal-rle1")]
+pub(crate) type DecodedBlock = ideal::rle1::BlockBuf;
+#[cfg(not(feature = "ideal-rle1"))]
+pub(crate) type DecodedBlock = Vec<u8>;
+
 /// `decode_block` into a buffer of the block's own, for the parallel workers: the block's
 /// bytes are the whole of the buffer returned, the bytes and the errors exactly
 /// `decode_block`'s. `take(n, syms)` gives that buffer once the block's `n` rows are known,
@@ -543,19 +599,24 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     k: Kernels,
     s: &mut Scratch<I>,
     take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
-) -> Result<Vec<u8>, ErrorKind> {
+) -> Result<DecodedBlock, ErrorKind> {
     let (crc, orig_ptr) = (b.crc, b.orig_ptr);
+    ch!(begin A5);
     #[cfg(feature = "ideal-mtf")]
     let replayed_mtf = if ideal::mtf::mode() == ideal::Mode::Replay {
         ideal::current_block().map(|idx| {
-            ideal::mtf::replay(
+            // (`character`: the replay is M's handover, apart from A5's own work)
+            ch!(begin HandM);
+            let r = ideal::mtf::replay(
                 idx,
                 s.inverse.reads_runs(),
                 &mut s.runs,
                 &mut s.ll,
                 &mut s.counts,
                 &mut s.checkpoints,
-            )
+            );
+            ch!(end HandM);
+            r
         })
     } else {
         None
@@ -591,9 +652,21 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
         }
     };
     if let Some(n) = runs_n {
+        ch!(end A5);
         if orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
+        #[cfg(feature = "ideal-rle1")]
+        let mut out = if ideal::rle1::mode() == ideal::Mode::Replay && s.rle1_spare.capacity() >= n
+        {
+            let _ = take(0, std::mem::take(&mut b.syms));
+            let mut v = std::mem::take(&mut s.rle1_spare);
+            v.clear();
+            v
+        } else {
+            take(n, std::mem::take(&mut b.syms))
+        };
+        #[cfg(not(feature = "ideal-rle1"))]
         let mut out = take(n, std::mem::take(&mut b.syms));
         #[cfg(feature = "trace")]
         trace::mark_sized(
@@ -611,10 +684,17 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
                 "the run records don't tile the block".into(),
             ));
         }
+        // (`character`: A9 entered before R's oracle, so that its visits are a block's either
+        // way; the replay is R's zero-copy handover, apart from A9's own work)
+        ch!(begin A9);
         #[cfg(feature = "ideal-rle1")]
         if ideal::rle1::mode() == ideal::Mode::Replay {
             if let Some(idx) = ideal::current_block() {
-                if ideal::rle1::replay_replace(idx, &mut out) {
+                ch!(begin HandR);
+                let shared = ideal::rle1::replay_shared(idx, &out);
+                ch!(end HandR);
+                if let Some(shared) = shared {
+                    ch!(end A9);
                     #[cfg(any(test, feature = "trace"))]
                     {
                         let route = if s.inverse.took_cells() {
@@ -624,7 +704,10 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
                         };
                         s.record_owned(route, n, b.max_len, k, Some(&out), false);
                     }
-                    return Ok(out);
+                    if out.capacity() >= s.rle1_spare.capacity() {
+                        s.rle1_spare = out;
+                    }
+                    return Ok(shared);
                 }
             }
         }
@@ -633,6 +716,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
         #[cfg(any(test, feature = "trace"))]
         let ll_before = s.ll.as_ptr();
         let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+        ch!(end A9);
         // (the footprint ledger's sample, after the RLE1, so that it sees the buffers the
         // block leaves: its own, and `ll` if its inverted bytes were staged there)
         #[cfg(any(test, feature = "trace"))]
@@ -658,7 +742,7 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
                 ideal::rle1::record(idx, &out);
             }
         }
-        return Ok(out);
+        return Ok(out.into());
     }
     let cooperative = s.inverse.wants_checkpoints();
     let n = {
@@ -690,26 +774,47 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
             mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
         }
     };
+    ch!(end A5);
+    ch!(point Route, u64::MAX, character::route::pack(character::route::COLUMN, n, 0));
     if orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
+    }
+    #[cfg(feature = "ideal-rle1")]
+    if ideal::rle1::mode() == ideal::Mode::Replay {
+        if let Some(idx) = ideal::current_block() {
+            let _ = take(0, std::mem::take(&mut b.syms));
+            let in_place = column_invert(s, n, orig_ptr, b.max_len, k);
+            let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+            ch!(begin A9);
+            ch!(begin HandR);
+            let shared = ideal::rle1::replay_shared(idx, inverted);
+            ch!(end HandR);
+            if let Some(shared) = shared {
+                ch!(end A9);
+                return Ok(shared);
+            }
+            let mut out = Vec::new();
+            let res = finish(inverted, crc, k, &mut out);
+            ch!(end A9);
+            res?;
+            return Ok(out.into());
+        }
     }
     let mut out = take(n, std::mem::take(&mut b.syms));
     out.clear();
     column(s, n, orig_ptr, crc, b.max_len, k, &mut out)?;
-    Ok(out)
+    Ok(out.into())
 }
 
-/// `decode_block`'s column route after the move-to-front (`n` rows in `ll`): the inverse,
-/// in place where the kernel can, then RLE1 and the CRC (`finish`), appended to `out`
-fn column<I: bwt::InverseBwt>(
+/// `decode_block`'s column route inversion (returning whether the inverted bytes live in `s.ll`
+/// vs `s.rle`).
+fn column_invert<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     n: usize,
     orig_ptr: u32,
-    crc: u32,
     _block_bound: usize,
     k: Kernels,
-    out: &mut Vec<u8>,
-) -> Result<u32, ErrorKind> {
+) -> bool {
     let cooperative = s.inverse.wants_checkpoints();
     #[cfg(feature = "trace")]
     trace::mark_sized(
@@ -719,6 +824,7 @@ fn column<I: bwt::InverseBwt>(
         trace::UNREAD,
     );
     // in place where the kernel can (its output over `ll`), else into `rle`
+    ch!(begin A8);
     let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, orig_ptr);
     if cooperative {
         let cps = &s.checkpoints;
@@ -741,9 +847,28 @@ fn column<I: bwt::InverseBwt>(
         k,
     );
     #[cfg(not(any(test, feature = "trace")))]
-    let _ = n;
+    let _ = (n, k);
+    ch!(end A8);
+    in_place
+}
+
+/// `decode_block`'s column route after the move-to-front (`n` rows in `ll`): the inverse,
+/// in place where the kernel can, then RLE1 and the CRC (`finish`), appended to `out`
+fn column<I: bwt::InverseBwt>(
+    s: &mut Scratch<I>,
+    n: usize,
+    orig_ptr: u32,
+    crc: u32,
+    block_bound: usize,
+    k: Kernels,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    let in_place = column_invert(s, n, orig_ptr, block_bound, k);
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
-    finish(inverted, crc, k, out)
+    ch!(begin A9);
+    let res = finish(inverted, crc, k, out);
+    ch!(end A9);
+    res
 }
 
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
@@ -752,7 +877,11 @@ fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result
     #[cfg(feature = "ideal-rle1")]
     if ideal::rle1::mode() == ideal::Mode::Replay {
         if let Some(idx) = ideal::current_block() {
-            if ideal::rle1::replay_append(idx, inverted, out) {
+            // (`character`: the replay's copy is R's handover, inside the column route's A9)
+            ch!(begin HandR);
+            let replayed = ideal::rle1::replay_append(idx, inverted, out);
+            ch!(end HandR);
+            if replayed {
                 return Ok(stored);
             }
         }

@@ -99,6 +99,28 @@ moonshot = []
 # production path. Retain while the census's features are in use; remove at the first release
 # review after
 census = []
+# Research only: the open kernel's emitter handed the block's own dictionary word codes in
+# marked-cycle output order, read sequentially from the front and back (src/supplied_codes.rs,
+# src/open/supplied.rs), against the emitter as shipped that walks the retained cycle, for
+# examples/supplied_codes.rs and the bench-supplied-codes diagnostic
+# (docs/journal/2026-11-24-supplied-codes-registration.md). Five clock reads and a record per
+# open block; in its `open` mode the kernel is as shipped. Never on a production path. Retain
+# until that run is read; then remove
+supplied-codes = []
+# Research only: the parallel decoder's scanner recorded (each block's symbols, an oracle pass
+# outside the clock) or replayed (those symbols delivered through the production job queue in
+# place of the scanner's reading) (src/scan_oracle.rs, the hooks in src/parallel.rs), with
+# supplied-codes' emission switch, for examples/four_arm.rs and the bench-four-arm diagnostic
+# (docs/journal/2026-11-24-four-arm-registration.md). In its `scan` mode the scanner is as
+# shipped. Never on a production path. Retain until that run is read; then remove
+scan-oracle = ["supplied-codes"]
+# Research only: the decoder's character across 1 to 20 workers, as a network of activities,
+# buffers and resources (src/character.rs, examples/character.rs; docs/journal/
+# 2026-11-24-algorithm-level/briefs/character.md, stage 1: bench-character): each thread's
+# ledger of activities (A0 to A10), waits and blocks, and the buffers' live occupancy. Off,
+# each hook is one relaxed atomic load. Never on a production path. Retain while the
+# character study's stages run; remove at the first release review after
+character = []
 # Research only: the ideal-parts matrix's construction oracle (C, target T2;
 # src/ideal/construction.rs, hook in src/open.rs): records each Open block's built structures
 # outside the clock and replays them straight to emission (MTF/RLE2 still runs). Never on a
@@ -156,6 +178,16 @@ overflow-checks = true
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 
+# bench-supplied-codes' harness needs the supplied-codes switch and records
+[[example]]
+name = "supplied_codes"
+required-features = ["supplied-codes"]
+
+# bench-four-arm's harness needs the scanner's replay and the emission switch
+[[example]]
+name = "four_arm"
+required-features = ["scan-oracle"]
+
 # The block census needs its recorder
 [[example]]
 name = "census"
@@ -185,3 +217,7 @@ required-features = ["owned-writer"]
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
+
+[[example]]
+name = "character"
+required-features = ["character"]
