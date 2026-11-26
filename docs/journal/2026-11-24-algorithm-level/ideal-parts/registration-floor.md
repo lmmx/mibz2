@@ -38,6 +38,15 @@ The recipe refuses a head without the zero-copy modes (a `git grep` for `E_full`
 
 The all-but-X arms were added at the Coordinator's decision of 26 November, before any data. **All but R is `SECMD`, not `SFCMD`.** The zero-copy oracles' `E_full` removes the spelling only where R replays the block (`supplied_codes::Mode::SuppliedFull`, PR 921). With R real, RLE1 needs emission's bytes, so the spelling runs, and `SFCMD` would be `SECMD` under another name. R's room is therefore read against `SECMRD`, with the spelling run on both sides. This was found on a trial build of PR 921, before any data. Against a zero-copy floor, they give each part's room net of its handover as a measurement, where the full matrix could only bound it (`results/full/README.md` §4).
 
+**What F means.** `F` is emission in `E_full` (`supplied_codes::Mode::SuppliedFull`, PR 921), which skips the spelling only where R also replays the block; elsewhere the oracle falls back to `Supplied` and spells. So `F` is registered as E_full only in arms with R ideal. The harness refuses an `F` arm without R, and the analysis VOIDs the run if any `F` arm's trace calls `E_consume` at all.
+
+**The accounting.** PR 921's `FloorAccounting` (`src/ideal/accounting.rs`) stays off. Off, each of its points is one relaxed load. On, each handover reads the clock and adds to counters shared across the workers, which would touch the timed decodes. The traces' ledgers give the same split (each handover's and `E_consume`'s time and calls) without it.
+
+**A known effect of the stand-in: C's store is read cold.** With C's zero-copy borrow, the walk (A7) reads C's 115 MiB store cold, where the old copying oracle had warmed it. On Antigravity's 2-core VM, C ideal alone at 1 worker moved A7 from 1,003 to 1,448 ms (PR 921). So C's room against the zero-copy floor carries a cache-locality effect of the stand-in, not of construction:
+- C's room is labelled as measured with a cold store;
+- each arm's A7 per worker, from its traces, is reported beside the walls;
+- the old copying C oracle as a reference arm at 1 and 8 workers is **not run**: PR 921 replaced C's copying replay with the borrow, so no such mode exists in this binary.
+
 **Fixed across every cell, as in the full matrix:**
 - the scanner is pinned to the first CPU of the core whose pinned calibration runs fastest, with every other thread masked off that core;
 - the 100 ms pre-spin on every CPU;
@@ -88,6 +97,7 @@ At each count k, the arms are paired within a block. Every figure is given with 
 - any cell's timed decode or trace is missing, duplicated or failed. This includes one killed at the timeout, and one whose ideal parts were not wholly replayed, which the harness fails;
 - any decode's output is not the registered size (4 × 209,700,196 bytes copied to the caller, or under D discarded in order), or its check pass is not byte-identical to the record pass's;
 - any decode has a major fault;
+- any `F` arm's trace calls `E_consume` (E_full not in force);
 - a removed part shows more than 5% of its real busy time in the ideal arms' traces, at any count. The real figure is the `none` arm's. Each part's own activities, per clarification 5 as corrected:
   - S, the scanner's A2 and A3;
   - E, the workers' A7, and in the `F` arms also `E_consume`, against `SECMRD`'s `E_consume`;
@@ -106,9 +116,11 @@ At each count k, the arms are paired within a block. Every figure is given with 
 - **hit** iff the measured `SFCMRD` wall at 1 worker has a 95% interval overlapping [14, 19] ms;
 - **miss** otherwise.
 
+Also reported only, not comparable to the i9 and unscored: PR 921's own `SFCMRD` walls on its 2-core Xeon VM, 44, 28 and 21 ms at 1, 4 and 8 workers, beside the measured walls at 1 and 8.
+
 Its other estimates are shown beside the results, unscored: Residual A of about 273, 60–62, 51–55 and 50–54 ms at 1, 6, 8 and 10 workers, and Residual B at the other counts.
 
 ## Checks before the data
 
-- **`results/analysis/test_zero_copy_floor.py`:** the analysis on synthetic runs with known walls, 26 checks. Every measure is recovered, the rooms against the floor among them (ROOM and NO ROOM both shown), the prediction is scored both ways, and each VOID and INCOMPLETE fires.
+- **`results/analysis/test_zero_copy_floor.py`:** the analysis on synthetic runs with known walls, 28 checks. Every measure is recovered, the rooms against the floor among them (ROOM and NO ROOM both shown), the prediction is scored both ways, and each VOID and INCOMPLETE fires.
 - **The recipe's DRY on the container:** one block, after rebasing onto Antigravity's merged PR.

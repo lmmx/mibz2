@@ -207,6 +207,19 @@ def main():
         text[:700],
     )
 
+    def spelling_called(r):
+        x = next(x for x in r if x.get("on") == 1 and x["arm"] == "SFCMR" and x["k"] == 8)
+        v = [0] * len(ACTS)
+        v[ACTS.index(zf.E_CONSUME)] = 3
+        x["threads"][1]["visits"] = v
+
+    code, text, _ = run(*records(fail=spelling_called))
+    check(
+        "VOID: an F arm's trace calls E_consume (E_full not in force)",
+        code == 1 and "E_full not in force" in text,
+        text[:700],
+    )
+
     def c_left(r):
         for x in r:
             if x.get("on") == 1 and "C" in x["arm"] and x["k"] == 10:

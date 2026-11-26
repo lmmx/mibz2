@@ -96,6 +96,19 @@ def busy(x, role, acts):
     )
 
 
+def visits(x, role, act):
+    """A trace's visits to the named activity over a role's threads (0 if the binary lacks it)"""
+    names = x.get("activities") or []
+    if act not in names:
+        return 0
+    i = names.index(act)
+    return sum(
+        t.get("visits", [])[i]
+        for t in x["threads"]
+        if t["role"] == role and i < len(t.get("visits", []))
+    )
+
+
 def delivered(x):
     return x.get("bytes", 0) + (x.get("replays") or {}).get("D_discarded_bytes", 0)
 
@@ -182,6 +195,15 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
             removed.append((k, "E_consume", share))
             if share > REMOVED_MAX:
                 void.append(f"k {k}: E_consume is {share:.1%} of SECMRD's in the E_full arms")
+        # F is E_full only where R replays (else the oracle falls back to Supplied and spells):
+        # every F arm's traces show no call to the spelling at all
+        for a in ARMS:
+            if "F" in a:
+                n = sum(visits(x, "Worker", E_CONSUME) for x in traces(k, a))
+                if n:
+                    void.append(
+                        f"k {k}: {a}'s traces call E_consume {n} times (E_full not in force)"
+                    )
     pinned = [x for (ci, b, on), x in dec.items() if on == 1 and cells[ci].get("pinned")]
     scpu = p.get("scanner_cpu")
     broken = [x for x in pinned
@@ -262,6 +284,20 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
             cells_.append(f"{r[0]:.4f} [{r[1]:.4f}, {r[2]:.4f}] {lab:<10}")
             row(k, f"room {part} against the floor", r, lab)
         pr(f"{k:<4} " + " ".join(cells_))
+    pr(
+        "(C's room is measured with a cold store: the zero-copy borrow leaves the walk to read C's"
+        " store cold, where the copying oracle warmed it; see A7 per arm below)"
+    )
+    pr("\nthe walk (A7) per worker in each arm's traces, ms (C's cold-store effect shows here):")
+    for k in counts:
+        bits = []
+        for a in ARMS:
+            tr = traces(k, a)
+            if tr:
+                v = interval([busy(x, "Worker", ("A7",)) / 1e6 / k for x in tr])
+                bits.append(f"{a} {v[0]:.1f}")
+                row(k, f"A7 ms per worker {a}", v)
+        pr(f"  k {k:<3} " + "; ".join(bits))
     # (reported only, the Coordinator's split of emission: its walk made free with the spelling
     # kept, SECMRD over SCMRD; the spelling is then SFCMRD over SECMRD)
     pr(
@@ -318,6 +354,12 @@ def analyse(p, recs, lscpu_text, blocks, out_bytes=OUT_BYTES, out=sys.stdout):
         pr("Residual B at 1 worker: not measured")
     pr(
         "(beside it, unscored: Antigravity's Residual A of about 273, 60-62, 51-55 and 50-54 ms at 1, 6, 8 and 10 workers)"
+    )
+    pr(
+        "(and reported only, not comparable to the i9: Antigravity's 2-core Xeon VM had the SFCMRD wall"
+        " at 44, 28 and 21 ms at 1, 4 and 8 workers; measured here "
+        + ", ".join(f"{ms(walls[k][B])[0]:.1f} ms at {k}" for k in (1, 8) if k in walls)
+        + ")"
     )
 
     pr("\n## Beside them (medians over the timed decodes)\n")
