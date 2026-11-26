@@ -57,7 +57,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Complementary bottlenecks: reading the ideal-parts matrix" = "blog/2026-11-26-complementary-bottlenecks.md" },
+    { "Complementary bottlenecks" = [
+      { "The experiment" = "blog/2026-11-26-complementary-bottlenecks.md" },
+      { "Beyond it: the algorithms" = "blog/2026-11-26-from-bottlenecks-to-better-algorithms.md" },
+    ] },
     { "The decoder as a queueing network" = [
       { "The story" = "blog/2026-11-25-the-decoder-as-a-queueing-network.md" },
       { "Beneath it: the theory" = "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" },
@@ -289,7 +292,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-26-complementary-bottlenecks.md" = "At eight workers the scanner and construction must be relieved together, and the matrix is enough to start designing for that." },
+  { "blog/2026-11-26-complementary-bottlenecks.md" = "Making the parts of mibz2's decoder free in turn and in combination shows where new algorithms would pay off and which two stages are worth far more together." },
+  { "blog/2026-11-26-from-bottlenecks-to-better-algorithms.md" = "How the matrix's lessons could become new algorithms, from what the experiment left behind to four designs and the tests that would reject them." },
   { "blog/2026-11-25-the-decoder-as-a-queueing-network.md" = "Modelled as stations and queues, the decoder shows in advance where more workers stop helping and which experiments to run next." },
   { "blog/2026-11-25-the-decoder-as-a-queueing-network-notes.md" = "The theory under the story, from counting what waits and finding the bottleneck to pricing a change before it is built." },
   { "blog/2026-11-24-posing-the-inversion-problem.md" = "The search for a new inversion algorithm became an eight-step programme, from a cost referee and measured ceilings to the model that will say where new mathematics fits." },

@@ -1,4 +1,5 @@
-"""Figures for "Complementary bottlenecks: reading the ideal-parts matrix".
+"""Figures first drawn for the ideal-parts post. "Complementary bottlenecks: reading the ideal-parts matrix" now
+uses only `pipeline` from here (docs/scripts/figures_where_mathematics.py draws the rest).
 
     python3 docs/scripts/figures_ideal_parts.py NAME
 
