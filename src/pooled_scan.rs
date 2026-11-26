@@ -173,6 +173,11 @@ impl Finder {
         Finder::new(true)
     }
 
+    /// Whether it runs the AVX2 filter (else the scalar one)
+    pub fn avx2(&self) -> bool {
+        self.avx2
+    }
+
     /// Every magic whose first bit lies in bytes `from..to` of `data` (whose first byte is the
     /// input's byte `base`), in order, appended to `v` with absolute bits. It reads at most 7
     /// bytes past `to`: ranges cut anywhere need a 6-byte overlap and no more.

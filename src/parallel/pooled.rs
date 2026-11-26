@@ -190,9 +190,11 @@ impl Cands {
             data.len().saturating_sub(7)
         };
         let mut v = Vec::new();
+        ch!(begin PoolFind);
         self.finder.find(data, from, 0, to, &mut v);
         v.retain(|c| c.bit >= from * 8);
         ps::noise(&mut v, &mut self.blocks_seen);
+        ch!(end PoolFind);
         self.found.extend(v);
         self.scanned = from + to as u64;
         self.seen = from + data.len() as u64;
@@ -240,7 +242,9 @@ fn pump(
         let last = next.map_or(u64::MAX, |n| n.bit / 8 + MARGIN);
         let want = last.saturating_sub(first).min(MAX_ITEM) as usize;
         let (data, _) = src.view(first, want)?;
+        ch!(begin PoolCopy);
         let bytes: Arc<[u8]> = Arc::from(&data[..want.min(data.len())]);
+        ch!(end PoolCopy);
         c.found.drain(..=i);
         ps::count(&ps::DISPATCHED, 1);
         ps::count(&ps::COPIED, bytes.len() as u64);
@@ -313,12 +317,14 @@ fn hint(
         match c.found.iter().find(|x| x.bit >= at) {
             // a block candidate here not handed out: the window is full; wait for room
             Some(x) if x.bit == at && !x.end => {
+                ch!(begin SlotWait);
                 let mut st = shared.lock();
                 while !st.cancelled && (st.issued - st.taken) + st.pool.spec >= shared.slots {
                     st.scanner_waiting = true;
                     st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
                 }
                 st.scanner_waiting = false;
+                ch!(end SlotWait);
                 if st.cancelled {
                     return None;
                 }
@@ -354,7 +360,9 @@ fn hint(
             return None;
         }
         st.scanner_waiting = true;
+        ch!(begin PoolWait);
         st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
+        ch!(end PoolWait);
         st.scanner_waiting = false;
     }
 }
@@ -400,12 +408,14 @@ fn chain(shared: &Shared, rx: Receiver<Vec<u8>>, q: &Queue) {
     loop {
         // a place first, as the shipped scanner waits for one
         let syms = {
+            ch!(begin SlotWait);
             let mut st = shared.lock();
             while !st.cancelled && shared.full(&st) {
                 st.scanner_waiting = true;
                 st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
             }
             st.scanner_waiting = false;
+            ch!(end SlotWait);
             if st.cancelled {
                 drop(st);
                 return finish(None);
@@ -473,7 +483,11 @@ fn worker<I: crate::bwt::InverseBwt>(shared: &Shared, q: &Queue, k: Kernels) {
     let mut scratch = Scratch::<I>::default();
     let mut scan = ScanScratch::default();
     let slots = shared.slots as usize;
-    while let Some(w) = q.recv() {
+    loop {
+        ch!(begin JobWait);
+        let w = q.recv();
+        ch!(end JobWait);
+        let Some(w) = w else { return };
         if shared.stopped.load(Ordering::Acquire) {
             continue;
         }

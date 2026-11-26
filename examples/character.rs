@@ -474,7 +474,8 @@ fn role(name: &str) -> Role {
 /// last block issued), drain (to the end)
 const PHASES: [&str; 3] = ["startup", "steady", "drain"];
 
-#[derive(Default, Clone)]
+// (Default by hand: an array of more than 32 has none derived, and the activities are 32)
+#[derive(Clone)]
 struct Block {
     route: u8,
     n: u64,
@@ -498,6 +499,29 @@ struct Block {
     /// visits: the scanner's to each activity for this block, and the reader's waits for it
     scan_v: [u32; NA + 1],
     read_wait_v: u32,
+}
+
+impl Default for Block {
+    fn default() -> Self {
+        Block {
+            route: 0,
+            n: 0,
+            r: 0,
+            syms_bytes: 0,
+            out_bytes: 0,
+            worker: 0,
+            t: [0; 7],
+            seq: [0; 7],
+            seen: [0; 8],
+            cpu_scan: 0,
+            cpu_work: 0,
+            scan: [0; NA + 1],
+            work: [0; NA + 1],
+            read_wait: 0,
+            scan_v: [0; NA + 1],
+            read_wait_v: 0,
+        }
+    }
 }
 
 struct ThreadOut {
@@ -2135,7 +2159,20 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             little[i]
         );
     }
-    line += "},\"threads\":[";
+    // (the activities' names in the states' order, the residual last, so that an analysis
+    // reads a ledger by name whatever activities this binary has; and the symbols' bytes the
+    // scanner queued to the workers, which the pooled scan's arms don't queue)
+    let _ = write!(
+        line,
+        "}},\"queue_syms_bytes\":{},\"activities\":[{}],\"threads\":[",
+        blocks.iter().map(|b| b.syms_bytes).sum::<u64>(),
+        ACTIVITIES
+            .iter()
+            .chain(std::iter::once(&"resid"))
+            .map(|a| format!("\"{a}\""))
+            .collect::<Vec<_>>()
+            .join(",")
+    );
     for (i, t) in threads.iter().enumerate() {
         let _ = write!(
             line,

@@ -65,9 +65,13 @@ jobs:
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
           MIBZ2_DOSE_MB=1 MIBZ2_DOSE_KIND=chase cargo test --features dose --test dose
       # the pooled scan's exactness: bytes and errors against the sequential and the shipped
-      # parallel decoder, its finder against the bit-by-bit one (pooled-scan/prototype.md)
+      # parallel decoder, its finder against the bit-by-bit one (pooled-scan/prototype.md). Two
+      # runs: a name filter would apply to both binaries, and the integration tests' names
+      # don't carry the module's path
       - name: The pooled scan (research feature)
-        run: cargo test --release --features pooled-scan --test pooled_scan --lib pooled_scan::
+        run: |
+          cargo test --release --features pooled-scan --test pooled_scan
+          cargo test --release --features pooled-scan --lib pooled_scan::
       # the lazy crossover's reported readings (`just bench-lazy-crossover`), on a made-up
       # run: the memory dose of each workers arm, and each arm's peak memory
       - name: The lazy crossover's reading (made-up run)
