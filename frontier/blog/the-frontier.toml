@@ -7,9 +7,9 @@ priority = 1
 status = "open"
 owned_paths = []
 needs_louis = ""
-stage = "outline"
-post = ""
-drafted_by = ""
+stage = "draft"
+post = "docs/site/blog/2026-11-26-dropping-the-coordinator.md"
+drafted_by = "antigravity"
 reviewed_by = ""
 question = """
 Write up the shift of 26 November:
@@ -28,4 +28,12 @@ The site's rules: no agent names (say "a coordinating agent", "an independent re
 done_when = """
 Published; the card at stage published, with drafted_by and reviewed_by.
 """
-links = ["docs/journal/2026-11-26-rhizome/README.md", "docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md", "docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md", "frontier/README.md", "docs/journal/2026-11-26-rhizome/the-frontier-outline.md"]
+links = [
+  "docs/journal/2026-11-26-rhizome/README.md",
+  "docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md",
+  "docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md",
+  "frontier/README.md",
+  "docs/journal/2026-11-26-rhizome/the-frontier-outline.md",
+  "docs/journal/2026-11-26-rhizome/the-frontier-draft.md",
+  "docs/scripts/figures_dropping_the_coordinator.py",
+]
