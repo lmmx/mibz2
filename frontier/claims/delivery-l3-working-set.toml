@@ -1,0 +1,33 @@
+id = "delivery-l3-working-set"
+title = "Bounding the ready-block L3 working set (READY_BYTES and SLOTS_PER_THREAD at 8-10W)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+mechanisms = ["delivery", "admission-window"]
+owned_paths = []
+needs_louis = ""
+question = """
+Primary evidence in #952 (`c71c4a56`, `cc8ba137`) and the 26 November synthesis shows that `READY_BYTES = 12 MiB` (`src/parallel.rs:74`) and `SLOTS_PER_THREAD = 4` (`src/parallel.rs:47`) let 12.0-16.3 MiB of unread decoded blocks sit in `Ready` out of the i9-10900K's 20 MiB L3 at `k = 9..10`.
+As workers speed up (`none -> PC -> SC`), `ready_bytes` climbs (`14.6 -> 16.3 MiB`) and BOTH `D` (`copy_out`: `43.7 -> 67.4 -> 77.9 ms`) and `R` (`A9`: `133.0 -> 191.2 -> 215.6 ms`) blow up together under L3 eviction — threatening to give back future `C`/`E`/`M` speedups at 8-10 workers.
+Characterise the admission-window tradeoff across `READY_BYTES` (e.g. 2, 4, 6, 8, 12 MiB) and `SLOTS_PER_THREAD` (2, 3, 4) at `k = 1, 6, 8, 9, 10` on both shipped `none` and fast-worker (`S`-ideal or `SC`) regimes, recording wall, `copy_out`, `A9`, `ready_bytes` hwm, `job_wait`, and LLC misses.
+"""
+why = """
+Separate from `delivery-copyout`'s API question (`StreamDecoder::read_block` already exists) and `single-pass-rle1-crc`'s `src/rle.rs` pass count: tightening the in-flight ready-block footprint directly attacks the shared 20 MiB L3 bottleneck that couples `D` and `R` at high worker counts.
+"""
+stop_test = """
+Frozen before data: smooth probe only. Admit a striated build/tuning claim only if a tighter `(READY_BYTES, SLOTS_PER_THREAD)` setting cuts `copy_out + A9/k` enough to reduce 8-10W wall by >= 2.0% on shipped `none` OR >= 4.0% on fast-worker (`S`/`SC`), without regressing `k = 6..8` wall by > 0.5% via scanner backpressure stalls, exact bytes on all blocks.
+"""
+done_when = """
+A results note under `docs/journal/2026-11-26-synthesis/` or `delivery-l3/`, a delta, `surface.tsv` row `D` updated, and either a striated tuning claim at `idea` or a `dead-ends.tsv` row.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+  "src/parallel.rs",
+]
+links = [
+  "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
+  "docs/journal/2026-11-26-synthesis/README.md",
+]
