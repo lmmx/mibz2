@@ -1,0 +1,25 @@
+id = "pooled-scan-hybrid"
+title = "A hybrid scan: idle workers scan ahead from slack only"
+kind = "write"
+zone = "smooth"
+needs = ["long-context"]
+priority = 4
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+The pooled scan was killed as built because pooling loads the scan's ~175 ms of CPU onto workers that bind below the knee (pooled-scan/results). Design a hybrid: the serial scanner stays, and workers scan ahead only when they would otherwise wait. Write the design and its kill test as a registration. No code until the worker-side claims land, since its value depends on worker slack.
+"""
+why = """
+The scan is still 179 ms of the 195 ms wall at 8 workers when the workers are free.
+"""
+stop_test = """
+Design only: a registration frozen before any data.
+"""
+done_when = """
+pooled-scan/hybrid-registration.md and a delta.
+"""
+links = ["docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md"]

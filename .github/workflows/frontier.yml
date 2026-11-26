@@ -1,0 +1,50 @@
+# The frontier's optional mirror and courtesy check. Nothing depends on this workflow: STATUS.md is
+# regenerated locally with `python3 frontier/tools/frontier.py status`, and every agent runs
+# `frontier.py check` itself. This only copies STATUS.md into issue #943 and the Needs Louis list
+# into #944, so they can be read without a checkout, and runs the check on PRs that touch frontier/.
+name: frontier
+
+on:
+  pull_request:
+    paths: ["frontier/**"]
+  push:
+    branches: [master]
+    paths: ["frontier/**"]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: python3 frontier/tools/frontier.py check
+
+  mirror:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Mirror STATUS.md and Needs Louis to their issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 frontier/tools/frontier.py status
+          status=$(python3 -c "import tomllib;print(tomllib.load(open('frontier/config.toml','rb'))['status_issue'])")
+          louis=$(python3 -c "import tomllib;print(tomllib.load(open('frontier/config.toml','rb'))['needs_louis_issue'])")
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/${status}" -F body=@frontier/STATUS.md >/dev/null
+          awk '/^## Needs Louis/{f=1} /^## In progress/{f=0} f' frontier/STATUS.md > needs.md
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/${louis}" -F body=@needs.md >/dev/null

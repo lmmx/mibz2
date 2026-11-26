@@ -1,0 +1,31 @@
+id = "spelling-census"
+title = "Where emission's 298 ms of spelling goes"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 1
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+Emission's spelling of codes into bytes (E_consume) is 298 ms at 1 worker (22% of the wall) and 37 ms at 8. The first matrix never saw it. Where does that time go?
+- per-code overhead against bytes copied;
+- inline (16 B or less) against long words;
+- word-length and reuse distributions;
+- branch misses and memory stalls (perf);
+- what the dictionary already knows that spelling recomputes.
+This is a census on real blocks (wikidata, wikidata x4, ab gen corpora), at most a day, before any theory ("nomad first": rhizome/deleuze-guattari-cross-reading.md, C4).
+"""
+why = """
+It is the largest cost the floor run found that no thread owns. It decides whether a word representation (straight-line-program expansion, fused words, lanes) can pay.
+"""
+stop_test = """
+Characterisation only, no gate. Report each component's ns per code and per byte, with min..max over at least 5 repeats, as ratios against a production mirror. It ends when it is reported.
+"""
+done_when = """
+A results file under rauzy-census/ or a new spelling/ folder, a delta, and surface row E-spelling updated with the split.
+"""
+links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md", "docs/journal/2026-11-24-algorithm-level/rauzy-census/results/README.md"]

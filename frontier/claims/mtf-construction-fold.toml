@@ -1,0 +1,26 @@
+id = "mtf-construction-fold"
+title = "Feed construction directly from MTF/RLE2 (A5 + A6a fold)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "i9"]
+priority = 2
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = ["src/runs.rs", "src/open.rs"]
+needs_louis = ""
+question = """
+MTF/RLE2 emits runs capped at 127, and construction's first pass (A6a, 200 ms at 1 worker) recombines them into maximal runs. Can MTF emit maximal runs straight into construction's accumulators?
+Census first (smooth, examples/): how often the cap splits runs on real blocks, and what A6a recomputes. Then a prototype behind a research feature, with a registration frozen before its data.
+"""
+why = """
+MTF/RLE2 has 7.5–8.4% room below the knee, and C 42% at 1 worker. Together they are the main worker-side lever once the scan has slack (pooled-scan/results).
+"""
+stop_test = """
+The census is ungated. The prototype's kill test is registered before data, using the paired-oracle form (against S ideal at 8 workers, as pooled-scan/registration.md). Exact bytes; Miri if any unsafe.
+"""
+done_when = """
+A registration, a prototype PR, a workstation run, a delta, and surface rows C-A6a and M updated.
+"""
+links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 1"]

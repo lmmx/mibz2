@@ -1,5 +1,7 @@
 # The plan: what we are doing, and why it would matter
 
+> **Live state is now `frontier/`** (`STATUS.md`, `surface.tsv`, the claims). This plan is the narrative record of 24–26 November; new threads are claims, not rows here.
+
 *Written 26 November 2026, at Louis's request: "we need to write down durably what we are planning to do and why it would matter, so that when we are half way in doing it we dont get confused about what we are doing it for."*
 
 **Read this first when picking up any thread below.** Every thread names:

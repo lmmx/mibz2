@@ -1,0 +1,28 @@
+id = "archive-team-strata"
+title = "Archive the coordinator-era team machinery"
+kind = "ops"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+Move the coordinator-era files into docs/team/archive/:
+- the dormant role specs (SPEC.*.md, WORK-*.md, CODEX-*.md, COORDINATOR-FAILOVER.md, MODE.RATIONALE.md, MODE.ORIGIN.md);
+- the inbox protocol (PROTOCOL.md, ROLES.md).
+Fix the links. Keep RULES.md's invariants, OWNERSHIP.md, PERFORMANCE-POLICY.md, CI-INCIDENTS.md and RELEASING.md live. Close the role inbox issues (#160, #161, #162, #222, #314, #346, #363) with a pointer to frontier/. Keep coord.py's head-sha check; its routing commands are retired.
+"""
+why = """
+The cross-readings' C5 and C6. Louis directed the move to this mode on 26 November.
+"""
+stop_test = """
+Ends when the links check passes (the site build, check_site) and nothing live points into the archive.
+"""
+done_when = """
+A docs PR and a delta.
+"""
+links = ["docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md"]

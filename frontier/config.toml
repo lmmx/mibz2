@@ -1,0 +1,3 @@
+# The issues the optional Action mirrors STATUS.md to. Nothing depends on them.
+status_issue = 943
+needs_louis_issue = 944

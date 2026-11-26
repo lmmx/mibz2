@@ -1,0 +1,29 @@
+id = "delivery-copyout"
+title = "Delivery's 48 ms serial copy-out"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+question = """
+The in-order reader copies 839 MB to the caller on one thread: 48 ms at every worker count (results/floor). What are the options? Measure each one's cost:
+- caller-provided buffers;
+- read() straight into the user's slice;
+- copying from several threads;
+- a zero-copy block-lending API.
+"""
+why = """
+It becomes the next serial floor once the scan is relieved.
+"""
+stop_test = """
+Characterisation only. A design proposal comes with costs; any API change is a later claim, needing Louis for a public API change.
+"""
+done_when = """
+A note with measurements, a delta, and surface row D updated.
+"""
+links = []

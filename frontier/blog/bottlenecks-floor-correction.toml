@@ -1,0 +1,29 @@
+id = "bottlenecks-floor-correction"
+title = "Correct the published posts' plumbing forecast"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context", "web"]
+priority = 3
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+stage = "idea"
+post = "docs/site/blog/2026-11-26-complementary-bottlenecks.md"
+drafted_by = ""
+reviewed_by = ""
+question = """
+The complementary-bottlenecks post and its companion quote the design analysis's 14–19 ms plumbing forecast. The floor run measured 5.2–5.7 ms. Add the measurement beside the forecast, without rewriting the posts.
+"""
+why = """
+Published figures should not trail the evidence.
+"""
+stop_test = """
+The site's rules. A small factual PR.
+"""
+done_when = """
+Merged.
+"""
+links = ["docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md"]

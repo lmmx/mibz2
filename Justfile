@@ -57,3 +57,10 @@ e target="":
 
 lint-action:
     actionlint .github/workflows/*.yml
+
+# The frontier (frontier/README.md): what to read and what to take
+frontier-brief *args:
+    python3 frontier/tools/frontier.py brief {{args}}
+
+frontier-status:
+    python3 frontier/tools/frontier.py status && python3 frontier/tools/frontier.py check

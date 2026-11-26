@@ -1,7 +1,10 @@
 ---
 name: coordinate-blog-post
-description: Use when the coordinator commissions, publishes or revises a mibz2 blog post written by another agent: briefing the drafting agent, publishing as soon as the post is fact-checked and renders, then two rounds of simulated-reader (exegenius) review by the Researcher, revised in flight on the live post. The writing itself is write-blog-post's; the render check is publish-page's.
+description: Retired 26 November 2026 with the coordinator. Do not use; blog work moves through the board in frontier/blog/ (frontier/README.md). Kept for history.
 ---
+
+> **Retired (26 November 2026)** with the coordinator. Blog work moves through the board in `frontier/blog/` (`frontier/README.md`, "The blog board"); `write-blog-post` and `publish-page` still apply.
+
 
 # Coordinating a blog post
 

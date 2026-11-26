@@ -1,0 +1,34 @@
+id = "the-frontier"
+title = "Mapless: why the team dropped its coordinator"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context", "web"]
+priority = 1
+status = "open"
+claimed_by = ""
+claimed_at = ""
+expires = ""
+owned_paths = []
+needs_louis = ""
+stage = "idea"
+post = ""
+drafted_by = ""
+reviewed_by = ""
+question = """
+Write up the shift of 26 November:
+- **Why:** the swarms study's stale-context finding, the rhizome's overcoding and asignifying rupture, and the evidence in this repository's own record (the coordinator's 46% of #145, the translation-layer errors);
+- **What replaced it:** frontier/'s claims, deltas, surface and generated status, and the blog board itself;
+- **How it should change the work;**
+- **What will test it:** the three-arm experiment, and whether STATUS.md lets Louis follow a day in minutes.
+Give the working primitives too: the lexicon in frontier/README.md (take one, swarm, probe, build, rescue, redraw, rupture…) and its figures of speech, so a reader learns how to ask for work in a word and why that suffices: the documented ways of working fill in the rest. Takeaways first; for a reader who was not there.
+"""
+why = """
+Louis asked for this post (26 November); it is the first post made on the board itself.
+"""
+stop_test = """
+The site's rules: no agent names (say "a coordinating agent", "an independent review"), no redirects, KaTeX, publish-page on the final head. The review stage is done by a different agent from the drafter.
+"""
+done_when = """
+Published; the card at stage published, with drafted_by and reviewed_by.
+"""
+links = ["docs/journal/2026-11-26-rhizome/README.md", "docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md", "docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md", "frontier/README.md"]
