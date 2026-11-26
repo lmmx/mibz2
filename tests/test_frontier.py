@@ -30,10 +30,10 @@ FRONTIER_SRC = REPO_ROOT / "frontier" / "tools" / "frontier.py"
 RUN_QUEUE_SH = REPO_ROOT / "bench" / "run-queue.sh"
 
 GIT_ENV = {
-    "GIT_AUTHOR_NAME": "Louis Maddox",
-    "GIT_AUTHOR_EMAIL": "louismmx@gmail.com",
-    "GIT_COMMITTER_NAME": "Louis Maddox",
-    "GIT_COMMITTER_EMAIL": "louismmx@gmail.com",
+    "GIT_AUTHOR_NAME": "Frontier Test",
+    "GIT_AUTHOR_EMAIL": "frontier-test@example.invalid",
+    "GIT_COMMITTER_NAME": "Frontier Test",
+    "GIT_COMMITTER_EMAIL": "frontier-test@example.invalid",
 }
 
 BASE_CONFIG = """\
@@ -227,6 +227,8 @@ class FrontierSandbox:
         """Create an independent working clone of the bare remote."""
         dst = self.tmp / name
         _git(self.tmp, "clone", str(self.remote), str(dst))
+        _git(dst, "config", "--local", "user.name", GIT_ENV["GIT_AUTHOR_NAME"])
+        _git(dst, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
         return dst
 
     def run_frontier(self, repo: pathlib.Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -273,6 +275,37 @@ class TestFrontierStress(unittest.TestCase):
     # ------------------------------------------------------------------
     # Scenario 1: two agents claim the same id at once
     # ------------------------------------------------------------------
+
+    def test_read_only_check_needs_no_commit_identity(self) -> None:
+        """Local validation does not acquire commit identity or require a PR query."""
+        a = self.sb.clone("reader")
+        _git(a, "config", "--local", "--unset", "user.email")
+        mod = _load_frontier_module(a)
+        with (
+            mock.patch.object(mod, "lease_identity", side_effect=AssertionError("identity read")),
+            mock.patch.object(mod, "read_open_prs", side_effect=AssertionError("PR query")),
+        ):
+            self.assertEqual(mod.check(), 0)
+
+    def test_lease_identity_is_local_and_missing_identity_refuses_write(self) -> None:
+        """Commit identity is configured in the checkout, not baked into the client."""
+        a = self.sb.clone("author")
+        mod = _load_frontier_module(a)
+        self.assertEqual(mod.lease_identity(), GIT_ENV)
+        _git(a, "config", "--local", "--unset", "user.email")
+        self.assertIsNone(mod.lease_identity())
+        result = self.sb.run_frontier(a, "claim", "c1", "--by", "author")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("repository-local Git identity is not configured", result.stderr)
+        self.assertNotIn("c1", mod.holds())
+        _git(a, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
+        result = self.sb.run_frontier(a, "claim", "c1", "--by", "author")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        sha = mod.holds()["c1"][0]
+        self.assertEqual(
+            _git(a, "log", "-1", "--format=%ae %ce", sha),
+            "frontier-test@example.invalid frontier-test@example.invalid",
+        )
 
     def test_s1_concurrent_claim_same_id_exactly_one_wins(self) -> None:
         """Two concurrent claims on the same id yield exactly one acquisition."""
