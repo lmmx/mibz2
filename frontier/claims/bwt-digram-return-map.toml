@@ -1,0 +1,33 @@
+id = "bwt-digram-return-map"
+title = "BWT-space digram and byte-bucket contracted return-map constructor"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust", "math"]
+priority = 2
+status = "idea"
+owned_paths = []
+mechanisms = ["bwt-digram-contraction"]
+needs_louis = ""
+question = """
+The `ideal-permutation-structures` product diagnostic proved that frequency-reused contracted first-return maps (`F1a_repair_inl16`, `F1b_repair_unb`, `F4a_repair_unb_4lane`) cut held-out consumer time by 2.8-4.4x through the exact same `emit` consumer (projected +278..+365 ms vs forward control, leaving C_max = 719-799 ms vs C_fwd ~ 473-481 ms), while ruling out post-Open row-graph contraction passes (`mat_f3b_post_open`, 3.26-3.42x baseline C). Can a run-level / BWT-bucket-level constructor—exploiting that every text digram `(a, b)` is a run of L-byte `a` inside contiguous F-bucket `[C[b], C[b+1])`, or eliminating selected high-frequency literal F-buckets / digram intervals / short bands before A6c row wiring—construct a contracted first-return map within the derived C_max <= 719-799 ms budget so that total end-to-end `C + E` beats both shipped baseline and matched `forward-emission`?
+"""
+why = """
+Consumer-side potential is +278..+365 ms of the 1,306 ms 1-worker wall over single-lane forward emission (+163..+237 ms even over 4-lane forward) and ~43-52 ms/worker under scan-ideal 8w, attacking `E-walk` and `E-spelling`'s 81.2% literal storm jointly while shrinking total representation bytes below Open's 518 KiB/blk.
+"""
+stop_test = """
+Frozen before data: smooth-zone prototype in `examples/` (zero `src/` edits, zero `unsafe`), 100% byte-identical to `bwt::walk` on all 233 Open-admitted wikidata blocks, forced non-admitted controls, and synthetic dense/periodic/multicycle/run-heavy cases. Charge full end-to-end `C + E` (`A6a + A6b + contraction + A6c + A7`) on held-out admitted blocks (7 interleaved repeats, baseline x86-64 and `-C target-cpu=native`). Pass only if full end-to-end `C + E` beats matched `forward-emission` (single-lane and 4-lane forward controls) by >= 3.0% of the 1,306 ms 1-worker reference wall (>= 39.18 ms projected, with non-overlapping 7-repeat spreads) without regressing guard corpora (`runs`, forced `text`). Otherwise STOP and record a scoped dead-end.
+"""
+done_when = """
+A reproducible smooth-zone constructor benchmark in `examples/`, full end-to-end `C + E` table vs shipped and forward controls, exactness report, results note, delta, and either a striated build claim (if pass) or a scoped `dead-ends.tsv` entry (if stop).
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/preregistration.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/2026-11-24-algorithm-level/spelling/README.md",
+]
+links = [
+  "frontier/claims/ideal-permutation-structures.toml",
+  "frontier/claims/forward-emission.toml",
+  "examples/ideal_permutation_structures.rs",
+]
