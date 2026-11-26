@@ -200,6 +200,15 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-scanner-plumbing's verdict (bench/scanner_plumbing.py) on synthetic runs: each verdict
+      # where the registration puts it, the workers and peak RSS reported, rule 4's trade, the DRY
+      # label, and no verdict from incomplete or malformed records or machine
+      - name: The scanner-plumbing verdict (synthetic runs)
+        run: python3 bench/test_scanner_plumbing.py
+      # the recipes' PRESPIN guard as written, under pipefail, on the real ab.rs (§84's test 1
+      # failed in resolve on a head that had the option: `git show | grep -q` took SIGPIPE)
+      - name: The PRESPIN guard under pipefail
+        run: python3 bench/test_prespin_guard.py
       # bench/run-queue.sh serving two scratch repositories: turns, once per commit per
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
