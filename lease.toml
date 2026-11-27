@@ -1,9 +1,9 @@
-id = "scanner-coalesced-u8-i9-queue"
+id = "text-knee-i9"
 holder = "antigravity"
-session = "888b8fb44679"
-claimed_at = "2026-11-27T08:11:53+00:00"
-expires = "2026-11-27T16:11:53+00:00"
-owned_paths = ["bench/workstation-queue.txt"]
-mechanisms = ["workstation-queue"]
-base = "3f98f2ae19bb8d4aa666a0dc0f423eb0f4470f2d"
+session = "2ce22045dc0a"
+claimed_at = "2026-11-27T08:17:08+00:00"
+expires = "2026-11-27T16:17:08+00:00"
+owned_paths = ["bench/text-knee.sh", ".just/text-knee.just", "bench/text_knee.py", "bench/test_text_knee.py", "Justfile"]
+mechanisms = ["station-balance"]
+base = "2fed5f184bf66ddaa50c72779a126dafe7811eef"
 released = false
