@@ -10,3 +10,5 @@ The runner emits full base executable paths and an empty error string on success
 The diagnostic instruments private trace builds. It observes the constructed worker/window topology and includes maintenance on a resumed seam. The raw records, instrumentation diffs and binary digests travel with the bundle. The maintenance reduction is diagnostic only.
 
 Fixture tests cover false VOID and false ADOPTS cases. On a 638,976-byte fixture, sixteen real ab child checks and the occupancy report matched the reference. The i9 verdict requires a reviewed, green head, the matching ready tag, the queue row and returned evidence. Keep the candidate branch open until then.
+
+The independent trace smoke on Wikidata window W00 exposed a false occupancy failure: Open retains the lazy fallback's buffers but does not always take that route. The diagnostic overlay now records the actual route and its allocation requirements. Both trace binaries passed W00's event and memory reconciliations with 19,800,013 output bytes and streaming hash 4b1fc07cb257edd9.

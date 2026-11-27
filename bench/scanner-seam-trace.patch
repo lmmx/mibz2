@@ -106,3 +106,82 @@
 +
      fn reads_runs(&self) -> bool {
          true
+--- a/src/open.rs
++++ b/src/open.rs
+@@ -789,2 +789,4 @@
+     lazy: LazyCells,
++    #[cfg(any(test, feature = "trace"))]
++    last_open: bool,
+     /// (test only) blocks the open kernel inverted
+@@ -994,2 +996,12 @@
+ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
++    #[cfg(any(test, feature = "trace"))]
++    fn took_open(&self) -> bool {
++        self.last_open
++    }
++
++    #[cfg(any(test, feature = "trace"))]
++    fn took_cells(&self) -> bool {
++        !self.last_open && self.lazy.took_cells()
++    }
++
+     // The diagnostic footprint ledger checks tt even on a block that uses Open.
+@@ -1020,2 +1032,6 @@
+     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
++        #[cfg(any(test, feature = "trace"))]
++        {
++            self.last_open = false;
++        }
+         if let Some(cap) = Self::cap(r.records().len(), n, p) {
+@@ -1036,2 +1052,6 @@
+             if ran.is_some() {
++                #[cfg(any(test, feature = "trace"))]
++                {
++                    self.last_open = true;
++                }
+                 #[cfg(test)]
+--- a/src/bwt.rs
++++ b/src/bwt.rs
+@@ -122,2 +122,7 @@
+     fn took_cells(&self) -> bool {
++        false
++    }
++
++    #[cfg(any(test, feature = "trace"))]
++    fn took_open(&self) -> bool {
+         false
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -414,2 +414,7 @@
+         }
++        let route = if route == trace::OutputRoute::Runs && self.inverse.took_open() {
++            trace::OutputRoute::Open
++        } else {
++            route
++        };
+         self.allocation_history.push(trace::AllocationSample {
+--- a/src/trace.rs
++++ b/src/trace.rs
+@@ -185,2 +185,3 @@
+     Cells,
++    Open,
+     ColumnInPlace,
+@@ -246,3 +247,3 @@
+         };
+-        if s.route != OutputRoute::Cells {
++        if !matches!(s.route, OutputRoute::Cells | OutputRoute::Open) {
+             self.tt = self.tt.max(s.rows + slack);
+@@ -252,3 +253,3 @@
+             // a block decoded into its own buffer writes no `ll` (`decode_owned`)
+-            OutputRoute::Runs | OutputRoute::Cells if s.owned.is_some() => 0,
++            OutputRoute::Runs | OutputRoute::Cells | OutputRoute::Open if s.owned.is_some() => 0,
+             OutputRoute::Runs => s.rows,
+@@ -256,2 +257,3 @@
+             OutputRoute::Cells => s.rows + 32,
++            OutputRoute::Open => s.rows + 16,
+             _ => s.block_bound,
+@@ -402,3 +404,3 @@
+             let rows = if sample.staged { 0 } else { sample.rows };
+-            if !matches!(sample.route, OutputRoute::Runs | OutputRoute::Cells)
++            if !matches!(sample.route, OutputRoute::Runs | OutputRoute::Cells | OutputRoute::Open)
+                 || o.name != "out"
