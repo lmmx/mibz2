@@ -1,0 +1,9 @@
+id = "agent-presence"
+holder = "claude-code"
+session = "929e7e063724"
+claimed_at = "2026-11-27T16:36:21+00:00"
+expires = "2026-11-27T22:36:21+00:00"
+owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
+mechanisms = ["agent-presence"]
+base = "66511da9c3b87f012710033fbc54603214ee429f"
+released = false
