@@ -28,13 +28,13 @@ scanner's; `S` makes the scan free, so its wall is the workers'.
 
 | k | none wall | C wall (scan-bound) | S wall (worker-bound) | none − max(C, S) | scanner A2+A3 | scanner `in_maint` | scanner `slot_wait` | worker `job_wait`/w |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 6 | 242.3 | 184.9 | 238.7 | 3.6 | 171.5 | — | 55.8 | 3.4 |
-| 7 | 212.0 | 184.0 | 207.1 | 4.9 | 170.7 | — | 24.6 | 4.0 |
+| 6 | 242.3 | 184.9 | 238.7 | 3.6 | 171.5 | 9.8 | 55.8 | 3.4 |
+| 7 | 212.0 | 184.0 | 207.1 | 4.9 | 170.7 | 10.4 | 24.6 | 4.0 |
 | **8** | **193.0** | **184.4** | **185.0** | **8.0** | 170.8 | 11.2 | **4.1** | **8.5** |
-| 9 | 195.3 | 186.4 | 173.1 | 8.9 | 171.0 | — | 7.9 | 20.5 |
+| 9 | 195.3 | 186.4 | 173.1 | 8.9 | 171.0 | 12.8 | 7.9 | 20.5 |
 | 10 | 198.7 | 187.5 | 169.5 | 11.2 | 189.7 | 12.8 | 4.3 | 42.5 |
 
-(ms; `in_maint` is shown where it was extracted.) **(derived)**
+(ms; `in_maint` is the input window's drain and re-copy, `ChannelSource::view`, and it grows with k as the workers contend for memory.) **(derived)**
 - **The tie:** at 8 the scan-bound and worker-bound walls differ by 0.6 ms (0.3%). Both stations
   wait on each other: the scanner is blocked by the window for 4.1 ms (`slot_wait`) and each
   worker is starved for 8.5 ms (`job_wait`). The 8.0 ms over the max is that two-way loss.
