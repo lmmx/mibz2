@@ -25,6 +25,10 @@ Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hi
 
 </div>
 
+**mibz2 already decompresses at 4.31 GB/s on our eight-worker Wikidata benchmark, and almost none of the remaining cost is in the pipeline's plumbing.** Queues, synchronisation and hand-offs account for only about 3% of the current 194.6 ms wall time when we isolate them with zero-copy stand-ins. Main-memory bandwidth is not yet the limiting factor on this machine, although L3 cache capacity matters. The implication is that the next substantial speedups must come primarily from making the algorithms themselves cheaper, rather than rearranging how they are coordinated.
+
+This is the practical payoff of our [hybrid-systems model](https://github.com/lmmx/mibz2/blob/03994d67f03ba3a409c2705c5c20f40d045cdf9b/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/decoder-as-hybrid-system.md) and its [design levers](https://github.com/lmmx/mibz2/blob/03994d67f03ba3a409c2705c5c20f40d045cdf9b/docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/levers.md): distinguish the work done between events from the rules that move work between threads. Pooling the scan redistributes computation without eliminating it. The experiments instead expose a previously underestimated cost in spelling dictionary words into bytes, alongside opportunities to fuse construction and reduce cache traffic. The next milestone is to demonstrate a path towards **6 GB/s** (about 140 ms for the same 838.8 MB of output, or 39% higher throughput). Supplying both scan and construction with idealised answers has already produced 135.3 ms, equivalent to 6.20 GB/s, but that is a diagnostic measurement, not a production speed or a promise that the target is attainable. The task now is to turn that measured headroom into real algorithmic gains.
+
 In [Complementary bottlenecks](2026-11-26-complementary-bottlenecks.md), we replaced each stage of
 mibz2's bzip2 decoder with a pre-recorded stand-in called an *oracle*. That factorial experiment
 showed where new algorithms could still speed up decoding. Its technical companion,

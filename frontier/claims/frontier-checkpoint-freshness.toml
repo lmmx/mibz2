@@ -1,0 +1,24 @@
+id = "frontier-checkpoint-freshness"
+title = "Pull-based freshness checkpoints for active participants"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = []
+mechanisms = ["frontier-checkpoint-freshness"]
+needs_louis = ""
+question = """
+Extend the read-only prototype and design in research/frontier-checkpoint/README.md. The observed rollout gap is that a busy old client may not read a protocol change. Test safe-point pull observation of current master, relevant flags/premises and client freshness with dirty research, unrelated updates and unavailable origin; preserve work, coalesce unchanged state. Propose minimal protected integration at existing brief/verify/mutation boundaries plus natural long-work checkpoints, not a queue of addressed messages or new agent dispatcher. No harness-specific assumption, automatic launch or idle inference polling.
+"""
+why = """
+The owner wants the decentralised swarm to discover changes to its environment without manually relaying messages or returning to synchronous communication. #974 is merged and #987 handles its rollout. A durable repository signal is insufficient if nothing observes it during a long task. A client version mismatch is a state predicate, not a personal notification. This is a follow-on, not another prerequisite to the current cap raise.
+"""
+stop_test = """
+Isolated temporary remotes only: stale client detected at next observation; unrelated dirty work preserved; relevant scope change surfaced; repeated snapshot idempotent; unavailable origin never grants authority; mixed old-client limit explicit. Report observation cost and safe-point latency under a bounded active-work fixture; no new shared queue, acknowledgement protocol, paid compute or role. Any proposed mutation guard goes through separate protected review and tests. Do not change existing cap gates or interfere with current rollout.
+"""
+done_when = """
+Reproducible tests and a concise minimal integration proposal, with limitations and a delta. No deployment claim without actual integration evidence.
+"""
+premises = ["research/frontier-checkpoint/README.md", "research/frontier-checkpoint/checkpoint.py", "frontier/tools/frontier.py", "research/event-stigmergy-shadow/README.md"]
+links = ["https://github.com/lmmx/mibz2/pull/974", "https://github.com/lmmx/mibz2/pull/987"]

@@ -644,7 +644,7 @@ Responses 1–3 have the shape Deleuze describes in "He Stuttered" (*Critique et
 a term returns, altered, and each return changes the question. Here the conclusion, `= R`, stays
 fixed, and the hypothesis returns transformed: weakened, certified, or replaced by a
 representation that does not need it. This is an analogy for the method, not evidence for any
-route. [MODE.RATIONALE.md](../MODE.RATIONALE.md) ("Differential recurrence") already sets it out.
+route. The coordinator-era `MODE.RATIONALE.md` ("Differential recurrence", archived 26 November 2026) already sets it out.
 
 ### 5.9 Cost theorems beside correctness theorems
 
@@ -770,7 +770,7 @@ C4: more instructions can buy overlap, locality or less contention).
   `docs/journal/2026-11-21-carbon-kitchen-sink-cycle45.md`,
   `docs/journal/2026-11-22-carbon-kitchen-sink-cycle46.md` and
   `docs/journal/2026-11-22-carbon-kitchen-sink-cycle47.md`, with their directories
-- The analogy of §5.8: [MODE.RATIONALE.md](../MODE.RATIONALE.md), "Differential recurrence"
+- The analogy of §5.8: `MODE.RATIONALE.md`, "Differential recurrence" (archived 26 November 2026)
 - The method of §5.9: Bach, Black, Huiberts and Kafer, "Beyond Smoothed Analysis: Analyzing the
   Simplex Method by the Book", [arXiv 2510.21613](https://arxiv.org/abs/2510.21613); the block
   census that will fix `θ`: #145, LOG 7126445058 and LOG 7126478963

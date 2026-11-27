@@ -1,0 +1,34 @@
+id = "huff-bmi2-dispatch"
+title = "Runtime BMI2 (shlx) dispatch ablation for shipped K=2 Huffman group decode"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = []
+mechanisms = ["scan-isa-dispatch"]
+needs_louis = ""
+question = """
+`multi-symbol-huffman-table` (#986) stopped B=10 K=3/K=4 tables, leaving `pooled-scan-hybrid` as the only claim on row S, yet observed incidentally that compiling shipped `k2_shipped` with `-C target-cpu=native` cut A3 by -11.9% (76.85 -> 67.70 ms, non-overlapping on 7 repeats). `src/lib.rs:189-193` detects `avx2+bmi1` and `pclmulqdq`, not `bmi2`, and `src/huff.rs` has no `#[target_feature]` dispatch, so every `r.skip_short_shl(e)` in `decode_group_win` compiles to baseline x86-64 `shl %cl` (3 uops, 2-cycle latency on Intel Haswell-Comet Lake) on the critical ~7-8-cycle dependent load+shift chain (~13.2 cycles/lookup on i9).
+Isolate pure `bmi2` (`shlx`) from `bmi1`, `avx2`, and full `-C target-cpu=native` scheduling via targeted `#[target_feature]` (or `-C target-feature=+bmi2` vs `+bmi1` vs `+avx2` vs baseline) arms on a faithful copy of shipped `src/huff.rs` (`decode_group_win` + `build_into`, all 431 wikidata blocks, 7 interleaved repeats), and inspect `objdump -d` to verify whether `shlx` alone accounts for the speedup.
+"""
+why = """
+After #986's STOP, the serial scan (177-179 ms at 8W; A3 ~81% = ~144-145 ms) has no remaining serial-algorithmic claim. Saving 1 cycle/lookup (-7.6%) to #986's native ratio (-11.9%) is ~11-17 ms off the i9 serial scan (~6-9% of the 8W scan wall once worker builds drop S(8) below 178 ms), with zero table bloat, zero L1d spill, and zero algorithmic risk.
+"""
+stop_test = """
+Frozen before data: smooth-zone probe in `examples/` (zero `src/` edits), 100% symbol- and end-bit-identical on all 431 blocks of `corpora/wikidata.bz2` (24,979,299 symbols) plus synthetic edge cases. Admit a striated build claim (`Kernels.bmi2` + `src/huff.rs` dispatch) only if isolated `+bmi2` (with `shlx` verified in disassembly) cuts total A3 (`decode + tables`, 7 interleaved repeats, baseline x86-64 build) by >= 5.0% with non-overlapping `[min..max]` spreads (corresponding to >= ~7 ms off the i9 scan). Otherwise STOP and append a row to `frontier/dead-ends.tsv`.
+"""
+done_when = """
+An ablation harness in `examples/`, disassembly check, results note under `docs/journal/2026-11-26-explore/`, delta, `surface.tsv` row S updated, and either a striated build claim at `idea` (if pass) or a `dead-ends.tsv` row (if stop).
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/multi-symbol-huffman-table.md",
+  "docs/journal/2026-11-26-explore/scan-lookups-and-runts.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+  "src/huff.rs",
+  "src/lib.rs",
+]
+links = [
+  "frontier/claims/multi-symbol-huffman-table.toml",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+]

@@ -1,0 +1,31 @@
+id = "permutation-patterns"
+title = "Permutation patterns: find and price an exact pattern-derived decoder representation"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust", "math", "long-context"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["permutation-pattern-representation"]
+needs_louis = ""
+question = """
+Read the verbatim research discussion at docs/journal/2026-11-24-algorithm-level/permutation-patterns/chatgpt-response.md and the directory README. Verify the relevant original representation theorems and hypotheses (Kozma–Opler, Brignall, Barbay–Navarro; separable permutations and small-pattern algorithms as appropriate). On real LF and Open retained maps, distinguish classical patterns from labelled first returns. Census strong intervals/irreducible cores, monotone subsequences, repeated local shapes and bounded short-pattern profiles, with the existing block-size/run covariates and a preregistered split by distinct block identity. Select at most two pattern-derived representation families using training blocks. Produce exact prebuilt representations and time their real labelled consumers against matched prebuilt shipped and forward controls; report navigation, label storage, output writes, working set and coordinate cost. Reuse the ideal-permutation-structures harness and controls when present; otherwise deliver interoperable artifacts under this research directory or uniquely named examples, not a second general ideal-structures harness. No production edits.
+"""
+why = """
+Raw LF avoids a descending pattern of length sigma+1 by stable byte order, but first returns need not inherit that property (binary bbaaa example in the discussion). Existing cycle and displacement censuses do not establish irreducibility or pattern avoidance. Pattern-based succinct permutation representations support efficient forward and inverse queries under stated hypotheses, but those are not automatically efficient orbit consumers. This is a dedicated application branch of ideal-permutation-structures, with the construction/discovery cost separated from downstream value. A successful representation supplies a concrete constructor target rather than another unpriced abstract mathematical proposal.
+"""
+stop_test = """
+Freeze candidate families, bounded local compute budget, distinct-block train/held-out split and repeat design before data. Use exact recognition or proof for any assumed avoidance; sampled absence is not proof. Preserve byte-identical bwt::walk outputs, marked rotation and periodic/multicycle semantics; include arbitrary-column controls. Charge every consumer lookup, conversion, metadata, spelling and store; match warm/cold conditions, report prebuilt consumer gain and materialisation separately. Apply the parent diagnostic's 39.18 ms (3% of 1,306 ms at one worker) combined budget, with labelled measured or explicitly projected values and an actual downstream gain over the matched prebuilt baseline/forward control (or a separately demonstrated cheaper materialisation). Report allowable constructor cost C0+E0-E1-39.18 ms and scan-ideal eight-worker results only if measured. Admit a separate constructor claim only for a concrete candidate that passes; otherwise record the scoped family verdict, not a universal no-go. No new workstation spending or changes to frozen earlier verdicts.
+"""
+done_when = """
+A source-checked literature-to-representation note, reproducible structural census and exactness witnesses, at least one concrete consumer comparison or a proved/quantified family exclusion, a held-out cost/Pareto ledger and allowable constructor budget, and a delta linking artifacts for ideal-permutation-structures. Passing candidates become separate bounded constructor claims; stop this batch if none survives. Record work in docs/journal/2026-11-24-algorithm-level/permutation-patterns/.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/README.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/chatgpt-response.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/README.md",
+  "docs/journal/2026-11-24-wikidata-block-census.md",
+  "docs/journal/monodromy/2026-11-10-rauzy-veech.md",
+  "src/open.rs",
+]
+links = ["frontier/claims/ideal-permutation-structures.toml", "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ESA.2026.92", "https://oro.open.ac.uk/23475/1/simples-survey.pdf", "https://barbay.cl/Publications/2013-TCS-OnCompressingPermutationsAndAdaptiveSorting-BarbayNavarro_withoutPreamble.pdf"]

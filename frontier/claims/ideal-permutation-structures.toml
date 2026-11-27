@@ -1,0 +1,33 @@
+id = "ideal-permutation-structures"
+title = "Ideal permutation structures: measure consumer value before finding a constructor"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust", "math"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["permutation-structure-oracle"]
+needs_louis = ""
+question = """
+The existing Rauzy order STOP bounds step-count savings on Open's current auxiliary exchange, not the value of other exact representations. Separate precomputed product quality, materialisation, and online discovery costs. Use the bounded diagnostic in docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/README.md. Compare real consumers of prebuilt alternative labelled return-map/grammar structures against matched prebuilt shipped and forward controls. Preserve exact LF semantics and output; do not supply decoded output as the representation. Search small legal families exactly where feasible, use bounded offline search for real blocks, and distinguish structural bounds from runtime measurements. Price the allowable constructor only after measuring downstream value.
+"""
+why = """
+Construction plus emission is the largest worker-side budget (1,068 ms of the 1,306 ms stage-1 one-worker reference). The prior order census's 2.65% conditional floor and LIMIT oracle's 2.78%/1.45% ceiling constrain narrow families, not all representations. Existing non-walk/tunnel results and the measured forward control must be reused rather than rediscovered. A new representation may reduce wiring, traversal and spelling together; actual 8-worker gains still require scanner relief. The owner's question is to separate ideal structure value from how to compute it, as the ideal-parts matrix separated stage budgets.
+"""
+stop_test = """
+Frozen before new data: bounded first-pass diagnostic under the linked note, no src changes. Pre-register candidate families, compute budget, train/held-out split and repeat design. Byte-exact bwt::walk on every tested case; preserve periodic/multicycle/error semantics as appropriate. Match warm/cold oracle conditions and charge the entire real consumer; report free selection, actual materialisation and consumer separately. A constructor follow-on requires a concrete candidate with measured downstream improvement over matched prebuilt baseline/forward control (or independently demonstrated cheaper materialisation), and a combined baseline construction-plus-consumer budget of at least 39.18 ms (3% of 1,306 ms) after charging the candidate consumer, with allowable constructor cost explicitly derived. Label projections, report consumer-only gain and scan-ideal 8w effects if measured; no new workstation spending. Otherwise STOP this candidate batch with scoped evidence. No broad no-go inferred from finite search and no alteration of prior gates.
+"""
+done_when = """
+A reproducible diagnostic and results note, exactness evidence and a cost/Pareto table separating consumer, offline search and materialisation; a scoped verdict delta; surface updated if warranted; any worthwhile product becomes a separate constructor claim with a frozen net-cost gate.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/README.md",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results/README.md",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/monodromy/2026-11-10-rauzy-veech.md",
+  "docs/journal/2026-11-22-neon-teamwork-paradigm.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md",
+  "examples/rauzy_output_census.rs",
+  "src/open.rs",
+]
+links = ["frontier/claims/rauzy-output.toml", "frontier/claims/forward-emission.toml"]

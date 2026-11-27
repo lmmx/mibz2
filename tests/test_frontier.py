@@ -9,9 +9,12 @@ hard passes.
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import datetime as dt
 import fcntl
 import importlib.util
+import io
+import json
 import os
 import pathlib
 import shutil
@@ -27,10 +30,10 @@ FRONTIER_SRC = REPO_ROOT / "frontier" / "tools" / "frontier.py"
 RUN_QUEUE_SH = REPO_ROOT / "bench" / "run-queue.sh"
 
 GIT_ENV = {
-    "GIT_AUTHOR_NAME": "Louis Maddox",
-    "GIT_AUTHOR_EMAIL": "louismmx@gmail.com",
-    "GIT_COMMITTER_NAME": "Louis Maddox",
-    "GIT_COMMITTER_EMAIL": "louismmx@gmail.com",
+    "GIT_AUTHOR_NAME": "Frontier Test",
+    "GIT_AUTHOR_EMAIL": "frontier-test@example.invalid",
+    "GIT_COMMITTER_NAME": "Frontier Test",
+    "GIT_COMMITTER_EMAIL": "frontier-test@example.invalid",
 }
 
 BASE_CONFIG = """\
@@ -224,6 +227,8 @@ class FrontierSandbox:
         """Create an independent working clone of the bare remote."""
         dst = self.tmp / name
         _git(self.tmp, "clone", str(self.remote), str(dst))
+        _git(dst, "config", "--local", "user.name", GIT_ENV["GIT_AUTHOR_NAME"])
+        _git(dst, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
         return dst
 
     def run_frontier(self, repo: pathlib.Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -270,6 +275,37 @@ class TestFrontierStress(unittest.TestCase):
     # ------------------------------------------------------------------
     # Scenario 1: two agents claim the same id at once
     # ------------------------------------------------------------------
+
+    def test_read_only_check_needs_no_commit_identity(self) -> None:
+        """Local validation does not acquire commit identity or require a PR query."""
+        a = self.sb.clone("reader")
+        _git(a, "config", "--local", "--unset", "user.email")
+        mod = _load_frontier_module(a)
+        with (
+            mock.patch.object(mod, "lease_identity", side_effect=AssertionError("identity read")),
+            mock.patch.object(mod, "read_open_prs", side_effect=AssertionError("PR query")),
+        ):
+            self.assertEqual(mod.check(), 0)
+
+    def test_lease_identity_is_local_and_missing_identity_refuses_write(self) -> None:
+        """Commit identity is configured in the checkout, not baked into the client."""
+        a = self.sb.clone("author")
+        mod = _load_frontier_module(a)
+        self.assertEqual(mod.lease_identity(), GIT_ENV)
+        _git(a, "config", "--local", "--unset", "user.email")
+        self.assertIsNone(mod.lease_identity())
+        result = self.sb.run_frontier(a, "claim", "c1", "--by", "author")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("repository-local Git identity is not configured", result.stderr)
+        self.assertNotIn("c1", mod.holds())
+        _git(a, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
+        result = self.sb.run_frontier(a, "claim", "c1", "--by", "author")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        sha = mod.holds()["c1"][0]
+        self.assertEqual(
+            _git(a, "log", "-1", "--format=%ae %ce", sha),
+            "frontier-test@example.invalid frontier-test@example.invalid",
+        )
 
     def test_s1_concurrent_claim_same_id_exactly_one_wins(self) -> None:
         """Two concurrent claims on the same id yield exactly one acquisition."""
@@ -804,6 +840,473 @@ class TestFrontierStress(unittest.TestCase):
         self.assertIn("needs-louis", res.stdout)
         self.assertNotIn("## Open flags", res.stdout)
         self.assertNotIn("## The blog board", res.stdout)
+
+
+    # ------------------------------------------------------------------
+    # Live review discovery: a PR must be visible before its claim edit merges
+    # ------------------------------------------------------------------
+
+    def test_review_visible_from_clean_master_at_capacity(self) -> None:
+        """The actual open PR is the review event, even at full capacity and before merge."""
+        a = self.sb.clone("author")
+        for cid in ("c1", "c2", "c3"):
+            result = self.sb.run_frontier(a, "claim", cid, "--by", "author")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        _git(a, "switch", "-c", "work-c1")
+        card = a / "frontier" / "claims" / "c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "review"\npr = 42'))
+        _git(a, "add", str(card))
+        _git(a, "commit", "-m", "work awaiting review")
+        _git(a, "push", "origin", "work-c1")
+        head = _git(a, "rev-parse", "HEAD")
+
+        b = self.sb.clone("fresh-reviewer")
+        self.assertIn('status = "open"', (b / "frontier/claims/c1.toml").read_text())
+        mod = _load_frontier_module(b)
+        pr = {
+            "number": 42,
+            "body": "Claim: c1\n\nReady for independent review.",
+            "head": {"sha": head},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+        }
+        with mock.patch.object(mod, "read_open_prs", return_value=([pr], None)):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief({"shell"})
+            brief = buf.getvalue()
+            status = mod.render()
+        review = brief.split("## Awaiting review or merge", 1)[1].split("##", 1)[0]
+        self.assertIn(f"c1: PR #42 at {head[:12]}", review)
+        self.assertIn(f"c1: PR #42 at {head[:12]}", status)
+        self.assertNotIn("**c1**", status.split("## Open claims, by priority", 1)[1].split("##", 1)[0])
+        self.assertIn("c1", brief.split("## Held now", 1)[1].split("##", 1)[0])
+
+    def test_review_projection_drafts_duplicates_and_stale_pointers(self) -> None:
+        """Neither stale TOML pointers nor malformed, draft or duplicate PRs look like authority."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        items = mod.load("claims")
+        c2 = next(c for c in items if c["id"] == "c2")
+        c2.update(status="review", pr=99)
+
+        def pr(number, body, draft=False):
+            return {
+                "number": number,
+                "body": body,
+                "head": {"sha": "a" * 40},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": draft,
+            }
+
+        rows = [
+            pr(12, "Claim: c1"),
+            pr(13, "Claim: c1", draft=True),
+            pr(14, "Claim: none"),
+            pr(15, "legacy PR"),
+            pr(16, "Claim: not-in-checkout"),
+        ]
+        lines, pending = mod.review_projection(items, rows, None)
+        out = "\n".join(lines)
+        self.assertEqual(pending, {"c1", "not-in-checkout"})
+        for part in (
+            "PR #12",
+            "PR #13",
+            "multiple open PRs",
+            "draft, not ready",
+            "Claim: none): #14",
+            "no valid Claim header; may be legacy): #15",
+            "claim not in this checkout",
+            "PR #99 is not a linked open PR (stale pointer)",
+        ):
+            self.assertIn(part, out)
+        lines, pending = mod.review_projection(items, None, "offline")
+        self.assertEqual(pending, set())
+        self.assertIn("UNAVAILABLE: offline", lines[0])
+        self.assertIn("stored PR #99 (unverified)", "\n".join(lines))
+        lines, pending = mod.review_projection(items, [{"number": 1}], None)
+        self.assertEqual(pending, set())
+        self.assertIn("UNAVAILABLE", lines[0])
+
+    def test_review_projection_excludes_linked_open_claim_without_hold(self) -> None:
+        """An expired or absent lease must not make a PR's claim look like new work."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        pr = {
+            "number": 42,
+            "body": "Claim: c1",
+            "head": {"sha": "b" * 40},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+        }
+        with mock.patch.object(mod, "read_open_prs", return_value=([pr], None)):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief({"shell"})
+        take = buf.getvalue().split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("**c1**", take)
+        self.assertIn("**c2**", take)
+
+    def test_review_discovery_paginates_without_gh(self) -> None:
+        """The standard-library fallback reads every page, or reports failure."""
+        a = self.sb.clone("reader")
+        mod = _load_frontier_module(a)
+        page1 = [{"number": n} for n in range(1, 101)]
+        page2 = [{"number": 101}]
+        with (
+            mock.patch.object(mod, "github_repository", return_value="test-owner/test-repo"),
+            mock.patch.object(mod.shutil, "which", return_value=None),
+            mock.patch.object(
+                mod.urllib.request,
+                "urlopen",
+                side_effect=[
+                    io.BytesIO(json.dumps(page1).encode()),
+                    io.BytesIO(json.dumps(page2).encode()),
+                ],
+            ) as request,
+        ):
+            prs, error = mod.read_open_prs()
+        self.assertIsNone(error)
+        self.assertEqual(prs, page1 + page2)
+        self.assertIn("page=2", request.call_args.args[0].full_url)
+
+    def test_review_lineage_gate_checks_frontier_pr_event(self) -> None:
+        """CI rejects missing or mismatched existing Claim lineage, not ordinary legacy PRs."""
+        a = self.sb.clone("author")
+        base = _git(a, "rev-parse", "HEAD")
+        mod = _load_frontier_module(a)
+        event_path = a / "event.json"
+        pr = {"number": 42, "base": {"sha": base}, "body": None}
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIsNone(mod.check_pr_lineage(event_path, mod.load("claims")))
+
+        card = a / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "review"\npr = 42'))
+        _git(a, "add", str(card))
+        _git(a, "commit", "-m", "work awaiting review")
+        items = mod.load("claims")
+        self.assertIn("Claim:", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: missing"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIn("no claim", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: c2"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIn("does not match", mod.check_pr_lineage(event_path, items))
+        pr["body"] = "Claim: c1"
+        event_path.write_text(json.dumps({"pull_request": pr}))
+        self.assertIsNone(mod.check_pr_lineage(event_path, items))
+
+
+    def _submitted_review(self):
+        """Fill the canary and publish an exact submitted claim in the sandbox."""
+        author = self.sb.clone("producer")
+        sessions = {}
+        for cid in ("c1", "c2", "c3"):
+            result = self.sb.run_frontier(author, "claim", cid, "--by", "producer")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            sessions[cid] = _extract_session(result.stdout)
+        _git(author, "switch", "-c", "submitted")
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "review"\npr = 42'))
+        _git(author, "add", str(card))
+        _git(author, "commit", "-m", "submit result for integration")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        head = _git(author, "rev-parse", "HEAD")
+        pr = {
+            "number": 42,
+            "body": "Claim: c1",
+            "head": {"sha": head},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+            "merged": False,
+        }
+        return author, sessions["c1"], head, pr
+
+    def test_handoff_at_saturation_and_recover_after_merge(self):
+        """The same reservation transfers at cap; completion survives the reviewer."""
+        author, old_session, head, pr = self._submitted_review()
+        fresh = self.sb.clone("reviewer")
+        mod = _load_frontier_module(fresh)
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            mod.take_review("c1", 42, head, "reviewer", 1)
+            holds = mod.holds()
+            lease = holds["c1"][1]
+            self.assertEqual(sum(mod.live(v) for _, v in holds.values()), 3)
+            self.assertEqual(lease["phase"], "integration")
+            self.assertEqual(lease["producer"], "producer")
+            with self.assertRaises(SystemExit):
+                mod.mine("c1", old_session)
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, head, "other-reviewer", 1)
+            self.assertEqual(mod.main(["frontier", "verify", "c1", "--session", lease["session"]]), 0)
+            with self.assertRaises(SystemExit):
+                mod.finish_review("c1", 42, head)
+
+        # Simulate an exact, verified merge to trunk and the reviewer disappearing.
+        _git(author, "push", "origin", "HEAD:master")
+        merged = {**pr, "state": "closed", "merged": True, "merge_commit_sha": head}
+        newcomer = _load_frontier_module(self.sb.clone("newcomer"))
+        with mock.patch.object(newcomer, "read_pr", return_value=merged):
+            newcomer.finish_review("c1", 42, head)
+            newcomer.finish_review("c1", 42, head)  # retry is harmless
+        self.assertTrue(newcomer.holds()["c1"][1]["released"])
+        self.assertEqual(sum(newcomer.live(v) for _, v in newcomer.holds().values()), 2)
+        result = self.sb.run_frontier(fresh, "claim", "c4", "--by", "newcomer")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_handoff_head_change_and_yield(self):
+        """A changed PR head invalidates authority; yielding lets a fresh participant take it."""
+        author, _, head, pr = self._submitted_review()
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            mod.take_review("c1", 42, head, "reviewer", 1)
+        session = mod.holds()["c1"][1]["session"]
+        _git(author, "commit", "--allow-empty", "-m", "change submitted head")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        new_head = _git(author, "rev-parse", "HEAD")
+        changed = {**pr, "head": {"sha": new_head}}
+        with mock.patch.object(mod, "read_pr", return_value=changed):
+            with self.assertRaises(SystemExit):
+                mod.main(["frontier", "verify", "c1", "--session", session])
+            mod.yield_review("c1", session)
+            with self.assertRaises(SystemExit):
+                mod.mine("c1", session)
+            mod.take_review("c1", 42, new_head, "fresh-reviewer", 1)
+        self.assertEqual(mod.holds()["c1"][1]["pr_head"], new_head)
+
+    def test_handoff_rejects_unsubmitted_and_same_producer(self):
+        """A draft or a mere PR header is not a surrendered work reservation."""
+        author, _, head, pr = self._submitted_review()
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(mod, "read_pr", return_value={**pr, "draft": True}):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, head, "reviewer", 1)
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, head, "producer", 1)
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "review"', 'status = "open"'))
+        _git(author, "add", str(card))
+        _git(author, "commit", "-m", "withdraw review declaration")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        new_head = _git(author, "rev-parse", "HEAD")
+        with mock.patch.object(mod, "read_pr", return_value={**pr, "head": {"sha": new_head}}):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, new_head, "reviewer", 1)
+        self.assertEqual(mod.holds()["c1"][1]["holder"], "producer")
+
+    def test_handoff_cas_race_and_closed_unmerged_cleanup(self):
+        """Two independent contenders cannot both take the same reservation."""
+        _, _, head, pr = self._submitted_review()
+        mods = [_load_frontier_module(self.sb.clone(f"reviewer-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i):
+            mod = mods[i]
+            original = mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with (
+                mock.patch.object(mod, "read_pr", return_value=pr),
+                mock.patch.object(mod, "write_lease", side_effect=write),
+            ):
+                try:
+                    mod.take_review("c1", 42, head, f"reviewer-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+        self.assertEqual(sum(results), 1)
+        mod = mods[0]
+        closed = {**pr, "state": "closed"}
+        with mock.patch.object(mod, "read_pr", return_value=closed):
+            with self.assertRaises(SystemExit):
+                mod.finish_review("c1", 42, head)
+            mod.finish_review("c1", 42, head, cancelled=True)
+            mod.finish_review("c1", 42, head, cancelled=True)
+        self.assertTrue(mod.holds()["c1"][1]["released"])
+
+
+    def test_atomic_admission_distinct_ids_at_last_slot(self):
+        """Distinct claims cannot both acquire the last slot."""
+        seed = self.sb.clone("capacity-seed")
+        for cid in ("c1", "c2"):
+            result = self.sb.run_frontier(seed, "claim", cid, "--by", "seed")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        mods = [_load_frontier_module(self.sb.clone(f"contender-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i):
+            mod = mods[i]
+            original = mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with mock.patch.object(mod, "write_lease", side_effect=write):
+                try:
+                    mod.claim(("c3", "c4")[i], f"agent-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 3)
+
+    def test_operational_limit_refresh_without_worktree_merge(self):
+        """An existing updated client reads new settings from trunk, not its worktree."""
+        seed = self.sb.seed
+        fr = seed / "frontier"
+        (fr / "config.toml").write_text(
+            BASE_CONFIG.replace("max_live_holds = 3", 'limits_file = "limits.toml"\nmax_live_holds = 0')
+        )
+        (fr / "limits.toml").write_text("max_live_holds = 1\n")
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "separate operational limit")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("limits-author")
+        first = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        blocked = self.sb.run_frontier(author, "claim", "c2", "--by", "author")
+        self.assertNotEqual(blocked.returncode, 0)
+        (fr / "limits.toml").write_text("max_live_holds = 2\n")
+        _git(seed, "commit", "-am", "owner raises operational limit")
+        _git(seed, "push", "origin", "master")
+        second = self.sb.run_frontier(author, "claim", "c2", "--by", "author")
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertEqual((author / "frontier/limits.toml").read_text(), "max_live_holds = 1\n")
+
+    def test_operational_limit_invalid_and_missing_refuse(self):
+        """Never use a permissive default if the authoritative setting is absent or invalid."""
+        seed = self.sb.seed
+        fr = seed / "frontier"
+        (fr / "config.toml").write_text(
+            BASE_CONFIG.replace("max_live_holds = 3", 'limits_file = "limits.toml"\nmax_live_holds = 0')
+        )
+        limit = fr / "limits.toml"
+        limit.write_text("max_live_holds = 0\n")
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "invalid limit")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("invalid-limit")
+        for value in ("0", "true", '"10"', "-1"):
+            limit.write_text(f"max_live_holds = {value}\n")
+            _git(seed, "add", "frontier")
+            if subprocess.run(["git", "-C", str(seed), "diff", "--cached", "--quiet"]).returncode:
+                _git(seed, "commit", "-m", "invalid limit value")
+                _git(seed, "push", "origin", "master")
+            result = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("cannot read reservation limit", result.stderr)
+        _git(seed, "rm", "frontier/limits.toml")
+        _git(seed, "commit", "-m", "missing limit")
+        _git(seed, "push", "origin", "master")
+        result = self.sb.run_frontier(author, "claim", "c1", "--by", "author")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing authoritative frontier/limits.toml", result.stderr)
+
+    def test_ten_slot_admission_and_reuse(self):
+        """At the proposed ceiling, racing distinct IDs cannot overshoot; release reopens a slot."""
+        seed = self.sb.seed
+        config_path = seed / "frontier" / "config.toml"
+        config_path.write_text(
+            config_path.read_text().replace("max_live_holds = 3", "max_live_holds = 10")
+        )
+        for i in range(12):
+            cid = f"cap-ten-{i}"
+            (seed / "frontier" / "claims" / f"{cid}.toml").write_text(_claim_toml(cid))
+        _git(seed, "add", "frontier")
+        _git(seed, "commit", "-m", "ten-slot fixture")
+        _git(seed, "push", "origin", "master")
+        author = self.sb.clone("ten-author")
+        for i in range(9):
+            result = self.sb.run_frontier(author, "claim", f"cap-ten-{i}", "--by", "seed")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        mods = [_load_frontier_module(self.sb.clone(f"ten-racer-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i):
+            mod = mods[i]
+            original = mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with mock.patch.object(mod, "write_lease", side_effect=write):
+                try:
+                    mod.claim(f"cap-ten-{9 + i}", f"agent-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 10)
+        full = self.sb.run_frontier(author, "claim", "cap-ten-11", "--by", "seed")
+        self.assertNotEqual(full.returncode, 0)
+        lease = mods[0].holds()["cap-ten-0"][1]
+        release = self.sb.run_frontier(
+            author, "release", "cap-ten-0", "--session", lease["session"]
+        )
+        self.assertEqual(release.returncode, 0, release.stdout + release.stderr)
+        result = self.sb.run_frontier(author, "claim", "cap-ten-11", "--by", "seed")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(sum(mods[0].live(v) for _, v in mods[0].holds().values()), 10)
+
+    def test_expired_producer_cannot_revive_at_capacity(self):
+        _, _, head, pr = self._submitted_review()
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+        sha, lease = mod.holds()["c1"]
+        expired = {**lease, "expires": "2000-01-01T00:00:00+00:00"}
+        self.assertTrue(mod.write_lease("c1", expired, sha, sha)[0])
+        mod.claim("c4", "fresh", 1)
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 42, head, "reviewer", 1)
+        self.assertEqual(sum(mod.live(v) for _, v in mod.holds().values()), 3)
+
+    def test_next_acquisition_recovers_closed_unmerged_integration(self):
+        _, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        closed = {**pr, "state": "closed", "merged": False}
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=closed):
+            fresh.claim("c4", "fresh", 1)
+        lease = fresh.holds()["c1"][1]
+        self.assertTrue(lease["released"])
+        self.assertEqual(lease["terminal"], "closed-unmerged")
+
+    def test_next_acquisition_recovers_abandoned_merged_integration(self):
+        """A new swarm iteration need not ask the old reviewer to release a merged PR."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        _git(author, "push", "origin", "HEAD:master")
+        merged = {**pr, "state": "closed", "merged": True, "merge_commit_sha": head}
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.claim("c4", "fresh", 1)
+        holds = fresh.holds()
+        self.assertTrue(holds["c1"][1]["released"])
+        self.assertTrue(fresh.live(holds["c4"][1]))
+        self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
 
 
 if __name__ == "__main__":
