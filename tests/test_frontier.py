@@ -609,6 +609,31 @@ class TestFrontierStress(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("lab-notebook entry", r.stdout)
 
+    def test_release_due_is_recognised_and_release_claims_are_p1(self) -> None:
+        """Software merged since the last tag with no live release claim is a due release (P1)."""
+        a = self.sb.clone("agent-a")
+        _git(a, "tag", "v0.0.1")
+        _git(a, "push", "origin", "v0.0.1")
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotIn("release due", r.stdout + r.stderr)
+        (a / "src").mkdir(exist_ok=True)
+        (a / "src" / "lib.rs").write_text("pub fn f() {}\n")
+        _git(a, "add", "src/lib.rs")
+        _git(a, "commit", "-m", "perf: a software change")
+        _git(a, "push", "origin", "master")
+        _git(a, "fetch", "-q", "origin")
+        r = self.sb.run_frontier(a, "check")
+        self.assertIn("release due: 1 software commit(s) on master since v0.0.1", r.stdout + r.stderr)
+        rel = a / "frontier" / "claims" / "release-0-0-2.toml"
+        rel.write_text(_claim_toml("release-0-0-2").replace("priority = 1", "priority = 2"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("a release claim is P1", r.stdout)
+        rel.write_text(_claim_toml("release-0-0-2"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotIn("release due", r.stdout + r.stderr)
+        self.assertNotIn("a release claim is P1", r.stdout)
+
     # ------------------------------------------------------------------
     # Scenario 5: persuasive wrong argument -> independent cold review
     # ------------------------------------------------------------------

@@ -807,6 +807,12 @@ def render():
     out += ["## Needs Louis", ""] + (
         [f"- **{c['id']}**: {c['needs_louis']}" for c in louis] or ["- nothing"]
     )
+    due = release_due(every)
+    out += ["", "## Release due (P1)", ""] + (
+        [f"- {len(due[1])} software commit(s) on master since {due[0]}; no release claim yet"]
+        if due
+        else ["- nothing"]
+    )
     flags = open_flags()
     out += ["", "## Open flags", ""] + (
         [f"- `{p.name}`: {h.get('flags')} ({h.get('invariant')})" for p, h in flags] or ["- none"]
@@ -867,6 +873,26 @@ def _merge_base():
     return base, None
 
 
+RELEASE_PATHS = ["src", "python", "Cargo.toml", "Cargo.lock", "pyproject.toml", "build.rs"]
+
+
+def release_due(claims):
+    """Software merged to master since the last release tag, and no live release claim.
+
+    Returns (tag, commits) when a release is due, else None. Releases are P1 once recognised
+    (Louis, 27 November 2026; docs/RELEASING.md section 1): this is how they are recognised.
+    """
+    rc, tag = git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", "origin/master")
+    if rc != 0 or not tag:
+        return None
+    rc, log = git("log", "--first-parent", "--format=%h %s", f"{tag}..origin/master", "--", *RELEASE_PATHS)
+    commits = [line for line in log.splitlines() if line.strip()] if rc == 0 else []
+    live_release = any(
+        c["id"].startswith("release-") and c.get("status") not in ("done", "dropped") for c in claims
+    )
+    return (tag, commits) if commits and not live_release else None
+
+
 def check(pr_event=None):
     """Validate the frontier's files (five checks); return 1 on any error."""
     errs, warn = [], []
@@ -900,6 +926,15 @@ def check(pr_event=None):
             errs.append(
                 f"{n}: past review, it needs reviewed_by, by a different agent from drafted_by"
             )
+    for c in claims:
+        if c["id"].startswith("release-") and c.get("status") not in ("done", "dropped") and c.get("priority") != 1:
+            errs.append(f"{c['_path'].name}: a release claim is P1 (priority = 1), always")
+    due = release_due(claims)
+    if due:
+        warn.append(
+            f"release due: {len(due[1])} software commit(s) on master since {due[0]} and no live "
+            "release claim; open release-<version> at priority 1 (docs/RELEASING.md section 1)"
+        )
     busy = [c["id"] for c in cards if not c.get("legacy") and c.get("stage") in IN_PROGRESS]
     if len(busy) > 1:
         errs.append(
@@ -1042,6 +1077,16 @@ def brief(can):
     print(
         "\n## Needs Louis\n"
         + ("\n".join(f"- {c['id']}: {c['needs_louis']}" for c in louis) or "- nothing")
+    )
+    due = release_due(claims)
+    print(
+        "\n## Release due (P1)\n"
+        + (
+            f"- {len(due[1])} software commit(s) on master since {due[0]}, and no release claim: "
+            "open `release-<version>` at priority 1 and take it (docs/RELEASING.md)"
+            if due
+            else "- nothing"
+        )
     )
     print(
         "\n## Open flags\n"

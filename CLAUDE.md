@@ -105,7 +105,12 @@ Any integration session may release mibz2 when merged work is worth releasing (a
 - the release-scaling run of the current release against the last;
 - the CHANGELOG, the downstream bump and the report.
 
-After a merge to master, check what has merged since the last tag. A release is worth a delta.
+**A release is P1, always, once recognised** (Louis, 27 November 2026). `frontier.py brief`, `status`
+and `check` report "release due" whenever software has merged to master since the last tag and no
+release claim is live. The first agent to see it opens `release-<version>` at priority 1, and an
+agent takes it ahead of other work. Default-path changes accepted under their own PRs' rules make a
+release worth shipping without a workstation run first; the release's own benchmarks measure the
+combined effect and decide how it is described (`docs/RELEASING.md` §1). A release is worth a delta.
 
 ## Workstation recipes: one tarball back
 
