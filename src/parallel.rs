@@ -1566,6 +1566,15 @@ mod channel_source_tests {
 }
 
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::place_scanner();
+        if crate::scan_oracle::mode() == crate::scan_oracle::Mode::Replay {
+            return replay_scanner(shared, rx, jobs);
+        }
+    }
+    #[cfg(feature = "scan-oracle")]
+    let recording = crate::scan_oracle::mode() == crate::scan_oracle::Mode::Record;
     let src = ChannelSource {
         rx,
         buf: Vec::new(),
@@ -1623,6 +1632,13 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 symbols,
                 ..
             }) => {
+                #[cfg(feature = "scan-oracle")]
+                {
+                    crate::scan_oracle::count_scanned();
+                    if recording {
+                        crate::scan_oracle::record(index, &symbols);
+                    }
+                }
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
@@ -1645,6 +1661,74 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     }
     // (the input's receiver and the jobs' sender are dropped here: a writer's next write
     // fails, and the workers end once the jobs queued are done)
+}
+
+/// (research only, `scan-oracle`) Zero-copy lock-free replay scanner (`scan_oracle::Mode::Replay`):
+/// drains and recycles compressed input chunks, enforces the same slot and ready-byte bounds, and
+/// sends lightweight headers (`syms: Vec::new()`, 0 bytes copied) so workers borrow `&[u16]`
+/// directly from the frozen `OnceLock` store.
+#[cfg(feature = "scan-oracle")]
+fn replay_scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
+    use std::sync::mpsc::TryRecvError;
+    let finish = || {
+        let mut st = shared.lock();
+        st.end = Some(st.issued);
+        drop(st);
+        shared.cv.notify_one();
+    };
+    let recycle = |chunk: Vec<u8>| {
+        if chunk.capacity() > 0 {
+            let mut st = shared.lock();
+            if st.free_in.is_empty() {
+                st.free_in.push(chunk);
+            }
+        }
+    };
+    let mut eof = false;
+    loop {
+        while !eof {
+            match rx.try_recv() {
+                Ok(chunk) => recycle(chunk),
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => eof = true,
+            }
+        }
+        mark!(SlotWait);
+        let index = {
+            let mut st = shared.lock();
+            while !st.cancelled && shared.full(&st) {
+                st.scanner_waiting = true;
+                st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
+            }
+            st.scanner_waiting = false;
+            if st.cancelled {
+                drop(st);
+                return finish();
+            }
+            st.issued
+        };
+        mark!(SlotGot);
+        let Some((symbols, syms_bytes)) = crate::scan_oracle::replay_header(index) else {
+            while !eof {
+                match rx.recv() {
+                    Ok(chunk) => recycle(chunk),
+                    Err(_) => eof = true,
+                }
+            }
+            return finish();
+        };
+        #[cfg(not(feature = "trace"))]
+        let _ = syms_bytes;
+        let mut st = shared.lock();
+        let place = st.issued;
+        st.issued += 1;
+        drop(st);
+        mark!(Issued, place, syms_bytes, 0);
+        if !jobs.send_job((place, 0, symbols)) {
+            return finish();
+        }
+        mark!(Enqueued, place);
+    }
 }
 
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
@@ -1677,6 +1761,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         // block of `POOLED_FROM` rows or more, its own for a smaller one
         let res = catch_unwind(AssertUnwindSafe(|| {
             #[cfg(any(
+                feature = "scan-oracle",
                 feature = "ideal-construction",
                 feature = "ideal-mtf",
                 feature = "ideal-rle1",
@@ -1719,12 +1804,14 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         });
         let mut st = shared.lock();
         let wake = shared.insert_locked(&mut st, place, res);
+        #[cfg(feature = "trace")]
+        let ready_bytes = st.ready.bytes;
         // (the symbols, where the block failed before its rows were known)
         if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
             st.free_syms.push(std::mem::take(&mut symbols.syms));
         }
         drop(st);
-        mark!(Ready, place);
+        mark!(Ready, place, ready_bytes, 0);
         if wake {
             shared.cv.notify_one();
         }

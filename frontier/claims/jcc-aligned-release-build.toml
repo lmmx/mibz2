@@ -1,0 +1,28 @@
+id = "jcc-aligned-release-build"
+title = "Ship release artefacts (wheels, bzcat) built with 32-byte branch alignment against the Intel JCC-erratum penalty"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "i9"]
+priority = 3
+status = "idea"
+owned_paths = ["pyproject.toml", ".github/workflows/CI.yml"]
+mechanisms = ["build-flags"]
+needs_louis = ""
+question = """
+Three independent VM probes found that 32-byte branch alignment (`-C llvm-args=-x86-align-branch-boundary=32 -C llvm-args=-x86-align-branch=fused+jcc+jmp`) moves the shipped decoder itself, not only candidates: #1067 measured `W0_shipped` -11..-12% (-81..-86 ms) on the composed Open worker; #1068 measured shipped 4-lane A7 -7.1% warm / -5.9% cold; #1060 saw 13-20% swings in `src/mtf.rs` loops between unmitigated builds. DECODER.md treats this as a measurement control. It is also a possible free production lever on Intel parts carrying the JCC-erratum microcode (the i9-10900K does). On i9, measure shipped master built default vs aligned (paired `ab run`, wikidata x4, k = 1, 8, 10, plus `text`, `records`, `random`), and on the CI AMD runner (no erratum) for a non-regression read. If it passes, set the flags for the release artefacts the project builds (wheels, bzcat); library consumers building from source are unaffected and can be pointed at the flags in docs. Check first that the paired harness builds both arms with identical other flags.
+"""
+why = """
+A -6..-12% worker-side gain for zero code would be the cheapest worker lever in the frontier, and at the 8-worker knee the workers now bind (synthesis ninth pass). The VM numbers are diagnostics (C5); the effect is microarchitecture-specific, so only i9 evidence counts, and AMD must not regress.
+"""
+stop_test = """
+Frozen before data (adoption registration, C6 review): on i9-10900K, aligned over default must be faster with a non-overlapping 95% CI at k = 1 by >= 3.0% and at k = 8 by >= 1.5%, with no > 1.0% regression at k = 10 or on any guard corpus, <= 1.02x peak RSS, identical output bytes; and on the CI AMD runner no > 1.0% regression at any thread count. Otherwise STOP with a scoped dead-end row.
+"""
+done_when = """
+Registration, i9 evidence bundle, verdict delta, and if PASS a PR setting the release flags.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/composed-worker-v2-probe.md",
+  "docs/journal/2026-11-27-explore/direct-literal-4lane-emit.md",
+  "docs/journal/2026-11-27-explore/mtf-column-front-dissection.md",
+]
+links = ["frontier/DECODER.md"]

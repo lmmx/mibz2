@@ -1,0 +1,33 @@
+id = "runt-exempt-window"
+title = "Count only full blocks against the decoder's window, so runts stop diluting it"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["runt-exempt-admission"]
+needs_louis = ""
+question = """
+`Shared::full` charges every block one place of `slots`. On lbzip2/pbzip2-written files, the Wikimedia dumps included, 46% of places are runts of under 1,000 symbols (encoder property: reference bzip2 writes none). On a 4-vCPU VM, the corpus's lbzip2 encoding decodes 1.06-1.09x slower than a bzip2 re-encoding of the same bytes at production's 16 slots/t4, 1.17-1.23x at 2 x threads; the gap closes at 32 slots. That makes it slot starvation, not per-runt work (docs/journal/2026-11-27-explore/encoder-dependence.md). On the i9 at k = 8 the same dilution was priced at -0.76% (eight-worker-coupling.md). Does admitting a block whose symbol bound (n_sel x 50) is below POOLED_FROM rows without charging a full place, with exempt places capped at `slots` more so that memory stays bounded, recover the gap without regressing runt-free files?
+"""
+why = """
+A pipeline-starvation cost that the bench corpus shows only weakly at 8W on the i9, but that grows on small and oversubscribed machines, which is where many real users decode Wikimedia-style files. It is a few lines in admission, disjoint from scanner and worker kernels, and it complements them: a faster worker shortens the window's horizon further.
+"""
+stop_test = """
+Frozen before data:
+1. Byte-identical and error-identical output (cargo test --lib, fuzz-smoke, stress, every corpus of the route census), with ordering and in-order errors unchanged. The memory bound is restated in the module doc: at most 2 x slots places, runt places holding <= 64 KiB each. The ledger's (bench-ledger) reserved bytes are within 1.05x of baseline at t = 2, 4, 10.
+2. Paired A/B, at least 9 interleaved rounds, on corpora/wikidata.bz2 and its bzip2 -9 re-encoding (control), at production's default window. PASS if the dump's t4 wall improves >= 3% (median ratio, 95% CI excluding 0) on a 4-vCPU runner, and the control moves by no more than +/-1%. At k = 6, 8 and 10 on the i9, no arm regresses by more than 0.5%. If neither the t4 gain nor an i9 k = 8 gain of >= 0.5% appears, STOP with a scoped dead-end row.
+"""
+done_when = """
+A PR on src/parallel.rs passing (1) and (2), with a delta; the i9 leg queued under the standing workstation authority only once frozen, reviewed and green.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/encoder-dependence.md",
+  "docs/journal/2026-11-27-explore/eight-worker-coupling.md",
+  "docs/journal/2026-11-05-window.md",
+]
+links = [
+  "examples/bzcat.rs",
+  "frontier/deltas/2026-11-27-explore-encoder-dependence.md",
+]

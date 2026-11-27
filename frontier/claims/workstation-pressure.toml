@@ -1,0 +1,26 @@
+id = "workstation-pressure"
+title = "Recover stranded i9 capacity through derived frontier pressure"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+pr = 0
+owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
+mechanisms = []
+needs_louis = ""
+question = """
+Can frontier brief and status automatically expose and prioritise the shortest eligible upstream path to useful runnable workstation validation when the queue is starved, without a coordinator or repeated maintainer intervention?
+Inspect the existing runner, queue, ready tags, evidence, claims, review discovery and holds. Reuse existing state and authority. Derive effective priority rather than permanently changing declared priorities. Distinguish repository queue starvation from physical i9 idleness, including other repositories, running jobs and stale or unavailable telemetry. If physical state is not observable, report unknown and use verified repository-local starvation only. Prefer the smallest mechanism; leave runner telemetry changes to a separately scoped claim if necessary.
+"""
+why = """
+#1070 manually elevated three dependencies to P1 because the queue had no runnable entry since 26 November. The existing standing authorisation and workstation replenishment rule already permit useful reviewed green recipes. Automating discovery and priority inheritance can recover stranded capacity without new authority, coordination roles or spending.
+"""
+stop_test = """
+Before implementing, freeze fixtures for verified empty queue with eligible candidate, nonempty/running queue, stale or unavailable data, multiple repositories, leased dependencies, failed or obsolete candidates, owner-only blockers, and no useful candidates. Demonstrate that brief prioritises only eligible unfinished dependencies, status explains the signal, pressure dissipates on replenishment, declared priorities are unchanged, and no duplicate dispatch, lease bypass, gate bypass or new expenditure occurs. Fail closed on incomplete data; do not infer physical idleness from an empty repo queue. No synthetic benchmark work merely to keep the machine busy. Stop or narrow scope if reliable signals cannot be obtained within existing authority.
+"""
+done_when = """
+Minimal implementation with regression tests, applicable exact-head checks and independent review under existing protected-path rules; documented evidence of correct pressure and decay. No new scheduler or approval layer. Record any remaining telemetry dependency in a follow-up claim.
+"""
+premises = []
+links = ["frontier/README.md", "CLAUDE.md", "bench/workstation-queue.txt", "frontier/tools/frontier.py"]

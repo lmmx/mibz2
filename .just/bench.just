@@ -1941,6 +1941,151 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
 
+# The MTF-into-construction fold's kill test on the i9-10900K (frozen registration:
+# docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md §3, claim mtf-fold-run):
+# arms none, F, S, FS at k = 1, 6, 8, 9, 10 and SM, SC at k = 8 on wikidata x4, scanner
+# pinned to the fastest calibrated physical core, 100 ms pre-spin, 12 randomised blocks
+# (traces in the first 3 capturing A5, A6a, fused A5+A6a, A9, copy_out, ready_bytes hwm,
+# and S scan residual), plus ab gen text at k = 1, 8 for non-Open fallback cost.
+#   just submit bench-mtf-fold
+bench-mtf-fold BLOCKS="12" TRACE_BLOCKS="3" TEXT_BLOCKS="6" COPIES="4" SEED="20261127" TIMEOUT="180":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/mtf-fold
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-mtf-fold (registration.md §3): blocks={{BLOCKS}} trace_blocks={{TRACE_BLOCKS}} text_blocks={{TEXT_BLOCKS}} copies={{COPIES}} seed={{SEED}} at $(git rev-parse HEAD)"
+    date -u +%FT%TZ > "$O/started.txt"
+    printf 'phase\trc\tstarted\tended\tlast\n' > "$O/phases.tsv"
+    FAILED=""
+    BIN=$PWD/target/release/examples/mtf_fold
+    AB=$PWD/target/release/examples/ab
+    corpus=$PWD/corpora/wikidata-sample.bz2
+    X4=$W/wikidata-x{{COPIES}}.bz2
+    GEN=$W/gen
+    TEXT=$GEN/text.bz2
+    finish() {
+      local rc=$?
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -rf "$X4" "$GEN"
+      if [ -n "$FAILED" ]; then
+        echo "bench-mtf-fold: failed phases:$FAILED"
+        [ "$rc" != 0 ] || rc=1
+      fi
+      exec 1>&3 2>&4
+      wait "$TEE" 2>/dev/null || sleep 1
+      bash bench/bundle.sh "$O" || { echo "bench-mtf-fold: bench/bundle.sh failed"; rc=1; }
+      exit "$rc"
+    }
+    trap finish EXIT
+    phase() {
+      local name=$1 needs=$2 n t0 rc last
+      shift 2
+      t0=$(date -u +%FT%TZ)
+      for n in ${needs//,/ }; do
+        [ "$n" = - ] && continue
+        if ! awk -F'\t' -v n="$n" '$1 == n && $2 == "0" { f = 1 } END { exit !f }' "$O/phases.tsv"; then
+          printf '%s\tSKIPPED\t%s\t%s\tneeds %s\n' "$name" "$t0" "$t0" "$n" >> "$O/phases.tsv"
+          echo "bench-mtf-fold: phase $name SKIPPED (it needs $n)"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-mtf-fold: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    checks() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-mtf-fold: the checkout has local changes"; exit 1; }
+      git rev-parse HEAD > "$O/commit.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-mtf-fold: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      cargo build -q --release \
+        --features "mtf-fold scan-oracle ideal-parts trace phase-counters" \
+        --example mtf_fold --example ab --example windows
+      sha256sum "$BIN" "$AB" | tee "$O/binaries.sha256"
+    }
+    inputs() {
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-mtf-fold: $corpus is not bench/wikidata.json's $want"; exit 1; }
+      : > "$X4"
+      for i in $(seq {{COPIES}}); do cat "$corpus" >> "$X4"; done
+      rm -rf "$GEN"
+      "$AB" gen "$GEN" 16
+      [ -f "$TEXT" ] || { echo "bench-mtf-fold: $TEXT missing after ab gen"; exit 1; }
+      sha256sum "$corpus" "$X4" "$TEXT" | tee "$O/inputs.sha256"
+    }
+    machine() {
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt" || true
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt" || true
+      for f in scaling_governor scaling_driver energy_performance_preference; do
+        echo "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>/dev/null || echo unreadable)"
+      done > "$O/frequency-policy.txt"
+      echo "no_turbo: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo unreadable), writable: $([ -w /sys/devices/system/cpu/intel_pstate/no_turbo ] && echo yes || echo no)" >> "$O/frequency-policy.txt"
+      echo "aslr (randomize_va_space): $(cat /proc/sys/kernel/randomize_va_space 2>/dev/null || echo unreadable)" >> "$O/frequency-policy.txt"
+      uname -a > "$O/uname.txt"
+      "$AB" env > "$O/env.json"
+    }
+    cores() {
+      cpus=$(python3 -c "import sys; sys.path.insert(0, 'bench'); import mtf_fold as m; print(' '.join(str(c[0]) for c in m.topology('$O/lscpu-e.txt')))")
+      { echo "{"; sep=""
+        for c in $cpus; do printf '%s"%s": %s\n' "$sep" "$c" "$(taskset -c "$c" "$BIN" --calibrate 200000000 5)"; sep=","; done
+        echo "}"; } > "$O/cores.json"
+      python3 -m json.tool "$O/cores.json" > /dev/null
+    }
+    plan() {
+      python3 bench/mtf_fold.py plan "$O/lscpu-e.txt" "$O/cores.json" "$O/plan.json" \
+        --blocks {{BLOCKS}} --trace-blocks {{TRACE_BLOCKS}} --text-blocks {{TEXT_BLOCKS}}
+    }
+    drive() {
+      python3 bench/mtf_fold.py run "$O/plan.json" --bin "$BIN" --corpus "$X4" \
+        --text-corpus "$TEXT" --out "$O" --blocks {{BLOCKS}} \
+        --trace-blocks {{TRACE_BLOCKS}} --text-blocks {{TEXT_BLOCKS}} \
+        --seed {{SEED}} --timeout {{TIMEOUT}}
+    }
+    report() {
+      date -u +%FT%TZ > "$O/timed.txt"
+      python3 bench/mtf_fold.py report "$O/plan.json" "$O/runs.jsonl" \
+        --text-runs "$O/text_runs.jsonl" --lscpu "$O/lscpu.txt" --out "$O" \
+        --blocks {{BLOCKS}} --trace-blocks {{TRACE_BLOCKS}} \
+        | tee "$O/report.txt"
+    }
+    phase checks   -           checks
+    phase build    checks      build
+    phase inputs   build       inputs
+    phase machine  build       machine
+    phase cores    machine     cores
+    phase plan     cores       plan
+    phase run      plan,inputs drive
+    phase report   plan        report
+
 # Frozen C6 adoption run for the input-chunk seam window (`scanner-seam-window`,
 # docs/journal/2026-11-27-scanner-seam-window/registration.md): compares HEAD_REF/HEAD_SHA
 # against its merge-base with origin/master on wikidata-x4 (4 copies of corpora/wikidata.bz2),

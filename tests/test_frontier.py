@@ -1308,6 +1308,232 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(fresh.live(holds["c4"][1]))
         self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
 
+    def _stale_docs_team_pair(self):
+        """Set up archive-team-strata holding docs/team/ and migrate-rules needing docs/team/RULES.md."""
+        seed = self.sb.seed
+        fr = seed / "frontier" / "claims"
+        (fr / "archive-team-strata.toml").write_text(
+            _claim_toml("archive-team-strata", zone="striated", owned_paths=["docs/team/"])
+        )
+        (fr / "migrate-rules.toml").write_text(
+            _claim_toml("migrate-rules", zone="striated", owned_paths=["docs/team/RULES.md"])
+        )
+        _git(seed, "add", "frontier/claims")
+        _git(seed, "commit", "-m", "add archive-team-strata and migrate-rules fixtures")
+        _git(seed, "push", "origin", "master")
+        prior_master = _git(seed, "rev-parse", "HEAD")
+
+        # Advance master once so prior_master strictly predates the lease's base.
+        _git(seed, "commit", "--allow-empty", "-m", "advance master before claim")
+        _git(seed, "push", "origin", "master")
+
+        holder = self.sb.clone("holder")
+        res = self.sb.run_frontier(holder, "claim", "archive-team-strata", "--by", "holder")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        session = _extract_session(res.stdout)
+        hold_sha = _git(self.sb.remote, "rev-parse", "refs/heads/hold/archive-team-strata")
+        return holder, session, hold_sha, prior_master
+
+    def test_stale_ordinary_hold_reconciles_on_verified_merged_pr_and_unblocks_overlap(self):
+        """A done ordinary hold with a verified merged PR on master reconciles and unblocks overlap."""
+        holder, old_session, old_hold_sha, _ = self._stale_docs_team_pair()
+        fresh_repo = self.sb.clone("fresh")
+
+        # While still open, migrate-rules is refused due to docs/team/ overlap.
+        blocked = self.sb.run_frontier(fresh_repo, "claim", "migrate-rules", "--by", "fresh")
+        self.assertNotEqual(blocked.returncode, 0)
+        self.assertIn("would share", blocked.stderr)
+        self.assertIn("archive-team-strata", blocked.stderr)
+
+        # Merge PR #977 to origin/master marking archive-team-strata done with pr = 977; forget release.
+        card = holder / "frontier" / "claims" / "archive-team-strata.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "done"\npr = 977'))
+        _git(holder, "add", str(card))
+        _git(holder, "commit", "-m", "finish archive-team-strata (#977)")
+        _git(holder, "push", "origin", "HEAD:master")
+        merge_sha = _git(holder, "rev-parse", "HEAD")
+
+        # Without GitHub PR verification (API unavailable), claim fails closed and retains the lease.
+        unverified = self.sb.run_frontier(fresh_repo, "claim", "migrate-rules", "--by", "fresh")
+        self.assertNotEqual(unverified.returncode, 0)
+        self.assertIn("would share", unverified.stderr)
+        fresh = _load_frontier_module(fresh_repo)
+        self.assertFalse(fresh.holds()["archive-team-strata"][1]["released"])
+
+        # With verified merged PR #977 on origin/master, claim reconciles and acquires migrate-rules.
+        merged_pr = {
+            "number": 977,
+            "body": "Claim: archive-team-strata\n\nArchived coordinator-era machinery.",
+            "base": {"ref": "master"},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+        with mock.patch.object(fresh, "read_pr", return_value=merged_pr):
+            fresh.claim("migrate-rules", "fresh", 1)
+
+        all_holds = fresh.holds()
+        rel_sha, rel_lease = all_holds["archive-team-strata"]
+        self.assertTrue(rel_lease["released"])
+        self.assertEqual(rel_lease["terminal"], merge_sha)
+        self.assertEqual(
+            _git(self.sb.remote, "rev-parse", f"{rel_sha}^"),
+            old_hold_sha,
+            "reconciliation release commit must chain from the previous hold commit",
+        )
+        self.assertTrue(fresh.live(all_holds["migrate-rules"][1]))
+        # Forgetful holder can no longer verify the reconciled lease.
+        old_verify = self.sb.run_frontier(
+            holder, "verify", "archive-team-strata", "--session", old_session
+        )
+        self.assertNotEqual(old_verify.returncode, 0)
+
+    def test_stale_ordinary_hold_dropped_claim_reconciles_at_capacity_with_atomic_cas(self):
+        """Dropped ordinary holds with verified merged PRs free capacity without CAS overshoot."""
+        seed = self.sb.seed
+        (seed / "frontier" / "claims" / "c5.toml").write_text(_claim_toml("c5"))
+        _git(seed, "add", "frontier/claims/c5.toml")
+        _git(seed, "commit", "-m", "add c5 claim")
+        _git(seed, "push", "origin", "master")
+
+        holder = self.sb.clone("holder")
+        for cid in ("c1", "c2", "c3"):
+            res = self.sb.run_frontier(holder, "claim", cid, "--by", "holder")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+
+        # Merge PR #55 dropping c1 on origin/master without releasing hold/c1.
+        card = holder / "frontier" / "claims" / "c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "dropped"\npr = 55'))
+        _git(holder, "add", str(card))
+        _git(holder, "commit", "-m", "drop c1 (#55)")
+        _git(holder, "push", "origin", "HEAD:master")
+        merge_sha = _git(holder, "rev-parse", "HEAD")
+
+        merged_pr = {
+            "number": 55,
+            "body": "Claim: c1\n\nDropped after evidence.",
+            "base": {"ref": "master"},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+
+        # Two contenders race for the single slot freed by reconciling c1.
+        mods = [_load_frontier_module(self.sb.clone(f"racer-{i}")) for i in range(2)]
+        barrier = threading.Barrier(2)
+
+        def attempt(i: int) -> bool:
+            mod = mods[i]
+            original = mod.write_lease
+
+            def guarded_write(cid, lease, parent, expected, admission=None):
+                if admission is not None:
+                    barrier.wait(timeout=10)
+                return original(cid, lease, parent, expected, admission)
+
+            with (
+                mock.patch.object(mod, "read_pr", return_value=merged_pr),
+                mock.patch.object(mod, "write_lease", side_effect=guarded_write),
+            ):
+                try:
+                    mod.claim(("c4", "c5")[i], f"agent-{i}", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, range(2)))
+
+        self.assertEqual(sum(results), 1)
+        all_holds = mods[0].holds()
+        self.assertTrue(all_holds["c1"][1]["released"])
+        self.assertEqual(all_holds["c1"][1]["terminal"], merge_sha)
+        self.assertEqual(sum(mods[0].live(v) for _, v in all_holds.values()), 3)
+
+    def test_stale_ordinary_hold_fails_closed_on_uncertainty(self):
+        """Never release an ordinary hold when status, pr, API, header, base, or merge is uncertain."""
+        holder, _, _, prior_master = self._stale_docs_team_pair()
+        fresh_repo = self.sb.clone("fresh")
+        fresh = _load_frontier_module(fresh_repo)
+
+        # Create an unmerged side-branch commit (not on origin/master).
+        _git(holder, "checkout", "-b", "unmerged-side")
+        _git(holder, "commit", "--allow-empty", "-m", "unmerged side commit")
+        unmerged_sha = _git(holder, "rev-parse", "HEAD")
+        _git(holder, "push", "origin", "HEAD:refs/heads/unmerged-side")
+        _git(holder, "checkout", "master")
+
+        def push_card(replacement: str) -> str:
+            card = holder / "frontier" / "claims" / "archive-team-strata.toml"
+            text = _claim_toml(
+                "archive-team-strata", zone="striated", owned_paths=["docs/team/"]
+            ).replace('status = "open"', replacement)
+            card.write_text(text)
+            _git(holder, "add", str(card))
+            _git(holder, "commit", "-m", f"update card: {replacement.splitlines()[0]}")
+            _git(holder, "push", "origin", "HEAD:master")
+            return _git(holder, "rev-parse", "HEAD")
+
+        # 1. Local-only done edit must not override origin/master status = "open".
+        local_card = fresh_repo / "frontier" / "claims" / "archive-team-strata.toml"
+        local_card.write_text(
+            local_card.read_text().replace('status = "open"', 'status = "done"\npr = 977')
+        )
+        with mock.patch.object(fresh, "read_pr", side_effect=AssertionError("must not query PR")):
+            with self.assertRaises(SystemExit):
+                fresh.claim("migrate-rules", "fresh", 1)
+        _git(fresh_repo, "checkout", "--", str(local_card))
+
+        # 2. Non-terminal status ("review") with pr = 977 must not release or query PR.
+        push_card('status = "review"\npr = 977')
+        with mock.patch.object(fresh, "read_pr", side_effect=AssertionError("must not query PR")):
+            with self.assertRaises(SystemExit):
+                fresh.claim("migrate-rules", "fresh", 1)
+
+        # 3. Terminal status ("done") with missing pr or pr = 0 must not release or query PR.
+        for bad_pr in ('status = "done"', 'status = "done"\npr = 0', 'status = "done"\npr = true'):
+            push_card(bad_pr)
+            with mock.patch.object(
+                fresh, "read_pr", side_effect=AssertionError("must not query PR")
+            ):
+                with self.assertRaises(SystemExit):
+                    fresh.claim("migrate-rules", "fresh", 1)
+
+        # 4. Terminal status with pr = 977: reject API error and every invalid/unverified PR payload.
+        merge_sha = push_card('status = "done"\npr = 977')
+        valid_pr = {
+            "number": 977,
+            "body": "Claim: archive-team-strata",
+            "base": {"ref": "master"},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+
+        with mock.patch.object(fresh, "read_pr", side_effect=SystemExit("API unavailable")):
+            with self.assertRaises(SystemExit):
+                fresh.claim("migrate-rules", "fresh", 1)
+
+        invalid_payloads = [
+            {**valid_pr, "state": "open", "merged": False},
+            {**valid_pr, "state": "closed", "merged": False, "merge_commit_sha": None},
+            {**valid_pr, "body": "Claim: migrate-rules"},
+            {**valid_pr, "body": "Claim: none"},
+            {**valid_pr, "base": {"ref": "other-branch"}},
+            {**valid_pr, "number": 978},
+            {**valid_pr, "merge_commit_sha": "not-a-sha"},
+            {**valid_pr, "merge_commit_sha": unmerged_sha},
+            {**valid_pr, "merge_commit_sha": prior_master},
+        ]
+        for payload in invalid_payloads:
+            with mock.patch.object(fresh, "read_pr", return_value=payload):
+                with self.assertRaises(SystemExit):
+                    fresh.claim("migrate-rules", "fresh", 1)
+            self.assertFalse(
+                fresh.holds()["archive-team-strata"][1]["released"],
+                f"must fail closed for payload: {payload}",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
