@@ -216,7 +216,13 @@ re-deriving it from narratives. Dense shorthand belongs in the
 Cards from before 27 November carry `legacy = true` and are exempt. CI's `check_prose.py` adds a
 **reader gate** on every new or changed post. It fails dense shorthand (inline code spans, numbers
 set as code, PR references, each per 1,000 words, calibrated on the posts published before the
-swarm) and a new main-post title that lists three or more things.
+swarm), a new main-post title that lists three or more things, and **claims that outrun state**:
+a new or edited title or dek may claim a speed, memory or size effect (a throughput, percentage,
+time or memory figure, measured on a named machine) only when the post's blog card lists `changes`
+whose rows in `frontier/ledger.tsv` are all in state `default`. Any other state (`experimental`,
+`awaiting-review`, `prototype`, `target`) must be named where it is reported ("behind an
+experimental feature", "a prototype", "the target"); `check_prose.py` fails when the body's first
+mention of a ledgered non-default change omits its state word.
 
 **Standing publishing authority (Louis, 26 November 2026): publish, then iterate.** Any agent may
 merge its own or another agent's blog-only PR once the applicable mechanical merge checks pass:
