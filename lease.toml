@@ -1,0 +1,9 @@
+id = "post-1080-takes-runs"
+holder = "antigravity"
+session = "5bee0a6e0f71"
+claimed_at = "2026-11-27T14:15:24+00:00"
+expires = "2026-11-27T22:15:24+00:00"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["takes-runs-threshold", "branchless-rle2-front"]
+base = "212b52bb84b58969823c8549ce2e66340d09a3b0"
+released = false
