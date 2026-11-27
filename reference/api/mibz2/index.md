@@ -68,6 +68,22 @@ readinto(b) -> int
 
 Read up to `len(b)` decoded bytes into `b`; 0 at the end (when verified).
 
+### readall
+
+```python
+readall() -> bytes
+```
+
+Read and return all remaining decoded bytes until EOF.
+
+### read
+
+```python
+read(size: int | None = -1) -> bytes
+```
+
+Read up to `size` bytes, or all remaining bytes if `size` is negative or `None`.
+
 ### verified
 
 ```python
