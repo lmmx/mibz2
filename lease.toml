@@ -1,9 +1,9 @@
-id = "scanner-a2-fast-build"
-holder = "claude-code"
-session = "780159e7f9bf"
-claimed_at = "2026-11-27T06:35:41+00:00"
-expires = "2026-11-27T11:04:16+00:00"
-owned_paths = ["src/block.rs", "src/huff.rs"]
-mechanisms = ["scanner-a2-build"]
-base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
+id = "jcc-aligned-release-build"
+holder = "antigravity"
+session = "c65be920f816"
+claimed_at = "2026-11-27T07:08:55+00:00"
+expires = "2026-11-27T15:08:55+00:00"
+owned_paths = ["pyproject.toml", ".github/workflows/CI.yml", ".just/bench.just", "bench/jcc_aligned.py", "bench/test_jcc_aligned.py"]
+mechanisms = ["build-flags"]
+base = "59cac2c52d7168e09a4b4d6edeb658c16ef9baf7"
 released = false
