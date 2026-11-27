@@ -79,3 +79,60 @@ No timing, no Rust. E1's estimator is one simple choice; a better one (for examp
 code-length histograms) would shrink the window, but E2 shows the collapse itself, not the
 window, is the expensive part. E2 starts at a random bit, not a true boundary (A says this adds
 only a few codewords). D and E are capped at 5,000 symbols and 16,384 bits.
+
+## Raw outputs
+
+`huffman_self_sync.py wikidata.bz2` (default 2,000 starts a block):
+
+```text
+blocks: 431
+A oracle-table sync: 486435/492570 synced, dead 6135, unsynced 0
+  codewords to sync: p50=3 p90=14 p99=43 p99.9=197 max=2141 mean=6.57
+  bits to sync:      p50=13 p90=60 p99=171 p99.9=453 max=4624 mean=25.42
+  mean bits/symbol 3.749; symbols 24979299; data bits 93636008
+B guessed-table: synced 2827122/2853140, at a boundary of the guessed table 480493; codewords p50=2 p90=8 p99=25 p99.9=69 max=2136 mean=4.13
+  right-table syncs per start (sum over guesses), mean 0.784
+C tables a block: {2: 197, 4: 1, 6: 233}
+  consecutive groups sharing a table: 312331/501017 = 0.6234
+D phase error: relocked 28068/119086 within 5000 syms (557 without ever leaving the true boundaries), died 2593
+  by d: {1: [15071, 7395], 7: [14923, 768], 25: [14986, 44], 49: [14989, 9], 50: [15086, 8], -1: [14627, 12048], -25: [14700, 5453], -50: [14704, 2343]}
+  symbols to relock: p50=1143 p90=4219 p99=4923 p99.9=4993 max=5000 mean=1709.54
+```
+
+`huffman_index_hypotheses.py wikidata.bz2 --chunks 3`:
+
+```text
+blocks 431, chunk starts 699, radius 400 (801 hypotheses)
+E1 group-index error |g_true - g_hat|: p50=8 p90=18 p99=33 max=46 mean=9.54
+   symbol-index error |s_true - s_hat|: p50=404 p90=917 p99=1686 max=2281
+   true index inside the +-400 window: 343/699
+E2 after   256 bits: distinct states p50=734 p90=791 max=801; collapsed to one: 0/699; true state present: 340/699
+E2 after  1024 bits: distinct states p50=592 p90=758 max=801; collapsed to one: 0/699; true state present: 343/699
+E2 after  4096 bits: distinct states p50=335 p90=608 max=801; collapsed to one: 0/699; true state present: 346/699
+E2 after 16384 bits: distinct states p50=131 p90=259 max=520; collapsed to one: 0/699; true state present: 370/699
+```
+
+`text.bz2`: `huffman_self_sync.py --starts 1000`, then `huffman_index_hypotheses.py --chunks 2`:
+
+```text
+blocks: 45
+A oracle-table sync: 44999/45000 synced, dead 1, unsynced 0
+  codewords to sync: p50=3 p90=10 p99=34 p99.9=74 max=390 mean=4.69
+  bits to sync:      p50=11 p90=34 p99=88 p99.9=181 max=882 mean=16.01
+  mean bits/symbol 3.568; symbols 15914730; data bits 56782409
+B guessed-table: synced 269997/270000, at a boundary of the guessed table 44629; codewords p50=3 p90=8 p99=21 p99.9=47 max=1137 mean=3.94
+  right-table syncs per start (sum over guesses), mean 0.992
+C tables a block: {6: 45}
+  consecutive groups sharing a table: 136635/318272 = 0.4293
+D phase error: relocked 2823/11250 within 5000 syms (27 without ever leaving the true boundaries), died 0
+  by d: {1: [1346, 898], 7: [1375, 212], 25: [1403, 10], 49: [1405, 0], 50: [1402, 0], -1: [1415, 1214], -25: [1459, 353], -50: [1445, 136]}
+  symbols to relock: p50=928 p90=4104 p99=4888 p99.9=4993 max=4998 mean=1553.17
+blocks 45, chunk starts 90, radius 400 (801 hypotheses)
+E1 group-index error |g_true - g_hat|: p50=62 p90=114 p99=135 max=136 mean=65.13
+   symbol-index error |s_true - s_hat|: p50=3128 p90=5690 p99=6754 max=6790
+   true index inside the +-400 window: 4/90
+E2 after   256 bits: distinct states p50=700 p90=750 max=801; collapsed to one: 0/90; true state present: 4/90
+E2 after  1024 bits: distinct states p50=492 p90=638 max=801; collapsed to one: 0/90; true state present: 4/90
+E2 after  4096 bits: distinct states p50=242 p90=361 max=801; collapsed to one: 0/90; true state present: 4/90
+E2 after 16384 bits: distinct states p50=92 p90=139 max=262; collapsed to one: 0/90; true state present: 4/90
+```
