@@ -12,8 +12,8 @@
 #
 # recipe                       branch                    what it measures
 bench-miss-cost              bench/miss-cost           contention counters at 10 threads, W = 10/9/8/7, THP arm and load-latency sampling (#529; MONODROMY record 47 frozen before the data)
-bench-release-scaling        master                    0.5.16 against 0.5.15 on the i9 (RELEASING §5), at the v0.5.16 tag commit 4e261140
-bench-crossover              master                    The team threshold after #1175's wider Runs admission (RELEASING §5a), at v0.5.16's commit 4e261140
+bench-release-scaling        master                    0.5.17 against 0.5.16 on the i9 (RELEASING §5), at the v0.5.17 tag commit 01acd74d
+bench-crossover              master                    The team threshold after #1222's recalibrated OpenCells admission (RELEASING §5a), at v0.5.17's commit 01acd74d
 bench-eager-trim             bench/eager-trim          eager against lazy at the trimmed counts: 6, 4 and 10 threads (#533; MONODROMY record 49 frozen before the data; docs/journal/2026-11-17-eager-trim.md)
 bench-fused                  perf/fused-finish         the CRC folded into RLE1 (#535): 10 threads (both arms 10/40, pinned) and 12 threads (7/28); adoption registration docs/journal/2026-11-17-fused-finish-registration.md, Researcher PROCEED 6947023492
 bench-knee                   bench/knee                diagnostic of the 8–20 thread plateau: DRAM bytes against a measured ceiling, worker idle by cause, fixed costs (#541; docs/journal/2026-11-17-knee.md frozen before the data; decides nothing in production)
@@ -67,3 +67,4 @@ bench-scanner-seam-window    build/scanner-seam-window    args=build/scanner-sea
 bench-a6b-endpoint  bench/a6b-endpoint-redesign  Registered A6b redesign of Open endpoint construction (#1053, recipe #1085), 15 paired rounds on Wikidata x4 and text, including the eight-worker ideal-scanner comparison.
 bench-scanner-coalesced      bench/scanner-coalesced    Frozen #1034 keep/revert comparison against its first parent, seven corpora, ten paired rounds, pinned scanner, serial phases and construction replay at eight and ten workers (#1105).
 bench-jcc-aligned-release    bench/jcc-aligned-release  Frozen C6 32-byte branch alignment comparison (baseline+32B-alignment vs baseline, no target-cpu=native) on wikidata x4 (k=1,4,5,6,8,10), text, records, random (12 paired rounds) and S/W station balance (#1119, C6 PROCEED #1165, ready tag pinned pre-merge at 256566b7ceaa).
+bench-scanner-adaptive-seam  build/scanner-adaptive-seam-window  args=0fda23812aecd8e170a88cb226933cf0fe318630,07e4fadd5d504a6baf48a6cb2b38464a467e2c25  #1144, adaptive lookahead + one-shot seam window against its master merge base: wikidata x4, 16 paired rounds unpinned at 6/8/9/10/12 threads, traced in_maint at 8 workers; one registered C6 adoption attempt (docs/journal/2026-11-27-scanner-adaptive-seam-window/registration.md)

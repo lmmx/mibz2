@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.17](https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17) - 2026-11-27
+
+### <!-- 1 -->Features
+
+- *(frontier)* observational agent presence, apart from reservations ([#1191](https://github.com/lmmx/mibz2/pull/1191))
+
+### <!-- 2 -->Bug Fixes
+
+- *(bench)* harden run_requests security and frontier authority gates ([#1124](https://github.com/lmmx/mibz2/pull/1124))
+
+### <!-- 3 -->Performance
+
+- *(open)* recalibrate OpenCells admission to [0.10, 0.21) m<=0.27*n post-#1080 ([#1222](https://github.com/lmmx/mibz2/pull/1222))
+- *(open/lanes)* disjoint 32 KiB slabs, inline LONG fast-path, and noinline run<K> ([#1217](https://github.com/lmmx/mibz2/pull/1217))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* why compression ratio moves the scaling ceiling ([#1211](https://github.com/lmmx/mibz2/pull/1211))
+- *(changelog)* distinguish median and maximum peak RSS for 0.5.16
+- *(changelog)* 0.5.16 measured notes, feature review, moonshot lockfile and partial delta ([#1196](https://github.com/lmmx/mibz2/pull/1196))
+- *(notebook)* explore the page layer (THP, faults, arena growth) on the OpenCells worker ([#1190](https://github.com/lmmx/mibz2/pull/1190))
+
+### <!-- 9 -->Other
+
+- open release-0-5-17 at P1 ([#1225](https://github.com/lmmx/mibz2/pull/1225))
+- *(ledger)* record #1222 post-1080-open-admission row ([#1223](https://github.com/lmmx/mibz2/pull/1223))
+- admit mtf-fold-batch-measure and freeze C1a stop_test ([#1221](https://github.com/lmmx/mibz2/pull/1221))
+- *(ledger)* record #1132 experimental mtf-fold-l1-batch-redesign row ([#1220](https://github.com/lmmx/mibz2/pull/1220))
+- admit post-1080-open-admission (idea -> open) ([#1219](https://github.com/lmmx/mibz2/pull/1219))
+- queue bench-scanner-adaptive-seam at 0fda2381 (scanner-adaptive-seam-window) ([#1218](https://github.com/lmmx/mibz2/pull/1218))
+- *(mtf-fold)* L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone, stopped at its local gates ([#1132](https://github.com/lmmx/mibz2/pull/1132))
+- admit lanes-disjoint-slabs-build (idea -> open) ([#1216](https://github.com/lmmx/mibz2/pull/1216))
+- dissect src/runs.rs front_avx2 and fill_avx2_trusted ([#1202](https://github.com/lmmx/mibz2/pull/1202))
+- *(open)* dissect forward lanes spelling and non-stage overhead (Track A PASS, Track B STOP) ([#1197](https://github.com/lmmx/mibz2/pull/1197))
+- *(frontier)* admit resume-released-pr-claim ([#1214](https://github.com/lmmx/mibz2/pull/1214))
+- file low-thread OpenCells unification as an idea claim ([#1213](https://github.com/lmmx/mibz2/pull/1213))
+- record text-knee-i9 verdict CONFIRMED (text knee 5 vs wikidata 9 on the i9) ([#1204](https://github.com/lmmx/mibz2/pull/1204))
+- mark workstation-pressure done after #1093 ([#1212](https://github.com/lmmx/mibz2/pull/1212))
+- dissect EagerCells (src/cells.rs), src/run_fed.rs, and inline Seq/t=1..3 OpenCells (STOP) ([#1194](https://github.com/lmmx/mibz2/pull/1194))
+- scanner-a2-fast-build cannot be resumed after a released hand-back; idea claim resume-released-pr-claim ([#1203](https://github.com/lmmx/mibz2/pull/1203))
+- sixteenth synthesis pass: i9 slow mode is the unpinned default's majority state; #1110 gates the Cells route ([#1209](https://github.com/lmmx/mibz2/pull/1209))
+- *(frontier)* derive workstation replenishment pressure in brief and status ([#1093](https://github.com/lmmx/mibz2/pull/1093))
+- *(compose)* verify post-v0.5.16 7-PR stack and catch post-1080-open-admission 8W RSS jump ([#1210](https://github.com/lmmx/mibz2/pull/1210))
+- *(migrate-rules)* independent review of #1065; surface the RULES D1 decision ([#1205](https://github.com/lmmx/mibz2/pull/1205))
+- *(parallel)* dissect StreamDecoder lifecycle ramp/drain/teardown and WarmPool reuse (PASS) ([#1200](https://github.com/lmmx/mibz2/pull/1200))
+- Record 0.5.16 i9 release-scaling and crossover; close release-0-5-16 ([#1199](https://github.com/lmmx/mibz2/pull/1199))
+- admit i9-clock-modes (idea -> open) ([#1198](https://github.com/lmmx/mibz2/pull/1198))
+- *(read,block)* dissect Rust streaming I/O, Vec growth, multi-stream framing, and block.rs (STOP) ([#1192](https://github.com/lmmx/mibz2/pull/1192))
+- fifteenth synthesis pass: shipped trim hides the scanner on i9 Wikidata; i9 clock modes ([#1189](https://github.com/lmmx/mibz2/pull/1189))
+- queue bench-text-knee at af7ff482 (text-knee-i9) ([#1188](https://github.com/lmmx/mibz2/pull/1188))
+
+- **Recalibrated `OpenCells` admission and direct `Segmented` fallback (#1222).** `OpenCellsOf::cap`
+  in `src/open.rs` now admits run-route blocks in `1/64 <= r/n < 0.10` outright (`Cap::NONE`),
+  checks `0.10 <= r/n < 0.21` via `within_cap` against `m <= min(256_000, 0.27 * n)` and
+  `strips <= 16_384`, and routes `r/n >= 0.21` (and `< 1/64`) directly to `Segmented` (dropping the
+  dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`). All
+  233/233 full Wikidata blocks remain in `OpenCells` (zero `Segmented` fallback scratch allocation),
+  while high-`m/n` `text` blocks (`m/n = 0.42`) route straight to `Segmented`: paired native
+  `OpenCells` runs measured −1.9% CPU and −2.6% wall on Wikidata at 8 workers (0.99× peak memory at
+  1 and 4 workers) and −4.4% whole-decoder CPU on `text` at 1 worker.
+- **Opt-in experimental features (off by default, zero default-build change):**
+  - `forward-anchor-lanes` (#1217): disjoint recycled 32 KiB per-lane slabs, inline long-word fast
+    path, and out-of-line `run<K>` (`0` new `unsafe`).
+  - `mtf-fold` (#1132): L1d-batched packed MTF fold and 16-entry `OutQ16` guard zone (stopped at
+    its local gates, retained behind `--features mtf-fold`).
+
+**The paired run on CI** compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run
+[46069227845](https://github.com/lmmx/mibz2/actions/runs/46069227845), **AMD EPYC 7763 64-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier metadata and version numbers from `292854d3` to the `v0.5.17` tag commit `01acd74d`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. Wikidata wall is +0.1% (−0.3%, +0.4%) at 1 thread, +0.9%
+  (−1.5%, +3.3%) at 2 threads, and +0.1% (−1.1%, +1.2%) at 4 threads (peak RSS 28 / 55 / 84 MB,
+  +0.1% / −0.3% / −0.0%); `random` is faster at 1 thread (−3.2% [−3.8%, −2.6%]) and 4 threads
+  (−4.4% [−6.0%, −2.7%]); `pattern` peak RSS fell −6.4% at 4 threads (38 → 36 MB; CPU +4.9%);
+  `text` wall is +0.8% (+0.2%, +1.5%) at 1 thread (CPU +0.7% [−0.0%, +1.5%]), −2.3% (−5.8%, +1.2%)
+  at 2 threads, and +1.7% (−1.7%, +5.2%) at 4 threads. The one-thread stage total is 6.86 → 6.78
+  c/B (−1.0% [−2.0%, −0.0%]; walk 3.28 → 3.19 c/B, −2.2% [−4.2%, −0.1%]).
+- **Why:** on CI's 4-CPU runner the default decoder runs eager `Cells` at 1–4 threads rather than
+  `OpenCells`, so #1222's admission change is not exercised on CI's 1–4 thread path, and #1217 and
+  #1132 are behind opt-in features. The i9 release-scaling and crossover runs (`01acd74d`, queued in
+  #1226) measure `OpenCells` directly across 1–20 threads.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.16 (the same 20 research features). The follow-ons listed under 0.5.15/0.5.16 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1222 keeps all 233/233 full Wikidata blocks
+in `OpenCells` with zero `Segmented` spill (#1217 and #1132 are off by default), and 0.5.16's
+crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9 at
+`01acd74d` (`#1226`, `ready/bench-release-scaling` and `ready/bench-crossover` confirmed on
+origin); results will be appended here when the bundles land on `evidence`.
+
 ## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
 
 ### <!-- 3 -->Performance
