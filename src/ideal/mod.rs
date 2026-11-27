@@ -14,12 +14,20 @@
 pub mod construction;
 #[cfg(feature = "ideal-delivery")]
 pub mod delivery;
+#[cfg(any(
+    feature = "scan-oracle",
+    feature = "ideal-construction",
+    feature = "ideal-mtf",
+    feature = "ideal-rle1",
+))]
+pub(crate) mod frozen;
 #[cfg(feature = "ideal-mtf")]
 pub mod mtf;
 #[cfg(feature = "ideal-rle1")]
 pub mod rle1;
 
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -73,6 +81,7 @@ impl Mode {
 }
 
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -84,6 +93,7 @@ thread_local! {
 
 /// Restores the worker thread's previous block index on drop (including on panic)
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -91,6 +101,7 @@ thread_local! {
 pub(crate) struct BlockGuard(Option<u64>);
 
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -103,6 +114,7 @@ impl Drop for BlockGuard {
 
 /// Bind `index` as the block this worker thread is currently decoding
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -114,6 +126,7 @@ pub(crate) fn enter_block(index: u64) -> BlockGuard {
 
 /// The block index bound to this worker thread, if any
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
