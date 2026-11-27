@@ -1,0 +1,46 @@
+id = "scanner-a3-k3-pipe-u8"
+title = "Post-#1034 A3 redesign: B=10 K=3 single-u32 u8-chunk decode + pipelined 4-step refill"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/block.rs", "src/huff.rs", "src/bits.rs"]
+mechanisms = ["scanner-a3-k3-pipe-u8"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/scanner-a3-post1034-dissection.md` (`examples/scanner_a3_post1034_dissection.rs`, `#![deny(unsafe_op_in_unsafe_fn)]`, 100% bit- and symbol-exact across 431 wikidata blocks + 5 guard corpora + synthetic `alpha = 258`) passed its frozen pre-data stop test across all four compiler builds (7 interleaved repeats on pinned CPU 0):
+- **`C6_k3hi_pipe4` vs shipped `#1034` (`R0_shipped`) on `wikidata.bz2` (paid `A2d build_into + A3 decode_runs`):**
+  - Baseline x86-64: **`-5.64%`** disjoint (`68.545` vs `72.645 ms`; decode `-9.30%`)
+  - Baseline + JCC-32B: **`-6.15%`** disjoint (`66.639` vs `71.008 ms`; decode `-9.65%`)
+  - Native (`-C target-cpu=native`): **`-7.65%`** disjoint (`65.992` vs `71.461 ms`; decode `-10.95%`)
+  - Native + JCC-32B: **`-7.48%`** disjoint (`64.497` vs `69.709 ms`; decode `-11.33%`)
+- **All 5 guard corpora clean:** `text` `-7.88%..-11.61%`, `runs` `-0.21%..-6.43%`, `random` `-0.20%..-3.54%`, `records` `-1.08%..+1.23%`, `onebyte` flat (mean `-0.34%`).
+- **`ScanScratch` footprint:** `60.3 KiB` (`61,720 B`) vs `59.8 KiB` (`61,232 B`) shipped (`1.008x`, `+488 B` total per scanner).
+
+Once `scanner-a2-fast-build` (`#1069` / PR `#1117`) finishes on `src/block.rs` and `src/huff.rs`, implement `C6_k3hi_pipe4` in production:
+1. High-2-bit `cnt` (`bits 30..31`) `B=10, K=3` LUT packing `SYM1/2/3` in `bits 6..29` and `total_bits` in `bits 0..3` (`bits 4..5 == 0` -> zero `and $0x3f` on `shlx`), storing all 1..3 symbols via a single 32-bit `movl` (`(e >> 6).to_le_bytes()`) into `chunk: [u8; 1042]` with a 32-entry cold `PatchBuf` side-list for `sym == 256` (avoiding early flushes on `records`).
+2. Pipelined 4-step overlapped refill: issue `r.refill(data)` directly after Step 3's `t.lut[idx]` load (invariant `live >= 46` at batch entry, `live >= 16 >= 10` before Step 3) to hide refill latency under Step 3's 5-cycle L1d load.
+3. 100% in-place zero-copy step-jumping `K = 3` table build with `split_at_mut` template-cloning, gated at `K3_GATE_SEL = 1024` (skipping Pass 3 on tiny runts and `runs` while retaining 100.0% of `wikidata` and `text` K=3 lookups), with `sym_len: [u8; 256]` for O(1) inline `decode_one_val` and compile-time constant `max_batch_syms = 12` (zero GPR spills).
+"""
+why = """
+On physical i9-10900K (`9de7b6e0`), post-`#1034` serial scan `S'` is `143.5 ms`, of which `A3` is `~115 ms` (>80%). Cutting paid `A3` by `-5.6%..-7.6%` projects `-6.5..-8.8 ms` directly off serial `S'` (stacking orthogonally with `#1069` `scanner-a2-fast-build` and `#1141` `scanner-adaptive-seam-window`) and `-10..-11%` off scanner-bound `text` at 8W, with only `+488 B` (`1.008x`) `ScanScratch` growth and zero L3 pressure.
+"""
+stop_test = """
+Frozen before data:
+1. Correctness & safety: `#![deny(unsafe_op_in_unsafe_fn)]`, zero new `unsafe` outside the existing `#[target_feature(enable = "bmi2")]` dispatch boundary (identical scope to `#1034`), 100% parity on `cargo test --lib` (including `alpha = 258`, `sym == 256`, `eob == 257`, error paths, libbzip2 parity), `fuzz-smoke`, and Miri clean on the scalar path.
+2. Workstation i9-10900K registration (frozen before any workstation run, paired A/B against current master on `wikidata x4`, 10+ paired rounds): must cut serial scan `phases/wikidata/1` by >= 4.0% (disjoint ranges, 95% CI upper bound <= 0.960), with peak RSS <= 1.02x and zero > 2.0% regressions on guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte`). Otherwise STOP and record a scoped dead-end in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR on `src/block.rs`, `src/huff.rs`, `src/bits.rs` (queued behind `scanner-a2-fast-build`), passing all exactness/Miri/fuzz-smoke checks, frozen workstation registration, i9-10900K evidence bundle under the frozen stop test, delta, and `surface.tsv` row `S` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/scanner-a3-post1034-dissection.md",
+  "examples/scanner_a3_post1034_dissection.rs",
+  "frontier/claims/scanner-coalesced-u8-decode.toml",
+  "frontier/claims/scanner-a2-fast-build.toml",
+]
+links = [
+  "frontier/claims/scanner-a2-fast-build.toml",
+  "frontier/deltas/2026-11-27-explore-scanner-a3-post1034.md",
+]
