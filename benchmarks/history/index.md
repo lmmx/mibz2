@@ -43,6 +43,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.15** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15>)
+
+**`wikidata`**
+
+| threads | 0.5.15 wall (median) | lbzip2 2.5 wall (median) | 0.5.14 wall (median) | lbzip2 2.5 against 0.5.15 | 0.5.14 against 0.5.15 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.361 s | 2.511 s | 0.393 s | \+581.8% (+558.3, +606.1) **slower** | \+5.7% (+1.1, +10.4) **slower** |
+| 2 | 0.217 s | 1.331 s | 0.226 s | \+517.2% (+509.9, +524.7) **slower** | \+3.4% (+1.2, +5.5) **slower** |
+| 4 | 0.133 s | 0.714 s | 0.134 s | \+434.2% (+420.5, +448.3) **slower** | \+0.0% (−2.5, +2.7) |
+| 8 | 0.066 s | 0.514 s | 0.066 s | \+677.3% (+670.1, +684.5) **slower** | \+0.2% (−0.6, +1.0) |
+| 10 | 0.059 s | 0.506 s | 0.059 s | \+753.7% (+744.9, +762.5) **slower** | −0.4% (−1.3, +0.5) |
+| 12 | 0.060 s | 0.509 s | 0.066 s | \+732.7% (+708.8, +757.3) **slower** | \+9.5% (+3.0, +16.4) **slower** |
+| 16 | 0.060 s | 0.493 s | 0.061 s | \+703.4% (+668.7, +739.5) **slower** | \+1.2% (−4.6, +7.3) |
+| 20 | 0.060 s | 0.491 s | 0.064 s | \+690.5% (+662.8, +719.3) **slower** | \+6.3% (−1.0, +14.2) |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-25: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.14** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-25-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.14>)
