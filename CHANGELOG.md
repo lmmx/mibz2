@@ -67,9 +67,25 @@ in frontier data and version numbers from `66511da9` to the `v0.5.16` tag commit
 **Worker counts (RELEASING §5c):** not recalibrated. #1175 changes no block's route on Wikidata,
 the corpus the trims are measured on, and 0.5.15's crossover left the team threshold unmoved.
 
-**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9-10900K at
-`v0.5.16` (`4e261140`, #1193; `ready/bench-release-scaling` and `ready/bench-crossover` confirmed
-on origin). Verdicts will be recorded here once the bundles land on `origin/evidence`.
+**Release scaling (RELEASING §5):** 0.5.16 against 0.5.15 on the i9-10900K
+(`release-scaling/run-20261127T170116Z`, evidence `4710ef99`, sha256 `13998ef2…ab8a`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical): **unchanged at every thread count**, as expected for
+a release that moves no Wikidata block's route.
+- **Pinned (1–10 threads, one CPU per core):** 0.5.15/0.5.16 wall is 1.012 [0.989, 1.035] at
+  1 thread, 1.003 [0.980, 1.026] at 2, 0.994 [0.964, 1.025] at 4, 1.005 [0.999, 1.011] at 8 and
+  1.007 [0.992, 1.022] at 10.
+- **Unpinned (12–20 threads):** 0.995 [0.942, 1.050] at 12, 0.984 [0.955, 1.015] at 16 and 1.025
+  [0.974, 1.079] at 20. Peak RSS 28–71 MB, within 4 MB of 0.5.15 at every count.
+- **Attribution (RELEASING §5b):** no step clears the bar; no row.
+
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T171216Z`, evidence
+`51183982` (sha256 `be8305bd…cd8f`, commit `4e261140`, 10 rounds on Wikidata, 400/400 same bytes).
+No forced arm is faster than the shipped decoder at any count where it changes the plan:
+`mibz2-workers-w` is 0.984 [0.959, 1.009] at 4 threads (CPU 1.066), 1.316 at 6, 1.057 at 8 and
+1.052 at 10; `mibz2-team2` and `mibz2-team3` are 1.21–2.35 wall at 4–10 threads. Sanity (the same
+plan as shipped): 1.002 [0.991, 1.014] at 5, 0.977 [0.951, 1.004] at 7 and 1.017 [0.992, 1.042]
+at 9 threads, each spanning 1. SMT counts (12, 16, 20), reported only: workers-w 1.025–1.144.
 
 ## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
 
