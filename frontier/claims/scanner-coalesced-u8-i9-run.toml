@@ -18,7 +18,7 @@ stop_test = """
 Frozen before data: registration §3.2 and §3.3 verbatim (C2). PASS keeps it merged and updates surface row S; STOP reverts the scanner change (#1034's squash) and records a scoped dead-ends row; VOID reruns only after the void condition is fixed.
 """
 done_when = """
-The recipe merged green, the ready tag and queue entry landed, the evidence bundle read from the `evidence` branch with its SHA-256 checked, the verdict under registration §3.2 in a delta, surface row S updated (or the revert merged and a dead-ends row), and `scanner-coalesced-u8-decode` marked done.
+The recipe merged green, the ready tag and queue entry landed, the evidence bundle read from the `evidence` branch with its SHA-256 checked, the verdict under registration §3.2 in a delta, surface row S updated (or the revert merged and a dead-ends row). This claim carries `scanner-coalesced-u8-decode`'s workstation done_when; that build claim was marked done when #1034 merged (5ed20c1d).
 """
 premises = [
   "docs/journal/2026-11-26-scanner-coalesced-u8/registration.md",
