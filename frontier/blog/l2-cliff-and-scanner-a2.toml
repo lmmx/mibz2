@@ -1,0 +1,42 @@
+id = "l2-cliff-and-scanner-a2"
+title = "The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "done"
+pr = 1099
+owned_paths = []
+needs_louis = ""
+stage = "review"
+post = "docs/site/blog/2026-11-27-l2-cliff-register-wall-and-scanner-a2.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Write up the microarchitectural & algorithmic wave following #1061:
+- Composing the 4-mechanism Open worker stack (#1062, #1067): exact additivity (-0.07%), halving unfused working set (6,893 -> 3,488.5 KiB/w), the 256 KiB L2 slab cliff (4x64 KiB = 100% L2 regressing +12.1..+22.2 ms vs 32 KiB slabs at 50% L2), and objdump catching cold-path spills and JCC crossings (-15..-35 ms);
+- Proving K=4, S=16, SLAB=32 KiB unified inline16 is the x86-64 local optimum (#1068, #1076, STOP): direct-literal split regressed 24/24 cells (+4.1%..+39.0%); K=6,8,10 hit the 15-GPR register-file wall (+10.8%..+45.4% in A6c+7+9); decoupled batch-chase broke OoO overlap (+56.0 ms even at K=4);
+- Safe-Rust serial header parsing (#1069, #1074, PASS): A2b_direct_runs, A2c_lut_multi, and A2d_direct cut standalone A2a..d -31.6%..-37.7% and full S' -4.44%..-7.38% (modeled S' ~ 134-139 ms), flipping k=8 from scanner-bound to worker-bound and shifting slack-only hybrid value to k=9-10;
+- Whole-decoder Intel JCC-32B branch alignment audit (#1077): 1,746 -> 0 unfused crossings (+3.4% .text), 12/12 off-Wikidata faster, OpenCells -13.7%..-15.6% disjoint on VM Xeon silicon, with explicit silicon distinction vs Comet Lake-S stepping 5 and AMD Zen;
+- Disciplined off-path stops (#1060 column MTF RLE2 branch floor; #1063 Cooperative Amdahl cap).
+"""
+why = """
+Synthesizes eight merged studies into a clear technical narrative separating workstation baselines from VM diagnostic probes and establishing the next i9-10900K validation queue.
+"""
+stop_test = """
+Site invariants: no model/agent names, no redirects, KaTeX maths, every figure traced to primary evidence on origin/master, strict zensical build, check_site.py, check_render.py, look_pages.py, and check_prose.py clean.
+"""
+done_when = """
+Published under standing blog-publishing authority.
+"""
+links = [
+  "docs/journal/2026-11-27-explore/composed-worker-stack-probe.md",
+  "docs/journal/2026-11-27-explore/composed-worker-v2-probe.md",
+  "docs/journal/2026-11-27-explore/direct-literal-4lane-emit.md",
+  "docs/journal/2026-11-27-explore/w4-v3-mlp-layout-probe.md",
+  "docs/journal/2026-11-27-explore/scanner-a2-dissection.md",
+  "docs/journal/2026-11-27-explore/jcc-alignment-whole-decoder.md",
+  "docs/journal/2026-11-27-explore/mtf-column-front-dissection.md",
+  "docs/journal/2026-11-27-explore/cooperative-decoder-dissection.md",
+  "docs/site/blog/2026-11-27-l2-cliff-register-wall-and-scanner-a2.md",
+]
