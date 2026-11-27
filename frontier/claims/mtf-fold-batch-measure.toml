@@ -1,0 +1,32 @@
+id = "mtf-fold-batch-measure"
+title = "Measure the L1d-batched MTF fold with enough power to decide, and clear its native push_slow vzeroupper"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 3
+status = "open"
+owned_paths = ["src/open/outq.rs", "examples/mtf_a6a_dissection.rs"]
+mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
+needs_louis = ""
+question = """
+`mtf-fold-l1-batch-redesign` (PR #1132, merged behind `--features mtf-fold`) STOPPED at its frozen local gates, not on evidence against the advantage: (1) under `-C target-cpu=native` the library's `QueuesOf<1008, 1024>::push_slow` holds 11 `vzeroupper` (0 on baseline; `fill_batch_avx2` is clean on both); (2) on the 4-vCPU VM the k=1 `[min..max]` spreads of `examples/mtf_a6a_dissection` overlap on both builds (paired ON/OFF ratios 0.67-1.13 a repeat), though every median favours the fold (`wkr_cpu_ms` -4.3..-11.1%) and A5 falls ~98% (62 -> 1 ms).
+Two levers, each a distinct experiment with its rule written before its data (C1a; never a re-run of the stopped gate): (a) shape `push_slow` so native codegen stays 128-bit with no `vzeroupper` (or show the native calls are now too rare to matter: 40,597 slow pushes on Wikidata vs 417,041 shipped); (b) a powered paired measurement, e.g. a pre-registered paired-ratio interval over >= 31 interleaved repeats or `perf stat` cycles on the worker thread, on a quiet host. If both clear, take it to the i9 under `mtf-fold/registration.md` §3 via `mtf-fold-run` (blocked on #1041).
+"""
+why = """
+A5 + A6a is ~25% of the 1-worker wall; the batched fold removes A5 almost entirely and its medians are 4-11% of worker CPU, but neither frozen local gate could pass on the VM as measured. The advantage is unruled out; the obstruction is measurement power plus one native-codegen detail.
+"""
+stop_test = """
+To be frozen by the claimant before any data (C1a), in this file. It may not reuse PR #1132's gate data, and it may not relax `mtf-fold/registration.md` §3 (K1-K4).
+"""
+done_when = """
+Either a powered local result (and native push_slow clean) that justifies queueing the i9 kill test, or a scoped STOP in dead-ends.tsv.
+"""
+premises = [
+  "frontier/deltas/2026-11-27-mtf-fold-l1-batch-redesign-2.md",
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md",
+]
+links = [
+  "frontier/claims/mtf-fold-l1-batch-redesign.toml",
+  "frontier/claims/mtf-fold-run.toml",
+  "frontier/deltas/2026-11-27-mtf-fold-batch-measure-registration.md",
+]

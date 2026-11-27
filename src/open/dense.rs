@@ -22,32 +22,65 @@ pub(super) fn dense_column(g: &mut Lcg, n: usize, long: u32) -> Vec<u8> {
     l
 }
 
-/// The record-count gates' edges: the old line, the dense band's 7 in 25, the sparse gate
-/// below both, and the kernel's entry condition; a cap only in the dense band
+/// The two-tier record-count gates' edges: sparse below 1/64, outright `Cap::NONE` for
+/// `1/64 <= r/n < 0.10`, capped `Cap::dense(n)` (`m <= 0.27 * n`) for `0.10 <= r/n < 0.21`
+/// (retaining all 5 `wikidata` dense blocks at `r/n <= 0.206`, `m/n <= 0.257`), `None`
+/// (`Segmented`) for `r/n >= 0.21`, and the kernel's entry condition
 #[test]
 fn dense_band_gate_edges() {
     type O = OpenCells;
-    assert_eq!(O::cap(149, 1000, 0), Some(Cap::NONE));
-    assert_eq!(O::cap(150, 1000, 0), Some(Cap::dense(1000)));
-    assert_eq!(O::cap(279, 1000, 999), Some(Cap::dense(1000)));
-    assert_eq!(O::cap(280, 1000, 0), None, "r/n 0.28 is refused");
-    assert_eq!(O::cap(15, 1000, 0), None, "the sparse gate holds");
-    assert_eq!(O::cap(200, 1000, 1000), None, "the row outside the block");
-    assert_eq!(O::cap(0, 0, 0), None);
-    assert_eq!(O::cap(200_000, 900_001, 0), None);
     assert_eq!(
-        O::cap(200_000, 900_000, 0),
+        O::cap(15, 1000, 0),
+        None,
+        "the sparse gate holds (r/n < 1/64)"
+    );
+    assert_eq!(
+        O::cap(16, 1000, 0),
+        Some(Cap::NONE),
+        "1/64 <= r/n < 0.10 outright"
+    );
+    assert_eq!(O::cap(99, 1000, 999), Some(Cap::NONE), "r/n 0.099 outright");
+    assert_eq!(
+        O::cap(100, 1000, 0),
+        Some(Cap::dense(1000)),
+        "r/n 0.10 enters capped band"
+    );
+    assert_eq!(
+        O::cap(209, 1000, 999),
+        Some(Cap::dense(1000)),
+        "r/n 0.209 in capped band (covers wikidata's 5 dense blocks up to 0.206)"
+    );
+    assert_eq!(
+        O::cap(210, 1000, 0),
+        None,
+        "r/n 0.21 goes straight to Segmented"
+    );
+    assert_eq!(
+        O::cap(280, 1000, 0),
+        None,
+        "r/n 0.28 goes straight to Segmented"
+    );
+    assert_eq!(O::cap(120, 1000, 1000), None, "the row outside the block");
+    assert_eq!(O::cap(0, 0, 0), None);
+    assert_eq!(O::cap(120_000, 900_001, 0), None);
+    assert_eq!(
+        O::cap(120_000, 900_000, 0),
         Some(Cap {
-            m: 256_000,
-            strips: 16_384
+            m: 243_000,
+            strips: 16_384,
         })
     );
+    assert_eq!(Cap::dense(1_000).m, 270, "exact 0.27 * n cap at n=1,000");
     assert_eq!(
         Cap::dense(800_000).m,
-        240_000,
-        "3 in 10 of the rows below 853,334"
+        216_000,
+        "exact 0.27 * n cap at n=800,000"
     );
-    assert_eq!(Cap::dense(853_336).m, 256_000);
+    assert_eq!(
+        Cap::dense(900_000).m,
+        243_000,
+        "exact 0.27 * n cap at n=900,000 (> wikidata max 231,600)"
+    );
     assert_eq!(ForcedOpenCells::cap(500, 1000, 0), Some(Cap::NONE));
 }
 
@@ -150,23 +183,40 @@ fn refusal_is_sticky_in_the_queues() {
     }
 }
 
-/// `OpenCells` on dense columns across the band and either side of it: opened where the
-/// record count admits outright, or in the band within `Cap::dense`; refused by the cap
-/// exactly where the uncapped construction's counts are past it; the plain inverse's output
+/// `OpenCells` on columns spanning all three bands (`r/n < 0.10`, `0.10 <= r/n < 0.21`,
+/// `r/n >= 0.21`): opened outright below 0.10, gated by `Cap::dense` (`m <= 0.27 * n`) in
+/// `[0.10, 0.21)`, and routed straight to `Segmented` from 0.21; the plain inverse's output
 /// whatever the route, through one decoder reused
 #[test]
 fn dense_band_routes_and_decodes_exactly() {
     let mut g = Lcg(0x6465_6e73);
     let mut cells = OpenCells::default();
     let (mut outright, mut banded, mut capped, mut refused) = (0, 0, 0, 0);
-    for i in 0..160 {
-        let n = if i % 8 == 0 {
+    for i in 0..240 {
+        let n = if i % 12 == 0 {
             900_000
         } else {
             2_000 + g.below(120_000) as usize
         };
-        let long = 20 + g.below(100);
-        let l = dense_column(&mut g, n, long);
+        let l = if i % 4 == 0 {
+            // Moderate short runs (1..=6) with periodic long runs: r/n in [0.10, 0.21) with m/n > 0.27
+            let mut col = Vec::with_capacity(n);
+            let mut c = 0u8;
+            let long = 20 + g.below(25);
+            while col.len() < n {
+                c = (c + 1 + g.below(39) as u8) % 40;
+                let w = if g.below(long) == 0 {
+                    20 + g.below(240)
+                } else {
+                    2 + g.below(5)
+                } as usize;
+                col.extend(std::iter::repeat_n(c, w.min(n - col.len())));
+            }
+            col
+        } else {
+            let long = 10 + g.below(70);
+            dense_column(&mut g, n, long)
+        };
         let p = g.below(n as u32);
         let r = Runs::of_column(&l);
         let recs = r.records().len();
@@ -209,7 +259,7 @@ fn dense_band_routes_and_decodes_exactly() {
 
 /// `within_cap` matches the uncapped construction's `(retained, thick)` counts at exact boundary
 /// caps across dense columns and marked-row positions (start, interior and end of a thick run,
-/// including cap-127 split records), and refusing a dense-band block skips Open's first pass.
+/// including cap-127 split records), and refusing a capped-band block skips Open's first pass.
 #[test]
 fn within_cap_matches_construction_and_skips_first_pass() {
     let mut g = Lcg(0x7072_6563);
@@ -252,11 +302,23 @@ fn within_cap_matches_construction_and_skips_first_pass() {
         }
     }
 
-    // A refused dense-band block skips `Kernel::try_run` entirely (zero queue chunks taken).
+    // A refused `[0.10, 0.21)` block (`m > 0.27 * n`) skips `Kernel::try_run` entirely.
     let mut cells = OpenCells::default();
     let mut tested_refusal = false;
-    for i in 0..40 {
-        let l = dense_column(&mut g, 40_000, 75 + i);
+    for i in 0..60 {
+        let n = 40_000usize;
+        let mut l = Vec::with_capacity(n);
+        let mut c = 0u8;
+        let long = 22 + (i % 20);
+        while l.len() < n {
+            c = (c + 1 + g.below(39) as u8) % 40;
+            let w = if g.below(long) == 0 {
+                20 + g.below(200)
+            } else {
+                3 + g.below(5)
+            } as usize;
+            l.extend(std::iter::repeat_n(c, w.min(n - l.len())));
+        }
         let r = Runs::of_column(&l);
         if let Some(cap) = OpenCells::cap(r.records().len(), l.len(), 7) {
             if cap.m != u32::MAX && !within_cap(r.records(), 7, LIMIT, cap) {
@@ -277,6 +339,6 @@ fn within_cap_matches_construction_and_skips_first_pass() {
     }
     assert!(
         tested_refusal,
-        "expected at least one refused dense-band block"
+        "expected at least one refused [0.10, 0.21) capped-band block"
     );
 }
