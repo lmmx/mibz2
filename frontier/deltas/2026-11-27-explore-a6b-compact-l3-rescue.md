@@ -1,0 +1,15 @@
+claim: none
+by: antigravity
+outcome: done
+evidence: docs/journal/2026-11-27-explore/a6b-compact-l3-rescue.md, examples/a6b_compact_rescue.rs, frontier/surface.tsv, frontier/dead-ends.tsv
+
+**What was asked:** Forensic L3/RSS dissection and compact-footprint safe-Rust (`#![forbid(unsafe_code)]`) rescue probe of `#1053` (`a6b-endpoint-build`) after its physical i9-10900K `STOP/KILL` (`origin/evidence` `a6e427b1`, `#1151`: `wikidata/1` `-1.76%` / `+24.7 ms`, `wikidata/8/S` `worker_busy = 1.0106`, RSS `+524–546 KiB/w`).
+**What I found — VERDICT: STOP** against the frozen pre-data stop test (RULES C2 strictly preserved; `4,160/4,160` byte-exact & CRC-exact across 431 wikidata blocks + 7 synthetic stress/spiral/gen-wrap cases + 4 guard corpora across all 8 arms):
+- **Forensic RSS audit reproduces i9-10900K and refutes the `Vec`/tiered-slab fix hypothesis:**
+  - Shipped `S0_default` overlays all `A6b` nodes, rules, and caches inside `Kernel.edges: Vec<u32>` (`0 KiB` extra `Endpoint` heap). `#1053` (`S1_1053`) abandoned that overlay, adding **`+4,580 KiB` (`+572.5 KiB/w`, `1.0356x`)** at `k = 8` (directly reproducing i9's `+4,192 KiB` / `+524 KiB/w` / `1.0374x`).
+  - Because Linux `calloc` already demand-paged `#1053`'s 64K arrays to `max(n_nodes) = 12,836` (`p50 = 7,996`, `mean = 7,739`; 100% of 233 Open blocks have `nodes_most <= 16K`), merely replacing `Box<[T; 65536]>` with `Vec` (`C1_vec_soa_v2`: `+4,400 KiB` / `+550.0 KiB/w` / `1.0342x`), `8K/16K` tiered slabs (`C2_tiered_slab_v2`: `+3,944 KiB` / `+493.0 KiB/w` / `1.0306x`), or `u64` inline-7 tiered slabs (`C3_compact_word8_soa`: `+3,308 KiB` / `+413.5 KiB/w` / `1.0257x`) **still fails `<= 1.00x` RSS**.
+  - Only Wormhole W1 `edges`-overlay designs eliminate the RSS jump: `C4_fused_setup_on_shipped` (`-124 KiB`, `0.9990x` at `k = 8`) and `C5_edges_overlay_soa_u64` packed 8B links (`-1,752 KiB`, `-219.0 KiB/w`, `0.9864x` — 6.15 MiB below `#1053`).
+- **JCC-32B control + L2-eviction audit explains `#1053`'s `-1.76%` 1W / `+1.06%` 8W physical i9-10900K behavior to two decimal places:**
+  - Removing Skylake JCC erratum (`jcc` build, matching Comet Lake-S stepping 5 silicon fix) speeds up shipped `S0_default` `A6b` by **`-11.5%`** (`124.73 -> 110.38 ms`), shrinking `#1053`'s isolated `A6b` advantage to `-19.65%` (`-21.70 ms`).
+  - Inside `Full_warm_cpu` (`k = 1`, `jcc`), `#1053` loses `+8.5 ms` to L2 eviction of `OutQ16`/`edges`, landing at **`-1.87%`** (matching physical i9's `-1.76%`), and collapses to **`-0.09%`** in the 8-worker rotating pool (`Full_cold8_cpu`). Meanwhile `edges`-overlaid `C5`/`C6` beat `#1053` on warm `jcc` (`-2.29%` / `-2.51%` vs `-1.87%`) by keeping `edges` L2-hot.
+- **Honest safe-Rust `A6b` ceiling:** On JCC-clean (`jcc`), best isolated `A6b` is `C2` `-20.78%` / `C3` `-20.37%` (failing `>= 30.0%`), best `Full_cold8_cpu` is `C3` `-1.75%` overlapping (failing `>= 4.0%` disjoint), and safe Rust cannot reinterpret `&mut [u32]` (`edges`) as `&mut [NodeLinks]`/`&mut [u64]` without `unsafe` (capping `edges`-overlaid `C5` at `-16.45%` isolated / `-0.70%` cold8 `jcc`). Standalone `A6b` redesign is closed as a `>= 3–4%` 8W lever.

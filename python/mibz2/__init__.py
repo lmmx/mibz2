@@ -24,6 +24,9 @@ __all__ = ["BZ2Reader", "DecodeError", "decompress", "open"]
 #: What a reader reads from: a path, or a binary file object open for reading
 Source = Union[str, "os.PathLike[str]", IO[bytes], io.RawIOBase, io.BufferedIOBase]
 
+#: Chunk size for ``BZ2Reader.readall`` (1 MiB, above the 900 kB max bzip2 block).
+_READALL_CHUNK = 1 << 20
+
 
 class BZ2Reader(io.RawIOBase):
     """A .bz2 file's decoded bytes, read in order (an unbuffered binary file).
@@ -66,6 +69,28 @@ class BZ2Reader(io.RawIOBase):
         n = len(data)
         memoryview(b).cast("B")[:n] = data
         return n
+
+    def readall(self) -> bytes:
+        """Read and return all remaining decoded bytes until EOF."""
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        chunks: list[bytes] = []
+        read = self._reader.read
+        while chunk := read(_READALL_CHUNK):
+            chunks.append(chunk)
+        if not chunks:
+            return b""
+        if len(chunks) == 1:
+            return chunks[0]
+        return b"".join(chunks)
+
+    def read(self, size: int | None = -1) -> bytes:
+        """Read up to ``size`` bytes, or all remaining bytes if ``size`` is negative or ``None``."""
+        if size is None or size < 0:
+            return self.readall()
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        return self._reader.read(size)
 
     @property
     def verified(self) -> bool:

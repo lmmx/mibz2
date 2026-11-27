@@ -3,7 +3,11 @@
 // A small loudhailer button on each post card of the blog index, and one on each post's own
 // page, copies the post's social announcement as one line of plain text:
 //
-//   📣 mibz2 blog ⠶ <title> <canonical URL>
+//   <kind emoji> mibz2 blog ⠶ <title> <canonical URL>
+//
+// The emoji says what kind of post it is, read from the same label that colours the post's card
+// (social_cards.py KINDS): 💡 a result, 🧩 a synthesis, 🔬 research in progress, ❓ an open
+// question, 🧭 meta. An unknown label keeps the loudhailer, 📣.
 //
 // Nothing is written per post. On the index the title is the card's .post-card-title and the
 // URL is the card's link resolved against the page's canonical URL, so a newly indexed post
@@ -20,7 +24,19 @@
 (() => {
   "use strict";
 
-  const PREFIX = "\u{1F4E3} mibz2 blog ⠶ ";
+  const PREFIX = " mibz2 blog ⠶ ";
+  // The post's kind, by the label on its card or meta line, as its emoji (social_cards.py KINDS).
+  const EMOJI = {
+    "Research result": "\u{1F4A1}",
+    "Research synthesis": "\u{1F9E9}",
+    "Research in progress": "\u{1F52C}",
+    "Work in progress": "\u{1F52C}",
+    "Investigation in progress": "\u{1F52C}",
+    "Open question": "\u{2753}",
+    "Meta": "\u{1F9ED}",
+  };
+  const FALLBACK = "\u{1F4E3}";
+  const emojiOf = (el) => (el && EMOJI[el.textContent.split("·").pop().trim()]) || FALLBACK;
   const LABEL = "Copy announcement";
   const POST = /\/blog\/(\d{4}-\d{2}-\d{2}-[^/]+)\/$/;
   const ICON =
@@ -146,7 +162,8 @@
     return b;
   };
 
-  const line = (title, url) => PREFIX + title.replace(/\s+/g, " ").trim() + " " + url;
+  const line = (emoji, title, url) =>
+    emoji + PREFIX + title.replace(/\s+/g, " ").trim() + " " + url;
 
   // A card's link as its canonical URL. The theme may already have made the link absolute
   // against wherever the page is served (a local preview, say), so take its path relative to
@@ -181,7 +198,7 @@
           const url = canonicalOf(child, base);
           const m = POST.exec(new URL(url).pathname);
           if (!m) return;
-          const b = button(m[1], line(title.textContent, url));
+          const b = button(m[1], line(emojiOf(child.querySelector(".post-card-date")), title.textContent, url));
           b.style.gridRow = String(row);
           b.style.gridColumn = "1";
           add.push(b);
@@ -206,7 +223,8 @@
       c.querySelectorAll(".headerlink").forEach((a) => a.remove());
       title = c.textContent.replace(/[­​-‍⁠]/g, "");
     }
-    const b = button(m[1], line(title, url));
+    const labels = article.querySelectorAll(".post-meta a");
+    const b = button(m[1], line(emojiOf(labels[labels.length - 1]), title, url));
     const meta = article.querySelector(".post-meta");
     if (meta) {
       b.classList.add("post-announce--inline");

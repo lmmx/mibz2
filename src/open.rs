@@ -20,7 +20,7 @@
 //! column to length 8 and ternary to 5, at every mark and five limits, and the B5 tests decode
 //! arbitrary columns against the plain inverse. [`OpenCells`] admits only blocks with
 //! `0 < n <= 900_000` and `p < n`, the kernel's own entry condition.
-use crate::bwt::{InverseBwt, LazyCells};
+use crate::bwt::{InverseBwt, Segmented};
 use crate::{runs::Runs, Kernels};
 
 /// A block's construction counts (the journal's; read by the tests and the arrow audit)
@@ -113,6 +113,8 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    #[cfg(feature = "forward-anchor-lanes")]
+    lanes: lanes::Arena,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -166,16 +168,17 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 }
 
 /// The first pass over a block's runs: the queues and the thick strips it writes, and its
-/// counts
-struct Pass<'a> {
-    queues: outq::Queues<'a>,
+/// counts (`512/512` on the shipped path; `FOLD_CHUNK/FOLD_STRIDE` with a 16-rank guard zone
+/// under `mtf-fold`)
+struct Pass<'a, const CHUNK: usize = 512, const STRIDE: usize = 512> {
+    queues: outq::QueuesOf<'a, CHUNK, STRIDE>,
     edges: &'a mut Vec<u32>,
     ns: usize,
     cap_strips: usize,
     f: First,
 }
 
-impl Pass<'_> {
+impl<const CHUNK: usize, const STRIDE: usize> Pass<'_, CHUNK, STRIDE> {
     /// The first pass on one maximal run of `width` rows of byte `c` from row `pos`: its thin
     /// rows queued (their ranks, as retained rows), its thick strips listed. (`split`'s cases
     /// written out, so that the common two inline into the walk over the records with no call.)
@@ -202,12 +205,23 @@ impl Pass<'_> {
         });
     }
 
+    #[cold]
+    #[inline(never)]
+    fn grow_edges(&mut self, at: usize) {
+        let need = (at + 3)
+            .max(2 * self.edges.len())
+            .max(1024)
+            .min(self.cap_strips.saturating_mul(3));
+        self.edges.reserve_exact(need - self.edges.len());
+        self.edges.resize(need, 0);
+    }
+
     /// One piece of a run: retained (`keep`) or a thick strip
     #[inline(always)]
     fn piece<const QUEUE: bool>(&mut self, c: u8, x: u32, w: u32, keep: bool, p: u32) {
         let a = usize::from(c);
-        let f = &mut self.f;
         if keep {
+            let f = &mut self.f;
             if p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
             }
@@ -220,13 +234,9 @@ impl Pass<'_> {
             if self.ns < self.cap_strips {
                 let at = 3 * self.ns;
                 if self.edges.len() < at + 3 {
-                    let need = (at + 3)
-                        .max(2 * self.edges.len())
-                        .max(1024)
-                        .min(self.cap_strips.saturating_mul(3));
-                    self.edges.reserve_exact(need - self.edges.len());
-                    self.edges.resize(need, 0);
+                    self.grow_edges(at);
                 }
+                let f = &self.f;
                 self.edges[at..at + 3].copy_from_slice(&[
                     x,
                     f.thin[a] + f.thick_rows[a],
@@ -234,8 +244,8 @@ impl Pass<'_> {
                 ]);
             }
             self.ns += 1;
-            f.thick[a] += 1;
-            f.thick_rows[a] += w;
+            self.f.thick[a] += 1;
+            self.f.thick_rows[a] += w;
         }
     }
 }
@@ -331,6 +341,28 @@ impl Kernel {
         }
     }
 
+    /// Research only (`mtf-fold`): first pass using `OutQ16`'s guarded chunk (`FOLD_CHUNK` /
+    /// `FOLD_STRIDE`)
+    #[cfg(feature = "mtf-fold")]
+    fn begin_folded<'a>(
+        &'a mut self,
+        out: &'a mut [u8],
+        limit: u32,
+        cap_strips: usize,
+    ) -> Pass<'a, { outq::FOLD_CHUNK }, { outq::FOLD_STRIDE }> {
+        Pass {
+            queues: outq::QueuesOf::<{ outq::FOLD_CHUNK }, { outq::FOLD_STRIDE }>::new(
+                out,
+                &mut self.spill,
+                limit,
+            ),
+            edges: &mut self.edges,
+            ns: 0,
+            cap_strips,
+            f: First::default(),
+        }
+    }
+
     #[cfg(test)]
     fn construct<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
@@ -380,6 +412,26 @@ impl Kernel {
     /// with it, the queues in `out` from `heads`)
     #[allow(clippy::too_many_arguments)]
     fn finish<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        f: &First,
+        ns: usize,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+        out: &[u8],
+        heads: &outq::Heads,
+    ) -> (Counts, u32, u32) {
+        self.finish_with::<INDUCE, QUEUE, 512, 512>(f, ns, records, n, p, limit, out, heads)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn finish_with<
+        const INDUCE: bool,
+        const QUEUE: bool,
+        const CHUNK: usize,
+        const STRIDE: usize,
+    >(
         &mut self,
         f: &First,
         ns: usize,
@@ -534,14 +586,19 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
-        if QUEUE && !wide && m >= 65_536 {
+        // (research, `forward-anchor-lanes`) a block the four-lane walk takes keeps forward links
+        #[cfg(feature = "forward-anchor-lanes")]
+        let xor = !lanes::fits(wide, self.lens.len(), m, bits);
+        #[cfg(not(feature = "forward-anchor-lanes"))]
+        let xor = true;
+        if QUEUE && !wide && m >= 65_536 && xor {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
-                let mut queue = outq::Reader::new(out, &self.spill, heads, a);
+                let mut queue = outq::ReaderOf::<CHUNK, STRIDE>::new(out, &self.spill, heads, a);
                 for &band in &self.bands[cursors[a]..end] {
                     queue.wire_xor(
                         edges,
@@ -559,7 +616,7 @@ impl Kernel {
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
-                let mut queue = outq::Reader::new(out, &self.spill, heads, a);
+                let mut queue = outq::ReaderOf::<CHUNK, STRIDE>::new(out, &self.spill, heads, a);
                 for &b in &self.bands[cursors[a]..end] {
                     let bend = b.end();
                     let span = (bend - k) as usize;
@@ -714,6 +771,23 @@ impl Kernel {
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+        #[cfg(feature = "forward-anchor-lanes")]
+        if self.predecessor.is_none()
+            && lanes::fits(!self.extra.is_empty(), self.lens.len(), m as u32, bits)
+        {
+            lanes::walk(
+                &mut self.edges[..m],
+                &self.spelling,
+                &self.inline16,
+                &self.lens,
+                n,
+                mark,
+                bits,
+                &mut self.lanes,
+                out,
+            );
+            return;
+        }
         walk_slices(
             self.predecessor,
             &self.edges[..m],
@@ -755,18 +829,23 @@ fn walk_slices(
 /// i9: bench-open-return, the moonshot runs)
 pub(crate) const LIMIT: u32 = 16;
 
-/// The dense band's density line: the open kernel takes a block up to `DENSE.0` records in
-/// `DENSE.1` rows (r/n below 0.28; text starts there) where `LazyCells`' own line (r/n 0.15)
-/// refuses it. Wikidata's five full blocks between the two lie at r/n 0.151 to 0.206
-/// (blocks 41, 56, 165, 270 and 278 of the bench corpus), and went to Segmented.
-const DENSE: (usize, usize) = (7, 25);
-/// The dense band's structural gate, from the first pass (the Mechanisms line's cycle 18,
-/// `docs/journal/2026-11-21-carbon-cycle18-aht-whole-corpus.md` on
-/// `research/carbon-word-transport`): at most `DENSE_M` retained rows and 3 in 10 of the
-/// block's, and at most `DENSE_STRIPS` thick strips. Wikidata's five keep 199,189 to 231,600
-/// retained rows and 568 to 2,729 strips. Past either the block goes to `LazyCells` as before,
-/// and the first pass has taken no more than the cap's queues and strips.
+/// Post-#1080 + #1210 two-tier open-kernel admission
+/// (`docs/journal/2026-11-27-explore/route-crossover-post-1080.md`,
+/// `docs/journal/2026-11-27-explore/composed-post-0516-stack.md`):
+/// - `1/64 <= r/n < 0.10` (`OPEN_OUTRIGHT`): admitted outright (`Cap::NONE`), zero `within_cap`
+///   overhead on 194/233 full `wikidata` blocks;
+/// - `0.10 <= r/n < 0.21` (`OPEN_BAND`): checked by `within_cap` against `Cap::dense(n)`
+///   (`m <= min(256_000, 0.27 * n)`, `strips <= 16_384`), keeping all 233/233 full `wikidata`
+///   blocks (including the 5 dense blocks at `r/n = 0.151..0.206`, `m/n = 0.221..0.257`) inside
+///   `OpenCells` so 8-worker `OpenCells` workers never allocate `Segmented`'s ~6.5–8.4 MiB/worker
+///   scratch (`<= 1.01x` 8W RSS), while catching high-`m/n` `text` blocks (`r/n = 0.142..0.146`,
+///   `m/n = 0.42`) and routing them straight to `Segmented`;
+/// - `r/n >= 0.21` (and `r/n < 1/64`): straight to `Segmented` without running `within_cap`,
+///   dropping the dead `[0.21, 0.28)` dense tail.
+const OPEN_OUTRIGHT: (usize, usize) = (1, 10);
+const OPEN_BAND: (usize, usize) = (21, 100);
 const DENSE_M: u32 = 256_000;
+const DENSE_M_RATIO: (u64, u64) = (27, 100);
 const DENSE_STRIPS: usize = 16_384;
 
 /// What the open kernel may take of a block, checked by its first pass
@@ -779,26 +858,25 @@ pub(crate) struct Cap {
 }
 
 impl Cap {
-    /// No cap: the blocks `LazyCells`' count gates admit, and the test route
+    /// No cap: blocks in `1/64 <= r/n < 0.10` (`OPEN_OUTRIGHT`), and the test route
     pub(crate) const NONE: Cap = Cap {
         m: u32::MAX,
         strips: usize::MAX,
     };
 
-    /// The dense band's, for a block of `n` rows
+    /// Structural cap for `0.10 <= r/n < 0.21` (`m <= min(256_000, 0.27 * n)`)
     pub(crate) fn dense(n: usize) -> Cap {
         Cap {
-            m: DENSE_M.min((n as u64 * 3 / 10) as u32),
+            m: DENSE_M.min((n as u64 * DENSE_M_RATIO.0 / DENSE_M_RATIO.1) as u32),
             strips: DENSE_STRIPS,
         }
     }
 }
 
-/// The workers' kernel wherever production ran `LazyCells` (from 0.5.7): the open kernel on
-/// every run-route block that `LazyCells`' record-count gates admit (its density line and the
-/// sparse gate, `cells_lazy::lazy_counts_admit`), and on the dense band above that density line
-/// (`DENSE`) that the first pass finds within `Cap::dense`; `LazyCells` as shipped on every
-/// other block and on the column route. The output is the same either way.
+/// The workers' default inverse-BWT kernel: the open kernel outright on run-route blocks in
+/// `1/64 <= r/n < 0.10`, and in `0.10 <= r/n < 0.21` when `within_cap` finds `m <= 0.27 * n`
+/// and `strips <= 16_384`; `Segmented` directly on every other block (`r/n >= 0.21`, `r/n < 1/64`,
+/// and the column route). The output is the same either way.
 pub type OpenCells = OpenCellsOf<false>;
 /// Test and fuzz route: the open kernel on every run-route block its entry condition admits,
 /// whatever the record count (`OpenCells` otherwise)
@@ -810,11 +888,11 @@ pub type ForcedOpenCells = OpenCellsOf<true>;
 #[derive(Default)]
 pub struct OpenCellsOf<const FORCED: bool> {
     open: Kernel,
-    lazy: LazyCells,
+    fallback: Segmented,
     /// (test only) blocks the open kernel inverted
     #[cfg(test)]
     pub(crate) opened: usize,
-    /// (test only) blocks the open kernel's first pass refused (past `Cap::dense`)
+    /// (test only) blocks refused by `within_cap` or the open kernel's first pass
     #[cfg(test)]
     pub(crate) capped: usize,
 }
@@ -822,14 +900,20 @@ pub struct OpenCellsOf<const FORCED: bool> {
 impl<const FORCED: bool> OpenCellsOf<FORCED> {
     /// What the open kernel may take of a run-route block of `records` records in `n` rows
     /// with the walk's row `p`, by its record count and the kernel's own entry condition:
-    /// all of it where `LazyCells`' record-count gates admit the block (and when `FORCED`),
-    /// `Cap::dense` in the dense band above their density line, nothing (`None`) elsewhere
+    /// `Cap::NONE` for `1/64 <= r/n < 0.10` (and when `FORCED`), `Cap::dense(n)` for
+    /// `0.10 <= r/n < 0.21`, and `None` (`Segmented`) elsewhere
     pub(crate) fn cap(records: usize, n: usize, p: u32) -> Option<Cap> {
         if n == 0 || n > 900_000 || p as usize >= n {
             None
-        } else if FORCED || crate::cells::lazy_counts_admit(records, n) {
+        } else if FORCED {
             Some(Cap::NONE)
-        } else if records * 64 >= n && records * DENSE.1 < n * DENSE.0 {
+        } else if crate::cells::lazy_counts_admit(records, n) {
+            if records * OPEN_OUTRIGHT.1 < n * OPEN_OUTRIGHT.0 {
+                Some(Cap::NONE)
+            } else {
+                Some(Cap::dense(n))
+            }
+        } else if records * 64 >= n && records * OPEN_BAND.1 < n * OPEN_BAND.0 {
             Some(Cap::dense(n))
         } else {
             None
@@ -844,15 +928,17 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
     }
 }
 
-/// Research only (`mtf-fold`): the open kernel's first pass fed run by run by the MTF/RLE2
-/// front (`runs::fold`), in place of `maximal` over the run records. Adjacent runs of one byte
-/// are merged as `maximal` merges records, so `Pass::take` sees exactly the maximal runs it
-/// sees on the shipped path, in the same order and at the same rows.
+/// Research only (`mtf-fold`): the open kernel's first pass fed by the decoupled L1d-batched
+/// MTF/RLE2 front (`runs::fold`), in place of `maximal` over the run records. On real bzip2
+/// blocks (`injective == true`), `flush_batch_direct` processes packed `(c << 24) | width`
+/// maximal runs with `m`/`in_out` hoisted in registers and `f.runs` incremented once per batch,
+/// writing into `OutQ16`'s guarded `CHUNK = 1008 / STRIDE = 1024` layout; non-injective synthetic
+/// blocks fall back to `flush_batch_merging` so `Pass::take` sees identical maximal runs.
 #[cfg(feature = "mtf-fold")]
 struct FoldSink<'a> {
-    pass: Pass<'a>,
+    pass: Pass<'a, { outq::FOLD_CHUNK }, { outq::FOLD_STRIDE }>,
     p: u32,
-    /// the maximal run so far: its byte, first row and rows (none while `width` is 0)
+    /// pending maximal run (for `run()` and non-injective merging; none while `width` is 0)
     c: u8,
     pos: u32,
     width: u32,
@@ -870,6 +956,96 @@ impl FoldSink<'_> {
             self.width = 0;
         }
     }
+
+    /// Fast 100% safe batch consumer (injective `seq_to_unseq`, 100% of real bzip2 blocks):
+    /// all 15 GPRs dedicated to `Pass::take + OutQ16`, zero `c == prev_c` check, `m` hoisted in a
+    /// register, `f.runs` updated once per batch, and epoch-boundary checks hoisted across the
+    /// whole batch whenever `(m & 0xFFFF) + runs.len() * LIMIT < 65536` (~87.5% of 512-run batches).
+    #[inline(always)]
+    fn flush_batch_direct(&mut self, runs: &[u32]) -> u64 {
+        let no_epoch = (self.pass.f.m & 0xFFFF) + (runs.len() as u32) * LIMIT < (1 << 16);
+        if no_epoch {
+            self.flush_batch_no_epoch(runs)
+        } else {
+            self.flush_batch_fallback(runs)
+        }
+    }
+
+    #[inline(never)]
+    fn flush_batch_no_epoch(&mut self, runs: &[u32]) -> u64 {
+        self.flush_batch_inner::<true>(runs)
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn flush_batch_fallback(&mut self, runs: &[u32]) -> u64 {
+        self.flush_batch_inner::<false>(runs)
+    }
+
+    #[inline(always)]
+    fn flush_batch_inner<const NO_EPOCH: bool>(&mut self, runs: &[u32]) -> u64 {
+        let mut cur = self.pos;
+        let mut m = self.pass.f.m;
+        let p = self.p;
+        self.pass.f.runs += runs.len();
+        for &packed in runs {
+            let c = (packed >> 24) as u8;
+            let width = packed & 0x00FF_FFFF;
+            if width <= LIMIT {
+                let a = usize::from(c);
+                if p.wrapping_sub(cur) < width {
+                    self.pass.f.mark = m + (p - cur);
+                }
+                self.pass
+                    .queues
+                    .push_thin_fast::<NO_EPOCH>(a, m, width, &self.pass.f.thin);
+                self.pass.f.thin[a] += width;
+                m += width;
+            } else if p.wrapping_sub(cur) >= width {
+                self.pass.piece::<true>(c, cur, width, false, p);
+            } else {
+                self.pass.f.m = m;
+                self.pass.take_marked::<true>(c, cur, width, p, LIMIT);
+                m = self.pass.f.m;
+            }
+            cur += width;
+        }
+        let delta = cur.wrapping_sub(self.pos);
+        self.pass.f.m = m;
+        self.pos = cur;
+        u64::from(delta)
+    }
+
+    /// Safe fallback batch consumer when `seq_to_unseq` is non-injective: merges adjacent
+    /// identical output bytes seamlessly across batch boundaries.
+    #[cold]
+    #[inline(never)]
+    fn flush_batch_merging(&mut self, runs: &[u32]) -> u64 {
+        let mut sum = 0u64;
+        let mut cur = self.pos;
+        let mut pc = self.c;
+        let mut pw = self.width;
+        let p = self.p;
+        for &packed in runs {
+            let c = (packed >> 24) as u8;
+            let width = packed & 0x00FF_FFFF;
+            sum += u64::from(width);
+            if c == pc && pw != 0 {
+                pw += width;
+            } else {
+                if pw != 0 {
+                    self.pass.take::<true>(pc, cur, pw, p, LIMIT);
+                    cur += pw;
+                }
+                pc = c;
+                pw = width;
+            }
+        }
+        self.pos = cur;
+        self.c = pc;
+        self.width = pw;
+        sum
+    }
 }
 
 #[cfg(feature = "mtf-fold")]
@@ -886,6 +1062,18 @@ impl crate::runs::fold::Sink for FoldSink<'_> {
         self.flush();
         self.c = c;
         self.width = total;
+    }
+
+    #[inline(always)]
+    fn batch(&mut self, runs: &[u32], injective: bool) -> u64 {
+        if injective {
+            // Any pending run (e.g. the block's opening run) has a byte distinct from the first
+            // literal in `runs` because `seq_to_unseq` over all accessed indices is injective.
+            self.flush();
+            self.flush_batch_direct(runs)
+        } else {
+            self.flush_batch_merging(runs)
+        }
     }
 }
 
@@ -939,7 +1127,7 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
         }
         buf.resize(bound + INLINE, 0);
         let mut sink = FoldSink {
-            pass: self.open.begin(&mut buf[..], bound as u32, strips),
+            pass: self.open.begin_folded(&mut buf[..], bound as u32, strips),
             p,
             c: 0,
             pos: 0,
@@ -972,9 +1160,18 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
         admitted(n, std::mem::take(&mut b.syms));
         #[cfg(feature = "trace")]
         crate::trace::mark(crate::trace::Kind::OpenPass1End, crate::trace::NONE);
-        let (stats, mark, bits) =
-            self.open
-                .finish::<true, true>(&f, ns, &[], n as u32, p, LIMIT, &buf[..], &heads);
+        let (stats, mark, bits) = self
+            .open
+            .finish_with::<true, true, { outq::FOLD_CHUNK }, { outq::FOLD_STRIDE }>(
+                &f,
+                ns,
+                &[],
+                n as u32,
+                p,
+                LIMIT,
+                &buf[..],
+                &heads,
+            );
         self.open.walk(n, stats.retained, mark, bits, buf);
         #[cfg(test)]
         {
@@ -1043,7 +1240,7 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 {
                     self.capped += 1;
                 }
-                return self.lazy.invert_runs(r, n, p, out, k);
+                return self.fallback.invert_runs(r, n, p, out, k);
             }
             let ran = self
                 .open
@@ -1064,16 +1261,16 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 self.capped += 1;
             }
         }
-        self.lazy.invert_runs(r, n, p, out, k)
+        self.fallback.invert_runs(r, n, p, out, k)
     }
     fn invert(&mut self, l: &[u8], c: &[u32; 256], p: u32, out: &mut Vec<u8>) {
-        self.lazy.invert(l, c, p, out);
+        self.fallback.invert(l, c, p, out);
     }
     fn invert_in_place(&mut self, l: &mut Vec<u8>, c: &[u32; 256], p: u32) -> bool {
-        self.lazy.invert_in_place(l, c, p)
+        self.fallback.invert_in_place(l, c, p)
     }
     fn wants_checkpoints(&self) -> bool {
-        self.lazy.wants_checkpoints()
+        self.fallback.wants_checkpoints()
     }
     fn invert_checkpointed(
         &mut self,
@@ -1083,7 +1280,7 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         p: u32,
         out: &mut Vec<u8>,
     ) {
-        self.lazy.invert_checkpointed(l, c, checkpoints, p, out);
+        self.fallback.invert_checkpointed(l, c, checkpoints, p, out);
     }
 }
 
@@ -1344,6 +1541,8 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+#[cfg(feature = "forward-anchor-lanes")]
+mod lanes;
 mod outq;
 
 #[cfg(test)]

@@ -1,0 +1,24 @@
+id = "scanner-coalesced-shallow-source"
+title = "Make the registered coalesced scanner comparison build from a shallow workstation checkout"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "done"
+owned_paths = ["bench/scanner_coalesced.py", "bench/test_scanner_coalesced.py"]
+mechanisms = ["scan-coalesced-u8"]
+needs_louis = ""
+question = """
+Can the registered #1105 recipe obtain exactly the #1034 squash, its first parent and the frozen registration when the i9 checkout lacks historical objects?
+"""
+why = """
+The returned A6b archive at b87790e5 shows the i9 checkout is shallow. The coalesced driver checks the squash's first parent in that checkout, then uses --local clones to acquire the historical source. The pending ready request was withdrawn before activation because both historical objects are required.
+"""
+stop_test = """
+Verify the immutable squash and first parent from the actual origin, reject mismatches, and exercise the historical producer and registration from their exact SHA in a shallow-fixture regression test. The ten-round comparison, measured routes, scoring and once-only authorisation remain frozen. The successor requires an independent review and green checks on its exact head before a queue holder can request it.
+"""
+done_when = """
+A green, independently reviewed successor on bench/scanner-coalesced is integrated and identified for the separate queue holder; the frozen source pins are unchanged.
+"""
+premises = ["frontier/claims/scanner-coalesced-u8-i9-queue.toml", "docs/ops/run-requests.md", "docs/journal/2026-11-26-scanner-coalesced-u8/registration.md"]
+links = ["https://github.com/lmmx/mibz2/pull/1105", "https://github.com/lmmx/mibz2/pull/1120"]

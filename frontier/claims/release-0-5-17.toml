@@ -1,0 +1,32 @@
+id = "release-0-5-17"
+title = "Release 0.5.17: the work merged since 0.5.16, benched against it on CI and the i9"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1      # a release is P1, always, once recognised (Louis, 27 November 2026)
+status = "open"
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
+needs_louis = ""
+question = """
+Release mibz2 0.5.17 by docs/RELEASING.md, step by step. Three software commits have merged to master since v0.5.16 (git log --first-parent v0.5.16..origin/master -- src python Cargo.toml Cargo.lock pyproject.toml build.rs), each accepted under its own PR's rule:
+- #1222 default-path OpenCells admission recalibrated to [1/64, 0.10) outright, [0.10, 0.21) within_cap m <= min(256_000, 0.27*n) and strips <= 16_384, and >= 0.21 directly to Segmented (replacing LazyCells fallback indirection), retaining all 233/233 full Wikidata blocks in OpenCells (0 Segmented scratch spill) while catching high-m/n text blocks;
+- #1217 experimental forward-anchor-lanes (off by default): disjoint recycled 32 KiB per-lane slabs, inline LONG fast-path, and noinline run<K>;
+- #1132 experimental mtf-fold (off by default): L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone.
+RELEASING section 5c does not apply: #1222 keeps all 233/233 full Wikidata blocks in OpenCells with zero Segmented spill (#1217 and #1132 are behind opt-in research features), and 0.5.16's crossover showed the team threshold unmoved. Section 5a's crossover runs anyway (src/open.rs on the workers path changed).
+"""
+why = """
+P1 by rule: a release is P1 once recognised. Default-path users get the recalibrated OpenCells admission and direct Segmented fallback (#1222), keeping Wikidata off fallback scratch while improving text and off-Wikidata decoding.
+"""
+stop_test = """
+Frozen before data: done when (1) master is green (Test, Fingerprint, the site); (2) the paired CI bench of v0.5.16's commit against master has run and its CPU is named; (3) the research features' retention notes are reviewed and listed; (4) Deploy Release (patch) has published the crate and the Python package, both verified on crates.io and PyPI (and docs.rs); (5) the release-scaling and crossover runs of 0.5.17 are queued on the i9 under the standing authorisation, and their verdicts recorded in the CHANGELOG section when they return; (6) a delta. The release is described by what (2) and (5) measured, never by a target or a projection.
+"""
+done_when = """
+0.5.17 published, verified, its CHANGELOG section written from the measured benches, the i9 runs recorded, and a delta.
+"""
+premises = [
+  "docs/RELEASING.md",
+  "CHANGELOG.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = []

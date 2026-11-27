@@ -1,0 +1,26 @@
+id = "workstation-runner-telemetry"
+title = "Optional read-only physical workstation runner telemetry (busy/idle and active repo)"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 3
+status = "idea"
+pr = 0
+owned_paths = ["bench/run-queue.sh", "bench/await-submit.sh", "frontier/tools/"]
+mechanisms = []
+needs_louis = ""
+question = """
+`workstation-pressure` observes repository-local queue starvation (`bench/workstation-queue.txt`, `ready/*`/`hold/*` tags, `origin/evidence`) and intentionally reports `Physical i9 state: unknown` because `bench/run-queue.sh` keeps `queue.lock`, `ran/<recipe>-<sha>`, and multi-repository runner state locally under `~/.local/state/` on Louis's workstation.
+If repository-local replenishment pressure later proves insufficient because the physical i9 is frequently busy on another repository (e.g. `wikidata-pq`), what minimal, read-only, privacy-safe heartbeat or state publication (with bounded staleness TTL and fail-closed `unknown` fallback) would expose physical runner busy/idle status without adding a scheduler, new permissions, or remote control?
+"""
+why = """
+Recorded per `workstation-pressure`'s `done_when` to separate physical runner telemetry (which touches Louis's workstation setup and multi-repo runner state under RULES D) from repository-local derived replenishment pressure.
+"""
+stop_test = """
+Do not admit or modify Louis's workstation runner without explicit owner approval (RULES D). Before implementation, freeze fixtures verifying: fresh busy/idle heartbeat, stale/expired heartbeat failing closed to `unknown`, multi-repo attribution without leaking private paths or host details, and zero runner-dispatch or lease-bypass behavior. Stop if repository-local replenishment pressure already eliminates stranded i9 capacity without runner telemetry.
+"""
+done_when = """
+Owner approval under RULES D, minimal read-only telemetry publication and fail-closed `frontier.py` reader with regression tests, exact-head checks, independent review, and a delta.
+"""
+premises = []
+links = ["frontier/claims/workstation-pressure.toml", "bench/run-queue.sh", "bench/await-submit.sh", "frontier/tools/frontier.py"]

@@ -1,0 +1,37 @@
+id = "why-the-scaling-ceiling-moves"
+title = "Why compression ratio moves the scaling ceiling"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "done"
+owned_paths = []
+needs_louis = ""
+stage = "review"
+news = "On a ten-core processor, parallel bzip2 decoding scales to nine threads on tightly compressed Wikidata dumps yet peaks at four or five on ordinary source code and JSON, alongside three default-path speed-ups shipped in 0.5.15 and 0.5.16."
+news_kind = "advance"
+changes = [1034, 1175, 1176]
+post = "docs/site/blog/2026-11-27-why-the-scaling-ceiling-moves.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Explain for an outside reader why compression ratio shifts a parallel bzip2 decoder's scaling knee on ten-core hardware (Wikidata scaling to nine workers vs ordinary Rust source, JSON and Markdown peaking at four or five because symbol density moves the serial Huffman scanner vs parallel worker balance), and report the three default-path software advances shipped in 0.5.15 and 0.5.16 (#1034, #1175, #1176).
+"""
+why = """
+Directly verified physical i9-10900K scaling-knee confirmation (5e3f28cc, 77236472) plus three unposted default-state ledger changes (#1034, #1175, #1176).
+"""
+stop_test = """
+The site's rules: outside-reader prose with zero claim IDs, PR numbers, hashes or code-formatted numbers in the body, every figure traced to primary evidence, strict zensical build, check_site.py, check_render.py, check_prose.py and frontier.py check clean.
+"""
+done_when = """
+Published on master with social card, index card, zensical nav entry and passing CI checks.
+"""
+links = [
+  "docs/journal/2026-11-27-text-knee-i9/registration.md",
+  "docs/journal/2026-11-27-explore/station-balance-off-wikidata.md",
+  "docs/journal/2026-11-27-explore/runs-takes-runs-post-1080.md",
+  "frontier/deltas/2026-11-27-scanner-coalesced-i9-verdict.md",
+  "frontier/deltas/2026-11-27-post-1080-takes-runs.md",
+  "frontier/deltas/2026-11-27-python-readall-abi3.md",
+  "docs/site/blog/2026-11-27-why-the-scaling-ceiling-moves.md",
+]

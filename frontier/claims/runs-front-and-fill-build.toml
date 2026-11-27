@@ -1,0 +1,44 @@
+id = "runs-front-and-fill-build"
+title = "Ship 64-sym u64 vptest Pass 1, branchless 256-bit YMM_STEPS, and zero-dead-per [u32; 256] counts in src/runs.rs::front_avx2"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["runs-front-ymm-steps", "runs-front-u64-vptest-p1", "runs-front-u32-counts"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md` dissected `src/runs.rs` (`front_avx2` and `fill_avx2_trusted`) across 7 rounds, 8 `Runs`-routed corpora (`wikidata`, `text`, `mdjournal`, `elf`, `json`, `runs`, `pattern`, `onebyte`), L3-warm & L3-cold regimes, and both baseline x86-64 and JCC-32B-aligned builds (`160/160` synthetic edge/error cases + `300/300` corpus blocks + `TT` exact; `0 B` extra heap memory):
+
+1. **Branchless 256-bit `YMM_STEPS` (`f01 = [f0 | f1]` in 1 YMM reg):** replaces shipped 4×16B loads + 4×`vpshufb` + 2×`vpor` with 2×32B loads + `vpermq $0x4e` + 2×`vpshufb` + 1×`vpor` (`3` Port-5 uops vs `4`, `2` loads vs `4`, `1` YMM reg vs `2`), cutting `runs::front` `-10.6..-12.2%` on its own.
+2. **Compiling out 100%-dead private `Runs.per` in production (`[u32; 256]` stack `cnt`):** `rg -n '\\.per\\b' src/` confirms `Runs.per` has zero production readers anywhere in `src/` (only `src/runs/tests.rs` and research-only `src/ideal/mtf.rs`). Gating `Runs.per` to `#[cfg(any(test, feature = "ideal-mtf"))]` (computed post-pass from `f.runs` only in test/`ideal-mtf` builds) frees the 14th GPR (`%rdi`) from holding `1u64 << 32`, allowing LLVM to hoist `YMM_STEPS` outside the hot Pass-2 loop, eliminating `or %rdi, %rdx` and `movabs $0x100000000`, halving stack `cnt` (`2 KiB -> 1 KiB`) and `Runs` struct size (`-1 KiB`), and shrinking the hot Pass-2 loop from `27 insns / 142 B` to **`19 insns / 100 B` (3 uop-cache lines, 0 spills, 0 calls, 0 `vzeroupper`)** — adding `+7.2..+9.5%` in JCC-32B (`U1_u32` `-17.7%` vs `U0_per` `-10.1%`).
+3. **64-symbol `u64` `vptest` Pass 1:** writes full `u64` bitmap words directly (eliminating 32→64 store-forwarding stalls), halves `vptest` EOB checks (zero `vpacksswb`+`vpermq`+`vpmovmskb` on non-EOB chunks), and writes the 2 trailing zero words inline (removing 2 `memset` + `vzeroupper` calls in shipped Pass 1).
+4. **Combined impact (`U1_u32`, 11 reps, `0/64` regressions across all 8 corpora & 4 regimes):**
+   - `runs::front`: `wikidata` **-19.4..-19.7% base warm / -14.8..-17.7% base cold / -17.3..-17.7% F JCC warm / -17.3..-17.4% F JCC cold**; `text` **-18.5% F base / -14.9..-15.9% F JCC**; `mdjournal` **-16.8..-18.6% F**; `json` **-16.0..-19.6% F**; `elf` **-5.0..-11.8% F**; `runs` **-5.6..-9.1% F**; `pattern`/`onebyte` neutral-to-faster.
+   - `runs::front + fill_avx2_trusted`: `text` **-10.5..-17.3%**, `mdjournal` **-11.3..-19.6%**, `json` **-8.0..-13.2%**, `elf` **-4.4..-12.7%**, `runs` **-5.0..-9.9%**.
+   - Shipped `fill_avx2_trusted` is left untouched (confirmed at silicon optimum; all length-branching and `vbroadcastss` alternatives regressed).
+
+Does shipping this `src/runs.rs`-only drop-in (`U1_u32`) pass CI paired bench (`PERFORMANCE-POLICY.md` §2) with clean B5 safety proofs, Miri parity, `objdump -d` verification, and zero regressions?
+"""
+why = """
+`runs::front_avx2` runs on 100% of Wikidata's 233 Open blocks (`M` = 132.4 ms at 1W / 19.3 ms/w at 8W on i9-10900K; projected -22..26 ms 1W / -3.3..3.8 ms/w 8W, ~1.7–2.0% of total 1W wall) and on every post-#1175 `Runs`-routed off-Wikidata block (`text`, `mdjournal`, `elf`, `json`, `runs`, `pattern`, `onebyte`). It is a self-contained `src/runs.rs`-only change (`0 B` extra heap, `-1 KiB` `Runs` struct / stack) that stacks orthogonally with `segmented-fused-postwalk`, `crc32-avx2-ring-barrett-build`, and `rle1-2load-filter-build`.
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & B5 safety: 100% bit-, `counts`-, `TT`-, and error-identical across `cargo test` (including all existing `src/runs/tests.rs` `per` assertions and `--features ideal-mtf` via `#[cfg(any(test, feature = "ideal-mtf"))]` post-pass `per`), `fuzz-smoke`, Miri (scalar + portable tests), synthetic word-boundary / `s >= 256` (`0x8000`) / `no-EOB` / `RunTooLong` / `BlockTooLong` tests, and all 8 corpora; every `unsafe` intrinsic/pointer invariant documented under B5; `objdump -d` confirms hoisted `YMM_STEPS` in a GPR, 3 Port-5 uops (`vpermq` + 2×`vpshufb`) per literal, 0 hot-loop `call`, 0 hot-loop `vzeroupper`, and 0 hot-loop spills.
+2. Paired A/B (`examples/ab.rs` + CI paired bench under `PERFORMANCE-POLICY.md` §2): zero primary regression on `wikidata` or `text` at any thread count, zero secondary regression > 2% on `pattern`/`random`/`records`/`runs`/`onebyte`, peak RSS <= 1.005x (`0 B` extra heap), and measurable win on `wikidata` (`>= 1.0%` 1W) or `text` (`>= 1.0%` 1W). Otherwise STOP with a scoped dead-end row.
+"""
+done_when = """
+Striated PR on `src/runs.rs` with B5 safety proofs, word-boundary & high-symbol (`s >= 0x8000`) unit tests, `objdump -d` audit, and green CI + paired bench passing `PERFORMANCE-POLICY.md` §2, merged cleanly with a delta and `surface.tsv` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md",
+  "docs/journal/2026-11-27-explore/runs-takes-runs-post-1080.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/runs.rs",
+]
+links = [
+  "examples/runs_front_fill_dissection.rs",
+  "frontier/deltas/2026-11-27-explore-runs-front-and-fill.md",
+]

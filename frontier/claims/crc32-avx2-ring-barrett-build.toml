@@ -1,0 +1,45 @@
+id = "crc32-avx2-ring-barrett-build"
+title = "Ship 8-slot AVX2 vpshufb ring + 8-lane PCLMULQDQ + zero-table Barrett reduction in src/crc.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = ["src/crc.rs"]
+mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/crc32-bzip2-dissection.md` dissected shipped `src/crc.rs::clmul_update` across 16 architectures, all 3 build profiles (baseline x86-64, `-C target-cpu=native`, JCC-32B-aligned native), `740,169 / 740,169` bit-exact checks (including all 431 `corpora/wikidata.bz2` blocks), `objdump -d` Port-5 uop accounting, L1d working-set eviction, and real `wikidata x4` `A9` (`unrle_in_place`):
+
+Shipped `clmul_update` executes `8 pclmulqdq + 4 pshufb` = **12.0 Port-5 uops / 64 B** and spills 64 B to the stack to call `update()` (pulling up to **16 KiB of `TABLES`** — half of L1d — into cache on every tile call). Replacing it with:
+1. **8-slot (1024 B) 64B-aligned `MaybeUninit` L1d ring buffer fed by 4× 256-bit `vpshufb` + 8-lane (128 B/iter) `vpclmulqdq`** (`len >= 1280` when `k.avx2 && k.clmul`): halves `pshufb` Port-5 uops (`4 -> 2` per 64 B = **10.0 Port-5 uops / 64 B**, `-16.67%` Port-5 floor) while keeping stores 7 blocks = 896 B (~308 uops > 192 Haswell ROB & > 224 Comet Lake ROB) ahead of 128-bit `vpxor` memory loads to eliminate Intel's 16B-from-32B store-to-load forwarding stall;
+2. **Pure-register zero-table Barrett reduction** (`4 pclmulqdq` + 96 B sliding tail masks, `0 B` of `mibz2::crc::TABLES` touched for ALL lengths `0..infinity`), with `len < 1280` dispatched at the `update_with` boundary BEFORE entering any `avx2` target-feature function so short calls execute zero `ymm` / zero `vzeroupper` instructions;
+3. **Optional `prefetcht0` (+512/+576 B) ablation** and zero-table `crc32_combine` helper (`12.6 ns` fixed-32 KiB / `99 ns` varlen vs `1,566 ns` scalar).
+
+In the smooth-zone probe, `C3_avx2_ring8_8x_pf` cuts isolated CRC-32 across all 3 builds by **-33.7..-34.9% (64 B)**, **-35.9..-36.5% (512 B)**, **-19.0..-21.8% (4 KiB)**, **-17.7..-18.1% (32 KiB)**, **-16.1..-17.6% (64 KiB)**, **-16.8..-18.0% (900 KiB)**, and **-18.3..-22.8% L3-cold `wikidata`** (9/9 disjoint FASTER on 32K/64K/900K), cuts coupled `24 KiB` L1d working-set eviction by **-8.6..-12.2%** (64K/32K tiles), and cuts **entire real `wikidata x4` `A9` (`unrle_in_place`)** by **-7.3..-7.9% warm (`C2` 3/3 disjoint) and -4.6..-5.2% L3-cold (`C2` 3/3 disjoint)**.
+
+Does shipping this zero-table AVX2-ring + Barrett CRC-32/BZIP2 kernel in `src/crc.rs` pass CI paired bench (`PERFORMANCE-POLICY.md` §2) with zero regressions across all 7 corpora, clean B5 safety proofs, and equal or lower RSS (`<= 1.00x`)?
+"""
+why = """
+CRC-32/BZIP2 runs on 100% of decoded output bytes across every decoder path (Open, Segmented, Cells, Cooperative) and every 32 KiB / 64 KiB tile of `unrle_in_place`, `forward-rle1-crc`, and `segmented-fused-postwalk`. Eliminating 16.7% of Port-5 uops plus 16 KiB/tile L1d `TABLES` pollution is a universal, zero-RSS (`0` heap allocs), isolated `src/crc.rs`-only win that also multiplies `forward-rle1-crc` and `segmented-fused-postwalk`.
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & B5 safety: 100% bit-identical to `update_bytewise` across `cargo test`, Miri (portable scalar + GF(2) constant/combine helpers), `fuzz-smoke`, all lengths `0..=5000`, all alignments `0..64`, all initial states, streaming splits, and all 7 corpora; every `unsafe` intrinsic/pointer invariant documented under B5; `objdump -d` confirms `0` `TABLES` references on the PCLMULQDQ path and `0` `ymm`/`vzeroupper` on `len < 1280`.
+2. Paired A/B (`examples/ab.rs` + CI paired bench under `PERFORMANCE-POLICY.md` §2, plus isolated `crc32` & `A9` A/B comparing with vs without `prefetcht0`): cuts isolated 32K/64K/900K CRC by `>= 14%` disjoint and shows zero primary regression on `wikidata` or `text` at any thread count, zero secondary regression > 2% on `pattern` / `random` / `records` / `runs` / `onebyte`, and peak RSS `<= 1.005x` (zero heap growth). If `prefetcht0` hurts any corpus or multi-thread DRAM bandwidth, ship `C2_avx2_ring8_8x` (no prefetch) or STOP if whole-stream paired A/B regresses any primary/guard corpus.
+"""
+done_when = """
+Striated PR on `src/crc.rs` with B5 safety proofs, exhaustive unit tests (short/tail/alignment/tile-split/combine), `objdump -d` verification, and green CI + paired bench passing `PERFORMANCE-POLICY.md` §2, merged cleanly with a delta and `surface.tsv` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/crc32-bzip2-dissection.md",
+  "docs/journal/2026-11-26-explore/rle1-crc-census.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/crc.rs",
+]
+links = [
+  "examples/crc32_bzip2_dissection.rs",
+  "frontier/deltas/2026-11-27-explore-crc32-bzip2-dissection.md",
+  "frontier/claims/forward-rle1-crc-vectored-build.toml",
+  "frontier/claims/segmented-fused-postwalk.toml",
+]

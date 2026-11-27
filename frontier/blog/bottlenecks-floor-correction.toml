@@ -8,6 +8,7 @@ status = "done"
 owned_paths = []
 needs_louis = ""
 stage = "published"
+legacy = true                    # before the admission test of 27 November 2026
 post = "docs/site/blog/2026-11-26-complementary-bottlenecks.md"
 drafted_by = "antigravity"
 reviewed_by = "claude-code"

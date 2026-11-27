@@ -2,6 +2,7 @@
 // what it admits, and how much scratch it keeps. Beside `checks.rs`, the journal's own arrow
 // audit, ported unchanged.
 use super::*;
+use crate::bwt::LazyCells;
 use crate::bwt::{InverseBwt, Plain};
 
 /// The plain inverse of column `l` at row `p`: the oracle
@@ -223,18 +224,17 @@ fn open_cells_admits_on_lazy_cells_count_gates() {
         assert!(lazy.invert_runs(&r, n, p, &mut want, Kernels::detect()));
         let after = lazy.counts();
         let gates_refuse = after.density > before.density || after.sparse > before.sparse;
+        let cap = OpenCells::cap(r.records().len(), n, p);
         let admits = OpenCells::admits(r.records().len(), n, p);
-        assert_eq!(
-            admits,
-            !gates_refuse,
-            "n {n}, records {}",
+        let dense = cap == Some(Cap::dense(n));
+        assert!(
+            !gates_refuse || !admits,
+            "n {n}, records {} admitted outright despite LazyCells gate refusal",
             r.records().len()
         );
         let was = cells.opened;
         let mut out = Vec::new();
         assert!(cells.invert_runs(&r, n, p, &mut out, Kernels::detect()));
-        // (the dense band, `dense.rs`: above the density line, the open kernel within its cap)
-        let dense = OpenCells::cap(r.records().len(), n, p) == Some(Cap::dense(n));
         assert!(admits || dense || cells.opened == was);
         assert!(!admits || cells.opened > was);
         assert_eq!(out, want);
@@ -251,14 +251,19 @@ fn open_cells_admits_on_lazy_cells_count_gates() {
     );
 }
 
-/// The gates' edges, exactly: the density line at 3 records in 20 rows, the sparse gate at
-/// 1 in 64, and the kernel's entry condition
+/// The gates' edges, exactly: outright admission in `[1/64, 0.10)`, `m <= 0.27*n` capped band in
+/// `[0.10, 0.21)`, `Segmented` from `0.21` and below `1/64`, and the kernel's entry condition
 #[test]
 fn open_cells_gate_edges() {
-    assert!(OpenCells::admits(16, 1000, 0) && OpenCells::admits(149, 1000, 999));
+    assert!(OpenCells::admits(16, 1000, 0) && OpenCells::admits(99, 1000, 999));
     assert!(
-        !OpenCells::admits(150, 1000, 0),
-        "r/n 0.15 is refused, as LazyCells refuses it"
+        !OpenCells::admits(100, 1000, 0) && OpenCells::cap(100, 1000, 0) == Some(Cap::dense(1000)),
+        "r/n 0.10 enters the m/n-capped band"
+    );
+    assert!(
+        OpenCells::cap(209, 1000, 999) == Some(Cap::dense(1000))
+            && OpenCells::cap(210, 1000, 0).is_none(),
+        "r/n 0.21 is refused straight to Segmented"
     );
     assert!(
         !OpenCells::admits(15, 1000, 0),
@@ -270,7 +275,7 @@ fn open_cells_gate_edges() {
         "the row outside the block"
     );
     assert!(!OpenCells::admits(0, 0, 0));
-    assert!(OpenCells::admits(100_000, 900_000, 0) && !OpenCells::admits(100_000, 900_001, 0));
+    assert!(OpenCells::admits(89_999, 900_000, 0) && !OpenCells::admits(89_999, 900_001, 0));
 }
 
 /// The scratch the kernel keeps, in bytes, across every buffer it owns
