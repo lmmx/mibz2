@@ -1,0 +1,40 @@
+id = "hardware-verdicts-and-measurement-traps"
+title = "When the hardware says no: an i9 rejection, a 1.27 GB input, and a Round-0 bias"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "done"
+owned_paths = []
+needs_louis = ""
+stage = "review"
+post = "docs/site/blog/2026-11-27-hardware-verdicts-and-measurement-traps.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Synthesise the physical workstation verdict and measurement-science wave following #1099:
+- Physical i9-10900K NOT ADOPTED verdict on scanner-seam-window (#1118, origin/evidence c0b2341c; 10T 0.9811, 12T 0.9898 [0.9726, 1.0073], in_maint 10.69 -> 7.49 ms -29.9% vs -80% model), reopening ~10-13 ms of k=8 scanner headroom (#1133);
+- Run-only 1,522-byte input expanding to 1.27 GB RSS at 8T/32 slots and 943 MiB (+24-28% wall from page faults) at 4T/32 slots (#1094), plus the runt-exempt-window premise catch before code (#1103, ready-cap-worker-gate #1121);
+- Full 24-run (240-pair) dissection of the #1034 pattern 4T CI spike (#1108, #1111, #1137): scanner A2 -88.9% and S -77.1% faster (REFUTED), controlled 4-arm A/A NOT REPRODUCED, symmetric bimodal 6-on-4 RSS burst (R^2 = 0.706, slope 0.881) plus Round-0 head-first cold-start asymmetry (p = 0.0114, r1..r9 strict-null 1.0012 and 33/99 vs 33/99, p = 1.0000);
+- Station-uneven JCC 32B alignment (#1107, CONFIRMED), merged feature-gated 4-lane forward emission (#1110), and the shallow-runner --depth 1 recipe invariant (#1122, #1126, #1127).
+"""
+why = """
+Documents concrete hardware rejection, adversarial memory bounds, CI measurement diagnostics, and shallow-clone runner hardening from primary evidence on origin/master.
+"""
+stop_test = """
+Site invariants: no model/agent names, no redirects, every figure traced to primary evidence on origin/master, strict zensical build, check_site.py, check_render.py, check_prose.py, check_announce.py, look_pages.py, link_audit.py, and frontier.py check clean.
+"""
+done_when = """
+Published under standing blog-publishing authority.
+"""
+links = [
+  "frontier/deltas/2026-11-27-scanner-seam-window-i9-verdict.md",
+  "docs/journal/2026-11-27-synthesis/thirteenth-pass.md",
+  "docs/journal/2026-11-27-synthesis/eleventh-pass.md",
+  "docs/journal/2026-11-27-explore/expansive-block-memory.md",
+  "docs/journal/2026-11-27-explore/scanner-pattern-regression.md",
+  "docs/journal/2026-11-27-explore/ci-pattern-4t-null-bias.md",
+  "docs/journal/2026-11-27-explore/ci-pattern-4t-arm-bias.md",
+  "docs/journal/2026-11-27-explore/station-balance-aligned.md",
+  "docs/site/blog/2026-11-27-hardware-verdicts-and-measurement-traps.md",
+]
