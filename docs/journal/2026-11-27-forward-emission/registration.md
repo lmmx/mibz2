@@ -47,3 +47,10 @@ A KILL records a scoped row in `frontier/dead-ends.tsv` naming this arm (`forwar
 
 - No default changes. Any adoption has its own C6 registration and review.
 - The recipe (a `just` recipe that runs the cells above unchanged) is a follow-on (`forward-emission-run`). It must implement §2 as written; any departure from §2 needs a new registration before data.
+
+## 5. Clarification before any i9 data (27 November, after the freeze)
+
+This section adds no threshold and changes no clause of §3.
+
+- **The 1-worker route.** The default plan inverts with the open kernel only from 8 workers (`Plan::lazy`, `LAZY_FROM_THREADS = 8`). Below that it uses Cells, which this change never touches. So the `k = 1` cells (wikidata and `text`) run both builds with the open kernel's route forced at one worker: `StreamDecoder::workers(1, 2, k, true)`, `examples/ab.rs`'s arm `mibz2-workers-lazy`. That is the route `character-stage1`'s 1W `A6c`/`A7` figures were traced on. The `k = 8` cells use the default plan, which is already the open kernel's.
+- **Data seen so far.** Only non-decisional VM diagnostics (C5), on a 4-vCPU Haswell VM, with no i9 data. All 233 admitted wikidata blocks take the four-lane walk, with no fallback, and the output is byte-identical (SHA-256 `3f075e30…5cdaf`) to libbzip2's. Over 12 interleaved rounds at 1W pinned, `mibz2-workers-lazy` measured a median CPU of 0.587 s on `base` and 0.543 s on `cand`. These numbers decide nothing.

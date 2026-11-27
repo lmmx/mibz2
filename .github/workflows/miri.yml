@@ -140,3 +140,11 @@ jobs:
           grep -q '^open::b5::miri_open_kernel_small_columns:' a6b-list.txt
       - name: Miri, the endpoint redesign
         run: cargo miri test --features a6b-endpoint-redesign --lib -- miri_a6b_endpoint_redesign miri_open_kernel_small_columns
+      # the four-lane walk from sampled anchors (`forward-anchor-lanes`, research): its tags,
+      # lanes, slabs and stitch on small blocks past its row floor, under Miri
+      - name: The four-lane walk's test is selected
+        run: |
+          cargo miri test --features forward-anchor-lanes --lib -- miri_forward_anchor_lanes --list 2>/dev/null | tee lanes-list.txt
+          grep -q '^open::lanes::tests::miri_forward_anchor_lanes:' lanes-list.txt
+      - name: Miri, the four-lane walk
+        run: cargo miri test --features forward-anchor-lanes --lib -- miri_forward_anchor_lanes

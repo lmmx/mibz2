@@ -113,6 +113,8 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    #[cfg(feature = "forward-anchor-lanes")]
+    lanes: lanes::Arena,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -534,7 +536,12 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
-        if QUEUE && !wide && m >= 65_536 {
+        // (research, `forward-anchor-lanes`) a block the four-lane walk takes keeps forward links
+        #[cfg(feature = "forward-anchor-lanes")]
+        let xor = !lanes::fits(wide, self.lens.len(), m, bits);
+        #[cfg(not(feature = "forward-anchor-lanes"))]
+        let xor = true;
+        if QUEUE && !wide && m >= 65_536 && xor {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
@@ -714,6 +721,23 @@ impl Kernel {
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+        #[cfg(feature = "forward-anchor-lanes")]
+        if self.predecessor.is_none()
+            && lanes::fits(!self.extra.is_empty(), self.lens.len(), m as u32, bits)
+        {
+            lanes::walk(
+                &mut self.edges[..m],
+                &self.spelling,
+                &self.inline16,
+                &self.lens,
+                n,
+                mark,
+                bits,
+                &mut self.lanes,
+                out,
+            );
+            return;
+        }
         walk_slices(
             self.predecessor,
             &self.edges[..m],
@@ -1344,6 +1368,8 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+#[cfg(feature = "forward-anchor-lanes")]
+mod lanes;
 mod outq;
 
 #[cfg(test)]

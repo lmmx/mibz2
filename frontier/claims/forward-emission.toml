@@ -6,7 +6,7 @@ needs = ["shell", "rust"]
 priority = 2
 status = "open"
 mechanisms = ["construction-wiring", "emission-walk"]
-owned_paths = ["src/open.rs", "src/open/outq.rs"]
+owned_paths = ["src/open.rs", "src/open/outq.rs", "src/open/lanes.rs"]
 needs_louis = ""
 question = """
 Replace XOR-linked two-ended traversal with forward-only links and several forward lanes from sampled anchors (more anchors than lanes, by order statistics, E[L_max] ~ m H_K / K). It should simplify A6c's wiring (161 ms) and expose memory-level parallelism in the walk. Design first, then a census of cycle lengths and anchor spacings, then a prototype.
@@ -20,7 +20,7 @@ stop_test = """
 A registration before data; exact bytes; the kill test against S ideal at 8 workers and at 1 worker.
 """
 done_when = """
-A frozen registration, a prototype PR implementing paid S=16 sampled-anchor forward wiring (`Reader::wire` + bit-31 tags) and dynamic 4-lane slab emission (contiguous stitch or vectored RLE1+CRC), paired workstation kill-test results, and a delta. (Design note and cycle/anchor census completed in `docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md`.)
+(27 Nov: the registration and prototype are done in #PRNUM. The paired workstation kill test moves to `forward-emission-run`, as `a6b-endpoint-build` handed off to `a6b-endpoint-run`.) A frozen registration, a prototype PR implementing paid S=16 sampled-anchor forward wiring (`Reader::wire` + bit-31 tags) and dynamic 4-lane slab emission (contiguous stitch or vectored RLE1+CRC), paired workstation kill-test results, and a delta. (Design note and cycle/anchor census completed in `docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md`.)
 """
 premises = [
   "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
