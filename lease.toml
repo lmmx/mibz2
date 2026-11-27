@@ -6,4 +6,4 @@ expires = "2026-11-27T08:20:56+00:00"
 owned_paths = ["src/python.rs"]
 mechanisms = ["delivery"]
 base = "a98ea9f5d707173abf219e62ac03d2be728a09f4"
-released = false
+released = true
