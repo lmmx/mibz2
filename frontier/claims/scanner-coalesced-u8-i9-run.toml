@@ -1,0 +1,29 @@
+id = "scanner-coalesced-u8-i9-run"
+title = "i9-10900K kill test of the merged coalesced byte-aligned scanner (#1034): recipe and run"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 1
+status = "idea"
+owned_paths = [".just/bench.just", "bench/workstation-queue.txt"]
+mechanisms = ["scan-coalesced-u8"]
+needs_louis = ""
+question = """
+`scanner-coalesced-u8-decode` merged on the CI paired bench under PERFORMANCE-POLICY §2 (wikidata 1T -1.9%, 4T -2.2% wall beyond noise; stages.py scanner -14.5%). Its frozen registration (`docs/journal/2026-11-26-scanner-coalesced-u8/registration.md` §3) judges keep-or-revert on the i9-10900K: >= 8.0% of serial scan S and >= 3.0% of the 10W (or paired post-worker-improvement 8W) wall, no regression on runs/text/1W-10W wikidata, RSS <= 1.05x. No recipe exists. Write `bench-scanner-coalesced` exactly to registration §3.1 (wikidata x4 plus ab gen text and runs; k in {1,2,6,8,10}; 10-12 randomised paired rounds of the #1034 squash against its first parent; single-thread `examples/phases.rs` read = A2 + A3; one-directory-per-attempt shape and `bench/bundle.sh`), get it green and independently read, then tag it ready and queue it under the standing authorisation.
+"""
+why = """
+The registration's verdict is the claim's done_when; until it runs, the scanner change is merged on CI evidence only and surface row S is stale. Workstation validation is the maintainer-named shared bottleneck (PR #1034 comment, 27 November).
+"""
+stop_test = """
+Frozen before data: registration §3.2 and §3.3 verbatim (C2). PASS keeps it merged and updates surface row S; STOP reverts the scanner change (#1034's squash) and records a scoped dead-ends row; VOID reruns only after the void condition is fixed.
+"""
+done_when = """
+The recipe merged green, the ready tag and queue entry landed, the evidence bundle read from the `evidence` branch with its SHA-256 checked, the verdict under registration §3.2 in a delta, surface row S updated (or the revert merged and a dead-ends row), and `scanner-coalesced-u8-decode` marked done.
+"""
+premises = [
+  "docs/journal/2026-11-26-scanner-coalesced-u8/registration.md",
+  "frontier/claims/scanner-coalesced-u8-decode.toml",
+]
+links = [
+  "frontier/deltas/2026-11-27-scanner-coalesced-u8-decode-review.md",
+]

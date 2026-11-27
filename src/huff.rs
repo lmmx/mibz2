@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
-//! L1d-resident canonical Huffman decode table (`4 KiB` 10-bit root LUT + `2 KiB` `O(1)`
-//! `SubLut` for `11..=20`-bit codes + Canonical Template-Clone 2-symbol pair builder +
-//! `264 B` group-window decoder).
+//! L1d-resident canonical Huffman decode table (`4 KiB` 10-bit byte-aligned root LUT + `2 KiB`
+//! `O(1)` `SubLut` for `11..=20`-bit codes + runt-gated Canonical Template-Clone 2-symbol pair
+//! builder + chunked coalesced-run decoder).
 
 use super::bits::{Bits, Reg};
 use super::ErrorKind;
@@ -15,23 +15,37 @@ const LUT_LEN: usize = 1 << LUT_BITS;
 const SUB_CAP: usize = 1024;
 const SUB_BAD_U16: u16 = 0xffff;
 
-/// Root LUT entry layout (`C36a`/`C37`):
-/// - bits `30..31` (`CNT_SH`): symbol count (`1` or `2` for non-EOB fast entries; `0` for `EOB_FAST` / `SUB_PTR` / `BAD` / slow)
-/// - bit `29` (`EOB_FAST`): `<= 10`-bit EOB sentinel (low 6 bits = `zn`)
-/// - bit `28` (`BAD`): invalid/oversubscribed prefix
-/// - bit `27` (`SUB_PTR`): 2nd-level `SubLut` pointer (`d_w` in `16..19`, `sub_off` in `0..15`)
-/// - bits `20..28` (`SYM2`): 2nd symbol (`0..258`)
-/// - bits `11..19` (`SYM1`): 1st symbol (`0..258`)
-/// - bits `6..10` (`LEN1`): 1st symbol bit length (`1..=10`)
-/// - bits `0..5`: total bits consumed (`1..=10`, bits `4..5 == 0` so `wrapping_shl(e)` needs no `& 31` mask)
+/// Root LUT entry layout (byte-aligned 8-bit symbols):
+/// - bits `30..31` (`CNT_SH`): symbol count (`1` or `2` for non-EOB, `<= 255` fast entries;
+///   `0` for `EOB_FAST` / `BAD` / `SUB_PTR` / `SYM256` / `0` (`> 10`-bit slow))
+/// - when `cnt != 0`:
+///   - bits `24..28` (`LEN1`): 1st symbol bit length (`1..=10`)
+///   - bits `16..23` (`SYM2`): 2nd symbol (`0..=255`)
+///   - bits `8..15`  (`SYM1`): 1st symbol (`0..=255`)
+///   - bits `0..7`: total bits consumed (`1..=10`, bits `4..7 == 0` so `skip_short_shl_u8`
+///     avoids `and $0x3f` on the shift chain)
+/// - when `cnt == 0`:
+///   - bit `29` (`EOB_FAST`): `<= 10`-bit EOB sentinel (low 6 bits = `zn`)
+///   - bit `28` (`BAD`): invalid/oversubscribed prefix
+///   - bit `27` (`SUB_PTR`): 2nd-level `SubLut` pointer (`d_w` in `16..19`, `sub_off` in `0..15`)
+///   - bit `26` (`SYM256`): `<= 10`-bit literal symbol `256` (`alpha == 258` only; low 6 bits = `zn`)
+pub(crate) const SYM256: u32 = 1 << 26;
 pub(crate) const SUB_PTR: u32 = 1 << 27;
 pub(crate) const BAD: u32 = 1 << 28;
 pub(crate) const EOB_FAST: u32 = 1 << 29;
-pub(crate) const LEN1: u32 = 6;
-pub(crate) const SYM1: u32 = 11;
-pub(crate) const SYM2: u32 = 20;
+pub(crate) const SYM1: u32 = 8;
+pub(crate) const SYM2: u32 = 16;
+pub(crate) const LEN1: u32 = 24;
 pub(crate) const CNT_SH: u32 = 30;
 const STEPS: usize = 5;
+
+/// Fixed L1d-hot chunk buffer size (`2 KiB`) for [`Huff::decode_run`]: `ck` persists across
+/// coalesced runs and flushes to `syms` only once `ck > CHUNK_STOP` or on `EOB`, cutting
+/// `extend_from_slice` calls by ~8x while keeping `ck & CHUNK_MASK` wrap-free and
+/// `idx + 2 < CHUNK_LEN` (zero per-step bounds checks, zero `syms.resize` memset, safe Rust).
+pub(crate) const CHUNK_LEN: usize = 1042;
+const CHUNK_MASK: usize = 1023;
+const CHUNK_STOP: usize = 1000;
 
 pub(crate) struct Huff {
     pub(crate) lut: [u32; LUT_LEN],
@@ -63,11 +77,11 @@ impl Huff {
     #[cfg(test)]
     pub(crate) fn new(lens: &[u8]) -> Huff {
         let mut h = Huff::default();
-        h.build_into(lens);
+        h.build_into(lens, true);
         h
     }
 
-    pub(crate) fn build_into(&mut self, lens: &[u8]) {
+    pub(crate) fn build_into(&mut self, lens: &[u8], build_pairs: bool) {
         let alpha = lens.len();
         let eob = (alpha - 1) as u16;
         let mut counts = [0i32; MAX_CODE_LEN];
@@ -128,7 +142,8 @@ impl Huff {
             for p in a..=hi {
                 let e = match self.symbol(zn, p as i32) {
                     Some(s) if s == eob => EOB_FAST | zn,
-                    Some(s) => (1u32 << CNT_SH) | ((s as u32) << SYM1) | (zn << LEN1) | zn,
+                    Some(256) => SYM256 | zn,
+                    Some(s) => (1u32 << CNT_SH) | (zn << LEN1) | ((s as u32) << SYM1) | zn,
                     None => BAD,
                 };
                 let end_idx = ((p + 1) << sh) as usize;
@@ -202,6 +217,9 @@ impl Huff {
             }
         }
 
+        if !build_pairs {
+            return;
+        }
         let mask = LUT_LEN - 1;
         for zn in min_len..=max_pair_l1 {
             let (lo_p, hi_p) = zn_ranges[zn as usize];
@@ -220,7 +238,7 @@ impl Huff {
                 if (e0 >> CNT_SH) == 0 {
                     continue;
                 }
-                let s1 = (e0 >> SYM1) & 0x1ff;
+                let s1 = (e0 >> SYM1) & 0xff;
                 if let Some((off0, s0)) = tpl {
                     let delta = s1.wrapping_sub(s0) << SYM1;
                     for u in 0..u_lim {
@@ -236,9 +254,9 @@ impl Huff {
                             continue;
                         }
                         self.lut[w] = (2u32 << CNT_SH)
-                            | (((e2 >> SYM1) & 0x1ff) << SYM2)
-                            | (e & (0x1ff << SYM1))
                             | (zn << LEN1)
+                            | (((e2 >> SYM1) & 0xff) << SYM2)
+                            | (e & (0xff << SYM1))
                             | (zn + l2 as u32);
                     }
                     tpl = Some((off_p, s1));
@@ -254,231 +272,164 @@ impl Huff {
     }
 
     #[inline(always)]
-    fn decode_one_win(
-        &self,
-        r: &mut Reg,
-        win: &[u8; 264],
-        full_data: &[u8],
-        base_pos: usize,
-    ) -> Result<u16, ErrorKind> {
-        if r.live < LUT_BITS {
-            r.refill_win(win);
-        }
-        let e = self.lut[r.peek_live(LUT_BITS) as usize];
-        if (e >> CNT_SH) != 0 {
-            r.skip_short((e >> LEN1) & 31);
-            return Ok(((e >> SYM1) & 0x1ff) as u16);
-        }
-        let (s, after) = self.decode_entry_slow_win(e, *r, win, full_data, base_pos);
-        *r = after;
-        s
-    }
-
-    #[inline(always)]
     pub(crate) fn decode(&self, r: &mut Reg, data: &[u8]) -> Result<u16, ErrorKind> {
         let e = self.lut[r.peek(data, LUT_BITS) as usize];
         if (e >> CNT_SH) != 0 {
             r.skip_short((e >> LEN1) & 31);
-            return Ok(((e >> SYM1) & 0x1ff) as u16);
+            return Ok(((e >> SYM1) as u8) as u16);
         }
         let (s, after) = self.decode_entry_slow(e, *r, data);
         *r = after;
         s
     }
 
+    /// Decode up to `target` symbols (`target = m * GROUP >= GROUP`) using this table,
+    /// staging into the L1d-hot fixed `chunk` buffer starting at `*ck_out <= CHUNK_STOP` and
+    /// flushing to `syms` only when `ck > CHUNK_STOP` or on `EOB`. Returns `Ok(true)` if
+    /// `eob` was decoded (with all symbols flushed to `syms`), `Ok(false)` once all `target`
+    /// symbols were staged/appended (maintaining `*ck_out <= CHUNK_STOP`).
     #[inline(always)]
-    pub(crate) fn decode_group_win(
+    pub(crate) fn decode_run(
         &self,
-        r: &mut Reg,
-        g_in: &[u8; 264],
+        r_out: &mut Reg,
         data: &[u8],
-        base_pos: usize,
-        g_out: &mut [u16; 66],
-    ) -> Result<(usize, bool), ErrorKind> {
+        chunk: &mut [u16; CHUNK_LEN],
+        ck_out: &mut usize,
+        syms: &mut Vec<u16>,
+        target: usize,
+    ) -> Result<bool, ErrorKind> {
+        debug_assert!(target >= GROUP && *ck_out <= CHUNK_STOP);
+        let mut r = *r_out;
+        let mut ck = *ck_out;
         let eob = self.eob;
-        let mut k = 0usize;
-        macro_rules! step_win {
-            () => {{
-                let e = self.lut[r.peek_live(LUT_BITS) as usize];
-                let c = (e >> CNT_SH) as usize;
-                if c != 0 {
-                    r.skip_short_shl(e);
-                    let idx = k & 63;
-                    let dst = &mut g_out[idx..idx + 2];
-                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
-                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
-                    k += c;
-                } else {
-                    let (s, after) = self.decode_entry_slow_win(e, *r, g_in, data, base_pos);
-                    *r = after;
-                    let s = match s {
-                        Ok(s) => s,
-                        Err(err) => {
-                            r.pos += base_pos;
-                            return Err(err);
-                        }
-                    };
-                    g_out[k & 63] = s;
-                    k += 1;
-                    if s == eob {
-                        r.pos += base_pos;
-                        return Ok((k, true));
-                    }
-                }
-            }};
-        }
-        r.pos = 0;
-        r.refill_win(g_in);
-        loop {
-            for _ in 0..STEPS {
-                step_win!();
-            }
-            if k > GROUP - 2 * STEPS {
-                break;
-            }
-            r.refill_win(g_in);
-        }
-        if k <= GROUP - 2 {
-            r.refill_win(g_in);
-            for _ in 0..4 {
-                if k > GROUP - 2 {
-                    break;
-                }
-                step_win!();
-            }
-            if k <= GROUP - 2 {
-                r.refill_win(g_in);
-                while k <= GROUP - 2 {
-                    step_win!();
-                }
-            }
-        }
-        if k == GROUP - 1 {
-            let s = match self.decode_one_win(r, g_in, data, base_pos) {
-                Ok(s) => s,
-                Err(err) => {
-                    r.pos += base_pos;
-                    return Err(err);
-                }
-            };
-            g_out[GROUP - 1] = s;
-            if s == eob {
-                r.pos += base_pos;
-                return Ok((GROUP, true));
-            }
-        }
-        r.pos += base_pos;
-        Ok((GROUP, false))
-    }
+        let mut rem_syms = target;
 
-    #[inline(always)]
-    pub(crate) fn decode_group_slice(
-        &self,
-        r: &mut Reg,
-        data: &[u8],
-        g_out: &mut [u16; 66],
-    ) -> Result<(usize, bool), ErrorKind> {
-        let eob = self.eob;
-        let mut k = 0usize;
-        macro_rules! step_slice {
-            () => {{
-                let e = self.lut[r.peek_live(LUT_BITS) as usize];
-                let c = (e >> CNT_SH) as usize;
-                if c != 0 {
-                    r.skip_short_shl(e);
-                    let idx = k & 63;
-                    let dst = &mut g_out[idx..idx + 2];
-                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
-                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
-                    k += c;
-                } else {
-                    let (s, after) = self.decode_entry_slow(e, *r, data);
-                    *r = after;
-                    let s = s?;
-                    g_out[k & 63] = s;
-                    k += 1;
-                    if s == eob {
-                        return Ok((k, true));
-                    }
-                }
-            }};
-        }
         r.refill(data);
-        loop {
-            for _ in 0..STEPS {
-                step_slice!();
-            }
-            if k > GROUP - 2 * STEPS {
-                break;
-            }
-            r.refill(data);
-        }
-        if k <= GROUP - 2 {
-            r.refill(data);
-            for _ in 0..4 {
-                if k > GROUP - 2 {
-                    break;
+        while rem_syms >= 2 * STEPS {
+            let stop_ck = (ck + (rem_syms - 2 * STEPS)).min(CHUNK_STOP);
+            let before_ck = ck;
+            while ck <= stop_ck {
+                let batch: &mut [u16; 18] = (&mut chunk[ck..ck + 18]).try_into().unwrap();
+                let mut bk = 0usize;
+                for _ in 0..STEPS {
+                    let e = self.lut[r.peek_live(LUT_BITS) as usize];
+                    let c = (e >> CNT_SH) as usize;
+                    if c != 0 {
+                        r.skip_short_shl_u8(e);
+                        let idx = bk & 15;
+                        let dst = &mut batch[idx..idx + 2];
+                        dst[0] = ((e >> SYM1) as u8) as u16;
+                        dst[1] = ((e >> SYM2) as u8) as u16;
+                        bk += c;
+                    } else {
+                        let (s, after) = self.decode_entry_slow(e, r, data);
+                        r = after;
+                        let s = match s {
+                            Ok(s) => s,
+                            Err(err) => {
+                                *ck_out = ck + bk;
+                                *r_out = r;
+                                return Err(err);
+                            }
+                        };
+                        batch[bk & 15] = s;
+                        bk += 1;
+                        if s == eob {
+                            syms.extend_from_slice(&chunk[..ck + bk]);
+                            *ck_out = 0;
+                            *r_out = r;
+                            return Ok(true);
+                        }
+                    }
                 }
-                step_slice!();
-            }
-            if k <= GROUP - 2 {
+                ck += bk;
                 r.refill(data);
-                while k <= GROUP - 2 {
-                    step_slice!();
+            }
+            rem_syms -= ck - before_ck;
+            if ck > CHUNK_STOP {
+                syms.extend_from_slice(&chunk[..ck]);
+                ck = 0;
+            }
+        }
+
+        if rem_syms > 0 {
+            let target_ck = ck + rem_syms;
+            macro_rules! step_tail {
+                () => {{
+                    let e = self.lut[r.peek_live(LUT_BITS) as usize];
+                    let c = (e >> CNT_SH) as usize;
+                    if c != 0 {
+                        r.skip_short_shl_u8(e);
+                        let idx = ck & CHUNK_MASK;
+                        let dst = &mut chunk[idx..idx + 2];
+                        dst[0] = ((e >> SYM1) as u8) as u16;
+                        dst[1] = ((e >> SYM2) as u8) as u16;
+                        ck += c;
+                    } else {
+                        let (s, after) = self.decode_entry_slow(e, r, data);
+                        r = after;
+                        let s = match s {
+                            Ok(s) => s,
+                            Err(err) => {
+                                *ck_out = ck;
+                                *r_out = r;
+                                return Err(err);
+                            }
+                        };
+                        chunk[ck & CHUNK_MASK] = s;
+                        ck += 1;
+                        if s == eob {
+                            syms.extend_from_slice(&chunk[..ck]);
+                            *ck_out = 0;
+                            *r_out = r;
+                            return Ok(true);
+                        }
+                    }
+                }};
+            }
+
+            if rem_syms >= 2 {
+                let tail_stop = target_ck - 2;
+                for _ in 0..4 {
+                    if ck > tail_stop {
+                        break;
+                    }
+                    step_tail!();
+                }
+                if ck <= tail_stop {
+                    r.refill(data);
+                    while ck <= tail_stop {
+                        step_tail!();
+                    }
                 }
             }
-        }
-        if k == GROUP - 1 {
-            let s = self.decode(r, data)?;
-            g_out[GROUP - 1] = s;
-            if s == eob {
-                return Ok((GROUP, true));
+            let last = target_ck - 1;
+            if ck == last {
+                let s = match self.decode(&mut r, data) {
+                    Ok(s) => s,
+                    Err(err) => {
+                        *ck_out = ck;
+                        *r_out = r;
+                        return Err(err);
+                    }
+                };
+                chunk[last & CHUNK_MASK] = s;
+                ck += 1;
+                if s == eob {
+                    syms.extend_from_slice(&chunk[..ck]);
+                    *ck_out = 0;
+                    *r_out = r;
+                    return Ok(true);
+                }
+            }
+            if ck > CHUNK_STOP {
+                syms.extend_from_slice(&chunk[..ck]);
+                ck = 0;
             }
         }
-        if r.pos > data.len() && r.overran(data) {
-            Err(ErrorKind::Truncated)
-        } else {
-            Ok((GROUP, false))
-        }
-    }
-
-    #[cold]
-    #[inline(never)]
-    fn decode_entry_slow_win(
-        &self,
-        e: u32,
-        mut r: Reg,
-        win: &[u8; 264],
-        full_data: &[u8],
-        base_pos: usize,
-    ) -> (Result<u16, ErrorKind>, Reg) {
-        if (e & SUB_PTR) != 0 {
-            if r.live < 20 {
-                r.refill_win(win);
-            }
-            let sub_off = (e & 0xffff) as usize;
-            let d_w = (e >> 16) & 15;
-            let idx = ((r.buf >> (54 - d_w)) as usize) & ((1usize << d_w) - 1);
-            let se = self.sub_lut[sub_off + idx];
-            if se != SUB_BAD_U16 {
-                r.skip_short((se & 31) as u32);
-                r.refill_win(win);
-                return (Ok(se >> 6), r);
-            }
-        } else if (e & EOB_FAST) != 0 {
-            r.skip_short(e & 63);
-            return (Ok(self.eob), r);
-        } else if (e & BAD) != 0 {
-            return (Err(ErrorKind::BadHuffmanCode), r);
-        }
-        let mut abs_r = r;
-        abs_r.pos += base_pos;
-        let mut br = Bits::of(full_data, abs_r);
-        let s = self.decode_slow(&mut br);
-        let mut out_r = br.parts().1;
-        out_r.pos -= base_pos;
-        out_r.refill_win(win);
-        (s, out_r)
+        *ck_out = ck;
+        *r_out = r;
+        Ok(false)
     }
 
     #[cold]
@@ -498,6 +449,9 @@ impl Huff {
         } else if (e & EOB_FAST) != 0 {
             r.skip_short(e & 63);
             return (Ok(self.eob), r);
+        } else if (e & SYM256) != 0 {
+            r.skip_short(e & 63);
+            return (Ok(256), r);
         } else if (e & BAD) != 0 {
             return (Err(ErrorKind::BadHuffmanCode), r);
         }
