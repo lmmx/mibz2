@@ -303,9 +303,23 @@ in docs, queue bookkeeping, and version numbers from `dd935418` to the `v0.5.15`
   `wait-stats`, `walk-stats`, `induction-trace`, and `grammar-replay` remain to be checked against
   their removal conditions.
 
-**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9-10900K at
-`v0.5.15` (`aaaee363`, #1170; `ready/bench-release-scaling` and `ready/bench-crossover` set on
-origin). Verdicts will be recorded here once the bundles land on `origin/evidence`.
+**Release scaling (RELEASING §5):** 0.5.15 against 0.5.14 on the i9-10900K
+(`release-scaling/run-20261127T140323Z`, evidence `bce3914d`, sha256 `f7ef4216…6fb0`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical):
+- **Pinned (1–10 threads, one CPU per core):** 0.5.14/0.5.15 wall is **1.057** [1.011, 1.104] at
+  1 thread (CPU 1.057 [1.012, 1.104]), **1.034** [1.012, 1.055] at 2 threads (CPU 1.028
+  [1.013, 1.043]), and flat at 4, 8 and 10 threads (1.000 [0.975, 1.027], 1.002 [0.994, 1.010],
+  and 0.996 [0.987, 1.005]; 8-thread CPU 1.009 [1.007, 1.012]).
+- **Unpinned (12–20 threads):** 0.5.14/0.5.15 wall is **1.095** [1.030, 1.164] at 12 threads
+  (CPU 1.054 [1.009, 1.101]), 1.012 [0.954, 1.073] at 16 threads, and 1.063 [0.990, 1.142] at 20
+  threads. Peak RSS stayed within 42–68 MB (0–2 MB of 0.5.14 across all thread counts).
+- **Attribution (RELEASING §5b):** recorded as row `0.5.14 → 0.5.15` in
+  `docs/journal/release-attribution.md`.
+
+**The team threshold (RELEASING §5a):** `bench-crossover` is queued on the i9-10900K at `v0.5.15`
+(`aaaee363`, #1170; `ready/bench-crossover` set on origin) and will be recorded once its bundle
+lands on `origin/evidence`.
 
 ## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
 
