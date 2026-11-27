@@ -1,0 +1,39 @@
+id = "post-1080-takes-runs"
+title = "Widen runs::takes_runs symbol bound from 0.50 to 0.75 post-#1080 (4 * len <= 3 * max_len)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["takes-runs-threshold", "branchless-rle2-front"]
+needs_louis = ""
+question = """
+`src/runs.rs:78` rejects the run-records path (`runs::front + Segmented::invert_runs`) whenever `2 * syms.len() > max_len` (`syms_ratio > 0.50`), a cut fitted in `2026-11-10` before #1080 (`build_lf` and `fill_avx2_trusted`). Across 14 corpora (658 blocks, 100% byte+CRC exact), compressible markdown (`mdjournal`, 10/10 Column blocks, `syms_ratio = 0.51-0.63`, `run_frac = 31-35%`), ELF binaries (`elf`, 25/26 Column blocks, `syms_ratio = 0.52-0.74`, `run_frac = 23-31%`), and boundary `prose`/`pysrc`/`json` blocks (`syms_ratio = 0.505-0.70`) suffer severe `s <= 1 / run != 0` RLE2 branch mispredictions in `mtf::mtf_avx2` (~90% of the gap) plus slower `build_lf` (~10%).
+
+Does widening `takes_runs_slice` in `src/runs.rs:78` from `2 * len > max_len` to `4 * len > 3 * max_len` (keeping `RUN_SHARE = 32` unchanged, so `random`/`records` still short-circuit in O(1) without sampling) cut MTF+inverse-BWT CPU by double digits on `mdjournal`/`elf`/`json` with zero regression on `wikidata`, `text`, `random`, `records`, `runs`, `onebyte`, and `pattern`?
+"""
+why = """
+A 1-line safe-Rust constant change in `src/runs.rs:78` (0 new `unsafe`, 0 blocks changed on `wikidata`/`text`/`random`/`records`/`runs`/`onebyte`/`pattern`) cuts steal-free MTF+inv CPU by -24.1% base / -32.4% native / -13.2% JCC-32B on `mdjournal`, -15.5% / -24.7% / -14.5% on `elf`, and -9.0%..-9.9% on `json` (all disjoint FASTER across all 3 builds), plus -4.3%..-8.4% on `prose` and -3.8%..-6.2% on `pysrc`, stacking cleanly with `post-1080-open-admission`.
+"""
+stop_test = """
+Frozen before data:
+1. 100% byte-identical and error-identical output on `cargo test`, `fuzz-smoke`, Miri on `src/runs.rs`, and all 14 corpora (658/658 blocks) of `examples/takes_runs_probe.rs` (0 new `unsafe`).
+2. Steal-free paired MTF+inverse-BWT CPU (`takes_runs_probe --rules-only --reps 5`) cuts `mdjournal` >= 10.0% AND `elf` >= 10.0% disjointly FASTER across baseline x86-64, `-C target-cpu=native`, and JCC-32B-aligned builds, with 0 disjoint regressions across all 14 corpora and 0 route changes on `wikidata`, `text`, `random`, `records`, `runs`, `onebyte`, and `pattern`.
+3. Exact-head CI paired `ab` bench passes `PERFORMANCE-POLICY.md` §2 across all 7 CI corpora at 1T/2T/4T (wall, CPU/byte, peak RSS).
+4. If peak RSS regresses > +5% on any CI corpus or any of the 14 corpora regresses disjointly, STOP; never relax thresholds post-data.
+"""
+done_when = """
+A merged PR on `src/runs.rs` (threshold update + unit tests covering `0.50 < syms/max_len <= 0.75` and `> 0.75` short-circuit) passing (1)-(3) on exact-head CI, with a delta.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/runs-takes-runs-post-1080.md",
+  "docs/journal/2026-11-27-explore/route-crossover-post-1080.md",
+  "docs/journal/2026-11-27-explore/mtf-column-front-dissection.md",
+  "docs/journal/2026-11-27-explore/segmented-fallback-dissection.md",
+]
+links = [
+  "examples/takes_runs_probe.rs",
+  "frontier/deltas/2026-11-27-explore-takes-runs.md",
+  "frontier/claims/post-1080-open-admission.toml",
+]
