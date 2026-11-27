@@ -29,10 +29,11 @@ Worth releasing:
 - **A batch of default-path changes,** each accepted under its own PR's rule (the CI bench, or a
   measurement admitted under PERFORMANCE-POLICY.md §2), even with no workstation run of any of
   them (Louis, 27 November 2026). A release doesn't wait for each change to be validated on the
-  i9 one at a time. The release's own paired bench of the last tag against master (§3) and its
-  release-scaling run on the i9 (§5) are the combined measurement. They decide how the release is
-  described (a speed release, a memory release, fixes), never whether it ships; a primary loss
-  they reveal is handled as any regression is, in its own PR.
+  i9 one at a time. The combined release candidate must, however, pass the pre-publication i9
+  regression gate in §3.5 when default-path performance can change. The paired CI bench and the
+  workstation gate decide whether the candidate may ship; the post-release scaling run records
+  what shipped. A primary loss is fixed or reverted before publication, not deferred to the next
+  release.
 
 Docs, journal, bench-harness or blog changes alone are not.
 
@@ -62,12 +63,49 @@ Docs, journal, bench-harness or blog changes alone are not.
 4. **Recalibrate the worker counts first, if the cost model has moved (§5c).** When the release
    would change what a worker costs, the trims are re-measured on master *before* the release, and
    any retune ships in the same release. Then the release never ships a kernel change with
-   stale worker counts that could worsen the knee or the profile. This step can delay the release;
-   it is the one pre-release check that does.
+   stale worker counts that could worsen the knee or the profile. This step is mandatory when its trigger applies, including a change in work performed within an
+   unchanged route. A previous release's crossover result or a route census alone cannot waive it.
+
+5. **Pass the physical i9 pre-release regression gate** (maintainer direction, following 0.5.17,
+   27 November 2026). This is a release gate, not another per-PR adoption experiment.
+   - Required whenever the batch changes the default decoder, its dispatch, scheduling, memory
+     traffic, Python delivery, or performance-relevant build/packaging flags. When uncertain,
+     require it. Docs-only or demonstrably non-performance-affecting changes do not trigger it;
+     record the reason. A neutral 1–4-thread CI bench cannot establish safety on many cores.
+   - After applicable §5c recalibration, pin the final release candidate and the current published
+     release to exact full commit SHAs. Use the normal workstation queue and standing authority,
+     with the existing paired release-scaling harness or a shallow-safe equivalent. Compare the
+     default decoder, with the release build configuration, before any version bump/tag/publication.
+     Use the established scaling thread grid through all 20 logical CPUs, including 8 and 10,
+     and both primary corpora (Wikidata and text); retain applicable secondary/memory guards under
+     PERFORMANCE-POLICY §2. Freeze the grid, pairing, rounds, validity conditions and decision rule
+     before data. Use stable production-like machine settings and the existing paired protocol;
+     verify byte parity, exact source/build identities and the archived bundle digest.
+   - PASS requires valid evidence and no statistically significant primary wall-time regression
+     at any judged thread count (candidate/base 95% interval wholly above 1 is a regression),
+     with secondary and memory trade-offs satisfying the existing performance policy. A gain is
+     not required for an otherwise worthwhile release. Do not use the §5b 3% attribution threshold
+     as a regression allowance. Invalid, missing, stale or unread evidence is not a pass.
+     Any repeat must follow the existing frozen rule and performance policy, not chase a pass.
+   - If a regression is found, block publication, record the scoped evidence, repair or revert the
+     offending change through the normal frontier, then validate the resulting candidate. When
+     correcting a known regression, also demonstrate recovery against the last known good release
+     in the affected cells, not just improvement over the regressed tag.
+   - Keep the release P1 while waiting for the recipe, result readback or correction; surface the
+     exact next action and do not let unrelated queue activity remove this pressure. No extra owner
+     approval for routine passes; an exception to this gate needs explicit maintainer authority.
+   - Record the candidate/base SHAs, evidence SHA/digest, verdict and relevant build inputs in
+     the release delta before dispatch. Re-check master at publication: if performance-relevant
+     inputs changed, the evidence is stale and the new candidate must pass. Only verified
+     non-performance metadata changes may reuse a result. Do not publish first and test later.
+   - 0.5.17 (#1222, #1228) is the motivating counterexample: the 1–4-thread CI result was neutral,
+     yet pinned 8/10-thread i9 elapsed time rose 2.6%/1.5%. A route census that retained every
+     Wikidata block missed added work within those routes. This rule would have blocked it.
 
 ## 4. The release
 
-1. **Dispatch Deploy Release** with `bump`: patch, or minor for a public API change. It bumps the crate
+1. **Dispatch Deploy Release only after all applicable §3 gates pass**, including §3.5 on the
+   exact release inputs. Use `bump`: patch, or minor for a public API change. It bumps the crate
    and the Python package together, tags `vX.Y.Z` and `py-X.Y.Z`, and starts CI.yml. CI.yml
    publishes the crate (release-plz, Trusted Publishing) and the PyPI wheels.
 2. **Verify the publication:**
@@ -96,8 +134,8 @@ three-team policy came from it). Every release gets one.
 
    With no arguments, the recipe compares the current release (the newest `vX.Y.Z` tag)
    against the last one (the tag before it). Never write version numbers into a command.
-   It is his run, under RULES C5. The agents never time on the workstation. Its figures
-   inform; they don't decide. If the queue isn't running, he can run it by hand:
+   It is his run, under RULES C5. The agents never time on the workstation. This post-tag
+   measurement records the release; it does not replace the mandatory pre-release §3.5 gate. If the queue isn't running, he can run it by hand:
    `just submit bench-release-scaling` on master.
 2. **When the submission lands on #145:**
    - fetch the bundle from the `evidence` branch at the commit the post names, and check its SHA-256;
@@ -108,8 +146,7 @@ three-team policy came from it). Every release gets one.
      0.2.8"). Look in a fresh browser profile and in one that has seen the page before, since
      the view remembers a reader's last choice. A run that is recorded but not shown first is
      not done (10 November 2026: the hero stayed on 0.2.4 against 0.2.1 after 0.2.9's run).
-3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The release
-   doesn't wait for it.
+3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The already-published release's reporting can remain incomplete; this is not a waiver of §3.5.
 
 ## 5a. The team threshold: when it may have moved
 
@@ -183,7 +220,8 @@ admission (#559), 8 workers beat 7 within the new kernel (0.979), where the ship
 1. **When:** before the release (§3.4), if either holds.
    - **The release changes what a worker costs:** the kernel's admission or work per block, its
      working set or scratch layout, or DRAM bytes per output byte. Examples are a new admission
-     line, a new induction, or a store or table change.
+     line, an extra pre-scan even when the final routes are identical, a new induction, or a store
+     or table change. Unchanged admission counts are not evidence of unchanged cost.
    - **A measurement shows the knee has moved:** a frozen run reports a different best count
      within the new kernel, or the release scaling or crossover shows the shipped trim losing to
      a neighbouring count.
