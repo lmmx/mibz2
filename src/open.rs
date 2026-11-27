@@ -1234,17 +1234,25 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         self.fold(b, scratch, buf, k, admitted)
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
-        if let Some(cap) = Self::cap(r.records().len(), n, p) {
-            if cap.m != u32::MAX && !within_cap(r.records(), p, LIMIT, cap) {
+        let recs = r.records();
+        if let Some(cap) = Self::cap(recs.len(), n, p) {
+            // Skip the scalar `within_cap` pre-scan on `lazy_counts_admit` blocks
+            // (`0.10 <= r/n < 0.15`): on Wikidata all 30/30 blocks pass the cap, so the
+            // separate scan was pure wasted CPU (+2.63% 8T / +1.52% 10T on 0.5.17 i9,
+            // `5182d546`). `try_run` enforces the exact same `cap` inside Pass 1 and falls
+            // back cleanly to `Segmented` on overflow, preserving identical routes on every
+            // block. Keep `within_cap` in `[0.15, 0.21)` where most off-Wikidata blocks refuse.
+            if cap.m != u32::MAX
+                && !crate::cells::lazy_counts_admit(recs.len(), n)
+                && !within_cap(recs, p, LIMIT, cap)
+            {
                 #[cfg(test)]
                 {
                     self.capped += 1;
                 }
                 return self.fallback.invert_runs(r, n, p, out, k);
             }
-            let ran = self
-                .open
-                .try_run::<true, true>(r.records(), n, p, LIMIT, cap, out);
+            let ran = self.open.try_run::<true, true>(recs, n, p, LIMIT, cap, out);
             #[cfg(feature = "census")]
             if let Some(c) = &ran {
                 crate::census::record(r.records(), n, p, LIMIT, c);
