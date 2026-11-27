@@ -4,9 +4,10 @@ kind = "write"
 zone = "striated"
 needs = ["long-context", "repo-write"]
 priority = 2
-status = "open"
+status = "review"
+pr = 1065
 owned_paths = ["docs/team/RULES.md"]
-needs_louis = ""
+needs_louis = "RULES D1: approve the frontier migration of docs/team/RULES.md (PR #1065 — coordinator references mapped by meaning to registrations, flags, and deltas; A1, A4, RULES D, and #995 O1/O2 preserved; broken archived links fixed; recommended: approve)"
 question = """
 docs/team/RULES.md still gives the coordinator authority in several places: authorisation, safety objections, decisions. Rewrite each by meaning for the frontier:
 - an authorisation becomes a frozen registration plus review by a different agent;
