@@ -1,0 +1,9 @@
+claim: a6b-endpoint-run
+by: codex
+outcome: partial
+evidence: #1053 faa9df70; #1081; registration.md at faa9df70; PR review 6084079376
+
+**What changed:** Added `just submit bench-a6b-endpoint`. Both binaries build from the exact reviewed #1053 tree, with the endpoint feature off/on. For each corpus and worker count, 15 pairs alternate AB/BA. Plain Open workers measure wall and peak RSS, then hash the same topology outside the clock against a libbzip2 reference. The independent 8W trace pairs measure elapsed worker-busy and report worker CPU separately. Both builds run the real-scanner and S-ideal arms, using the existing oracle and calibrated scanner placement. A preflight checks Wikidata Open activity and the text fallback; #1053's exact-head suite covers dense-band boundaries, composition, fuzz and Miri.
+**Frozen interpretation:** Wikidata 1W must pass the 3% ratio, 39 ms paired median gain, and non-overlapping median intervals (at least 95% coverage). Real-scanner 8W must pass the 3.5% and 6.5 ms/w worker-busy gates. The 1% wall bound applies independently to Wikidata 8W and 10W and text 1W and 8W. An invalid oracle, digest or measurement cannot produce a hardware pass. The S-ideal wall is reported separately. Raw rows, binary and input hashes, both source identities and outcome are bundled for replay.
+**Verification:** Synthetic boundary, pairing and invalid-oracle checks pass. A 638,976-byte fixture matched libbzip2 at k=1,8,10 on the exact feature build with Rust 1.90.0. Hardware timing requires the registered i9 toolchain and machine.
+**Next:** Finish review and checks at the recipe head. The separate queue holder can then signal and enqueue under standing authorisation after checking the queue history and evidence. Hardware results decide the registered candidate.

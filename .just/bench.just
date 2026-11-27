@@ -2085,3 +2085,25 @@ bench-mtf-fold BLOCKS="12" TRACE_BLOCKS="3" TEXT_BLOCKS="6" COPIES="4" SEED="202
     phase plan     cores       plan
     phase run      plan,inputs drive
     phase report   plan        report
+
+# A6b endpoint hardware validation, frozen in #1053 at faa9df70.
+bench-a6b-endpoint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/a6b-endpoint
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    logger=$!
+    finish() {
+      rc=$?
+      if [[ ! -s "$O/outcome.txt" ]]; then echo "INCOMPLETE (exit $rc)" > "$O/outcome.txt"; fi
+      exec 1>&3 2>&4
+      wait "$logger" || rc=1
+      bash bench/bundle.sh "$O" || rc=1
+      exit "$rc"
+    }
+    trap finish EXIT
+    python3 bench/a6b_endpoint.py "$O"
