@@ -1,0 +1,43 @@
+id = "segmented-fused-postwalk"
+title = "Fuse Segmented reverse-assembly + RLE1 + L2-hot CRC32 and u64-store build_lf"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/bwt.rs", "src/rle.rs", "src/lib.rs"]
+mechanisms = ["segmented-fused-postwalk", "build-lf-u64-store"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/bwt-segmented-dissection.md` dissected post-`#1080` `Segmented` (`src/bwt.rs`, `src/runs.rs`, `src/rle.rs`, `src/crc.rs`) across all 7 corpora (`wikidata`, `text`, `random`, `records`, `pattern`, `runs`, `onebyte`), warm & L3-cold, across baseline x86-64, `-C target-cpu=native`, and JCC-32B-aligned builds (2,530/2,530 bit-exact & CRC-exact checks):
+1. **Single-pass fused reverse-assembly + AVX2 RLE1 + L2-hot PCLMULQDQ CRC32 (`fused_rev_rle_crc_buf_avx2`):** After `room_segments::<32, PF_L1, true>` fills `s.bufs[0..ns]`, traverse the segment chain in forward order inside ONE `#[target_feature(enable = "avx2,bmi1")]` function (zero per-segment/chunk `vzeroupper`), reversing each segment ONCE in 32B AVX2 strides into a 4 KiB L1d stack buffer, decoding RLE1 directly into `out` (with hoisted capacity check, `#[cold]` `reserve_exact` growth, and zero-call 32B AVX2 stores for `v0` literals and `run <= 32` fills), and folding L2-hot PCLMULQDQ CRC32 every 64 KiB. Eliminates `assemble_reversed` full-block writes, `find_runs_avx2` scan, `shift > 0` `copy_within` (11/11 `text` blocks), `s.rle_runs`, and `Column`'s `s.ll` intermediate write.
+2. **Pre-shifted `u64` store-combining `build_lf` on `Column` (`src/bwt.rs`):** Pre-shift `ftab[c] = c | (cum << 8)` and pack pairs of LF entries `(e0 as u64) | ((e1 as u64) << 32)` to halve `tt` store uops (`16 -> 12` Port-4 stores per 8 bytes), cutting baseline `build_lf` by `-18.5%` (`random`) / `-20.9%` (`records`) and JCC-32B by `-3.9% / -4.0%`.
+3. **Skip redundant `START`-bit cleanup inside private `Segmented::tt`** (public `walk_back_room` retains cleanup).
+
+In the smooth-zone probe, `M4_buf4k_u64` cuts full `Segmented` (`build + walk + asm + rle + crc`) thread CPU by **-17.2%..-18.9% DISJOINT FASTER across all 6 cells** on primary `text` (`-44.9%..-51.9%` isolated post-walk), **-7.1%..-10.7% DISJOINT FASTER** on baseline `random`/`records` (`-5.0%..-11.9%` JCC-32B, `-1.0%..-5.8%` native), **-24.7%..-31.1% DISJOINT FASTER** on `runs`, **-24.6%..-28.4% DISJOINT FASTER** on `onebyte`, and **-17%..-32%** on `wikidata`'s 198 non-Open runts (`0.10-0.26 ms`), while keeping peak heap at `1.002x` (`text`), `0.901x` (`random`), and `0.870x` (`onebyte`).
+Does shipping this fused post-walk + `u64`-store `build_lf` in `src/bwt.rs`, `src/rle.rs`, and `src/lib.rs` deliver a decisive primary wall-time win on `text` under `PERFORMANCE-POLICY.md` §2 with zero Wikidata regression and clean Miri/B5 safety?
+"""
+why = """
+Directly attacks the #1 remaining removable bottleneck in post-`#1080` `Segmented` (`asm + RLE1 + CRC` = 32% of `text`, 79-84% of `runs`/`onebyte`, 11-12% of `random`/`records`) plus baseline `Column` `build_lf` Port-4 store pressure, projecting ~10-12% full-worker speedup on primary `text` (and -7..-11% on baseline `random`/`records`) with equal or lower peak RSS and zero effect on Wikidata's 233 Open blocks.
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & B5 safety: 100% byte-identical, CRC-identical, and error-identical (including `RunUnfinished`, short blocks `< MIN_SEGMENTED`, short cycles `m < n`, RLE1 runs straddling segment/4 KiB boundaries, and expansive `onebyte`) across `cargo test`, Miri (scalar path + all unsafe invariants justified under B5), `fuzz-smoke`, and all 7 corpora; zero Wikidata route changes (233 Open).
+2. Paired A/B performance (`examples/ab.rs` + CI paired bench) under `PERFORMANCE-POLICY.md` §2: statistically significant primary wall-time speedup on `text` (95% CI wholly below 1.000, expected >= 6% at 1T), zero primary regression on `wikidata` or `text` at any thread count, zero secondary regression > 2% on `pattern` / `random` / `records` / `runs` / `onebyte`, and peak RSS ratio <= 1.02x. If `text` fails to show a primary win or any primary/guard regression breaches policy, STOP and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR on `src/bwt.rs`, `src/rle.rs`, and `src/lib.rs` with B5 safety proofs for unsafe AVX2/pointer blocks, Miri + unit/edge-case tests (boundary-straddling RLE1 runs, `RunUnfinished`, short cycles) + CI paired bench passing `PERFORMANCE-POLICY.md` §2, merged cleanly with a delta and `surface.tsv` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/bwt-segmented-dissection.md",
+  "docs/journal/2026-11-27-explore/segmented-fallback-dissection.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/bwt.rs",
+  "src/rle.rs",
+  "src/lib.rs",
+]
+links = [
+  "examples/bwt_segmented_dissection.rs",
+  "frontier/claims/segmented-fallback-build.toml",
+  "frontier/deltas/2026-11-27-bwt-segmented-dissection.md",
+]
