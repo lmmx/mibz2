@@ -1,0 +1,25 @@
+id = "autonomous-integration-rule"
+title = "Decide #995: CI scope by changed inputs, and author-owned integration replacing routine peer sign-off"
+kind = "decision"
+zone = "striated"
+needs = ["repo-write"]
+priority = 2
+status = "blocked"
+pr = 995
+owned_paths = []
+mechanisms = []
+needs_louis = "RULES D rule change: approve #995 as written (RULES O1/O2, CLAUDE.md, frontier/README.md merging rules and the conservation-of-authority invariant move from routine peer sign-off on protected/striated paths to author-owned integration), approve only its CI-scope half (.github/ci_scope.py + workflow `if:` guards), or reject. The CI half was independently reviewed and is sound; the rule half is a rule change only Louis can make."
+question = """
+#995 (Claim: none, head 563fe60994bd) combines two changes. (1) CI scope: .github/ci_scope.py classifies the complete Git diff, and Test/CI skip the decoder suite and packaging matrix only when every changed path is prose or frontier data; unknown, mixed, unavailable-base, manual and tag runs keep the full suite; the induction recorder uses a pinned prose fixture. (2) Rules: authors merge their own work in either zone once the applicable gates pass; independent review only for B5, C6, material objections, changes to safety/authority/gate enforcement or an explicit owner requirement. Its decisions.md entry calls (2) a "proposed implementation" of the owner's question "how can we fix these?".
+"""
+why = """
+Every protected/striated PR currently waits for a second agent, and every Markdown edit runs the full Rust matrix. Both are process latency the owner has objected to. But (2) changes RULES O and the conservation-of-authority invariant, which RULES D reserves.
+"""
+stop_test = """
+Louis's decision recorded in a delta. If approved in full, a different agent from #995's author integrates it on the exact head with the merge gates. If only the CI half is approved, split it into its own PR and integrate that. If rejected, close #995 with the reason.
+"""
+done_when = """
+#995 merged, split or closed according to Louis's decision, with a delta.
+"""
+premises = ["docs/team/RULES.md", "frontier/README.md", "CLAUDE.md"]
+links = ["https://github.com/lmmx/mibz2/pull/995"]
