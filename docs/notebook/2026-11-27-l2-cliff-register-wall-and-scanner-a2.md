@@ -1,8 +1,7 @@
----
-title: "The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee"
-image: assets/social/blog-2026-11-27-l2-cliff-register-wall-and-scanner-a2.png
-description: "Composing the worker stack hits two sharp hardware walls while safe header decoding cuts serial parsing by a third and flips the eight-worker knee."
----
+# The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee
+
+*Published on the blog on 27 November 2026 and retired the same day under the blog's admission test (Louis, 27 November 2026): kept here verbatim as a notebook entry. Its news, where it had any, is now told in the rewritten posts.*
+
 
 <div class="post-hero" markdown>
 

@@ -1,8 +1,7 @@
----
-title: "The architecture of a 6 GB/s bzip2 decoder"
-image: assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png
-description: "Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s."
----
+# The architecture of a 6 GB/s bzip2 decoder
+
+*Published on the blog on 27 November 2026 and retired the same day under the blog's admission test (Louis, 27 November 2026): kept here verbatim as a notebook entry. Its news, where it had any, is now told in the rewritten posts.*
+
 
 <div class="post-hero" markdown>
 

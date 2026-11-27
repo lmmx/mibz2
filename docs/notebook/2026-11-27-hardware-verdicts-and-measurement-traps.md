@@ -1,8 +1,7 @@
----
-title: "When the hardware says no: an i9 rejection, a 1.27 GB input, and a Round-0 bias"
-image: assets/social/blog-2026-11-27-hardware-verdicts-and-measurement-traps.png
-description: "A physical i9 run rejects a scanner change while controlled probes isolate a 1.27 GB window blowup and a cold-start CI bias."
----
+# When the hardware says no: an i9 rejection, a 1.27 GB input, and a Round-0 bias
+
+*Published on the blog on 27 November 2026 and retired the same day under the blog's admission test (Louis, 27 November 2026): kept here verbatim as a notebook entry. Its news, where it had any, is now told in the rewritten posts.*
+
 
 <div class="post-hero" markdown>
 

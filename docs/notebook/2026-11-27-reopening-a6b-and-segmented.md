@@ -1,8 +1,7 @@
----
-title: "Reopening Open's middle and the off-Wikidata decoder"
-image: assets/social/blog-2026-11-27-reopening-a6b-and-segmented.png
-description: "A safe fixed-size redesign cuts Open's middle stage by 28% and a fallback stack speeds off-Wikidata blocks by 16%, while contraction hits a floor."
----
+# Reopening Open's middle and the off-Wikidata decoder
+
+*Published on the blog on 27 November 2026 and retired the same day under the blog's admission test (Louis, 27 November 2026): kept here verbatim as a notebook entry. Its news, where it had any, is now told in the rewritten posts.*
+
 
 <div class="post-hero" markdown>
 
