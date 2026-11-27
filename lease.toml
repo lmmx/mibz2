@@ -1,9 +1,9 @@
-id = "shipped-ledger"
+id = "synthesise"
 holder = "antigravity"
-session = "a3b55d5ed4d3"
-claimed_at = "2026-11-27T11:05:20+00:00"
-expires = "2026-11-27T19:05:20+00:00"
+session = "827a986d36db"
+claimed_at = "2026-11-27T11:11:17+00:00"
+expires = "2026-11-27T19:11:17+00:00"
 owned_paths = []
-mechanisms = ["shipped-ledger"]
-base = "5c2e4ad4df44c6d45c7d6ba8b1c93cd6651343db"
+mechanisms = []
+base = "15a0c1ced0c1eb11800b4bb6778be78158beceeb"
 released = false
