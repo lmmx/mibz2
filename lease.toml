@@ -1,9 +1,9 @@
-id = "scanner-adaptive-seam-window"
+id = "explore"
 holder = "antigravity"
-session = "16fb0ab09db7"
-claimed_at = "2026-11-27T09:19:41+00:00"
-expires = "2026-11-27T17:19:41+00:00"
-owned_paths = ["src/stream.rs", "src/parallel.rs", "src/trace.rs"]
-mechanisms = ["scanner-adaptive-lookahead", "scanner-oneshot-seam"]
-base = "d2e5f46337edd89f9801f1883f87ffd50355c095"
+session = "48e52679a308"
+claimed_at = "2026-11-27T10:21:16+00:00"
+expires = "2026-11-27T18:21:16+00:00"
+owned_paths = []
+mechanisms = []
+base = "521f5ca36bc316fbfd2a5d80f54a914238d5c357"
 released = false
