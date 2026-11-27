@@ -160,6 +160,96 @@ impl InverseBwt for Plain {
     }
 }
 
+/// Maximum row count for the stack-buffered fused small-block path (covers all Wikidata
+/// non-Open runts with zero heap allocation).
+const SMALL_FUSED_MAX: usize = 4096;
+
+#[derive(Default)]
+enum FusedState {
+    #[default]
+    Idle,
+    /// `decode_owned` Runs route: `Segmented::invert_runs` writes RLE1-decoded bytes directly
+    /// into its `out` parameter (cleared first) and stores the block CRC result in `Done`.
+    Owned(crate::Kernels),
+    /// `decode_block` Runs route and `column`: `Segmented` appends RLE1-decoded bytes directly
+    /// to `*out` (leaving `out[..start]` untouched on error) and stores the block CRC in `Done`.
+    Append {
+        out: *mut Vec<u8>,
+        k: crate::Kernels,
+    },
+    /// Completed fused post-walk CRC32 result (or `RunUnfinished`), awaiting `FusedPostwalk::take`.
+    Done(Result<u32, crate::ErrorKind>),
+}
+
+thread_local! {
+    static FUSED_POSTWALK: std::cell::Cell<FusedState> = const {
+        std::cell::Cell::new(FusedState::Idle)
+    };
+}
+
+/// Panic-safe RAII scope letting `decode_block` / `decode_owned` receive a fused
+/// reverse+RLE1+CRC32 result directly from `Segmented` without altering the public `InverseBwt`
+/// contract or wrapper types (`OpenCells`, `LazyCells`, `Cells`).
+pub(crate) struct FusedPostwalk<'a> {
+    prev: FusedState,
+    active: bool,
+    _borrow: std::marker::PhantomData<&'a mut Vec<u8>>,
+}
+
+impl<'a> FusedPostwalk<'a> {
+    /// Arm fused post-walk for `decode_owned`'s Runs route (`Segmented::invert_runs` writes
+    /// RLE1-decoded bytes directly into its own `out` parameter).
+    #[inline]
+    pub(crate) fn enter_owned(k: crate::Kernels) -> FusedPostwalk<'static> {
+        let prev = FUSED_POSTWALK.with(|c| c.replace(FusedState::Owned(k)));
+        FusedPostwalk {
+            prev,
+            active: true,
+            _borrow: std::marker::PhantomData,
+        }
+    }
+
+    /// Arm fused post-walk appending directly to `out` (for `decode_block` Runs and `column`).
+    ///
+    /// Holding `&'a mut Vec<u8>` via `PhantomData` statically prevents the caller from touching
+    /// `out` until this guard is consumed or dropped.
+    #[inline]
+    pub(crate) fn enter_append(out: &'a mut Vec<u8>, k: crate::Kernels) -> Self {
+        let prev = FUSED_POSTWALK.with(|c| {
+            c.replace(FusedState::Append {
+                out: out as *mut Vec<u8>,
+                k,
+            })
+        });
+        FusedPostwalk {
+            prev,
+            active: true,
+            _borrow: std::marker::PhantomData,
+        }
+    }
+
+    /// Disarm the scope and return the fused CRC32 result if `Segmented` ran it.
+    #[inline]
+    pub(crate) fn take(mut self) -> Option<Result<u32, crate::ErrorKind>> {
+        self.active = false;
+        let prev = std::mem::take(&mut self.prev);
+        let cur = FUSED_POSTWALK.with(|c| c.replace(prev));
+        match cur {
+            FusedState::Done(res) => Some(res),
+            _ => None,
+        }
+    }
+}
+
+impl Drop for FusedPostwalk<'_> {
+    fn drop(&mut self) {
+        if self.active {
+            let prev = std::mem::take(&mut self.prev);
+            FUSED_POSTWALK.with(|c| c.set(prev));
+        }
+    }
+}
+
 /// The segmented walk in passes (`walk_segments_room`), the plain one for a short block:
 /// the default
 #[derive(Default)]
@@ -168,13 +258,62 @@ pub struct Segmented {
     seg: SegScratch,
 }
 
+impl Segmented {
+    /// Walk private `self.tt` backward with `clear_start = false` (skipping redundant
+    /// `START`-bit cleanup on private `self.tt`, which is rebuilt before every walk) and run
+    /// the fused reverse+RLE1+CRC32 pass into `dst`.
+    ///
+    /// Returns `true` if the fused pass ran (and stored its result in `FUSED_POSTWALK`), or
+    /// `false` if the block fell in `SMALL_FUSED_MAX < n < MIN_SEGMENTED` and should use the
+    /// unfused `walk_back` path.
+    fn run_back_fused(
+        &mut self,
+        orig_ptr: u32,
+        dst: &mut Vec<u8>,
+        clear_dst: bool,
+        k: crate::Kernels,
+    ) -> bool {
+        let n = self.tt.len();
+        if n >= MIN_SEGMENTED {
+            room_segments::<FLAGGED_LANES, PREFETCH, true>(
+                &mut self.tt,
+                orig_ptr,
+                &mut self.seg,
+                FLAGGED_SEGMENTS,
+                false,
+            );
+            if clear_dst {
+                dst.clear();
+            }
+            let res = self.seg.assemble_reversed_rle_crc(dst, k);
+            FUSED_POSTWALK.with(|c| c.set(FusedState::Done(res)));
+            true
+        } else if n <= SMALL_FUSED_MAX {
+            if clear_dst {
+                dst.clear();
+            }
+            let res = walk_back_fused_small(&self.tt, orig_ptr, dst, k);
+            FUSED_POSTWALK.with(|c| c.set(FusedState::Done(res)));
+            true
+        } else {
+            false
+        }
+    }
+}
+
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         if build_lf(ll, counts, &mut self.tt) {
-            walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+            walk_back_room_private(
+                &mut self.tt,
+                orig_ptr,
+                out,
+                &mut self.seg,
+                crate::Kernels::detect(),
+            );
         } else {
             build(ll, counts, &mut self.tt);
-            walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+            walk_segments_room_private(&mut self.tt, orig_ptr, out, &mut self.seg);
         }
     }
 
@@ -186,10 +325,32 @@ impl InverseBwt for Segmented {
     // contract holds, and Segmented never falls back.
     fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
         if build_lf(ll, counts, &mut self.tt) {
-            walk_back_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+            let mode = FUSED_POSTWALK.with(|c| c.take());
+            if let FusedState::Append { out: dst_ptr, k } = mode {
+                // SAFETY: `dst_ptr` was installed by `FusedPostwalk::enter_append(out, k)` on
+                // this thread, which holds an exclusive `&'a mut Vec<u8>` borrow for the
+                // dynamic extent of this call, and `take()` removed `dst_ptr` from TLS so no
+                // alias can be created. `dst_ptr` is disjoint from `&mut self` and `ll`.
+                let dst = unsafe { &mut *dst_ptr };
+                if self.run_back_fused(orig_ptr, dst, false, k) {
+                    return true;
+                }
+                // `SMALL_FUSED_MAX < n < MIN_SEGMENTED`: leave `FUSED_POSTWALK` idle and fall
+                // through to `walk_back` into `ll` so the caller runs `finish`.
+                walk_back(&self.tt, orig_ptr, ll);
+                return true;
+            }
+            FUSED_POSTWALK.with(|c| c.set(mode));
+            walk_back_room_private(
+                &mut self.tt,
+                orig_ptr,
+                ll,
+                &mut self.seg,
+                crate::Kernels::detect(),
+            );
         } else {
             build(ll, counts, &mut self.tt);
-            walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+            walk_segments_room_private(&mut self.tt, orig_ptr, ll, &mut self.seg);
         }
         true
     }
@@ -211,8 +372,36 @@ impl InverseBwt for Segmented {
         if !crate::runs::fill(r, n, &mut self.tt, k) {
             return false;
         }
-        walk_back_room_with_kernels(&mut self.tt, orig_ptr, out, &mut self.seg, k);
-        true
+        let mode = FUSED_POSTWALK.with(|c| c.take());
+        match mode {
+            FusedState::Owned(fk) => {
+                if self.run_back_fused(orig_ptr, out, true, fk) {
+                    return true;
+                }
+                walk_back(&self.tt, orig_ptr, out);
+                true
+            }
+            FusedState::Append {
+                out: dst_ptr,
+                k: fk,
+            } => {
+                // SAFETY: `dst_ptr` was installed by `FusedPostwalk::enter_append(out, k)` on
+                // this thread, which holds an exclusive `&'a mut Vec<u8>` borrow for the
+                // dynamic extent of this call, and `take()` removed `dst_ptr` from TLS so no
+                // alias can be created. `dst_ptr` is disjoint from `&mut self` and `out`.
+                let dst = unsafe { &mut *dst_ptr };
+                if self.run_back_fused(orig_ptr, dst, false, fk) {
+                    return true;
+                }
+                walk_back(&self.tt, orig_ptr, out);
+                true
+            }
+            other => {
+                FUSED_POSTWALK.with(|c| c.set(other));
+                walk_back_room_private(&mut self.tt, orig_ptr, out, &mut self.seg, k);
+                true
+            }
+        }
     }
 
     #[cfg(any(test, feature = "trace"))]
@@ -446,7 +635,7 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
 /// random write into a 3.6 MB table and a second random read of `ll[s]`), this reads `ll`
 /// sequentially and writes `tt` sequentially: zero random stores, zero `ll` random loads,
 /// with only the 1 KiB `ftab` cursor array hot in L1. Equal-byte runs of 8 rows advance the
-/// bucket cursor once and write 8 consecutive entries directly.
+/// bucket cursor once and write 8 sequential entries.
 ///
 /// Returns `true` when `n < 2^24` and `counts` matches `ll` (verified after the pass by
 /// `ftab == lim`), establishing `TVector`'s invariant that every link `(e >> 8)` is below `n`.
@@ -515,12 +704,8 @@ pub(crate) fn build_lf(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) -> bool
     if ftab != lim {
         return false;
     }
-    // SAFETY:
-    // 1. Every slot in `0..n` was written sequentially above (`i` stepped from `0` to `n`).
-    // 2. Every cursor `ftab[c]` started at `cum[c]`, incremented only by positive counts
-    //    summing in total to `n < 2^24` (so no `wrapping_add` can wrap `u32`), and ended at
-    //    `lim[c]`. Therefore every written link `s` satisfied `cum[c] <= s < lim[c] <= n`,
-    //    establishing `TVector`'s invariant that every `(e >> 8) < n`.
+    // SAFETY: every slot in `0..n` was written above and `ftab == lim` proves every stored
+    // link is strictly below `n` (`n < 2^24`).
     unsafe { tt.0.set_len(n) };
     true
 }
@@ -993,6 +1178,683 @@ impl SegScratch {
         // < n), so every byte of dst[..n] is written
         unsafe { out.set_len(n) };
     }
+
+    /// Single-pass fused reverse-assembly + RLE1 + L2-hot CRC32 for backward LF room walks:
+    /// appends the block's decoded bytes to `out` (starting at `start = out.len()`), returns
+    /// the CRC32 of `&out[start..]`, and restores `out.truncate(start)` on `RunUnfinished`.
+    ///
+    /// Eliminates the full-block `assemble_reversed` write, `find_runs` scan, `shift > 0`
+    /// `copy_within` pass, `rle_runs` scratch, and `Column`'s `ll` intermediate write.
+    pub(crate) fn assemble_reversed_rle_crc(
+        &self,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> Result<u32, crate::ErrorKind> {
+        const BUF_CAP: usize = 4096;
+        const CRC_TILE: usize = crate::rle::TILE;
+
+        let n = self.n;
+        let start = out.len();
+        if n == 0 {
+            return Ok(crate::crc::crc32(&[], k));
+        }
+
+        // Collect segment chain in backward walk order, then reverse for forward order.
+        // Production always has `ns <= FLAGGED_SEGMENTS` (512), fitting in 1 KiB on the stack.
+        let mut stack_chain = [0u16; FLAGGED_SEGMENTS];
+        let mut stack_len = 0usize;
+        let mut heap_chain: Vec<usize> = Vec::new();
+        let mut total = 0usize;
+        let mut seg = self.first;
+        while total < n {
+            let blen = self.bufs[seg].len().min(n - total);
+            if heap_chain.is_empty() && stack_len < FLAGGED_SEGMENTS && seg <= u16::MAX as usize {
+                stack_chain[stack_len] = seg as u16;
+                stack_len += 1;
+            } else {
+                if heap_chain.is_empty() {
+                    heap_chain.reserve(stack_len + 64);
+                    heap_chain.extend(stack_chain[..stack_len].iter().map(|&x| x as usize));
+                }
+                heap_chain.push(seg);
+            }
+            total += blen;
+            seg = self.next[seg];
+            if seg == self.first {
+                break;
+            }
+        }
+        assert!(total > 0);
+
+        // Reserve `n + pad` matching `rle::unrle` (and `trace.rs`'s output-buffer ledger) so
+        // non-expanding blocks never reallocate and pooled `decode_owned` buffers (`n + n/16 + 64`)
+        // hit zero allocation overhead.
+        let pad = if cfg!(target_arch = "x86_64") && k.avx2 {
+            64
+        } else {
+            0
+        };
+        out.reserve(n + pad);
+
+        let res = if total == n {
+            if heap_chain.is_empty() {
+                stack_chain[..stack_len].reverse();
+                #[cfg(target_arch = "x86_64")]
+                if k.avx2 {
+                    // SAFETY: `k.avx2` guarantees AVX2 + BMI1 (`Kernels` invariant); every
+                    // segment index in `stack_chain[..stack_len]` came from `self.first` /
+                    // `self.next` and is `< self.bufs.len()`.
+                    return unsafe {
+                        fused_rev_rle_crc_buf_avx2::<BUF_CAP, CRC_TILE, u16>(
+                            &self.bufs,
+                            &stack_chain[..stack_len],
+                            n,
+                            start,
+                            out,
+                            k,
+                        )
+                    };
+                }
+                fused_rev_rle_crc_buf_scalar::<BUF_CAP, CRC_TILE, u16>(
+                    &self.bufs,
+                    &stack_chain[..stack_len],
+                    n,
+                    start,
+                    out,
+                    k,
+                )
+            } else {
+                heap_chain.reverse();
+                #[cfg(target_arch = "x86_64")]
+                if k.avx2 {
+                    // SAFETY: `k.avx2` guarantees AVX2 + BMI1 (`Kernels` invariant); every
+                    // segment index in `heap_chain` is `< self.bufs.len()`.
+                    return unsafe {
+                        fused_rev_rle_crc_buf_avx2::<BUF_CAP, CRC_TILE, usize>(
+                            &self.bufs,
+                            &heap_chain,
+                            n,
+                            start,
+                            out,
+                            k,
+                        )
+                    };
+                }
+                fused_rev_rle_crc_buf_scalar::<BUF_CAP, CRC_TILE, usize>(
+                    &self.bufs,
+                    &heap_chain,
+                    n,
+                    start,
+                    out,
+                    k,
+                )
+            }
+        } else {
+            // Short cycle (`m = total < n`, e.g. periodic `onebyte` or `b"ab".repeat(...)`):
+            // materialize the `m`-byte forward cycle once (on the stack when `m <= 4096`) and
+            // stream repeated copies through the fused RLE1 + CRC32 decoder.
+            let m = total;
+            let mut stack_cyc = [0u8; BUF_CAP];
+            let mut heap_cyc: Vec<u8> = Vec::new();
+            let cyc: &mut [u8] = if m <= BUF_CAP {
+                &mut stack_cyc[..m]
+            } else {
+                heap_cyc.resize(m, 0);
+                &mut heap_cyc[..m]
+            };
+            let mut off = 0usize;
+            if heap_chain.is_empty() {
+                for &sg in stack_chain[..stack_len].iter().rev() {
+                    let b = &self.bufs[sg as usize];
+                    let len = b.len();
+                    // SAFETY: `b` and `cyc[off..off + len]` are disjoint valid `len`-byte ranges.
+                    unsafe { reverse_copy_scalar(b.as_ptr(), cyc.as_mut_ptr().add(off), len) };
+                    off += len;
+                }
+            } else {
+                for &sg in heap_chain.iter().rev() {
+                    let b = &self.bufs[sg];
+                    let len = b.len();
+                    // SAFETY: `b` and `cyc[off..off + len]` are disjoint valid `len`-byte ranges.
+                    unsafe { reverse_copy_scalar(b.as_ptr(), cyc.as_mut_ptr().add(off), len) };
+                    off += len;
+                }
+            }
+            debug_assert_eq!(off, m);
+            #[cfg(target_arch = "x86_64")]
+            if k.avx2 {
+                // SAFETY: `k.avx2` guarantees AVX2 + BMI1 (`Kernels` invariant).
+                return unsafe {
+                    fused_rev_rle_crc_cycle_avx2::<BUF_CAP, CRC_TILE>(cyc, n, start, out, k)
+                };
+            }
+            fused_rev_rle_crc_cycle_scalar::<BUF_CAP, CRC_TILE>(cyc, n, start, out, k)
+        };
+        if res.is_err() {
+            out.truncate(start);
+        }
+        res
+    }
+}
+
+trait SegIdx: Copy {
+    fn as_usize(self) -> usize;
+}
+impl SegIdx for u16 {
+    #[inline(always)]
+    fn as_usize(self) -> usize {
+        self as usize
+    }
+}
+impl SegIdx for usize {
+    #[inline(always)]
+    fn as_usize(self) -> usize {
+        self
+    }
+}
+
+/// Cold growth path for the fused AVX2 RLE1 writer.
+///
+/// When `start == 0` (per-block buffers in `decode_owned` and `BzReader::new`), linearly
+/// extrapolates the remaining RLE1 output from `produced / consumed` (with a 1% + 16 KiB
+/// headroom, capped at bzip2's theoretical `52x` RLE1 expansion ceiling) and calls
+/// `reserve_exact`. Uniformly expanding blocks (`onebyte`, `runs`) resize once to ~1.01x exact
+/// size instead of 7–18 incremental `realloc` + `memcpy` passes (+7..+14% RSS). When `start >
+/// 0` (multi-block accumulation in `decode` / `decode_blocks`), uses geometric `Vec::reserve`
+/// to keep whole-stream accumulation O(N).
+#[cfg(target_arch = "x86_64")]
+#[cold]
+#[inline(never)]
+fn grow_out(
+    out: &mut Vec<u8>,
+    start: usize,
+    cur_len: usize,
+    extra_need: usize,
+    consumed: usize,
+    rem_in: usize,
+) -> (*mut u8, usize) {
+    // SAFETY: caller has initialized `out[..cur_len]` (`cur_len <= out.capacity()`).
+    unsafe { out.set_len(cur_len) };
+    if start == 0 {
+        let produced = cur_len;
+        let est_rem = if consumed >= 1024 && produced > consumed {
+            let raw = ((produced as u128 * rem_in as u128) / (consumed as u128)) as usize;
+            raw.saturating_add(raw / 100).saturating_add(16 << 10)
+        } else {
+            rem_in.saturating_add(rem_in / 16).saturating_add(32 << 10)
+        };
+        let max_rem = rem_in.saturating_mul(52).saturating_add(320);
+        let step = extra_need.max(est_rem.min(max_rem));
+        out.reserve_exact(step);
+    } else {
+        out.reserve(extra_need);
+    }
+    (out.as_mut_ptr(), out.capacity())
+}
+
+/// 64-byte cache-line-aligned staging buffer for the 4 KiB L1d fused reverse+RLE1 pass,
+/// eliminating 64-byte cache-line splits on 32-byte AVX2 loads and stores.
+#[repr(C, align(64))]
+struct AlignedBuf<const N: usize>([u8; N]);
+
+/// Shared AVX2 decode + L2-hot CRC32 body over `rev_buf[..buf_len]` used by both full-cycle
+/// and short-cycle fused post-walk functions inside a single `#[target_feature]` boundary
+/// (zero per-segment / per-chunk `vzeroupper`).
+#[cfg(target_arch = "x86_64")]
+macro_rules! decode_rev_buf_avx2 {
+    (
+        $rev_buf:expr,
+        $buf_len:expr,
+        $is_eof:expr,
+        $total_n:expr,
+        $rem_after:expr,
+        $start:expr,
+        $out:expr,
+        $out_p:expr,
+        $out_len:expr,
+        $out_cap:expr,
+        $crc_state:expr,
+        $crc_at:expr,
+        $crc_tile:expr,
+        $k:expr
+    ) => {{
+        let avail: usize = $buf_len;
+        let is_eof: bool = $is_eof;
+        let total_n: usize = $total_n;
+        let rem_after: usize = $rem_after;
+        let p = $rev_buf.as_ptr();
+        let mut i = 0usize;
+        // Hoist capacity invariant `out_len + (avail - i) + 32 <= out_cap` once per 4 KiB
+        // chunk: every non-expanding 32B literal store and 1B tail write stays strictly in
+        // bounds with zero per-iteration capacity branch.
+        if $out_len + avail + 32 > $out_cap {
+            let rem_in = rem_after + avail;
+            let (np, nc) = grow_out(
+                $out,
+                $start,
+                $out_len,
+                avail + 32,
+                total_n.saturating_sub(rem_in),
+                rem_in,
+            );
+            $out_p = np;
+            $out_cap = nc;
+        }
+        // Fast 2-load AVX2 loop: `i + 36 <= avail` guarantees `p[i..i + 36]` is inside
+        // `rev_buf[..avail]`, covering loads at `i` and `i + 1`, boundary bytes `i + 32..35`,
+        // and any run's 5th count byte at `j + 4 <= i + 35`.
+        //
+        // Bit `k` (`0..32`) of `m1` is 1 iff `p[i + k] == p[i + k + 1]`. Thus `tri = m1 &
+        // (m1 >> 1) & (m1 >> 2)` has bit `k` set (`0..30`) iff `p[i + k..i + k + 4]` are all
+        // equal, while any run at `k = 30` or `k = 31` requires bit 31 of `m1` (`p[i + 31] ==
+        // p[i + 32]`). Testing `(tri | (m1 & (1 << 31))) == 0` cuts loads 4 -> 2 and compares
+        // 3 -> 1 per 32 bytes with a single branch on the literal fast path.
+        while i + 36 <= avail {
+            let v0 = _mm256_loadu_si256(p.add(i) as *const __m256i);
+            let v1 = _mm256_loadu_si256(p.add(i + 1) as *const __m256i);
+            let m1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(v0, v1)) as u32;
+            // Invariant gives `out_len + 32 <= out_len + (avail - i) < out_cap`: store all 32
+            // bytes of `v0` straight from ymm0 (on a run hit, `tz` leading literals are final
+            // and the trailing `32 - tz` slack bytes are immediately overwritten by the fill).
+            _mm256_storeu_si256($out_p.add($out_len) as *mut __m256i, v0);
+            let tri = m1 & (m1 >> 1) & (m1 >> 2);
+            if (tri | (m1 & (1 << 31))) == 0 {
+                $out_len += 32;
+                i += 32;
+                continue;
+            }
+            let tz = if tri != 0 {
+                tri.trailing_zeros() as usize
+            } else {
+                let b32 = *p.add(i + 32);
+                let b33 = *p.add(i + 33);
+                if (m1 & (1 << 30)) != 0 && b32 == b33 {
+                    30
+                } else if b32 == b33 && b33 == *p.add(i + 34) {
+                    31
+                } else {
+                    $out_len += 32;
+                    i += 32;
+                    continue;
+                }
+            };
+            let j = i + tz;
+            let c = *p.add(j);
+            let extra = *p.add(j + 4) as usize;
+            let run = 4 + extra;
+            $out_len += tz;
+            // `need` covers both `run.max(32)` for this store (since `run >= 4`, `run + 32 >=
+            // 36`) and the restored invariant `(out_len + run) + (avail - (j + 5)) + 32`.
+            let need = run + (avail - (j + 5)) + 32;
+            if $out_len + need > $out_cap {
+                let rem_in = rem_after + (avail - j);
+                let (np, nc) = grow_out(
+                    $out,
+                    $start,
+                    $out_len,
+                    need,
+                    total_n.saturating_sub(rem_in),
+                    rem_in,
+                );
+                $out_p = np;
+                $out_cap = nc;
+            }
+            if run <= 32 {
+                let fill_v = _mm256_set1_epi8(c as i8);
+                _mm256_storeu_si256($out_p.add($out_len) as *mut __m256i, fill_v);
+                $out_len += run;
+            } else {
+                std::ptr::write_bytes($out_p.add($out_len), c, run);
+                $out_len += run;
+            }
+            i = j + 5;
+        }
+        let limit = if is_eof {
+            avail
+        } else {
+            avail.saturating_sub(4)
+        };
+        while i < limit {
+            let c = *p.add(i);
+            if i + 3 < avail && *p.add(i + 1) == c && *p.add(i + 2) == c && *p.add(i + 3) == c {
+                if i + 4 >= avail {
+                    $out.set_len($start);
+                    return Err(crate::ErrorKind::RunUnfinished);
+                }
+                let run = 4 + (*p.add(i + 4) as usize);
+                let need = run + (avail - (i + 5)) + 32;
+                if $out_len + need > $out_cap {
+                    let rem_in = rem_after + (avail - i);
+                    let (np, nc) = grow_out(
+                        $out,
+                        $start,
+                        $out_len,
+                        need,
+                        total_n.saturating_sub(rem_in),
+                        rem_in,
+                    );
+                    $out_p = np;
+                    $out_cap = nc;
+                }
+                std::ptr::write_bytes($out_p.add($out_len), c, run);
+                $out_len += run;
+                i += 5;
+            } else {
+                *$out_p.add($out_len) = c;
+                $out_len += 1;
+                i += 1;
+            }
+        }
+        let rem = avail - i;
+        if rem > 0 {
+            $rev_buf.copy_within(avail - rem..avail, 0);
+        }
+        $buf_len = rem;
+        let avail_out = $out_len - $crc_at;
+        if avail_out >= $crc_tile {
+            let take = avail_out & !63;
+            $out.set_len($out_len);
+            $crc_state = crate::crc::update_with($crc_state, &$out[$crc_at..$crc_at + take], $k);
+            $crc_at += take;
+        }
+    }};
+}
+
+/// Single-`#[target_feature(enable = "avx2,bmi1")]` fused reverse-into-4KiB-L1d + RLE1 +
+/// 64 KiB L2-hot CRC32 for full-cycle (`total == n`) segment chains.
+///
+/// # Safety
+///
+/// AVX2 and BMI1 must be available (`k.avx2 == true`). Every segment index in `chain` must be
+/// `< bufs.len()`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn fused_rev_rle_crc_buf_avx2<const BUF_CAP: usize, const CRC_TILE: usize, I: SegIdx>(
+    bufs: &[Vec<u8>],
+    chain: &[I],
+    n: usize,
+    start: usize,
+    out: &mut Vec<u8>,
+    k: crate::Kernels,
+) -> Result<u32, crate::ErrorKind> {
+    use core::arch::x86_64::*;
+    let rev = _mm256_setr_epi8(
+        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6,
+        5, 4, 3, 2, 1, 0,
+    );
+    let mut out_len = start;
+    let mut out_cap = out.capacity();
+    let mut out_p = out.as_mut_ptr();
+
+    let mut rev_buf = AlignedBuf([0u8; BUF_CAP]);
+    let mut buf_len = 0usize;
+    let mut crc_state = !0u32;
+    let mut crc_at = start;
+    let mut rem_n = n;
+
+    for &sg in chain {
+        // SAFETY: caller guarantees every segment index in `chain` is `< bufs.len()`.
+        let b = unsafe { bufs.get_unchecked(sg.as_usize()) };
+        let seg_take = b.len().min(rem_n);
+        rem_n -= seg_take;
+        let mut pos = seg_take;
+        while pos > 0 {
+            let space = BUF_CAP - buf_len;
+            let chunk = pos.min(space);
+            pos -= chunk;
+            // Inline AVX2 32B reverse copy into L1d `rev_buf` (zero `vzeroupper`).
+            // SAFETY: `pos + chunk <= seg_take <= b.len()` and `buf_len + chunk <= BUF_CAP`,
+            // with `b` and `rev_buf` disjoint.
+            unsafe {
+                let src = b.as_ptr().add(pos);
+                let dst = rev_buf.0.as_mut_ptr().add(buf_len);
+                let mut ri = 0usize;
+                while ri + 32 <= chunk {
+                    let v = _mm256_loadu_si256(src.add(ri) as *const __m256i);
+                    let s = _mm256_shuffle_epi8(v, rev);
+                    let r = _mm256_permute2x128_si256::<0x01>(s, s);
+                    _mm256_storeu_si256(dst.add(chunk - ri - 32) as *mut __m256i, r);
+                    ri += 32;
+                }
+                if ri < chunk {
+                    reverse_copy_scalar(src.add(ri), dst, chunk - ri);
+                }
+            }
+            buf_len += chunk;
+            if buf_len >= BUF_CAP - 32 {
+                let rem_after = rem_n + pos;
+                let is_eof = rem_after == 0;
+                decode_rev_buf_avx2!(
+                    rev_buf.0, buf_len, is_eof, n, rem_after, start, out, out_p, out_len, out_cap,
+                    crc_state, crc_at, CRC_TILE, k
+                );
+            }
+        }
+    }
+    if buf_len > 0 {
+        decode_rev_buf_avx2!(
+            rev_buf.0, buf_len, true, n, 0, start, out, out_p, out_len, out_cap, crc_state, crc_at,
+            CRC_TILE, k
+        );
+        debug_assert_eq!(buf_len, 0);
+    }
+    // SAFETY: `out[..out_len]` is initialized (`out[..start]` prior to call, `out[start..out_len]`
+    // written sequentially above) and `out_len <= out.capacity()`.
+    unsafe { out.set_len(out_len) };
+    if crc_at < out_len {
+        crc_state = crate::crc::update_with(crc_state, &out[crc_at..out_len], k);
+    }
+    Ok(!crc_state)
+}
+
+/// Single-`#[target_feature(enable = "avx2,bmi1")]` fused cycle-repeat + RLE1 + L2-hot CRC32
+/// for short-cycle (`m < n`, e.g. `onebyte` or periodic blocks).
+///
+/// # Safety
+///
+/// AVX2 and BMI1 must be available (`k.avx2 == true`) and `cycle` must be non-empty.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn fused_rev_rle_crc_cycle_avx2<const BUF_CAP: usize, const CRC_TILE: usize>(
+    cycle: &[u8],
+    n: usize,
+    start: usize,
+    out: &mut Vec<u8>,
+    k: crate::Kernels,
+) -> Result<u32, crate::ErrorKind> {
+    use core::arch::x86_64::*;
+    let m = cycle.len();
+    let mut out_len = start;
+    let mut out_cap = out.capacity();
+    let mut out_p = out.as_mut_ptr();
+
+    let mut rev_buf = AlignedBuf([0u8; BUF_CAP]);
+    let mut buf_len = 0usize;
+    let mut crc_state = !0u32;
+    let mut crc_at = start;
+    let mut rem_n = n;
+    let mut cyc_pos = 0usize;
+
+    while rem_n > 0 {
+        while buf_len < BUF_CAP && rem_n > 0 {
+            let take = (m - cyc_pos).min(BUF_CAP - buf_len).min(rem_n);
+            rev_buf.0[buf_len..buf_len + take].copy_from_slice(&cycle[cyc_pos..cyc_pos + take]);
+            buf_len += take;
+            rem_n -= take;
+            cyc_pos += take;
+            if cyc_pos == m {
+                cyc_pos = 0;
+            }
+        }
+        let is_eof = rem_n == 0;
+        decode_rev_buf_avx2!(
+            rev_buf.0, buf_len, is_eof, n, rem_n, start, out, out_p, out_len, out_cap, crc_state,
+            crc_at, CRC_TILE, k
+        );
+    }
+    if buf_len > 0 {
+        decode_rev_buf_avx2!(
+            rev_buf.0, buf_len, true, n, 0, start, out, out_p, out_len, out_cap, crc_state, crc_at,
+            CRC_TILE, k
+        );
+        debug_assert_eq!(buf_len, 0);
+    }
+    // SAFETY: `out[..out_len]` is initialized and `out_len <= out.capacity()`.
+    unsafe { out.set_len(out_len) };
+    if crc_at < out_len {
+        crc_state = crate::crc::update_with(crc_state, &out[crc_at..out_len], k);
+    }
+    Ok(!crc_state)
+}
+
+/// Portable scalar fused reverse-into-4KiB-L1d + RLE1 + 64 KiB CRC32 for full-cycle chains.
+fn fused_rev_rle_crc_buf_scalar<const BUF_CAP: usize, const CRC_TILE: usize, I: SegIdx>(
+    bufs: &[Vec<u8>],
+    chain: &[I],
+    n: usize,
+    start: usize,
+    out: &mut Vec<u8>,
+    k: crate::Kernels,
+) -> Result<u32, crate::ErrorKind> {
+    let mut rev_buf = [0u8; BUF_CAP];
+    let mut buf_len = 0usize;
+    let mut crc_state = !0u32;
+    let mut crc_at = start;
+    let mut rem_n = n;
+
+    let flush_crc = |crc_state: &mut u32, crc_at: &mut usize, out: &[u8]| {
+        let avail_out = out.len() - *crc_at;
+        if avail_out >= CRC_TILE {
+            let take = avail_out & !63;
+            *crc_state = crate::crc::update_with(*crc_state, &out[*crc_at..*crc_at + take], k);
+            *crc_at += take;
+        }
+    };
+
+    for &sg in chain {
+        let b = &bufs[sg.as_usize()];
+        let seg_take = b.len().min(rem_n);
+        rem_n -= seg_take;
+        let mut pos = seg_take;
+        while pos > 0 {
+            let space = BUF_CAP - buf_len;
+            let chunk = pos.min(space);
+            pos -= chunk;
+            // SAFETY: `pos + chunk <= seg_take <= b.len()`, `buf_len + chunk <= BUF_CAP`,
+            // and `b` vs `rev_buf` are disjoint.
+            unsafe {
+                reverse_copy_scalar(
+                    b.as_ptr().add(pos),
+                    rev_buf.as_mut_ptr().add(buf_len),
+                    chunk,
+                );
+            }
+            buf_len += chunk;
+            if buf_len >= BUF_CAP - 32 {
+                let is_eof = rem_n == 0 && pos == 0;
+                let rem = crate::rle::decode_chunk_scalar(&rev_buf, buf_len, is_eof, out)?;
+                if rem > 0 {
+                    rev_buf.copy_within(buf_len - rem..buf_len, 0);
+                }
+                buf_len = rem;
+                flush_crc(&mut crc_state, &mut crc_at, out);
+            }
+        }
+    }
+    if buf_len > 0 {
+        let rem = crate::rle::decode_chunk_scalar(&rev_buf, buf_len, true, out)?;
+        debug_assert_eq!(rem, 0);
+    }
+    if crc_at < out.len() {
+        crc_state = crate::crc::update_with(crc_state, &out[crc_at..], k);
+    }
+    Ok(!crc_state)
+}
+
+/// Portable scalar fused cycle-repeat + RLE1 + 64 KiB CRC32 for short cycles (`m < n`).
+fn fused_rev_rle_crc_cycle_scalar<const BUF_CAP: usize, const CRC_TILE: usize>(
+    cycle: &[u8],
+    n: usize,
+    start: usize,
+    out: &mut Vec<u8>,
+    k: crate::Kernels,
+) -> Result<u32, crate::ErrorKind> {
+    let m = cycle.len();
+    let mut rev_buf = [0u8; BUF_CAP];
+    let mut buf_len = 0usize;
+    let mut crc_state = !0u32;
+    let mut crc_at = start;
+    let mut rem_n = n;
+    let mut cyc_pos = 0usize;
+
+    while rem_n > 0 {
+        while buf_len < BUF_CAP && rem_n > 0 {
+            let take = (m - cyc_pos).min(BUF_CAP - buf_len).min(rem_n);
+            rev_buf[buf_len..buf_len + take].copy_from_slice(&cycle[cyc_pos..cyc_pos + take]);
+            buf_len += take;
+            rem_n -= take;
+            cyc_pos += take;
+            if cyc_pos == m {
+                cyc_pos = 0;
+            }
+        }
+        let is_eof = rem_n == 0;
+        let rem = crate::rle::decode_chunk_scalar(&rev_buf, buf_len, is_eof, out)?;
+        if rem > 0 {
+            rev_buf.copy_within(buf_len - rem..buf_len, 0);
+        }
+        buf_len = rem;
+        let avail_out = out.len() - crc_at;
+        if avail_out >= CRC_TILE {
+            let take = avail_out & !63;
+            crc_state = crate::crc::update_with(crc_state, &out[crc_at..crc_at + take], k);
+            crc_at += take;
+        }
+    }
+    if buf_len > 0 {
+        let rem = crate::rle::decode_chunk_scalar(&rev_buf, buf_len, true, out)?;
+        debug_assert_eq!(rem, 0);
+    }
+    if crc_at < out.len() {
+        crc_state = crate::crc::update_with(crc_state, &out[crc_at..], k);
+    }
+    Ok(!crc_state)
+}
+
+/// Fused plain backward LF walk + RLE1 + CRC32 for tiny blocks (`n <= SMALL_FUSED_MAX`, e.g.
+/// Wikidata's 198 non-Open runts): walks into a 4 KiB stack buffer with zero heap scratch,
+/// appends RLE1-decoded bytes to `out`, and returns the CRC32 of `&out[start..]`.
+fn walk_back_fused_small(
+    tt: &TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    k: crate::Kernels,
+) -> Result<u32, crate::ErrorKind> {
+    let t = &tt.0;
+    let n = t.len();
+    let start = out.len();
+    if n == 0 {
+        return Ok(crate::crc::crc32(&[], k));
+    }
+    let mut tmp = [0u8; SMALL_FUSED_MAX];
+    let buf = &mut tmp[..n];
+    let mut i = orig_ptr as usize;
+    let mut m = n;
+    for step in 0..n {
+        let e = t[i];
+        buf[n - 1 - step] = e as u8;
+        i = (e >> 8) as usize;
+        if i == orig_ptr as usize {
+            m = step + 1;
+            break;
+        }
+    }
+    repeat_cycle(buf, m);
+    if let Err(kind) = crate::rle::unrle(buf, out, k) {
+        out.truncate(start);
+        return Err(kind);
+    }
+    Ok(crate::crc::crc32(&out[start..], k))
 }
 
 /// The plain walk of an LF table (`runs::fill`'s): from `orig_ptr`, i ← LF(i), the block's
@@ -1025,7 +1887,7 @@ pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mu
     if tt.len() < MIN_SEGMENTED {
         return walk_back(tt, orig_ptr, out);
     }
-    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS, true);
     s.assemble_reversed(out);
 }
 
@@ -1040,8 +1902,39 @@ pub(crate) fn walk_back_room_with_kernels(
     if tt.len() < MIN_SEGMENTED {
         return walk_back(tt, orig_ptr, out);
     }
-    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS, true);
     s.assemble_reversed_with(out, k);
+}
+
+/// Private `Segmented` backward room walk: skips redundant `START`-bit cleanup on `Segmented`'s
+/// private `tt` (which is always overwritten by the next block's build).
+fn walk_back_room_private(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    k: crate::Kernels,
+) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk_back(tt, orig_ptr, out);
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS, false);
+    s.assemble_reversed_with(out, k);
+}
+
+/// Private `Segmented` forward room walk (forged-counts fallback): skips redundant `START`-bit
+/// cleanup on `Segmented`'s private `tt`.
+fn walk_segments_room_private(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH, false>(tt, orig_ptr, s, FLAGGED_SEGMENTS, false);
+    s.assemble(out);
 }
 
 /// `walk_back_room` in its two parts, as `walk_segments_room_parts`: the room walk of the LF
@@ -1058,7 +1951,7 @@ pub(crate) fn walk_back_room_parts(
         walk_back(tt, orig_ptr, out);
         return false;
     }
-    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS, true);
     true
 }
 
@@ -1076,7 +1969,7 @@ pub(crate) fn walk_back_room_with<const L: usize>(
     if tt.0.is_empty() {
         return;
     }
-    room_segments::<L, PREFETCH, true>(tt, orig_ptr, s, segments);
+    room_segments::<L, PREFETCH, true>(tt, orig_ptr, s, segments, true);
     s.assemble_reversed(out);
 }
 
@@ -1449,7 +2342,7 @@ pub fn walk_segments_room_parts(
         walk(tt, orig_ptr, out);
         return false;
     }
-    room_segments::<FLAGGED_LANES, PREFETCH, false>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, false>(tt, orig_ptr, s, FLAGGED_SEGMENTS, true);
     true
 }
 
@@ -1484,7 +2377,7 @@ pub fn walk_segments_room_with_prefetch<const L: usize, const PF: u8>(
     if tt.0.is_empty() {
         return;
     }
-    room_segments::<L, PF, false>(tt, orig_ptr, s, segments);
+    room_segments::<L, PF, false>(tt, orig_ptr, s, segments, true);
     s.assemble(out);
 }
 
@@ -1498,6 +2391,7 @@ fn room_segments<const L: usize, const PF: u8, const BACK: bool>(
     orig_ptr: u32,
     s: &mut SegScratch,
     segments: usize,
+    clear_start: bool,
 ) {
     // a pass marks its lanes in a u64
     const { assert!(L <= 64) };
@@ -1806,8 +2700,10 @@ fn room_segments<const L: usize, const PF: u8, const BACK: bool>(
             i += 1;
         }
     }
-    for &r in starts {
-        tt.0[r as usize] &= LINK;
+    if clear_start {
+        for &r in starts {
+            tt.0[r as usize] &= LINK;
+        }
     }
     s.first = seg_of(r0);
     s.n = n;
@@ -2760,7 +3656,9 @@ pub(crate) mod tests {
                 let mut tt_lf = TVector::new();
                 assert!(build_lf(ll, &counts, &mut tt_lf));
                 let mut s = SegScratch::default();
-                room_segments::<FLAGGED_LANES, PREFETCH, true>(&mut tt_lf, orig_ptr, &mut s, 32);
+                room_segments::<FLAGGED_LANES, PREFETCH, true>(
+                    &mut tt_lf, orig_ptr, &mut s, 32, true,
+                );
                 let (mut a_scalar, mut a_detect) = (Vec::new(), Vec::new());
                 s.assemble_reversed_with(&mut a_scalar, crate::Kernels::scalar());
                 assert_eq!(a_scalar, want, "assemble_reversed scalar len={}", ll.len());
@@ -2796,5 +3694,240 @@ pub(crate) mod tests {
         let mut in_place = ll.clone();
         assert!(seg_k.invert_in_place(&mut in_place, &bad_bucket, 3));
         assert_eq!(in_place, want);
+    }
+
+    /// Build a synthetic `SegScratch` whose backward-walked segments reverse-join to `forward`
+    /// (split into arbitrary segment sizes `splits`), so tests can place RLE1 runs and
+    /// `RunUnfinished` errors at exact segment and 4 KiB buffer boundaries.
+    fn synthetic_scratch(forward: &[u8], splits: &[usize], cycle_repeat: usize) -> SegScratch {
+        let mut bufs = Vec::new();
+        let mut pos = 0usize;
+        let mut si = 0usize;
+        while pos < forward.len() {
+            let take = splits[si % splits.len()].min(forward.len() - pos);
+            let mut seg = forward[pos..pos + take].to_vec();
+            seg.reverse();
+            bufs.push(seg);
+            pos += take;
+            si += 1;
+        }
+        let ns = bufs.len();
+        // Backward walk order is the reverse of forward order: `ns - 1 -> ns - 2 -> ... -> 0`.
+        let next: Vec<usize> = (0..ns)
+            .map(|i| if i == 0 { ns - 1 } else { i - 1 })
+            .collect();
+        SegScratch {
+            starts: (0..ns as u32).collect(),
+            bitmap: Vec::new(),
+            bufs,
+            next,
+            n: forward.len() * cycle_repeat,
+            first: ns - 1,
+        }
+    }
+
+    /// Verify `assemble_reversed_rle_crc` (both scalar and detected AVX2/CLMUL kernels)
+    /// against `assemble_reversed_with` + `rle::unrle` + `crc::crc32` on boundary-straddling
+    /// runs, 4 KiB buffer wraps, `RunUnfinished`, short cycles, and `start > 0` append rollback.
+    #[test]
+    fn miri_fused_postwalk_edges_and_parity() {
+        let kernels = {
+            let mut v = vec![crate::Kernels::scalar()];
+            if crate::Kernels::detect() != crate::Kernels::scalar() {
+                v.push(crate::Kernels::detect());
+            }
+            v
+        };
+
+        let mut cases: Vec<(String, Vec<u8>, Vec<usize>, usize)> = Vec::new();
+
+        // 1. Every run length extra in {0,1,2,27,28,29,32,33,255} straddling 4 KiB buffer edge
+        //    (4092..4099) AND straddling tiny segment boundaries (3, 5, 7, 31, 32, 33 bytes).
+        let extras: &[u8] = if cfg!(miri) {
+            &[0, 1, 28, 255]
+        } else {
+            &[0, 1, 2, 27, 28, 29, 32, 33, 255]
+        };
+        let offsets: &[usize] = if cfg!(miri) {
+            &[0, 3, 30, 31, 4094]
+        } else {
+            &[0, 1, 2, 3, 4, 29, 30, 31, 32, 4092, 4093, 4094, 4095, 4096]
+        };
+        for &extra in extras {
+            for &offset in offsets {
+                let mut v: Vec<u8> = (0..offset).map(|i| b'a' + (i % 23) as u8).collect();
+                v.extend_from_slice(&[b'#', b'#', b'#', b'#', extra]);
+                v.extend((0..70).map(|i| b'A' + (i % 19) as u8));
+                cases.push((
+                    format!("run_extra{extra}_off{offset}"),
+                    v,
+                    vec![3, 5, 7, 31, 32, 33, 127],
+                    1,
+                ));
+            }
+        }
+        // Boundary pair/triple false-positives for the 2-load `m1 & (1 << 31)` check (`p[31] == p[32]`)
+        for (tag, tail) in [
+            ("pair31", &b"xxYZ"[..]),
+            ("triple30", &b"xxxY"[..]),
+            ("triple31", &b"Yxxx"[..]),
+        ] {
+            let mut v: Vec<u8> = (0..30).map(|i| b'a' + (i % 23) as u8).collect();
+            v.extend_from_slice(tail);
+            v.extend((0..40).map(|i| b'A' + (i % 19) as u8));
+            cases.push((format!("m1_edge_{tag}"), v, vec![64], 1));
+        }
+
+        // 2. `RunUnfinished` at exact segment boundaries, 4 KiB boundary, and short-cycle EOF.
+        let pads: &[usize] = if cfg!(miri) {
+            &[0, 3, 4094]
+        } else {
+            &[0, 1, 31, 32, 33, 4092, 4093, 4094, 4095, 4096]
+        };
+        for &pad in pads {
+            let mut v: Vec<u8> = (0..pad).map(|i| b'a' + (i % 17) as u8).collect();
+            v.extend_from_slice(b"zzzz");
+            cases.push((format!("unfinished_pad{pad}"), v, vec![2, 3, 5, 19], 1));
+        }
+
+        // 3. Short cycles (including expansive `onebyte`-style 5-byte run cycle, 2-byte
+        //    periodic `ab`, and a short cycle ending in `RunUnfinished`).
+        let cyc_reps = if cfg!(miri) { 12 } else { 2000 };
+        cases.push((
+            "short_cycle_onebyte".into(),
+            b"\0\0\0\0\xff".to_vec(),
+            vec![2, 3],
+            cyc_reps,
+        ));
+        cases.push((
+            "short_cycle_ab".into(),
+            b"ab".to_vec(),
+            vec![1, 1],
+            cyc_reps,
+        ));
+        cases.push((
+            "short_cycle_runs".into(),
+            b"aaaa\x03bcdddd\x00".to_vec(),
+            vec![3, 4, 5],
+            cyc_reps,
+        ));
+        cases.push((
+            "short_cycle_unfinished".into(),
+            b"abzzzz".to_vec(),
+            vec![2, 4],
+            1,
+        ));
+
+        // 4. Multi-tile block (> 64 KiB CRC tile) with dense runs + literals (skipped under Miri
+        //    to keep Miri runtime fast; exercised natively in `cargo test`).
+        if !cfg!(miri) {
+            let mut dense = Vec::with_capacity(90_000);
+            let mut rng = 0x55aa_1234_9876_fedcu64;
+            while dense.len() < 85_000 {
+                rng ^= rng << 13;
+                rng ^= rng >> 7;
+                rng ^= rng << 17;
+                if rng % 11 == 0 {
+                    let c = (rng % 8) as u8;
+                    let extra = [0u8, 1, 2, 15, 28, 29, 64, 255][(rng >> 8) as usize % 8];
+                    dense.extend_from_slice(&[c, c, c, c, extra]);
+                } else {
+                    dense.push((rng & 0xff) as u8);
+                }
+            }
+            cases.push((
+                "multi_tile_dense".into(),
+                dense,
+                vec![17, 31, 32, 33, 64, 1024, 4095, 4096, 4097],
+                1,
+            ));
+        }
+
+        for (label, forward, splits, reps) in &cases {
+            let s = synthetic_scratch(forward, splits, *reps);
+            let mut raw = Vec::new();
+            s.assemble_reversed_with(&mut raw, crate::Kernels::scalar());
+
+            for &k in &kernels {
+                let mut want = Vec::new();
+                let want_res =
+                    crate::rle::unrle(&raw, &mut want, k).map(|()| crate::crc::crc32(&want, k));
+
+                // Fresh buffer (`start == 0`)
+                let mut got = Vec::new();
+                let got_res = s.assemble_reversed_rle_crc(&mut got, k);
+                assert_eq!(got_res, want_res, "{label} fresh {k:?}");
+                if want_res.is_ok() {
+                    assert_eq!(got, want, "{label} fresh bytes {k:?}");
+                } else {
+                    assert!(got.is_empty(), "{label} fresh error rollback {k:?}");
+                }
+
+                // Append mode (`start > 0`) verifying prefix preservation on both Ok and Err
+                let prefix = b"PREFIX_BYTES_12345";
+                let mut got_app = prefix.to_vec();
+                let got_app_res = s.assemble_reversed_rle_crc(&mut got_app, k);
+                assert_eq!(got_app_res, want_res, "{label} append {k:?}");
+                assert_eq!(
+                    &got_app[..prefix.len()],
+                    prefix,
+                    "{label} prefix intact {k:?}"
+                );
+                if want_res.is_ok() {
+                    assert_eq!(
+                        &got_app[prefix.len()..],
+                        &want[..],
+                        "{label} append bytes {k:?}"
+                    );
+                } else {
+                    assert_eq!(
+                        got_app.len(),
+                        prefix.len(),
+                        "{label} append error rollback {k:?}"
+                    );
+                }
+            }
+        }
+
+        // 5. `FusedPostwalk` RAII scope + panic-safety & `walk_back_fused_small` parity.
+        let small_ll = b"baaabbbb\x02cccddddd\x00!".to_vec();
+        let mut counts = [0u32; 256];
+        for &c in &small_ll {
+            counts[c as usize] += 1;
+        }
+        let mut seg = Segmented::default();
+        let mut plain = Plain::default();
+        for orig_ptr in [0u32, 5, small_ll.len() as u32 - 1] {
+            let mut raw = Vec::new();
+            plain.invert(&small_ll, &counts, orig_ptr, &mut raw);
+            for &k in &kernels {
+                let mut want = Vec::new();
+                let want_res =
+                    crate::rle::unrle(&raw, &mut want, k).map(|()| crate::crc::crc32(&want, k));
+                let mut ll_copy = small_ll.clone();
+                let mut out = b"HEAD".to_vec();
+                let guard = FusedPostwalk::enter_append(&mut out, k);
+                assert!(seg.invert_in_place(&mut ll_copy, &counts, orig_ptr));
+                let got_res = guard.take().expect("fused small path must engage");
+                assert_eq!(got_res, want_res, "small fused orig_ptr={orig_ptr} {k:?}");
+                assert_eq!(&out[..4], b"HEAD");
+                if want_res.is_ok() {
+                    assert_eq!(&out[4..], &want[..]);
+                } else {
+                    assert_eq!(out.len(), 4);
+                }
+            }
+        }
+
+        // Unconsumed `FusedPostwalk` drop restores Idle cleanly (including on unwind).
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _g = FusedPostwalk::enter_owned(crate::Kernels::scalar());
+            panic!("simulated unwind");
+        }));
+        let mut raw_after = Vec::new();
+        seg.invert(&small_ll, &counts, 0, &mut raw_after);
+        let mut plain_after = Vec::new();
+        plain.invert(&small_ll, &counts, 0, &mut plain_after);
+        assert_eq!(raw_after, plain_after);
     }
 }
