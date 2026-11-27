@@ -1,0 +1,29 @@
+id = "scanner-a2-fast-i9-run"
+title = "i9-10900K keep/revert run of the fast A2 scanner setup (direct selector runs, multi-length code-length LUT, single-write table build)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = [".just/bench.just", "bench/scanner_a2_fast.py", "bench/test_scanner_a2_fast.py"]
+mechanisms = ["scanner-a2-build"]
+needs_louis = ""
+question = """
+`scanner-a2-fast-build` merged on CI's paired bench and a VM paired scan (wikidata S -4.0%, 10/10 pairs). Its frozen stop test's second gate is a workstation one and still open: write the recipe to it unchanged (paired A/B of the merge's squash against its first parent on `wikidata x4`, 7+ interleaved repeats, single-thread serial scan `S'` = A2 + A3 as `examples/phases.rs` reads it, guard corpora `text`, `records`, `random`, `runs`, `onebyte`, peak RSS), get it green and read, then set the ready tag and queue entry under standing authorisation. Add k = 8 and k = 9 wall if the grid is cheap: the claim's value is conditional on the knee (synthesis ninth pass).
+"""
+why = """
+Carries `scanner-a2-fast-build`'s workstation done_when (as `scanner-coalesced-u8-i9-run` carries #1034's). The VM measures direction, not the i9 magnitude the 3.0% gate needs (C5).
+"""
+stop_test = """
+Frozen before data (scanner-a2-fast-build's stop_test, gate 2, verbatim): must cut serial scan `S'` (`A2 + A3`) by >= 3.0% (non-overlapping 95% CI / spreads) with <= 1.02x peak RSS and no > 2.0% regression on guard corpora (`text`, `records`, `random`, `runs`, `onebyte`). Otherwise STOP: revert the merge's squash and record a scoped dead-end in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Recipe merged green, ready tag and queue entry landed, bundle read from the `evidence` branch with its SHA-256 checked, verdict in a delta, surface row S updated (or the revert merged and a dead-ends row).
+"""
+premises = [
+  "frontier/claims/scanner-a2-fast-build.toml",
+  "frontier/deltas/2026-11-27-scanner-a2-fast-build.md",
+]
+links = [
+  "frontier/claims/scanner-coalesced-u8-i9-run.toml",
+]

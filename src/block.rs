@@ -726,13 +726,22 @@ mod tests {
         // the same bits, error, end position and runs (or lengths), on both the
         // `leading_zeros`/multi-length fast paths (input to spare) and near or past the
         // input's end (each reader's overrun checks)
-        let mut rng = Rng(0x7a3c_9f12_04d5_be61);
+        readers_match_reference(0x7a3c_9f12_04d5_be61, 20000, 4000);
+    }
+
+    #[test]
+    fn miri_selectors_and_lengths_read_as_reference() {
+        readers_match_reference(0x0dd1_7e55_a2b9_4c03, 24, 300);
+    }
+
+    fn readers_match_reference(seed: u64, cases: usize, max_len: u64) {
+        let mut rng = Rng(seed);
         let mut runs = Box::new([(0u8, 0u16); MAX_SELECTORS]);
-        for case in 0..20000 {
+        for case in 0..cases {
             let len = match case % 4 {
                 0 => 1 + rng.below(16) as usize,
                 1 => 16 + rng.below(200) as usize,
-                _ => 200 + rng.below(4000) as usize,
+                _ => 200 + rng.below(max_len) as usize,
             };
             let data = biased_bits(&mut rng, len);
             let start = rng.below(8 * len as u64 + 16);
@@ -740,7 +749,7 @@ mod tests {
             if case % 2 == 0 {
                 let n_groups = 2 + rng.below(5) as usize;
                 let n_sel = match rng.below(8) {
-                    0 => MAX_SELECTORS + 1 + rng.below(100) as usize,
+                    0 if cases > 100 => MAX_SELECTORS + 1 + rng.below(100) as usize,
                     1 => 1,
                     _ => 1 + rng.below(4 * len as u64 + 1) as usize,
                 };
@@ -772,8 +781,7 @@ mod tests {
     fn delta_lut_matches_bitwise_decode() {
         // every 8-bit prefix: its lengths, bits, net change and range as decoded one bit
         // at a time
-        for p in 0..256usize {
-            let e = DELTA_LUT[p];
+        for (p, &e) in DELTA_LUT.iter().enumerate() {
             let mut b = 0usize;
             let mut off = 0i8;
             let (mut lo, mut hi) = (0i8, 0i8);
