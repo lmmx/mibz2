@@ -51,6 +51,7 @@ import dataclasses
 import datetime as dt
 import json
 import os
+import pathlib
 import re
 import secrets
 import subprocess
@@ -177,22 +178,39 @@ class World:
         _git(self.cwd, "fetch", "-q", "--no-tags", self.remote, *refspecs)
 
     def _show(self, rev, path, limit=1 << 20):
-        p = _git(self.cwd, "cat-file", "-s", f"{rev}:{path}", check=False)
-        if p.returncode or int(p.stdout) > limit:
+        ls = _git(self.cwd, "ls-tree", "-l", rev, "--", path, check=False)
+        if ls.returncode or not ls.stdout.strip():
             return None
-        return _git(self.cwd, "cat-file", "blob", f"{rev}:{path}").stdout
+        lines = ls.stdout.splitlines()
+        if len(lines) != 1:
+            return None
+        head_meta, _, entry_path = lines[0].partition("\t")
+        parts = head_meta.split()
+        if len(parts) != 4 or parts[0] not in ("100644", "100755") or parts[1] != "blob":
+            return None
+        if entry_path != path or not parts[3].isdigit() or int(parts[3]) > limit:
+            return None
+        p = _git(self.cwd, "cat-file", "blob", parts[2], check=False)
+        return p.stdout if p.returncode == 0 else None
 
     # requests
     def requests(self):
         out = _git(self.cwd, "ls-remote", self.remote, "refs/heads/run-request/*").stdout
         refs = [line.split("\t")[1] for line in out.splitlines() if "\t" in line]
         refs = sorted(r for r in refs if REQUEST_REF.match(r))
-        if refs:
-            self._fetch("+refs/heads/run-request/*:refs/reconcile/request/*")
+        refspecs = [
+            f"+{r}:refs/reconcile/request/{r[len('refs/heads/run-request/') :]}" for r in refs
+        ]
+        for i in range(0, len(refspecs), 100):
+            self._fetch(*refspecs[i : i + 100])
         found = []
         for ref in refs:
             local = "refs/reconcile/request/" + ref[len("refs/heads/run-request/") :]
-            meta = _git(self.cwd, "show", "-s", "--format=%H %ct", local).stdout.split()
+            p_meta = _git(self.cwd, "show", "-s", "--format=%H %ct", local, check=False)
+            meta = p_meta.stdout.split() if p_meta.returncode == 0 else []
+            if len(meta) != 2 or not meta[1].isdigit():
+                found.append((ref, "", dt.datetime.fromtimestamp(0, dt.timezone.utc), None))
+                continue
             text = self._show(local, "request.toml", MAX_BYTES)
             found.append(
                 (ref, meta[0], dt.datetime.fromtimestamp(int(meta[1]), dt.timezone.utc), text)
@@ -212,6 +230,37 @@ class World:
     def claim(self, claim_id):
         text = self._show("refs/reconcile/default", f"frontier/claims/{claim_id}.toml")
         return _toml(text, f"claim {claim_id}") if text else None
+
+    def open_flags(self):
+        """Read open (or malformed-status) flags from the default branch's frontier/flags/."""
+        p = _git(
+            self.cwd,
+            "ls-tree",
+            "-r",
+            "--name-only",
+            "refs/reconcile/default",
+            "--",
+            "frontier/flags",
+            check=False,
+        )
+        if p.returncode:
+            raise Unavailable("cannot list frontier/flags on default branch")
+        active = []
+        for rel in sorted(p.stdout.splitlines()):
+            name = pathlib.PurePosixPath(rel).name
+            if not name.endswith(".md") or name == "README.md":
+                continue
+            body = self._show("refs/reconcile/default", rel, MAX_BYTES * 8)
+            if body is None:
+                raise Refused(f"cannot read frontier flag {name}")
+            head = {}
+            for line in body.splitlines()[:10]:
+                if ":" in line and not line.startswith("**"):
+                    k, v = line.split(":", 1)
+                    head[k.strip()] = v.strip()
+            if head.get("status") != "resolved":
+                active.append((name, head.get("flags", "").split()))
+        return active
 
     def lease(self, claim_id):
         p = _git(
@@ -376,20 +425,24 @@ def parse(text):
 
 def check_ci(world, sha):
     """Green as CLAUDE.md defines it: every check run and the legacy commit status, with every
-    workflow finished and the required ones present (absent or not yet reported is not green)."""
+    workflow finished and the required ones succeeded (absent or skipped is not green)."""
     runs = world.checks(sha)
     got = runs.get("check_runs", [])
     if runs.get("total_count", 0) > len(got):
         raise Refused("more than 100 check runs: not all could be read")
-    missing = REQUIRED_CHECKS - {r.get("name") for r in got}
-    if missing:
-        raise Refused(f"required check(s) {sorted(missing)} have not reported on {sha[:12]}")
 
     # by name, across workflows: a superseded run's twin lives in another workflow run's suite
     # (on #1104, `mirror` was cancelled in one run and skipped in another), so keying on the
     # suite would hold every request on routine duplicates
     def key(r):
         return r.get("name")
+
+    succeeded = {
+        key(r) for r in got if r.get("status") == "completed" and r.get("conclusion") == "success"
+    }
+    missing = REQUIRED_CHECKS - succeeded
+    if missing:
+        raise Refused(f"required check(s) {sorted(missing)} have not succeeded on {sha[:12]}")
 
     passed = {
         key(r) for r in got if r.get("status") == "completed" and r.get("conclusion") in PASSED
@@ -400,6 +453,12 @@ def check_ci(world, sha):
 
     for run in got:
         name, status, concl = run.get("name", "?"), run.get("status"), run.get("conclusion")
+        if name in REQUIRED_CHECKS:
+            if status == "completed" and concl == "success":
+                continue
+            if status == "completed" and concl == "cancelled" and name in succeeded:
+                continue
+            raise Refused(f"required check {name!r} is {status}/{concl}")
         if status == "completed" and concl in PASSED:
             continue
         if waiting_macos(run):
@@ -414,14 +473,27 @@ def check_ci(world, sha):
     for suite in listed:
         if (suite.get("app") or {}).get("slug") != "github-actions":
             continue
+        suite_runs = [r for r in got if (r.get("check_suite") or {}).get("id") == suite.get("id")]
         if suite.get("status") == "completed":
-            continue
-        pending = [
-            r
-            for r in got
-            if (r.get("check_suite") or {}).get("id") == suite.get("id")
-            and r.get("status") != "completed"
-        ]
+            concl = suite.get("conclusion")
+            if concl in PASSED:
+                continue
+            if (
+                concl == "cancelled"
+                and suite_runs
+                and all(
+                    (r.get("status") == "completed" and r.get("conclusion") in PASSED)
+                    or (
+                        r.get("status") == "completed"
+                        and r.get("conclusion") == "cancelled"
+                        and key(r) in passed
+                    )
+                    for r in suite_runs
+                )
+            ):
+                continue
+            raise Refused(f"a workflow on {sha[:12]} completed with {concl!r}")
+        pending = [r for r in suite_runs if r.get("status") != "completed"]
         if pending and all(waiting_macos(r) for r in pending):
             continue
         raise Refused(f"a workflow on {sha[:12]} is still {suite.get('status')}")
@@ -432,6 +504,23 @@ def check_ci(world, sha):
             raise Refused(f"status {context!r} is {contexts.get(context, 'absent')}")
     if st.get("state") != "success":
         raise Refused(f"commit status is {st.get('state')}")
+
+
+def _overlaps(a, b):
+    """Whether two repository paths contain one another, by path segment."""
+    pa, pb = pathlib.PurePosixPath(a.lstrip("/")), pathlib.PurePosixPath(b.lstrip("/"))
+    return pa == pb or pa in pb.parents or pb in pa.parents
+
+
+def _matching_open_flag(world, claim_id, recipe, claim):
+    """Return the first open flag filename matching claim_id, recipe, or owned/premise paths."""
+    paths = list(claim.get("owned_paths", []) or []) + list(claim.get("premises", []) or [])
+    for name, targets in world.open_flags():
+        if claim_id in targets or recipe in targets:
+            return name
+        if any(_overlaps(tok, p) for tok in targets for p in paths):
+            return name
+    return None
 
 
 def names_recipe(claim, recipe):
@@ -470,10 +559,14 @@ def evaluate_ready(world, req, now, when):
         raise Refused(f"claim {req['claim']} is not a workstation queue claim")
     if not names_recipe(claim, recipe):
         raise Refused(f"claim {req['claim']} does not name {recipe}")
+    open_flag = _matching_open_flag(world, req["claim"], recipe, claim)
+    if open_flag:
+        raise Refused(f"open flag {open_flag} blocks {req['claim']}/{recipe}")
     lease = world.lease(req["claim"])
     if (
         not lease
         or lease.get("released") is not False
+        or lease.get("phase") not in (None, "integration")
         or lease.get("id") != req["claim"]
         or lease.get("session") != req["session"]
     ):
@@ -487,12 +580,17 @@ def evaluate_ready(world, req, now, when):
         raise Refused(f"{sha[:12]} is not on {req['branch']}")
     pr = world.pr(req["pr"])
     head = pr.get("head") or {}
+    base = pr.get("base") or {}
     if (
         head.get("sha") != sha
         or head.get("ref") != req["branch"]
         or (head.get("repo") or {}).get("full_name") != world.repo
     ):
         raise Refused(f"PR #{req['pr']}'s head is not {sha[:12]} on {world.repo}'s {req['branch']}")
+    if base.get("ref") != world.default:
+        raise Refused(f"PR #{req['pr']} targets {base.get('ref')!r}, not {world.default!r}")
+    if pr.get("draft") is not False:
+        raise Refused(f"PR #{req['pr']} is draft or draft status is unknown")
     if not (pr.get("state") == "open" or pr.get("merged") is True):
         raise Refused(f"PR #{req['pr']} is closed without merging")
     reviews = world.reviews(req["pr"])
