@@ -1,0 +1,43 @@
+id = "python-zero-extra-copy"
+title = "Eliminate Python readall 8 KiB loop and double-copy/2x-RSS in mibz2.open().read(), BZ2Reader.read(), and decompress()"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "python"]
+priority = 2
+status = "idea"
+owned_paths = ["src/python.rs", "python/mibz2/__init__.py", "python/tests/", "Cargo.toml"]
+mechanisms = ["python-readall-pybyteswriter", "python-readinto-pybuffer"]
+needs_louis = "Packaging decision if dropping abi3-py310 for per-version CPython wheels: PyO3 0.29 PyBytes::new_with_writer uses CPython native _PyBytes_Resize only under not(Py_LIMITED_API) (delivering -14..-40% wall and -36..-46% peak RSS), and PyBuffer<u8> requires abi3-py311 or not(Py_LIMITED_API). A pure abi3-py310 subset (BZ2Reader.readall() 1 MiB chunks + b''.join) needs no packaging change and saves -7..-11% CPU on open().read()."
+question = """
+`docs/journal/2026-11-27-explore/python-binding-dissection.md` audited `src/python.rs` and `python/mibz2/__init__.py` after `#1033` against native Rust `BzReader` ceilings on `wikidata.bz2` (209.7 MB) and `text.bz2` (12.0 MB) at `t = 1, 2, 4`:
+1. `BZ2Reader` does not override `readall()` or `read(-1)`, so both `mibz2.open(path).read()` and `BZ2Reader(path).read()` inherit `io.RawIOBase.readall()` and execute **25,829 × 8 KiB** `readinto` calls on `wikidata.bz2` (`+62%` CPU above native Rust `fill_buf` at `t = 1`, `441–480 MiB` peak RSS = `2.1–2.3×` output).
+2. `mibz2.decompress(data, threads)` allocates a full `Vec<u8>` via `crate::decode`/`decode_parallel` and copies all 210 MB a second time under the GIL via `PyBytes::new(py, &out)` (`436–471 MiB` peak RSS vs `228–285 MiB` native Rust `decode`).
+3. A 100% safe-Rust `PyBytes::new_with_writer` streaming prototype (GIL detached during `BzReader::fill_buf()`, single copy per decoded block directly into one growing `PyBytes`) cuts on `wikidata.bz2`:
+   - `mibz2.open(path).read()`: wall **-14.0% (`t=1`) / -28.0% (`t=2`) / -13.6% (`t=4`)**, CPU **-20.5% / -15.7% / -13.9%**, peak `VmHWM` RSS **-45.9% / -42.5% / -35.8%** (`441 -> 239 MiB` at `t=1`, `469 -> 301 MiB` at `t=4`);
+   - `BZ2Reader(path).read()`: wall **-36.4% / -37.6% / -29.8%**, CPU **-20.5% / -20.7% / -15.2%**, peak RSS **-45.9% / -40.7% / -37.5%**;
+   - `mibz2.decompress(data)`: wall **-21.8% / -33.1% / -40.4%**, CPU **-15.2% / -18.0% / -16.4%**, peak RSS **-42.7% / -40.9% / -37.1%** (matching native Rust `decode` CPU and RSS!).
+   - Also adds safe `Reader::readinto` via `PyBuffer<u8>::as_mut_slice` (`-0.8..-3.7%` CPU on `open_read_1m`/`raw_readinto_1m`, `-9..-10%` RSS at `t=1`). Do NOT add scratch-`PyByteArray` `readinto` to `PyFile` (measured `< 2%` CPU, `+13.6%` RSS at `t=4`).
+"""
+why = """
+Directly attacks the largest remaining Python-facing wall and memory overhead in mibz2: whole-file reads (`mibz2.open(path).read()`, `BZ2Reader(path).read()`) and in-memory `mibz2.decompress()` currently pay 2.0-2.3x output peak RSS (~440-480 MiB for a 210 MiB file) and +15-40% extra wall/CPU time over native Rust. Eliminating both in 100% safe Rust brings Python whole-stream delivery to parity with native Rust `decode_parallel`.
+"""
+stop_test = """
+Frozen before data:
+1. Exactness & safety: zero new `unsafe` (`PyBytes::new_with_writer` + `PyBuffer<u8>::as_mut_slice` or pure-Python `readall` subset); 100% SHA-256 bit-identical across all existing `python/tests/` plus new tests for `readall()`, `read(-1)`, `read(None)`, `readinto()` (partial, empty, read-only, non-contiguous, closed, error propagation), `verified` flag after `readall()`, and `decompress()` edge cases (empty, multi-stream, corrupt CRC).
+2. Paired A/B performance & RSS on `wikidata.bz2` (209.7 MB) and `text.bz2` (12.0 MB) at `t = 1, 2, 4` (n >= 7 interleaved repeats + isolated fresh-process `VmHWM`):
+   - Under non-`abi3` (`PyBytes::new_with_writer`): must cut `wikidata.bz2` peak `VmHWM` RSS by `>= 30%` AND wall/CPU by `>= 10%` on `open().read()`, `BZ2Reader.read()`, and `decompress()` at `t = 1, 2, 4`, with no `> 2%` regression on `open_read_1m`, `raw_readinto_1m`, `open_lines`, or `text.bz2` (ensure `decompress` initial capacity does not oversize small streams).
+   - Under `abi3-py310`-only subset (`BZ2Reader.readall()` 1 MiB chunking): must cut `open().read()` and `BZ2Reader.read()` CPU by `>= 5%` at `t = 1, 4` with `<= 1.02x` peak RSS and zero regressions.
+"""
+done_when = """
+Striated PR on `src/python.rs`, `python/mibz2/__init__.py`, `python/tests/` (and `Cargo.toml` / wheel config if owner approves dropping `abi3-py310`), passing all Python/Rust CI tests and the frozen stop test, with delta and `surface.tsv` row `D` updated.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/python-binding-dissection.md",
+  "frontier/deltas/2026-11-26-python-read-single-copy.md",
+  "src/python.rs",
+  "python/mibz2/__init__.py",
+]
+links = [
+  "frontier/claims/python-read-single-copy.toml",
+  "frontier/deltas/2026-11-27-explore-python-binding-dissection.md",
+]
