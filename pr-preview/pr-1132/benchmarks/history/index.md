@@ -43,6 +43,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.15** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15>)
+
+**`wikidata`**
+
+| threads | 0.5.15 wall (median) | lbzip2 2.5 wall (median) | 0.5.14 wall (median) | lbzip2 2.5 against 0.5.15 | 0.5.14 against 0.5.15 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.361 s | 2.511 s | 0.393 s | \+581.8% (+558.3, +606.1) **slower** | \+5.7% (+1.1, +10.4) **slower** |
+| 2 | 0.217 s | 1.331 s | 0.226 s | \+517.2% (+509.9, +524.7) **slower** | \+3.4% (+1.2, +5.5) **slower** |
+| 4 | 0.133 s | 0.714 s | 0.134 s | \+434.2% (+420.5, +448.3) **slower** | \+0.0% (−2.5, +2.7) |
+| 8 | 0.066 s | 0.514 s | 0.066 s | \+677.3% (+670.1, +684.5) **slower** | \+0.2% (−0.6, +1.0) |
+| 10 | 0.059 s | 0.506 s | 0.059 s | \+753.7% (+744.9, +762.5) **slower** | −0.4% (−1.3, +0.5) |
+| 12 | 0.060 s | 0.509 s | 0.066 s | \+732.7% (+708.8, +757.3) **slower** | \+9.5% (+3.0, +16.4) **slower** |
+| 16 | 0.060 s | 0.493 s | 0.061 s | \+703.4% (+668.7, +739.5) **slower** | \+1.2% (−4.6, +7.3) |
+| 20 | 0.060 s | 0.491 s | 0.064 s | \+690.5% (+662.8, +719.3) **slower** | \+6.3% (−1.0, +14.2) |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-25: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.14** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-25-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.14>)
@@ -549,6 +568,22 @@ With no releases named, it compares the newest release tag with the one before i
 ## What changed, release by release
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
+
+### 0.5.15
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0515---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15>)
+
+- Bounded decoder memory on highly compressible streams (\#1129). Workers now check the 12 MiB ready-output byte cap before starting a block, and the pool of spare output buffers is capped in bytes rather than buffer count.
+- Faster fallback inverse BWT construction and precheck on non-Wikidata blocks (\#1080, \#1040). Blocks declined by the open kernel now use a sequential LF column build, unchecked fast fills on verified run records, and AVX2 byte reversal (\#1080), and dense blocks are checked against the open kernel's row and strip caps…
+- Single-copy Python reads (\#1033). `Reader::read` copies directly from `BzReader::fill_buf` into Python `bytes`, removing an intermediate buffer allocation and copy (−7.0% at 1 MiB reads and −3.1% at 64 KiB reads at 1 thread on Wikidata ×4, VM).
+- Coalesced Huffman scanner (\#1034). Same-selector runs are coalesced with a byte-aligned lookup table, skipped symbol zeroing, and block-level BMI2 dispatch.
+- Research features (off by default): `#895` (`ideal-*`), `#1010` (`mtf-fold`), `#1041` (`scan-oracle`), `#1053` (`a6b-endpoint-redesign`), and `#1110` (`forward-anchor-lanes`) leave the default build unchanged.
+- The paired run on CI compared v0.5.14 at `7475dafd` with master at `dd935418` (Benchmark run 46008894855, AMD EPYC 9V74 80-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Stages (1 thread, Wikidata): total 5.92 → 5.85 c/B (−1.1% \[−2.1%, −0.0%\]), led by scanner 0.62 → 0.59 c/B (−5.4% \[−5.8%, −5.1%\]) and MTF + RLE2 1.07 → 1.03 c/B (−4.2% \[−4.8%, −3.6%\]).
+- The other corpora: faster on `text` (−3.6% wall / −3.7% CPU at 1T; −2.8% CPU at 2T; −3.6% CPU at 4T), `pattern` (−6.4% / −7.6% / −7.3% wall at 1/2/4T), `random` (−3.9% / −4.2% / −4.2% wall; −3.8% / −5.0% / −5.5% CPU), `records` (−4.0% wall at 1T and 4T; −3.9% / −6.2% CPU), and `runs` (−1.4% CPU at 4T).
+- Features reviewed: none was removed in this release.
+
+**Changes:** one-tap copy of a blog post's announcement ([\#1113](<https://github.com/lmmx/mibz2/pull/1113>)); fix mtf\_fold SC oracle store check and shallow-checkout hardening ([\#1138](<https://github.com/lmmx/mibz2/pull/1138>)); gate workers on ready cap and bound free\_out bytes ([\#1129](<https://github.com/lmmx/mibz2/pull/1129>)); reconcile ordinary leases for terminal merged claims ([\#1047](<https://github.com/lmmx/mibz2/pull/1047>)); make submitted work discoverable, transferable and recoverable ([\#974](<https://github.com/lmmx/mibz2/pull/974>)); harden tooling against the initial stress-test gaps; sequential LF column build, trusted fill\_avx2, and AVX2 reverse assembly ([\#1080](<https://github.com/lmmx/mibz2/pull/1080>)); fused endpoint setup, 64K SoA induction and generation-tagged dictionary behind research feature ([\#1053](<https://github.com/lmmx/mibz2/pull/1053>)); single-copy Reader::read via BufRead::fill\_buf ([\#1033](<https://github.com/lmmx/mibz2/pull/1033>)); precheck dense-band cap from run records before first pass ([\#1040](<https://github.com/lmmx/mibz2/pull/1040>)); Forensic L3/RSS dissection and compact-footprint rescue probe of A6b (STOP) ([\#1161](<https://github.com/lmmx/mibz2/pull/1161>)); Walk the open kernel's cycle in four lanes from 16 sampled anchors (research feature) ([\#1110](<https://github.com/lmmx/mibz2/pull/1110>)); coalesced same-selector runs, byte-aligned u8 LUT, zero-skip syms reuse, block-level BMI2 dispatch ([\#1034](<https://github.com/lmmx/mibz2/pull/1034>)); port zero-copy scan oracle and freeze bench-mtf-fold kill-test recipe ([\#1041](<https://github.com/lmmx/mibz2/pull/1041>)); fold MTF/RLE2 front into open kernel first pass behind research feature ([\#1010](<https://github.com/lmmx/mibz2/pull/1010>)); oracles for construction, MTF/RLE2, RLE1/CRC/output and delivery ([\#895](<https://github.com/lmmx/mibz2/pull/895>)).
 
 ### 0.5.14
 
