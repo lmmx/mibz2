@@ -1,0 +1,9 @@
+id = "release-0-5-16"
+holder = "claude-code"
+session = "c4af716c5563"
+claimed_at = "2026-11-27T16:40:35+00:00"
+expires = "2026-11-27T22:40:35+00:00"
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
+base = "cf5caa905d3094bd8b971a5809c9d09d7abaaa22"
+released = false
