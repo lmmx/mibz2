@@ -2213,8 +2213,7 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
       (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
         || { echo "bench-scanner-seam-window: build-$b toolchain differs"; exit 1; }
       (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
-      (cd "$W/build-$b" && cargo build -q --release --features trace --example occupancy)
-      sha256sum "$W/build-$b/target/release/examples/ab" "$W/build-$b/target/release/examples/occupancy" | tee -a "$O/binaries.sha256"
+      sha256sum "$W/build-$b/target/release/examples/ab" | tee -a "$O/binaries.sha256"
     }
     inputs() {
       local want dir
@@ -2270,12 +2269,27 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
         --corpus wikidata-x$COPIES --diagnostic ${dry:+--dry} | tee "$O/lazy.txt"
     }
     trace_diag() {
-      local t_rounds=3
-      [ -z "$dry" ] || t_rounds=1
-      "$W/build-base/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$t_rounds" \
-        --out "$O/trace-base.jsonl" | tee "$O/trace-base.txt"
-      "$W/build-head/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$t_rounds" \
-        --out "$O/trace-head.jsonl" | tee "$O/trace-head.txt"
+      local tmp b sha recipe_root=$PWD
+      # Instrument private copies after the judged build. Keep the applied diff and binary
+      # digest with each trace so the intervals can be verified against both source trees.
+      tmp=$(mktemp -d "$W/trace.XXXXXXXX")
+      trap "rm -rf -- $(printf '%q' "$tmp")" EXIT
+      for b in base head; do
+        sha=$(awk -v b="$b" '$1 == b { print $2 }' "$O/builds.txt")
+        git clone -q --local --shared --no-checkout . "$tmp/$b"
+        git -C "$tmp/$b" checkout -q --detach "$sha"
+        git -C "$tmp/$b" apply "$recipe_root/bench/scanner-seam-trace.patch"
+        if [ "$b" = head ]; then
+          git -C "$tmp/$b" apply "$recipe_root/bench/scanner-seam-pending.patch"
+        fi
+        git -C "$tmp/$b" diff > "$O/trace-$b-instrumentation.diff"
+        (cd "$tmp/$b" && CARGO_TARGET_DIR="$tmp/$b/target" cargo build -q --locked --release --features trace --example occupancy)
+        sha256sum "$tmp/$b/target/release/examples/occupancy" >> "$O/binaries.sha256"
+        "$tmp/$b/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$TRACE_ROUNDS" \
+          --out "$O/trace-$b.jsonl" | tee "$O/trace-$b.txt"
+      done
+      python3 bench/scanner_seam_trace.py "$O/trace-base.jsonl" "$O/trace-head.jsonl" \
+        "$TRACE_ROUNDS" ${dry:+--dry} | tee "$O/in-maint.txt"
     }
     phase resolve - resolve
     phase build-base resolve build base

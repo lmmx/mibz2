@@ -90,6 +90,7 @@ In checklist form (`bench/scanner_seam_window.py`):
 
 1. **Traced diagnostic (`in_maint` at 8 workers, decides nothing):**
    - Built with `--features trace` (`examples/occupancy`) on both `base` and `head` at 10 threads (production's 8 workers) on `wikidata ×4`.
+   - Apply the archived trace-only patches in separate copies of base and head. Sum received-chunk and resumed-seam maintenance intervals on the scanner, excluding channel wait and intervening decode work. Confirm eight constructed workers and 32 slots on both arms. Report the median timeline duration across the three rounds and its percentage change.
    - Reports `window_live_max_mb`, `window_cap_max_mb`, scanner timeline shares, and `InputGot -> Window` / `ChannelSource::view` maintenance time (`in_maint`), checking the expected **`>= 80%` drop in `in_maint`** at 8 workers.
 2. **Explicit-worker lazy diagnostic (decides nothing):**
    - `mibz2-workers-lazy@build-base` vs `mibz2-workers-lazy` at explicit `8, 9, 10` workers, 16 paired rounds, unpinned, on `wikidata ×4` — directly exposing the scanner-bound regime at 9 and 10 workers.

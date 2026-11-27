@@ -1,0 +1,108 @@
+--- a/src/trace.rs
++++ b/src/trace.rs
+@@ -44,4 +44,6 @@
+     InputGot,
+     InputEnd,
++    WindowResume,
++    WindowWorkEnd,
+     /// the scanner: before it looks for a slot, and once it has one
+     SlotWait,
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1079,4 +1079,5 @@
++            mark!(WindowWorkEnd);
+         }
+         let i = (from - self.base) as usize;
+         Ok((self.buf.get(i..).unwrap_or(&[]), self.eof))
+     }
+--- a/examples/occupancy.rs
++++ b/examples/occupancy.rs
+@@ -146,4 +146,5 @@
+     let mut h = Hash::new();
+     let t0 = Instant::now();
++    let mut built = None;
+     let res = std::fs::File::open(path)
+         .map_err(|e| e.to_string())
+@@ -165,5 +166,13 @@
+                     BzReader::parallel_planned(f, plan, window, Kernels::detect())
+                 }
+-                _ => BzReader::parallel_with(f, threads, slots, Kernels::detect()),
++                _ => {
++                    let (reader, calls) = mibz2::parallel::observe_builds(|| {
++                        BzReader::parallel_with(f, threads, slots, Kernels::detect())
++                    });
++                    let [actual] = calls.as_slice() else { panic!("expected one decoder") };
++                    assert!(!actual.service && !actual.pipelined, "unexpected decoder topology");
++                    built = Some(*actual);
++                    reader
++                }
+             };
+             drain(reader, &mut h)
+@@ -171,4 +180,8 @@
+     let wall = t0.elapsed().as_secs_f64();
+     let mut kv = Kv::default();
++    let actual = built.expect("registered trace requires production dispatch");
++    let plan = Plan::Workers(actual.threads);
++    kv.f("t.dispatch_workers", actual.threads as f64);
++    kv.f("t.dispatch_slots", actual.window as f64);
+     if level > 0 {
+         // (the decoder's threads end once it is dropped; its last reference can be the
+@@ -436,4 +449,28 @@
+         _ => Some(Role::Reader),
+     };
++    // An input wait ends at InputGot. The seam can also resume a pending chunk in a
++    // later view. Neither the channel wait nor work between views belongs to in_maint.
++    for scanner in traces.iter().filter(|t| t.name == "mibz2-scan") {
++        let mut start = None;
++        let mut elapsed = 0;
++        let mut spans = 0;
++        for m in &scanner.marks {
++            match m.kind {
++                Kind::InputGot | Kind::WindowResume => {
++                    assert!(start.replace(m.ns).is_none(), "nested window maintenance");
++                }
++                Kind::WindowWorkEnd => {
++                    if let Some(begin) = start.take() {
++                        elapsed += m.ns - begin;
++                        spans += 1;
++                    }
++                }
++                _ => {}
++            }
++        }
++        assert!(start.is_none() && spans > 0, "incomplete window maintenance");
++        kv.f("t.in_maint_ms", elapsed as f64 / 1e6);
++        kv.f("t.in_maint_spans", spans as f64);
++    }
+     let roles: Vec<Option<Role>> = traces.iter().map(|t| role(&t.name)).collect();
+     let n_workers = roles.iter().filter(|r| **r == Some(Role::Worker)).count();
+@@ -1448,12 +1485,10 @@
+             g(&full, "b.slices"),
+         );
+-        let s = slots.unwrap_or(SLOTS_PER_THREAD * t);
++        let s = g(&tl, "dispatch_slots") as usize;
+         let rows = g(&tl, "f.rows_max");
+         let decoded = g(&tl, "f.decoded_max");
+-        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
+-            teams: (t / k).max(1),
+-            k,
+-        });
+-        let mut ls = trace::Settings::new(level, t, s);
++        let workers = g(&tl, "dispatch_workers") as usize;
++        let plan = Plan::Workers(workers);
++        let mut ls = trace::Settings::new(level, workers, s);
+         // A column-only sizing scenario, not the measured per-worker route history.
+         ls.in_place = matches!(plan, Plan::Workers(_));
+--- a/src/open.rs
++++ b/src/open.rs
+@@ -994,3 +994,10 @@
+ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
++    // The diagnostic footprint ledger checks tt even on a block that uses Open.
++    // Its allocation belongs to the retained lazy fallback.
++    #[cfg(any(test, feature = "trace"))]
++    fn buffers(&self) -> Vec<crate::trace::Buffer> {
++        self.lazy.buffers()
++    }
++
+     fn reads_runs(&self) -> bool {
+         true

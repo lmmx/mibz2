@@ -1,0 +1,8 @@
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1083,4 +1083,5 @@
+             let drop_n = (self.released - self.base) as usize;
+             if !self.next.is_empty() {
++                mark!(WindowResume);
+                 if self.released >= self.next_base {
+                     // (nothing held before the next chunk: it is the window, read in place
