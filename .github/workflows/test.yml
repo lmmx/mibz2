@@ -11,7 +11,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check changed inputs
+        id: scope
+        run: |
+          python3 .github/ci_scope.py --self-test
+          python3 .github/ci_scope.py
+
   rust:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -60,13 +77,14 @@ jobs:
           cargo test --features mtf-fold --lib
       # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
       # arbitrary columns, tampered logs refused, every block of the test corpora recorded
-      # and checked; then a file of the repository's Markdown recorded (MONODROMY's prose
-      # recipe) and every step replayed again by the Python reader
+      # and checked; then fixed prose recorded and replayed by the Python reader
       - name: The induction recorder (research feature)
         run: |
           cargo test --release --features induction-trace --lib itrace::
           cargo test --release --features induction-trace --test induction_trace
-          git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
+          # A frozen prose fixture, with numbered sections for a multi-block input.
+          # Editing research or site Markdown must not change a decoder test input.
+          python3 -c 'from pathlib import Path; import sys; p = Path("tests/fixtures/induction-prose.txt").read_bytes(); sys.stdout.buffer.write(b"".join(f"Section {i}\n".encode() + p for i in range(160)))' | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
       - name: The dose build (research feature)
@@ -124,6 +142,8 @@ jobs:
   # opend, and the proxy's Valgrind tool built and run on two blocks. Untimed: the scorer's
   # timings are container evidence only, never CI's
   moonshot:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -164,6 +184,8 @@ jobs:
   # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
   fuzz-smoke:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -199,6 +221,8 @@ jobs:
   # bench/submit.sh, the workstation evidence submission (RULES C5), against a scratch
   # repository and a stand-in for gh: archived once, posted once, retried without a rerun
   submit:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -254,6 +278,8 @@ jobs:
         run: python3 bench/test_service_tg_recipe.py
 
   get-python-versions:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.get-versions.outputs.versions }}
@@ -279,7 +305,8 @@ jobs:
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
   python:
-    needs: get-python-versions
+    needs: [scope, get-python-versions]
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -303,6 +330,8 @@ jobs:
         run: uv run --python ${{ matrix.python-version }} pytest
 
   typing:
+    needs: scope
+    if: needs.scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
