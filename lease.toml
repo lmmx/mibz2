@@ -1,9 +1,9 @@
-id = "scanner-seam-window-queue"
-holder = "antigravity"
-session = "d81df4f8f589"
-claimed_at = "2026-11-27T06:42:29+00:00"
-expires = "2026-11-27T14:42:29+00:00"
-owned_paths = ["bench/workstation-queue.txt"]
-mechanisms = ["workstation-queue"]
+id = "explore"
+holder = "claude-code"
+session = "c337ef668392"
+claimed_at = "2026-11-27T06:44:04+00:00"
+expires = "2026-11-27T14:44:04+00:00"
+owned_paths = []
+mechanisms = []
 base = "a6796f58c84cf6b31bf65138cde848e952fcac5b"
 released = false
