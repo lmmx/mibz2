@@ -317,9 +317,18 @@ Wikidata 210 MB, all outputs byte-identical):
 - **Attribution (RELEASING §5b):** recorded as row `0.5.14 → 0.5.15` in
   `docs/journal/release-attribution.md`.
 
-**The team threshold (RELEASING §5a):** `bench-crossover` is queued on the i9-10900K at `v0.5.15`
-(`aaaee363`, #1170; `ready/bench-crossover` set on origin) and will be recorded once its bundle
-lands on `origin/evidence`.
+**The team threshold (RELEASING §5a):** `crossover/run-20261127T141422Z`, evidence `45ae3ff3`
+(sha256 `cf23c148…4073`, commit `aaaee363`, 10 rounds on Wikidata, 400/400 same bytes).
+- **Unmoved.** No forced arm beats the shipped decoder at any count where it changes the plan:
+  - one block a thread (`mibz2-workers-w`): 4T 1.010 [0.973, 1.049] (CPU 1.077), 6T 1.282 [1.237, 1.329],
+    8T 1.042 [1.022, 1.062], 10T 1.056 [1.031, 1.081]; above physical cores (SMT, reported only):
+    12T 0.996 [0.943, 1.051] (CPU 1.308), 16T 1.080 [1.039, 1.123], 20T 1.122 [1.086, 1.160];
+  - teams of 2 (`mibz2-team2`): 1.206–4.533 wall (1.102–9.708 CPU);
+  - teams of 3 (`mibz2-team3`): 1.393–2.948 wall (1.124–4.888 CPU).
+- **Sanity:** where `mibz2-workers-w` runs the identical shipped plan (5, 7, 9 threads), 7T
+  (0.984 [0.964, 1.005], CPU 0.988) and 9T (0.995 [0.968, 1.023], CPU 0.995) span 1; 5T wall
+  is 0.964 [0.937, 0.993] (near-miss noise on identical 5-worker plan; CPU 0.991 [0.982, 1.001]
+  spans 1).
 
 ## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
 
