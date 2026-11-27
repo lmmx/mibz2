@@ -1,9 +1,9 @@
-id = "declarative-ready-signal"
+id = "synthesise"
 holder = "claude-code"
-session = "6395ce493133"
-claimed_at = "2026-11-27T06:34:34+00:00"
-expires = "2026-11-27T12:34:34+00:00"
-owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
-mechanisms = ["workstation-ready-signal"]
+session = "dd8b00aa755a"
+claimed_at = "2026-11-27T06:35:26+00:00"
+expires = "2026-11-27T14:35:26+00:00"
+owned_paths = []
+mechanisms = []
 base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
 released = false
