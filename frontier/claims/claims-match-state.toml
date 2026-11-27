@@ -1,0 +1,32 @@
+id = "claims-match-state"
+title = "A post's headline claims only what its changes' state supports"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"   # opened over max_open_claims at Louis's direction, 27 November 2026; starts once shipped-ledger has merged
+owned_paths = ["docs/scripts/check_prose.py", "docs/scripts/test_check_prose.py"]
+mechanisms = ["blog-reader-gate"]
+needs_louis = ""
+question = """
+After shipped-ledger: the 27 November post "The architecture of a 6 GB/s bzip2 decoder" titled a research target as an achievement; the measured i9 baseline is about 4.31 GB/s and the pieces were variously default, feature-gated, awaiting review or prototype. Rule: a post's title and dek may claim a speed, memory or size effect only for changes in state default, with the figure measured on a named machine; any other state must be named in the sentence that reports it ("behind an experimental feature", "a prototype", "the target").
+Mechanise what can be: in check_prose.py's reader gate, a new or edited title or dek that contains a throughput, percentage, time or memory figure fails unless the post's blog card (frontier/blog/*.toml naming this post) lists `changes` whose ledger rows are all state default; and the body's first mention of each ledgered experimental/prototype/target change must carry its state word (check by matching the card's changes to state words in the paragraph that cites them, or by a `{: .state-… }`-free plain convention the claimer designs). Write the rule into write-blog-post ("Reporting measurements") and frontier/README.md ("The blog board"). Calibrate against the published posts: the 6 GB/s post's title must fail; the queueing and complementary-bottlenecks posts must pass.
+"""
+why = """
+Readers can't tell shipped from planned unless the post says so, and a headline is what travels. This is the second half of "news comes from the ledger": the ledger says what state a change is in, this makes the prose honour it.
+"""
+stop_test = """
+Frozen before data: PASS iff test_check_prose.py shows (1) a title or dek with a speed or memory figure fails when the card's changes include a non-default state, and passes when all are default; (2) the published "6 GB/s" title fails the rule as calibrated; (3) every post published before 26 November that is checked passes; (4) the skill and README carry the rule. Otherwise not done.
+"""
+done_when = """
+PR merged with the gate, its tests in the site workflow, the skill and README text, and a delta.
+"""
+premises = [
+  "docs/scripts/check_prose.py",
+  ".claude/skills/write-blog-post/SKILL.md",
+  "frontier/README.md",
+]
+links = [
+  "frontier/claims/shipped-ledger.toml",
+  "frontier/claims/blog-cards-cite-ledger.toml",
+]
