@@ -6,4 +6,4 @@ expires = "2026-11-27T13:18:06+00:00"
 owned_paths = ["src/bwt.rs", "src/runs.rs"]
 mechanisms = ["segmented-fallback"]
 base = "a1869b5a24cf4016075e41ea5d3316f947ac6d49"
-released = false
+released = true
