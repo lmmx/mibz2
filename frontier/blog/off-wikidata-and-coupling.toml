@@ -1,0 +1,31 @@
+id = "off-wikidata-and-coupling"
+title = "Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "review"
+owned_paths = []
+needs_louis = ""
+stage = "review"
+post = "docs/site/blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Write up the two 27 November empirical findings: the off-Wikidata route census (84% of non-Wikidata full blocks run Segmented; 25/25 dense-band blocks are refused after running Open's first pass to its cap) and the exact eight-worker coupling dissection (correcting the 5.2 ms plumbing subtraction, uncovering the 2.15 ms in_maint coupling bonus, and establishing the ~4.5 ms irreducible floor vs ~2.5 ms unowned ceiling).
+"""
+why = """
+Primary results published after the 26 November true-floor and pooled-scan post that redirect both non-Wikidata and eight-worker priorities.
+"""
+stop_test = """
+The site's rules: no agent names, no redirects, KaTeX maths, every figure traced to primary evidence, strict zensical build, check_site.py, check_render.py, and check_prose.py clean.
+"""
+done_when = """
+Published under standing blog-publishing authority.
+"""
+links = [
+  "docs/journal/2026-11-27-explore/route-census.md",
+  "docs/journal/2026-11-27-explore/eight-worker-coupling.md",
+  "docs/journal/2026-11-27-synthesis/sixth-pass.md",
+  "docs/site/blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md",
+]
