@@ -497,6 +497,20 @@ def review_card(cid, number, head):
     sys.exit(f"PR #{number} has not declared this claim ready for handoff")
 
 
+def _trunk_item(cid):
+    """Read a claim or blog card strictly from origin/master (never local files)."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", cid):
+        return {}
+    for dirname in ("claims", "blog"):
+        rc, body = git("show", f"origin/master:frontier/{dirname}/{cid}.toml")
+        if rc == 0:
+            try:
+                return tomllib.loads(body)
+            except tomllib.TOMLDecodeError:
+                return {}
+    return {}
+
+
 def take_review(cid, number, head, by, hours):
     """Transfer a submitted claim's existing reservation, without acquiring another work slot."""
     if not re.fullmatch(r"[A-Za-z0-9_-]+", cid):
@@ -506,12 +520,7 @@ def take_review(cid, number, head, by, hours):
     check_review_pr(cid, number, head)
     c = review_card(cid, number, head)
     _fetch_master(strict=True)
-    trunk = {}
-    for dirname in ("claims", "blog"):
-        rc, body = git("show", f"origin/master:frontier/{dirname}/{cid}.toml")
-        if rc == 0:
-            trunk = tomllib.loads(body)
-            break
+    trunk = _trunk_item(cid)
     if not trunk or trunk.get("status") not in ("open", "review") or trunk.get("needs_louis"):
         sys.exit(f"{cid} is not an admitted, unreserved integration candidate")
     if c.get("needs_louis"):
@@ -602,18 +611,87 @@ def finish_review(cid, number, head, *, cancelled=False):
     print(f"{cid}: terminal PR #{number}; reservation released")
 
 
-def reconcile_integrations(all_holds):
+def _release_terminal_ordinary(cid, sha, lease, trunk):
+    """Release an ordinary live lease only on verified merged PR state on origin/master."""
+    number = trunk.get("pr")
+    base = lease.get("base")
+    if (
+        trunk.get("id") != cid
+        or trunk.get("status") not in ("done", "dropped")
+        or type(number) is not int
+        or number < 1
+        or not isinstance(base, str)
+        or not re.fullmatch(r"[0-9a-f]{40}", base)
+    ):
+        return False
+    pr = read_pr(number)
+    try:
+        merge = pr.get("merge_commit_sha")
+        body = pr.get("body")
+        valid = (
+            type(pr["number"]) is int
+            and pr["number"] == number
+            and pr["base"]["ref"] == "master"
+            and isinstance(body, str)
+            and claim_header(body) == cid
+            and pr["state"] == "closed"
+            and pr["merged"] is True
+            and isinstance(merge, str)
+            and bool(re.fullmatch(r"[0-9a-f]{40}", merge))
+        )
+    except (AttributeError, KeyError, TypeError, ValueError):
+        valid = False
+    if not valid:
+        sys.exit(f"PR #{number} is not a verified merged PR for {cid}")
+    _fetch_master(strict=True)
+    if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
+        sys.exit("merge commit is not on origin/master")
+    if git("merge-base", "--is-ancestor", base, merge)[0]:
+        sys.exit("merge commit does not descend from the reserved work base")
+    updated = {**lease, "released": True, "terminal": merge}
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"terminal hold not released: {out}")
+    print(f"{cid}: terminal PR #{number}; reservation released")
+    return True
+
+
+def reconcile_integrations(all_holds, *, fetch_master=True):
     """Recover terminal reservations before admitting new work; never release on uncertainty."""
-    for cid, (_, lease) in sorted(all_holds.items()):
-        if lease.get("released") or lease.get("phase") not in ("integration", "parked"):
+    refresh = False
+    master_ok = True
+    has_ordinary = any(live(v) and v.get("phase") is None for _, v in all_holds.values())
+    if has_ordinary and fetch_master:
+        master_ok, _ = _fetch_master(strict=False)
+    for cid, (sha, lease) in sorted(all_holds.items()):
+        if not live(lease):
             continue
-        try:
-            pr = read_pr(lease["pr"])
-            if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
-                finish_review(cid, lease["pr"], lease["pr_head"], cancelled=not pr["merged"])
-        except (SystemExit, KeyError, TypeError, ValueError):
-            print(f"{cid}: integration reconciliation unavailable; reservation retained", file=sys.stderr)
-    return holds()
+        phase = lease.get("phase")
+        if phase in ("integration", "parked"):
+            refresh = True
+            try:
+                pr = read_pr(lease["pr"])
+                if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
+                    finish_review(cid, lease["pr"], lease["pr_head"], cancelled=not pr["merged"])
+            except (SystemExit, KeyError, TypeError, ValueError):
+                print(
+                    f"{cid}: integration reconciliation unavailable; reservation retained",
+                    file=sys.stderr,
+                )
+        elif phase is None and master_ok:
+            trunk = _trunk_item(cid)
+            if trunk.get("status") not in ("done", "dropped"):
+                continue
+            try:
+                if _release_terminal_ordinary(cid, sha, lease, trunk):
+                    refresh = True
+            except (SystemExit, KeyError, TypeError, ValueError):
+                refresh = True
+                print(
+                    f"{cid}: terminal hold reconciliation unavailable; reservation retained",
+                    file=sys.stderr,
+                )
+    return holds() if refresh else all_holds
 
 
 def review_projection(items, prs, error):
@@ -1014,8 +1092,8 @@ def claim(cid, by, hours):
             sys.exit(f"{cid} already has a pending PR; finish it before starting again")
     admission = admission_snapshot()
     all_holds = holds()
-    if any(v.get("phase") in ("integration", "parked") and not v.get("released") for _, v in all_holds.values()):
-        all_holds = reconcile_integrations(all_holds)
+    if any(live(v) for _, v in all_holds.values()):
+        all_holds = reconcile_integrations(all_holds, fetch_master=False)
     if sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
         sys.exit(
             "the live-hold budget is full (max_live_holds); take nothing, or help finish something held"
