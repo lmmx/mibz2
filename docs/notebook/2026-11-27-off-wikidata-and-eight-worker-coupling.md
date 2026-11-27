@@ -1,8 +1,7 @@
----
-title: "Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls"
-image: assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png
-description: "Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie."
----
+# Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls
+
+*Published on the blog on 27 November 2026 and retired the same day under the blog's admission test (Louis, 27 November 2026): kept here verbatim as a notebook entry. Its news, where it had any, is now told in the rewritten posts.*
+
 
 <div class="post-hero" markdown>
 
