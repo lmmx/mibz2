@@ -1,0 +1,28 @@
+431 blocks, 233 admitted
+O1 census, train 117 blocks: median m/n = 0.1099, literal share of visits = 0.820
+  k   P_k(p)/n med [p10..p90]   n/k<=m blocks   P_k(k+8)<=Open bytes blocks
+   1  0.0644 [0.0579..0.1069]     0     0
+   2  0.0781 [0.0704..0.1304]     0     0
+   4  0.0964 [0.0856..0.1593]     2     0
+   8  0.1259 [0.1116..0.2058]    25     0
+  16  0.1746 [0.1520..0.2817]   117     0
+  32  0.2502 [0.2207..0.3882]   117     0
+  k   P_k(T)/m med [p10..p90]
+   1  0.5517 [0.4929..0.6301]
+   2  0.6313 [0.5690..0.7202]
+   4  0.6840 [0.6256..0.7788]
+   8  0.7364 [0.6823..0.8256]
+exactness: 233/233 blocks byte-identical to bwt::walk on every arm (0 multi-cycle: 4-lane arms skipped there)
+visits: ctrl 26567581; J_0 26567581 (1.000x), J_1 14751393 (0.555x), J_2 9099157 (0.342x), J_3 6523063 (0.246x)
+train (117 blocks, 3 repeats, medians ms): ctrl1 75.94, ctrl4 63.91
+  r=0: C 24.75  E1 271.44  E4 119.45  C+E4 144.20
+  r=1: C 88.43  E1 155.58  E4 75.84  C+E4 164.27
+  r=2: C 169.21  E1 92.73  E4 51.95  C+E4 221.16
+  r=3: C 279.14  E1 51.87  E4 41.38  C+E4 320.52
+  selected r = 0
+held-out (116 blocks, 7 interleaved repeats, ms med (min..max)):
+  ctrl1 78.23 (74.21..80.62)   ctrl4 66.51 (65.07..68.73)
+  r=0*: C 25.56 (24.50..26.33)  E1 294.18 (272.56..298.55) [3.760x ctrl1]  E4 126.58 (120.18..133.25) [1.903x ctrl4]  C+E4 152.57 (144.68..158.95)  net vs ctrl4 -86.06 ms (-129.4%) disjoint=true -> i9 proj -420.8 ms (gate 39.18)
+  r=1: C 91.21 (86.82..95.18)  E1 165.87 (153.72..170.53) [2.120x ctrl1]  E4 76.67 (71.74..84.17) [1.153x ctrl4]  C+E4 167.88 (158.56..179.35)  net vs ctrl4 -101.37 ms (-152.4%) disjoint=true -> i9 proj -495.7 ms (gate 39.18)
+  r=2: C 169.36 (162.39..181.62)  E1 93.59 (86.04..98.46) [1.196x ctrl1]  E4 53.00 (49.77..55.76) [0.797x ctrl4]  C+E4 223.29 (212.15..236.99)  net vs ctrl4 -156.79 ms (-235.7%) disjoint=true -> i9 proj -766.6 ms (gate 39.18)
+  r=3: C 283.99 (266.60..299.10)  E1 55.99 (50.64..57.79) [0.716x ctrl1]  E4 42.59 (38.83..46.88) [0.640x ctrl4]  C+E4 325.94 (305.43..345.98)  net vs ctrl4 -259.44 ms (-390.1%) disjoint=true -> i9 proj -1268.6 ms (gate 39.18)
