@@ -35,6 +35,20 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 /// records).
 pub(crate) trait Sink {
     fn run(&mut self, c: u8, total: u32);
+
+    /// Process a batch of packed `(c << 24) | total` runs (`1 <= total < 2^24`), returning the
+    /// total rows processed. `injective` holds only when `seq_to_unseq` over all accessed MTF
+    /// indices is injective (guaranteeing adjacent emitted runs have distinct bytes).
+    #[inline]
+    fn batch(&mut self, runs: &[u32], _injective: bool) -> u64 {
+        let mut sum = 0u64;
+        for &packed in runs {
+            let w = packed & 0x00FF_FFFF;
+            self.run((packed >> 24) as u8, w);
+            sum += u64::from(w);
+        }
+        sum
+    }
 }
 
 /// What a fold attempt came to
@@ -263,33 +277,94 @@ fn front_scalar_with_syms<S: Sink>(
     Ok((n, recs))
 }
 
-/// `runs::front_avx2` with each record's write replaced by the sink (and no `counts`/`per`).
-/// `Bailed` wherever `front_avx2` returns None, and only there (`NotOpen` as `front_scalar`'s,
-/// from its bitmaps): the bitmaps, the list's two levels
-/// and every check are its own, line for line.
+/// L1d-resident packed maximal-run batch size (`512 * 4 = 2 KiB`, well inside 32 KiB L1d;
+/// selected by `docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md` as the sweet spot
+/// on both baseline x86-64 and `-C target-cpu=native`).
+#[cfg(target_arch = "x86_64")]
+const BATCH: usize = 512;
+
+/// Maximum run length representable in a packed `(c << 24) | total` batch entry. Any longer run
+/// (> 16M rows, possible only in synthetic `Symbols` with lifted bounds) escapes via `BatchState::huge`.
+#[cfg(target_arch = "x86_64")]
+const MAX_PACKED_RUN: u64 = (1 << 24) - 1;
+
+#[cfg(target_arch = "x86_64")]
+#[repr(align(64))]
+struct MtfRows([u8; 224]);
+
+/// The AVX2 front's state between batches. `repr(C)` fixes `front` at offset 0 of a 64-aligned
+/// struct, which `fill_batch_avx2`'s aligned 16-byte loads and stores of it rely on (under the
+/// default layout the compiler may place it anywhere); `rows` is 64-aligned by its own type.
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(64))]
+struct BatchState {
+    front: [u8; 32],
+    rows: MtfRows,
+    wi: usize,
+    w: u64,
+    tz: usize,
+    last: usize,
+    end: usize,
+    slack: usize,
+    big: u64,
+    extra_recs: usize,
+    done: bool,
+    huge: Option<(u8, u64)>,
+}
+
+/// Whether `s2u[..used]` contains all distinct bytes. When true and every literal accesses an
+/// index `1 <= nn < used`, the MTF list's first `used` entries remain a permutation of distinct
+/// bytes, so every literal moves a byte strictly distinct from the previous front (`c != prev_c`).
+#[cfg(target_arch = "x86_64")]
+fn s2u_injective(s2u: &[u8; 256], used: usize) -> bool {
+    let mut seen = [0u64; 4];
+    for &b in &s2u[..used] {
+        let word = (b >> 6) as usize;
+        let bit = 1u64 << (b & 63);
+        if seen[word] & bit != 0 {
+            return false;
+        }
+        seen[word] |= bit;
+    }
+    true
+}
+
+/// Cold out-of-line second-level MTF helper (`s >= 33`, ~1.5% of Wikidata literals). Keeping this
+/// out-of-line prevents LLVM from hoisting five YMM constant loads into `fill_batch_avx2`'s
+/// prologue and keeps `fill_batch_avx2` pure 128-bit XMM with zero `vzeroupper` instructions.
 ///
-/// What it writes: the bitmaps, as `front_avx2` writes them (`words` words each, reserved,
-/// every one written before the length is set); and the second level's rows (an index is
-/// clamped to 255). No records.
+/// # Safety
 ///
-/// What it reads: as `front_avx2` reads (a symbol at a set bit of `lit`, all of which are below
-/// `end`; whole words of `lit` and `one` up to the word holding `end`; and 8 bytes of `one`
-/// from the byte holding the bit after a literal's, inside the two words of zeros after the
-/// last symbol's).
+/// AVX2 must be available; `tail` is 64-aligned and holds 224 bytes; `t < 224`.
+#[cfg(target_arch = "x86_64")]
+#[cold]
+#[inline(never)]
+#[target_feature(enable = "avx2")]
+unsafe fn second_cold(tail: *mut u8, t: usize, f1: std::arch::x86_64::__m128i) -> u8 {
+    use std::arch::x86_64::*;
+    let idx = _mm256_setr_epi8(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    );
+    super::second(tail, t, f1, idx)
+}
+
+/// Pass 1: build `lit` and `one` bitmaps from `b.syms`, count literals in-flight (free base
+/// record count and early `lits_refused` check), and compute `max_sym` before `eob` so
+/// `s2u_injective` is exact for arbitrary `Symbols`.
 ///
 /// # Safety
 ///
 /// AVX2, BMI1, BMI2, LZCNT and POPCNT must be available.
 #[cfg(target_arch = "x86_64")]
+#[inline(never)]
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
-unsafe fn front_avx2<S: Sink>(
+unsafe fn build_bitmaps_avx2(
     b: &Symbols,
     syms: &[u16],
     f: &mut Runs,
-    sink: &mut S,
     lits_refused: usize,
-) -> Result<(usize, usize), Outcome> {
-    use super::{second, STEPS};
+) -> Result<(usize, usize, u16), Outcome> {
     use std::arch::x86_64::*;
     let m = syms.len();
     let sp = syms.as_ptr();
@@ -297,7 +372,6 @@ unsafe fn front_avx2<S: Sink>(
         return Err(Outcome::Bailed);
     }
 
-    // ---- the bitmaps, 32 symbols a step, to the first end-of-block symbol ----
     let words = m / 64 + 3;
     f.lit.clear();
     f.lit.reserve(words);
@@ -308,6 +382,7 @@ unsafe fn front_avx2<S: Sink>(
     let v1 = _mm256_set1_epi16(1);
     let v0 = _mm256_setzero_si256();
     let ve = _mm256_set1_epi16(b.eob as i16);
+    let mut vmax = v0;
     macro_rules! bits {
         ($x:expr, $y:expr) => {
             _mm256_movemask_epi8(_mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi16($x, $y)))
@@ -315,6 +390,8 @@ unsafe fn front_avx2<S: Sink>(
         };
     }
     let mut end = usize::MAX;
+    let mut lits = 0usize;
+    let mut max_sym = 0u16;
     let mut ci = 0usize;
     while end == usize::MAX && ci * 32 + 32 <= m {
         // SAFETY: symbols ci·32 .. ci·32 + 32 are below m
@@ -333,7 +410,13 @@ unsafe fn front_avx2<S: Sink>(
             let keep = ((2u64 << t) - 1) as u32;
             l &= keep >> 1;
             o &= keep;
+            for &s in &syms[ci * 32..end] {
+                max_sym = max_sym.max(s);
+            }
+        } else {
+            vmax = _mm256_max_epu16(vmax, _mm256_max_epu16(x, y));
         }
+        lits += l.count_ones() as usize;
         // SAFETY: ci < 2·words (ci·32 < m, words > m / 64)
         *lit32.add(ci) = l;
         *one32.add(ci) = o;
@@ -350,7 +433,9 @@ unsafe fn front_avx2<S: Sink>(
                 }
                 l |= 1 << t;
             }
+            max_sym = max_sym.max(s);
         }
+        lits += l.count_ones() as usize;
         // SAFETY: ci·32 <= m, so ci < 2·words
         *lit32.add(ci) = l;
         *one32.add(ci) = o;
@@ -367,71 +452,62 @@ unsafe fn front_avx2<S: Sink>(
     if end == usize::MAX {
         return Err(Outcome::Bailed);
     }
-    // (the admission's refusal by the literals alone, `refused`: `lit` holds exactly the
-    // literals before `end`)
-    if lits_refused < m {
-        let lits: usize = f.lit.iter().map(|w| w.count_ones() as usize).sum();
-        if lits >= lits_refused {
-            return Err(Outcome::NotOpen);
-        }
+    if lits_refused < m && lits >= lits_refused {
+        return Err(Outcome::NotOpen);
     }
+    // Horizontal max across the 16 u16 lanes of `vmax`
+    let hi = _mm256_extracti128_si256::<1>(vmax);
+    let lo = _mm256_castsi256_si128(vmax);
+    let m8 = _mm_max_epu16(lo, hi);
+    let m4 = _mm_max_epu16(m8, _mm_srli_si128::<8>(m8));
+    let m2 = _mm_max_epu16(m4, _mm_srli_si128::<4>(m4));
+    let m1 = _mm_max_epu16(m2, _mm_srli_si128::<2>(m2));
+    max_sym = max_sym.max(_mm_cvtsi128_si32(m1) as u16);
+    Ok((end, lits, max_sym))
+}
 
-    // ---- the literals ----
-    let s2u = &b.seq_to_unseq;
-    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
-    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
-    #[repr(align(64))]
-    struct Rows([u8; 224]);
-    let mut rows = Rows([0u8; 224]);
-    rows.0.copy_from_slice(&s2u[32..]);
-    let tail = rows.0.as_mut_ptr();
-    let idx = _mm256_setr_epi8(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31,
-    );
+/// Pass 2: pure 128-bit XMM hot loop emitting up to `BATCH` packed `(c << 24) | total` runs into
+/// the L1d-resident stack batch. `f0` and `f1` live permanently in XMM registers on the 98.5%
+/// `s < 33` fast path with zero `FoldSink` state, zero `cnt[256]`, zero `CAP=127` writes, and
+/// zero `vzeroupper` instructions in the entire function.
+///
+/// # Safety
+///
+/// AVX2, BMI1, BMI2, LZCNT and POPCNT must be available. `sp`, `litp`, `onep`, and `st` must
+/// come from a successful `build_bitmaps_avx2` call on the same block.
+#[cfg(target_arch = "x86_64")]
+#[inline(never)]
+#[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
+unsafe fn fill_batch_avx2(
+    st: &mut BatchState,
+    sp: *const u16,
+    litp: *const u64,
+    onep: *const u64,
+    max_len: u64,
+    batch: &mut [u32; BATCH],
+) -> Result<usize, Outcome> {
+    use super::STEPS;
+    use std::arch::x86_64::*;
+
+    // SAFETY: `BatchState` is `repr(C, align(64))` with `front` first, so `front` is at offset 0
+    // of a 64-aligned value and both its halves are 16-byte aligned
+    let mut f0 = _mm_load_si128(st.front.as_ptr() as *const __m128i);
+    let mut f1 = _mm_load_si128(st.front.as_ptr().add(16) as *const __m128i);
+    let tail = st.rows.0.as_mut_ptr();
     let steps = STEPS.as_ptr();
-    // `front_avx2`'s budget for the further records of runs over 127 rows, kept so that the
-    // fold gives up exactly where it does
-    let mut slack = b.max_len / CAP as usize + 1;
-    // the rows, the records `front_avx2` would have written, and the rows of the runs over 127
-    let (mut n, mut recs, mut big) = (0u64, 0usize, 0u64);
-    let litp = f.lit.as_ptr();
-    let onep = f.one.as_ptr();
-    macro_rules! long {
-        ($c:expr, $total:expr) => {{
-            let (c, total): (u64, u64) = ($c, $total);
-            let r = total.div_ceil(CAP as u64);
-            let more = r.saturating_sub(1) as usize;
-            big += total;
-            if more > slack || big > b.max_len as u64 {
-                return Err(Outcome::Bailed);
-            }
-            slack -= more;
-            recs += r as usize;
-            n += total;
-            if total != 0 {
-                // (total <= big <= max_len < 2^31)
-                sink.run(c as u8, total as u32);
-            }
-        }};
-    }
-    macro_rules! emit {
-        ($c:expr, $total:expr, $span:expr) => {{
-            let (c, total): (u64, u64) = ($c, $total);
-            if total > CAP as u64 {
-                if $span > 22 {
-                    return Err(Outcome::Bailed);
-                }
-                long!(c, total);
-            } else {
-                recs += 1;
-                n += total;
-                sink.run(c as u8, total as u32);
-            }
-        }};
-    }
-    let last = end / 64;
-    let (mut wi, mut w) = (0usize, *litp);
+
+    let mut wi = st.wi;
+    let mut w = st.w;
+    let mut tz = st.tz;
+    let last = st.last;
+    let end = st.end;
+    let mut after = *onep.add(wi) >> 1;
+    let mut spw = sp.add(wi * 64);
+
+    let out0 = batch.as_mut_ptr();
+    let mut out = out0;
+    let out_end = out0.add(BATCH);
+
     macro_rules! seek {
         () => {{
             loop {
@@ -459,57 +535,207 @@ unsafe fn front_avx2<S: Sink>(
             _bzhi_u64(bits, ($q2 - $q) as u32)
         }};
     }
-    let first = seek!();
+    macro_rules! emit_long {
+        ($c:expr, $total:expr, $span:expr, $finished:expr) => {{
+            if $span > 22 {
+                return Err(Outcome::Bailed);
+            }
+            let r = $total.div_ceil(CAP as u64);
+            let more = r.saturating_sub(1) as usize;
+            st.big += $total;
+            if more > st.slack || st.big > max_len {
+                return Err(Outcome::Bailed);
+            }
+            st.slack -= more;
+            st.extra_recs += more;
+            if $total <= MAX_PACKED_RUN {
+                // SAFETY: `out < out_end` holds at the start of every iteration
+                *out = (($c << 24) | $total) as u32;
+                out = out.add(1);
+            } else {
+                st.huge = Some(($c as u8, $total));
+                st.done = $finished;
+                break;
+            }
+        }};
+    }
+
+    loop {
+        // SAFETY: its bit is set in `lit`, so it is below `end` < m
+        let s = *spw.add(tz) as usize;
+        if s < 33 {
+            // SAFETY: s - 1 < 32 rows of STEPS
+            let t = steps.add(s - 1);
+            let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
+            let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
+            let cc = _mm_load_si128((*t).c.as_ptr() as *const __m128i);
+            let dd = _mm_load_si128((*t).d.as_ptr() as *const __m128i);
+            let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
+            f1 = _mm_or_si128(_mm_shuffle_epi8(f1, cc), _mm_shuffle_epi8(f0, dd));
+            f0 = g0;
+        } else {
+            // SAFETY: (s - 1).min(255) - 32 < 224; `tail` 64-aligned, 224 bytes
+            let v = second_cold(tail, (s - 1).min(255) - 32, f1);
+            f1 = _mm_alignr_epi8::<15>(f1, f0);
+            f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
+        }
+        let c = _mm_cvtsi128_si32(f0) as u8 as u64;
+
+        if w != 0 {
+            let t2 = w.trailing_zeros() as usize;
+            w &= w - 1;
+            let total = _bzhi_u64(after, t2 as u32) >> tz;
+            let span = t2 - tz;
+            tz = t2;
+            if total <= CAP as u64 {
+                // SAFETY: `out < out_end` holds at the start of every iteration
+                *out = ((c << 24) | total) as u32;
+                out = out.add(1);
+            } else {
+                emit_long!(c, total, span, false);
+            }
+            if out == out_end {
+                break;
+            }
+        } else {
+            let q = wi * 64 + tz;
+            let next = seek!();
+            let q2 = next.map_or(end, |t| wi * 64 + t);
+            let span = q2 - q;
+            if span > 22 {
+                return Err(Outcome::Bailed);
+            }
+            let total = count!(q, q2);
+            let finished = match next {
+                Some(t) => {
+                    tz = t;
+                    after = *onep.add(wi) >> 1;
+                    spw = sp.add(wi * 64);
+                    false
+                }
+                None => true,
+            };
+            if total <= CAP as u64 {
+                // SAFETY: `out < out_end` holds at the start of every iteration
+                *out = ((c << 24) | total) as u32;
+                out = out.add(1);
+            } else {
+                emit_long!(c, total, span, finished);
+            }
+            if finished {
+                st.done = true;
+                break;
+            }
+            if out == out_end {
+                break;
+            }
+        }
+    }
+
+    _mm_store_si128(st.front.as_mut_ptr() as *mut __m128i, f0);
+    _mm_store_si128(st.front.as_mut_ptr().add(16) as *mut __m128i, f1);
+    st.wi = wi;
+    st.w = w;
+    st.tz = tz;
+    Ok(out.offset_from(out0) as usize)
+}
+
+/// Decoupled L1d-batched AVX2 front: Pass 1 (`build_bitmaps_avx2`) builds the bitmaps and checks
+/// `lits_refused`; Pass 2 (`fill_batch_avx2`, `#[inline(never)]`, pure 128-bit XMM) fills a 2 KiB
+/// `[u32; 512]` stack batch of packed maximal runs `(c << 24) | total`, flushing into `sink.batch`
+/// (which runs outside `#[target_feature]` with all 15 GPRs dedicated to `Pass::take + OutQ16`).
+/// `Bailed` wherever shipped `runs::front_avx2` returns `None`, and only there.
+///
+/// # Safety
+///
+/// AVX2, BMI1, BMI2, LZCNT and POPCNT must be available.
+#[cfg(target_arch = "x86_64")]
+unsafe fn front_avx2<S: Sink>(
+    b: &Symbols,
+    syms: &[u16],
+    f: &mut Runs,
+    sink: &mut S,
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
+    let (end, lits, max_sym) = build_bitmaps_avx2(b, syms, f, lits_refused)?;
+    let used = usize::from(max_sym).clamp(1, 256);
+    let injective = s2u_injective(&b.seq_to_unseq, used);
+
+    let last = end / 64;
+    let litp = f.lit.as_ptr();
+    let onep = f.one.as_ptr();
+    let mut wi = 0usize;
+    let mut w = f.lit[0];
+    let first = loop {
+        if w != 0 {
+            let t = w.trailing_zeros() as usize;
+            w &= w - 1;
+            break Some(t);
+        }
+        if wi == last {
+            break None;
+        }
+        wi += 1;
+        w = f.lit[wi];
+    };
+
     let q = first.map_or(end, |t| wi * 64 + t);
     if q > 21 {
         return Err(Outcome::Bailed);
     }
-    long!(*s2u.as_ptr() as u64, _bzhi_u64(*onep, q as u32 + 1) - 1);
-    if let Some(mut tz) = first {
-        let mut after = *onep.add(wi) >> 1;
-        let mut spw = sp.add(wi * 64);
-        loop {
-            // SAFETY: its bit is set in `lit`, so it is below `end` < m
-            let s = *spw.add(tz) as usize;
-            if s < 33 {
-                // SAFETY: s - 1 < 32 rows of STEPS
-                let t = steps.add(s - 1);
-                let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
-                let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
-                let cc = _mm_load_si128((*t).c.as_ptr() as *const __m128i);
-                let dd = _mm_load_si128((*t).d.as_ptr() as *const __m128i);
-                let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
-                f1 = _mm_or_si128(_mm_shuffle_epi8(f1, cc), _mm_shuffle_epi8(f0, dd));
-                f0 = g0;
-            } else {
-                // SAFETY: (s - 1).min(255) - 32 < 224; `tail` 64-aligned, 224 bytes
-                let v = second(tail, (s - 1).min(255) - 32, f1, idx);
-                f1 = _mm_alignr_epi8::<15>(f1, f0);
-                f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
+    // Portable bit mask (q <= 21 => q + 1 <= 22 < 64): avoids BMI2 outside `#[target_feature]`
+    let open_len = (f.one[0] & ((1u64 << (q + 1)) - 1)) - 1;
+    let mut slack = b.max_len / CAP as usize + 1;
+    let open_recs = open_len.div_ceil(CAP as u64);
+    let open_more = open_recs.saturating_sub(1) as usize;
+    if open_more > slack || open_len > b.max_len as u64 {
+        return Err(Outcome::Bailed);
+    }
+    slack -= open_more;
+
+    let mut n = open_len;
+    if open_len != 0 {
+        sink.run(b.seq_to_unseq[0], open_len as u32);
+    }
+
+    let mut extra_recs = 0usize;
+    if let Some(tz) = first {
+        let mut front = [0u8; 32];
+        front.copy_from_slice(&b.seq_to_unseq[..32]);
+        let mut rows = MtfRows([0u8; 224]);
+        rows.0.copy_from_slice(&b.seq_to_unseq[32..]);
+        let mut st = BatchState {
+            front,
+            rows,
+            wi,
+            w,
+            tz,
+            last,
+            end,
+            slack,
+            big: open_len,
+            extra_recs: 0,
+            done: false,
+            huge: None,
+        };
+        let mut batch = [0u32; BATCH];
+        let sp = syms.as_ptr();
+        let max_len = b.max_len as u64;
+        while !st.done {
+            let blen = fill_batch_avx2(&mut st, sp, litp, onep, max_len, &mut batch)?;
+            if blen != 0 {
+                n += sink.batch(&batch[..blen], injective);
             }
-            let c = _mm_cvtsi128_si32(f0) as u8 as u64;
-            if w != 0 {
-                let t2 = w.trailing_zeros() as usize;
-                w &= w - 1;
-                emit!(c, _bzhi_u64(after, t2 as u32) >> tz, t2 - tz);
-                tz = t2;
-            } else {
-                let q = wi * 64 + tz;
-                let next = seek!();
-                let q2 = next.map_or(end, |t| wi * 64 + t);
-                if q2 - q > 22 {
-                    return Err(Outcome::Bailed);
-                }
-                emit!(c, count!(q, q2), q2 - q);
-                match next {
-                    Some(t) => (tz, after, spw) = (t, *onep.add(wi) >> 1, sp.add(wi * 64)),
-                    None => break,
-                }
+            if let Some((hc, htot)) = st.huge.take() {
+                sink.run(hc, htot as u32);
+                n += htot;
             }
         }
+        extra_recs = st.extra_recs;
     }
+
     if n > b.max_len as u64 {
         return Err(Outcome::Bailed);
     }
-    Ok((n as usize, recs))
+    Ok((n as usize, open_recs as usize + lits + extra_recs))
 }
