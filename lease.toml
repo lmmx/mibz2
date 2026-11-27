@@ -1,0 +1,9 @@
+id = "blog-cards-cite-ledger"
+holder = "antigravity"
+session = "f78c5c381944"
+claimed_at = "2026-11-27T11:31:34+00:00"
+expires = "2026-11-27T19:31:34+00:00"
+owned_paths = []
+mechanisms = ["blog-admission"]
+base = "74e55bf2f1faa655cca476082f888432bd808cd3"
+released = false
