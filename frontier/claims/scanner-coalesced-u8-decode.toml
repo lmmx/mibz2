@@ -3,7 +3,7 @@ title = "Coalesced same-selector runs, byte-aligned u8 LUT, zero-skip syms reuse
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 2
+priority = 1
 status = "review"
 pr = 1034
 owned_paths = ["src/huff.rs", "src/block.rs", "src/bits.rs"]
@@ -17,6 +17,8 @@ Can the three pure safe-Rust serial-scanner levers measured in `docs/journal/202
 4. Optionally combined with `huff-bmi2-dispatch` (`shlx`/`shrx`/`movbe`) if that probe passes?
 """
 why = """
+27 November: P1 because #1034 is green but its outstanding B5 review and hardware recipe block validation of the scanner side of the coupled decoder. Complete the substantive safety review, finish applicable integration and prepare/queue the existing frozen test at its exact reviewed head; no additional permission.
+
 `mtf-fold-build` + `forward-emission` hand the 8-worker wall directly to `S` (178 ms vs 152-161 ms workers). On the VM (7 interleaved repeats, schedstat on-CPU + wall), levers 1-3 alone cut `S` -10.8% in 100% safe Rust (zero overlap) both on baseline x86-64 AND on top of `-C target-cpu=native` BMI2 (-14.0% on a 16-buffer rotating pool; -14.8% to -17.9% total when stacked with BMI2, projected ~26-32 ms off i9's 178 ms serial scan), fully disjoint from `src/open.rs`.
 """
 stop_test = """

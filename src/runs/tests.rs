@@ -1016,7 +1016,7 @@ mod fold_tests {
         #[cfg(target_arch = "x86_64")]
         if front_fast(k) {
             // SAFETY: `front_fast` holds only where the features it needs were detected
-            return unsafe { front_avx2(b, &mut Runs::default()) }.is_none();
+            return unsafe { front_avx2(b, &b.syms, &mut Runs::default()) }.is_none();
         }
         let _ = (b, k);
         false

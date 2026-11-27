@@ -1,16 +1,17 @@
-//! Research only (`ideal-construction`): factor C (target T2) of the ideal-parts matrix.
+//! Research only (`ideal-construction`): zero-copy lock-free factor C of the ideal-parts oracles.
 //!
 //! Records Open's built structures (`Kernel::construct_capped`: `edges[..m]`, `extra`,
-//! `spelling`, `inline16[256..]`, `lens[256..]`, `predecessor`, `m`, `mark`, `bits`) by block
-//! index during a `Record` pass, sharing repeated blocks across streams. In `Replay`, skips
-//! `construct_capped` completely, copies the recorded structures once into `Kernel`'s buffers
-//! (charged to the handover), and runs `Kernel::walk` (emission) on them. Upstream MTF/RLE2
-//! still runs in full, its output discarded where construction would consume it.
+//! `spelling`, `inline16`, `lens` with the 256 literal slots pre-populated, `predecessor`, `m`,
+//! `mark`, `bits`) by block index during a `Record` pass, sharing repeated blocks across streams.
+//! Entering `Replay` freezes the store into a lock-free `OnceLock` snapshot; `with_built` borrows
+//! `&Built` directly for emission without copying any structure.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, RwLock};
 
+use super::frozen::FrozenSlot;
 use super::{Fnv1a, Mode};
 
 const INLINE: usize = 16;
@@ -20,27 +21,33 @@ static CONSTRUCTED: AtomicU64 = AtomicU64::new(0);
 static REPLAYED: AtomicU64 = AtomicU64::new(0);
 static REFUSED_REPLAYED: AtomicU64 = AtomicU64::new(0);
 
-/// Switch the construction oracle's mode for decodes started from now on
+/// Switch the construction oracle's mode for decodes started from now on.
+///
+/// Entering [`Mode::Replay`] freezes the recorded store into the lock-free `OnceLock` snapshot.
 pub fn set_mode(m: Mode) {
+    if m == Mode::Replay {
+        freeze_store();
+    }
     MODE.store(m as u8, Ordering::SeqCst);
 }
 
-/// The mode now set
+/// The mode now set.
+#[inline]
 pub fn mode() -> Mode {
     Mode::of(MODE.load(Ordering::Relaxed))
 }
 
-struct Built {
-    n: u32,
-    m: u32,
-    mark: u32,
-    bits: u32,
-    predecessor: Option<u32>,
-    edges: Box<[u32]>,
-    extra: Box<[u32]>,
-    spelling: Box<[u8]>,
-    inline16_words: Box<[[u8; INLINE]]>,
-    lens_words: Box<[u8]>,
+pub(crate) struct Built {
+    pub(crate) n: u32,
+    pub(crate) m: u32,
+    pub(crate) mark: u32,
+    pub(crate) bits: u32,
+    pub(crate) predecessor: Option<u32>,
+    pub(crate) edges: Box<[u32]>,
+    pub(crate) extra: Box<[u32]>,
+    pub(crate) spelling: Box<[u8]>,
+    pub(crate) inline16: Box<[[u8; INLINE]]>,
+    pub(crate) lens: Box<[u8]>,
 }
 
 enum Entry {
@@ -60,8 +67,8 @@ impl Built {
         edges: &[u32],
         extra: &[u32],
         spelling: &[u8],
-        inline16_words: &[[u8; INLINE]],
-        lens_words: &[u8],
+        inline16: &[[u8; INLINE]],
+        lens: &[u8],
     ) -> bool {
         self.n == n
             && self.m == m
@@ -71,8 +78,8 @@ impl Built {
             && *self.edges == *edges
             && *self.extra == *extra
             && *self.spelling == *spelling
-            && *self.inline16_words == *inline16_words
-            && *self.lens_words == *lens_words
+            && *self.inline16 == *inline16
+            && *self.lens == *lens
     }
 
     fn byte_size(&self) -> u64 {
@@ -80,8 +87,8 @@ impl Built {
             + (self.edges.len() * std::mem::size_of::<u32>()) as u64
             + (self.extra.len() * std::mem::size_of::<u32>()) as u64
             + self.spelling.len() as u64
-            + (self.inline16_words.len() * INLINE) as u64
-            + self.lens_words.len() as u64
+            + (self.inline16.len() * INLINE) as u64
+            + self.lens.len() as u64
     }
 }
 
@@ -95,8 +102,8 @@ fn hash_built(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
-    inline16_words: &[[u8; INLINE]],
-    lens_words: &[u8],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
 ) -> u64 {
     let mut h = Fnv1a::new();
     h.bytes(&[1]);
@@ -121,12 +128,12 @@ fn hash_built(
     }
     h.bytes(&(spelling.len() as u64).to_le_bytes());
     h.bytes(spelling);
-    h.bytes(&(inline16_words.len() as u64).to_le_bytes());
-    for w in inline16_words {
+    h.bytes(&(inline16.len() as u64).to_le_bytes());
+    for w in inline16 {
         h.bytes(w);
     }
-    h.bytes(&(lens_words.len() as u64).to_le_bytes());
-    h.bytes(lens_words);
+    h.bytes(&(lens.len() as u64).to_le_bytes());
+    h.bytes(lens);
     h.finish()
 }
 
@@ -139,15 +146,31 @@ struct Store {
     conflicts: u64,
 }
 
-static STORE: RwLock<Option<Store>> = RwLock::new(None);
+type Snapshot = Box<[Option<Arc<Entry>>]>;
 
-/// Empty the store
+static STORE: RwLock<Option<Store>> = RwLock::new(None);
+static FROZEN: FrozenSlot<Snapshot> = FrozenSlot::new();
+
+thread_local! {
+    static TLS: RefCell<(u64, Option<Arc<Snapshot>>)> = const { RefCell::new((0, None)) };
+}
+
+fn freeze_store() {
+    FROZEN.freeze(|| {
+        let g = STORE.read().unwrap_or_else(|e| e.into_inner());
+        let st = g.as_ref()?;
+        (!st.blocks.is_empty()).then(|| st.blocks.clone().into_boxed_slice())
+    });
+}
+
+/// Empty the store and invalidate any frozen snapshot.
 pub fn clear_store() {
     *STORE.write().unwrap_or_else(|e| e.into_inner()) = Some(Store::default());
+    FROZEN.invalidate();
 }
 
 /// The store: (blocks indexed, distinct entries, their bytes, conflicts, blocks missing below
-/// the last indexed)
+/// the last indexed).
 pub fn store_size() -> (u64, u64, u64, u64, u64) {
     let g = STORE.read().unwrap_or_else(|e| e.into_inner());
     g.as_ref().map_or((0, 0, 0, 0, 0), |s| {
@@ -163,19 +186,29 @@ pub fn store_size() -> (u64, u64, u64, u64, u64) {
     })
 }
 
-/// Real `construct_capped` executions since the last call (and reset)
+/// Real `construct_capped` executions since the last call (and reset).
 pub fn take_constructed() -> u64 {
     CONSTRUCTED.swap(0, Ordering::SeqCst)
 }
 
-/// Open blocks whose built structures were replayed since the last call (and reset)
+/// Open blocks whose built structures were replayed since the last call (and reset).
 pub fn take_replayed() -> u64 {
     REPLAYED.swap(0, Ordering::SeqCst)
 }
 
-/// Blocks whose recorded Open refusal was replayed since the last call (and reset)
+/// Blocks whose recorded Open refusal was replayed since the last call (and reset).
 pub fn take_refused_replayed() -> u64 {
     REFUSED_REPLAYED.swap(0, Ordering::SeqCst)
+}
+
+/// Fallback `RwLock` acquisitions during `Replay` since the last call (0 on the `OnceLock` path).
+pub fn take_lock_acquires() -> u64 {
+    FROZEN.take_lock_acquires()
+}
+
+/// Whether `Replay` is currently serving from the lock-free `OnceLock` fast path.
+pub fn is_frozen_lock_free() -> bool {
+    FROZEN.is_once_active()
 }
 
 pub(crate) fn count_constructed() {
@@ -193,8 +226,8 @@ pub(crate) fn record_built(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
-    inline16_words: &[[u8; INLINE]],
-    lens_words: &[u8],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
 ) {
     let h = hash_built(
         n,
@@ -205,8 +238,8 @@ pub(crate) fn record_built(
         edges,
         extra,
         spelling,
-        inline16_words,
-        lens_words,
+        inline16,
+        lens,
     );
     let mut g = STORE.write().unwrap_or_else(|e| e.into_inner());
     let st = g.get_or_insert_with(Store::default);
@@ -222,8 +255,8 @@ pub(crate) fn record_built(
                     edges,
                     extra,
                     spelling,
-                    inline16_words,
-                    lens_words,
+                    inline16,
+                    lens,
                 ),
                 Entry::Refused => false,
             })
@@ -239,8 +272,8 @@ pub(crate) fn record_built(
             edges: edges.into(),
             extra: extra.into(),
             spelling: spelling.into(),
-            inline16_words: inline16_words.into(),
-            lens_words: lens_words.into(),
+            inline16: inline16.into(),
+            lens: lens.into(),
         };
         st.bytes += built.byte_size();
         let e = Arc::new(Entry::Built(built));
@@ -263,8 +296,8 @@ pub(crate) fn record_built(
                     edges,
                     extra,
                     spelling,
-                    inline16_words,
-                    lens_words,
+                    inline16,
+                    lens,
                 ),
                 Entry::Refused => false,
             };
@@ -274,6 +307,7 @@ pub(crate) fn record_built(
         }
         None => st.blocks[i] = Some(entry),
     }
+    FROZEN.mark_dirty();
 }
 
 pub(crate) fn record_refused(index: u64) {
@@ -297,62 +331,34 @@ pub(crate) fn record_refused(index: u64) {
         Some(_) => {}
         None => st.blocks[i] = Some(entry),
     }
+    FROZEN.mark_dirty();
 }
 
-pub(crate) enum Replay {
-    Built { m: usize, mark: u32, bits: u32 },
+pub(crate) enum Replay<R> {
+    Built(R),
     Refused,
     Miss,
 }
 
-/// Hand over block `index`'s recorded built structures into `Kernel`'s buffers (one copy per
-/// structure, charged to the handover), with the lock released before copying.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn replay(
-    index: u64,
-    n: u32,
-    predecessor: &mut Option<u32>,
-    edges: &mut Vec<u32>,
-    extra: &mut Vec<u32>,
-    spelling: &mut Vec<u8>,
-    inline16: &mut Vec<[u8; INLINE]>,
-    lens: &mut Vec<u8>,
-    init_literals: impl FnOnce(usize, &mut Vec<[u8; INLINE]>, &mut Vec<u8>),
-) -> Replay {
-    let entry = {
-        let g = STORE.read().unwrap_or_else(|e| e.into_inner());
-        match g
-            .as_ref()
-            .and_then(|s| s.blocks.get(index as usize))
-            .and_then(|b| b.clone())
-        {
-            Some(e) => e,
-            None => return Replay::Miss,
+/// Zero-copy borrowed construction hand-over: borrows `&Built` straight from the lock-free
+/// frozen store (0 bytes copied) and invokes `f(&Built)`.
+pub(crate) fn with_built<R>(index: u64, n: u32, f: impl FnOnce(&Built) -> R) -> Replay<R> {
+    let res = FROZEN.with(&TLS, |blocks| {
+        let entry = blocks.get(index as usize).and_then(|b| b.as_ref());
+        match entry {
+            None => Replay::Miss,
+            Some(e) => match e.as_ref() {
+                Entry::Refused => {
+                    REFUSED_REPLAYED.fetch_add(1, Ordering::Relaxed);
+                    Replay::Refused
+                }
+                Entry::Built(b) => {
+                    debug_assert_eq!(b.n, n);
+                    REPLAYED.fetch_add(1, Ordering::Relaxed);
+                    Replay::Built(f(b))
+                }
+            },
         }
-    };
-    match entry.as_ref() {
-        Entry::Refused => {
-            REFUSED_REPLAYED.fetch_add(1, Ordering::Relaxed);
-            Replay::Refused
-        }
-        Entry::Built(b) => {
-            debug_assert_eq!(b.n, n);
-            *predecessor = b.predecessor;
-            edges.clear();
-            edges.extend_from_slice(&b.edges);
-            extra.clear();
-            extra.extend_from_slice(&b.extra);
-            spelling.clear();
-            spelling.extend_from_slice(&b.spelling);
-            init_literals(b.lens_words.len(), inline16, lens);
-            inline16.extend_from_slice(&b.inline16_words);
-            lens.extend_from_slice(&b.lens_words);
-            REPLAYED.fetch_add(1, Ordering::Relaxed);
-            Replay::Built {
-                m: b.m as usize,
-                mark: b.mark,
-                bits: b.bits,
-            }
-        }
-    }
+    });
+    res.unwrap_or(Replay::Miss)
 }

@@ -63,9 +63,19 @@ const RUN_SHARE: usize = 32;
 ///
 /// Every block this admits, `2 * syms <= max_len` admits too.
 pub fn takes_runs(b: &Symbols) -> bool {
-    let syms = &b.syms;
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| takes_runs_slice(b.max_len, syms))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        takes_runs_slice(b.max_len, &b.syms)
+    }
+}
+
+fn takes_runs_slice(max_len: usize, syms: &[u16]) -> bool {
     let len = syms.len();
-    if b.max_len >= (1 << 24) || 2 * len > b.max_len {
+    if max_len >= (1 << 24) || 2 * len > max_len {
         return false;
     }
     if len <= WINDOW * WINDOWS {
@@ -109,6 +119,9 @@ pub fn takes_runs(b: &Symbols) -> bool {
 pub struct Runs {
     /// the runs of L in L order, cut at CAP: byte << 8 | length
     runs: Vec<u16>,
+    /// (research only, `ideal-mtf`) zero-copy shared run records replayed from the frozen store
+    #[cfg(feature = "ideal-mtf")]
+    shared_runs: Option<std::sync::Arc<[u16]>>,
     /// each byte's rows, and its records
     counts: [u32; 256],
     per: [u32; 256],
@@ -121,6 +134,8 @@ impl Default for Runs {
     fn default() -> Self {
         Runs {
             runs: Vec::new(),
+            #[cfg(feature = "ideal-mtf")]
+            shared_runs: None,
             counts: [0; 256],
             per: [0; 256],
             lit: Vec::new(),
@@ -130,10 +145,19 @@ impl Default for Runs {
 }
 
 impl Runs {
+    #[inline]
+    fn records_slice(&self) -> &[u16] {
+        #[cfg(feature = "ideal-mtf")]
+        if let Some(ref s) = self.shared_runs {
+            return s;
+        }
+        &self.runs
+    }
+
     /// Read-only records for the experimental cells kernel; format unchanged.
     #[cfg(not(feature = "moonshot"))]
     pub(crate) fn records(&self) -> &[u16] {
-        &self.runs
+        self.records_slice()
     }
 
     /// Research only (`moonshot`): the same records, public, so that a candidate kernel built
@@ -142,7 +166,7 @@ impl Runs {
     #[cfg(feature = "moonshot")]
     #[doc(hidden)]
     pub fn records(&self) -> &[u16] {
-        &self.runs
+        self.records_slice()
     }
 
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
@@ -159,14 +183,18 @@ impl Runs {
     /// (research only, `ideal-mtf`) The run-records representation of L produced by `front`
     #[cfg(feature = "ideal-mtf")]
     pub(crate) fn snapshot(&self) -> (&[u16], &[u32; 256], &[u32; 256]) {
-        (&self.runs, &self.counts, &self.per)
+        (self.records_slice(), &self.counts, &self.per)
     }
 
-    /// (research only, `ideal-mtf`) Hand over recorded run records into `self` (one copy)
+    /// (research only, `ideal-mtf`) Zero-copy handover of recorded run records via `Arc<[u16]>`
     #[cfg(feature = "ideal-mtf")]
-    pub(crate) fn load_snapshot(&mut self, runs: &[u16], counts: &[u32; 256], per: &[u32; 256]) {
-        self.runs.clear();
-        self.runs.extend_from_slice(runs);
+    pub(crate) fn load_shared(
+        &mut self,
+        runs: std::sync::Arc<[u16]>,
+        counts: &[u32; 256],
+        per: &[u32; 256],
+    ) {
+        self.shared_runs = Some(runs);
         self.counts = *counts;
         self.per = *per;
     }
@@ -231,21 +259,56 @@ fn front_fast(k: Kernels) -> bool {
 /// table that repeats a byte, two adjacent records could share it, which is still the column
 /// (`sort` and `fill` don't need the runs maximal).
 pub fn front(b: &Symbols, r: &mut Runs, k: Kernels) -> Result<usize, ErrorKind> {
+    #[cfg(feature = "ideal-mtf")]
+    {
+        r.shared_runs = None;
+    }
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| front_with_syms(b, syms, r, k))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        front_with_syms(b, &b.syms, r, k)
+    }
+}
+
+fn front_with_syms(
+    b: &Symbols,
+    syms: &[u16],
+    r: &mut Runs,
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
     #[cfg(target_arch = "x86_64")]
     if front_fast(k) {
         // SAFETY: `front_fast` holds only when AVX2, BMI1, BMI2, LZCNT and POPCNT were
         // detected (`Kernels::avx2` is set only when AVX2 and BMI1 were)
-        if let Some(n) = unsafe { front_avx2(b, r) } {
+        if let Some(n) = unsafe { front_avx2(b, syms, r) } {
             return Ok(n);
         }
     }
     let _ = k;
-    front_scalar(b, r)
+    front_scalar_with_syms(b, syms, r)
 }
 
 /// The scalar front: `mtf::mtf_scalar`'s loop, checks and errors, a literal opening a record
 /// and a count extending the open one (or opening the block's first)
 pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
+    #[cfg(feature = "ideal-mtf")]
+    {
+        r.shared_runs = None;
+    }
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| front_scalar_with_syms(b, syms, r))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        front_scalar_with_syms(b, &b.syms, r)
+    }
+}
+
+fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usize, ErrorKind> {
     fn close(open: (u8, u32), runs: &mut Vec<u16>, per: &mut [u32; 256]) {
         let (c, mut left) = open;
         while left > 0 {
@@ -264,7 +327,7 @@ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
     let mut n = 0usize;
     // the open run's byte and length: empty only before the block's first row
     let mut open = (0u8, 0u32);
-    for &s in &b.syms {
+    for &s in syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
                 return Err(ErrorKind::RunTooLong);
@@ -433,10 +496,10 @@ unsafe fn second(
 /// AVX2, BMI1, BMI2, LZCNT and POPCNT must be available.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
-unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
+unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
     use std::arch::x86_64::*;
-    let m = b.syms.len();
-    let sp = b.syms.as_ptr();
+    let m = syms.len();
+    let sp = syms.as_ptr();
     if b.max_len >= 1 << 31 || m >= 1 << 24 {
         return None;
     }
@@ -489,7 +552,7 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
     if end == usize::MAX {
         // the last symbols, fewer than 32
         let (mut l, mut o) = (0u32, 0u32);
-        for (t, &s) in b.syms[ci * 32..].iter().enumerate() {
+        for (t, &s) in syms[ci * 32..].iter().enumerate() {
             o |= ((s != 0) as u32) << t;
             if s > 1 {
                 if s == b.eob {
@@ -723,15 +786,16 @@ pub fn fill(r: &Runs, n: usize, tt: &mut TVector, k: Kernels) -> bool {
     if cum != n as u64 {
         return false;
     }
+    let runs = r.records_slice();
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
             // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
-            return unsafe { fill_avx2(&r.runs, n as u32, next, &lim, &mut tt.0) };
+            return unsafe { fill_avx2(runs, n as u32, next, &lim, &mut tt.0) };
         }
     }
     let _ = k;
-    fill_scalar(&r.runs, n as u32, next, &lim, &mut tt.0)
+    fill_scalar(runs, n as u32, next, &lim, &mut tt.0)
 }
 
 /// The fill in safe code: each entry pushed
@@ -846,7 +910,7 @@ pub(crate) struct Cut {
 /// A piece's work is taken as a store for each 8 rows and one more for each record.
 pub(crate) fn cuts(r: &Runs, n: usize, out: &mut Vec<Cut>) -> bool {
     out.clear();
-    let runs = &r.runs;
+    let runs = r.records_slice();
     // (below 2^24 records of at most 255 rows: the sums below fit 32 bits)
     if n >= 1 << 24 || runs.len() >= 1 << 24 {
         return false;
@@ -931,7 +995,7 @@ pub(crate) fn cuts_tile(r: &Runs, n: usize, cuts: &[Cut]) -> bool {
     if cum != n as u64 || first.rec != 0 || first.row != 0 {
         return false;
     }
-    if last.rec != r.runs.len() || last.row as usize != n {
+    if last.rec != r.records_slice().len() || last.row as usize != n {
         return false;
     }
     if last.next.iter().any(|&v| v as usize > n) {
@@ -961,7 +1025,7 @@ pub(crate) fn cuts_tile(r: &Runs, n: usize, cuts: &[Cut]) -> bool {
 /// `out` must be valid for writes of `to.row` slots, and no other thread may read or write
 /// slots `from.row .. to.row` during the call.
 pub(crate) unsafe fn fill_share(r: &Runs, from: &Cut, to: &Cut, out: *mut u32, k: Kernels) -> bool {
-    let Some(runs) = r.runs.get(from.rec..to.rec) else {
+    let Some(runs) = r.records_slice().get(from.rec..to.rec) else {
         return false;
     };
     if from.row > to.row || from.next.iter().zip(&to.next).any(|(a, b)| a > b) {

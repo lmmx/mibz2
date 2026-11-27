@@ -3,7 +3,7 @@ title = "Fused A6b setup, safe 64K u16-link inline15 SoA induction, and generati
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 2
+priority = 1
 status = "open"
 owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
 mechanisms = ["construction-induction-dict"]
@@ -17,6 +17,8 @@ Implement the combined `A6b` redesign in `src/open/endpoint.rs` (and the strip h
 3. Generation-tagged L1d-hot `contents[4096]` (16 KiB) + `pairs[1024]` (8 KiB, long words only) eliminating per-block 24 KiB zero-fill, direct `u128` short-word extraction, node-cached outer band loop, `bottom` stored in dead `(prev1, next1)` `u16` pair, and dead `stats` gated behind `#[cfg(any(test, feature = "census"))]`.
 """
 why = """
+27 November: P1 because #1053 has passed CI and hardware evidence on worker demand unlocks downstream hybrid-scan decisions. Complete independent C6 review and executable recipe; queue under standing authorisation, preserving the existing registration.
+
 `C-A6b` (`216.0 ms` at 1W, `30.4 ms/w` at 8W) is the largest unheld worker-side construction phase. Realising `~50–65 ms` at 1W (`~8–9 ms/worker` at 8W) composes additively with `mtf-fold-build` (A5+A6a) and `forward-emission` (A6c+A7) and uses 100% safe Rust with zero `A7` regression.
 """
 stop_test = """

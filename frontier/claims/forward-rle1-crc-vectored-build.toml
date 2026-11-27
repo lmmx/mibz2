@@ -3,7 +3,7 @@ title = "4-lane vectored forward emission with zero-scratch in-place RLE1+CRC fu
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 3
+priority = 2
 status = "idea"
 owned_paths = ["src/open.rs", "src/rle.rs", "src/crc.rs", "src/parallel.rs"]
 mechanisms = ["rle1-crc", "emission-walk"]
@@ -16,6 +16,7 @@ Once `forward-emission` lands 4-lane forward anchors on `src/open.rs`, implement
 3. Vectored 4-slice block delivery in `src/parallel.rs` (draining the 4 lane slices directly into caller output without stitching into a single `Vec<u8>`, preserving `BufRead` zero-copy semantics without changing public API compatibility).
 """
 why = """
+Priority 3 -> 2 (synthesis ninth pass, 27 Nov): with #1069 projecting post-#1034 serial S' to ~134-139 ms, the composed worker stack (#1062/#1067: W'/8 ~134.7 ms native warm, 140.0-145.5 ms L3-cold) is now the binding station at the 8-worker knee, and A7+A9 is 46% of the composed W4. This build is the integration step those stacks depend on. #1067 fixes its slab: cold-outlined `compact_and_crc_slab` at 32 KiB (adopt); 64 KiB regresses A7+A9 by +12..+25 ms (reject, contrary to #1062's suggestion). #1068 keeps the unified branchless `inline16[code]` dict path.
 Standalone single-pass RLE1+CRC hit a 72.3% compute floor (`single-pass-rle1-crc` STOP), and 4-lane stitched fusion loses to `74.9%` `memmove` (`-18.6%` writes). Vectored 4-lane tile fusion is the only tested path that breaks the standalone `A9` floor while preserving 4-lane MLP, cutting projected 1W `E+A9` by `~32-50 ms` (`+2.4-3.8%` of 1,306 ms wall) and removing `918 MiB` (`-53.4%`) of worker L3 write traffic on `wikidata x4`—directly attacking the worker-footprint LLC pressure (`k*W_worker`) that drives `A9`'s `2.55x` blow-up at 8-10W (`worker-l3-footprint`).
 """
 stop_test = """
