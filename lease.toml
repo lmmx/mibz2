@@ -1,9 +1,9 @@
-id = "forward-4lane-anchor-probe"
+id = "a6b-endpoint-build"
 holder = "antigravity"
-session = "c0daa21dc759"
-claimed_at = "2026-11-27T02:08:11+00:00"
-expires = "2026-11-27T10:08:11+00:00"
-owned_paths = []
-mechanisms = ["forward-anchor-wiring"]
-base = "f2845b84bd3e8958745488f34af644d55481d005"
+session = "0124fb0b68ba"
+claimed_at = "2026-11-27T02:09:55+00:00"
+expires = "2026-11-27T10:09:55+00:00"
+owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
+mechanisms = ["construction-induction-dict"]
+base = "0eaf87f993ed7d6156bb48e5d608428ce0304253"
 released = false
