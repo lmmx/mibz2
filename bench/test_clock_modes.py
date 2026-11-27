@@ -63,6 +63,7 @@ def make_factorial_rows(
     prespin_ms_values: tuple[int, ...] = cm.DEFAULT_PRESPIN_MS,
     wall_fn=None,
     cycles_fn=None,
+    instructions_fn=None,
 ) -> list[dict]:
     """Generate a complete synthetic factorial dataset matching `factorial_plan`."""
     plan = cm.factorial_plan(
@@ -77,9 +78,17 @@ def make_factorial_rows(
         t = item["threads"]
         base_wall = 1.380 if t == 1 else 0.244
         base_cycles = 7_000_000_000 if t == 1 else 7_200_000_000
+        base_ins = int(base_cycles * 1.4)
         wall = wall_fn(item, base_wall) if wall_fn else base_wall
         cycles = cycles_fn(item, base_cycles) if cycles_fn else base_cycles
+        ins = (
+            instructions_fn(item, base_ins)
+            if instructions_fn
+            else (base_ins if cycles is not None else None)
+        )
         cpb = (cycles / REF["wall_out"]) if cycles is not None else None
+        ipb = (ins / REF["wall_out"]) if ins is not None else None
+        cpi = (cycles / ins) if (cycles is not None and ins) else None
         rows.append(
             {
                 **item,
@@ -93,12 +102,14 @@ def make_factorial_rows(
                 "err": "",
                 "termination": "success",
                 "cycles": cycles,
-                "instructions": int(cycles * 1.4) if cycles is not None else None,
+                "instructions": ins,
                 "ref_cycles": int(wall * 3_700_000_000) if cycles is not None else None,
                 "cycles_per_ref": round(cycles / (wall * 3_700_000_000), 4)
                 if cycles is not None
                 else None,
                 "cycles_per_byte": round(cpb, 6) if cpb is not None else None,
+                "instructions_per_byte": round(ipb, 6) if ipb is not None else None,
+                "cpi": round(cpi, 4) if cpi is not None else None,
                 "perf_available": cycles is not None,
                 "perf_source": "ab_perf" if cycles is not None else "none",
                 "placement": {
@@ -213,8 +224,9 @@ class StopTestClassifierTests(unittest.TestCase):
         res_75 = cm.score(build_with_unpinned_count(15), REF)
         self.assertEqual(res_75["verdict"], "STOP")
 
-    def test_pass_mode_is_real_work_when_cycles_ge_1_2x(self):
-        # Slow 6T unpinned runs execute 1.28x cycles -> contention/placement, not clock.
+    def test_pass_mode_is_real_work_separates_slow_cpi_from_slow_instructions(self):
+        # 1. Uncore-clock / memory-stall / contention signature (`slow_cpi`):
+        #    cycles/byte = 1.28x while instructions/byte stays at 1.00x (CPI = 1.28x).
         def wall_fn(item, base):
             if item["threads"] == 6 and item["pinning"] == "unpinned":
                 return base * 1.40
@@ -225,13 +237,37 @@ class StopTestClassifierTests(unittest.TestCase):
                 return int(base_c * 1.28)
             return base_c
 
-        rows = make_factorial_rows(wall_fn=wall_fn, cycles_fn=cycles_fn)
-        res = cm.score(rows, REF)
-        self.assertEqual(res["verdict"], "PASS (mode is real work)")
-        pt6 = res["per_thread"]["6"]
-        self.assertEqual(pt6["mode_counts"]["slow_work"], 48)
-        self.assertEqual(pt6["mode_counts"]["slow_clock"], 0)
-        self.assertGreaterEqual(pt6["median_slow_cpb_ratio"], 1.20)
+        rows_cpi = make_factorial_rows(wall_fn=wall_fn, cycles_fn=cycles_fn)
+        res_cpi = cm.score(rows_cpi, REF)
+        self.assertEqual(res_cpi["verdict"], "PASS (mode is real work)")
+        pt6_cpi = res_cpi["per_thread"]["6"]
+        self.assertEqual(pt6_cpi["mode_counts"]["slow_work"], 48)
+        self.assertEqual(pt6_cpi["mode_counts"]["slow_clock"], 0)
+        self.assertEqual(pt6_cpi["work_sub_counts"]["slow_cpi"], 48)
+        self.assertEqual(pt6_cpi["work_sub_counts"]["slow_instructions"], 0)
+        self.assertEqual(pt6_cpi["work_diagnosis"], "uncore_or_memory_stall")
+        self.assertGreaterEqual(pt6_cpi["median_slow_cpb_ratio"], 1.20)
+        self.assertAlmostEqual(pt6_cpi["median_slow_ipb_ratio"], 1.0, places=3)
+        self.assertGreaterEqual(pt6_cpi["median_slow_cpi_ratio"], 1.20)
+        self.assertIn("uncore_or_memory_stall", cm.format_summary(res_cpi))
+
+        # 2. Extra executed instructions signature (`slow_instructions`, e.g. spin/retry loop):
+        #    cycles/byte = 1.28x AND instructions/byte = 1.25x (>= 1.15x).
+        def ins_fn(item, base_ins):
+            if item["threads"] == 6 and item["pinning"] == "unpinned":
+                return int(base_ins * 1.25)
+            return base_ins
+
+        rows_ins = make_factorial_rows(wall_fn=wall_fn, cycles_fn=cycles_fn, instructions_fn=ins_fn)
+        res_ins = cm.score(rows_ins, REF)
+        self.assertEqual(res_ins["verdict"], "PASS (mode is real work)")
+        pt6_ins = res_ins["per_thread"]["6"]
+        self.assertEqual(pt6_ins["mode_counts"]["slow_work"], 48)
+        self.assertEqual(pt6_ins["work_sub_counts"]["slow_instructions"], 48)
+        self.assertEqual(pt6_ins["work_sub_counts"]["slow_cpi"], 0)
+        self.assertEqual(pt6_ins["work_diagnosis"], "extra_instructions")
+        self.assertGreaterEqual(pt6_ins["median_slow_ipb_ratio"], 1.15)
+        self.assertIn("extra_instructions", cm.format_summary(res_ins))
 
     def test_stop_when_unimodal_or_uniform_or_no_perf_or_single_outlier(self):
         # 1. Completely unimodal -> STOP

@@ -44,7 +44,7 @@ This single discriminating i9 run isolates **pinning**, **settle gap**, and **pa
 Every timed child (`ab child mibz2 <t> <wikidata-x4>` with `AB_MACHINE_STATE=1`) records:
 
 1. **Timing, CPU, memory & correctness:** `wall`, `cpu` (net of sampler), `user_s`, `sys_s` (via `os.wait4`), `rss_kb`, `parent_rss_kb`, `out`, `hash`, `sha256`, `threads_busy`, `thread_cpu`, `runq_s`, `err`.
-2. **Hardware counters (frequency vs work):** `ab`'s in-child inherited `perf_event_open` counters (`cycles`, `instructions`, `ref_cycles`, `task_clock_s`, `eff_ghz`, `cycles_per_ref`, `cycles_per_byte`, `perf_multiplexed`, `perf_running`). If `ab_perf` is unavailable (e.g., on restricted VMs), `bench/clock_modes.py` falls back cleanly in order to `perf stat -x,` -> `/dev/cpu/*/msr` (APERF `0xE8` / MPERF `0xE7`) -> explicit `perf_available: false` with reason.
+2. **Hardware counters (core clock vs uncore/memory stall vs extra instructions):** `ab`'s in-child inherited `perf_event_open` counters (`cycles`, `instructions`, `ref_cycles`, `task_clock_s`, `eff_ghz`, `cycles_per_ref`, `cycles_per_byte`, `instructions_per_byte`, `cpi = cycles / instructions`, `perf_multiplexed`, `perf_running`). If `ab_perf` is unavailable (e.g., on restricted VMs), `bench/clock_modes.py` falls back cleanly in order to `perf stat -x,` -> `/dev/cpu/*/msr` (APERF `0xE8` / MPERF `0xE7`) -> explicit `perf_available: false` with reason.
 3. **Sampled per-thread CPU placement:** Parent sampler polls `/proc/<pid>/task/*/stat` (field 39, `processor`) at 5 ms intervals throughout every `1T` and `6T` child's lifetime, recording `sample_count`, `cpus_sampled`, `n_distinct_cpus`, `n_distinct_cores`, `smt_sibling_overlap_samples` (two decoder threads simultaneously on SMT siblings of one physical core), `migrations`, and `per_tid_cpus`.
 4. **Best-effort sysfs state:** `scaling_cur_freq`, `scaling_governor`, `energy_performance_preference`, and `intel_pstate/no_turbo` before and after each child.
 
@@ -53,18 +53,20 @@ Every timed child (`ab child mibz2 <t> <wikidata-x4>` with `AB_MACHINE_STATE=1`)
 For each thread count $t \in \{1, 6\}$ independently:
 
 1. **Fast-mode anchor:** Anchor `fast_wall_median` robustly on the lower cluster (seed at the 5th-percentile sorted wall; take the median of all runs below `seed * wall_threshold`, where `wall_threshold` is `1.04` for `1T` and `1.30` for `6T`).
-2. **Per-run mode classification:**
+2. **Per-run mode classification (frozen C2 thresholds intact) and three-way physical sub-diagnostics:**
    - `fast`: `wall < fast_wall_median * wall_threshold`.
    - Among wall-slow runs (`wall >= fast_wall_median * wall_threshold`), compare `cpb_ratio = (cycles / out) / fast_cpb_median`:
-     - `slow_clock`: `|cpb_ratio - 1.0| <= 0.03` (clock/frequency drop; executed work unchanged).
-     - `slow_work`: `cpb_ratio >= 1.20` (real extra work: contention or placement).
+     - **`slow_clock` (core-clock slowdown):** `|cpb_ratio - 1.0| <= 0.03` (core frequency drop; executed cycles per byte unchanged, corroborated by lower `cycles_per_ref`).
+     - **`slow_work` (`cpb_ratio >= 1.20`, triggers frozen `PASS (mode is real work)`):** further decomposed using `ipb_ratio = (instructions / out) / fast_ipb_median` and `cpi = cycles / instructions` so low uncore clock / memory stalls are separated from extra executed instructions:
+       - **`slow_cpi` (`uncore_or_memory_stall`):** `cpb_ratio >= 1.20` while `|ipb_ratio - 1.0| <= 0.03` (`CPI >= 1.20x` at unchanged instruction count — low uncore/ring clock, L3/memory stall, or SMT/cache contention).
+       - **`slow_instructions` (`extra_instructions`):** `ipb_ratio >= 1.15` (genuinely extra executed instructions, e.g. spin-loop or retry work).
      - `slow_mixed`: wall-slow with `cpb_ratio` outside `±3%` and `< 1.20`.
      - `slow_unclassified`: wall-slow with PMU cycles unavailable.
 3. **Factor / two-way interaction explanation:** Evaluate every single-factor level (`pinning`, `settle_s`, `pair_pos`) and every two-way interaction cell (`pinning x settle_s`, `pinning x pair_pos`, `settle_s x pair_pos`) for `explained_share = slow_clock_in_cell / n_slow_clock`, requiring `explained_share >= 0.80` and `slow_rate > complement_slow_rate`, with a minimum noise guard `min_slow_runs = 3` (so a single stray outlier out of 96 runs cannot falsely trigger `1/1 = 100%`).
 4. **Verdict:**
    - **VOID** if any prerequisite or data-integrity invariant fails (non-i9 host, restricted affinity or CPU quota, dirty tracked tree, wrong `rustc`, non-empty `RUSTFLAGS`, corpus/parity mismatch, missing/duplicate cell, decode error, non-finite wall/RSS).
    - **PASS (mechanism found)** if either `1T` or `6T` has `>= 3` `slow_clock` runs and one factor or two-way interaction explains `>= 80%` of them.
-   - **PASS (mode is real work)** if either `1T` or `6T` has `>= 3` wall-slow runs where slow runs execute `>= 1.2x` the cycles of fast runs (`slow_work` >= 50% of wall-slow or median `cpb_ratio >= 1.20`).
+   - **PASS (mode is real work)** if either `1T` or `6T` has `>= 3` wall-slow runs where slow runs execute `>= 1.2x` the cycles of fast runs (`slow_work` >= 50% of wall-slow or median `cpb_ratio >= 1.20`), annotated with its `slow_cpi` vs `slow_instructions` sub-diagnosis.
    - **STOP** otherwise, with the full per-cell table and ANOVA `eta^2` recorded.
 
 ## 6. Mode-robust estimator for `ab` comparisons

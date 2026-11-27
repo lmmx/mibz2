@@ -56,6 +56,8 @@ SAMPLE_INTERVAL_S = 0.005
 WALL_SLOW_RATIO = {1: 1.04, 6: 1.30}
 CYCLES_PER_BYTE_TOL = 0.03
 REAL_WORK_CYCLES_RATIO = 1.20
+INSTRUCTIONS_PER_BYTE_TOL = 0.03
+EXTRA_INSTRUCTIONS_RATIO = 1.15
 EXPLAIN_THRESHOLD = 0.80
 MIN_SLOW_RUNS = 3
 
@@ -815,6 +817,22 @@ def run_one_child(
         and cycles > 0
         else None
     )
+    instructions_per_byte = (
+        round(instructions / out_bytes, 6)
+        if isinstance(instructions, (int, float))
+        and isinstance(out_bytes, int)
+        and out_bytes > 0
+        and instructions > 0
+        else None
+    )
+    cpi = (
+        round(cycles / instructions, 4)
+        if isinstance(cycles, (int, float))
+        and isinstance(instructions, (int, float))
+        and cycles > 0
+        and instructions > 0
+        else None
+    )
 
     return {
         **child_row,
@@ -832,6 +850,8 @@ def run_one_child(
         "ref_cycles": ref_cycles,
         "cycles_per_ref": cycles_per_ref,
         "cycles_per_byte": cycles_per_byte,
+        "instructions_per_byte": instructions_per_byte,
+        "cpi": cpi,
         "perf_available": perf_available,
         "perf_source": effective_perf_source,
         "perf_unavailable_reason": perf_reason,
@@ -897,8 +917,67 @@ def _row_cpb(row: dict[str, Any]) -> float | None:
     return None
 
 
+def _row_ipb(row: dict[str, Any]) -> float | None:
+    ipb = row.get("instructions_per_byte")
+    if isinstance(ipb, (int, float)) and math.isfinite(ipb) and ipb > 0:
+        return float(ipb)
+    ins = row.get("instructions")
+    out_b = row.get("out")
+    if (
+        isinstance(ins, (int, float))
+        and isinstance(out_b, (int, float))
+        and math.isfinite(ins)
+        and ins > 0
+        and out_b > 0
+    ):
+        return float(ins) / float(out_b)
+    return None
+
+
+def _row_cpi(row: dict[str, Any]) -> float | None:
+    cpi = row.get("cpi")
+    if isinstance(cpi, (int, float)) and math.isfinite(cpi) and cpi > 0:
+        return float(cpi)
+    cycles = row.get("cycles")
+    ins = row.get("instructions")
+    if (
+        isinstance(cycles, (int, float))
+        and isinstance(ins, (int, float))
+        and math.isfinite(cycles)
+        and math.isfinite(ins)
+        and cycles > 0
+        and ins > 0
+    ):
+        return float(cycles) / float(ins)
+    return None
+
+
+def _row_cpr(row: dict[str, Any]) -> float | None:
+    cpr = row.get("cycles_per_ref")
+    if isinstance(cpr, (int, float)) and math.isfinite(cpr) and cpr > 0:
+        return float(cpr)
+    cycles = row.get("cycles")
+    ref_c = row.get("ref_cycles")
+    if (
+        isinstance(cycles, (int, float))
+        and isinstance(ref_c, (int, float))
+        and math.isfinite(cycles)
+        and math.isfinite(ref_c)
+        and cycles > 0
+        and ref_c > 0
+    ):
+        return float(cycles) / float(ref_c)
+    return None
+
+
 def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, Any]:
-    """Classify rows for a single thread count into fast / slow_clock / slow_work / slow_mixed."""
+    """Classify rows for a single thread count into fast / slow_clock / slow_work / slow_mixed.
+
+    Also computes sub-diagnostics on `slow_work` runs (`slow_cpi` vs `slow_instructions`) via
+    `instructions_per_byte`, `cpi = cycles / instructions`, and `cycles_per_ref` so uncore-clock
+    or memory-stall slowdowns are separated from extra executed instructions without altering
+    the frozen C2 verdict thresholds.
+    """
     threshold = wall_slow_threshold(threads)
     walls = [float(r["wall"]) for r in rows]
     fast_wall_med = _fast_cluster_anchor(walls, threshold)
@@ -909,15 +988,42 @@ def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, 
         for r, is_slow in zip(rows, wall_slow_flags, strict=True)
         if not is_slow and (cpb := _row_cpb(r)) is not None
     ]
+    fast_ipbs = [
+        ipb
+        for r, is_slow in zip(rows, wall_slow_flags, strict=True)
+        if not is_slow and (ipb := _row_ipb(r)) is not None
+    ]
+    fast_cpis = [
+        cpi
+        for r, is_slow in zip(rows, wall_slow_flags, strict=True)
+        if not is_slow and (cpi := _row_cpi(r)) is not None
+    ]
+    fast_cprs = [
+        cpr
+        for r, is_slow in zip(rows, wall_slow_flags, strict=True)
+        if not is_slow and (cpr := _row_cpr(r)) is not None
+    ]
     fast_cpb_med = statistics.median(fast_cpbs) if fast_cpbs else None
+    fast_ipb_med = statistics.median(fast_ipbs) if fast_ipbs else None
+    fast_cpi_med = statistics.median(fast_cpis) if fast_cpis else None
+    fast_cpr_med = statistics.median(fast_cprs) if fast_cprs else None
     perf_covered = sum(1 for r in rows if _row_cpb(r) is not None)
 
     classified: list[dict[str, Any]] = []
     counts = defaultdict(int)
+    work_sub_counts = defaultdict(int)
     for r, is_wall_slow in zip(rows, wall_slow_flags, strict=True):
         wall_ratio = float(r["wall"]) / fast_wall_med
         cpb = _row_cpb(r)
+        ipb = _row_ipb(r)
+        cpi = _row_cpi(r)
+        cpr = _row_cpr(r)
         cpb_ratio = (cpb / fast_cpb_med) if (cpb is not None and fast_cpb_med) else None
+        ipb_ratio = (ipb / fast_ipb_med) if (ipb is not None and fast_ipb_med) else None
+        cpi_ratio = (cpi / fast_cpi_med) if (cpi is not None and fast_cpi_med) else None
+        cpr_ratio = (cpr / fast_cpr_med) if (cpr is not None and fast_cpr_med) else None
+
+        work_subclass: str | None = None
         if not is_wall_slow:
             mode = "fast"
         elif cpb_ratio is None:
@@ -926,6 +1032,15 @@ def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, 
             mode = "slow_clock"
         elif cpb_ratio >= REAL_WORK_CYCLES_RATIO:
             mode = "slow_work"
+            if ipb_ratio is None:
+                work_subclass = "slow_work_no_instructions"
+            elif ipb_ratio >= EXTRA_INSTRUCTIONS_RATIO:
+                work_subclass = "slow_instructions"
+            elif abs(ipb_ratio - 1.0) <= INSTRUCTIONS_PER_BYTE_TOL:
+                work_subclass = "slow_cpi"
+            else:
+                work_subclass = "slow_work_other"
+            work_sub_counts[work_subclass] += 1
         else:
             mode = "slow_mixed"
         counts[mode] += 1
@@ -933,10 +1048,17 @@ def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, 
             {
                 "row": r,
                 "mode": mode,
+                "work_subclass": work_subclass,
                 "is_wall_slow": is_wall_slow,
                 "wall_ratio": wall_ratio,
                 "cpb": cpb,
                 "cpb_ratio": cpb_ratio,
+                "ipb": ipb,
+                "ipb_ratio": ipb_ratio,
+                "cpi": cpi,
+                "cpi_ratio": cpi_ratio,
+                "cpr": cpr,
+                "cpr_ratio": cpr_ratio,
             }
         )
 
@@ -945,6 +1067,9 @@ def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, 
         "wall_slow_threshold": threshold,
         "fast_wall_median_s": fast_wall_med,
         "fast_cpb_median": fast_cpb_med,
+        "fast_ipb_median": fast_ipb_med,
+        "fast_cpi_median": fast_cpi_med,
+        "fast_cpr_median": fast_cpr_med,
         "perf_covered_runs": perf_covered,
         "total_runs": len(rows),
         "mode_counts": {
@@ -953,6 +1078,12 @@ def classify_thread_rows(rows: list[dict[str, Any]], threads: int) -> dict[str, 
             "slow_work": counts["slow_work"],
             "slow_mixed": counts["slow_mixed"],
             "slow_unclassified": counts["slow_unclassified"],
+        },
+        "work_sub_counts": {
+            "slow_cpi": work_sub_counts["slow_cpi"],
+            "slow_instructions": work_sub_counts["slow_instructions"],
+            "slow_work_other": work_sub_counts["slow_work_other"],
+            "slow_work_no_instructions": work_sub_counts["slow_work_no_instructions"],
         },
         "classified": classified,
     }
@@ -1074,11 +1205,9 @@ def _cell_table(classified: list[dict[str, Any]]) -> list[dict[str, Any]]:
         walls = [float(i["row"]["wall"]) for i in items]
         cpus = [float(i["row"]["cpu"]) for i in items if i["row"].get("cpu") is not None]
         cpbs = [i["cpb"] for i in items if i["cpb"] is not None]
-        cprs = [
-            float(i["row"]["cycles_per_ref"])
-            for i in items
-            if isinstance(i["row"].get("cycles_per_ref"), (int, float))
-        ]
+        ipbs = [i["ipb"] for i in items if i["ipb"] is not None]
+        cpis = [i["cpi"] for i in items if i["cpi"] is not None]
+        cprs = [i["cpr"] for i in items if i["cpr"] is not None]
         distinct_cpus = [
             i["row"]["placement"]["n_distinct_cpus"]
             for i in items
@@ -1103,10 +1232,16 @@ def _cell_table(classified: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "max_wall_s": round(max(walls), 4),
                 "median_cpu_s": round(statistics.median(cpus), 4) if cpus else None,
                 "median_cpb": round(statistics.median(cpbs), 4) if cpbs else None,
+                "median_ipb": round(statistics.median(ipbs), 4) if ipbs else None,
+                "median_cpi": round(statistics.median(cpis), 4) if cpis else None,
                 "median_cycles_per_ref": round(statistics.median(cprs), 4) if cprs else None,
                 "n_fast": sum(1 for i in items if i["mode"] == "fast"),
                 "n_slow_clock": sum(1 for i in items if i["mode"] == "slow_clock"),
                 "n_slow_work": sum(1 for i in items if i["mode"] == "slow_work"),
+                "n_slow_cpi": sum(1 for i in items if i["work_subclass"] == "slow_cpi"),
+                "n_slow_instructions": sum(
+                    1 for i in items if i["work_subclass"] == "slow_instructions"
+                ),
                 "n_slow_mixed": sum(1 for i in items if i["mode"] == "slow_mixed"),
                 "n_slow_unclassified": sum(1 for i in items if i["mode"] == "slow_unclassified"),
                 "median_distinct_cpus": statistics.median(distinct_cpus) if distinct_cpus else None,
@@ -1187,19 +1322,49 @@ def score(
     for t in threads:
         cls = classify_thread_rows(by_threads[t], t)
         mc = cls["mode_counts"]
+        wsc = cls["work_sub_counts"]
         factor_eval = evaluate_factors(cls["classified"], target_mode="slow_clock")
         wall_slow_items = [i for i in cls["classified"] if i["is_wall_slow"]]
         wall_slow_cpb_ratios = [
             i["cpb_ratio"] for i in wall_slow_items if i["cpb_ratio"] is not None
         ]
+        wall_slow_ipb_ratios = [
+            i["ipb_ratio"] for i in wall_slow_items if i["ipb_ratio"] is not None
+        ]
+        wall_slow_cpi_ratios = [
+            i["cpi_ratio"] for i in wall_slow_items if i["cpi_ratio"] is not None
+        ]
+        wall_slow_cpr_ratios = [
+            i["cpr_ratio"] for i in wall_slow_items if i["cpr_ratio"] is not None
+        ]
         median_slow_cpb_ratio = (
             round(statistics.median(wall_slow_cpb_ratios), 4) if wall_slow_cpb_ratios else None
         )
+        median_slow_ipb_ratio = (
+            round(statistics.median(wall_slow_ipb_ratios), 4) if wall_slow_ipb_ratios else None
+        )
+        median_slow_cpi_ratio = (
+            round(statistics.median(wall_slow_cpi_ratios), 4) if wall_slow_cpi_ratios else None
+        )
+        median_slow_cpr_ratio = (
+            round(statistics.median(wall_slow_cpr_ratios), 4) if wall_slow_cpr_ratios else None
+        )
+
+        # Sub-diagnosis for slow_work runs: separate uncore/memory-stall CPI inflation from
+        # extra executed instructions (e.g. spin-loop/retry work).
+        n_slow_work = mc["slow_work"]
+        work_diagnosis: str | None = None
+        if n_slow_work > 0:
+            if wsc["slow_cpi"] >= wsc["slow_instructions"] and wsc["slow_cpi"] / n_slow_work >= 0.5:
+                work_diagnosis = "uncore_or_memory_stall"
+            elif wsc["slow_instructions"] / n_slow_work >= 0.5:
+                work_diagnosis = "extra_instructions"
+            else:
+                work_diagnosis = "mixed_or_unavailable"
 
         # Evaluate per-thread verdict under the frozen stop test.
         best = factor_eval["best_explainer"]
         n_slow_clock = mc["slow_clock"]
-        n_slow_work = mc["slow_work"]
         n_wall_slow = len(wall_slow_items)
         if n_slow_clock >= min_slow_runs and best is not None:
             t_verdict = "PASS (mechanism found)"
@@ -1208,7 +1373,8 @@ def score(
             t_reason = (
                 f"{t}T: {best['label']} explains {best['n_target']}/{n_slow_clock} "
                 f"({best['explained_share'] * 100:.1f}%) of slow_clock runs "
-                f"(rate {rate_pct:.1f}% vs {comp_pct:.1f}%)"
+                f"(rate {rate_pct:.1f}% vs {comp_pct:.1f}%, "
+                f"med cpr_ratio={median_slow_cpr_ratio})"
             )
             mechanism_hits.append(t_reason)
         elif n_wall_slow >= min_slow_runs and (
@@ -1224,7 +1390,10 @@ def score(
             t_verdict = "PASS (mode is real work)"
             t_reason = (
                 f"{t}T: {n_slow_work}/{n_wall_slow} wall-slow runs have >=1.2x cycles "
-                f"(median cpb_ratio={median_slow_cpb_ratio})"
+                f"(median cpb_ratio={median_slow_cpb_ratio}, "
+                f"ipb_ratio={median_slow_ipb_ratio}, cpi_ratio={median_slow_cpi_ratio}; "
+                f"sub={work_diagnosis}: slow_cpi={wsc['slow_cpi']}, "
+                f"slow_instructions={wsc['slow_instructions']})"
             )
             work_hits.append(t_reason)
         else:
@@ -1260,10 +1429,24 @@ def score(
             "fast_cpb_median": round(cls["fast_cpb_median"], 6)
             if cls["fast_cpb_median"] is not None
             else None,
+            "fast_ipb_median": round(cls["fast_ipb_median"], 6)
+            if cls["fast_ipb_median"] is not None
+            else None,
+            "fast_cpi_median": round(cls["fast_cpi_median"], 4)
+            if cls["fast_cpi_median"] is not None
+            else None,
+            "fast_cpr_median": round(cls["fast_cpr_median"], 4)
+            if cls["fast_cpr_median"] is not None
+            else None,
             "median_slow_cpb_ratio": median_slow_cpb_ratio,
+            "median_slow_ipb_ratio": median_slow_ipb_ratio,
+            "median_slow_cpi_ratio": median_slow_cpi_ratio,
+            "median_slow_cpr_ratio": median_slow_cpr_ratio,
             "perf_covered_runs": cls["perf_covered_runs"],
             "total_runs": cls["total_runs"],
             "mode_counts": mc,
+            "work_sub_counts": wsc,
+            "work_diagnosis": work_diagnosis,
             "best_explainer": factor_eval["best_explainer"],
             "best_single": factor_eval["best_single"],
             "best_two_way": factor_eval["best_two_way"],
@@ -1295,6 +1478,8 @@ def score(
             "wall_slow_ratio": {str(t): wall_slow_threshold(t) for t in threads},
             "cycles_per_byte_tol": CYCLES_PER_BYTE_TOL,
             "real_work_cycles_ratio": REAL_WORK_CYCLES_RATIO,
+            "instructions_per_byte_tol": INSTRUCTIONS_PER_BYTE_TOL,
+            "extra_instructions_ratio": EXTRA_INSTRUCTIONS_RATIO,
             "explain_threshold": EXPLAIN_THRESHOLD,
         },
         "per_thread": per_thread,
@@ -1316,28 +1501,35 @@ def format_summary(summary: dict[str, Any]) -> str:
     for t in summary["threads"]:
         pt = summary["per_thread"][str(t)]
         mc = pt["mode_counts"]
+        wsc = pt["work_sub_counts"]
         perf_cov = f"{pt['perf_covered_runs']}/{pt['total_runs']}"
         lines.append("")
         lines.append(
             f"=== {t}T ({pt['verdict']}) fast_wall={pt['fast_wall_median_s']:.4f}s "
             f"thr={pt['wall_slow_threshold']:.2f}x perf={perf_cov} "
-            f"modes=fast:{mc['fast']},clock:{mc['slow_clock']},work:{mc['slow_work']},"
+            f"modes=fast:{mc['fast']},clock:{mc['slow_clock']},work:{mc['slow_work']}"
+            f"(cpi:{wsc['slow_cpi']},ins:{wsc['slow_instructions']}),"
             f"mixed:{mc['slow_mixed']},uncls:{mc['slow_unclassified']} ==="
         )
         lines.append(f"  {pt['reason']}")
         lines.append(
             "  pinning   settle  prespin  pos   n   med_wall   min..max        "
-            "med_cpr  fast/clk/wrk/uncls  cpus  smt_ovlp"
+            "med_cpr  med_cpi  med_ipb  fast/clk/cpi/ins/unc  cpus  smt_ovlp"
         )
         for c in pt["cells"]:
             cpr = f"{c['median_cycles_per_ref']:.3f}" if c["median_cycles_per_ref"] else "  -  "
+            cpi_s = f"{c['median_cpi']:.3f}" if c["median_cpi"] else "  -  "
+            ipb_s = f"{c['median_ipb']:.2f}" if c["median_ipb"] else "  -  "
             dcpus = f"{c['median_distinct_cpus']:.1f}" if c["median_distinct_cpus"] else " - "
+            counts_s = (
+                f"{c['n_fast']:>2d}/{c['n_slow_clock']:>2d}/{c['n_slow_cpi']:>2d}/"
+                f"{c['n_slow_instructions']:>2d}/{c['n_slow_unclassified']:>2d}"
+            )
             lines.append(
                 f"  {c['pinning']:<8s}  {c['settle_s']:<6.1f}  {c['prespin_ms']:<7d}  "
                 f"{c['pair_pos']:<3d}  {c['n']:<2d}  {c['median_wall_s']:<9.4f}  "
                 f"{c['min_wall_s']:.4f}..{c['max_wall_s']:.4f}  {cpr:<7s}  "
-                f"{c['n_fast']:>2d}/{c['n_slow_clock']:>2d}/{c['n_slow_work']:>2d}/"
-                f"{c['n_slow_unclassified']:>2d}            "
+                f"{cpi_s:<7s}  {ipb_s:<7s}  {counts_s:<20s}  "
                 f"{dcpus:>4s}  {c['total_smt_overlap_samples']:>8d}"
             )
     return "\n".join(lines) + "\n"
