@@ -1,7 +1,7 @@
 claim: migrate-rules
 by: antigravity
 outcome: partial
-evidence: docs/team/RULES.md, frontier/claims/migrate-rules.toml, docs/journal/decisions.md, #977, #995
+evidence: #1065, docs/team/RULES.md, frontier/claims/migrate-rules.toml, docs/journal/decisions.md, #977, #995
 
 **What was asked:** Migrate `docs/team/RULES.md` off coordinator references by meaning for the frontier while preserving A1, A4, RULES D, and #995's O1–O2, and fixing broken archived links.
 **What I found / did:**
