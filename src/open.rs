@@ -407,6 +407,10 @@ impl Kernel {
         stats.thick = ns;
         let first = starts(all);
         let mut write = starts(thick);
+        #[cfg(feature = "a6b-endpoint-redesign")]
+        let use_redesign = INDUCE && !self.wide(ns);
+        #[cfg(not(feature = "a6b-endpoint-redesign"))]
+        let use_redesign = false;
         let need = if INDUCE {
             self.arena_words(ns, m as usize)
         } else {
@@ -417,52 +421,54 @@ impl Kernel {
             self.edges.reserve_exact(add);
             self.edges.resize(need, 0);
         }
-        let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
-        let image_order = &mut rest_edges[..ns];
         self.tiles.clear();
-        let (mut last_x, mut retained_x) = (0, 0u32);
-        for i in 0..ns {
-            let sw = &mut strips_raw[3 * i..3 * i + 3];
-            let byte = (sw[2] & 0xFF) as u8;
-            let width = sw[2] >> 8;
-            let from = sw[0];
-            let a = usize::from(byte);
-            sw[1] += first[a];
-            let to = sw[1];
-            image_order[write[a] as usize] = i as u32;
-            write[a] += 1;
-            if !INDUCE {
-                if from > last_x {
+        if !use_redesign {
+            let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
+            let image_order = &mut rest_edges[..ns];
+            let (mut last_x, mut retained_x) = (0, 0u32);
+            for i in 0..ns {
+                let sw = &mut strips_raw[3 * i..3 * i + 3];
+                let byte = (sw[2] & 0xFF) as u8;
+                let width = sw[2] >> 8;
+                let from = sw[0];
+                let a = usize::from(byte);
+                sw[1] += first[a];
+                let to = sw[1];
+                image_order[write[a] as usize] = i as u32;
+                write[a] += 1;
+                if !INDUCE {
+                    if from > last_x {
+                        self.tiles.push(Tile {
+                            end: from,
+                            delta: retained_x.wrapping_sub(last_x),
+                            symbol: TERMINAL,
+                        });
+                        retained_x += from - last_x;
+                    }
+                    last_x = from + width;
                     self.tiles.push(Tile {
-                        end: from,
+                        end: last_x,
+                        delta: to.wrapping_sub(from),
+                        symbol: byte.into(),
+                    });
+                }
+            }
+            if !INDUCE {
+                if last_x < n {
+                    self.tiles.push(Tile {
+                        end: n,
                         delta: retained_x.wrapping_sub(last_x),
                         symbol: TERMINAL,
                     });
-                    retained_x += from - last_x;
                 }
-                last_x = from + width;
-                self.tiles.push(Tile {
-                    end: last_x,
-                    delta: to.wrapping_sub(from),
-                    symbol: byte.into(),
-                });
-            }
-        }
-        if !INDUCE {
-            if last_x < n {
-                self.tiles.push(Tile {
-                    end: n,
-                    delta: retained_x.wrapping_sub(last_x),
-                    symbol: TERMINAL,
-                });
-            }
-            self.directory.clear();
-            let mut ti = 0;
-            for x in (0..n).step_by(PAGE) {
-                while self.tiles[ti].end <= x {
-                    ti += 1;
+                self.directory.clear();
+                let mut ti = 0;
+                for x in (0..n).step_by(PAGE) {
+                    while self.tiles[ti].end <= x {
+                        ti += 1;
+                    }
+                    self.directory.push(ti as u32);
                 }
-                self.directory.push(ti as u32);
             }
         }
         self.bands.clear();
@@ -475,6 +481,13 @@ impl Kernel {
             self.offsets.push(0);
         }
         let mut cursors = if INDUCE {
+            #[cfg(feature = "a6b-endpoint-redesign")]
+            if use_redesign {
+                self.induced_redesigned(ns, n, &first, &mut write, &thin, &mut stats)
+            } else {
+                self.induced(ns, n, &thin, &mut stats)
+            }
+            #[cfg(not(feature = "a6b-endpoint-redesign"))]
             self.induced(ns, n, &thin, &mut stats)
         } else {
             let mut cursors = [0usize; 256];

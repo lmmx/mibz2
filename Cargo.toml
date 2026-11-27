@@ -128,6 +128,13 @@ ideal-delivery = []
 # for the bench's arms. Never a default; frozen registration:
 # docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md. Retain until its run is read
 mtf-fold = []
+# Research only: redesigned open-kernel endpoint elimination and dictionary (`src/open/endpoint.rs`,
+# strip hand-off in `src/open.rs`; claim `a6b-endpoint-build`, frozen registration
+# `docs/journal/2026-11-27-a6b-endpoint-build/registration.md`): fused single-pass strip/gap setup
+# with packed u64 image order, safe 64K u16-link inline-15 u128 SoA induction with direct aw==bw
+# replace (Wide fallback preserved), and generation-tagged L1d caches (contents[4096], pairs[1024]).
+# Zero new unsafe; default build unchanged. Retain until i9 paired A/B evaluation is read
+a6b-endpoint-redesign = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

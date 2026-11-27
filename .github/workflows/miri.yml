@@ -131,3 +131,12 @@ jobs:
           grep -q '^runs::tests::fold_tests::miri_fold_open_kernel_is_the_shipped_path:' fold-list.txt
       - name: Miri, the fold
         run: cargo miri test --features mtf-fold --lib -- miri_fold
+      # the redesigned endpoint elimination and dictionary (`a6b-endpoint-redesign`, research):
+      # safe 64K SoA setup/induction/dictionary and small open-kernel columns under Miri
+      - name: The endpoint redesign's tests are selected
+        run: |
+          cargo miri test --features a6b-endpoint-redesign --lib -- miri_a6b_endpoint_redesign miri_open_kernel_small_columns --list 2>/dev/null | tee a6b-list.txt
+          grep -q '^open::endpoint::tests::miri_a6b_endpoint_redesign:' a6b-list.txt
+          grep -q '^open::b5::miri_open_kernel_small_columns:' a6b-list.txt
+      - name: Miri, the endpoint redesign
+        run: cargo miri test --features a6b-endpoint-redesign --lib -- miri_a6b_endpoint_redesign miri_open_kernel_small_columns
