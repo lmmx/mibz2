@@ -1,0 +1,9 @@
+id = "segmented-fallback-dissection"
+holder = "antigravity"
+session = "f81bebe3eda1"
+claimed_at = "2026-11-27T01:12:03+00:00"
+expires = "2026-11-27T09:12:03+00:00"
+owned_paths = []
+mechanisms = ["segmented-fallback"]
+base = "ccfd7f809bd58e54df885d146d2ffd5689774081"
+released = false
