@@ -1,0 +1,8 @@
+schema = 1
+participant = "claude-code"
+instance = "5e77eceebbb5fa98"
+state = "active"
+claim = ""
+capabilities = ["cloud-session", "long-context", "repo-write", "rust", "shell"]
+started = "2026-11-27T16:43:11+00:00"
+last_seen = "2026-11-27T16:43:11+00:00"
