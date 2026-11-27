@@ -79,9 +79,13 @@ a release that moves no Wikidata block's route.
   [0.974, 1.079] at 20. Peak RSS 28–71 MB, within 4 MB of 0.5.15 at every count.
 - **Attribution (RELEASING §5b):** no step clears the bar; no row.
 
-**The team threshold (RELEASING §5a):** queued on the i9-10900K at `v0.5.16` (`4e261140`, #1193;
-`ready/bench-crossover` confirmed on origin). Its verdict will be recorded here once the bundle lands
-on `origin/evidence`.
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T171216Z`, evidence
+`51183982` (sha256 `be8305bd…cd8f`, commit `4e261140`, 10 rounds on Wikidata, 400/400 same bytes).
+No forced arm is faster than the shipped decoder at any count where it changes the plan:
+`mibz2-workers-w` is 0.984 [0.959, 1.009] at 4 threads (CPU 1.066), 1.316 at 6, 1.057 at 8 and
+1.052 at 10; `mibz2-team2` and `mibz2-team3` are 1.21–2.35 wall at 4–10 threads. Sanity (the same
+plan as shipped): 1.002 [0.991, 1.014] at 5, 0.977 [0.951, 1.004] at 7 and 1.017 [0.992, 1.042]
+at 9 threads, each spanning 1. SMT counts (12, 16, 20), reported only: workers-w 1.025–1.144.
 
 ## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
 
