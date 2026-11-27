@@ -235,8 +235,8 @@ Residual B was the run's scored prediction under the rule frozen before the data
 workers, or 2.7% of the shipped 194.6 ms decode at eight. That misses low at every count — whether
 compared against the floor report's 14–19 ms one-worker label or the per-count forecasts above —
 and closes pipeline plumbing as a target. Residual A was reported unscored. At one worker it
-exceeds its forecast because that configuration reads the oracles' stores cold from main memory,
-adding about 55–65 ms to its 298 ms word-spelling figure
+exceeds its forecast because that configuration reads the oracles' stores cold from main memory:
+about 55–65 ms of its 298 ms word-spelling figure is that traffic, not the decoder's work
 ([the cold-store reread](https://github.com/lmmx/mibz2/blob/2aaded3a3ba00f140d2621813e87a365758e975b/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md),
 [PR #952](https://github.com/lmmx/mibz2/pull/952)). From eight to ten workers Residual A stays flat
 (42.4, 42.9 and 40.5 ms), confirming that the earlier rise to 142 ms was the old oracles' copying.
