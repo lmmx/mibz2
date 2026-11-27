@@ -1,9 +1,8 @@
 # Synthesis, twelfth pass: under aligned codegen the scanner binds at k = 8 on every corpus measured
 
 *Recurring claim [`synthesise`](../../../frontier/claims/synthesise.toml), 27 November 2026. Read with the
-[eleventh pass](eleventh-pass.md) (#1103) and the [tenth](tenth-pass.md) (#1090). Master has not moved
-since #1103 (`583e9b8`). The sources are the open PRs that landed their data since then: #1107
-(`station-balance-aligned`, CONFIRMED), #1105 (the coalesced-scanner i9 recipe), #1106 (seam-window
+[eleventh pass](eleventh-pass.md) (#1103) and the [tenth](tenth-pass.md) (#1090). The sources since #1103 (`583e9b8`) are #1107
+(`station-balance-aligned`, CONFIRMED, merged as `e4bef3e`) and the open PRs #1105 (the coalesced-scanner i9 recipe), #1106 (seam-window
 queued), #1104 and #1093 (the dispatch-capability and queue-pressure tools). No new workstation
 evidence: the last bundle is still `c71c4a56`. **(derived)** marks arithmetic across sources. Every
 i9 figure below is derived from VM diagnostics (C5).*
