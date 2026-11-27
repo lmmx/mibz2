@@ -86,3 +86,137 @@ index c56e6dc131..330ab65bf3 100644
          // A column-only sizing scenario, not the measured per-worker route history.
          ls.in_place = matches!(plan, Plan::Workers(_));
          if rows.is_finite() && rows > 0.0 {
+diff --git a/src/bwt.rs b/src/bwt.rs
+index 1105100f74..5597e64d43 100644
+--- a/src/bwt.rs
++++ b/src/bwt.rs
+@@ -123,6 +123,13 @@ pub trait InverseBwt: Default + Send {
+         false
+     }
+ 
++    /// (trace only) whether the last `invert_runs` that returned true was done by the open
++    /// kernel in its own buffers, so the footprint ledger charges it no fallback table
++    #[cfg(any(test, feature = "trace"))]
++    fn took_open(&self) -> bool {
++        false
++    }
++
+     /// `invert` for the block of `n` rows whose run records `runs::front` left in `r`: the
+     /// LF table `runs::fill` builds from them, walked backward, its bytes into `out`
+     /// (cleared): exactly what `invert` gives for the block's column. `orig_ptr` is below
+diff --git a/src/lib.rs b/src/lib.rs
+index d2e92df2e0..786dc64dc8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -417,6 +417,11 @@ impl<I: bwt::InverseBwt> Scratch<I> {
+         if !cfg!(test) && trace::level() == 0 {
+             return;
+         }
++        let route = if route == trace::OutputRoute::Runs && self.inverse.took_open() {
++            trace::OutputRoute::Open
++        } else {
++            route
++        };
+         self.allocation_history.push(trace::AllocationSample {
+             route,
+             cooperative: self.inverse.wants_checkpoints(),
+diff --git a/src/open.rs b/src/open.rs
+index 07b4c8cfac..83bd11158e 100644
+--- a/src/open.rs
++++ b/src/open.rs
+@@ -835,6 +835,8 @@ pub type ForcedOpenCells = OpenCellsOf<true>;
+ pub struct OpenCellsOf<const FORCED: bool> {
+     open: Kernel,
+     lazy: LazyCells,
++    #[cfg(any(test, feature = "trace"))]
++    last_open: bool,
+     /// (test only) blocks the open kernel inverted
+     #[cfg(test)]
+     pub(crate) opened: usize,
+@@ -1042,6 +1044,23 @@ fn within_cap(records: &[u16], p: u32, limit: u32, cap: Cap) -> bool {
+ }
+ 
+ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
++    #[cfg(any(test, feature = "trace"))]
++    fn took_open(&self) -> bool {
++        self.last_open
++    }
++
++    #[cfg(any(test, feature = "trace"))]
++    fn took_cells(&self) -> bool {
++        !self.last_open && self.lazy.took_cells()
++    }
++
++    // The diagnostic footprint ledger checks tt even on a block that uses Open.
++    // Its allocation belongs to the retained lazy fallback.
++    #[cfg(any(test, feature = "trace"))]
++    fn buffers(&self) -> Vec<crate::trace::Buffer> {
++        self.lazy.buffers()
++    }
++
+     fn reads_runs(&self) -> bool {
+         true
+     }
+@@ -1061,6 +1080,10 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
+         self.fold(b, scratch, buf, k, admitted)
+     }
+     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
++        #[cfg(any(test, feature = "trace"))]
++        {
++            self.last_open = false;
++        }
+         if let Some(cap) = Self::cap(r.records().len(), n, p) {
+             if cap.m != u32::MAX && !within_cap(r.records(), p, LIMIT, cap) {
+                 #[cfg(test)]
+@@ -1077,6 +1100,10 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
+                 crate::census::record(r.records(), n, p, LIMIT, c);
+             }
+             if ran.is_some() {
++                #[cfg(any(test, feature = "trace"))]
++                {
++                    self.last_open = true;
++                }
+                 #[cfg(test)]
+                 {
+                     self.opened += 1;
+diff --git a/src/trace.rs b/src/trace.rs
+index 354809f5c2..4763bebed2 100644
+--- a/src/trace.rs
++++ b/src/trace.rs
+@@ -184,6 +184,7 @@ pub enum OutputRoute {
+     /// a run-route block Cells inverted in its own buffers: it writes `ll` for n output
+     /// rows, as the run route does, and requests nothing of the fallback's `tt`
+     Cells,
++    Open,
+     ColumnInPlace,
+     ColumnSeparate,
+ }
+@@ -245,16 +246,17 @@ impl WorkerNeeds {
+         } else {
+             0
+         };
+-        if s.route != OutputRoute::Cells {
++        if !matches!(s.route, OutputRoute::Cells | OutputRoute::Open) {
+             self.tt = self.tt.max(s.rows + slack);
+             self.tt_rows = self.tt_rows.max(s.rows);
+         }
+         self.ll = self.ll.max(match s.route {
+             // a block decoded into its own buffer writes no `ll` (`decode_owned`)
+-            OutputRoute::Runs | OutputRoute::Cells if s.owned.is_some() => 0,
++            OutputRoute::Runs | OutputRoute::Cells | OutputRoute::Open if s.owned.is_some() => 0,
+             OutputRoute::Runs => s.rows,
+             // Cells writes its output with 32 bytes of slack (src/cells.rs, `out.resize`)
+             OutputRoute::Cells => s.rows + 32,
++            OutputRoute::Open => s.rows + 16,
+             _ => s.block_bound,
+         });
+         if s.route == OutputRoute::ColumnSeparate {
+@@ -401,7 +403,7 @@ pub fn validate_worker(
+             // they were staged away (its buffer is then `ll`'s old one), and within the
+             // owned buffers' bound
+             let rows = if sample.staged { 0 } else { sample.rows };
+-            if !matches!(sample.route, OutputRoute::Runs | OutputRoute::Cells)
++            if !matches!(sample.route, OutputRoute::Runs | OutputRoute::Cells | OutputRoute::Open)
+                 || o.name != "out"
+                 || o.len > o.cap
+                 || o.cap < rows

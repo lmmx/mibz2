@@ -2171,6 +2171,8 @@ bench-scanner-adaptive-seam HEAD_SHA BASE_SHA DRY="":
     set -uo pipefail
     HEAD_SHA="{{HEAD_SHA}}" BASE_SHA="{{BASE_SHA}}" dry="{{DRY}}"
     unset AB_SHA256 AB_READ_BUF
+    # each build reads its own ./target (base, head and the traced copies must not share one)
+    unset CARGO_TARGET_DIR
     COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=10,12 SUPPORTING=6,8,9 LAZY=8,9,10
     TRACE_ROUNDS=3 PRESPIN=100
     [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; TRACE_ROUNDS=1; }
