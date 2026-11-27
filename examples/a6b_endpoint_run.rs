@@ -24,7 +24,7 @@ fn decode(data: &'static [u8], workers: usize, mut dest: impl Write) -> io::Resu
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn sample() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
     if args.len() != 3 {
         return Err("expected a compressed corpus path and worker count".into());
@@ -66,4 +66,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{{\"k\":{workers},\"wall_s\":{wall},\"bytes\":{bytes},\"maxrss_kib\":{rss},\"sha256\":\"{digest}\"}}"
     );
     Ok(())
+}
+
+fn main() {
+    if let Err(err) = sample() {
+        eprintln!("{err}");
+        std::process::exit(1);
+    }
 }

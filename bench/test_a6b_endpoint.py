@@ -2,7 +2,15 @@
 
 import unittest
 
-from a6b_endpoint import REPEATS, WALL_CELLS, paired, summarise, validate_trace
+from a6b_endpoint import (
+    ByteMismatch,
+    REPEATS,
+    WALL_CELLS,
+    paired,
+    summarise,
+    validate_pair,
+    validate_trace,
+)
 
 
 def observations():
@@ -80,9 +88,27 @@ class EndpointRecipe(unittest.TestCase):
             ),
             oracles=dict(scanned=0, replayed=5, scan_locks=0, recorded_blocks=5),
         )
-        validate_trace(r, "ok", "S")
-        with self.assertRaises(ValueError):
-            validate_trace(r, "wrong", "S")
+        r["trace_summary"]["blocks_issued"] = 5
+        validate_trace(r, "S")
+        r["trace_summary"]["blocks_issued"] = 99
+        with self.assertRaisesRegex(ValueError, "incomplete"):
+            validate_trace(r, "S")
+        r["trace_summary"]["blocks_issued"] = 5
         r["trace_summary"]["blocks_open_pass1"] = 0
-        with self.assertRaises(ValueError):
-            validate_trace(r, "ok", "S")
+        with self.assertRaisesRegex(ValueError, "Open"):
+            validate_trace(r, "S")
+
+    def test_classify_candidate_and_control_byte_failures(self):
+        good = dict(k=8, maxrss_kib=20, measure="wall", sha256="reference")
+        wrong = {**good, "sha256": "wrong"}
+        error = {"kind": "failed", "stderr": "block CRC mismatch (stored 0, computed 1)"}
+        for invalid in (wrong, error):
+            with self.assertRaises(ByteMismatch):
+                validate_pair(
+                    {"base": good, "candidate": invalid}, "text", 8, 0, "wall", "reference"
+                )
+            with self.assertRaisesRegex(ValueError, "control failed") as exc:
+                validate_pair(
+                    {"base": invalid, "candidate": wrong}, "text", 8, 0, "wall", "reference"
+                )
+            self.assertNotIsInstance(exc.exception, ByteMismatch)

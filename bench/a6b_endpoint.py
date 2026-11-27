@@ -167,77 +167,109 @@ def sample_trace(binary, path, corpus, k, oracle, block, cpu, mask):
     return run_child(str(binary), str(path), cell, 0, block, True, 180)
 
 
-def validate_trace(row, expected, oracle):
+class ByteMismatch(ValueError):
+    """The measured decoder returned a wrong digest or reported a CRC mismatch."""
+
+
+def verify_output(row, digest):
+    if row.get("kind") == "failed":
+        msg = row.get("stderr", "")
+        if "block CRC mismatch" in msg or "stream CRC mismatch" in msg:
+            raise ByteMismatch(msg)
+        raise ValueError(f"sample failed: {row}")
+    if row["measure"] == "wall":
+        actual = row["sha256"]
+    else:
+        cp = row["check_pass"]
+        if not cp["identical"] or cp["bytes"] != row["bytes"]:
+            raise ByteMismatch("trace output or byte count differs from its reference")
+        actual = cp["sha256"]
+    if actual != digest:
+        raise ByteMismatch(f"expected {digest}, measured {actual}")
+
+
+def validate_trace(row, oracle):
     if row.get("kind") != "decode" or row.get("scanner_pin_ok") is not True:
         raise ValueError("missing trace decode or scanner affinity")
-    cp = row["check_pass"]
-    if not cp["identical"] or cp["sha256"] != expected or cp["bytes"] != row["bytes"]:
-        raise ValueError("trace output differs from libbzip2")
     trace = row["trace_summary"]
-    if not trace or trace["workers_seen"] != row["k"] or trace["blocks_decoded"] <= 0:
+    o = row["oracles"]
+    decoded = trace["blocks_decoded"]
+    if not (
+        trace["workers_seen"] == row["k"]
+        and decoded > 0
+        and 0 <= trace["blocks_open_pass1"] <= decoded
+        and decoded == trace["blocks_issued"]
+    ):
         raise ValueError("worker trace is incomplete")
-    if not 0 < trace["worker_busy_ns_per_w"] or row["maxrss_kib"] <= 0:
+    if trace["worker_busy_ns_per_w"] <= 0 or row["maxrss_kib"] <= 0:
         raise ValueError("missing worker busy time or RSS")
-    if row["section"] == "wikidata" and trace["blocks_open_pass1"] <= 0:
+    if row["section"] == "wikidata" and trace["blocks_open_pass1"] == 0:
         raise ValueError("Wikidata did not exercise Open")
-    if row["section"] == "text" and trace["blocks_open_pass1"] >= trace["blocks_decoded"]:
+    if row["section"] == "text" and trace["blocks_open_pass1"] >= decoded:
         raise ValueError("text did not exercise fallback")
     if oracle == "S":
-        o = row["oracles"]
         if (
             o["scan_locks"]
             or o["scanned"]
-            or o["replayed"] != trace["blocks_decoded"]
-            or o["recorded_blocks"] != o["replayed"]
+            or o["replayed"] != decoded
+            or o["recorded_blocks"] != decoded
         ):
             raise ValueError("scan oracle did not replay every block")
+    elif o["replayed"] or o["scanned"] != decoded:
+        raise ValueError("real scanner and worker block counts differ")
+
+
+def wall_sample(binary, path, k):
+    proc = subprocess.run([binary, path, str(k)], timeout=180, text=True, capture_output=True)
+    if proc.returncode:
+        return {"kind": "failed", "stderr": proc.stderr.strip(), "returncode": proc.returncode}
+    return json.loads(proc.stdout)
+
+
+def validate_pair(pair, corpus, k, block, measure, digest):
+    for arm in ("base", "candidate"):
+        row = pair[arm]
+        context = f"{arm} {corpus} k={k} round={block} {measure}"
+        try:
+            verify_output(row, digest)
+        except ByteMismatch as exc:
+            if arm == "candidate":
+                raise ByteMismatch(f"{context}: {exc}") from exc
+            raise ValueError(f"control failed its reference check: {context}: {exc}") from exc
+        if row["k"] != k or row["maxrss_kib"] <= 0:
+            raise ValueError(f"unexpected topology or missing RSS: {context}")
+        if measure != "wall":
+            validate_trace(row, "none" if measure == "preflight" else measure)
 
 
 def run(out, bins, files, hashes, cpu, mask):
     rows = []
     with (out / "runs.jsonl").open("x", buffering=1) as log:
 
-        def record(row):
-            log.write(json.dumps(row, allow_nan=False) + "\n")
-            rows.append(row)
+        def sample_pair(corpus, k, block, measure, order):
+            pair = {}
+            for arm in order:
+                if measure == "wall":
+                    row = wall_sample(bins[arm]["a6b_endpoint_run"], files[corpus], k)
+                else:
+                    oracle = "none" if measure == "preflight" else measure
+                    row = sample_trace(
+                        bins[arm]["mtf_fold"], files[corpus], corpus, k, oracle, block, cpu, mask
+                    )
+                raw = {**row, "build": arm, "measure": measure, "section": corpus, "block": block}
+                log.write(json.dumps(raw, allow_nan=False) + "\n")
+                rows.append(raw)
+                pair[arm] = raw
+            validate_pair(pair, corpus, k, block, measure, hashes[corpus])
 
-        for arm, instruments in bins.items():
-            for corpus in files:
-                row = sample_trace(
-                    instruments["mtf_fold"], files[corpus], corpus, 1, "none", -1, cpu, mask
-                )
-                record({**row, "build": arm, "measure": "preflight"})
-                validate_trace(row, hashes[corpus], "none")
+        for corpus in files:
+            sample_pair(corpus, 1, -1, "preflight", ("base", "candidate"))
         for block in range(REPEATS):
             order = ("base", "candidate") if block % 2 == 0 else ("candidate", "base")
             for corpus, k in WALL_CELLS:
-                for arm in order:
-                    row = json.loads(
-                        subprocess.check_output(
-                            [bins[arm]["a6b_endpoint_run"], files[corpus], str(k)],
-                            timeout=180,
-                            text=True,
-                        )
-                    )
-                    record(
-                        {**row, "build": arm, "measure": "wall", "section": corpus, "block": block}
-                    )
-                    if row["sha256"] != hashes[corpus] or row["k"] != k or row["maxrss_kib"] <= 0:
-                        raise ValueError(f"{corpus}/{k} output or resource check failed")
+                sample_pair(corpus, k, block, "wall", order)
             for oracle in ("none", "S"):
-                for arm in order:
-                    row = sample_trace(
-                        bins[arm]["mtf_fold"],
-                        files["wikidata"],
-                        "wikidata",
-                        8,
-                        oracle,
-                        block,
-                        cpu,
-                        mask,
-                    )
-                    record({**row, "build": arm, "measure": oracle})
-                    validate_trace(row, hashes["wikidata"], oracle)
+                sample_pair("wikidata", 8, block, oracle, order)
     return rows
 
 
@@ -324,7 +356,13 @@ def main():
     out = Path(sys.argv[1]).resolve()
     with tempfile.TemporaryDirectory(prefix="build-", dir=out.parent) as tmp:
         args = prepare(out, Path(tmp))
-        rows = run(out, *args)
+        try:
+            rows = run(out, *args)
+        except ByteMismatch as exc:
+            (out / "outcome.txt").write_text(
+                f"STOP/KILL: frozen exactness criterion failed: {exc}\n"
+            )
+            return
         result = summarise(rows)
         save(out / "summary.json", result)
         verdict = "HARDWARE PASS" if result["hardware_pass"] else "STOP/KILL"
