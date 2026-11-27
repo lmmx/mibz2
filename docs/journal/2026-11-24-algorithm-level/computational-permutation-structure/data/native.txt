@@ -1,0 +1,15 @@
+431 blocks, 233 admitted
+exactness: 233/233 blocks byte-identical to bwt::walk on every arm (0 multi-cycle: 4-lane arms skipped there)
+visits: ctrl 26567581; J_0 26567581 (1.000x), J_1 14751393 (0.555x), J_2 9099157 (0.342x), J_3 6523063 (0.246x)
+train (117 blocks, 3 repeats, medians ms): ctrl1 77.08, ctrl4 60.68
+  r=0: C 22.59  E1 260.73  E4 117.54  C+E4 140.13
+  r=1: C 79.32  E1 147.95  E4 74.49  C+E4 153.81
+  r=2: C 149.81  E1 83.89  E4 49.53  C+E4 199.34
+  r=3: C 252.49  E1 48.92  E4 40.21  C+E4 292.70
+  selected r = 0
+held-out (116 blocks, 7 interleaved repeats, ms med (min..max)):
+  ctrl1 80.97 (77.92..82.20)   ctrl4 62.20 (61.36..64.00)
+  r=0*: C 22.98 (22.14..25.56)  E1 285.38 (265.76..291.78) [3.524x ctrl1]  E4 125.23 (119.83..129.96) [2.013x ctrl4]  C+E4 147.75 (142.41..154.15)  net vs ctrl4 -85.56 ms (-137.6%) disjoint=true -> i9 proj -447.3 ms (gate 39.18)
+  r=1: C 83.26 (81.49..89.82)  E1 158.58 (153.47..170.49) [1.958x ctrl1]  E4 77.26 (74.18..81.79) [1.242x ctrl4]  C+E4 161.04 (155.67..171.61)  net vs ctrl4 -98.84 ms (-158.9%) disjoint=true -> i9 proj -516.8 ms (gate 39.18)
+  r=2: C 154.48 (152.86..165.74)  E1 89.50 (83.40..96.28) [1.105x ctrl1]  E4 51.49 (50.56..56.15) [0.828x ctrl4]  C+E4 205.92 (203.42..218.97)  net vs ctrl4 -143.72 ms (-231.1%) disjoint=true -> i9 proj -751.5 ms (gate 39.18)
+  r=3: C 257.34 (254.61..264.84)  E1 52.06 (48.91..53.79) [0.643x ctrl1]  E4 40.36 (39.49..41.74) [0.649x ctrl4]  C+E4 298.48 (294.40..306.57)  net vs ctrl4 -236.28 ms (-379.9%) disjoint=true -> i9 proj -1235.4 ms (gate 39.18)

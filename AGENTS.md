@@ -2,10 +2,12 @@
 
 There is no coordinator. The repository's files are the shared state. **A swarm session is execution, not conversation.** Ordinary-language invitations (including `swarm` or teamwork) start the frontier loop; no slash command or exact lexicon word is necessary. During active work, treat direct maintainer messages as swarm instructions encountered at a safe point, not prompts for conversational permission or acknowledgement. Resolve delegated decisions independently, record them in shared state, and continue. Genuine owner-only decisions belong in the relevant claim's `needs_louis` (issue #944), not a chat question; continue unaffected work. Explicit read-only/status requests remain read-only; explicit stop instructions stop affected work. Respect existing authority, holds, evidence and spending boundaries. See `CLAUDE.md` and `frontier/README.md`.
 
+**`swarm` is parallel fan-out, not `take one`.** Use all available useful concurrency: launch independent workers for eligible work now, each claiming its own reservation from the frontier. Prefer durable, independent peer sessions/workers with their own context, checkout/worktree and full ability to follow the frontier loop from claim to integration (in Claude Code, sibling sessions; in other harnesses, the equivalent persistent worker/session facility where available). Short-lived subagents are useful for bounded assistance or constructive review, not the preferred unit of swarm participation. Do not make the parent session responsible for collecting and integrating every worker's results. If only subagents are available, use them for genuinely independent work only where they can safely complete or durably hand off the contribution under the same ownership rules; otherwise use the serial fallback. Never claim a session was launched without actual harness support. Refill free capacity as workers finish; do not serialize independent tasks or reserve holds for other workers. Stay within shared limits, capabilities, scope and spending authority; if the harness cannot fan out, keep working serially. No coordinator, no extra permission. Only an explicit `take one` means finish a single contribution and stop.
+
 1. **Read `frontier/README.md`:** the protocol and the lexicon.
 2. **Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`.** Without a shell, read issue #943.
 3. **Claim atomically** with `frontier.py claim`. Only a printed "acquired" counts.
-4. **Do the work, leave a delta, integrate or open a PR starting `Claim: <id>`.** Under `swarm`, repeat with eligible work until none fits; under `take one`, finish the one contribution and stop.
+4. **Do the work, leave a delta, integrate or open a PR starting `Claim: <id>`.** Each worker finishes its own contribution. Under `swarm`, run this loop concurrently across eligible independent tasks and refill capacity; under `take one`, finish one contribution and stop.
 
 **Research persistence:** a failed implementation is not a failed opportunity. Optimise the cost that consumed a demonstrated gain; seek a constructive independent perspective before shelving a substantial opportunity, and continue distinct bounded improvements while justified. Preserve every frozen verdict. See `CLAUDE.md`.
 
@@ -16,7 +18,7 @@ There is no coordinator. The repository's files are the shared state. **A swarm 
   - `coord.py head-sha` before and after;
   - `expectedHeadSha`;
   - a squash message you write yourself;
-  - ordinary integration is author-owned; independent review applies to substantive safety/authority/gate changes (B5, C6 adoption, material objections);
+  - ordinary integration is author-owned on applicable checks; protected paths flag substantive risks, not mandatory peer sign-off (see `CLAUDE.md`, RULES O);
   - RULES D (spending, rules, roles, Louis's workstation) needs Louis.
 - **The site:** no redirects, ever. Name things by mechanism, never by model.
 - **Evidence:** deltas are append-only, a stop test is frozen before data, and a verdict is never relaxed after the data (C2).
