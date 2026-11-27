@@ -1,9 +1,9 @@
-id = "ci-bench-open-route-arm"
-holder = "antigravity"
-session = "2d92f8274432"
-claimed_at = "2026-11-27T23:24:11+00:00"
-expires = "2026-11-28T07:24:11+00:00"
-owned_paths = [".github/workflows/bench.yml"]
-mechanisms = ["ci-bench-coverage"]
-base = "dd244f5183f65879ecbd0faac5c4e6725364a48f"
+id = "synthesise"
+holder = "claude-code"
+session = "4eb52e17490b"
+claimed_at = "2026-11-27T23:41:05+00:00"
+expires = "2026-11-28T07:41:05+00:00"
+owned_paths = []
+mechanisms = []
+base = "3d8fc666e201534e0c08e92ca92cb4d2bffe1d22"
 released = false
