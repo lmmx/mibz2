@@ -1,0 +1,27 @@
+id = "blog-announcement-copy"
+title = "Generate copy-ready social announcements for every published blog post"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 3
+status = "open"
+pr = 0
+owned_paths = []
+mechanisms = ["blog-announcement-copy"]
+needs_louis = ""
+question = """
+Make the existing site build generate a conveniently accessible list of copy-ready social announcements for the blog, newest first, automatically from the existing blog index and canonical post titles/URLs. Prefer a generated plain-text resource on the published site (for example /mibz2/blog/announcements.txt) and a discreet copy affordance on the blog index or individual posts if it fits the existing site design. Reuse the existing build and publication pipeline; do not add a scheduled job, separate announcement PR per post, manual metadata duplication, social account integration or automatic posting.
+Exact format for each post, one line:
+🆕 mibz2 blog ⠶ The decoder's true floor and the limits of a pooled scan https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/
+"""
+why = """
+The maintainer manually announces mibz2 blog posts on socials with a fixed title-and-link format and wants the copy produced in the repository/site, not by a chat notification. The existing blog index is already maintained with each publication; deriving copy during the build removes repeated work without a new agent role or publication gate.
+"""
+stop_test = """
+Freeze tests before implementation: exact sample line (including emoji, Braille separator, punctuation and canonical trailing slash), newest-first order, correct title and canonical URL for each listed published article including technical companions, no draft/index entries, no duplicate URLs, correct HTML escaping/entity decoding and UTF-8, deterministic output, and automatic inclusion of a newly indexed post without separately editing announcement text. Verify strict site build and render checks. Keep output copyable as plain text without Markdown formatting, hashtags or editorial additions. No external social actions, new spending, scheduled notifications, redirects or additional publication approval.
+"""
+done_when = """
+The normal site build produces the announcement resource for current and future posts; a documented stable location makes it easy for the maintainer to copy individual lines. Tests and existing applicable checks pass, and the implementation is integrated under normal repository rules. Report the actual resulting URL/path and any deployment uncertainty.
+"""
+premises = ["docs/site/blog/index.md"]
+links = ["https://lmmx.github.io/mibz2/blog/"]
