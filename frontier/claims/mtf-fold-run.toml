@@ -4,7 +4,7 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 2
-status = "review"
+status = "blocked"
 pr = 1041
 mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
 # (overlaps mtf-fold-build's paths on purpose: `claim` refuses this one until that hold is

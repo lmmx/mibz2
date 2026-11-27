@@ -3,7 +3,7 @@ title = "Copy only the straddling bytes at input-chunk boundaries (seam window),
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 2
+priority = 1
 status = "open"
 owned_paths = ["src/parallel.rs", "src/trace.rs"]
 mechanisms = ["scanner-input-seam"]
@@ -13,6 +13,8 @@ question = """
 Rebase #857 alone onto master and write that registration before its data. The symbol-buffer half (#846, `src/block.rs`) is the same change as `scanner-coalesced-u8-decode`'s lever 3 and belongs to that claim's paths. It stays out of this one, so the two holds are disjoint. The run can share a workstation slot with that claim's run if both are frozen.
 """
 why = """
+27 November: P1 because the existing #1031 frozen recipe is green and can supply the first new hardware evidence immediately after independent C6 review. Review the exact candidate, then signal and queue under standing authorisation; the recipe rejects a candidate already on master, so run the reviewed branch before adoption. Check existing signals and evidence first.
+
 A measured, low-risk serial-scanner cost with two i9 runs pointing the same way, stranded by the coordinator's retirement rather than by a verdict. At the 8-worker tie its realised wall gain is capped near 4% (fifth pass §1). Where the scanner binds (9-10 workers, or 8 once the fold and forward emission land) it transfers close to 1:1, measured at 0.92-0.94 for the combined fix. It is also a precondition for reading the scanner levers' combined effect cleanly.
 """
 stop_test = """
