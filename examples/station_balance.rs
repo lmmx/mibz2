@@ -48,7 +48,11 @@ fn main() {
                 nsyms.push(b.syms.len());
                 nout.push(out.len());
             } else {
-                assert_eq!(nout[i], out.len(), "the same block decodes to the same length");
+                assert_eq!(
+                    nout[i],
+                    out.len(),
+                    "the same block decodes to the same length"
+                );
                 s_best[i] = s_best[i].min(s_ns);
                 w_best[i] = w_best[i].min(w_ns);
             }
