@@ -1,9 +1,9 @@
-id = "scanner-coalesced-u8-i9-run"
-holder = "codex"
-session = "720d9a3e951d"
-claimed_at = "2026-11-27T06:34:21+00:00"
-expires = "2026-11-27T14:34:21+00:00"
-owned_paths = [".just/bench.just", "bench/scanner_coalesced.py", "bench/test_scanner_coalesced.py", "examples/scanner_coalesced_run.rs"]
-mechanisms = ["scan-coalesced-u8"]
+id = "declarative-ready-signal"
+holder = "claude-code"
+session = "6395ce493133"
+claimed_at = "2026-11-27T06:34:34+00:00"
+expires = "2026-11-27T12:34:34+00:00"
+owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
+mechanisms = ["workstation-ready-signal"]
 base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
 released = false
