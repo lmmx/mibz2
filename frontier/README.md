@@ -36,6 +36,7 @@ There is no coordinator and no routing. The repository's files are the shared st
 4. **Leave a delta** (40 lines at most, `frontier/deltas/`, template in its README) and mark the claim: `frontier.py mark <id> --status done|blocked|open|dropped`.
    - **Discoveries become claims** at status `idea`. They are admitted to `open` while open claims number fewer than `max_open_claims`.
    - **Changed rooms go into `surface.tsv`.**
+   - **Writing it up:** a digest, a process account or a negative result goes in the lab notebook (`docs/notebook/`), where shorthand is fine. A blog card is only for news worth telling the world, a discovery or an advance in the software, written for an outside reader without internal shorthand ("The blog board").
    - **Killed or stopped** implementations get a scoped row in `frontier/dead-ends.tsv`; do not repeat the same arm. A substantial correct component gain with an expensive constructor or other offsetting cost is a live opportunity: optimise/redesign the expensive phase and create a distinct follow-on when justified. Before shelving such a line, seek a cold constructive second perspective where available, with the actual code, cost ledger, remaining budget and failed attempts. Keep distinct iterations while marginal value warrants them; stop on a scoped obstruction, exhausted feasible budget or no credible new lever, not merely the first failed total-cost test. Keep C2 and every verdict. No fixed retry count, review ceremony, new spend or owner question.
    - Then `frontier.py check`. `frontier.py status` writes the status page locally; it is gitignored, so parallel PRs never conflict on it.
 5. **Finish your own work.** Open a PR with `Claim: <id>` as its first line, record the result, verify the exact head and applicable gates, merge, and release your hold. Do not turn ordinary completion into a handoff. When independent scrutiny is actually required (see below), or you cannot finish yourself, mark `status = "review"` and `pr = <N>` on the head. `brief` discovers that PR directly; `take-review ID --pr N --head SHA --by AGENT` transfers the existing reservation without another slot, `yield-review` parks it, and `finish-review` releases it on exact verified merge. A later acquisition reconciles terminal integrations; `cancel-review` handles exact closed-unmerged work. Stop cleanly.
@@ -93,7 +94,7 @@ These words are optional shorthand for work, not a conversational interface or a
 | **redraw** | Re-run the characterisation (`bench-zero-copy-floor`, and the matrix if the parts changed), then update `surface.tsv`. Do it after any merge that moves the shipped 8-worker wall by 5% or more. |
 | **where are we** / **surface** | Read `STATUS.md` and the recent deltas back in plain words, in a few minutes' reading at most. Change nothing. |
 | **needs me** | List the `needs_louis` items, and what each needs from him. |
-| **blog *X*** | Add a blog card for X at stage idea. |
+| **blog *X*** | Add a blog card for X at stage idea, if X is news for the world (a discovery or an advance; see "The blog board"); otherwise write a notebook entry in `docs/notebook/`. |
 | **move *card*** | Take the card to its next stage, under the board's rules. |
 | **review *X*** | A cold review by a different agent from X's author: read X's primary files and evidence, not summaries. Leave a delta with the findings. |
 | **ship *X*** | Integrate X: the merge gates, the merge, and a release if `docs/RELEASING.md` says it's worth one and nothing reserves it. |
@@ -175,20 +176,50 @@ premises = []                    # the evidence this claim rests on: re-read it 
 links = []
 ```
 
-Blog cards add `stage` (idea → outline → draft → review → revise → ready → published), `post` (its file under `docs/site/blog/`), `drafted_by` and `reviewed_by`.
+Blog cards add `stage` (idea → outline → draft → review → revise → ready → published), `post` (its file under `docs/site/blog/`), `drafted_by`, `reviewed_by`, and from `outline` on `news` (one plain sentence: what an outside reader learns) and `news_kind` (`discovery` or `advance`). See "The blog board".
 
 ## The blog board
 
 **One claim, one session.** Work that spans sessions (a census, then a build, then a workstation run) is several claims, each admitting the next. Don't put the i9 in a claim's `needs` unless that session itself runs on the workstation; runs go through the queue.
 
+**What the blog is for (Louis, 27 November 2026).** The blog is for something worth telling the
+world, written for a reader outside the project. Dense shorthand belongs in the
+[lab notebook](../docs/notebook/README.md), never on the blog.
+- **A post carries news of one of two kinds:** a theoretical *discovery*, or an *advance* in the
+  software itself. Positive findings far outweigh negative ones.
+- **Never a post:** process narration (how work was organised, reviewed, queued, run or merged), a
+  digest of recent PRs or deltas, or a negative result on its own ("the hardware rejected X").
+  These go in the notebook. A negative result reaches the blog only inside a positive finding it
+  explains.
+- **The title names the finding,** in plain words. Never an event ("when the hardware says no"),
+  never a list of three things.
+- **Written for a stranger, from the evidence, not from deltas.** No claim ids, PR or issue
+  numbers, evidence hashes, constants, flags or verdict labels in the body: say what each thing
+  does, and put the references in the closing Sources list. Numbers are prose, not code.
+  `write-blog-post` has the house style.
+
+**The board enforces it.** `frontier.py check` fails:
+- a blog card past `idea` without `news`, one plain sentence saying what an outside reader
+  learns;
+- a card whose `news_kind` is not `discovery` or `advance`;
+- more than one card in progress (`outline` to `ready`): publish or drop one first.
+
+Cards from before 27 November carry `legacy = true` and are exempt. CI's `check_prose.py` adds a
+**reader gate** on every new or changed post. It fails dense shorthand (inline code spans, numbers
+set as code, PR references, each per 1,000 words, calibrated on the posts published before the
+swarm) and a new main-post title that lists three or more things.
+
 **Standing publishing authority (Louis, 26 November 2026): publish, then iterate.** Any agent may
-merge its own or another agent's blog-only PR once the applicable mechanical merge checks and
-the strict site build and `check_render.py` pass. No owner approval, independent editorial approval,
-extra review round, preview inspection, or deployment completion is a prerequisite. Never leave a
-ready blog PR for the maintainer to merge. Correct or improve the live post in subsequent small
-PRs; deployment checks are observations after merging, not gates.
+merge its own or another agent's blog-only PR once the applicable mechanical merge checks pass:
+the strict site build, `check_render.py` and `check_prose.py`, including its reader gate. No owner
+approval, independent editorial approval, extra review round, preview inspection or deployment
+completion is a prerequisite. Never leave a ready blog PR for the maintainer to merge. Correct or
+improve the live post in subsequent small PRs; deployment checks are observations after merging,
+not gates.
 
 The card stages are useful records of work, not a mandatory serial approval pipeline:
+- **idea:** a candidate. It needs `news` and `news_kind` before it moves on; if it can't state
+  them, it is a notebook entry;
 - **outline/draft:** the claim, reader, takeaways, sourced numbers and a first figure (`write-blog-post`, `dataviz`);
 - **ready/published:** put the first version through `publish-page` and merge promptly; record publication and release the hold;
 - **review/revise:** independent simulated-reader and source-checking passes are valuable and may happen before or after publication, but must not hold an otherwise publishable post. A follow-up review does not unpublish a card.

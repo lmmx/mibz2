@@ -575,6 +575,40 @@ class TestFrontierStress(unittest.TestCase):
         self.assertNotEqual(r_chk.returncode, 0)
         self.assertIn("nonexistent-evidence.md", r_chk.stdout)
 
+    def test_blog_admission_needs_news_and_one_post_in_progress(self) -> None:
+        """A blog card past idea states its news and kind; one post is in progress at a time."""
+        a = self.sb.clone("agent-a")
+
+        def card(cid: str, stage: str, extra: str = "") -> str:
+            base = _claim_toml(cid).replace('kind = "probe"', 'kind = "blog"')
+            return base + f'stage = "{stage}"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n' + extra
+
+        blog = a / "frontier" / "blog"
+        blog.mkdir(parents=True, exist_ok=True)
+        (blog / "b-idea.toml").write_text(card("b-idea", "idea"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-draft.toml").write_text(card("b-draft", "draft"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("needs news", r.stdout)
+        self.assertIn("news_kind", r.stdout)
+        news = 'news = "A new induction order rebuilds text with a third fewer steps."\nnews_kind = "discovery"\n'
+        (blog / "b-draft.toml").write_text(card("b-draft", "draft", news))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-other.toml").write_text(card("b-other", "outline", news.replace("discovery", "advance")))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("2 posts in progress", r.stdout)
+        (blog / "b-other.toml").write_text(card("b-other", "outline", news + "legacy = true\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-other.toml").write_text(card("b-other", "outline", news.replace("discovery", "negative-result")))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("lab-notebook entry", r.stdout)
+
     # ------------------------------------------------------------------
     # Scenario 5: persuasive wrong argument -> independent cold review
     # ------------------------------------------------------------------

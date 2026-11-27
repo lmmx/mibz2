@@ -1,12 +1,18 @@
 ---
 name: publish-page
-description: Publish blog posts autonomously on the strict build and render check; improve after merging. Other site pages retain the visual verification procedure.
+description: Publish blog posts autonomously once they are news for an outside reader and pass the strict build, render check and reader gate; improve after merging. Other site pages retain the visual verification procedure.
 ---
 
 # Publishing a page
 
-**For a blog-only PR, publish on the strict build and `check_render.py` and the applicable
-mechanical merge checks.** Standing authorisation from Louis, 26 November 2026: any agent,
+**First, the post must be news and must pass the reader gate.** It carries a theoretical
+discovery or an advance in the software, for a reader outside the project; process accounts,
+digests and lone negative results go in the lab notebook (`docs/notebook/`). Run
+`python3 docs/scripts/check_prose.py docs/site/blog/<post>.md`: its dek and reader gate must
+pass (`write-blog-post`, "First: is it a post at all?").
+
+**For a blog-only PR, publish on the strict build, `check_render.py`, `check_prose.py` and the
+applicable mechanical merge checks.** Standing authorisation from Louis, 26 November 2026: any agent,
 including the author, merges without waiting for human approval, editorial sign-off, preview,
 `look`, or deployment completion. Do not leave a publishable PR for the maintainer.
 The steps below are improvements to the live blog post, not prerequisites; corrections ship as

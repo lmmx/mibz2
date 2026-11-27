@@ -21,9 +21,25 @@ mess of overloaded fragments nor childishly plain (Louis, 9 November 2026):
 It prints the post's summary (sentences, mean words, share flagged, Flesch reading ease, where
 higher is easier and 60+ is plain English), the dek's verdict, and the worst sentences.
 --all lists every flagged sentence. --changed BASE checks the posts changed since BASE (CI's
-site workflow runs it on every pull request); there a dek fails only if it is new or edited. The exit status is 1 if a dek fails. The body's
+site workflow runs it on every pull request); there a dek fails only if it is new or edited. The exit status is 1 if a dek, the reader gate or a title fails. The body's
 share of flagged sentences is reported against a target of 15%; it isn't yet a gate, since
 the existing posts are over it.
+
+**The reader gate: no internal shorthand** (Louis, 27 November 2026: the blog is "something
+worth telling the world"; dense shorthand belongs in the lab notebook, docs/notebook/). The
+sentence measures above can't see shorthand: a sentence made of code-formatted identifiers is
+short and scores as plain. So the body (before the closing **Sources:** list, without figures,
+code blocks and display maths) is also counted per 1,000 words, and a new or changed post fails
+when it exceeds any of these:
+- inline code spans, more than 25 (claim ids, constants, flags and paths read as code);
+- numbers set as code (`1.89%`, `0.9811`), more than 5: a measurement is prose, not code;
+- pull-request and issue references (#1118), more than 10: they belong in Sources.
+Commit hashes in the body are counted and reported, not gated: earlier accepted posts cite a few.
+The limits sit above every post published before the swarm (the highest: 24.6 code spans, 4.9
+numbers as code, 9.4 references per 1,000 words; calibrated 27 November 2026) and well below
+the swarm's shorthand digests (32 to 220 code spans). A new or edited title of a main post (not a
+technical companion) also fails if it is a list of three or more things, two commas or more: a
+title names one finding, not a digest of events.
 """
 import re
 import sys
@@ -33,6 +49,55 @@ DEK_WORDS = (16, 28)
 DEK_BREAKS, DEK_FIGURES = 1, 2
 DEK_FLESCH = (35, 70)
 MAX_FLAGGED = 0.15
+# The reader gate, per 1,000 words of body (see the docstring).
+MAX_CODE, MAX_NUMCODE, MAX_REFS = 25, 5, 10
+
+
+def gate_body(text):
+    """The body the reader gate counts.
+
+    No front matter, figures, code blocks, display maths or Sources list; links keep their text.
+    """
+    text = re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S)
+    for pat in (r"<figure.*?</figure>", r"<svg.*?</svg>", r"```.*?```", r"\$\$.*?\$\$"):
+        text = re.sub(pat, " ", text, flags=re.S)
+    i = text.rfind("**Sources")
+    if i > 0:
+        text = text[:i]
+    return re.sub(r"\]\([^)]*\)", "]", text)
+
+
+def shorthand(text):
+    """The reader gate's counts for a post: (problems, summary)."""
+    body = gate_body(text)
+    n = len(re.findall(r"[A-Za-z0-9]+", re.sub(r"<[^>]+>", " ", body)))
+    per_k = 1000 / max(n, 1)
+    code = re.findall(r"`[^`\n]+`", body)
+    numcode = [c for c in code if re.fullmatch(r"`[~≈<>+−-]?[\d.,]+\s*(?:%|ms|s|MB|GB|MiB|KiB|GiB|×|x)?`", c)]
+    plain = re.sub(r"`[^`\n]+`", " ", body)
+    refs = re.findall(r"(?<![\w&])#\d{3,5}\b", plain) + [c for c in code if re.search(r"#\d{3,5}", c)]
+    refs += re.findall(r"\bPRs? \d{3,5}\b", plain)
+    hashes = re.findall(r"\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b", body)
+    rates = (("inline code spans", len(code) * per_k, MAX_CODE),
+             ("numbers set as code", len(numcode) * per_k, MAX_NUMCODE),
+             ("PR or issue references", len(refs) * per_k, MAX_REFS))
+    problems = [f"{name} {r:.1f} per 1,000 words, over {lim}" for name, r, lim in rates if r > lim]
+    summary = ", ".join(f"{name} {r:.1f}/1k" for name, r, _ in rates) + f", hashes {len(hashes)}"
+    return problems, summary
+
+
+def title_of(text):
+    """The post's front-matter title, or None."""
+    m = re.search(r'^title: "(.*)"$', text, re.M)
+    return m.group(1) if m else None
+
+
+def title_problem(text):
+    """A main post's title that lists three or more things (two commas or more)."""
+    t = title_of(text)
+    if t is None or "Companion to" in text:
+        return None
+    return f"the title lists {t.count(',') + 1} things; name one finding" if t.count(",") >= 2 else None
 
 
 def prose_blocks(text):
@@ -175,6 +240,25 @@ def check(path, show_all, base=None):
         ok = dek_ok or unchanged
         verdict = "PASS" if dek_ok else ("unchanged since " + base + ", reported, not gated" if unchanged else "FAIL")
         print(f"  dek: {verdict} ({why})")
+    text = open(path, encoding="utf-8").read()
+    sh_problems, sh_summary = shorthand(text)
+    print(f"  reader gate: {'FAIL' if sh_problems else 'PASS'} ({sh_summary}"
+          + ("; " + "; ".join(sh_problems) if sh_problems else "") + ")")
+    if sh_problems:
+        print("    dense shorthand belongs in the lab notebook (docs/notebook/); a post is written for a reader outside the project")
+        ok = False
+    tp = title_problem(text)
+    if tp:
+        old = None
+        if base is not None:
+            import subprocess
+            prev = subprocess.run(["git", "show", f"{base}:{path}"], capture_output=True, text=True)
+            old = title_of(prev.stdout) if prev.returncode == 0 else None
+        if old is not None and old == title_of(text):
+            print(f"  title: {tp} (unchanged since {base}, reported, not gated)")
+        else:
+            print(f"  title: FAIL ({tp})")
+            ok = False
     worst = sorted(flagged, key=lambda x: (x[1], x[0]), reverse=True)
     for n, l, s in worst if show_all else worst[:8]:
         print(f"  [{n} words, load {l}] {s[:200]}{'…' if len(s) > 200 else ''}")
