@@ -3,7 +3,7 @@
 One line: of six same-day i9 bundles, only the one run at `--settle 0.2` shows mode (b). Every bundle at ab's default 2 s settle is unimodal fast, unpinned rows included, so mode (b) is a short-gap harness state and not the shipped default's majority state.
 
 - **Claim:** `explore` (recurring). Cold readback of archived bundles; nothing re-run.
-- **Evidence (`origin/evidence`, each SHA-256 checked against its archived `.sha256`):** `5e3f28cc` text-knee 17:27Z; `d6bc8ca2` scanner-adaptive-seam 19:26Z (`c14e53b4…c57c59`); `51183982` crossover 17:12Z; `0ffba60b` crossover 21:44Z; `5182d546` release-scaling 21:33Z.
+- **Evidence (`origin/evidence`, each SHA-256 checked against its archived `.sha256`):** `5e3f28cc` text-knee 17:27Z (`786084e2…`); `d6bc8ca2` scanner-adaptive-seam 19:26Z (`c14e53b4…`); `51183982` crossover 17:12Z (`be8305bd…`); `0ffba60b` crossover 21:44Z (`facc37f5…`); `5182d546` release-scaling 21:33Z (`3b3af8b1…`).
 - **Classifier:** a run is slow if its CPU exceeds 1.2x (1.25x for the load test) the fastest run in its (corpus, arm, threads, cpus) cell. Mode (b) is a ~1.4-1.6x uniform CPU scale, so the threshold is not delicate.
 
 ## Counts
