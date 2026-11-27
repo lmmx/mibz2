@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [When the hardware says no](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-hardware-verdicts-and-measurement-traps/index.md>): A physical i9 run rejects a scanner change while controlled probes isolate a 1.27 GB window blowup and a cold-start CI bias.
 - [The 256 KiB L2 cliff and the flipped knee](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-l2-cliff-register-wall-and-scanner-a2/index.md>): Composing the worker stack hits two sharp hardware walls while safe header decoding cuts serial parsing by a third and flips the eight-worker knee.
 - [The architecture of a 6 GB/s decoder](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-six-gbs-decoder-architecture/index.md>): Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.
 - [Reopening Open's middle and off-Wikidata](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-reopening-a6b-and-segmented/index.md>): A safe fixed-size redesign cuts Open's middle stage by 28% and a fallback stack speeds off-Wikidata blocks by 16%, while contraction hits a floor.
