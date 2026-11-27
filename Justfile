@@ -11,6 +11,7 @@ import ".just/rust.just"
 import ".just/ship.just"
 import ".just/share-nothing.just"
 import ".just/text-knee.just"
+import ".just/clock-modes.just"
 
 default: clippy
 
