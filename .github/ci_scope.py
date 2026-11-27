@@ -42,6 +42,21 @@ def git(*args):
     return subprocess.run(["git", *args], capture_output=True, check=True).stdout
 
 
+def merge_parent(head_sha):
+    """The base side of the checked-out PR merge commit, or None.
+
+    The payload's base.sha is the base tip when the event fired. GitHub can build
+    the merge ref on a newer base, and then master's drift between the two counts
+    as changed (#1017: 7 paths for a 1-file diff). The merge commit's first parent
+    is the base CI actually tests on, so diff against it whenever HEAD is exactly
+    (that parent, this PR's head).
+    """
+    parents = git("rev-list", "--parents", "-n", "1", "HEAD").decode().split()[1:]
+    if len(parents) == 2 and parents[1] == head_sha:
+        return parents[0]
+    return None
+
+
 def classify():
     event = os.environ.get("GITHUB_EVENT_NAME")
     if event not in ("pull_request", "push"):
@@ -51,6 +66,8 @@ def classify():
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as file:
         payload = json.load(file)
     base = payload["pull_request"]["base"]["sha"] if event == "pull_request" else payload["before"]
+    if event == "pull_request":
+        base = merge_parent(payload["pull_request"]["head"]["sha"]) or base
     if not re.fullmatch(r"[0-9a-f]{40}", base) or base == "0" * 40:
         return True, "no usable base"
     try:
