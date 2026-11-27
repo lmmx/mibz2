@@ -144,10 +144,12 @@ The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-
 | `deltas/*.md` | one ≤ 40-line write-up per finished session, the group's memory | the session that did the work |
 | `surface.tsv` | the measured frontier: each target, its room at 1 and 8 workers, its state, its evidence, its claims | whoever's result changes a row |
 | `STATUS.md` | the generated page: Needs Louis, flags, review, open claims, the blog board, deltas, dead ends, the surface. Local and gitignored; #943 publishes it | `frontier.py status`, never by hand |
+| `ledger.tsv` | the shipped-changes ledger: every merged software PR since the last release tag, its plain-language effect, state, measured result and evidence | whoever merges or maintains software changes |
 | `dead-ends.tsv` | every killed or stopped direction: its verdict, what it showed and its evidence. Read it before proposing a direction | whoever's claim ends KILL or STOP |
 | `config.toml` | mirror issues, protected paths, claim backlog and protocol settings | rarely changed |
 | `limits.toml` | owner-authorised operational reservation ceiling | ordinary lightweight config PR |
 | `tools/frontier.py` | brief, status, check, claim, release; standard library only | anyone, keeping `check` small |
+| `tools/ledger.py` | list merged software PRs since the newest ledger row, `--missing`, `--check`; standard library only | anyone maintaining `ledger.tsv` |
 
 **Admission and integration safety.** Acquisitions, renewals and review transfers compare-and-swap a shared admission epoch together with the individual lease using an atomic push. A competing admission invalidates the decision; retry from fresh state. The GitHub PR API is required for safe acquisition on a GitHub origin; unavailable data means no new acquisition. Participant independence is declared, not authenticated. The next acquisition reconciles exact merged and closed-unmerged integration reservations. Do not raise the cap until the updated client has been independently tested and deployed to all participating checkouts; older clients do not use the shared epoch and must not acquire or renew. No new server or dispatcher is required.
 
@@ -179,12 +181,18 @@ links = []
 
 Blog cards add `stage` (idea → outline → draft → review → revise → ready → published), `post` (its file under `docs/site/blog/`), `drafted_by`, `reviewed_by`, and from `outline` on `news` (one plain sentence: what an outside reader learns) and `news_kind` (`discovery` or `advance`). See "The blog board".
 
+## The ledger
+
+`frontier/ledger.tsv` is the merge log of what actually reached the software: one row per PR merged to `master` since the last release tag that touches `src/`, `python/`, `Cargo.*`, `pyproject.toml`, `build.rs` or a feature flag, sitting beside `CHANGELOG.md` (which release automation generates from commit messages). Each row records `pr`, `merged` (ISO date), `effect` (one plain sentence a user would understand, with no inline code, claim ids or `#N` references), `state` (`default`, `experimental`, `awaiting-review`, `prototype` or `target`), `measured` (a concrete figure, input and named machine — `i9`, `VM`, `CI` or `local` — or `not measured`) and `evidence` (path or PR). Run `python3 frontier/tools/ledger.py` to list merged software PRs since the newest row, `--missing` to verify nothing since the last release tag is unrecorded, and `--check` to validate the schema and prose rules.
+
 ## The blog board
 
 **One claim, one session.** Work that spans sessions (a census, then a build, then a workstation run) is several claims, each admitting the next. Don't put the i9 in a claim's `needs` unless that session itself runs on the workstation; runs go through the queue.
 
 **What the blog is for (Louis, 27 November 2026).** The blog is for something worth telling the
-world, written for a reader outside the project. Dense shorthand belongs in the
+world, written for a reader outside the project. Start from [the ledger](#the-ledger)
+(`frontier/ledger.tsv`) to see what actually reached the software and in what state, rather than
+re-deriving it from narratives. Dense shorthand belongs in the
 [lab notebook](../docs/notebook/README.md), never on the blog.
 - **A post carries news of one of two kinds:** a theoretical *discovery*, or an *advance* in the
   software itself. Positive findings far outweigh negative ones.
