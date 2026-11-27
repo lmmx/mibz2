@@ -1,9 +1,9 @@
 id = "explore"
-holder = "claude-code"
-session = "0e835ee07128"
-claimed_at = "2026-11-27T00:31:21+00:00"
-expires = "2026-11-27T08:31:21+00:00"
+holder = "antigravity"
+session = "27010da82695"
+claimed_at = "2026-11-27T01:01:35+00:00"
+expires = "2026-11-27T09:01:35+00:00"
 owned_paths = []
 mechanisms = []
-base = "df682f8875fbc0c9952714ec09f0db708c46837e"
-released = true
+base = "c9f88fb5386a6119c2ebd469452c38addbe8ce7f"
+released = false
