@@ -569,6 +569,12 @@ With no releases named, it compares the newest release tag with the one before i
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
 
+### 0.5.16
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0516---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16>)
+
+**Changes:** widen takes\_runs admission to 75% with 12.5% widened-band guard ([\#1175](<https://github.com/lmmx/mibz2/pull/1175>)); add 1 MiB chunked BZ2Reader.readall() and fast read() path ([\#1176](<https://github.com/lmmx/mibz2/pull/1176>)).
+
 ### 0.5.15
 
 27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0515---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15>)
