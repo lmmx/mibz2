@@ -3,7 +3,7 @@ title = "Executable i9 kill-test recipe for the registered sampled-anchor four-l
 kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
-priority = 2
+priority = 1  # sixteenth synthesis pass: #1110's verdict gates Cells-route retirement at t=1..7 and two lanes builds
 status = "open"
 owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
 mechanisms = ["forward-lanes-workstation-validation"]
