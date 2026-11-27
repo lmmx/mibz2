@@ -57,6 +57,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Reopening Open's middle and off-Wikidata" = "blog/2026-11-27-reopening-a6b-and-segmented.md" },
     { "Off Wikidata and inside the eight-worker tie" = "blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md" },
     { "The decoder's true floor and a pooled scan" = "blog/2026-11-26-true-floor-and-pooled-scan.md" },
     { "Dropping the coordinator" = "blog/2026-11-26-dropping-the-coordinator.md" },
@@ -295,6 +296,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-27-reopening-a6b-and-segmented.md" = "A safe fixed-size redesign cuts Open's middle stage by 28% and a fallback stack speeds off-Wikidata blocks by 16%, while contraction hits a floor." },
   { "blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md" = "Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie." },
   { "blog/2026-11-26-true-floor-and-pooled-scan.md" = "Zero-copy stand-ins drop mibz2's plumbing floor to 5 milliseconds and uncover hidden spelling and cache costs, while pooling the scan pays off only from slack." },
   { "blog/2026-11-26-dropping-the-coordinator.md" = "Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier." },
