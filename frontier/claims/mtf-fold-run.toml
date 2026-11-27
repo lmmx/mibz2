@@ -4,7 +4,8 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 2
-status = "open"
+status = "review"
+pr = 1041
 mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
 # (overlaps mtf-fold-build's paths on purpose: `claim` refuses this one until that hold is
 # released, i.e. until the prototype's PR has merged)

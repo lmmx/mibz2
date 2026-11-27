@@ -1,0 +1,38 @@
+id = "forward-rle1-crc-vectored-build"
+title = "4-lane vectored forward emission with zero-scratch in-place RLE1+CRC fusion"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/open.rs", "src/rle.rs", "src/crc.rs", "src/parallel.rs"]
+mechanisms = ["rle1-crc", "emission-walk"]
+needs_louis = ""
+question = """
+`forward-rle1-crc-fusion` passed its frozen stop test via 4-lane chunked forward emission + zero-scratch single-pass in-place tile RLE1 compaction + 64 KiB tiled PCLMULQDQ CRC32 + GF(2) `crc32_combine` + zero-stitch vectored 4-lane delivery (`fused_4l_tile4096_vec`): 13,360/13,360 byte- and CRC-exact checks (all 431 wikidata blocks, all 6 `ab gen` corpora, 56 synthetic/straddle stress blocks, 116 `F1b` blocks), cutting `wikidata x4` logical `E+A9` write traffic `-53.4%` (`1,718.2 -> 799.9 MiB`), beating matched 4-lane unfused control by `+49.9 ms` (`+3.82%` of 1,306 ms wall, non-overlapping) warm and `+31.8 ms` (`+2.43%`, non-overlapping, matching `floor_4lane_plus_crc`) cold on matched-AVX2 `-C target-cpu=native` (and `+46.4 ms` / `+3.55%` non-overlapping warm on baseline x86-64 even under `#![forbid(unsafe_code)]` SSE2 handicap), with zero regressions on `text`, `onebyte`, and `runs`.
+Once `forward-emission` lands 4-lane forward anchors on `src/open.rs`, implement vectored 4-lane fused emission+RLE1+CRC behind a clean research feature (or paired A/B toggle) using:
+1. `src/rle.rs`'s existing runtime-dispatched AVX2 run scanner on L1d/L2-hot lane chunks (`CHUNK_STEPS = 2048..4096`, `span/4` pre-allocated slack, zero-scratch in-place compaction while `dst <= src`, suffix-only scratch spill on net growth);
+2. 64 KiB tiled PCLMULQDQ `crc::update_with` per lane + GF(2) `crc32_combine` in `src/crc.rs`, with exact lane-boundary straddle check/repair (`0/431` straddles on wikidata) and bypass to shipped unfused path on small `no_lanes` blocks (`pattern.bz2`);
+3. Vectored 4-slice block delivery in `src/parallel.rs` (draining the 4 lane slices directly into caller output without stitching into a single `Vec<u8>`, preserving `BufRead` zero-copy semantics without changing public API compatibility).
+"""
+why = """
+Standalone single-pass RLE1+CRC hit a 72.3% compute floor (`single-pass-rle1-crc` STOP), and 4-lane stitched fusion loses to `74.9%` `memmove` (`-18.6%` writes). Vectored 4-lane tile fusion is the only tested path that breaks the standalone `A9` floor while preserving 4-lane MLP, cutting projected 1W `E+A9` by `~32-50 ms` (`+2.4-3.8%` of 1,306 ms wall) and removing `918 MiB` (`-53.4%`) of worker L3 write traffic on `wikidata x4`—directly attacking the worker-footprint LLC pressure (`k*W_worker`) that drives `A9`'s `2.55x` blow-up at 8-10W (`worker-l3-footprint`).
+"""
+stop_test = """
+Frozen before data: write an adoption registration before queuing the i9-10900K run (paired A/B against shipped 4-lane unfused `forward-emission` + `unrle_in_place` on `wikidata x4` at k=1, k=8, and k=10, plus all 6 `ab gen` corpora, 7+ interleaved repeats). Adopt as default only if: (1) 100% byte-, CRC-, and error-identical on all tests, fuzz smoke, synthetic boundary-straddle tests, and `wikidata x4`; (2) Miri clean on scalar paths and zero new unsafe outside existing `src/rle.rs`/`src/crc.rs` dispatch; (3) on i9-10900K baseline x86-64, cuts 1W wall by >= 2.0% (~26 ms) OR cuts 8W/10W wall (or worker CPU + DRAM traffic under S-ideal/post-scanner-wins) by >= 2.0% with non-overlapping 95% CIs, <= 1.05x RSS, and no > 3% regression on guard corpora (`runs`, `text`, `onebyte`, `pattern`). Otherwise KILL/STOP and record in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR gated behind a research feature (queued behind `forward-emission`), exactness + straddle tests + Miri clean, adoption registration frozen, workstation run queued, delta written, and `surface.tsv` row R updated.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md",
+  "examples/forward_rle1_crc_fusion.rs",
+  "docs/journal/2026-11-26-explore/rle1-crc-census.md",
+  "docs/journal/2026-11-26-synthesis/worker-l3-footprint.md",
+  "frontier/claims/forward-emission.toml",
+]
+links = [
+  "frontier/claims/forward-rle1-crc-fusion.toml",
+  "frontier/claims/forward-emission.toml",
+  "frontier/claims/single-pass-rle1-crc.toml",
+]

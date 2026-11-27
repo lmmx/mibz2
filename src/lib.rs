@@ -109,8 +109,9 @@ mod open;
 #[cfg(feature = "census")]
 #[doc(hidden)]
 pub mod census;
-// (research only: the ideal-parts matrix's oracles C, M, R and delivery mode D)
+// (research only: the ideal-parts oracles S, C, M, R and delivery mode D)
 #[cfg(any(
+    feature = "scan-oracle",
     feature = "ideal-construction",
     feature = "ideal-mtf",
     feature = "ideal-rle1",
@@ -125,6 +126,10 @@ pub mod phase;
 mod read;
 pub mod rle;
 pub mod runs;
+// (research only, `scan-oracle`: the parallel decoder's scanner recorded or replayed zero-copy)
+#[cfg(feature = "scan-oracle")]
+#[doc(hidden)]
+pub mod scan_oracle;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;

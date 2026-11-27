@@ -135,6 +135,20 @@ mtf-fold = []
 # replace (Wide fallback preserved), and generation-tagged L1d caches (contents[4096], pairs[1024]).
 # Zero new unsafe; default build unchanged. Retain until i9 paired A/B evaluation is read
 a6b-endpoint-redesign = []
+# Research only: zero-copy lock-free scan oracle (S, src/scan_oracle.rs, hooks in
+# src/parallel.rs, src/runs.rs, src/runs/fold.rs, src/mtf.rs): records each block's symbols
+# outside the clock and replays lightweight headers while workers borrow `&[u16]` directly from
+# the frozen OnceLock store, with optional scanner-thread CPU pinning. Never on a production
+# path. Retain while paired-oracle kill tests (bench-mtf-fold) use it
+scan-oracle = []
+# Research only: convenience bundle enabling all four ideal-parts oracles (C, M, R, D). Never on
+# a production path. Retain while ideal-parts oracles are in use
+ideal-parts = [
+  "ideal-construction",
+  "ideal-delivery",
+  "ideal-mtf",
+  "ideal-rle1",
+]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -200,6 +214,16 @@ required-features = ["owned-writer"]
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
+
+# The MTF-into-construction fold kill-test harness (bench-mtf-fold)
+[[example]]
+name = "mtf_fold"
+required-features = [
+  "ideal-construction",
+  "ideal-mtf",
+  "mtf-fold",
+  "scan-oracle",
+]
 
 # the MTF-into-construction fold on and off through the parallel decoder (research feature)
 [[test]]

@@ -1,0 +1,46 @@
+id = "mtf-fold-l1-batch-redesign"
+title = "L1d-batched packed maximal MTF fold + OutQ16 guard zone (rescue redesign for #1010)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = ["src/runs/fold.rs", "src/open.rs", "src/open/outq.rs"]
+mechanisms = ["mtf", "construction-first-pass"]
+needs_louis = ""
+question = """
+Cold dissection of #1010 (`docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md`) measured the real `mtf-fold` prototype on `corpora/wikidata.bz2` (233/233 Open blocks folded, 0 bailed) and found it actively SLOWER than shipped at k=1 (`wkr_cpu_ms` +1.61% baseline [7/7 repeats slower], +4.33% native) and k=2 (+1.71% baseline, +3.81% native). `objdump -d` traced the regression to four implementation pathologies in direct per-run `S: Sink` / `FoldSink` fusion:
+1. Catastrophic register-spill explosion exceeding x86-64's 15-GPR file: baseline spills `sink` (reloaded 10 times per literal) + 7 GPRs (`after`, `c`, `self.c`, `recs`, `t2`, `n`, `w`); `-C target-cpu=native` inlines `fold::front_avx2` into `worker` and spills BOTH MTF XMM/YMM registers (`f0` at `0x120(%rsp)`, `f1` at `0x180(%rsp)`) on every single literal;
+2. Memory-aliased `&mut FoldSink` state + dead `c == self.c && width != 0` merge check (0 / 15,141,602 hits on Wikidata; `seq_to_unseq` is injective);
+3. 417,041 `vzeroupper` + 5-YMM constant reloads on `push_slow` calls (baseline), 84.3% (351,722) of which are pure `f + 16 > 512` tail-of-chunk overrun guards;
+4. Port-5 shuffle contention between `front_avx2`'s 4x `vpshufb` and `OutQ16`'s `vpbroadcastw`.
+
+Redesign `mtf-fold` (keeping it behind `--features mtf-fold`) to decouple the two hot loops via a 1 KiB L1d-resident `[u32; 256]` packed maximal-run batch (`(c << 24) | total`, checked once before the loop for injective `seq_to_unseq`), keeping `front_avx2` `#[inline(never)]` with zero `f0`/`f1`/GPR spills and no `CAP=127` splitting or `cnt[256]` RMW, flushing every 256 runs into a dedicated `#[inline(never)]` `Pass::take` + `OutQ16` with a power-of-2 guard zone (`CHUNK = 496, STRIDE = 512` [1024 B] or `CHUNK = 1008, STRIDE = 1024` [2048 B], cutting `push_slow` 6.2x-10.3x with 0 overflow chunks on Wikidata). Does this rescue redesign clear both the local wikidata gate and `mtf-fold/registration.md`'s frozen i9 kill test (K1-K4)?
+
+Note (smooth-zone probe, 27 Nov, `docs/journal/2026-11-27-explore/mtf-l1-batch-and-outq32.md`; `stop_test` untouched): `examples/outq_hoist_and_rle_probe.rs` (233/233 Open blocks + 27 stress cases exact, 0 `f0`/`f1` spills in `objdump -d`, JCC-aligned native control) showed that `[u32; 256]` + `496/512` *without* hoisting saves only `-17.2 ms` (`-10.5%` A5+A6a; `-12.8..-16.0 ms` joint A5+A6a+A6c ≈ `1.85-2.49%` of 1W `wkr_cpu_ms`, right at/below `2.5%`), whereas adding **batch-hoisted `p`/`EPOCH` + `OVF_BIT` single-branch `f + w <= C` `push_hoisted` + register-local `m` + fused Pass-1 `lits` popcount** (100% safe Rust) doubles the alignment-invariant gain to **`-28.2..-32.0 ms` (`-18.1%..-20.8%` A5+A6a; `-28.3 ms` bidi / `-25.0 ms` fwd ≈ `-4.1%..-4.6%` of 1W `wkr_cpu_ms`)**. Guard invariant requires `f + w <= C` (not `f < C`). Run-encoded `OutQ32` STOPPED (`+34.6%..+40.6%` joint A5+A6a+A6c). Include a JCC-aligned control alongside default builds to rule out 20-40 ms 32B branch-alignment swings.
+"""
+why = """
+`A5 + A6a` is 332.7 ms at 1W (25.5% of wall) and 47.5 ms/w at 8W (25.7% of worker busy). Eliminating `124.5 MiB` of L2-spilling `runs: Vec<u16>`, `CAP=127` splitting, unused `counts`/`per`, `maximal()`, and `351,722` `OutQ16` tail-guard slow calls remains a substantial live opportunity once the register-spill and `FoldSink` aliasing pathologies are removed.
+"""
+stop_test = """
+Frozen before code (C1a / C2):
+1. Exactness & safety: 100% byte- and error-identical to shipped on `corpora/wikidata.bz2`, `ab gen` corpora (`text`, `random`, `onebyte`, `pattern`, `runs`, `records`), `cargo test --features mtf-fold`, and Miri on the scalar fold; zero new `unsafe` kinds (`OutQ16` guard zone stays 100% safe Rust).
+2. Disassembly gate (`objdump -d` on both baseline x86-64 and `-C target-cpu=native`): ZERO stack spills of `f0`/`f1` in Pass 2, ZERO per-literal `FoldSink` reloads, ZERO `vzeroupper` inside `OutQ16::push_slow`.
+3. Local VM gate BEFORE queueing any i9 workstation run (`examples/mtf_a6a_dissection.rs --features mtf-fold,trace` on `corpora/wikidata.bz2`, 7 interleaved repeats, `k = 1`): must beat shipped (`fold=OFF`) on `wkr_cpu_ms` and `A5+A6+A7` by >= 2.5% with non-overlapping `[min..max]` spreads on BOTH baseline x86-64 AND `-C target-cpu=native` (and `0` Open-block fallbacks). If it fails the local gate, STOP without spending an i9 run and record a scoped row in `frontier/dead-ends.tsv`.
+4. If local gate passes, judge on i9-10900K under the existing frozen `docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md` §3 kill test (K1-K4, VOID §3.5; never relaxed).
+"""
+done_when = """
+Redesigned `src/runs/fold.rs` + `src/open.rs` + `src/open/outq.rs` behind `--features mtf-fold`, disassembly verification, local wikidata gate table (baseline + native), tests + Miri passing, delta, and either queued for i9 under `mtf-fold/registration.md` or stopped cleanly in `dead-ends.tsv`.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md",
+  "docs/journal/2026-11-27-explore/mtf-l1-batch-and-outq32.md",
+  "docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md",
+  "src/runs/fold.rs",
+  "src/open/outq.rs",
+]
+links = [
+  "examples/mtf_a6a_dissection.rs",
+  "examples/outq_hoist_and_rle_probe.rs",
+  "frontier/claims/mtf-fold-run.toml",
+]
