@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Why compression ratio moves the scaling ceiling](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-why-the-scaling-ceiling-moves/index.md>): On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.
 - [Half the memory on compressible files](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-bounded-memory-on-highly-compressible-input/index.md>): Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.
 - [Faster decoding for ordinary text](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-faster-decoding-for-ordinary-text/index.md>): Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.
 - [Stages built to fit together](<https://lmmx.github.io/mibz2/pr-preview/pr-1132/blog/2026-11-27-stages-built-to-fit-together/index.md>): Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.
