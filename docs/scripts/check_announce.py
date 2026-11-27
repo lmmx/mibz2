@@ -4,9 +4,11 @@ Serves the built site (site/, from `just docs-build`) on localhost and drives it
 with Playwright. The expected text for every post is worked out here from the Markdown
 sources, independently of the page's script:
 
-    📣 mibz2 blog ⠶ <the card's title> <site_url>blog/<slug>/
+    <kind emoji> mibz2 blog ⠶ <the card's title> <site_url>blog/<slug>/
 
-where the card is the post's `<a class="post-card" href="<slug>.md">` in
+where the emoji is the post's kind, from its card's label through social_cards.py's KINDS (💡 a
+result, 🧩 a synthesis, 🔬 research in progress, ❓ an open question, 🧭 meta; 📣 for an unknown
+label), and the card is the post's `<a class="post-card" href="<slug>.md">` in
 docs/site/blog/index.md and site_url is zensical.toml's. It checks:
 
 - the index has exactly one control per post card, none nested in a card's link, and none
@@ -43,16 +45,21 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from social_cards import KINDS  # noqa: E402  (the label -> kind table that colours the cards)
 INDEX_MD = ROOT / "docs/site/blog/index.md"
-PREFIX = "📣 mibz2 blog ⠶ "
+PREFIX = " mibz2 blog ⠶ "
+EMOJI = {"result": "💡", "synthesis": "🧩", "progress": "🔬", "question": "❓", "meta": "🧭"}
+FALLBACK = "📣"
 SAMPLE = (
-    "📣 mibz2 blog ⠶ The decoder's true floor and the limits of a pooled scan "
+    "💡 mibz2 blog ⠶ The decoder's true floor and the limits of a pooled scan "
     "https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/"
 )
 LABEL = "Copy announcement"
 
 CARD = re.compile(
     r'<a class="post-card" href="(?P<href>[^"]+)\.md"[^>]*>.*?'
+    r'<span class="post-card-date">(?P<date>.*?)</span>.*?'
     r'<span class="post-card-title">(?P<title>.*?)</span>',
     re.S,
 )
@@ -64,7 +71,9 @@ def expected() -> dict[str, str]:
     out: dict[str, str] = {}
     for m in CARD.finditer(INDEX_MD.read_text(encoding="utf-8")):
         title = html.unescape(re.sub(r"<[^>]+>", "", m["title"])).strip()
-        out[m["href"]] = f"{PREFIX}{title} {site_url}blog/{m['href']}/"
+        label = html.unescape(m["date"]).split("·")[-1].strip()
+        emoji = EMOJI.get(KINDS.get(label, ""), FALLBACK)
+        out[m["href"]] = f"{emoji}{PREFIX}{title} {site_url}blog/{m['href']}/"
     return out
 
 
@@ -274,7 +283,8 @@ def main() -> int:
                 "e => e.dataset.state === 'copied'", arg=nb.element_handle(), timeout=3000
             )
             want_new = (
-                PREFIX
+                EMOJI["meta"]
+                + PREFIX
                 + 'Q&A: <tags> & café — "quotes" https://lmmx.github.io/mibz2/blog/2026-12-01-new-post/'
             )
             check(clip() == want_new, f"new post: copied {clip()!r}")
