@@ -1,9 +1,9 @@
-id = "synthesise"
+id = "migrate-rules"
 holder = "antigravity"
-session = "0578b49c27ce"
-claimed_at = "2026-11-27T03:22:01+00:00"
-expires = "2026-11-27T11:22:01+00:00"
-owned_paths = []
+session = "ffa3e879b589"
+claimed_at = "2026-11-27T03:33:18+00:00"
+expires = "2026-11-27T11:33:18+00:00"
+owned_paths = ["docs/team/RULES.md"]
 mechanisms = []
-base = "63e94c194400ac20f762213670d44ec3fc7b4f39"
+base = "da48997293faf726d1d9a803d49674291edc7f00"
 released = false
