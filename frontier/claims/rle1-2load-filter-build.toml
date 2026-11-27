@@ -1,0 +1,41 @@
+id = "rle1-2load-filter-build"
+title = "Ship 128B-unrolled 2-load m1 AVX2 find_runs and zero-vzeroupper raw-AVX2 unrle in src/rle.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/rle.rs"]
+mechanisms = ["rle1-2load-m1-filter", "rle1-raw-avx2-unrle"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/rle1-2load-filter.md` dissected `src/rle.rs` (`find_runs_avx2`, `unrle_in_place`, `unrle_avx2`) across 14 arms, 8 corpora (`wikidata_x4`, `text`, `random`, `onebyte`, `pattern`, `runs`, `records`, `zeros`), both L3-warm and L3-cold regimes, and both baseline x86-64 and JCC-32B-aligned builds (`101,234 / 101,234` bit-, CRC-, and error-exact checks; `0 B` extra memory):
+
+1. Replacing shipped 4-load 3-`vpcmpeqb` `find_runs_avx2` with 128-byte-unrolled 2-load 1-`vpcmpeqb` `m1` (`F3_m1_128b`: two `u64` masks with 2-bit carry `prev`, 1 branch / 128 B, multi-hit drain inside each `u64`, zero `vpand`, zero bounds panics) cuts isolated `find_runs` by **-21.6..-23.8% warm / -10.9..-11.3% cold** on `wikidata_x4` (both DISJOINT FASTER), **-36.5..-40.6%** on `text`, and **-60.8..-62.2%** on `runs`/`onebyte`/`zeros`.
+2. Replacing shipped `unrle_avx2` (which `objdump -d` shows emits **11 `vzeroupper` + `call memcpy` + `call memset`** from `extend_from_slice`/`resize`) with 62-byte-stride 2-load `m1` + direct `vmovdqu` stores + inline AVX2 `vpbroadcastb` fill + `#[cold]` `grow_out` (`U2_m1_64b_raw`: 0 hot-loop `memcpy`/`memset`/`vzeroupper`) cuts out-of-place `unrle` by **-55.1..-55.9% warm / -51.8..-53.3% cold** on `text`, **-21.5..-23.9% warm / -12.7..-13.7% cold** on `wikidata_x4`, and **-22.9..-30.8%** on `runs`.
+3. Keeping shipped `copy_within` + `fill` inside `unrle_in_place` (avoiding the `+6.1..+14.1%` `text` branch-misprediction regression of inline small-copy/fill) while swapping only `find_runs_avx2` (`F3`) + `unrle_avx2` (`U2`, also used on `shift > n` stage-swap) cuts whole `unrle_in_place` (`A9`) with **0/64 regressions**: `wikidata_x4` **-9.2..-11.0% warm / -5.8..-7.0% cold** (~0.8–0.9% projected i9 1W, stacking orthogonally with `crc32-avx2-ring-barrett-build`), `text` **-15.0..-16.1% A9 (-2.3..-2.6% total 1W)**, `runs` **-14.7..-16.6% A9 (-7.0..-9.0% 1W)**, `zeros` **-10.5..-11.2% A9 (-6.0..-6.6% 1W)**, `onebyte` **-8.8..-9.7% A9 (-4.8..-5.7% 1W)**, and `pattern` **-11.5..-13.9% A9**.
+
+Does shipping `F3_m1_128b` + `U2_m1_64b_raw` in `src/rle.rs` pass CI paired bench (`PERFORMANCE-POLICY.md` §2) with clean B5 safety proofs, Miri parity, `objdump -d` verification, and zero regressions?
+"""
+why = """
+RLE1 (`src/rle.rs`) runs on 100% of `Open`, `Cells`, and `Column` blocks (`A9` = ~8–9% of 1W on i9 `wikidata`, 15–16% on `text`, 48–59% on `runs`/`onebyte`/`zeros`). It is a self-contained `src/rle.rs`-only change (`0 B` extra memory) that directly cuts total 1W decode by 2.3–9.0% off-Wikidata and stacks orthogonally with `crc32-avx2-ring-barrett-build` (`src/crc.rs`) for a combined ~17–18% cut to `A9` on `wikidata`.
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & B5 safety: 100% bit-, CRC-, and error-identical (`RunUnfinished`) across `cargo test`, `fuzz-smoke`, Miri (scalar + portable tests), exhaustive 32B/64B/128B seam offsets `0..=130`, 2-run interference (`extra1 == c1/c2`), tile boundaries, and all 8 corpora; every `unsafe` intrinsic/pointer invariant documented under B5; `objdump -d` confirms 2-load 1-`vpcmpeqb` per 32B in `find_runs_avx2` and 0 hot-loop `memcpy`/`memset`/`vzeroupper` in `unrle_avx2`.
+2. Paired A/B (`examples/ab.rs` + CI paired bench under `PERFORMANCE-POLICY.md` §2): zero primary regression on `wikidata` or `text` at any thread count, zero secondary regression > 2% on `pattern`/`random`/`records`/`runs`/`onebyte`, peak RSS <= 1.005x (`0 B` extra heap), and measurable win on `text`/`runs`/`onebyte` (`>= 1.5%` on `text` or `>= 5%` on `runs`/`onebyte`). Otherwise STOP with a scoped dead-end row.
+"""
+done_when = """
+Striated PR on `src/rle.rs` with B5 safety proofs, exhaustive seam/interference unit tests, `objdump -d` audit, and green CI + paired bench passing `PERFORMANCE-POLICY.md` §2, merged cleanly with a delta and `surface.tsv` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/rle1-2load-filter.md",
+  "docs/journal/2026-11-26-explore/rle1-crc-census.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/rle.rs",
+]
+links = [
+  "examples/rle1_dissection.rs",
+  "frontier/deltas/2026-11-27-explore-rle1-2load-filter.md",
+  "frontier/claims/crc32-avx2-ring-barrett-build.toml",
+]
