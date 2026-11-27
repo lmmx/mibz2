@@ -573,6 +573,12 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 
 27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0516---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16>)
 
+- Faster decoding of compressible non-Wikidata blocks (\#1175). The Runs route now admits blocks whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at least 12.5% of their symbols are runs in the widened band.
+- Faster `BZ2Reader.readall()` from Python (\#1176): read in 1 MiB chunks and joined, with a fast path for `read()`.
+- The paired run on CI compared v0.5.15 at `aaaee363` with master at `66511da9` (Benchmark run 46035127124, AMD EPYC 9V74 80-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Features reviewed: none was removed; the `[features]` table is unchanged since 0.5.15 (the same 20 research features).
+- Worker counts: not recalibrated.
+
 **Changes:** widen takes\_runs admission to 75% with 12.5% widened-band guard ([\#1175](<https://github.com/lmmx/mibz2/pull/1175>)); add 1 MiB chunked BZ2Reader.readall() and fast read() path ([\#1176](<https://github.com/lmmx/mibz2/pull/1176>)).
 
 ### 0.5.15
