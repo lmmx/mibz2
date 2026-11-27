@@ -6,4 +6,4 @@ expires = "2026-11-27T21:37:41+00:00"
 owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
 mechanisms = ["release"]
 base = "dd93541881b29d7137066e07236095c70cd7ca1d"
-released = false
+released = true
