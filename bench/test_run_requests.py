@@ -146,7 +146,9 @@ class Fixture(unittest.TestCase):
         self.api = FakeAPI()
         self.api.prs[7] = {
             "state": "open",
+            "draft": False,
             "merged": False,
+            "base": {"ref": "master"},
             "head": {"sha": self.sha, "ref": BRANCH, "repo": {"full_name": "o/r"}},
         }
         self.api.reviews[7] = [
@@ -683,6 +685,225 @@ class Hold(Fixture):
             remote=str(self.origin), cwd=self.work, now=NOW, action="hold", recipe="bench-unlisted"
         )
         self.assertEqual([d.outcome for d in self.reconcile()], ["refused"])
+
+
+class SecurityHardening(Fixture):
+    """Regression tests for the 4 security/protocol defects reproduced against #1104 (01181d78)."""
+
+    def _commit_flag(self, filename, body):
+        flags_dir = self.work / "frontier" / "flags"
+        flags_dir.mkdir(parents=True, exist_ok=True)
+        (flags_dir / filename).write_text(body)
+        git(self.work, "add", "frontier/flags")
+        git(self.work, "commit", "-qm", f"flag {filename}")
+        git(self.work, "push", "-q", "origin", "master")
+
+    def test_directory_request_toml_refused_without_halting_other_requests(self):
+        """A directory named request.toml/ must be refused individually, never crashing the batch."""
+        good_ref = self.publish()
+        blob = git(self.work, "hash-object", "-w", "--stdin", input="x\n")
+        sub = git(self.work, "mktree", input=f"100644 blob {blob}\tinner\n")
+        root = git(self.work, "mktree", input=f"040000 tree {sub}\trequest.toml\n")
+        commit = git(self.work, "commit-tree", root, "-m", "dir request")
+        bad_ref = f"refs/heads/run-request/{RECIPE}/deadbeefcafe"
+        git(self.work, "push", "-q", "origin", f"{commit}:{bad_ref}")
+
+        report = {d.ref: d for d in self.reconcile()}
+        self.assertEqual(report[bad_ref].outcome, "refused", report[bad_ref])
+        self.assertEqual(report[good_ref].outcome, "activated", report[good_ref])
+        self.assertEqual(self.tag(f"ready/{RECIPE}"), self.sha)
+
+    def test_symlink_request_toml_refused_without_halting_other_requests(self):
+        """A symlink (mode 120000) named request.toml must be refused without halting valid work."""
+        good_ref = self.publish()
+        target = git(self.work, "hash-object", "-w", "--stdin", input="other.toml")
+        root = git(self.work, "mktree", input=f"120000 blob {target}\trequest.toml\n")
+        commit = git(self.work, "commit-tree", root, "-m", "symlink request")
+        bad_ref = f"refs/heads/run-request/{RECIPE}/cafebabedead"
+        git(self.work, "push", "-q", "origin", f"{commit}:{bad_ref}")
+
+        report = {d.ref: d for d in self.reconcile()}
+        self.assertEqual(report[bad_ref].outcome, "refused", report[bad_ref])
+        self.assertEqual(report[good_ref].outcome, "activated", report[good_ref])
+
+    def test_completed_non_passing_check_suites_with_zero_runs_refused(self):
+        """Completed Actions suites with startup_failure/failure/cancelled (0 runs) fail closed."""
+        for bad_conclusion in (
+            "startup_failure",
+            "failure",
+            "timed_out",
+            "action_required",
+            "cancelled",
+            None,
+        ):
+            with self.subTest(conclusion=bad_conclusion):
+                self.setUp()
+                self.api.suites[self.sha]["check_suites"].append(
+                    {
+                        "id": 99,
+                        "status": "completed",
+                        "conclusion": bad_conclusion,
+                        "app": {"slug": "github-actions"},
+                    }
+                )
+                self.publish()
+                report = self.reconcile()
+                self.assertEqual(report[0].outcome, "refused", report)
+                self.assertIn("completed with", report[0].reason)
+                self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+
+    def test_completed_cancelled_suite_with_passed_twins_allowed(self):
+        """A cancelled suite whose runs all have passed twins still activates cleanly."""
+        self.api.suites[self.sha]["check_suites"].append(
+            {
+                "id": 9,
+                "status": "completed",
+                "conclusion": "cancelled",
+                "app": {"slug": "github-actions"},
+            }
+        )
+        self.api.checks[self.sha]["check_runs"].append(
+            {
+                "name": "bench",
+                "status": "completed",
+                "conclusion": "cancelled",
+                "check_suite": {"id": 9},
+            }
+        )
+        self.api.checks[self.sha]["total_count"] += 1
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
+    def test_required_check_skipped_and_neutral_refused(self):
+        """Required checks (check-commit, no-ai-attribution) must succeed, not skip or neutral."""
+        for req_name, bad_concl in (
+            ("no-ai-attribution", "skipped"),
+            ("check-commit", "neutral"),
+            ("no-ai-attribution", "neutral"),
+        ):
+            with self.subTest(check=req_name, conclusion=bad_concl):
+                self.setUp()
+                for r in self.api.checks[self.sha]["check_runs"]:
+                    if r["name"] == req_name:
+                        r["conclusion"] = bad_concl
+                self.publish()
+                report = self.reconcile()
+                self.assertEqual(report[0].outcome, "refused", report)
+                self.assertIn("required", report[0].reason)
+                self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+
+    def test_required_check_cancelled_duplicate_with_success_twin_allowed(self):
+        """A superseded cancelled duplicate of a required check is allowed if a success twin exists."""
+        self.api.checks[self.sha]["check_runs"].append(
+            {
+                "name": "no-ai-attribution",
+                "status": "completed",
+                "conclusion": "cancelled",
+                "check_suite": {"id": 8},
+            }
+        )
+        self.api.checks[self.sha]["total_count"] += 1
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
+    def test_parked_lease_refused_and_integration_lease_allowed(self):
+        """Parked leases (yield-review) are refused; active integration leases remain accepted."""
+        for phase, expected in (("parked", "refused"), ("integration", "activated")):
+            with self.subTest(phase=phase):
+                self.setUp()
+                lease = (
+                    f'id = "{CLAIM}"\nholder = "x"\nsession = "{SESSION}"\n'
+                    f'phase = "{phase}"\n'
+                    f'claimed_at = "2026-11-27T06:00:00+00:00"\n'
+                    f'expires = "2026-11-27T12:00:00+00:00"\n'
+                    f'owned_paths = ["bench/workstation-queue.txt"]\nreleased = false\n'
+                )
+                blob = git(self.work, "hash-object", "-w", "--stdin", input=lease)
+                tree = git(self.work, "mktree", input=f"100644 blob {blob}\tlease.toml\n")
+                commit = git(self.work, "commit-tree", tree, "-m", f"lease {phase}")
+                git(self.work, "push", "-qf", "origin", f"{commit}:refs/heads/hold/{CLAIM}")
+                self.publish()
+                report = self.reconcile()
+                self.assertEqual([d.outcome for d in report], [expected], report)
+
+    def test_open_flags_block_claim_recipe_or_owned_path_but_not_resolved_or_unrelated(self):
+        """Open flags matching claim, recipe, or owned path refuse; unrelated or resolved pass."""
+        blocking = [
+            ("2026-11-27-claim.md", f"flags: {CLAIM}\ninvariant: test\nby: a\nstatus: open\n"),
+            ("2026-11-27-recipe.md", f"flags: {RECIPE}\ninvariant: test\nby: a\nstatus: open\n"),
+            (
+                "2026-11-27-path.md",
+                "flags: bench/workstation-queue.txt\ninvariant: test\nby: a\nstatus: open\n",
+            ),
+            (
+                "2026-11-27-bad-status.md",
+                f"flags: {CLAIM}\ninvariant: test\nby: a\nstatus: unknown\n",
+            ),
+        ]
+        for fname, body in blocking:
+            with self.subTest(blocking=fname):
+                self.setUp()
+                self._commit_flag(fname, body)
+                self.publish()
+                report = self.reconcile()
+                self.assertEqual(report[0].outcome, "refused", report)
+                self.assertIn("open flag", report[0].reason)
+                self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+
+        # Resolved flag on claim + unrelated open flag on another claim must NOT block
+        self.setUp()
+        self._commit_flag(
+            "2026-11-27-resolved.md",
+            f"flags: {CLAIM}\ninvariant: test\nby: a\nstatus: resolved\nresolved_by: b\n",
+        )
+        self._commit_flag(
+            "2026-11-27-unrelated.md",
+            "flags: other-claim-id\ninvariant: test\nby: a\nstatus: open\n",
+        )
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
+    def test_draft_pr_and_non_default_base_branch_refused(self):
+        """Draft PRs, missing draft field, and PRs targeting non-default bases are refused."""
+        cases = [
+            ("draft_true", {"draft": True}, "draft"),
+            ("draft_missing", {"draft": None}, "draft"),
+            ("wrong_base", {"base": {"ref": "feature-branch"}}, "targets"),
+            ("missing_base", {"base": {}}, "targets"),
+        ]
+        for label, patch, needle in cases:
+            with self.subTest(case=label):
+                self.setUp()
+                for k, v in patch.items():
+                    if v is None:
+                        self.api.prs[7].pop(k, None)
+                    else:
+                        self.api.prs[7][k] = v
+                self.publish()
+                report = self.reconcile()
+                self.assertEqual(report[0].outcome, "refused", report)
+                self.assertIn(needle, report[0].reason)
+                self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+
+    def test_identifiers_with_a_trailing_newline_are_refused_at_parse(self):
+        """`$` matches before a final newline; every identifier must match whole, not prefix."""
+        fields = dict(
+            version=1,
+            action="ready",
+            recipe=RECIPE,
+            sha=self.sha,
+            branch=BRANCH,
+            claim=CLAIM,
+            session=SESSION,
+            pr=7,
+            review=99,
+            created=NOW.isoformat(),
+        )
+        for key in ("recipe", "sha", "branch", "claim", "session"):
+            with self.subTest(key=key):
+                text = rr.render({**fields, key: fields[key] + "\n"})
+                with self.assertRaisesRegex(rr.Refused, f"bad {key}"):
+                    rr.parse(text)
 
 
 if __name__ == "__main__":
