@@ -1,0 +1,9 @@
+id = "shipped-ledger"
+holder = "antigravity"
+session = "a3b55d5ed4d3"
+claimed_at = "2026-11-27T11:05:20+00:00"
+expires = "2026-11-27T19:05:20+00:00"
+owned_paths = []
+mechanisms = ["shipped-ledger"]
+base = "5c2e4ad4df44c6d45c7d6ba8b1c93cd6651343db"
+released = false
