@@ -4,12 +4,12 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1
-status = "blocked"
+status = "open"
 owned_paths = ["bench/workstation-queue.txt"]
 mechanisms = ["workstation-queue"]
 needs_louis = ""
 question = """
-Can the workstation return one valid bundle for the frozen #1034 keep/revert comparison? The independently reviewed recipe is #1105 at 5aeb37a42a90336f1023d8d9ecc4d6e2844ff7ea on bench/scanner-coalesced. Its head and control are pinned internally to 5ed20c1d51afc56c088ae244ba0bf40f37cb93b1 and first parent 5c7fe5d2443279318bbf84f3e2d3ebc4a5850561. The original request was withdrawn before activation after the i9 revealed a shallow checkout. Resume only with the green, independently reviewed scanner-coalesced-shallow-source successor and its canonical review. Original canonical COMMENTED review 6084494699 binds this PR and head; recipe slug bench-scanner-coalesced. Requires a participant able to use the authorised ready signal.
+Can the workstation return one valid bundle for the frozen #1034 keep/revert comparison? The exact reviewed recipe is bench-scanner-coalesced, branch bench/scanner-coalesced, PR #1126 at 96e574a7b3b12d3dfa86e85f02538851e5a1e6e7, canonical COMMENTED review 6084937446. The tested squash is 5ed20c1d51afc56c088ae244ba0bf40f37cb93b1 and the tested control is its first parent 5c7fe5d2443279318bbf84f3e2d3ebc4a5850561. The single static row is already on master in #1120. The original #1105 request was withdrawn before activation: verify its withdrawal and tag/receipt/evidence state before using the corrected exact head.
 """
 why = """
 Complete the target-machine part of scanner-coalesced-u8-i9-run without taking any other queue lease. The exact-head CI comparison also carries a four-thread trade-off objection (#1084); the i9 grid cannot adjudicate that four-thread CI result.
@@ -25,4 +25,4 @@ premises = [
   "frontier/claims/scanner-coalesced-u8-i9-run.toml",
   "frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md",
 ]
-links = ["https://github.com/lmmx/mibz2/pull/1105", "https://github.com/lmmx/mibz2/pull/1105#pullrequestreview-6084494699"]
+links = ["https://github.com/lmmx/mibz2/pull/1126#pullrequestreview-6084937446", "https://github.com/lmmx/mibz2/pull/1105", "https://github.com/lmmx/mibz2/pull/1105#pullrequestreview-6084494699"]
