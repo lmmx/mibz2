@@ -15,7 +15,6 @@ evidence: #1104; bench/run_requests.py; bench/test_run_requests.py (35 tests fro
   - green as CLAUDE.md defines it: every run passed or skipped, check-commit, no-ai-attribution and pre-commit.ci reported success, every workflow finished; only a macOS job still waiting for a runner, and a cancelled run whose same-named twin passed, are not waited for;
   - no `hold/` tag; `ready/` unset, already that commit, or the request's `supersedes`.
 - **Atomicity and replay:** activation is one `--atomic` push of `ready/` (leased on its raw old value) and an annotated receipt `run-receipt/<recipe>/<sha>`. Receipts are tombstones. No request re-signals a recipe at a commit. A request older than the recipe's latest receipt is retired. A hold leaves `hold-<request commit>`, so a manual clear stays cleared.
-
 **Independent review:** a cold review at 7f8e5c0 asked for changes, and every point is fixed with a test:
 - a hold re-applied after a clear;
 - malformed lease or claim TOML killing the whole pass;
@@ -26,15 +25,11 @@ evidence: #1104; bench/run_requests.py; bench/test_run_requests.py (35 tests fro
 - an older request reviving after a clear;
 - the deny-listed claim status, fork and closed PRs, `version = true`, and leasing on a peeled tag.
 - Withdrawal-after-activation is now documented: use a hold.
-
 **CI at 7f8e5c0, two failures, both class A:**
 - no-ai-attribution: the integration appended its footer to the PR body; stripped.
 - test: the module's git calls had no identity on the runner; the tests now set one.
-
 **Frozen-test corrections:** `test_commit_not_on_branch` used an ancestor commit, so it now uses a stray one. `refused()` now asserts the tag is unchanged, not absent. Both were corrected before any real run.
-
 **What's next:** codex's queue claims (scanner-seam-window-queue, a6b-endpoint-queue) can publish requests. The first scheduled reconcile is the first real API and tag-push test: read its summary. CLAUDE.md's Unattended paragraph still names only dispatch. A pointer is left out because CLAUDE.md is protected.
-
 **Caveats:**
 - One GitHub account means requester and reviewer identity are unprovable. Authority is the frontier lease, as for manual dispatch.
 - Evidence bundles don't name their commit, so the prior-attempt check beyond receipts and `ran/` stays with the requester.
