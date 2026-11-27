@@ -19,43 +19,56 @@
 //!
 //! **Safety:** no `unsafe`; every index is bounds-checked.
 
-/// Ranks a chunk holds
+/// Ranks a chunk holds on the shipped path (and its power-of-2 chunk stride)
 const CHUNK: usize = 512;
-/// A chunk's bytes
-const BYTES: usize = 2 * CHUNK;
+/// Usable ranks per chunk on the `mtf-fold` path: leaves 16 guard ranks (32 B) at the end of each
+/// `2 * FOLD_STRIDE` byte chunk so any `w <= 16` thin run with `f + w <= FOLD_CHUNK` writes 32 B
+/// safely inside the chunk without hitting `push_slow` (0 overflow chunks on Wikidata)
+#[cfg(feature = "mtf-fold")]
+pub(super) const FOLD_CHUNK: usize = 1008;
+/// Power-of-2 chunk stride (ranks) on the `mtf-fold` path
+#[cfg(feature = "mtf-fold")]
+pub(super) const FOLD_STRIDE: usize = 1024;
 /// No chunk
 const NONE: u32 = u32::MAX;
 /// Ranks an epoch holds
 const EPOCH: u32 = 1 << 16;
+/// High bit of `fill[a]` marking an overflow (or not-yet-allocated) chunk when `HAS_GUARD` is
+/// enabled: folds `tail < in_out` into the single `f.wrapping_add(w) <= C` check on the fast path
+const OVF_BIT: u32 = 1 << 31;
 
 /// The queues' state kept between blocks: the chunks' links, the overflow chunks and the
 /// epochs' cuts (on the admitted blocks, a few KiB in all)
 #[derive(Default)]
 pub(super) struct Spill {
     next: Vec<u32>,
-    ovf: Vec<[u8; BYTES]>,
+    ovf: Vec<u8>,
     cuts: Vec<[u32; 256]>,
     /// (test only) the chunks the last block's first pass took
     #[cfg(test)]
     pub(super) taken: u32,
+    /// (test only) overflow chunks taken by the last block
+    #[cfg(test)]
+    ovf_chunks: usize,
 }
 
 impl Spill {
     /// (test only) the scratch it keeps, in bytes
     #[cfg(test)]
     pub(super) fn scratch(&self) -> usize {
-        4 * self.next.capacity() + BYTES * self.ovf.capacity() + 1024 * self.cuts.capacity()
+        4 * self.next.capacity() + self.ovf.capacity() + 1024 * self.cuts.capacity()
     }
 
     /// (test only) the overflow chunks the last block took
     #[cfg(test)]
     pub(super) fn overflow(&self) -> usize {
-        self.ovf.len()
+        self.ovf_chunks
     }
 }
 
-/// The queues while the first pass writes them
-pub(super) struct Queues<'a> {
+/// The queues while the first pass writes them (`C` usable ranks per `2 * STRIDE` byte chunk;
+/// `512/512` on the shipped path, `C/STRIDE` with a 16-rank guard zone under `mtf-fold`)
+pub(super) struct QueuesOf<'a, const C: usize, const STRIDE: usize = CHUNK> {
     out: &'a mut [u8],
     spill: &'a mut Spill,
     /// chunks `out` holds
@@ -64,7 +77,8 @@ pub(super) struct Queues<'a> {
     chunks: u32,
     heads: [u32; 256],
     tails: [u32; 256],
-    /// ranks in each byte's last chunk (`CHUNK` before its first)
+    /// ranks in each byte's last chunk (`C` before its first; bit 31 set on overflow chunks when
+    /// `HAS_GUARD` holds)
     fill: [u32; 256],
     /// the retained ranks the block may have (`Cap::m`)
     limit: u32,
@@ -72,25 +86,40 @@ pub(super) struct Queues<'a> {
     over: bool,
 }
 
+/// Shipped queues (`CHUNK = 512` usable ranks per 1024 B chunk)
+pub(super) type Queues<'a> = QueuesOf<'a, CHUNK, CHUNK>;
+
 /// Where the queues are, once written: each byte's first chunk
 pub(super) struct Heads {
     heads: [u32; 256],
     in_out: u32,
 }
 
-impl<'a> Queues<'a> {
+impl<'a, const C: usize, const STRIDE: usize> QueuesOf<'a, C, STRIDE> {
+    const BYTES: usize = 2 * STRIDE;
+    const HAS_GUARD: bool = C + 16 <= STRIDE;
+
     /// Empty queues in `out`, whose bytes are free until the walk, for at most `limit` ranks
     pub(super) fn new(out: &'a mut [u8], spill: &'a mut Spill, limit: u32) -> Self {
         spill.ovf.clear();
         spill.cuts.clear();
-        Queues {
-            in_out: (out.len() / BYTES) as u32,
+        #[cfg(test)]
+        {
+            spill.ovf_chunks = 0;
+        }
+        let init_fill = if Self::HAS_GUARD {
+            OVF_BIT | (C as u32)
+        } else {
+            C as u32
+        };
+        QueuesOf {
+            in_out: (out.len() / Self::BYTES) as u32,
             out,
             spill,
             chunks: 0,
             heads: [NONE; 256],
             tails: [NONE; 256],
-            fill: [CHUNK as u32; 256],
+            fill: [init_fill; 256],
             limit,
             over: false,
         }
@@ -120,16 +149,63 @@ impl<'a> Queues<'a> {
     /// `out`, and within an epoch. Anything else takes `push_slow`.
     #[inline(always)]
     pub(super) fn push(&mut self, a: usize, m: u32, w: u32, thin: &[u32; 256]) {
+        if Self::HAS_GUARD {
+            let f = self.fill[a];
+            let next_f = f.wrapping_add(w);
+            let lo = m & (EPOCH - 1);
+            if w <= 16 && next_f <= C as u32 && lo + w < EPOCH {
+                let at = self.tails[a] as usize * Self::BYTES + 2 * (f as usize);
+                let iota: [u16; 16] = std::array::from_fn(|i| (lo as u16).wrapping_add(i as u16));
+                for (d, v) in self.out[at..at + 32].chunks_exact_mut(2).zip(iota) {
+                    d.copy_from_slice(&v.to_le_bytes());
+                }
+                self.fill[a] = next_f;
+                return;
+            }
+            self.push_slow(a, m, w, thin);
+            return;
+        }
         let f = self.fill[a] as usize;
         let lo = m & (EPOCH - 1);
         let tail = self.tails[a];
-        if w <= 16 && f + 16 <= CHUNK && lo + w < EPOCH && tail < self.in_out {
-            let at = tail as usize * BYTES + 2 * f;
+        if w <= 16 && f + 16 <= C && lo + w < EPOCH && tail < self.in_out {
+            let at = tail as usize * Self::BYTES + 2 * f;
             let iota: [u16; 16] = std::array::from_fn(|i| (lo as u16).wrapping_add(i as u16));
             for (d, v) in self.out[at..at + 32].chunks_exact_mut(2).zip(iota) {
                 d.copy_from_slice(&v.to_le_bytes());
             }
             self.fill[a] = (f as u32) + w;
+        } else {
+            self.push_slow(a, m, w, thin);
+        }
+    }
+
+    /// Guard-zone `push` for thin runs (`1 <= w <= 16`) inside `mtf-fold`'s batch flush loop.
+    /// Because `OVF_BIT` is set in `fill[a]` before the first chunk and on overflow chunks,
+    /// `f.wrapping_add(w) <= C` proves `f < C < OVF_BIT`, `tails[a] < in_out`, and `f + 16 <= STRIDE`
+    /// in a single unsigned compare. When `NO_EPOCH` is true, the caller proved the entire batch
+    /// cannot reach an epoch boundary, eliminating the epoch check as well.
+    #[cfg(feature = "mtf-fold")]
+    #[inline(always)]
+    pub(super) fn push_thin_fast<const NO_EPOCH: bool>(
+        &mut self,
+        a: usize,
+        m: u32,
+        w: u32,
+        thin: &[u32; 256],
+    ) {
+        debug_assert!(Self::HAS_GUARD && w <= 16);
+        let f = self.fill[a];
+        let next_f = f.wrapping_add(w);
+        let epoch_ok = NO_EPOCH || ((m & (EPOCH - 1)) + w < EPOCH);
+        if next_f <= C as u32 && epoch_ok {
+            let at = self.tails[a] as usize * Self::BYTES + 2 * (f as usize);
+            let lo = m as u16;
+            let iota: [u16; 16] = std::array::from_fn(|i| lo.wrapping_add(i as u16));
+            for (d, v) in self.out[at..at + 32].chunks_exact_mut(2).zip(iota) {
+                d.copy_from_slice(&v.to_le_bytes());
+            }
+            self.fill[a] = next_f;
         } else {
             self.push_slow(a, m, w, thin);
         }
@@ -149,12 +225,21 @@ impl<'a> Queues<'a> {
         }
         let mut left = w;
         while left > 0 {
-            if self.fill[a] as usize == CHUNK {
+            let f_cur = if Self::HAS_GUARD {
+                (self.fill[a] & !OVF_BIT) as usize
+            } else {
+                self.fill[a] as usize
+            };
+            if f_cur == C {
                 self.take_chunk(a);
             }
-            let f = self.fill[a] as usize;
+            let f = if Self::HAS_GUARD {
+                (self.fill[a] & !OVF_BIT) as usize
+            } else {
+                self.fill[a] as usize
+            };
             let lo = m & (EPOCH - 1);
-            let take = left.min((CHUNK - f) as u32).min(EPOCH - lo);
+            let take = left.min((C - f) as u32).min(EPOCH - lo);
             let chunk = self.chunk_mut(self.tails[a]);
             for (i, d) in chunk[2 * f..2 * (f + take as usize)]
                 .chunks_exact_mut(2)
@@ -178,8 +263,15 @@ impl<'a> Queues<'a> {
     fn take_chunk(&mut self, a: usize) {
         let id = self.chunks;
         self.chunks += 1;
-        if id >= self.in_out && self.spill.ovf.len() <= (id - self.in_out) as usize {
-            self.spill.ovf.push([0; BYTES]);
+        if id >= self.in_out {
+            let need = ((id - self.in_out) as usize + 1) * Self::BYTES;
+            if self.spill.ovf.len() < need {
+                self.spill.ovf.resize(need, 0);
+            }
+            #[cfg(test)]
+            {
+                self.spill.ovf_chunks = self.spill.ovf_chunks.max((id - self.in_out) as usize + 1);
+            }
         }
         if self.spill.next.len() <= id as usize {
             self.spill.next.resize(id as usize + 1, NONE);
@@ -191,22 +283,27 @@ impl<'a> Queues<'a> {
             self.spill.next[self.tails[a] as usize] = id;
         }
         self.tails[a] = id;
-        self.fill[a] = 0;
+        self.fill[a] = if Self::HAS_GUARD && id >= self.in_out {
+            OVF_BIT
+        } else {
+            0
+        };
     }
 
     fn chunk_mut(&mut self, id: u32) -> &mut [u8] {
         if id < self.in_out {
-            let at = id as usize * BYTES;
-            &mut self.out[at..at + BYTES]
+            let at = id as usize * Self::BYTES;
+            &mut self.out[at..at + Self::BYTES]
         } else {
-            &mut self.spill.ovf[(id - self.in_out) as usize][..]
+            let at = (id - self.in_out) as usize * Self::BYTES;
+            &mut self.spill.ovf[at..at + Self::BYTES]
         }
     }
 }
 
 /// A byte's queue read in order: its chunk, the rank within it, the ranks read, and the
 /// epoch with the queue length at which it ends
-pub(super) struct Reader<'a> {
+pub(super) struct ReaderOf<'a, const C: usize, const STRIDE: usize = CHUNK> {
     out: &'a [u8],
     spill: &'a Spill,
     in_out: u32,
@@ -218,10 +315,16 @@ pub(super) struct Reader<'a> {
     cut: u32,
 }
 
-impl<'a> Reader<'a> {
+/// Shipped reader (`CHUNK = 512` usable ranks per 1024 B chunk)
+#[cfg(test)]
+pub(super) type Reader<'a> = ReaderOf<'a, CHUNK, CHUNK>;
+
+impl<'a, const C: usize, const STRIDE: usize> ReaderOf<'a, C, STRIDE> {
+    const BYTES: usize = 2 * STRIDE;
+
     /// Byte `a`'s queue, from its first rank
     pub(super) fn new(out: &'a [u8], spill: &'a Spill, heads: &Heads, a: usize) -> Self {
-        Reader {
+        ReaderOf {
             out,
             spill,
             in_out: heads.in_out,
@@ -247,9 +350,9 @@ impl<'a> Reader<'a> {
         mark: u32,
         predecessor: &mut u32,
     ) {
-        if self.at + span <= CHUNK && self.read + span as u32 <= self.cut && self.id < self.in_out {
+        if self.at + span <= C && self.read + span as u32 <= self.cut && self.id < self.in_out {
             let hi = self.epoch << 16;
-            let at = self.id as usize * BYTES + 2 * self.at;
+            let at = self.id as usize * Self::BYTES + 2 * self.at;
             let bytes = &self.out[at..at + 2 * span];
             let mut before = *predecessor;
             for (i, s) in bytes.chunks_exact(2).enumerate() {
@@ -289,18 +392,17 @@ impl<'a> Reader<'a> {
                     .get(self.epoch as usize)
                     .map_or(u32::MAX, |c| c[self.a]);
             }
-            if self.at == CHUNK {
+            if self.at == C {
                 self.id = self.spill.next[self.id as usize];
                 self.at = 0;
             }
-            let take = left
-                .min(CHUNK - self.at)
-                .min((self.cut - self.read) as usize);
+            let take = left.min(C - self.at).min((self.cut - self.read) as usize);
             let chunk: &[u8] = if self.id < self.in_out {
-                let at = self.id as usize * BYTES;
-                &self.out[at..at + BYTES]
+                let at = self.id as usize * Self::BYTES;
+                &self.out[at..at + Self::BYTES]
             } else {
-                &self.spill.ovf[(self.id - self.in_out) as usize][..]
+                let at = (self.id - self.in_out) as usize * Self::BYTES;
+                &self.spill.ovf[at..at + Self::BYTES]
             };
             let hi = self.epoch << 16;
             for (i, s) in chunk[2 * self.at..2 * (self.at + take)]
@@ -326,10 +428,10 @@ impl<'a> Reader<'a> {
     #[inline(always)]
     pub(super) fn wire(&mut self, dst: &mut [u32], pack: u32) {
         let span = dst.len();
-        if self.at + span <= CHUNK && self.read + span as u32 <= self.cut && self.id < self.in_out {
+        if self.at + span <= C && self.read + span as u32 <= self.cut && self.id < self.in_out {
             // the common case: one chunk of `out`, one epoch
             let hi = pack | (self.epoch << 16);
-            let at = self.id as usize * BYTES + 2 * self.at;
+            let at = self.id as usize * Self::BYTES + 2 * self.at;
             for (e, s) in dst
                 .iter_mut()
                 .zip(self.out[at..at + 2 * span].chunks_exact(2))
@@ -355,19 +457,20 @@ impl<'a> Reader<'a> {
                     .get(self.epoch as usize)
                     .map_or(u32::MAX, |c| c[self.a]);
             }
-            if self.at == CHUNK {
+            if self.at == C {
                 self.id = self.spill.next[self.id as usize];
                 self.at = 0;
             }
             let take = dst
                 .len()
-                .min(CHUNK - self.at)
+                .min(C - self.at)
                 .min((self.cut - self.read) as usize);
             let chunk: &[u8] = if self.id < self.in_out {
-                let at = self.id as usize * BYTES;
-                &self.out[at..at + BYTES]
+                let at = self.id as usize * Self::BYTES;
+                &self.out[at..at + Self::BYTES]
             } else {
-                &self.spill.ovf[(self.id - self.in_out) as usize][..]
+                let at = (self.id - self.in_out) as usize * Self::BYTES;
+                &self.spill.ovf[at..at + Self::BYTES]
             };
             let hi = pack | (self.epoch << 16);
             let (now, rest) = dst.split_at_mut(take);
