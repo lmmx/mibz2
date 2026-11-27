@@ -237,8 +237,12 @@ impl<'a> Reader<'a> {
     /// Each arrow from row u to v contributes v to u's low bits and u to
     /// v's low bits by XOR. The high bits of u hold its word code. Save the
     /// incoming neighbor of the mark to start the walk in either direction.
+    ///
+    /// With `CHECK_MARK` false the search for the mark is left out. That is exact for every
+    /// queue but the marked row's byte's: a queue holds only its own byte's retained ranks,
+    /// and the mark is one of them, so no other queue can hold it.
     #[inline(always)]
-    pub(super) fn wire_xor(
+    pub(super) fn wire_xor<const CHECK_MARK: bool>(
         &mut self,
         edges: &mut [u32],
         dst_start: usize,
@@ -255,23 +259,25 @@ impl<'a> Reader<'a> {
             for (i, s) in bytes.chunks_exact(2).enumerate() {
                 let u = dst_start + i;
                 let v = hi | u32::from(u16::from_le_bytes([s[0], s[1]]));
-                if v == mark {
+                if CHECK_MARK && v == mark {
                     before = u as u32;
                 }
                 edges[u] ^= pack | v;
                 edges[v as usize] ^= u as u32;
             }
-            *predecessor = before;
+            if CHECK_MARK {
+                *predecessor = before;
+            }
             self.at += span;
             self.read += span as u32;
         } else {
-            self.wire_xor_slow(edges, dst_start, span, pack, mark, predecessor);
+            self.wire_xor_slow::<CHECK_MARK>(edges, dst_start, span, pack, mark, predecessor);
         }
     }
 
     #[cold]
     #[inline(never)]
-    fn wire_xor_slow(
+    fn wire_xor_slow<const CHECK_MARK: bool>(
         &mut self,
         edges: &mut [u32],
         mut dst_start: usize,
@@ -309,7 +315,7 @@ impl<'a> Reader<'a> {
             {
                 let u = dst_start + i;
                 let v = hi | u32::from(u16::from_le_bytes([s[0], s[1]]));
-                if v == mark {
+                if CHECK_MARK && v == mark {
                     *predecessor = u as u32;
                 }
                 edges[u] ^= pack | v;

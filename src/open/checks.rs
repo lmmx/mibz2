@@ -384,3 +384,125 @@ fn full_nonzero_tail_links_to_its_overflow_chunk() {
     outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
     assert!(decoded.into_iter().eq(1..=514));
 }
+
+/// `wire_xor` without the mark search, against it with the search: on every queue that does
+/// not hold the mark the two write the same arrows and neither moves the predecessor, and on
+/// the marked queue the search finds the mark's row. The queues cross chunks of `out`,
+/// overflow chunks and two epoch ends, and are read in spans of 1 to 40.
+#[test]
+fn wire_without_the_mark_search_matches_wire_xor() {
+    let mut g = super::b5::Lcg(71);
+    // 3 bytes' queues, pushed in thin runs of 1 to 16 ranks, past 2 * 65,536 + 700 ranks
+    let total = 2 * 65_536 + 700;
+    let mut out = vec![0u8; 1024 * 150];
+    let mut spill = outq::Spill::default();
+    let mut owner = vec![0u8; total];
+    let heads = {
+        let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
+        let mut thin = [0u32; 256];
+        let mut m = 0;
+        while (m as usize) < total {
+            let a = 1 + g.below(3) as usize;
+            let w = (1 + g.below(16)).min(total as u32 - m);
+            queues.push(a, m, w, &thin);
+            owner[m as usize..(m + w) as usize].fill(a as u8);
+            thin[a] += w;
+            m += w;
+        }
+        assert!(!queues.over());
+        queues.heads()
+    };
+    let count = |a: u8| owner.iter().filter(|&&o| o == a).count();
+    for mark in [0, 65_535, 65_536, 100_001, total as u32 - 1] {
+        let marked = owner[mark as usize];
+        for a in 1..=3u8 {
+            let len = count(a);
+            let (mut with, mut without) = (vec![0u32; total], vec![0u32; total]);
+            let (mut pw, mut pwo) = (u32::MAX - 1, u32::MAX - 1);
+            let mut rw = outq::Reader::new(&out, &spill, &heads, usize::from(a));
+            let mut rwo = outq::Reader::new(&out, &spill, &heads, usize::from(a));
+            let mut dst = 0;
+            while dst < len {
+                let span = (1 + g.below(40) as usize).min(len - dst);
+                let pack = g.next() & !0x3_FFFF;
+                rw.wire_xor::<true>(&mut with, dst, span, pack, mark, &mut pw);
+                rwo.wire_xor::<false>(&mut without, dst, span, pack, mark, &mut pwo);
+                dst += span;
+            }
+            assert!(with == without, "byte {a}, mark {mark}");
+            assert_eq!(
+                pwo,
+                u32::MAX - 1,
+                "the search left out never moves the predecessor"
+            );
+            if a == marked {
+                // the mark's row: its position among the queue's ranks
+                let at = owner[..mark as usize].iter().filter(|&&o| o == a).count();
+                assert_eq!(pw, at as u32, "byte {a}, mark {mark}");
+            } else {
+                assert_eq!(pw, u32::MAX - 1, "byte {a}, mark {mark}");
+            }
+        }
+    }
+}
+
+/// A column of exactly `m` retained rows (thin runs of 1 to 16 rows over bytes 0 to 3) with
+/// `thick` thick runs of 17 to 200 rows over bytes 10 and 11 between them, which retain no row
+/// and give the construction words to spell. The marked row is a thin one.
+fn column_of_retained(g: &mut super::b5::Lcg, m: usize, thick: usize) -> Vec<u8> {
+    let mut thin = Vec::with_capacity(m);
+    while thin.len() < m {
+        let c = g.below(4) as u8;
+        // a thin run never joins the last one, so each stays at most 16 rows
+        let c = if thin.last() == Some(&c) {
+            (c + 1) % 4
+        } else {
+            c
+        };
+        let w = (1 + g.below(16) as usize).min(m - thin.len());
+        thin.extend(std::iter::repeat_n(c, w));
+    }
+    let mut l = Vec::with_capacity(m + 200 * thick);
+    let every = m / (thick + 1);
+    for (i, &c) in thin.iter().enumerate() {
+        l.push(c);
+        if thick > 0 && i % every == every - 1 && i / every < thick {
+            let t = 10 + (i / every % 2) as u8;
+            l.extend(std::iter::repeat_n(t, 17 + g.below(184) as usize));
+        }
+    }
+    l
+}
+
+/// The open kernel on columns of retained rows on both sides of the two-ended route's line
+/// (65,536 retained rows) and exactly at it, with the marked row in each of the thin bytes:
+/// the block's bytes equal the plain inverse's, and the route is the one the line gives.
+#[test]
+fn both_routes_at_and_around_the_two_ended_line() {
+    let mut g = super::b5::Lcg(29);
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    for m in [65_535, 65_536, 65_537] {
+        for thick in [0, 40] {
+            let l = column_of_retained(&mut g, m, thick);
+            let r = Runs::of_column(&l);
+            let mut seen = [false; 4];
+            for p in (0..l.len()).step_by(l.len() / 23) {
+                let c = l[p];
+                if c > 3 || seen[usize::from(c)] {
+                    continue;
+                }
+                seen[usize::from(c)] = true;
+                let stats =
+                    kernel.run::<true, true>(r.records(), l.len(), p as u32, LIMIT, &mut out);
+                assert_eq!(stats.retained, m);
+                assert_eq!(kernel.predecessor.is_some(), m >= 65_536, "m {m}");
+                assert!(
+                    out == super::b5::plain(&l, p as u32),
+                    "m {m}, thick {thick}, p {p}"
+                );
+            }
+            assert!(seen.iter().all(|&s| s), "m {m}: a mark in every thin byte");
+        }
+    }
+}
