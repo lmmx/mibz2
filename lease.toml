@@ -1,9 +1,9 @@
-id = "post-1080-open-admission"
+id = "mtf-fold-batch-measure"
 holder = "antigravity"
-session = "3ae955f625dc"
-claimed_at = "2026-11-27T19:38:12+00:00"
-expires = "2026-11-28T03:38:12+00:00"
-owned_paths = ["src/open.rs"]
-mechanisms = ["two-tier-open-admission", "post-1080-route-boundary"]
-base = "84e09879c7bb391d752ed26124f91a0ce87c7012"
+session = "56b82ce93c58"
+claimed_at = "2026-11-27T20:17:00+00:00"
+expires = "2026-11-28T04:17:00+00:00"
+owned_paths = ["src/open/outq.rs", "examples/mtf_a6a_dissection.rs"]
+mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
+base = "559ca20682e9eff51ac0e62033cf3a0dc35a33a8"
 released = false
