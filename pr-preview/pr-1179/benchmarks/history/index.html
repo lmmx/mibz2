@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=49c9ae8936a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=1b6492288007">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=49c9ae8936a8">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -763,6 +763,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-25-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1064,6 +1075,17 @@
   
     <nav class="md-nav" aria-label="What changed, release by release">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-0-5-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        0.5.16
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#release-0-5-15" class="md-nav__link">
@@ -4254,6 +4276,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-25-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4555,6 +4588,17 @@
   
     <nav class="md-nav" aria-label="What changed, release by release">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-0-5-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        0.5.16
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#release-0-5-15" class="md-nav__link">
@@ -5133,6 +5177,88 @@ paired wall ratios against the reference arm, with its 95% interval: a minus sig
 faster. Up to the machine's physical core count, each thread runs on a core of its own
 (<code>--spread</code>); above it, threads share cores.</p>
 <h3 id="2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz">2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz" title="Permanent link">&para;</a></h3>
+<p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.5.16</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16">the records</a></p>
+<p><strong><code>wikidata</code></strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">0.5.16 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 wall (median)</th>
+<th style="text-align: right;">0.5.15 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 against 0.5.16</th>
+<th style="text-align: right;">0.5.15 against 0.5.16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.351 s</td>
+<td style="text-align: right;">2.509 s</td>
+<td style="text-align: right;">0.352 s</td>
+<td style="text-align: right;">+604.7% (+586.8, +623.1) <strong>slower</strong></td>
+<td style="text-align: right;">+1.2% (−1.1, +3.5)</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.211 s</td>
+<td style="text-align: right;">1.340 s</td>
+<td style="text-align: right;">0.213 s</td>
+<td style="text-align: right;">+527.8% (+514.6, +541.2) <strong>slower</strong></td>
+<td style="text-align: right;">+0.3% (−2.0, +2.6)</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.132 s</td>
+<td style="text-align: right;">0.713 s</td>
+<td style="text-align: right;">0.133 s</td>
+<td style="text-align: right;">+437.1% (+426.7, +447.8) <strong>slower</strong></td>
+<td style="text-align: right;">−0.6% (−3.6, +2.5)</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.066 s</td>
+<td style="text-align: right;">0.513 s</td>
+<td style="text-align: right;">0.066 s</td>
+<td style="text-align: right;">+679.1% (+677.0, +681.2) <strong>slower</strong></td>
+<td style="text-align: right;">+0.5% (−0.1, +1.1)</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.059 s</td>
+<td style="text-align: right;">0.505 s</td>
+<td style="text-align: right;">0.059 s</td>
+<td style="text-align: right;">+750.6% (+746.4, +754.8) <strong>slower</strong></td>
+<td style="text-align: right;">+0.7% (−0.8, +2.2)</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.060 s</td>
+<td style="text-align: right;">0.508 s</td>
+<td style="text-align: right;">0.062 s</td>
+<td style="text-align: right;">+719.2% (+678.1, +762.4) <strong>slower</strong></td>
+<td style="text-align: right;">−0.5% (−5.8, +5.0)</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.061 s</td>
+<td style="text-align: right;">0.497 s</td>
+<td style="text-align: right;">0.059 s</td>
+<td style="text-align: right;">+708.9% (+690.4, +727.8) <strong>slower</strong></td>
+<td style="text-align: right;">−1.6% (−4.5, +1.5)</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.060 s</td>
+<td style="text-align: right;">0.492 s</td>
+<td style="text-align: right;">0.061 s</td>
+<td style="text-align: right;">+717.1% (+699.5, +735.1) <strong>slower</strong></td>
+<td style="text-align: right;">+2.5% (−2.6, +7.9)</td>
+</tr>
+</tbody>
+</table>
+<p>Every arm's output was the same bytes as the reference's.</p>
+<h3 id="2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz_1">2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-27-intelr-coretm-i9-10900k-cpu-370ghz_1" title="Permanent link">&para;</a></h3>
 <p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.5.15</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15">the records</a></p>
 <p><strong><code>wikidata</code></strong></p>
 <table>
@@ -7362,6 +7488,16 @@ its opening sentence, the first sentence of each summary written for it, its cha
 their pull requests, and the blog posts that explain it. A post names the releases it
 explains in its front matter (<code>releases: ["0.5.8"]</code>), and its header links back here. The
 figures behind each summary are in the CHANGELOG.</p>
+<h3 id="release-0-5-16">0.5.16<a class="headerlink" href="#release-0-5-16" title="Permanent link">&para;</a></h3>
+<p class="rn-meta">27 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0516---2026-11-27">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16">its diff</a></p>
+<ul>
+<li>Faster decoding of compressible non-Wikidata blocks (#1175). The Runs route now admits blocks whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at least 12.5% of their symbols are runs in the widened band.</li>
+<li>Faster <code>BZ2Reader.readall()</code> from Python (#1176): read in 1 MiB chunks and joined, with a fast path for <code>read()</code>.</li>
+<li>The paired run on CI compared v0.5.15 at <code>aaaee363</code> with master at <code>66511da9</code> (Benchmark run 46035127124, AMD EPYC 9V74 80-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).</li>
+<li>Features reviewed: none was removed; the <code>[features]</code> table is unchanged since 0.5.15 (the same 20 research features).</li>
+<li>Worker counts: not recalibrated.</li>
+</ul>
+<p><strong>Changes:</strong> widen takes_runs admission to 75% with 12.5% widened-band guard (<a href="https://github.com/lmmx/mibz2/pull/1175">#1175</a>); add 1 MiB chunked BZ2Reader.readall() and fast read() path (<a href="https://github.com/lmmx/mibz2/pull/1176">#1176</a>).</p>
 <h3 id="release-0-5-15">0.5.15<a class="headerlink" href="#release-0-5-15" title="Permanent link">&para;</a></h3>
 <p class="rn-meta">27 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0515---2026-11-27">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15">its diff</a></p>
 <ul>
@@ -7813,21 +7949,21 @@ figures behind each summary are in the CHANGELOG.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/bench.js?v=49c9ae8936a8"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/couriers.js?v=49c9ae8936a8"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/blog.js?v=49c9ae8936a8"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/announce.js?v=49c9ae8936a8"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/frontier.js?v=49c9ae8936a8"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/observatory.js?v=49c9ae8936a8"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=1b6492288007"></script>
+        <script src="../../assets/javascripts/katex.js?v=49c9ae8936a8"></script>
       
     
   </body>
