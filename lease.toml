@@ -1,9 +1,9 @@
-id = "resume-released-pr-claim"
+id = "lanes-disjoint-slabs-build"
 holder = "antigravity"
-session = "ac425dd31ecc"
-claimed_at = "2026-11-27T18:38:18+00:00"
-expires = "2026-11-28T02:38:18+00:00"
-owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
-mechanisms = []
-base = "77c015db882285eed56063048c07af1d5e918184"
+session = "b5f713395993"
+claimed_at = "2026-11-27T18:48:20+00:00"
+expires = "2026-11-28T02:48:20+00:00"
+owned_paths = ["src/open/lanes.rs"]
+mechanisms = ["forward-lanes-disjoint-slabs", "forward-lanes-inline-long"]
+base = "926ff31bd6e6534ef2a002d93dc1387b8239e084"
 released = false
