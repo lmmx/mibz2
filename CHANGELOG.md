@@ -58,6 +58,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fifteenth synthesis pass: shipped trim hides the scanner on i9 Wikidata; i9 clock modes ([#1189](https://github.com/lmmx/mibz2/pull/1189))
 - queue bench-text-knee at af7ff482 (text-knee-i9) ([#1188](https://github.com/lmmx/mibz2/pull/1188))
 
+- **Recalibrated `OpenCells` admission and direct `Segmented` fallback (#1222).** `OpenCellsOf::cap`
+  in `src/open.rs` now admits run-route blocks in `1/64 <= r/n < 0.10` outright (`Cap::NONE`),
+  checks `0.10 <= r/n < 0.21` via `within_cap` against `m <= min(256_000, 0.27 * n)` and
+  `strips <= 16_384`, and routes `r/n >= 0.21` (and `< 1/64`) directly to `Segmented` (dropping the
+  dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`). All
+  233/233 full Wikidata blocks remain in `OpenCells` (zero `Segmented` fallback scratch allocation),
+  while high-`m/n` `text` blocks (`m/n = 0.42`) route straight to `Segmented`: paired native
+  `OpenCells` runs measured −1.9% CPU and −2.6% wall on Wikidata at 8 workers (0.99× peak memory at
+  1 and 4 workers) and −4.4% whole-decoder CPU on `text` at 1 worker.
+- **Opt-in experimental features (off by default, zero default-build change):**
+  - `forward-anchor-lanes` (#1217): disjoint recycled 32 KiB per-lane slabs, inline long-word fast
+    path, and out-of-line `run<K>` (`0` new `unsafe`).
+  - `mtf-fold` (#1132): L1d-batched packed MTF fold and 16-entry `OutQ16` guard zone (stopped at
+    its local gates, retained behind `--features mtf-fold`).
+
+**The paired run on CI** compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run
+[46069227845](https://github.com/lmmx/mibz2/actions/runs/46069227845), **AMD EPYC 7763 64-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier metadata and version numbers from `292854d3` to the `v0.5.17` tag commit `01acd74d`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. Wikidata wall is +0.1% (−0.3%, +0.4%) at 1 thread, +0.9%
+  (−1.5%, +3.3%) at 2 threads, and +0.1% (−1.1%, +1.2%) at 4 threads (peak RSS 28 / 55 / 84 MB,
+  +0.1% / −0.3% / −0.0%); `random` is faster at 1 thread (−3.2% [−3.8%, −2.6%]) and 4 threads
+  (−4.4% [−6.0%, −2.7%]); `pattern` peak RSS fell −6.4% at 4 threads (38 → 36 MB; CPU +4.9%);
+  `text` wall is +0.8% (+0.2%, +1.5%) at 1 thread (CPU +0.7% [−0.0%, +1.5%]), −2.3% (−5.8%, +1.2%)
+  at 2 threads, and +1.7% (−1.7%, +5.2%) at 4 threads. The one-thread stage total is 6.86 → 6.78
+  c/B (−1.0% [−2.0%, −0.0%]; walk 3.28 → 3.19 c/B, −2.2% [−4.2%, −0.1%]).
+- **Why:** on CI's 4-CPU runner the default decoder runs eager `Cells` at 1–4 threads rather than
+  `OpenCells`, so #1222's admission change is not exercised on CI's 1–4 thread path, and #1217 and
+  #1132 are behind opt-in features. The i9 release-scaling and crossover runs (`01acd74d`, queued in
+  #1226) measure `OpenCells` directly across 1–20 threads.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.16 (the same 20 research features). The follow-ons listed under 0.5.15/0.5.16 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1222 keeps all 233/233 full Wikidata blocks
+in `OpenCells` with zero `Segmented` spill (#1217 and #1132 are off by default), and 0.5.16's
+crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9 at
+`01acd74d` (`#1226`, `ready/bench-release-scaling` and `ready/bench-crossover` confirmed on
+origin); results will be appended here when the bundles land on `evidence`.
+
 ## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
 
 ### <!-- 3 -->Performance
