@@ -1,0 +1,31 @@
+id = "blog-cards-cite-ledger"
+title = "Blog cards name the merged changes they report, checked against the ledger and master"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"   # opened over max_open_claims at Louis's direction, 27 November 2026; starts once shipped-ledger has merged
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+mechanisms = ["blog-admission"]
+needs_louis = ""
+question = """
+After shipped-ledger: make a blog card's news come from what shipped, not from the drafter's narrative. A card past idea with news_kind = "advance" must list `changes = [<PR numbers>]`; `frontier.py check` fails it unless each PR has a row in frontier/ledger.tsv and its merge commit is on origin/master. A news_kind = "discovery" card lists its evidence instead (`evidence = [paths]`, each existing). Add `frontier.py news` (read-only): ledger rows with state default or experimental merged since the newest published post's date and not yet named by any card, so the "what reached users since the last post?" pass starts from the ledger. Update "The blog board" in frontier/README.md, write-blog-post ("First: is it a post at all?") and tests/test_frontier.py. Depends on the admission test of PR #1146 (news, news_kind, one card in progress).
+"""
+why = """
+The 27 November failure: a merged fix (#1129, half the peak memory on highly compressible input) was classed as a negative result because the triage read the post's framing, not the merge log. Tying cards to the ledger makes advances visible whether or not anyone narrated them well, and stops prototypes or targets being pitched as shipped.
+"""
+stop_test = """
+Frozen before data: PASS iff (1) a test card with news_kind advance and no `changes`, or naming an unmerged or unledgered PR, fails `frontier.py check`; (2) one naming a ledgered PR merged on master passes; (3) a discovery card with a missing evidence path fails; (4) `frontier.py news` lists a ledgered default-state PR not named by any card and omits one that is named; (5) all tests/test_frontier.py tests pass. Otherwise not done.
+"""
+done_when = """
+PR merged with the check, the news command, tests, README and skill updates, and a delta.
+"""
+premises = [
+  "frontier/tools/frontier.py",
+  "frontier/README.md",
+  "tests/test_frontier.py",
+]
+links = [
+  "frontier/claims/shipped-ledger.toml",
+  "frontier/claims/claims-match-state.toml",
+]
