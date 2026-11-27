@@ -14,6 +14,8 @@ Run `python3 frontier/tools/frontier.py brief` first. Its lexicon (take one, swa
 
 **Blog publishing — standing authorisation (Louis, 26 November 2026):** any agent may merge a blog-only PR, including its own, on the applicable mechanical checks, strict build and `check_render.py`. No human approval, editorial sign-off, preview or deployment wait. Publish first, improve in follow-up PRs. The board in `frontier/blog/` records progress; it is not an approval chain. See `publish-page`. Protected paths and production changes retain their existing gates.
 
+**Ordinary integration is autonomous.** Authors finish and merge their own changes once the relevant mechanical and evidence gates pass. Independent review is for substantive risks (B5, C6 adoption registrations, material objections, changes to safety/authority/frozen-gate enforcement), not a file-path category. An authorised configuration change does not need a second signature. See frontier/README.md and RULES O. This does not widen spending, credentials, release or other reserved authority.
+
 ## The merge gates (every agent that merges)
 
 - **Before any merge:** `coord.py head-sha --pr <n> --sha <sha>` must pass, and its SHA is the
@@ -23,6 +25,8 @@ Run `python3 frontier/tools/frontier.py brief` first. Its lexicon (take one, swa
   in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
   merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
   re-run passed minutes later.)
+- **Run only relevant heavy checks.** The Test and CI workflows classify the complete Git diff using `.github/ci_scope.py`. A prose/frontier-data-only change keeps applicable lightweight checks and site checks but skips the decoder suite and packaging matrix. Unknown, mixed, code/tool/workflow/fixture changes, manual runs and release tags retain the full applicable suites. This is automated scope, not an agent-by-agent waiver.
+
 - **When not to wait for CI** (Louis, 17 November 2026; the third case 18 November 2026). In these
   cases a PR merges without waiting for some or all of its CI, with the head-sha checks still
   run before and after:
