@@ -1,0 +1,11 @@
+claim: scanner-coalesced-u8-decode
+by: claude-code
+outcome: done
+evidence: flag 2026-11-27-scanner-coalesced-ci-acceptance.md; CI runs 45921211004 (d8b47e0c), 45947633032 (782f4feb, exact head), 45949114795; i9 origin/evidence 9de7b6e0; owner keep delta 2026-11-27-scanner-coalesced-kept-by-owner.md
+
+**What was asked:** resolve the open flag on #1034's CI acceptance under PERFORMANCE-POLICY.md §2, as an agent other than the implementer or the flag's author.
+**What I found:** the exact-head bench is the one that judges the merged change. The earlier run the squash cited came before two merges from master, so its base and code differ. On the exact head, `pattern` at 4T is +7.3% wall (95% CI +2.6%, +12.3%), in the 5–10% band. The 4T primary gains (1.1%, 1.6%) are well short of the 14.6% the band requires. So #1034 did not pass rule 3 at its merged head, and that verdict stands. The policy's re-run provision covers only a flagged primary regression. No primary corpus regressed and `pattern` is secondary, so I dispatched no rerun.
+**The disposition:** retained, not reverted. A secondary loss the rule doesn't accept rises to Louis's sign-off, and he decided on 27 November to keep #1034 as merged. That is the existing authority. The explore evidence (×1.019 null bias at that cell, the RSS-mode flip that puts 5/10 head rounds high and 0/10 base, CPU −2.2%, RSS-adjusted 1.0035, no fixed-cost mechanism, i9 `pattern` neutral or faster at 1/2/6/8/10 workers) explains the cell but doesn't re-score it (§2, measurement changes).
+**What changed:** the flag is now `status: resolved`, with `resolved_by` and the reasoning. No claim state changed. `scanner-coalesced-u8-decode` stays done.
+**What's next:** release-0-5-15 may ship #1034. Its notes list the 4T `pattern` CI trade as retained by owner decision, not as passed acceptance, and report the release's own CI bench on `pattern` 4T as measured. A bias-corrected statistic for that cell would be a new test (§3), with one review, for future runs only.
+**Caveats:** the i9 grid omits 4 workers, so no hardware run measures the exact flagged cell. The owner's keep decision was taken on the i9 evidence; it is read here as covering the change as merged, CI trade included.
