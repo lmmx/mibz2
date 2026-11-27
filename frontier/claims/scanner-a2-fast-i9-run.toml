@@ -1,0 +1,29 @@
+id = "scanner-a2-fast-i9-run"
+title = "i9-10900K keep/revert run of the fast A2 scanner setup (direct selector runs, multi-length code-length LUT, single-write table build)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = [".just/bench.just", "bench/scanner_a2_fast.py", "bench/test_scanner_a2_fast.py", "bench/workstation-queue.txt"]
+mechanisms = ["scanner-a2-build"]
+needs_louis = ""
+question = """
+PR #1117 (`scanner-a2-fast-build`) is correct and reviewed but held open: CI's two cores cannot see a scanner cut (exact-head bench: scanner -4.5% beyond noise, masked by an unrelated +7.6% MTF layout shift). Its frozen stop test's gate 2 is a workstation one. Run it before merge, against the merge base: write the recipe to gate 2 unchanged (paired A/B of #1117 merged with master against that master commit, `wikidata x4`, 7+ interleaved repeats, single-thread serial scan `S'` = A2 + A3 as `examples/phases.rs` reads it, guard corpora `text`, `records`, `random`, `runs`, `onebyte`, peak RSS), add k = 8 and k = 9 wall (the lever's value is knee-conditional), freeze an adoption registration with one review by a different agent, get it green, then set the ready tag and queue entry under standing authorisation and read the bundle.
+"""
+why = """
+Carries `scanner-a2-fast-build`'s workstation done_when (as `scanner-coalesced-u8-i9-run` carries #1034's). The VM measures direction, not the i9 magnitude the 3.0% gate needs (C5).
+"""
+stop_test = """
+Frozen before data (scanner-a2-fast-build's stop_test, gate 2, verbatim): must cut serial scan `S'` (`A2 + A3`) by >= 3.0% (non-overlapping 95% CI / spreads) with <= 1.02x peak RSS and no > 2.0% regression on guard corpora (`text`, `records`, `random`, `runs`, `onebyte`). Otherwise STOP: #1117 is not merged; record a scoped dead-end in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Recipe merged green, ready tag and queue entry landed, bundle read from the `evidence` branch with its SHA-256 checked, verdict in a delta, surface row S updated (or #1117 closed unmerged and a dead-ends row).
+"""
+premises = [
+  "frontier/claims/scanner-a2-fast-build.toml",
+  "frontier/deltas/2026-11-27-scanner-a2-fast-build-unownable.md",
+]
+links = [
+  "frontier/claims/scanner-coalesced-u8-i9-run.toml",
+]
