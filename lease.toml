@@ -1,9 +1,9 @@
-id = "synthesise"
+id = "forward-emission"
 holder = "claude-code"
-session = "73c966fef761"
-claimed_at = "2026-11-27T06:13:37+00:00"
-expires = "2026-11-27T14:13:37+00:00"
-owned_paths = []
-mechanisms = []
-base = "534bc652f5dfadcd5a6b07253e7e91c6200d8d34"
+session = "5504d64edbf8"
+claimed_at = "2026-11-27T06:14:46+00:00"
+expires = "2026-11-27T12:14:46+00:00"
+owned_paths = ["src/open.rs", "src/open/outq.rs"]
+mechanisms = ["construction-wiring", "emission-walk"]
+base = "f90e924613e0597d42c3d2fa283fede597e457f1"
 released = false
