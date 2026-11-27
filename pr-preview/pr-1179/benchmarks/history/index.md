@@ -45,6 +45,25 @@ Each table gives an arm's median wall time. It also gives the geometric mean of 
 
 ### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.17** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.17>)
+
+**`wikidata`**
+
+| threads | 0.5.17 wall (median) | lbzip2 2.5 wall (median) | 0.5.16 wall (median) | lbzip2 2.5 against 0.5.17 | 0.5.16 against 0.5.17 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.351 s | 2.510 s | 0.352 s | \+597.7% (+573.6, +622.7) **slower** | \+0.3% (−3.7, +4.5) |
+| 2 | 0.219 s | 1.335 s | 0.213 s | \+510.5% (+503.3, +517.8) **slower** | −1.9% (−4.7, +1.0) |
+| 4 | 0.132 s | 0.714 s | 0.134 s | \+436.3% (+427.2, +445.5) **slower** | \+0.4% (−1.8, +2.5) |
+| 8 | 0.067 s | 0.513 s | 0.066 s | \+655.6% (+648.4, +662.9) **slower** | −2.6% (−3.3, −1.8) **faster** |
+| 10 | 0.060 s | 0.506 s | 0.059 s | \+742.6% (+737.1, +748.2) **slower** | −1.5% (−2.4, −0.5) **faster** |
+| 12 | 0.060 s | 0.508 s | 0.060 s | \+726.6% (+694.8, +759.6) **slower** | −2.0% (−6.6, +2.8) |
+| 16 | 0.063 s | 0.501 s | 0.060 s | \+678.0% (+646.2, +711.1) **slower** | −1.6% (−8.0, +5.3) |
+| 20 | 0.061 s | 0.492 s | 0.060 s | \+683.7% (+646.2, +723.0) **slower** | −4.1% (−9.0, +1.0) |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.16** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16>)
 
 **`wikidata`**
@@ -587,6 +606,17 @@ With no releases named, it compares the newest release tag with the one before i
 ## What changed, release by release
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
+
+### 0.5.17
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17>)
+
+- Recalibrated `OpenCells` admission and direct `Segmented` fallback (\#1222). `OpenCellsOf::cap` in `src/open.rs` now admits run-route blocks in `1/64 = 0.21` (and `< 1/64`) directly to `Segmented` (dropping the dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`).
+- The paired run on CI compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run 46069227845, AMD EPYC 7763 64-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Features reviewed: none was removed; the `[features]` table is unchanged since 0.5.16 (the same 20 research features).
+- Worker counts: not recalibrated.
+
+**Changes:** observational agent presence, apart from reservations ([\#1191](<https://github.com/lmmx/mibz2/pull/1191>)); harden run\_requests security and frontier authority gates ([\#1124](<https://github.com/lmmx/mibz2/pull/1124>)); recalibrate OpenCells admission to \[0.10, 0.21) m\<=0.27\*n post-\#1080 ([\#1222](<https://github.com/lmmx/mibz2/pull/1222>)); disjoint 32 KiB slabs, inline LONG fast-path, and noinline run ([\#1217](<https://github.com/lmmx/mibz2/pull/1217>)); L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone, stopped at its local gates ([\#1132](<https://github.com/lmmx/mibz2/pull/1132>)).
 
 ### 0.5.16
 
