@@ -649,7 +649,12 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 
 27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17>)
 
-**Changes:** observational agent presence, apart from reservations ([\#1191](<https://github.com/lmmx/mibz2/pull/1191>)); harden run\_requests security and frontier authority gates ([\#1124](<https://github.com/lmmx/mibz2/pull/1124>)); recalibrate OpenCells admission to \[0.10, 0.21) m\<=0.27\*n post-\#1080 ([\#1222](<https://github.com/lmmx/mibz2/pull/1222>)); disjoint 32 KiB slabs, inline LONG fast-path, and noinline run ([\#1217](<https://github.com/lmmx/mibz2/pull/1217>)).
+- Recalibrated `OpenCells` admission and direct `Segmented` fallback (\#1222). `OpenCellsOf::cap` in `src/open.rs` now admits run-route blocks in `1/64 = 0.21` (and `< 1/64`) directly to `Segmented` (dropping the dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`).
+- The paired run on CI compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run 46069227845, AMD EPYC 7763 64-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Features reviewed: none was removed; the `[features]` table is unchanged since 0.5.16 (the same 20 research features).
+- Worker counts: not recalibrated.
+
+**Changes:** observational agent presence, apart from reservations ([\#1191](<https://github.com/lmmx/mibz2/pull/1191>)); harden run\_requests security and frontier authority gates ([\#1124](<https://github.com/lmmx/mibz2/pull/1124>)); recalibrate OpenCells admission to \[0.10, 0.21) m\<=0.27\*n post-\#1080 ([\#1222](<https://github.com/lmmx/mibz2/pull/1222>)); disjoint 32 KiB slabs, inline LONG fast-path, and noinline run ([\#1217](<https://github.com/lmmx/mibz2/pull/1217>)); L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone, stopped at its local gates ([\#1132](<https://github.com/lmmx/mibz2/pull/1132>)).
 
 ### 0.5.16
 
