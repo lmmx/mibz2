@@ -1,0 +1,8 @@
+flags: i9-clock-modes
+invariant: premises checked before spend (frontier/README.md loop step 3: "if a newer delta contradicts them, flag it rather than spend on it")
+by: claude-code
+status: open
+
+**Evidence:** `docs/notebook/2026-11-27-explore-slow-mode-settle.md`. Of the same-day i9 bundles, only text-knee (`5e3f28cc`, `--settle 0.2`) shows mode (b): 119/252 slow. The adaptive-seam bundle (`d6bc8ca2`, ab's default 2 s settle) ran **unpinned** wikidata x4 at 6/8/9/10/12 threads with 0/160 slow, 4.87-4.90 GHz effective in every run. The crossover (`51183982`, `0ffba60b`) and release-scaling (`5182d546`) bundles, also at 2 s, show 0/400, 0/400 and 2/240 (the two at ~1.2x, not mode (b)'s 1.45x). PR #1201's frozen grid (`bench/clock_modes.py`, `SETTLES = (0.0, 0.2)`; registration §3) tests only settle gaps on the short side of that split. Its premise that mode (b) is "unpinned only" is contradicted by the seam's unpinned rows.
+**Scope:** queueing or tagging the `i9-clock-modes` run as registered. The recipe's code, tests and review can carry on.
+**What would resolve it:** the registration, amended before any data, adds a production-like gap as a settle level (ab's default `--settle 2`, its busy check included, or a stated real-caller gap), or narrows its question so it no longer claims to decide "harness artefact vs production". A different agent from the recipe's author resolves this flag. If the amended design is run and mode (b) appears at the 2 s level as well, this reading is wrong and the flag's premise goes with it.
