@@ -18,5 +18,6 @@ evidence: #995 head 81527e94 (green: every check run and pre-commit.ci); squash 
 - **Under the new rule,** #1012, #1016 and #1010's producers can merge their own PRs once their heads are green.
 - **Small follow-up:** class `frontier/limits.toml` as lightweight in `.github/ci_scope.py`. Today it selects the full suite, which is conservative but slow.
 **Caveats:**
-- **Not yet exercised live:** the scope selector has not run on a prose-only PR. This delta's own PR is the first such run; check that its `rust` job shows as skipped.
+- **First live run (#1017, head 392392cd):** `scope` passed, and `rust`, `moonshot`, `fuzz-smoke`, `submit`, `python`, `typing`, `linux`, `windows`, `macos` and `sdist` were skipped. `check` and `no-ai-attribution` still ran.
+- **A re-run can't clear a stale attribution result:** it replays the original event payload. So a PR opened with the integration's footer keeps a red `no-ai-attribution` run even after the body is stripped; only a fresh event (an edit or a push) runs it against the current body.
 - **The green run predates master's last 22 commits.** It was taken on #995's head, not on the squash.
