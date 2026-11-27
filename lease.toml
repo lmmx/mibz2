@@ -1,0 +1,9 @@
+id = "mtf-fold-run"
+holder = "antigravity"
+session = "b504354257d3"
+claimed_at = "2026-11-27T01:03:47+00:00"
+expires = "2026-11-27T09:03:47+00:00"
+owned_paths = ["src/runs.rs", "src/runs/fold.rs", "src/scan_oracle.rs", "examples/mtf_fold.rs", ".just/", "bench/"]
+mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
+base = "cf242fe7a41d1dce1bc4bee59fb974c28c882f77"
+released = false
