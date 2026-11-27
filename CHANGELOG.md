@@ -245,6 +245,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(ideal-parts)* oracles for construction, MTF/RLE2, RLE1/CRC/output and delivery ([#895](https://github.com/lmmx/mibz2/pull/895))
 - CHANGELOG 0.5.14: the release scaling and the team threshold ([#893](https://github.com/lmmx/mibz2/pull/893))
 
+- **Bounded decoder memory on highly compressible streams (#1129).** Workers now check the 12 MiB
+  ready-output byte cap before starting a block, and the pool of spare output buffers is capped in
+  bytes rather than buffer count. On 2 GiB of zeros, peak RSS fell from 1,118 to 545 MiB (−51.2%)
+  at 4 workers and 32 slots (1,528 to 955 MiB at 8 workers, local), with −2.0% wall on Wikidata at
+  4 threads on CI.
+- **Faster fallback inverse BWT construction and precheck on non-Wikidata blocks (#1080, #1040).**
+  Blocks declined by the open kernel now use a sequential LF column build, unchecked fast fills on
+  verified run records, and AVX2 byte reversal (#1080), and dense blocks are checked against the
+  open kernel's row and strip caps from their run records before entering its first pass (#1040).
+- **Single-copy Python reads (#1033).** `Reader::read` copies directly from `BzReader::fill_buf`
+  into Python `bytes`, removing an intermediate buffer allocation and copy (−7.0% at 1 MiB reads
+  and −3.1% at 64 KiB reads at 1 thread on Wikidata ×4, VM).
+- **Coalesced Huffman scanner (#1034).** Same-selector runs are coalesced with a byte-aligned
+  lookup table, skipped symbol zeroing, and block-level BMI2 dispatch. Its registered i9-10900K run
+  (`scanner-coalesced/run-20261127T082548Z`, evidence 9de7b6e0) returned **STOP** under its
+  10-thread bound (0.970): −1.9% wall at 8 workers (0.981 [0.963, 0.999]) and −4.0% at 10 (0.960
+  [0.946, 0.974]), with 0 guard regressions at 1–6 workers or on `text`. Kept in this release by
+  owner override (27 November 2026; the STOP verdict stands).
+- **Research features (off by default):** `#895` (`ideal-*`), `#1010` (`mtf-fold`), `#1041`
+  (`scan-oracle`), `#1053` (`a6b-endpoint-redesign`), and `#1110` (`forward-anchor-lanes`) leave
+  the default build unchanged.
+
+**The paired run on CI** compared v0.5.14 at `7475dafd` with master at `dd935418` (Benchmark run
+[46008894855](https://github.com/lmmx/mibz2/actions/runs/46008894855), **AMD EPYC 9V74 80-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in docs, queue bookkeeping, and version numbers from `dd935418` to the `v0.5.15` tag commit
+`aaaee363`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **Better (CPU cost), and no measure worse**.
+- **Wikidata (11.9 MB → 210 MB):**
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|---|--:|
+  | 1 | **−2.2%** [−4.1%, −0.3%] | **−2.2%** [−4.1%, −0.3%] | 28 → 28 MB (−0.6%) |
+  | 2 | **−1.3%** [−2.4%, −0.2%] | **−0.9%** [−1.6%, −0.3%] | 56 → 54 MB (−2.9%) |
+  | 4 | −0.9% [−2.5%, +0.8%] | **−1.4%** [−2.6%, −0.1%] | 82 → 84 MB (+2.6%) |
+
+- **Stages (1 thread, Wikidata):** total **5.92 → 5.85 c/B (−1.1% [−2.1%, −0.0%])**, led by
+  scanner **0.62 → 0.59 c/B (−5.4% [−5.8%, −5.1%])** and MTF + RLE2 **1.07 → 1.03 c/B (−4.2%
+  [−4.8%, −3.6%])**.
+- **The other corpora:** faster on `text` (−3.6% wall / −3.7% CPU at 1T; −2.8% CPU at 2T; −3.6%
+  CPU at 4T), `pattern` (−6.4% / −7.6% / −7.3% wall at 1/2/4T), `random` (−3.9% / −4.2% / −4.2%
+  wall; −3.8% / −5.0% / −5.5% CPU), `records` (−4.0% wall at 1T and 4T; −3.9% / −6.2% CPU), and
+  `runs` (−1.4% CPU at 4T). `onebyte` was unchanged. No corpus was slower at any thread count.
+- **Cost & caveats:** peak RSS on `records` at 4 threads rose +2.5% (53 → 55 MB); all other peak
+  RSS deltas were flat or lower. CI runs on 2 physical cores (4 CPUs), so many-core scaling above
+  4 threads is measured by the i9 release-scaling run below.
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **Reviewed (20 entries):** `trace`, `memory-lever`, `wait-stats`, `walk-stats`, `dose`,
+  `phase-counters`, `induction-trace`, `grammar-replay`, `owned-writer`, `moonshot`, `census`,
+  `ideal-construction`, `ideal-mtf`, `ideal-rle1`, `ideal-delivery`, `ideal-parts`, `mtf-fold`,
+  `a6b-endpoint-redesign`, `forward-anchor-lanes`, and `scan-oracle`.
+- **Ready for separate follow-on removal PRs:** `a6b-endpoint-redesign` (its i9 paired A/B run,
+  evidence `a6e427b1`, returned STOP/KILL and compact rescue closed in #1161). Still open from
+  0.5.13/0.5.14: `owned-writer` still has no retention note, and `memory-lever`, `phase-counters`,
+  `wait-stats`, `walk-stats`, `induction-trace`, and `grammar-replay` remain to be checked against
+  their removal conditions.
+
+**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9-10900K at
+`v0.5.15` (`aaaee363`, #1170; `ready/bench-release-scaling` and `ready/bench-crossover` set on
+origin). Verdicts will be recorded here once the bundles land on `origin/evidence`.
+
 ## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
 
 ### <!-- 3 -->Performance
