@@ -14,7 +14,7 @@
 //! before it reads the next. A slot holds a block's symbols (1.8 MB at most) and its
 //! decoded bytes (about 1 MB of JSON; at most ~46 MB for a block of runs only); each
 //! worker keeps ~7 MB of buffers; the input held is the chunks queued (`INPUT_QUEUE`) and
-//! the scanner's window (its lookahead, 2 MB, from the block being read on). Buffers are
+//! the scanner's window (at most 1 MB of adaptive lookahead past the block being read). Buffers are
 //! reused from block to block, not allocated each time. The plain workers' decoder also
 //! caps the decoded bytes waiting for the reader (`READY_BYTES`): past them, both the
 //! scanner and the workers stay within `Cap::floor` blocks (`threads + 2`) ahead of the
@@ -1029,8 +1029,9 @@ impl StreamDecoder {
     /// A buffer for the next `write`, reusing an input chunk the scanner is done with where
     /// there is one (its length and contents are whatever they were: a caller resizes it
     /// and overwrites it), else an empty Vec, which a caller replaces with a zeroed one
-    /// (`vec![0; n]`, which a short input faults in only as far as it reaches). At most one
-    /// chunk is kept spare. Saves a writer allocating, and faulting in, every chunk.
+    /// (`vec![0; n]`, which a short input faults in only as far as it reaches). Up to
+    /// `INPUT_QUEUE + 2` chunks are kept spare. Saves a writer allocating, and faulting in,
+    /// every chunk.
     #[doc(hidden)]
     pub fn spare(&self) -> Vec<u8> {
         self.shared.lock().free_in.pop().unwrap_or_default()
@@ -1121,7 +1122,18 @@ impl Drop for StreamDecoder {
     }
 }
 
-/// The scanner's input: chunks from the channel, held from the block being read on
+/// Extra bytes copied beyond `need` when entering or extending the seam buffer so a
+/// boundary-straddling block finishes in one pass instead of re-entering on subsequent
+/// blocks before `released >= next_base`.
+const SEAM_ONESHOT_EXTRA: usize = 128 << 10;
+
+/// The scanner's input: chunks from the channel, held from the block being read on.
+///
+/// Chunks are scanned in place without copying into a growing window. When a view reaches
+/// past the end of `buf`, the next chunk is parked in `next` (at `next_base`), and only the
+/// unreleased tail plus a one-shot slice of `next` is copied into a reused `seam` buffer
+/// until `released >= next_base`, at which point `next` is swapped straight into `buf` with
+/// zero copy.
 struct ChannelSource<'a> {
     rx: Receiver<Vec<u8>>,
     buf: Vec<u8>,
@@ -1129,49 +1141,150 @@ struct ChannelSource<'a> {
     base: u64,
     released: u64,
     eof: bool,
+    /// the next chunk waiting after the bytes in `buf` (empty when none is parked)
+    next: Vec<u8>,
+    /// the absolute offset of `next[0]` when `!next.is_empty()`
+    next_base: u64,
+    /// reusable boundary buffer kept across seams while `in_seam` is false
+    seam: Vec<u8>,
+    /// whether `buf` currently holds the seam buffer rather than a writer's chunk
+    in_seam: bool,
     shared: &'a Shared,
+}
+
+impl ChannelSource<'_> {
+    fn new(rx: Receiver<Vec<u8>>, shared: &Shared) -> ChannelSource<'_> {
+        ChannelSource {
+            rx,
+            buf: Vec::new(),
+            base: 0,
+            released: 0,
+            eof: false,
+            next: Vec::new(),
+            next_base: 0,
+            seam: Vec::new(),
+            in_seam: false,
+            shared,
+        }
+    }
+
+    /// Return a spent input chunk to the writer's spare pool (`StreamDecoder::spare`),
+    /// retaining up to `INPUT_QUEUE + 2` buffers (matching the `chunks` ledger entry) and
+    /// dropping any surplus outside the lock.
+    fn recycle_input(&self, chunk: Vec<u8>) {
+        if chunk.capacity() > 0 {
+            let mut st = self.shared.lock();
+            if st.free_in.len() < INPUT_QUEUE + 2 {
+                st.free_in.push(chunk);
+            }
+        }
+    }
+
+    /// Retire the window's replaced buffer: keep it as `seam` if it was the seam, else
+    /// recycle it as a spare input chunk.
+    fn retire(&mut self, old: Vec<u8>) {
+        if self.in_seam {
+            self.seam = old;
+            self.in_seam = false;
+        } else {
+            self.recycle_input(old);
+        }
+    }
+
+    #[cfg(feature = "trace")]
+    fn window_sizes(&self) -> (u64, usize) {
+        let live = (self.base + self.buf.len() as u64).saturating_sub(self.released);
+        let cap = self.buf.capacity() + self.seam.capacity();
+        (live, cap)
+    }
 }
 
 impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
-        while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
-            mark!(InputWait);
-            match self.rx.recv() {
-                Ok(mut chunk) => {
-                    mark!(InputGot);
-                    let drop_n = (self.released - self.base) as usize;
-                    if drop_n == self.buf.len() {
-                        // (nothing held: the chunk is the window, the window's buffer spare)
-                        std::mem::swap(&mut self.buf, &mut chunk);
+        let need = from.saturating_add(want as u64);
+        // (`next` is consumed before polling `rx`, so EOF is reached only once `next` is empty)
+        while !self.eof && self.base + (self.buf.len() as u64) < need {
+            let drop_n = (self.released - self.base) as usize;
+            if !self.next.is_empty() {
+                mark!(WindowResume);
+                if self.released >= self.next_base {
+                    // Nothing held before the parked chunk: swap it directly into `buf`.
+                    std::mem::swap(&mut self.buf, &mut self.next);
+                    self.base = self.next_base;
+                    let old = std::mem::take(&mut self.next);
+                    self.retire(old);
+                } else {
+                    // Bytes are still held before `next_base`: copy only the tail plus a
+                    // one-shot lookahead slice of `next` into the reused seam buffer.
+                    let at = (self.base + self.buf.len() as u64 - self.next_base) as usize;
+                    let target_need = need.saturating_add(SEAM_ONESHOT_EXTRA as u64);
+                    let upto = (target_need - self.next_base).min(self.next.len() as u64) as usize;
+                    let add = upto - at;
+                    if !self.in_seam {
+                        let mut seam = std::mem::take(&mut self.seam);
+                        seam.clear();
+                        seam.reserve(self.buf.len() - drop_n + add);
+                        seam.extend_from_slice(&self.buf[drop_n..]);
+                        let chunk = std::mem::replace(&mut self.buf, seam);
                         self.base = self.released;
+                        self.in_seam = true;
+                        self.recycle_input(chunk);
                     } else {
-                        if drop_n >= COMPACT {
+                        let (len, cap) = (self.buf.len(), self.buf.capacity());
+                        if drop_n >= COMPACT || (len + add > cap && len - drop_n + add <= cap) {
                             self.buf.drain(..drop_n);
                             self.base = self.released;
                         }
-                        self.buf.extend_from_slice(&chunk);
                     }
-                    // (the chunk's buffer, done with, for the writer's next: `spare`; one kept)
-                    if chunk.capacity() > 0 {
-                        let mut st = self.shared.lock();
-                        if st.free_in.is_empty() {
-                            st.free_in.push(chunk);
+                    self.buf.extend_from_slice(&self.next[at..upto]);
+                    if upto == self.next.len() {
+                        let spent = std::mem::take(&mut self.next);
+                        self.recycle_input(spent);
+                    }
+                }
+                #[cfg(feature = "trace")]
+                let (w_live, w_cap) = self.window_sizes();
+                mark!(Window, crate::trace::NONE, w_live, w_cap);
+                let cancelled = self.shared.stopped.load(Ordering::Acquire);
+                mark!(WindowWorkEnd);
+                if cancelled {
+                    return Err(ErrorKind::Cancelled);
+                }
+            } else {
+                mark!(InputWait);
+                match self.rx.recv() {
+                    Ok(mut chunk) => {
+                        mark!(InputGot);
+                        if chunk.is_empty() {
+                            self.recycle_input(chunk);
+                        } else if drop_n == self.buf.len() {
+                            // Nothing held: the chunk becomes the window in place.
+                            std::mem::swap(&mut self.buf, &mut chunk);
+                            self.base = self.released;
+                            self.retire(chunk);
+                        } else {
+                            // Bytes are still held: park the chunk as `next` instead of
+                            // copying all of it onto `buf`.
+                            self.next_base = self.base + self.buf.len() as u64;
+                            self.next = chunk;
+                        }
+                        #[cfg(feature = "trace")]
+                        let (w_live, w_cap) = self.window_sizes();
+                        mark!(Window, crate::trace::NONE, w_live, w_cap);
+                        let cancelled = self.shared.stopped.load(Ordering::Acquire);
+                        mark!(WindowWorkEnd);
+                        if cancelled {
+                            return Err(ErrorKind::Cancelled);
                         }
                     }
-                    mark!(
-                        Window,
-                        crate::trace::NONE,
-                        self.base + self.buf.len() as u64 - self.released,
-                        self.buf.capacity()
-                    );
+                    Err(_) => {
+                        mark!(InputEnd);
+                        self.eof = true;
+                        if self.shared.stopped.load(Ordering::Acquire) {
+                            return Err(ErrorKind::Cancelled);
+                        }
+                    }
                 }
-                Err(_) => {
-                    mark!(InputEnd);
-                    self.eof = true;
-                }
-            }
-            if self.shared.lock().cancelled {
-                return Err(ErrorKind::Cancelled);
             }
         }
         let i = (from - self.base) as usize;
@@ -1180,6 +1293,297 @@ impl Source for ChannelSource<'_> {
 
     fn release(&mut self, upto: u64) {
         self.released = self.released.max(upto);
+    }
+}
+
+#[cfg(test)]
+mod channel_source_tests {
+    use super::*;
+
+    /// Randomized parity across chunk boundaries (empty chunks, tiny chunks, multi-MiB chunks),
+    /// varying lookahead requests (64 KiB to 3 MiB), seam entries, compactions, swaps, and
+    /// lock-free cancellation.
+    #[test]
+    fn views_are_the_input() {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rng = move |n: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % n.max(1)
+        };
+        let (mut seams, mut swaps) = (0usize, 0usize);
+        for case in 0..96 {
+            let len = 1 + rng(if case % 2 == 0 { 9_000_000 } else { 400_000 }) as usize;
+            let data: Vec<u8> = (0..len)
+                .map(|i| ((i as u64).wrapping_mul(251) ^ (case as u64)) as u8)
+                .collect();
+            let shared = Shared::new(4, None);
+            let (tx, rx) = channel();
+            let mut pos = 0usize;
+            while pos < len {
+                if rng(7) == 0 {
+                    tx.send(Vec::new()).unwrap();
+                }
+                let chunk_len = match rng(5) {
+                    0 => 1 + rng(64) as usize,
+                    1 => 1 + rng(65_536) as usize,
+                    2 => 1 + rng(512 << 10) as usize,
+                    _ => (1 << 20) + rng(4 << 20) as usize,
+                }
+                .min(len - pos);
+                tx.send(data[pos..pos + chunk_len].to_vec()).unwrap();
+                pos += chunk_len;
+            }
+            if rng(2) == 0 {
+                tx.send(Vec::new()).unwrap();
+            }
+            drop(tx);
+            let mut src = ChannelSource::new(rx, &shared);
+            let mut from = 0usize;
+            while from < len {
+                let want = match rng(4) {
+                    0 => 64 << 10,
+                    1 => 128 << 10,
+                    2 => 1 << 20,
+                    _ => 3 << 20,
+                };
+                let was_in_seam = src.in_seam;
+                let (got, eof) = src.view(from as u64, want).unwrap();
+                assert_eq!(got, &data[from..from + got.len()]);
+                assert!(eof || got.len() >= want);
+                if src.in_seam {
+                    seams += 1;
+                } else if was_in_seam {
+                    swaps += 1;
+                }
+                // Exercise growing retry without advancing `from` on 1 in 6 steps.
+                if rng(6) == 0 && !eof {
+                    let bigger = want + (256 << 10);
+                    let (got2, eof2) = src.view(from as u64, bigger).unwrap();
+                    assert_eq!(got2, &data[from..from + got2.len()]);
+                    assert!(eof2 || got2.len() >= bigger);
+                }
+                let step = (1 + rng(400_000) as usize).min(len - from);
+                from += step;
+                src.release(from as u64);
+            }
+            let (tail, eof) = src.view(len as u64, 16).unwrap();
+            assert!(eof && tail.is_empty());
+        }
+        assert!(seams > 0 && swaps > 0, "seams={seams} swaps={swaps}");
+
+        // Lock-free cancellation via `cancel_locked` returns `Err(ErrorKind::Cancelled)`.
+        let shared_c = Shared::new(4, None);
+        let (tx_c, rx_c) = channel();
+        tx_c.send(vec![1u8; 64]).unwrap();
+        {
+            let mut st = shared_c.lock();
+            shared_c.cancel_locked(&mut st);
+        }
+        let mut src_c = ChannelSource::new(rx_c, &shared_c);
+        assert_eq!(src_c.view(0, 128), Err(ErrorKind::Cancelled));
+        drop(tx_c);
+    }
+
+    /// End-to-end parallel decode parity against `crate::decode` across single-chunk,
+    /// mid-seam EOF, multi-chunk boundary straddling, empty chunks, sudden compressible ->
+    /// incompressible transition (forcing overrun retry across a seam), and malformed inputs
+    /// straddling seams.
+    #[test]
+    fn stream_decoder_seam_and_error_parity() {
+        use bzip2::write::BzEncoder;
+        use bzip2::Compression;
+        use std::io::Write;
+
+        // Prefix with small highly-compressible streams (drives adaptive lookahead down to the
+        // 64 KiB floor), followed by multi-MiB incompressible-ish level-9 blocks (forcing
+        // overrun retry growth and crossing multiple chunk seams).
+        let mut bz = Vec::new();
+        for _ in 0..20 {
+            let mut enc = BzEncoder::new(&mut bz, Compression::new(1));
+            enc.write_all(&vec![b'a'; 20_000]).unwrap();
+            enc.finish().unwrap();
+        }
+        let mut x = 0x517c_c1b7_2722_0a95u64;
+        let mut raw = vec![0u8; 5_200_000];
+        for b in &mut raw {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            *b = (x & 0x3f) as u8;
+        }
+        {
+            let mut enc = BzEncoder::new(&mut bz, Compression::new(9));
+            enc.write_all(&raw).unwrap();
+            enc.finish().unwrap();
+        }
+        assert!(
+            bz.len() > (2 << 20),
+            "compressed fixture must exceed 2 MiB (got {})",
+            bz.len()
+        );
+        let ref_bytes = crate::decode(&bz).unwrap();
+
+        let decode_chunks = |chunks: Vec<Vec<u8>>| -> Result<Vec<u8>, Error> {
+            let dec = Arc::new(StreamDecoder::new(4, 8, Kernels::detect()));
+            let dec_w = Arc::clone(&dec);
+            let feed = std::thread::spawn(move || {
+                for c in chunks {
+                    if dec_w.write(c).is_err() {
+                        break;
+                    }
+                }
+                dec_w.close();
+            });
+            let mut out = Vec::new();
+            let mut tmp = vec![0u8; 65_536];
+            let res = loop {
+                match dec.read(&mut tmp) {
+                    Ok(0) => break Ok(out),
+                    Ok(n) => out.extend_from_slice(&tmp[..n]),
+                    Err(e) => break Err(e),
+                }
+            };
+            let _ = feed.join();
+            res
+        };
+
+        // 1. Single-chunk input (no seam allocated).
+        assert_eq!(decode_chunks(vec![bz.clone()]).unwrap(), ref_bytes);
+
+        // 2. Two-chunk input ending mid-seam.
+        let split_mid = bz.len() - 400_000;
+        assert_eq!(
+            decode_chunks(vec![bz[..split_mid].to_vec(), bz[split_mid..].to_vec()]).unwrap(),
+            ref_bytes
+        );
+
+        // 3. Multi-chunk boundaries smaller than lookahead, with empty chunks interspersed.
+        let mut small_chunks = Vec::new();
+        for (idx, c) in bz.chunks(350_000).enumerate() {
+            if idx % 2 == 0 {
+                small_chunks.push(Vec::new());
+            }
+            small_chunks.push(c.to_vec());
+        }
+        small_chunks.push(Vec::new());
+        assert_eq!(decode_chunks(small_chunks).unwrap(), ref_bytes);
+
+        // 4. Exact error parity (`kind`, `block`, `bit`) on malformed inputs straddling a seam.
+        let trunc = &bz[..bz.len() - 17];
+        assert_eq!(
+            decode_chunks(vec![
+                trunc[..trunc.len() - 300_000].to_vec(),
+                trunc[trunc.len() - 300_000..].to_vec(),
+            ])
+            .unwrap_err(),
+            crate::decode(trunc).unwrap_err(),
+            "truncated mid-seam error parity"
+        );
+
+        let mut trailing = bz.clone();
+        trailing.extend_from_slice(b"NOTBZ2");
+        assert_eq!(
+            decode_chunks(vec![
+                trailing[..trailing.len() - 250_000].to_vec(),
+                trailing[trailing.len() - 250_000..].to_vec(),
+            ])
+            .unwrap_err(),
+            crate::decode(&trailing).unwrap_err(),
+            "trailing garbage mid-seam error parity"
+        );
+
+        let mut bad_crc = bz.clone();
+        let n = bad_crc.len();
+        bad_crc[n - 2] ^= 0xff;
+        assert_eq!(
+            decode_chunks(vec![
+                bad_crc[..n - 250_000].to_vec(),
+                bad_crc[n - 250_000..].to_vec(),
+            ])
+            .unwrap_err(),
+            crate::decode(&bad_crc).unwrap_err(),
+            "corrupted CRC mid-seam error parity"
+        );
+    }
+
+    /// Under `--features trace`, every `InputGot` and `WindowResume` span closes with a
+    /// matching `WindowWorkEnd`, and `window` capacity stays bounded by one chunk plus seam.
+    #[cfg(feature = "trace")]
+    #[test]
+    fn traced_window_maintenance_spans_balance_and_stay_bounded() {
+        use crate::trace::{self, Kind};
+        use bzip2::write::BzEncoder;
+        use bzip2::Compression;
+        use std::io::Write;
+
+        let mut x = 0x243f_6a88_85a3_08d3u64;
+        let mut raw = vec![0u8; 3_000_000];
+        for b in &mut raw {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            *b = (x & 0x1f) as u8;
+        }
+        let mut enc = BzEncoder::new(Vec::new(), Compression::new(9));
+        enc.write_all(&raw).unwrap();
+        let bz = enc.finish().unwrap();
+
+        trace::set_level(1);
+        let dec = Arc::new(StreamDecoder::new(2, 4, Kernels::detect()));
+        let dec_w = Arc::clone(&dec);
+        let bz_w = bz.clone();
+        let feed = std::thread::spawn(move || {
+            for c in bz_w.chunks(256 << 10) {
+                dec_w.write(c.to_vec()).unwrap();
+            }
+            dec_w.close();
+        });
+        let mut out = Vec::new();
+        let mut tmp = vec![0u8; 65_536];
+        loop {
+            let n = dec.read(&mut tmp).unwrap();
+            if n == 0 {
+                break;
+            }
+            out.extend_from_slice(&tmp[..n]);
+        }
+        feed.join().unwrap();
+        drop(dec);
+        assert_eq!(out, raw);
+
+        let traces = trace::take();
+        trace::set_level(0);
+        let scanner = traces
+            .iter()
+            .find(|t| t.name == "mibz2-scan")
+            .expect("scanner trace");
+        let mut open = false;
+        let mut spans = 0usize;
+        let mut max_cap = 0u64;
+        for m in &scanner.marks {
+            match m.kind {
+                Kind::InputGot | Kind::WindowResume => {
+                    assert!(!open, "nested window maintenance span");
+                    open = true;
+                }
+                Kind::WindowWorkEnd => {
+                    assert!(open, "stray WindowWorkEnd");
+                    open = false;
+                    spans += 1;
+                }
+                Kind::Window => {
+                    max_cap = max_cap.max(m.cap);
+                }
+                _ => {}
+            }
+        }
+        assert!(!open && spans > 0, "unclosed or empty spans={spans}");
+        assert!(
+            max_cap <= (4 << 20),
+            "expected bounded window cap on 256 KiB chunks, got {max_cap}"
+        );
     }
 }
 
@@ -1193,14 +1597,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     }
     #[cfg(feature = "scan-oracle")]
     let recording = crate::scan_oracle::mode() == crate::scan_oracle::Mode::Record;
-    let src = ChannelSource {
-        rx,
-        buf: Vec::new(),
-        base: 0,
-        released: 0,
-        eof: false,
-        shared,
-    };
+    let src = ChannelSource::new(rx, shared);
     let mut sc = Scanner::new(src);
     let finish = |res: Option<Error>| {
         let mut st = shared.lock();

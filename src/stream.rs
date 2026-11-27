@@ -48,9 +48,13 @@ enum State {
     Done,
 }
 
-/// The input a block's read first asks for, doubled while a block runs past it (a real
-/// block is at most ~4.2 MB compressed; nearly all are under 1 MB), up to MAX_ITEM
-const LOOKAHEAD: usize = 2 << 20;
+/// First block's initial lookahead before any block lengths have been observed.
+const INITIAL_LOOKAHEAD: usize = 128 << 10;
+/// Adaptive per-block lookahead bounds over the last 16 completed items' compressed byte lengths.
+const MIN_LOOKAHEAD: usize = 64 << 10;
+const MAX_LOOKAHEAD: usize = 1 << 20;
+const LOOKAHEAD_PAD: usize = 4 << 10;
+const RETRY_STEP_INIT: usize = 128 << 10;
 const MAX_ITEM: usize = 64 << 20;
 
 pub struct Scanner<S> {
@@ -60,7 +64,9 @@ pub struct Scanner<S> {
     state: State,
     blocks: u64,
     streams: u64,
-    lookahead: usize,
+    /// compressed byte lengths of the last 16 completed items (sliding-window peak for lookahead)
+    recent_lens: [usize; 16],
+    recent_idx: usize,
     scratch: ScanScratch,
 }
 
@@ -72,8 +78,19 @@ impl<S: Source> Scanner<S> {
             state: State::Header { first: true },
             blocks: 0,
             streams: 0,
-            lookahead: LOOKAHEAD,
+            recent_lens: [0; 16],
+            recent_idx: 0,
             scratch: ScanScratch::default(),
+        }
+    }
+
+    #[inline(always)]
+    fn initial_want(&self) -> usize {
+        let max16 = self.recent_lens.iter().copied().max().unwrap_or(0);
+        if max16 == 0 {
+            INITIAL_LOOKAHEAD
+        } else {
+            (max16 + (max16 >> 2) + LOOKAHEAD_PAD).clamp(MIN_LOOKAHEAD, MAX_LOOKAHEAD)
         }
     }
 
@@ -123,64 +140,177 @@ impl<S: Source> Scanner<S> {
                         bit: Some(at),
                     };
                     let base = at / 8;
-                    let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
-                    let mut br = Bits::at(data, at % 8);
-                    let item =
-                        block::read_item_with_scratch(&mut br, level, syms, &mut self.scratch);
-                    let used = br.bit_pos() - at % 8;
-                    if br.overran() {
-                        // an item past the input held: more input, or the input's end
-                        if eof {
-                            return Err(err(ErrorKind::Truncated));
-                        }
-                        if self.lookahead >= MAX_ITEM {
-                            return Err(err(ErrorKind::BlockTooLarge));
-                        }
-                        self.lookahead = (self.lookahead * 2).max(data.len() + 1).min(MAX_ITEM);
-                        syms = match item {
-                            Ok(Item::Block(b)) => b.syms,
-                            Ok(Item::End(_)) => Vec::new(),
-                            Err((_, s)) => s,
-                        };
-                        continue;
-                    }
-                    self.bit += used;
-                    self.src.release(self.bit / 8);
-                    match item.map_err(|(kind, _)| err(kind))? {
-                        Item::End(stored) => {
-                            if stored != combined {
-                                return Err(err(ErrorKind::StreamCrc {
-                                    stored,
-                                    computed: combined,
-                                }));
+                    let mut want = self.initial_want();
+                    let mut retry_step = RETRY_STEP_INIT;
+                    loop {
+                        let (data, eof) = self.src.view(base, want).map_err(err)?;
+                        let data_len = data.len();
+                        let mut br = Bits::at(data, at % 8);
+                        let item =
+                            block::read_item_with_scratch(&mut br, level, syms, &mut self.scratch);
+                        let used = br.bit_pos() - at % 8;
+                        if br.overran() {
+                            // an item past the input held: more input, or the input's end
+                            if eof {
+                                return Err(err(ErrorKind::Truncated));
                             }
-                            // the next stream starts at a byte
-                            self.bit = self.bit.div_ceil(8) * 8;
-                            self.state = State::Header { first: false };
-                            self.streams += 1;
-                            syms = Vec::new();
-                        }
-                        Item::Block(symbols) => {
-                            // (the stored CRC: each block's computed CRC is checked
-                            // against it by its worker, in order before this stream's end)
-                            self.state = State::Stream {
-                                level,
-                                combined: combined.rotate_left(1) ^ symbols.crc,
+                            if want >= MAX_ITEM {
+                                return Err(err(ErrorKind::BlockTooLarge));
+                            }
+                            want = (data_len + retry_step).max(want * 2).min(MAX_ITEM);
+                            retry_step = (retry_step * 2).min(MAX_ITEM);
+                            syms = match item {
+                                Ok(Item::Block(b)) => b.syms,
+                                Ok(Item::End(_)) => Vec::new(),
+                                Err((_, s)) => s,
                             };
-                            self.blocks += 1;
-                            let (end, stream) = (self.bit, self.streams);
-                            return Ok(Event::Block {
-                                index,
-                                bit: at,
-                                end,
-                                stream,
-                                level,
-                                symbols,
-                            });
+                            continue;
+                        }
+                        self.bit += used;
+                        self.src.release(self.bit / 8);
+                        let used_bytes = used.div_ceil(8) as usize;
+                        self.recent_lens[self.recent_idx] = used_bytes;
+                        self.recent_idx = (self.recent_idx + 1) & 15;
+                        match item.map_err(|(kind, _)| err(kind))? {
+                            Item::End(stored) => {
+                                if stored != combined {
+                                    return Err(err(ErrorKind::StreamCrc {
+                                        stored,
+                                        computed: combined,
+                                    }));
+                                }
+                                // the next stream starts at a byte
+                                self.bit = self.bit.div_ceil(8) * 8;
+                                self.state = State::Header { first: false };
+                                self.streams += 1;
+                                syms = Vec::new();
+                                break;
+                            }
+                            Item::Block(symbols) => {
+                                // (the stored CRC: each block's computed CRC is checked
+                                // against it by its worker, in order before this stream's end)
+                                self.state = State::Stream {
+                                    level,
+                                    combined: combined.rotate_left(1) ^ symbols.crc,
+                                };
+                                self.blocks += 1;
+                                let (end, stream) = (self.bit, self.streams);
+                                return Ok(Event::Block {
+                                    index,
+                                    bit: at,
+                                    end,
+                                    stream,
+                                    level,
+                                    symbols,
+                                });
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A `Source` serving a slice capped to `want` bytes per call (exercising adaptive lookahead
+    /// and `br.overran()` retry growth cleanly under Miri).
+    struct CappedSource<'a> {
+        data: &'a [u8],
+        released: u64,
+        wants: Vec<usize>,
+    }
+
+    impl Source for CappedSource<'_> {
+        fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
+            self.wants.push(want);
+            let start = (from as usize).min(self.data.len());
+            let end = start.saturating_add(want).min(self.data.len());
+            let eof = end == self.data.len();
+            Ok((&self.data[start..end], eof))
+        }
+
+        fn release(&mut self, upto: u64) {
+            assert!(upto >= self.released);
+            self.released = upto;
+        }
+    }
+
+    #[test]
+    fn adaptive_lookahead_and_retry_growth() {
+        use bzip2::write::BzEncoder;
+        use bzip2::Compression;
+        use std::io::Write;
+
+        // Multi-stream input: tiny compressible block first, then an incompressible block that
+        // exceeds the adaptive 64 KiB floor so `Scanner::next` must grow `want` and retry cleanly.
+        let mut bz = Vec::new();
+        {
+            let mut enc = BzEncoder::new(&mut bz, Compression::new(1));
+            enc.write_all(&vec![b'a'; 10_000]).unwrap();
+            enc.finish().unwrap();
+        }
+        {
+            let mut x = 0x9e37_79b9_7f4a_7c15u64;
+            let mut noise = vec![0u8; 95_000];
+            for b in &mut noise {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                *b = x as u8;
+            }
+            let mut enc = BzEncoder::new(&mut bz, Compression::new(1));
+            enc.write_all(&noise).unwrap();
+            enc.finish().unwrap();
+        }
+
+        let mut want_events = Vec::new();
+        {
+            let mut sc = Scanner::new(SliceSource(&bz));
+            while let Event::Block {
+                bit, end, symbols, ..
+            } = sc.next(Vec::new()).unwrap()
+            {
+                want_events.push((bit, end, symbols.crc, symbols.syms));
+            }
+        }
+
+        let mut got_events = Vec::new();
+        let src = CappedSource {
+            data: &bz,
+            released: 0,
+            wants: Vec::new(),
+        };
+        let mut sc = Scanner::new(src);
+        while let Event::Block {
+            bit, end, symbols, ..
+        } = sc.next(Vec::new()).unwrap()
+        {
+            got_events.push((bit, end, symbols.crc, symbols.syms));
+        }
+        assert_eq!(got_events, want_events);
+        // First block requested INITIAL_LOOKAHEAD (128 KiB), second dropped to MIN_LOOKAHEAD
+        // (64 KiB) from the tiny first block, then grew on `overran()` to finish cleanly.
+        assert!(sc.src.wants.contains(&INITIAL_LOOKAHEAD));
+        assert!(sc.src.wants.contains(&MIN_LOOKAHEAD));
+        assert!(sc.src.wants.iter().any(|&w| w > MIN_LOOKAHEAD));
+    }
+
+    #[test]
+    fn miri_adaptive_lookahead_clamps_and_decays_after_16_blocks() {
+        let mut sc = Scanner::new(SliceSource(&[]));
+        assert_eq!(sc.initial_want(), INITIAL_LOOKAHEAD);
+        // One huge 900 KiB block raises lookahead to MAX_LOOKAHEAD (1 MiB)
+        sc.recent_lens[0] = 900 << 10;
+        assert_eq!(sc.initial_want(), MAX_LOOKAHEAD);
+        // Overwriting all 16 slots with tiny 10 KiB blocks decays lookahead back to MIN_LOOKAHEAD
+        sc.recent_lens = [10 << 10; 16];
+        assert_eq!(sc.initial_want(), MIN_LOOKAHEAD);
+        // Moderate 200 KiB peak -> 200 KiB + 50 KiB + 4 KiB = 254 KiB
+        sc.recent_lens[3] = 200 << 10;
+        assert_eq!(sc.initial_want(), (200 << 10) + (50 << 10) + LOOKAHEAD_PAD);
     }
 }

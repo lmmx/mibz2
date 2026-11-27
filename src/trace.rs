@@ -43,6 +43,10 @@ pub enum Kind {
     InputWait,
     InputGot,
     InputEnd,
+    /// the scanner: resuming a parked next chunk at a seam (without waiting on `recv`), and
+    /// the end of a window-maintenance span started by `InputGot` or `WindowResume`
+    WindowResume,
+    WindowWorkEnd,
     /// the scanner: before it looks for a slot, and once it has one
     SlotWait,
     SlotGot,
@@ -679,9 +683,10 @@ pub fn schedstat(f: &std::fs::File) -> (u64, u64, u64) {
 // ---------------------------------------------------------------------------------------
 // The footprint ledger
 
-/// The window the scanner reads a block's first bytes through (stream.rs's `LOOKAHEAD`; it
-/// doubles only for a block whose compressed form is longer, which no real block is)
-pub const LOOKAHEAD: usize = 2 << 20;
+/// The adaptive look-ahead ceiling the scanner asks for before a block's first read
+/// (stream.rs's `MAX_LOOKAHEAD`; it grows past this only on an overrun retry for a block
+/// whose compressed form exceeds it)
+pub const LOOKAHEAD: usize = 1 << 20;
 /// `BzReader::parallel`'s input chunk (read.rs's `CHUNK`)
 pub const CHUNK: usize = 4 << 20;
 /// The T-vector's bytes a row (bwt.rs's `TVector`: a `u32` a row)
@@ -940,7 +945,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             live: s.chunk,
             hot: 0,
             life: "per chunk",
-            note: "compressed input: queued, one held by the writer (filling it, or blocked sending it), one being appended to the window",
+            note: "compressed input: queued, one held by the writer (filling it, or blocked sending it), one the next after the window's, waiting while the window holds bytes before it",
         },
         Entry {
             owner: "input",
@@ -952,7 +957,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             live: LOOKAHEAD + s.chunk,
             hot: 0,
             life: "once",
-            note: "the scanner's compressed bytes, from the block being read on (live: not yet released); up to COMPACT bytes already read are kept before it drops them, so it holds less than COMPACT + LOOKAHEAD + chunk, reserved by doubling from the first chunk",
+            note: "the scanner's compressed bytes, from the block being read on (live: not yet released): a chunk read in place, or at a chunk boundary the seam (its held bytes and a one-shot slice of the next chunk, reserved and reused across boundaries); where views reach past the next chunk too, up to COMPACT bytes already read are kept before it drops them, so window and seam hold less than COMPACT + LOOKAHEAD + chunk, reserved by doubling",
         },
         Entry {
             owner: "decoder",
