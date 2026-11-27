@@ -6,4 +6,4 @@ expires = "2026-11-27T15:08:55+00:00"
 owned_paths = ["pyproject.toml", ".github/workflows/CI.yml", ".just/bench.just", "bench/jcc_aligned.py", "bench/test_jcc_aligned.py"]
 mechanisms = ["build-flags"]
 base = "59cac2c52d7168e09a4b4d6edeb658c16ef9baf7"
-released = false
+released = true
