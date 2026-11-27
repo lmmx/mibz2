@@ -6,4 +6,4 @@ expires = "2026-11-28T03:38:12+00:00"
 owned_paths = ["src/open.rs"]
 mechanisms = ["two-tier-open-admission", "post-1080-route-boundary"]
 base = "84e09879c7bb391d752ed26124f91a0ce87c7012"
-released = false
+released = true
