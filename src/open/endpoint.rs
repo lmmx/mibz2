@@ -110,6 +110,8 @@ const SPIRAL_RULES: usize = 2 * 20 + 1;
 #[derive(Default)]
 pub(super) struct Endpoint {
     stack: Vec<u32>,
+    #[cfg(feature = "a6b-endpoint-redesign")]
+    redesign: redesign::State,
     /// (test only) make every elimination take `Wide` links
     #[cfg(test)]
     pub(super) force_wide: bool,
@@ -147,7 +149,14 @@ impl Endpoint {
     /// (test only) the scratch it keeps, in bytes (its nodes and rules are in `edges`)
     #[cfg(test)]
     pub(super) fn scratch(&self) -> usize {
-        4 * self.stack.capacity()
+        #[cfg(feature = "a6b-endpoint-redesign")]
+        {
+            4 * self.stack.capacity() + self.redesign.scratch()
+        }
+        #[cfg(not(feature = "a6b-endpoint-redesign"))]
+        {
+            4 * self.stack.capacity()
+        }
     }
 }
 
@@ -597,7 +606,7 @@ impl Kernel {
     }
 
     /// Whether the elimination of `ns` strips takes `Wide` links
-    fn wide(&self, ns: usize) -> bool {
+    pub(super) fn wide(&self, ns: usize) -> bool {
         #[cfg(test)]
         let wide = Self::nodes_most(ns) > NARROW_NODES || self.endpoint.force_wide;
         #[cfg(not(test))]
@@ -610,6 +619,10 @@ impl Kernel {
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
     /// the `m` edges written over them all
     pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {
+        #[cfg(feature = "a6b-endpoint-redesign")]
+        if !self.wide(ns) {
+            return (3 * ns).max(m);
+        }
         let stride = if self.wide(ns) {
             Wide::STRIDE
         } else {
@@ -837,6 +850,872 @@ impl Kernel {
     }
 }
 
+#[cfg(feature = "a6b-endpoint-redesign")]
+mod redesign {
+    use super::super::{begin_inline, long_slot, long_word, Band, Counts, Kernel, INLINE, LONG};
+    #[cfg(test)]
+    use super::Clobber;
+    use super::{CERTIFIED_WIDTH, NARROW_NODES};
+
+    /// `u128` inline-15 encoding: top byte (bits 120..128) is tag:
+    /// - `0` => empty word (`0u128`)
+    /// - `1..=15` => inline payload of `tag` bytes in bits `0..(8 * tag)`, higher payload bits 0
+    /// - `0xFF` => long rule handle: bits `0..32` = rule id (`>= 257`), bits `32..64` = exact length
+    const U128_PAYLOAD_MASK: u128 = (1u128 << 120) - 1;
+    const U128_LONG_TAG: u128 = 0xFFu128 << 120;
+
+    const GEN_PAIR_SLOTS: usize = 1024;
+    const GEN_CONTENT_SLOTS: usize = 4096;
+
+    #[inline(always)]
+    fn literal_u128(byte: u8) -> u128 {
+        (1u128 << 120) | u128::from(byte)
+    }
+
+    #[derive(Default, Clone, Copy)]
+    pub(super) struct NodeLinks {
+        pub(super) prev0: u16,
+        pub(super) next0: u16,
+        pub(super) prev1: u16,
+        pub(super) next1: u16,
+    }
+
+    fn boxed_array_64k<T: Copy>(val: T) -> Box<[T; NARROW_NODES]> {
+        vec![val; NARROW_NODES]
+            .into_boxed_slice()
+            .try_into()
+            .ok()
+            .unwrap()
+    }
+
+    /// Fixed-size 64K SoA node tables indexed by `usize::from(u16)` for safe zero-bounds-check
+    /// access (zero `unsafe`). Allocated once per worker on first Narrow block and reused.
+    /// Reserves 1.75 MiB virtual (512 KiB links + 256 KiB widths + 1 MiB words128); only
+    /// `0..nodes` is touched per block.
+    pub(super) struct Fixed64kSoa {
+        pub(super) links: Box<[NodeLinks; NARROW_NODES]>,
+        pub(super) widths: Box<[u32; NARROW_NODES]>,
+        pub(super) words128: Box<[u128; NARROW_NODES]>,
+    }
+
+    impl Fixed64kSoa {
+        fn new() -> Self {
+            Fixed64kSoa {
+                links: boxed_array_64k(NodeLinks::default()),
+                widths: boxed_array_64k(0),
+                words128: boxed_array_64k(0),
+            }
+        }
+    }
+
+    /// Generation-tagged L1d-hot caches (eliminating per-block 24 KiB zero-fill):
+    /// - `pairs`: 1024 x u64 (8 KiB), packed as `(gen18 << 46) | (code16 << 30) | key30`
+    /// - `contents`: 4096 x u32 (16 KiB), packed as `(gen16 << 16) | code16`
+    pub(super) struct GenCache {
+        pub(super) pairs: Vec<u64>,
+        pub(super) contents: Vec<u32>,
+        pub(super) pair_gen: u64,
+        pub(super) content_gen: u32,
+    }
+
+    impl Default for GenCache {
+        fn default() -> Self {
+            GenCache {
+                pairs: vec![0; GEN_PAIR_SLOTS],
+                contents: vec![0; GEN_CONTENT_SLOTS],
+                pair_gen: 0,
+                content_gen: 0,
+            }
+        }
+    }
+
+    impl GenCache {
+        #[inline(always)]
+        pub(super) fn next_block(&mut self) {
+            self.pair_gen += 1;
+            if self.pair_gen >= (1u64 << 18) {
+                self.pairs.fill(0);
+                self.pair_gen = 1;
+            }
+            self.content_gen += 1;
+            if self.content_gen >= (1u32 << 16) {
+                self.contents.fill(0);
+                self.content_gen = 1;
+            }
+        }
+    }
+
+    /// Reusable per-worker workspace for the redesigned Narrow `A6b` path.
+    #[derive(Default)]
+    pub(super) struct State {
+        pub(super) image_order64: Vec<u64>,
+        pub(super) fixed_soa: Option<Fixed64kSoa>,
+        pub(super) rules: Vec<[u32; 4]>,
+        pub(super) gen_cache: GenCache,
+    }
+
+    impl State {
+        #[cfg(test)]
+        pub(super) fn scratch(&self) -> usize {
+            use std::mem::size_of;
+            let soa_bytes = if self.fixed_soa.is_some() {
+                NARROW_NODES * (size_of::<NodeLinks>() + size_of::<u32>() + size_of::<u128>())
+            } else {
+                0
+            };
+            size_of::<u64>() * self.image_order64.capacity()
+                + size_of::<[u32; 4]>() * self.rules.capacity()
+                + size_of::<u64>() * self.gen_cache.pairs.capacity()
+                + size_of::<u32>() * self.gen_cache.contents.capacity()
+                + soa_bytes
+        }
+    }
+
+    #[inline(always)]
+    fn join_u128(rules: &mut Vec<[u32; 4]>, left: u128, right: u128) -> u128 {
+        if left == 0 {
+            return right;
+        }
+        if right == 0 {
+            return left;
+        }
+        let ll = (left >> 120) as u32;
+        let rl = (right >> 120) as u32;
+        if ll + rl < 16 {
+            return (left + (u128::from(rl) << 120)) | (right << (8 * ll));
+        }
+        join_u128_long(rules, left, right, ll, rl)
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn join_u128_long(
+        rules: &mut Vec<[u32; 4]>,
+        left: u128,
+        right: u128,
+        ll: u32,
+        rl: u32,
+    ) -> u128 {
+        let (lid, l_len) = if ll == 0xFF {
+            (left as u32, (left >> 32) as u32)
+        } else if ll == 1 {
+            (u32::from(left as u8) + 1, 1)
+        } else {
+            let id = rules.len() as u32 + 257;
+            rules.push([
+                left as u32,
+                (left >> 32) as u32,
+                (left >> 64) as u32,
+                (left >> 96) as u32,
+            ]);
+            (id, ll)
+        };
+        let (rid, r_len) = if left == right {
+            (lid, l_len)
+        } else if rl == 0xFF {
+            (right as u32, (right >> 32) as u32)
+        } else if rl == 1 {
+            (u32::from(right as u8) + 1, 1)
+        } else {
+            let id = rules.len() as u32 + 257;
+            rules.push([
+                right as u32,
+                (right >> 32) as u32,
+                (right >> 64) as u32,
+                (right >> 96) as u32,
+            ]);
+            (id, rl)
+        };
+        let total_len = l_len + r_len;
+        let id = rules.len() as u32 + 257;
+        rules.push([lid, rid, total_len, u32::MAX]);
+        U128_LONG_TAG | (u128::from(total_len) << 32) | u128::from(id)
+    }
+
+    fn power_u128(rules: &mut Vec<[u32; 4]>, word: u128, q: u32) -> u128 {
+        let (mut acc, mut base, mut e) = (0u128, word, q);
+        loop {
+            if e & 1 == 1 {
+                acc = join_u128(rules, acc, base);
+            }
+            e >>= 1;
+            if e == 0 {
+                break acc;
+            }
+            base = join_u128(rules, base, base);
+        }
+    }
+
+    /// Compute `x^q y` for spiral contraction, first absorbing inline-15 steps directly into `y`
+    /// (zero rules) before squaring any remainder, so rules never exceed the plain loop's.
+    fn fold_left_power(rules: &mut Vec<[u32; 4]>, x: u128, mut q: u32, mut y: u128) -> u128 {
+        if x == 0 {
+            return y;
+        }
+        let xl = (x >> 120) as u32;
+        if xl < 16 {
+            while q > 0 {
+                let yl = (y >> 120) as u32;
+                if yl >= 16 || xl + yl >= 16 {
+                    break;
+                }
+                y = if y == 0 {
+                    x
+                } else {
+                    (x + (u128::from(yl) << 120)) | (y << (8 * xl))
+                };
+                q -= 1;
+            }
+        }
+        if q == 0 {
+            return y;
+        }
+        let head = power_u128(rules, x, q);
+        join_u128(rules, head, y)
+    }
+
+    /// Compute `x y^q` for spiral contraction, first absorbing inline-15 steps directly into `x`
+    /// (zero rules) before squaring any remainder, so rules never exceed the plain loop's.
+    fn fold_right_power(rules: &mut Vec<[u32; 4]>, mut x: u128, y: u128, mut q: u32) -> u128 {
+        if y == 0 {
+            return x;
+        }
+        let yl = (y >> 120) as u32;
+        if yl < 16 {
+            while q > 0 {
+                let xl = (x >> 120) as u32;
+                if xl >= 16 || xl + yl >= 16 {
+                    break;
+                }
+                x = if x == 0 {
+                    y
+                } else {
+                    (x + (u128::from(yl) << 120)) | (y << (8 * xl))
+                };
+                q -= 1;
+            }
+        }
+        if q == 0 {
+            return x;
+        }
+        let tail = power_u128(rules, y, q);
+        join_u128(rules, x, tail)
+    }
+
+    fn append_rules(rules: &mut [[u32; 4]], word: u32, stack: &mut Vec<u32>, dest: &mut Vec<u8>) {
+        stack.clear();
+        stack.push(word);
+        while let Some(id) = stack.pop() {
+            if id <= 256 {
+                dest.push((id - 1) as u8);
+            } else {
+                let idx = (id - 257) as usize;
+                let tag = rules[idx][3];
+                if tag >> 28 == 0 {
+                    let r = rules[idx];
+                    let bytes = (u128::from(r[0])
+                        | (u128::from(r[1]) << 32)
+                        | (u128::from(r[2]) << 64)
+                        | (u128::from(r[3] & 0x00ff_ffff) << 96))
+                        .to_le_bytes();
+                    dest.extend_from_slice(&bytes[..(tag >> 24) as usize]);
+                    continue;
+                }
+                if tag == u32::MAX {
+                    let r0 = rules[idx][0];
+                    let r1 = rules[idx][1];
+                    rules[idx][3] = 0x8000_0000 | dest.len() as u32;
+                    stack.push(r1);
+                    stack.push(r0);
+                } else {
+                    let start = (tag & 0x7fff_ffff) as usize;
+                    let len = rules[idx][2] as usize;
+                    dest.extend_from_within(start..start + len);
+                }
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn short_u128_hash(entry_u128: u128, len: u8) -> u64 {
+        let low = entry_u128 as u64;
+        let high = (entry_u128 >> 64) as u64;
+        let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+            ^ high.rotate_left(29).wrapping_mul(0x94D0_49BB_1331_11EB)
+            ^ u64::from(len).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        h ^ (h >> 30)
+    }
+
+    #[inline(always)]
+    fn long_bytes_hash(bytes: &[u8]) -> u64 {
+        let part = |i: usize| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        let low = part(0);
+        let high = part(bytes.len() - 8);
+        let middle = part(bytes.len() / 2 - 4);
+        let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+            ^ high.rotate_left(29).wrapping_mul(0x94D0_49BB_1331_11EB)
+            ^ middle.wrapping_mul(0xD6E8_FEB8_6659_FD93)
+            ^ (bytes.len() as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        h ^ (h >> 30)
+    }
+
+    /// Fused single-pass setup over `strips_raw` with packed `u64` `image_order64`
+    /// (`to:20 | width:20 | sid:16`) and branchless sentinel-0 `order` appends.
+    #[allow(clippy::too_many_arguments)]
+    fn setup_soa_64k(
+        strips_raw: &[u32],
+        ns: usize,
+        n: u32,
+        first: &[u32; 256],
+        write: &mut [u32; 256],
+        img_buf: &mut Vec<u64>,
+        soa: &mut Fixed64kSoa,
+        #[cfg(test)] clobber: Clobber,
+    ) -> (u32, usize) {
+        if img_buf.len() < ns {
+            img_buf.resize(ns, 0);
+        }
+        let img = &mut img_buf[..ns];
+        let links = &mut *soa.links;
+        let widths = &mut *soa.widths;
+        let words = &mut *soa.words128;
+
+        links[0] = NodeLinks::default();
+        widths[0] = 0;
+        words[0] = 0;
+
+        let mut nodes = (1 + ns) as u32;
+        let mut widest = 0u32;
+        let mut ord0_tail = 0u16;
+        let (mut term1_head, mut term1_tail) = (0u16, 0u16);
+        let mut x = 0u32;
+
+        for i in 0..ns {
+            let base = 3 * i;
+            let from = strips_raw[base];
+            let to_rel = strips_raw[base + 1];
+            let meta = strips_raw[base + 2];
+            let byte = (meta & 0xFF) as u8;
+            let width = meta >> 8;
+            let a = usize::from(byte);
+            let to = to_rel + first[a];
+            let sid = (i + 1) as u16;
+
+            widths[usize::from(sid)] = width;
+            words[usize::from(sid)] = literal_u128(byte);
+            widest = widest.max(width);
+
+            let pos = write[a] as usize;
+            write[a] = (pos + 1) as u32;
+            img[pos] = u64::from(to) | (u64::from(width) << 20) | (u64::from(sid) << 40);
+
+            if x < from {
+                let gap = from - x;
+                widest = widest.max(gap);
+                let gid = nodes as u16;
+                nodes += 1;
+                widths[usize::from(gid)] = gap;
+                words[usize::from(gid)] = 0;
+                links[usize::from(ord0_tail)].next0 = gid;
+                links[usize::from(gid)].prev0 = ord0_tail;
+                ord0_tail = gid;
+                if term1_tail == 0 {
+                    term1_head = gid;
+                } else {
+                    links[usize::from(term1_tail)].next1 = gid;
+                }
+                links[usize::from(gid)].prev1 = term1_tail;
+                term1_tail = gid;
+            }
+            links[usize::from(ord0_tail)].next0 = sid;
+            links[usize::from(sid)].prev0 = ord0_tail;
+            ord0_tail = sid;
+            x = from + width;
+        }
+        if x < n {
+            let gap = n - x;
+            widest = widest.max(gap);
+            let gid = nodes as u16;
+            nodes += 1;
+            widths[usize::from(gid)] = gap;
+            words[usize::from(gid)] = 0;
+            links[usize::from(ord0_tail)].next0 = gid;
+            links[usize::from(gid)].prev0 = ord0_tail;
+            ord0_tail = gid;
+            if term1_tail == 0 {
+                term1_head = gid;
+            } else {
+                links[usize::from(term1_tail)].next1 = gid;
+            }
+            links[usize::from(gid)].prev1 = term1_tail;
+            term1_tail = gid;
+        }
+        let ord0_head = if ord0_tail == 0 { 0 } else { links[0].next0 };
+
+        #[cfg(test)]
+        if clobber == Clobber::OrderBeforeNodes {
+            img.fill(0xA5A5_A5A5_A5A5_A5A5);
+        }
+
+        let mut ord1_tail = 0u16;
+        let (mut term0_head, mut term0_tail) = (0u16, 0u16);
+        x = 0;
+        for &packed in img.iter() {
+            let to = (packed & 0xF_FFFF) as u32;
+            let width = ((packed >> 20) & 0xF_FFFF) as u32;
+            let sid = (packed >> 40) as u16;
+            if x < to {
+                let gap = to - x;
+                widest = widest.max(gap);
+                let gid = nodes as u16;
+                nodes += 1;
+                widths[usize::from(gid)] = gap;
+                words[usize::from(gid)] = 0;
+                links[usize::from(ord1_tail)].next1 = gid;
+                links[usize::from(gid)].prev1 = ord1_tail;
+                ord1_tail = gid;
+                if term0_tail == 0 {
+                    term0_head = gid;
+                } else {
+                    links[usize::from(term0_tail)].next0 = gid;
+                }
+                links[usize::from(gid)].prev0 = term0_tail;
+                term0_tail = gid;
+            }
+            links[usize::from(ord1_tail)].next1 = sid;
+            links[usize::from(sid)].prev1 = ord1_tail;
+            ord1_tail = sid;
+            x = to + width;
+        }
+        if x < n {
+            let gap = n - x;
+            widest = widest.max(gap);
+            let gid = nodes as u16;
+            nodes += 1;
+            widths[usize::from(gid)] = gap;
+            words[usize::from(gid)] = 0;
+            links[usize::from(ord1_tail)].next1 = gid;
+            links[usize::from(gid)].prev1 = ord1_tail;
+            ord1_tail = gid;
+            if term0_tail == 0 {
+                term0_head = gid;
+            } else {
+                links[usize::from(term0_tail)].next0 = gid;
+            }
+            links[usize::from(gid)].prev0 = term0_tail;
+            term0_tail = gid;
+        }
+        let ord1_head = if ord1_tail == 0 { 0 } else { links[0].next1 };
+
+        #[cfg(test)]
+        if clobber == Clobber::OrderAfterNodes {
+            img.fill(0xA5A5_A5A5_A5A5_A5A5);
+        }
+
+        {
+            let mut prev = 0u16;
+            for (h, t) in [(term0_head, term0_tail), (ord0_head, ord0_tail)] {
+                if t == 0 {
+                    continue;
+                }
+                links[usize::from(prev)].next0 = h;
+                links[usize::from(h)].prev0 = prev;
+                prev = t;
+            }
+            links[usize::from(prev)].next0 = 0;
+            links[0].prev0 = prev;
+        }
+        {
+            let mut prev = 0u16;
+            for (h, t) in [(term1_head, term1_tail), (ord1_head, ord1_tail)] {
+                if t == 0 {
+                    continue;
+                }
+                links[usize::from(prev)].next1 = h;
+                links[usize::from(h)].prev1 = prev;
+                prev = t;
+            }
+            links[usize::from(prev)].next1 = 0;
+            links[0].prev1 = prev;
+        }
+        (widest, nodes as usize)
+    }
+
+    /// Safe zero-bounds-check induction over `Fixed64kSoa` (`inline15` `u128` words + direct
+    /// `aw == bw` replace), preserving `SPIRALS` contraction identically to shipped `eliminate`.
+    fn eliminate_inline15_soa_64k<const SPIRALS: bool>(
+        soa: &mut Fixed64kSoa,
+        rules: &mut Vec<[u32; 4]>,
+        n: u32,
+    ) -> usize {
+        rules.clear();
+        let links = &mut *soa.links;
+        let widths = &mut *soa.widths;
+        let words = &mut *soa.words128;
+        let mut left = n;
+        let mut taken = 0usize;
+        while left != 0 {
+            let x = links[0].prev0;
+            let y = links[0].prev1;
+            let xi = usize::from(x);
+            let yi = usize::from(y);
+            let aw = widths[xi];
+            let bw = widths[yi];
+            if SPIRALS && x != y {
+                if aw > bw && links[yi].prev1 == x && (aw - 1) / bw >= 2 {
+                    let q = (aw - 1) / bw;
+                    assert!(q * bw < aw && q * bw <= left);
+                    words[yi] = fold_left_power(rules, words[xi], q, words[yi]);
+                    widths[xi] = aw - q * bw;
+                    left -= q * bw;
+                    taken += q as usize;
+                    continue;
+                }
+                if aw < bw && links[xi].prev0 == y && (bw - 1) / aw >= 2 {
+                    let q = (bw - 1) / aw;
+                    assert!(q * aw < bw && q * aw <= left);
+                    words[xi] = fold_right_power(rules, words[xi], words[yi], q);
+                    widths[yi] = bw - q * aw;
+                    left -= q * aw;
+                    taken += q as usize;
+                    continue;
+                }
+            }
+            let w = aw.min(bw);
+            assert!(w > 0 && w <= left);
+            left -= w;
+            taken += 1;
+            if x == y {
+                let xp = links[xi].prev0;
+                links[usize::from(xp)].next0 = 0;
+                links[0].prev0 = xp;
+                let yp = links[yi].prev1;
+                links[usize::from(yp)].next1 = 0;
+                links[0].prev1 = yp;
+                continue;
+            }
+            let word = join_u128(rules, words[xi], words[yi]);
+            if aw > bw {
+                let yp = links[yi].prev1;
+                links[usize::from(yp)].next1 = 0;
+                links[0].prev1 = yp;
+                let xn = links[xi].next1;
+                links[yi].prev1 = x;
+                links[yi].next1 = xn;
+                links[xi].next1 = y;
+                links[usize::from(xn)].prev1 = y;
+                words[yi] = word;
+                widths[xi] = aw - bw;
+            } else if aw < bw {
+                let xp = links[xi].prev0;
+                links[usize::from(xp)].next0 = 0;
+                links[0].prev0 = xp;
+                let yn = links[yi].next0;
+                links[xi].prev0 = y;
+                links[xi].next0 = yn;
+                links[yi].next0 = x;
+                links[usize::from(yn)].prev0 = x;
+                words[xi] = word;
+                widths[yi] = bw - aw;
+            } else {
+                let xp = links[xi].prev0;
+                links[usize::from(xp)].next0 = 0;
+                links[0].prev0 = xp;
+                let yp0 = links[yi].prev0;
+                let yn0 = links[yi].next0;
+                links[xi].prev0 = yp0;
+                links[xi].next0 = yn0;
+                links[usize::from(yp0)].next0 = x;
+                links[usize::from(yn0)].prev0 = x;
+                let yp1 = links[yi].prev1;
+                links[usize::from(yp1)].next1 = 0;
+                links[0].prev1 = yp1;
+                words[xi] = word;
+            }
+        }
+        taken
+    }
+
+    /// Assign bottom coordinates from both ends of side 1 into the dead `(prev1, next1)` `u16` pair.
+    fn assign_bottom_soa_64k(
+        links: &mut [NodeLinks; NARROW_NODES],
+        widths: &[u32; NARROW_NODES],
+        rows: u32,
+    ) {
+        let mut first = links[0].next1;
+        let mut last = links[0].prev1;
+        let (mut lo, mut hi) = (0u32, rows);
+        while first != last {
+            let fi = usize::from(first);
+            let li = usize::from(last);
+            let next = links[fi].next1;
+            let prev = links[li].prev1;
+            let wf = widths[fi];
+            hi -= widths[li];
+            links[fi].prev1 = lo as u16;
+            links[fi].next1 = (lo >> 16) as u16;
+            links[li].prev1 = hi as u16;
+            links[li].next1 = (hi >> 16) as u16;
+            lo += wf;
+            if next == last {
+                assert_eq!(lo, hi);
+                return;
+            }
+            first = next;
+            last = prev;
+        }
+        if first != 0 {
+            let fi = usize::from(first);
+            links[fi].prev1 = lo as u16;
+            links[fi].next1 = (lo >> 16) as u16;
+            lo += widths[fi];
+        }
+        assert_eq!(lo, hi);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    #[inline(always)]
+    fn dict_code_u128(
+        word: u128,
+        byte: u8,
+        rules: &mut [[u32; 4]],
+        gen_cache: &mut GenCache,
+        inline16: &mut Vec<[u8; INLINE]>,
+        lens: &mut Vec<u8>,
+        spelling: &mut Vec<u8>,
+        stack: &mut Vec<u32>,
+    ) -> u32 {
+        let tag = (word >> 120) as u32;
+        if tag < 16 {
+            let entry_u128 = (word & U128_PAYLOAD_MASK) | (u128::from(byte) << (8 * tag));
+            let len = (tag + 1) as u8;
+            let idx = (short_u128_hash(entry_u128, len) as usize) & (GEN_CONTENT_SLOTS - 1);
+            let g = gen_cache.content_gen;
+            let slot = gen_cache.contents[idx];
+            if (slot >> 16) == g {
+                let old = (slot & 0xFFFF) as usize;
+                if lens[old] == len && u128::from_le_bytes(inline16[old]) == entry_u128 {
+                    return old as u32;
+                }
+            }
+            let code = lens.len() as u32;
+            inline16.push(entry_u128.to_le_bytes());
+            lens.push(len);
+            if code < 65_536 {
+                gen_cache.contents[idx] = (g << 16) | code;
+            }
+            code
+        } else {
+            dict_code_rule_long(
+                word as u32,
+                byte,
+                rules,
+                gen_cache,
+                inline16,
+                lens,
+                spelling,
+                stack,
+            )
+        }
+    }
+
+    #[cold]
+    #[inline(never)]
+    #[allow(clippy::too_many_arguments)]
+    fn dict_code_rule_long(
+        id: u32,
+        byte: u8,
+        rules: &mut [[u32; 4]],
+        gen_cache: &mut GenCache,
+        inline16: &mut Vec<[u8; INLINE]>,
+        lens: &mut Vec<u8>,
+        spelling: &mut Vec<u8>,
+        stack: &mut Vec<u32>,
+    ) -> u32 {
+        let key = (id << 8) | u32::from(byte);
+        let p_idx = (key.wrapping_mul(0x9e37_79b9) >> 22) as usize;
+        if id < (1 << 22) {
+            let packed = gen_cache.pairs[p_idx];
+            if (packed >> 46) == gen_cache.pair_gen && ((packed as u32) & 0x3FFF_FFFF) == key {
+                return ((packed >> 30) & 0xFFFF) as u32;
+            }
+        }
+
+        let start = spelling.len();
+        let memoized = rules[(id - 257) as usize][3] != u32::MAX;
+        append_rules(rules, id, stack, spelling);
+        spelling.push(byte);
+        let end = spelling.len();
+        let entry = long_slot(start as u32, end as u32);
+
+        let bytes = &spelling[start..end];
+        let idx = (long_bytes_hash(bytes) as usize) & (GEN_CONTENT_SLOTS - 1);
+        let g = gen_cache.content_gen;
+        let slot = gen_cache.contents[idx];
+        if (slot >> 16) == g {
+            let old = (slot & 0xFFFF) as usize;
+            if lens[old] == LONG && long_word(&inline16[old], spelling) == bytes {
+                if memoized {
+                    spelling.truncate(start);
+                } else {
+                    spelling.pop();
+                }
+                let code = old as u32;
+                if id < (1 << 22) && code < 65_536 {
+                    gen_cache.pairs[p_idx] =
+                        (gen_cache.pair_gen << 46) | (u64::from(code) << 30) | u64::from(key);
+                }
+                return code;
+            }
+        }
+
+        let code = lens.len() as u32;
+        inline16.push(entry);
+        lens.push(LONG);
+        if code < 65_536 {
+            gen_cache.contents[idx] = (g << 16) | code;
+        }
+        if id < (1 << 22) && code < 65_536 {
+            gen_cache.pairs[p_idx] =
+                (gen_cache.pair_gen << 46) | (u64::from(code) << 30) | u64::from(key);
+        }
+        code
+    }
+
+    impl Kernel {
+        /// Redesigned Narrow `A6b` path: fused setup + `Fixed64kSoa` `inline15` `u128` induction +
+        /// generation-tagged L1d dictionary. Called only when `!self.wide(ns)`.
+        pub(in crate::open) fn induced_redesigned(
+            &mut self,
+            ns: usize,
+            n: u32,
+            first: &[u32; 256],
+            write: &mut [u32; 256],
+            thin: &[u32; 256],
+            stats: &mut Counts,
+        ) -> [usize; 256] {
+            let Kernel {
+                endpoint,
+                bands,
+                spelling,
+                edges,
+                inline16,
+                lens,
+                ..
+            } = self;
+            let strips_raw = &edges[..3 * ns];
+            let redesign = &mut endpoint.redesign;
+            let soa = redesign.fixed_soa.get_or_insert_with(Fixed64kSoa::new);
+            let (widest, nodes_used) = setup_soa_64k(
+                strips_raw,
+                ns,
+                n,
+                first,
+                write,
+                &mut redesign.image_order64,
+                soa,
+                #[cfg(test)]
+                endpoint.clobber,
+            );
+            stats.open_nodes = nodes_used - 1;
+
+            #[cfg(test)]
+            let spirals = endpoint.spirals.unwrap_or(widest > CERTIFIED_WIDTH);
+            #[cfg(not(test))]
+            let spirals = widest > CERTIFIED_WIDTH;
+            stats.spirals = spirals;
+
+            let steps = if spirals {
+                eliminate_inline15_soa_64k::<true>(soa, &mut redesign.rules, n)
+            } else {
+                eliminate_inline15_soa_64k::<false>(soa, &mut redesign.rules, n)
+            };
+            stats.steps = steps;
+            stats.rules = redesign.rules.len();
+
+            #[cfg(test)]
+            if endpoint.clobber == Clobber::ArenaBeforeBands {
+                soa.widths[..nodes_used].fill(0xA5A5_A5A5);
+            }
+
+            assign_bottom_soa_64k(&mut soa.links, &soa.widths, stats.retained as u32);
+            redesign.gen_cache.next_block();
+            begin_inline(if n >= 65_536 { 1536 } else { 0 }, inline16, lens);
+
+            let mut cursors = [0usize; 256];
+            let links = &*soa.links;
+            let widths = &*soa.widths;
+            let words = &*soa.words128;
+            let rules = &mut redesign.rules[..];
+
+            let mut id = links[0].next0;
+            let mut node_width = widths[usize::from(id)];
+            let mut node_word = words[usize::from(id)];
+            let l0 = links[usize::from(id)];
+            let mut node_bottom = u32::from(l0.prev1) | (u32::from(l0.next1) << 16);
+            let mut node_next = l0.next0;
+            let mut in_node = 0u32;
+            let mut k = 0u32;
+
+            for a in 0..256 {
+                cursors[a] = bands.len();
+                let end = k + thin[a];
+                while k < end {
+                    let width = (end - k).min(node_width - in_node);
+                    assert!(width > 0);
+                    let dst = node_bottom + in_node;
+                    #[cfg(any(test, feature = "census"))]
+                    if node_word != 0 {
+                        let tag = (node_word >> 120) as u32;
+                        let height = if tag < 16 {
+                            tag as usize
+                        } else {
+                            (node_word >> 32) as u32 as usize
+                        };
+                        stats.words += 1;
+                        stats.copies += width as usize;
+                        stats.traced += height;
+                        stats.thick_area += width as usize * height;
+                        stats.unit_work += usize::from(width == 1) * height;
+                        stats.longest = stats.longest.max(height);
+                    }
+                    let code = if node_word == 0 {
+                        a as u32
+                    } else {
+                        dict_code_u128(
+                            node_word,
+                            a as u8,
+                            rules,
+                            &mut redesign.gen_cache,
+                            inline16,
+                            lens,
+                            spelling,
+                            &mut endpoint.stack,
+                        )
+                    };
+                    bands.push(Band::new(k + width, dst, code));
+                    in_node += width;
+                    k += width;
+                    if in_node == node_width {
+                        id = node_next;
+                        in_node = 0;
+                        if id != 0 {
+                            let idx = usize::from(id);
+                            let l = links[idx];
+                            node_width = widths[idx];
+                            node_word = words[idx];
+                            node_bottom = u32::from(l.prev1) | (u32::from(l.next1) << 16);
+                            node_next = l.next0;
+                        }
+                    }
+                }
+            }
+            assert_eq!(id, 0);
+            cursors
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1009,5 +1888,133 @@ mod tests {
         assert_eq!(Narrow::prev(e.a, 0, 1), 1);
         assert_eq!(Narrow::next(e.a, 1, 0), 2);
         assert_eq!(Narrow::prev(e.a, 0, 0), 2);
+    }
+
+    #[cfg(feature = "a6b-endpoint-redesign")]
+    #[test]
+    fn redesigned_matches_wide_and_spirals_and_zero_strips() {
+        use super::super::b5::{plain, runs_column, Lcg};
+        use super::super::LIMIT;
+        use crate::runs::Runs;
+
+        let mut g = Lcg(0x6136_6231);
+        let mut cases: Vec<(Vec<u8>, u32)> = vec![
+            // ns == 0 (all thin runs)
+            ((0..500).map(|i| (i % 7) as u8).collect(), 123),
+            // single long run (spiral candidate)
+            (
+                {
+                    let mut v = vec![3u8; 40_000];
+                    v[0] = 1;
+                    v[19_999] = 2;
+                    v
+                },
+                7,
+            ),
+            // mixed dense & sparse runs (both short inline-15 and long rules)
+            (runs_column(&mut g, 8_000, 12, 18), 401),
+            (runs_column(&mut g, 40_000, 35, 14), 12_345),
+        ];
+        // Dense comb with deep words (> 15 bytes) forcing long rules & dict dedup
+        let comb: Vec<u8> = (0..12_000)
+            .map(|i| {
+                if i % 40 < 20 {
+                    (i / 40 % 4) as u8
+                } else {
+                    4 + (i % 3) as u8
+                }
+            })
+            .collect();
+        cases.push((comb, 333));
+
+        let mut redesigned = Kernel::default();
+        let mut wide = Kernel::default();
+        wide.endpoint.force_wide = true;
+        let (mut out_r, mut out_w) = (Vec::new(), Vec::new());
+
+        for (l, p) in &cases {
+            let r = Runs::of_column(l);
+            let want = plain(l, *p);
+            for spirals in [Some(false), Some(true), None] {
+                redesigned.endpoint.spirals = spirals;
+                wide.endpoint.spirals = spirals;
+                let sr = redesigned.run::<true, true>(r.records(), l.len(), *p, LIMIT, &mut out_r);
+                let sw = wide.run::<true, true>(r.records(), l.len(), *p, LIMIT, &mut out_w);
+                assert_eq!(
+                    out_r,
+                    want,
+                    "redesigned mismatch len={} spirals={spirals:?}",
+                    l.len()
+                );
+                assert_eq!(
+                    out_w,
+                    want,
+                    "wide mismatch len={} spirals={spirals:?}",
+                    l.len()
+                );
+                assert_eq!(sr.steps, sw.steps);
+                assert_eq!(sr.open_nodes, sw.open_nodes);
+                assert_eq!(sr.words, sw.words);
+                assert_eq!(sr.traced, sw.traced);
+                assert_eq!(sr.longest, sw.longest);
+                assert!(sr.rules <= sw.rules);
+            }
+        }
+    }
+
+    #[cfg(feature = "a6b-endpoint-redesign")]
+    #[test]
+    fn redesigned_gen_cache_wrap_and_reuse() {
+        use super::super::b5::{plain, runs_column, Lcg};
+        use super::super::LIMIT;
+        use crate::runs::Runs;
+
+        let mut g = Lcg(0x6765_6e77);
+        let mut k = Kernel::default();
+        let mut out = Vec::new();
+        // Force both content_gen (16-bit) and pair_gen (18-bit) to wrap on the next block.
+        k.endpoint.redesign.gen_cache.content_gen = (1u32 << 16) - 2;
+        k.endpoint.redesign.gen_cache.pair_gen = (1u64 << 18) - 2;
+        for _ in 0..5 {
+            let l = runs_column(&mut g, 6_000, 8, 22);
+            let p = g.below(l.len() as u32);
+            let r = Runs::of_column(&l);
+            k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
+            assert_eq!(out, plain(&l, p));
+        }
+        assert!(k.endpoint.redesign.gen_cache.content_gen < 10);
+        assert!(k.endpoint.redesign.gen_cache.pair_gen < 10);
+    }
+
+    #[cfg(feature = "a6b-endpoint-redesign")]
+    #[test]
+    fn miri_a6b_endpoint_redesign() {
+        use super::super::b5::{plain, runs_column, Lcg};
+        use super::super::LIMIT;
+        use crate::runs::Runs;
+
+        let mut g = Lcg(0x6d69_7269);
+        let mut k = Kernel::default();
+        let mut out = Vec::new();
+        // Small columns exercising ns == 0, inline-15 words, long rules, and SPIRALS=true/false
+        let small_spiral: Vec<u8> = (0..180).map(|i| if i == 0 { 1 } else { 0 }).collect();
+        let long_word: Vec<u8> = (0..400)
+            .map(|i| if i % 22 < 18 { (i / 22 % 3) as u8 } else { 3 })
+            .collect();
+        let mixed = runs_column(&mut g, 320, 6, 18);
+        for (l, p) in [
+            ((0..64).map(|i| (i % 5) as u8).collect::<Vec<_>>(), 11u32),
+            (small_spiral, 5),
+            (long_word, 77),
+            (mixed, 19),
+        ] {
+            let r = Runs::of_column(&l);
+            let want = plain(&l, p);
+            for spirals in [Some(false), Some(true)] {
+                k.endpoint.spirals = spirals;
+                k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
+                assert_eq!(out, want);
+            }
+        }
     }
 }

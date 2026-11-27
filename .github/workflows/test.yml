@@ -75,6 +75,14 @@ jobs:
         run: |
           cargo test --release --features mtf-fold --test mtf_fold
           cargo test --features mtf-fold --lib
+      # the redesigned endpoint elimination and dictionary (research feature `a6b-endpoint-redesign`,
+      # claim a6b-endpoint-build; docs/journal/2026-11-27-a6b-endpoint-build/registration.md):
+      # full open-kernel and library tests plus composition with mtf-fold
+      - name: The endpoint elimination redesign (research feature)
+        run: |
+          cargo test --features a6b-endpoint-redesign --lib open::
+          cargo test --release --features "a6b-endpoint-redesign mtf-fold" --test mtf_fold
+          cargo test --release --features a6b-endpoint-redesign --test service_default
       # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
       # arbitrary columns, tampered logs refused, every block of the test corpora recorded
       # and checked; then fixed prose recorded and replayed by the Python reader
