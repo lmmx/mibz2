@@ -349,6 +349,13 @@
     "section": " · Research blog",
     "title": "Reopening Open's middle and the off-Wikidata decoder"
   },
+  "assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png": {
+    "description": "Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "synthesis",
+    "section": " · Research blog",
+    "title": "The architecture of a 6 GB/s bzip2 decoder"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
