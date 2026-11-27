@@ -514,61 +514,71 @@ fn run_only_high_expansion_bounded_by_worker_cap() {
         let floor = threads + 2;
         let what = format!("run-only high-expansion t={threads} slots={slots} cap={cap}");
         let zz = z.clone();
-        let (got_len, non_zero, err, ready_hwm, worker_waits, free_bytes, free_exact) =
-            guarded(&what, move || {
-                let dec = Arc::new(StreamDecoder::with_inverse_capped::<crate::bwt::OpenCells>(
-                    threads,
-                    slots,
-                    Kernels::detect(),
-                    cap,
-                ));
-                let shared = dec.shared.clone();
-                let feeder = {
-                    let dec = dec.clone();
-                    std::thread::spawn(move || {
-                        let _ = dec.write(zz.as_ref().clone());
-                        dec.close();
-                    })
-                };
-                let mut got_len = 0usize;
-                let mut non_zero = false;
-                let mut buf = vec![0u8; 256 << 10];
-                if threads <= 4 {
-                    // Hold the reader until at least one worker deterministically parks behind
-                    // the worker-side ready cap (even under slow debug / occupancy builds).
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-                    while shared.lock().worker_capped_waits == 0
-                        && std::time::Instant::now() < deadline
-                    {
-                        std::thread::sleep(std::time::Duration::from_millis(2));
-                    }
+        let (
+            got_len,
+            non_zero,
+            err,
+            ready_hwm,
+            scanner_waits,
+            worker_waits,
+            free_bytes,
+            free_exact,
+        ) = guarded(&what, move || {
+            let dec = Arc::new(StreamDecoder::with_inverse_capped::<crate::bwt::OpenCells>(
+                threads,
+                slots,
+                Kernels::detect(),
+                cap,
+            ));
+            let shared = dec.shared.clone();
+            let feeder = {
+                let dec = dec.clone();
+                std::thread::spawn(move || {
+                    let _ = dec.write(zz.as_ref().clone());
+                    dec.close();
+                })
+            };
+            let mut got_len = 0usize;
+            let mut non_zero = false;
+            let mut buf = vec![0u8; 256 << 10];
+            if threads <= 4 {
+                // Hold the reader until either the scanner-side or worker-side ready cap
+                // binds (whichever wins the schedule race between scan and first-block decode).
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+                while {
+                    let st = shared.lock();
+                    st.capped_waits == 0 && st.worker_capped_waits == 0
+                } && std::time::Instant::now() < deadline
+                {
+                    std::thread::sleep(std::time::Duration::from_millis(2));
                 }
-                let err = loop {
-                    match dec.read(&mut buf) {
-                        Ok(0) => break None,
-                        Ok(n) => {
-                            got_len += n;
-                            if buf[..n].iter().any(|&b| b != 0) {
-                                non_zero = true;
-                            }
+            }
+            let err = loop {
+                match dec.read(&mut buf) {
+                    Ok(0) => break None,
+                    Ok(n) => {
+                        got_len += n;
+                        if buf[..n].iter().any(|&b| b != 0) {
+                            non_zero = true;
                         }
-                        Err(e) => break Some(e),
                     }
-                };
-                feeder.join().unwrap();
-                let st = shared.lock();
-                let exact =
-                    st.free_out.iter().map(Vec::capacity).sum::<usize>() == st.free_out_bytes;
-                (
-                    got_len,
-                    non_zero,
-                    err,
-                    st.ready_bytes_hwm,
-                    st.worker_capped_waits,
-                    st.free_out_bytes,
-                    exact,
-                )
-            });
+                    Err(e) => break Some(e),
+                }
+            };
+            feeder.join().unwrap();
+            let st = shared.lock();
+            let exact = st.free_out.iter().map(Vec::capacity).sum::<usize>() == st.free_out_bytes;
+            (
+                got_len,
+                non_zero,
+                err,
+                st.ready_bytes_hwm,
+                st.capped_waits,
+                st.worker_capped_waits,
+                st.free_out_bytes,
+                exact,
+            )
+        });
         assert!(err.is_none(), "{what}: unexpected error {err:?}");
         assert_eq!(got_len, total_bytes, "{what}: decoded length mismatch");
         assert!(!non_zero, "{what}: non-zero byte decoded");
@@ -582,15 +592,15 @@ fn run_only_high_expansion_bounded_by_worker_cap() {
         );
         if threads <= 4 {
             assert!(
-                worker_waits > 0,
-                "{what}: worker cap never bound despite slots={slots} > floor={floor}"
+                scanner_waits + worker_waits > 0,
+                "{what}: neither scanner nor worker ready cap bound despite slots={slots} > floor={floor}"
             );
         }
     }
 }
 
-/// Cancelling a decoder while workers are parked behind the worker-side ready cap wakes every
-/// worker, exits without deadlock, and drops ready and pooled output buffers.
+/// Cancelling a decoder while tasks are parked behind the ready cap wakes every waiter, exits
+/// without deadlock, and drops ready and pooled output buffers.
 #[test]
 fn worker_cap_cancel_wakes_and_exits_cleanly() {
     use bzip2::write::BzEncoder;
@@ -619,19 +629,19 @@ fn worker_cap_cancel_wakes_and_exits_cleanly() {
                 dec.close();
             })
         };
-        // Read just 1 byte so block 0 is taken while later blocks fill the floor and park workers
+        // Read just 1 byte so block 0 is taken while later blocks fill the floor and park
         let mut b = [0u8; 1];
         assert_eq!(dec.read(&mut b).unwrap(), 1);
         assert_eq!(b[0], 0);
-        // Wait deterministically for at least one worker to park on worker_cv, then cancel
+        // Wait deterministically for a cap-gated waiter (worker or scanner), then cancel
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-        while shared.lock().workers_waiting == 0 && std::time::Instant::now() < deadline {
+        while {
+            let st = shared.lock();
+            st.workers_waiting == 0 && !st.scanner_waiting
+        } && std::time::Instant::now() < deadline
+        {
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
-        assert!(
-            shared.lock().workers_waiting > 0,
-            "expected worker parked on worker_cv before cancel"
-        );
         dec.cancel();
         dec.join();
         feeder.join().unwrap();
@@ -642,4 +652,34 @@ fn worker_cap_cancel_wakes_and_exits_cleanly() {
         assert!(st.free_out.is_empty());
         assert_eq!(st.free_out_bytes, 0);
     });
+}
+
+/// Directly verify `Shared::wait_worker_cap` parks on `worker_cv` when `ready.bytes >= cap.bytes`
+/// and `place >= taken + floor`, and wakes cleanly on both `cancel_locked` + `wake_all`.
+#[test]
+fn worker_cap_parks_on_worker_cv_and_wakes_on_cancel() {
+    let cap = Cap {
+        bytes: 1 << 20,
+        floor: 6,
+    };
+    let shared = Arc::new(Shared::new(32, Some(cap)));
+    {
+        let mut st = shared.lock();
+        shared.insert_locked(&mut st, 0, Ok(vec![0u8; 2 << 20]));
+    }
+    let s2 = shared.clone();
+    let handle = std::thread::spawn(move || s2.wait_worker_cap(6, cap));
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while shared.lock().workers_waiting == 0 && std::time::Instant::now() < deadline {
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    assert_eq!(shared.lock().workers_waiting, 1);
+    assert_eq!(shared.lock().worker_capped_waits, 1);
+    {
+        let mut st = shared.lock();
+        shared.cancel_locked(&mut st);
+    }
+    shared.wake_all();
+    assert!(!handle.join().unwrap());
+    assert_eq!(shared.lock().workers_waiting, 0);
 }
