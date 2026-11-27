@@ -13,6 +13,7 @@ import ".just/share-nothing.just"
 import ".just/text-knee.just"
 import ".just/clock-modes.just"
 import ".just/forward-adopt.just"
+import ".just/plan-schedule.just"
 
 default: clippy
 
