@@ -1,0 +1,4712 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1010/blog/2026-11-26-dropping-the-coordinator/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-26-true-floor-and-pooled-scan/">
+      
+      
+        <link rel="next" href="../2026-11-26-complementary-bottlenecks/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>Dropping the coordinator: atomic file locks on a measured frontier - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=112e7576763b">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="Dropping the coordinator: atomic file locks on a measured frontier">
+  <meta property="og:description" content="Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1010/blog/2026-11-26-dropping-the-coordinator/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1010/assets/social/blog-2026-11-26-dropping-the-coordinator.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Dropping the coordinator: atomic file locks on a measured frontier">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dropping the coordinator: atomic file locks on a measured frontier">
+  <meta name="twitter:description" content="Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1010/assets/social/blog-2026-11-26-dropping-the-coordinator.png">
+  <meta name="twitter:image:alt" content="Dropping the coordinator: atomic file locks on a measured frontier">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Dropping the coordinator: atomic file locks on a measured frontier
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder's true floor and a pooled scan
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dropping the coordinator
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dropping the coordinator
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-drop-a-coordinator-that-seemed-to-be-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Why drop a coordinator that seemed to be working?
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Why drop a coordinator that seemed to be working?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#external-evidence-fresh-resets-beat-long-lived-swarms" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        External evidence: fresh resets beat long-lived swarms
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-repositorys-own-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The repository's own record
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-structural-lens-with-a-warning-attached" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A structural lens, with a warning attached
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-makes-flat-coordination-possible-the-measured-frontier" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What makes flat coordination possible? The measured frontier
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-what-replaced-the-hub-files-atomic-locks-and-five-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. What replaced the hub: files, atomic locks and five invariants
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. What replaced the hub: files, atomic locks and five invariants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#following-one-claim-from-discovery-to-rupture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Following one claim from discovery to rupture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardening-the-protocol-after-three-independent-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Hardening the protocol after three independent reviews
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#two-zones-five-invariants-and-the-blog-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Two zones, five invariants and the blog board
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-asking-for-work-in-a-word-the-lexicon-and-its-figures-of-speech" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Asking for work in a word: the lexicon and its figures of speech
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-how-this-should-change-the-work-and-what-could-still-go-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. How this should change the work — and what could still go wrong
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. How this should change the work — and what could still go wrong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-day-feedback-finishing-must-not-require-starting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        First-day feedback: finishing must not require starting
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-complementary-experiment-in-learned-cooperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A complementary experiment in learned cooperation
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-will-test-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What will test it
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. What will test it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-1-the-eight-scenario-canary-stress-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 1: the eight-scenario canary stress test
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-2-the-pre-registered-three-arm-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 2: the pre-registered three-arm experiment
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-3-the-daily-human-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 3: the daily human test
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Complementary bottlenecks
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Complementary bottlenecks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-complementary-bottlenecks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The experiment
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beyond it: the algorithms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_5" id="__nav_7_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder as a queueing network
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  The decoder as a queueing network
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The story
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beneath it: the theory
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-posing-the-inversion-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Posing the inversion problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-the-scanner-hides-the-emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Masked bottlenecks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-what-else-moves-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What else moves together
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-halving-the-single-row-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Halving the single-row steps
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Playing the hand you're dealt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-two-centuries-of-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_22" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_22">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_24" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_24" id="__nav_7_24_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_24_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_24">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_32" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_32">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  A new way back from the BWT
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The post
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Companion: compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_40">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_42" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_42" id="__nav_7_42_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_42_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_42">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-drop-a-coordinator-that-seemed-to-be-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Why drop a coordinator that seemed to be working?
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Why drop a coordinator that seemed to be working?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#external-evidence-fresh-resets-beat-long-lived-swarms" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        External evidence: fresh resets beat long-lived swarms
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-repositorys-own-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The repository's own record
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-structural-lens-with-a-warning-attached" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A structural lens, with a warning attached
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-makes-flat-coordination-possible-the-measured-frontier" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What makes flat coordination possible? The measured frontier
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-what-replaced-the-hub-files-atomic-locks-and-five-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. What replaced the hub: files, atomic locks and five invariants
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. What replaced the hub: files, atomic locks and five invariants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#following-one-claim-from-discovery-to-rupture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Following one claim from discovery to rupture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardening-the-protocol-after-three-independent-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Hardening the protocol after three independent reviews
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#two-zones-five-invariants-and-the-blog-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Two zones, five invariants and the blog board
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-asking-for-work-in-a-word-the-lexicon-and-its-figures-of-speech" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Asking for work in a word: the lexicon and its figures of speech
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-how-this-should-change-the-work-and-what-could-still-go-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. How this should change the work — and what could still go wrong
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. How this should change the work — and what could still go wrong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-day-feedback-finishing-must-not-require-starting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        First-day feedback: finishing must not require starting
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-complementary-experiment-in-learned-cooperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A complementary experiment in learned cooperation
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-will-test-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What will test it
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. What will test it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-1-the-eight-scenario-canary-stress-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 1: the eight-scenario canary stress test
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-2-the-pre-registered-three-arm-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 2: the pre-registered three-arm experiment
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-3-the-daily-human-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test 3: the daily human test
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-26-dropping-the-coordinator.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="dropping-the-coordinator-atomic-file-locks-on-a-measured-frontier">Dropping the coordinator: atomic file locks on a measured frontier<a class="headerlink" href="#dropping-the-coordinator-atomic-file-locks-on-a-measured-frontier" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Our coordinating agent wrote 46% of recent team traffic, so we replaced central routing with atomic file locks and fresh sessions on a shared frontier.</p>
+<p class="post-meta">26 November 2026 · 21 min read · <a href="#6-what-will-test-it">Meta</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>Three weeks ago, in <a href="../2026-11-04-autonomous-agent-team/">Call on mibz2</a>, we showed how four
+autonomous agents began passing tasks through a GitHub pull request thread. That setup freed the
+maintainer from acting as a manual message bus and shipped real decoder gains. By late November,
+however, the central coordinating agent had become the very bottleneck it was meant to remove. On
+26 November 2026 we retired the coordinating role while keeping every automated verification gate
+intact. Shared team state now lives in a flat directory of plain files (<code>frontier/</code>) governed by
+atomic git locks and short, disposable sessions.</p>
+<p>This post records the evidence that forced the redesign and the mechanism that replaced the hub.
+<a href="#1-why-drop-a-coordinator-that-seemed-to-be-working">Section 1</a> presents the external benchmark
+evidence, our five-day channel audit, and the structural diagnosis behind the shift.
+<a href="#2-what-makes-flat-coordination-possible-the-measured-frontier">Section 2</a> explains why flat
+coordination became practical once counterfactual decoder runs replaced prose priority debates with
+a numeric map.
+<a href="#3-what-replaced-the-hub-files-atomic-locks-and-five-invariants">Section 3</a> walks through the new
+file-based protocol, its git compare-and-swap locks, and the five invariants it enforces.
+<a href="#4-asking-for-work-in-a-word-the-lexicon-and-its-figures-of-speech">Section 4</a> introduces the
+compact lexicon that lets anyone request work in a word or two.
+<a href="#5-how-this-should-change-the-work-and-what-could-still-go-wrong">Section 5</a> examines how daily
+work changes and which failure modes decentralisation creates.
+<a href="#6-what-will-test-it">Section 6</a> states the pre-registered experiments that will keep or overturn
+the new mode.</p>
+<p><strong>Takeaways</strong></p>
+<ul>
+<li><strong>Central routing was the bottleneck, not verification.</strong> Over five days on our shared channel,
+  the coordinating agent wrote 46.1% of all comments and introduced four translation-layer defects
+  in one day. Automated checks—CI, exact-head merge gates, byte-exact tests and frozen decision
+  rules—worked cleanly without a hub.</li>
+<li><strong>Fresh contexts beat long-lived swarms.</strong> Matched-token experiments from Paradigm 3 showed that
+  an apparent eight-agent advantage vanished once a single agent restarted with fresh context
+  windows. Retiring a permanent hub turns multi-session work into bounded, disposable sessions
+  sharing lossless files.</li>
+<li><strong>A measured frontier lets parallel sessions self-route.</strong> Counterfactual oracle runs mapped
+  every decoder stage's unmasked headroom onto <code>frontier/surface.tsv</code>. Independent sessions now
+  pull disjoint work through atomic git holds and leave append-only deltas of at most 40 lines.
+  A generated status page replaces chat.</li>
+<li><strong>One word suffices, but no special words are required.</strong> The vocabulary names activities the
+  participants already understand. Repository files supply the procedures, capability tags, stop
+  tests and merge gates, so the maintainer can speak naturally rather than dispatch tasks.</li>
+<li><strong>The mode is an experiment, not dogma.</strong> Live concurrency stays capped at three holds until
+  eight adversarial stress tests pass. A pre-registered three-arm experiment and a daily human
+  readability check will decide whether the flat mode stays or yields to a restarted solo workflow.</li>
+</ul>
+<h2 id="1-why-drop-a-coordinator-that-seemed-to-be-working">1. Why drop a coordinator that seemed to be working?<a class="headerlink" href="#1-why-drop-a-coordinator-that-seemed-to-be-working" title="Permanent link">&para;</a></h2>
+<p>Our five-day channel audit did not show a stalled team. Instead, it showed that nearly half of our
+channel traffic was the coordinating agent logging its own bookkeeping. Every operational defect on
+26 November also happened at the translation boundary between the hub and the session doing the
+actual work. Those two facts exposed an architectural flaw: the coordinating agent bundled two
+opposite functions into one long-lived session.</p>
+<p>The first function was <em>routing and summarising</em>: writing long briefs, assigning tasks, compressing
+reviews into prose, and logging status transitions. That layer injected stale context, dropped
+technical caveats, and pushed the maintainer back into copying prompts between sessions. The second
+function was <em>verifying</em>, covering CI, exact-head merge checks, byte-exact tests, SHA-256 digests
+and frozen decision rules. Those checks are symmetric and mechanical. Dropping central routing
+while keeping every verification gate removes the hub's failures without lowering the bar for
+shipping code.</p>
+<p>Three independent lines of evidence converged on that conclusion in the same week.</p>
+<h3 id="external-evidence-fresh-resets-beat-long-lived-swarms">External evidence: fresh resets beat long-lived swarms<a class="headerlink" href="#external-evidence-fresh-resets-beat-long-lived-swarms" title="Permanent link">&para;</a></h3>
+<p>On 24 November 2026, Niccolò Zanichelli and Gavin Leech at Paradigm 3 published
+<a href="https://www.paradigm3.org/research/swarms"><em>Swarms do not yet raise the roof</em></a>. They evaluated
+more than 1,100 runs across over 80 team configurations at matched weighted-token budgets of 8M
+and 32M. To measure multi-agent efficiency, they used Toby Ord's
+<a href="https://www.tobyord.com/writing/swarm-scaling">stepping-on-toes scaling model</a>, in which <span class="arithmatex">\(N\)</span>
+parallel agents match a single agent working <span class="arithmatex">\(N^\lambda\)</span> times as long. Given a solo budget <span class="arithmatex">\(X\)</span>
+that matches an <span class="arithmatex">\(N\)</span>-agent team spending <span class="arithmatex">\(b\)</span> tokens per member, the scaling exponent is</p>
+<div class="arithmatex">\[
+\lambda = \frac{\ln(X / b)}{\ln N}.
+\]</div>
+<p>A perfectly divisible task has <span class="arithmatex">\(\lambda = 1\)</span>, whereas <span class="arithmatex">\(\lambda &lt; 1\)</span> means workers duplicate effort
+or interfere with one another. Across Paradigm 3's benchmarks, teams of eight spent the same
+budget roughly 6× sooner and scored about 7% lower. On the one task where <span class="arithmatex">\(\lambda\)</span> could be
+estimated, it came out at about 0.6–0.9.</p>
+<p>The decisive result came at 32M weighted tokens on <code>git-to-zig</code>, where agents reimplement <code>git</code> in
+Zig against 743 test scripts. At first, self-organised teams of eight agents beat continuous solo
+runs on both tested frontier models. On the stronger model, the team hit 93.2% against the solo
+run's 83.7%. On the weaker model, the team hit 32.0% against 26.6%. That advantage reversed
+completely once the solo agent restarted across eight fresh sequential sessions at the same token
+budget. The restarted solo reached 97.0% on the stronger model and 41.9% on the weaker one.
+Scaling the weaker model's swarm further hurt performance. Teams of 16 plateaued at 33.3%, while
+teams of 32 fell to 23.2%, below the continuous solo baseline. Free-chat mixed teams also showed a
+wide spread from −17 to +53 points.</p>
+<p>Context staleness explains that reversal. A long-lived session accumulates obsolete hypotheses and
+compacted history. Splitting a budget across eight agents accidentally gave each member a shorter,
+cleaner context window while adding a coordination tax. A permanent coordinating agent is precisely
+the long-lived continuous session that Paradigm 3's restarted baseline beat.</p>
+<figure class="bf-fig" id="evidence">
+<p class="bf-title">Why fresh contexts beat long-lived swarms, and where our channel traffic went</p>
+<!-- fig:evidence -->
+<svg viewBox="0 0 720 308" role="img" aria-label="Two-panel chart. Panel A shows Paradigm 3 git-to-zig test pass rates at 32 million weighted tokens: for Model A, continuous solo 83.7 percent, team of 8 93.2 percent, restarted solo 97.0 percent; for Model B, continuous solo 26.6 percent, team of 8 32.0 percent, team of 16 33.3 percent, team of 32 23.2 percent, restarted solo 41.9 percent. Panel B shows the 269 comments posted to shared channel #145 from 22 to 26 November: coordinating agent 124 comments or 46.1 percent, peer reviews and notes 85 or 31.6 percent, automated workstation pings 60 or 22.3 percent, and four dormant role inboxes 0 comments."><text class="bf-t-strong" x="14.0" y="20.0" text-anchor="start" style="font-size:12px">A. Fresh resets beat swarms (32M tokens)</text><text class="bf-tm" x="14.0" y="36.0" text-anchor="start" style="font-size:10.5px">Paradigm 3 git-to-zig test pass rate (%)</text><line x1="128.0" y1="54" x2="128.0" y2="266" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="128.0" y="281.0" text-anchor="middle" style="font-size:10px">0%</text><line x1="182.0" y1="54" x2="182.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="182.0" y="281.0" text-anchor="middle" style="font-size:10px">25%</text><line x1="236.0" y1="54" x2="236.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="236.0" y="281.0" text-anchor="middle" style="font-size:10px">50%</text><line x1="290.0" y1="54" x2="290.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="290.0" y="281.0" text-anchor="middle" style="font-size:10px">75%</text><line x1="344.0" y1="54" x2="344.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="344.0" y="281.0" text-anchor="middle" style="font-size:10px">100%</text><text class="bf-t-strong" x="14.0" y="70.0" text-anchor="start" style="font-size:10.5px">Model A</text><text class="bf-tm" x="120.0" y="87.0" text-anchor="end" style="font-size:10.5px">Continuous solo</text><path d="M128.0,76.0 L304.8,76.0 A4.0,4.0 0 0 1 308.8,80.0 L308.8,86.0 A4.0,4.0 0 0 1 304.8,90.0 L128.0,90.0 Z" style="fill:var(--bf-vz-2)"><title>Model A continuous solo: 83.7% of 743 git tests at 32M weighted tokens</title></path><text class="bf-t-strong" x="302.8" y="87.0" text-anchor="end" style="font-size:10px;fill:var(--bf-vz-2-ink)">83.7%</text><text class="bf-tm" x="120.0" y="107.0" text-anchor="end" style="font-size:10.5px">Team of 8</text><path d="M128.0,96.0 L325.3,96.0 A4.0,4.0 0 0 1 329.3,100.0 L329.3,106.0 A4.0,4.0 0 0 1 325.3,110.0 L128.0,110.0 Z" style="fill:var(--bf-vz-1)"><title>Model A self-organised team of 8: 93.2% at 32M weighted tokens</title></path><text class="bf-t-strong" x="323.3" y="107.0" text-anchor="end" style="font-size:10px;fill:var(--bf-vz-1-ink)">93.2%</text><text class="bf-tm" x="120.0" y="127.0" text-anchor="end" style="font-size:10.5px">Restarted solo</text><path d="M128.0,116.0 L333.5,116.0 A4.0,4.0 0 0 1 337.5,120.0 L337.5,126.0 A4.0,4.0 0 0 1 333.5,130.0 L128.0,130.0 Z" style="fill:var(--bf-vz-3)"><title>Model A restarted solo across 8 fresh sessions: 97.0% at 32M weighted tokens</title></path><text class="bf-t-strong" x="331.5" y="127.0" text-anchor="end" style="font-size:10px;fill:var(--bf-vz-3-ink)">97.0%</text><text class="bf-t-strong" x="14.0" y="148.0" text-anchor="start" style="font-size:10.5px">Model B</text><text class="bf-tm" x="120.0" y="165.0" text-anchor="end" style="font-size:10.5px">Continuous solo</text><path d="M128.0,154.0 L181.5,154.0 A4.0,4.0 0 0 1 185.5,158.0 L185.5,164.0 A4.0,4.0 0 0 1 181.5,168.0 L128.0,168.0 Z" style="fill:var(--bf-vz-2)"><title>Model B continuous solo: 26.6% at 32M weighted tokens</title></path><text class="bf-t-strong" x="190.5" y="165.0" text-anchor="start" style="font-size:10px">26.6%</text><text class="bf-tm" x="120.0" y="185.0" text-anchor="end" style="font-size:10.5px">Team of 8</text><path d="M128.0,174.0 L193.1,174.0 A4.0,4.0 0 0 1 197.1,178.0 L197.1,184.0 A4.0,4.0 0 0 1 193.1,188.0 L128.0,188.0 Z" style="fill:var(--bf-vz-1)"><title>Model B self-organised team of 8: 32.0% at 32M weighted tokens</title></path><text class="bf-t-strong" x="202.1" y="185.0" text-anchor="start" style="font-size:10px">32.0%</text><text class="bf-tm" x="120.0" y="205.0" text-anchor="end" style="font-size:10.5px">Team of 16</text><path d="M128.0,194.0 L195.9,194.0 A4.0,4.0 0 0 1 199.9,198.0 L199.9,204.0 A4.0,4.0 0 0 1 195.9,208.0 L128.0,208.0 Z" style="fill:var(--bf-vz-1)"><title>Model B self-organised team of 16: 33.3% (plateau) at 32M weighted tokens</title></path><text class="bf-t-strong" x="204.9" y="205.0" text-anchor="start" style="font-size:10px">33.3%</text><text class="bf-tm" x="120.0" y="225.0" text-anchor="end" style="font-size:10.5px">Team of 32</text><path d="M128.0,214.0 L174.1,214.0 A4.0,4.0 0 0 1 178.1,218.0 L178.1,224.0 A4.0,4.0 0 0 1 174.1,228.0 L128.0,228.0 Z" style="fill:var(--bf-vz-4)"><title>Model B self-organised team of 32: 23.2% (below continuous solo) at 32M tokens</title></path><text class="bf-t-strong" x="183.1" y="225.0" text-anchor="start" style="font-size:10px">23.2%</text><text class="bf-tm" x="120.0" y="245.0" text-anchor="end" style="font-size:10.5px">Restarted solo</text><path d="M128.0,234.0 L214.5,234.0 A4.0,4.0 0 0 1 218.5,238.0 L218.5,244.0 A4.0,4.0 0 0 1 214.5,248.0 L128.0,248.0 Z" style="fill:var(--bf-vz-3)"><title>Model B restarted solo across 8 fresh sessions: 41.9% at 32M weighted tokens</title></path><text class="bf-t-strong" x="223.5" y="245.0" text-anchor="start" style="font-size:10px">41.9%</text><line x1="366" y1="12" x2="366" y2="292" style="stroke:var(--bf-frame);stroke-width:1"/><text class="bf-t-strong" x="380.0" y="20.0" text-anchor="start" style="font-size:12px">B. Where #145 traffic went (22-26 Nov)</text><text class="bf-tm" x="380.0" y="36.0" text-anchor="start" style="font-size:10.5px">Share of 269 channel comments (%)</text><line x1="496.0" y1="54" x2="496.0" y2="266" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="496.0" y="281.0" text-anchor="middle" style="font-size:10px">0%</text><line x1="546.0" y1="54" x2="546.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="546.0" y="281.0" text-anchor="middle" style="font-size:10px">20%</text><line x1="596.0" y1="54" x2="596.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="596.0" y="281.0" text-anchor="middle" style="font-size:10px">40%</text><line x1="646.0" y1="54" x2="646.0" y2="266" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="646.0" y="281.0" text-anchor="middle" style="font-size:10px">60%</text><text class="bf-t-strong" x="488.0" y="81.0" text-anchor="end" style="font-size:10.2px">Coordinating agent</text><text class="bf-tm" x="488.0" y="94.0" text-anchor="end" style="font-size:9.2px">107 log, 13 queued, 4 fix</text><path d="M496.0,72.0 L607.2,72.0 A4.0,4.0 0 0 1 611.2,76.0 L611.2,88.0 A4.0,4.0 0 0 1 607.2,92.0 L496.0,92.0 Z" style="fill:var(--bf-vz-2)"><title>Coordinating agent: 124 of 269 comments (46.1%)</title></path><text class="bf-t-strong" x="617.2" y="86.0" text-anchor="start" style="font-size:10.2px">46.1% (124)</text><text class="bf-tm" x="488.0" y="129.0" text-anchor="end" style="font-size:10.2px">Peer reviews &amp; notes</text><text class="bf-tm" x="488.0" y="142.0" text-anchor="end" style="font-size:9.2px">code &amp; math reviews</text><path d="M496.0,120.0 L571.0,120.0 A4.0,4.0 0 0 1 575.0,124.0 L575.0,136.0 A4.0,4.0 0 0 1 571.0,140.0 L496.0,140.0 Z" style="fill:var(--bf-vz-1)"><title>Peer reviews &amp; notes: 85 of 269 comments (31.6%)</title></path><text class="bf-t-strong" x="581.0" y="134.0" text-anchor="start" style="font-size:10.2px">31.6% (85)</text><text class="bf-tm" x="488.0" y="177.0" text-anchor="end" style="font-size:10.2px">Workstation pings</text><text class="bf-tm" x="488.0" y="190.0" text-anchor="end" style="font-size:9.2px">automated SHA-256 logs</text><path d="M496.0,168.0 L547.8,168.0 A4.0,4.0 0 0 1 551.8,172.0 L551.8,184.0 A4.0,4.0 0 0 1 547.8,188.0 L496.0,188.0 Z" style="fill:var(--bf-vz-3)"><title>Workstation pings: 60 of 269 comments (22.3%)</title></path><text class="bf-t-strong" x="557.8" y="182.0" text-anchor="start" style="font-size:10.2px">22.3% (60)</text><text class="bf-tm" x="488.0" y="225.0" text-anchor="end" style="font-size:10.2px">4 dormant inboxes</text><text class="bf-tm" x="488.0" y="238.0" text-anchor="end" style="font-size:9.2px">still wired into routing</text><rect x="496.0" y="216.0" width="2.0" height="20.0" style="fill:var(--bf-vz-axis)"><title>4 dormant inboxes: 0 of 269 comments (0.0%)</title></rect><text class="bf-t-strong" x="502.0" y="230.0" text-anchor="start" style="font-size:10.2px">0.0% (0)</text><text class="bf-tm" x="380.0" y="294.0" text-anchor="start" style="font-size:10px">22-day total: 2,269 comments on #145 (2,748 across 8 threads).</text></svg>
+<figcaption>Measured data. Left: Paradigm 3's matched-budget <code>git-to-zig</code> results at 32M weighted tokens across two frontier models, showing teams of eight beating continuous solo runs only until the solo agent restarts with fresh contexts. Right: breakdown of all 269 comments posted to shared channel PR #145 from 22 to 26 November 2026.</figcaption>
+</figure>
+
+<h3 id="the-repositorys-own-record">The repository's own record<a class="headerlink" href="#the-repositorys-own-record" title="Permanent link">&para;</a></h3>
+<p>Measuring our own GitHub threads confirmed the same coordination tax inside <code>mibz2</code>. Over 22 days,
+shared channel PR #145 accumulated 2,269 comments. With the seven role inboxes added, total
+traffic reached 2,748 comments. In the five days ending 26 November, 269 comments arrived on PR #145. The
+coordinating agent wrote 124 of them (46.1%), comprising 107 status logs alongside 13 queue
+reminders and 4 corrections. Automated workstation runs accounted for 60 comments (22.3%). Peer
+reviews and notes accounted for 85 (31.6%). Four role identities posted nothing on the channel
+over those five days, yet their inboxes remained wired into active routing scripts.</p>
+<p>Governance had also stopped pruning itself. Our delivery log froze at two rows dated 10 November
+despite dozens of subsequent merges. Of the 50 most recent commits on <code>master</code>, 38 touched <code>docs/</code>
+while only 3 touched <code>src/</code>. Rule files grew by incident patching: the root rules file expanded to
+225 lines, and the rationale behind our style-and-mode specification reached 702 lines.</p>
+<p>On 26 November alone, four separate errors originated in the hub's translation layer while the
+underlying engineering stayed sound. First, a build prompt named <code>master</code> as its base branch when
+two required oracle files lived on a feature branch. Fixing that required PR #916. Second, two
+useful pre-port tests were withheld from a brief and bounced to the maintainer as a question.
+Third, a blog brief asked a drafter to name an agent directly, breaking site policy and triggering
+rewrites from PR #920 through PR #927. Fourth, a squash merge in PR #926 let attribution trailers
+slip into <code>master</code>. Six earlier channel comments also failed header parsing because a hub prompt
+compressed a three-line header onto one line.</p>
+<p>Worse than clerical glitches was lossy technical compression. Earlier hub summaries mistook the
+bottleneck <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#1-the-formal-design-space">lower bound</a>
+<span class="arithmatex">\(L = \max(S, W/k, R)\)</span> for an upper completion-time certificate. Others blamed 259 ms of real
+word-spelling work on oracle copying, or misread 7 lazy workers as 20 active workers. Every one of
+those errors survived until a cold independent review bypassed the summaries and read the raw
+source files and measurement tables directly.</p>
+<h3 id="a-structural-lens-with-a-warning-attached">A structural lens, with a warning attached<a class="headerlink" href="#a-structural-lens-with-a-warning-attached" title="Permanent link">&para;</a></h3>
+<p>Reading Gilles Deleuze and Félix Guattari's <a href="https://en.wikipedia.org/wiki/A_Thousand_Plateaus"><em>A Thousand Plateaus</em></a>
+alongside those logs sharpened the diagnosis. Three concepts mapped directly onto observed failure
+modes: <em>overcoding</em>, <em>asignifying rupture</em> and <em>restratification</em>.</p>
+<aside class="il-gloss">
+<p><strong>Overcoding and asignifying rupture</strong> are borrowed here strictly as systems terms. <em>Overcoding</em>
+occurs when a central layer projects its own stale frame over lateral work, forcing every local
+fact through one narrator. <em>Asignifying rupture</em> is a clean break that stops a closed loop and
+restarts from raw material rather than accumulated chatter.</p>
+</aside>
+<p>The coordinating agent functioned as an overcoding hub sitting above lateral work. Meanwhile, the
+702-line rationale for our mode specification illustrated <em>restratification</em>. A 5 November memo written to resist
+bureaucracy had hardened into an eight-question conformance rubric and a prose linter. Yet the same
+book warns against naive decentralisation. Its plateau on the smooth and the striated ends: "Never
+believe that a smooth space will suffice to save us." Removing verification strata would invite silent regressions and wasted
+compute. Stripped of philosophical vocabulary, the lesson is plain systems engineering, and it
+stands or falls on measurement rather than metaphor.</p>
+<h2 id="2-what-makes-flat-coordination-possible-the-measured-frontier">2. What makes flat coordination possible? The measured frontier<a class="headerlink" href="#2-what-makes-flat-coordination-possible-the-measured-frontier" title="Permanent link">&para;</a></h2>
+<p>Removing a central dispatcher fails whenever peers argue in prose over priorities or collide on
+coupled code. Two weeks earlier, a flat mode would have stalled for both reasons. What made
+hubless work viable on 26 November was the decoder's own measurement campaign, detailed in
+<a href="../2026-11-26-complementary-bottlenecks/">Complementary bottlenecks</a>.</p>
+<p>A brief recap explains why the decoder's stages resisted simple division. Decoding a bzip2 stream
+starts with one serial Huffman scanner (<code>S</code>) feeding compressed blocks to a pool of parallel
+workers. Each worker undoes move-to-front coding (<code>M</code>), builds our
+<a href="../2026-11-10-rauzy-veech-reconstruction/">interval-exchange structures</a> (<code>C</code>), emits the decoded
+text (<code>E</code>) and finishes run-length decoding and checksums (<code>R</code>). An in-order reader then delivers
+finished bytes to the caller (<code>D</code>). Because those stages overlap and share caches, speeding up one
+stage alone can look pointless when another stage still sets the wall clock.</p>
+<p>Counterfactual oracle runs dissolved that ambiguity by replacing each stage with pre-recorded ideal
+answers, alone and in combination. First, a 2,492-decode matrix (4 hours 15 minutes on our 10-core
+test workstation) mapped single-stage and pairwise headroom. A 16-minute follow-up with zero-copy
+oracles (648 decodes; results in PR #931) then isolated what remains once every part is free. The resulting
+map in <code>frontier/surface.tsv</code> settled four open debates at once:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Measured headroom / floor</th>
+<th>Implication for priorities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Construction (<code>C</code>) at 1 worker</strong></td>
+<td>−42.1% (<code>1,306 → 756 ms</code>)</td>
+<td>Largest single-core opportunity</td>
+</tr>
+<tr>
+<td><strong>Scan (<code>S</code>) or <code>C</code> alone at 8 workers</strong></td>
+<td>−3.2% (<code>S</code>), −5.6% (<code>C</code>) on 195 ms wall</td>
+<td>Either stage alone is masked by the other</td>
+</tr>
+<tr>
+<td><strong><code>S + C</code> together at 8 workers</strong></td>
+<td>−36% (<code>195 → 125 ms</code>)</td>
+<td>Primary coupled multi-core frontier</td>
+</tr>
+<tr>
+<td><strong>Serial scan alone (<code>FCMRD</code>) at 8 workers</strong></td>
+<td>179.1 ms (92% of shipped wall)</td>
+<td>Caps worker-only gains at 8% until scan leaves one thread</td>
+</tr>
+<tr>
+<td><strong>Emission word spelling (<code>E_consume</code>)</strong></td>
+<td>298 ms at 1W (22% of 1,343 ms), of which ~55–65 ms is oracle-store traffic; 37 ms at 8W</td>
+<td>Hidden worker cost missed by the first matrix</td>
+</tr>
+<tr>
+<td><strong>Serial delivery copy-out (<code>D</code>)</strong></td>
+<td>29.1 ms at 1W, 34.0 ms at 8W (839 MB on one thread); 44–78 ms at 10W</td>
+<td>Small until the reader's buffered bytes spill the 20 MiB L3</td>
+</tr>
+<tr>
+<td><strong>Pipeline plumbing (<code>SFCMRD</code>)</strong></td>
+<td>5.2–5.7 ms (2.7% of 8W wall)</td>
+<td>Negligible; closed as a target</td>
+</tr>
+</tbody>
+</table>
+<p>Frozen decision rules then pruned dead ends in hours instead of weeks. A census of alternative
+induction orders hit a 1.41% zero-overhead wall ceiling, below its pre-registered 3% gate
+(PR #933, <code>STOP</code>), avoiding a multi-thousand-line library port. Pre-port checks killed a
+network-calculus model whose bounds sat 3.2–3.5× above wall time. The same suite killed a static
+microarchitecture port that erred by −28.8% and missed the sign of an L1 data-cache spill
+(PR #935). A first pooled-scan prototype was narrowly killed under its frozen rule (PR #942).
+Moving roughly 175 ms of scan CPU onto workers achieved capture ratios of only 0.52 at eight workers
+and 0.48 at nine. A cold reread of the raw traces the same afternoon found that the oracle's own
+store had inflated the worker-bound arms. Corrected, the capture at eight rises to about 0.73
+against a bar of about 0.78. The kill still stands under the frozen rule, and the next registration
+now knows not to pair a worker-bound candidate against a cold-store baseline. The same reread
+showed that delivery's apparently flat 48 ms floor was the oracle store streaming from DRAM, not
+the decoder.</p>
+<p>The key step for team architecture is what zero-copy oracles do to parallelism. Normally, a coupled
+bottleneck like <code>S × C</code> forces sequential work because neither side can show its true gain alone.
+Pairing each candidate against its partner's zero-copy oracle breaks that coupling.</p>
+<aside class="il-gloss">
+<p><strong>Paired-oracle kill test.</strong> When stage <span class="arithmatex">\(S\)</span> is masked behind stage <span class="arithmatex">\(C\)</span>, testing a candidate scanner
+alone can show only 3% gain even if the scanner is much faster. Pairing the candidate scanner with
+the idealised construction oracle (<code>PC/C</code>) measures it against the unmasked room <span class="arithmatex">\(\text{SC}/C\)</span>.
+The candidate is killed unless <code>PC/C</code> can be shown to reach <span class="arithmatex">\(\sqrt{\text{SC}/C}\)</span>, half that room on a
+log scale. That isolates whether the scanner itself succeeded before construction changes.</p>
+</aside>
+<p>One session can therefore build a scanner change against ideal construction while another builds a
+construction or spelling change against an ideal scanner. Both work on disjoint source files with
+zero merge collisions and zero channel chatter. In Ord's terms, oracle-decoupled work on a measured
+surface pushes effective <span class="arithmatex">\(\lambda\)</span> toward 1.</p>
+<h2 id="3-what-replaced-the-hub-files-atomic-locks-and-five-invariants">3. What replaced the hub: files, atomic locks and five invariants<a class="headerlink" href="#3-what-replaced-the-hub-files-atomic-locks-and-five-invariants" title="Permanent link">&para;</a></h2>
+<p>The <code>frontier/</code> directory replaces central dispatch with
+<a href="https://en.wikipedia.org/wiki/Stigmergy">stigmergy</a>: indirect coordination through durable marks
+left in a shared environment. Every useful function previously held inside the coordinating agent
+now lives in plain version-controlled files. Mutual exclusion, memory, prioritisation, safety
+vetoes and human visibility are handled by a 500-line standard-library Python script
+(<code>frontier.py</code>), with zero dependence on GitHub Actions.</p>
+<aside class="il-gloss">
+<p><strong>Stigmergy</strong> was coined in 1959 by the French biologist Pierre-Paul Grassé from the Greek
+<em>stigma</em> (mark) and <em>ergon</em> (work) to describe how termites build complex nests by responding to
+traces left in the mud rather than signalling one another directly. In a git repository, committed
+tables, atomic branch leases and short deltas serve as those lossless traces.</p>
+</aside>
+<figure class="bf-fig" id="topology">
+<p class="bf-title">Before and after: central telephone switchboard versus a shared harbour chart with locked berths</p>
+<!-- fig:topology -->
+<svg viewBox="0 0 720 328" role="img" aria-label="Side-by-side comparison of the old star hub and the new shared frontier. Before: a central coordinating agent wrote 46.1 percent of recent channel #145 comments, relayed pasted briefs through the maintainer across seven role inboxes, four of them dormant, and held state in a long-lived context. After: fresh independent sessions read surface.tsv, acquire atomic git compare-and-swap locks on hold branches, work on disjoint smooth or striated claims, record deltas of at most 40 lines plus dead ends, and leave STATUS.md generated locally and mirrored to issue #943."><rect x="12.0" y="12.0" width="336.0" height="306.0" rx="8" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="26.0" y="34.0" text-anchor="start" style="font-size:12.5px">Before: central hub (telephone switchboard)</text><text class="bf-tm" x="26.0" y="51.0" text-anchor="start" style="font-size:10.5px">One operator re-phrases briefs and holds state in memory</text><rect x="106.0" y="74.0" width="148.0" height="66.0" rx="7" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.6"><title>Coordinating agent: 124 of 269 recent #145 comments (46.1%), 4 single-day translation defects</title></rect><text class="bf-t-strong" x="180.0" y="96.0" text-anchor="middle" style="font-size:12px">Coordinating agent</text><text class="bf-tm" x="180.0" y="113.0" text-anchor="middle" style="font-size:10.5px">46.1% of #145 traffic</text><text class="bf-tm" x="180.0" y="128.0" text-anchor="middle" style="font-size:10px">long-lived, compacted context</text><rect x="28.0" y="166.0" width="124.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2;stroke-dasharray:4 3"><title>Manual copy-paste relay of prompts and reviews</title></rect><text class="bf-t-strong" x="90.0" y="185.0" text-anchor="middle" style="font-size:11px">Maintainer relay</text><text class="bf-tm" x="90.0" y="201.0" text-anchor="middle" style="font-size:10px">pasted briefs &amp; reviews</text><rect x="196.0" y="166.0" width="136.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-vz-axis);stroke-width:1.2"><title>PR #145 (2,269 comments) plus 7 role inboxes (4 dormant at 0 posts)</title></rect><text class="bf-t-strong" x="264.0" y="185.0" text-anchor="middle" style="font-size:10.5px">Channel #145 + 7 inboxes</text><text class="bf-tm" x="264.0" y="201.0" text-anchor="middle" style="font-size:10px">2,269 comments; 4 dormant</text><line x1="146.0" y1="140.0" x2="108.0" y2="165.0" style="stroke:var(--bf-amber);stroke-width:1.6"/><polygon points="108.0,165.0 116.5,164.2 112.1,157.5" style="fill:var(--bf-amber)"/><line x1="214.0" y1="140.0" x2="248.0" y2="165.0" style="stroke:var(--bf-amber);stroke-width:1.6"/><polygon points="248.0,165.0 244.3,157.3 239.6,163.8" style="fill:var(--bf-amber)"/><rect x="26.0" y="244.0" width="92.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="72.0" y="263.0" text-anchor="middle" style="font-size:11px">Worker A</text><text class="bf-tm" x="72.0" y="279.0" text-anchor="middle" style="font-size:10px">waits on brief</text><rect x="134.0" y="244.0" width="92.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="180.0" y="263.0" text-anchor="middle" style="font-size:11px">Worker B</text><text class="bf-tm" x="180.0" y="279.0" text-anchor="middle" style="font-size:10px">waits on brief</text><rect x="242.0" y="244.0" width="92.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="288.0" y="263.0" text-anchor="middle" style="font-size:11px">Cold review</text><text class="bf-tm" x="288.0" y="279.0" text-anchor="middle" style="font-size:10px">pasted back</text><line x1="78.0" y1="212.0" x2="72.0" y2="243.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6"/><polygon points="72.0,243.0 77.4,236.4 69.5,234.9" style="fill:var(--bf-vz-axis)"/><line x1="126.0" y1="212.0" x2="174.0" y2="243.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6"/><polygon points="174.0,243.0 169.9,235.6 165.5,242.3" style="fill:var(--bf-vz-axis)"/><line x1="264.0" y1="212.0" x2="286.0" y2="243.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6"/><polygon points="286.0,243.0 284.9,234.6 278.4,239.2" style="fill:var(--bf-vz-axis)"/><text class="bf-tm" x="180.0" y="308.0" text-anchor="middle" style="font-size:10px">Lossy summaries · stale context · single routing bottleneck</text><rect x="372.0" y="12.0" width="336.0" height="306.0" rx="8" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="386.0" y="34.0" text-anchor="start" style="font-size:12.5px">After: shared frontier (harbour chart &amp; locks)</text><text class="bf-tm" x="386.0" y="51.0" text-anchor="start" style="font-size:10.5px">Each fresh session reads the map, locks a berth, logs a delta</text><rect x="388.0" y="70.0" width="304.0" height="126.0" rx="7" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"><title>Repository files under frontier/: shared lossless state</title></rect><text class="bf-t-strong" x="540.0" y="88.0" text-anchor="middle" style="font-size:11.5px">Shared repository state (frontier/)</text><rect x="398.0" y="98.0" width="136.0" height="38.0" rx="5" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.2"><title>surface.tsv: measured headroom</title></rect><text class="bf-t-strong" x="466.0" y="114.0" text-anchor="middle" style="font-size:10.5px">surface.tsv</text><text class="bf-tm" x="466.0" y="128.0" text-anchor="middle" style="font-size:9.5px">measured headroom</text><rect x="546.0" y="98.0" width="136.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.2"><title>hold/&lt;id&gt; (CAS): atomic git lease</title></rect><text class="bf-t-strong" x="614.0" y="114.0" text-anchor="middle" style="font-size:10.5px">hold/&lt;id&gt; (CAS)</text><text class="bf-tm" x="614.0" y="128.0" text-anchor="middle" style="font-size:9.5px">atomic git lease</text><rect x="398.0" y="146.0" width="136.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.2"><title>claims/ &amp; flags/: disjoint paths &amp; vetoes</title></rect><text class="bf-t-strong" x="466.0" y="162.0" text-anchor="middle" style="font-size:10.5px">claims/ &amp; flags/</text><text class="bf-tm" x="466.0" y="176.0" text-anchor="middle" style="font-size:9.5px">disjoint paths &amp; vetoes</text><rect x="546.0" y="146.0" width="136.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-steel);stroke-width:1.2"><title>deltas/ &amp; dead-ends: &lt;=40-line memory</title></rect><text class="bf-t-strong" x="614.0" y="162.0" text-anchor="middle" style="font-size:10.5px">deltas/ &amp; dead-ends</text><text class="bf-tm" x="614.0" y="176.0" text-anchor="middle" style="font-size:9.5px">&lt;=40-line memory</text><rect x="388.0" y="228.0" width="92.0" height="48.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-green);stroke-width:1.5"><title>Session 1: smooth probe; fresh context, ruptures after merge</title></rect><text class="bf-t-strong" x="434.0" y="248.0" text-anchor="middle" style="font-size:11px">Session 1</text><text class="bf-tm" x="434.0" y="264.0" text-anchor="middle" style="font-size:10px">smooth probe</text><line x1="422.0" y1="227.0" x2="422.0" y2="198.0" style="stroke:var(--bf-green);stroke-width:1.6"/><polygon points="422.0,198.0 418.0,205.5 426.0,205.5" style="fill:var(--bf-green)"/><line x1="446.0" y1="198.0" x2="446.0" y2="227.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6;stroke-dasharray:3 2"/><polygon points="446.0,227.0 450.0,219.5 442.0,219.5" style="fill:var(--bf-vz-axis)"/><rect x="494.0" y="228.0" width="92.0" height="48.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.5"><title>Session 2: striated build; fresh context, ruptures after merge</title></rect><text class="bf-t-strong" x="540.0" y="248.0" text-anchor="middle" style="font-size:11px">Session 2</text><text class="bf-tm" x="540.0" y="264.0" text-anchor="middle" style="font-size:10px">striated build</text><line x1="528.0" y1="227.0" x2="528.0" y2="198.0" style="stroke:var(--bf-blue);stroke-width:1.6"/><polygon points="528.0,198.0 524.0,205.5 532.0,205.5" style="fill:var(--bf-blue)"/><line x1="552.0" y1="198.0" x2="552.0" y2="227.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6;stroke-dasharray:3 2"/><polygon points="552.0,227.0 556.0,219.5 548.0,219.5" style="fill:var(--bf-vz-axis)"/><rect x="600.0" y="228.0" width="92.0" height="48.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-ultra);stroke-width:1.5"><title>Session 3: cold review; fresh context, ruptures after merge</title></rect><text class="bf-t-strong" x="646.0" y="248.0" text-anchor="middle" style="font-size:11px">Session 3</text><text class="bf-tm" x="646.0" y="264.0" text-anchor="middle" style="font-size:10px">cold review</text><line x1="634.0" y1="227.0" x2="634.0" y2="198.0" style="stroke:var(--bf-ultra);stroke-width:1.6"/><polygon points="634.0,198.0 630.0,205.5 638.0,205.5" style="fill:var(--bf-ultra)"/><line x1="658.0" y1="198.0" x2="658.0" y2="227.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6;stroke-dasharray:3 2"/><polygon points="658.0,227.0 662.0,219.5 654.0,219.5" style="fill:var(--bf-vz-axis)"/><text class="bf-tm" x="540.0" y="294.0" text-anchor="middle" style="font-size:9.8px">STATUS.md (local, mirrored to #943) · #944 Needs maintainer</text><text class="bf-tm" x="540.0" y="309.0" text-anchor="middle" style="font-size:9.8px">Zero routing hub · atomic CAS exclusion · fresh context per claim</text></svg>
+<figcaption>Conceptual architecture comparing the retired star topology (left) with the flat frontier (right). Analogy: replacing a switchboard operator who re-phrases every call from memory with a live harbour chart and radio-locked berths. Where the analogy stops: unlike a ship's crew, software sessions keep no memory between voyages, so append-only deltas and <code>dead-ends.tsv</code> must hold all continuity.</figcaption>
+</figure>
+
+<h3 id="following-one-claim-from-discovery-to-rupture">Following one claim from discovery to rupture<a class="headerlink" href="#following-one-claim-from-discovery-to-rupture" title="Permanent link">&para;</a></h3>
+<p>Before listing every file, trace one concrete task through the loop. Suppose a fresh session with
+shell and Rust capabilities starts work on <code>spelling-census</code>, an open probe investigating where
+emission's 298 ms of word spelling goes.</p>
+<ol>
+<li><strong>Read the state:</strong> the session runs <code>python3 frontier/tools/frontier.py brief --can shell,rust</code>.
+   The output lists maintainer escalations, open flags, live holds on <code>origin</code>, pull requests
+   awaiting review, recent workstation evidence commits, and matching open claims sorted by
+   priority.</li>
+<li><strong>Acquire an atomic hold:</strong> the session runs <code>frontier.py claim spelling-census --by &lt;tag&gt;</code>.
+   The tool pushes a lease commit onto branch <code>hold/spelling-census</code> on <code>origin</code> using git's
+   compare-and-swap guard (<code>--force-with-lease</code>). Only a printed <code>acquired</code> line with a 12-hex
+   session ID means the session holds the claim.</li>
+<li><strong>Check premises and execute:</strong> the session re-reads the primary evidence listed in <code>premises</code>
+   to confirm no newer delta invalidated it. This is the session's duty; the tool does not yet
+   inspect <code>premises</code> itself. It then runs the probe and records raw outputs.</li>
+<li><strong>Leave a delta and open a PR:</strong> the session writes an append-only delta of at most 40 lines
+   under <code>frontier/deltas/</code> and updates <code>frontier/surface.tsv</code> (plus <code>dead-ends.tsv</code> if stopped or
+   killed). It runs <code>frontier.py check</code>, opens one pull request starting <code>Claim: spelling-census</code>,
+   and marks the claim <code>status = "review"</code> with the PR number.</li>
+<li><strong>Verify, merge, release and rupture:</strong> the hold stays live until the pull request merges.
+   Before merging, <code>frontier.py verify spelling-census --session &lt;S&gt;</code> confirms the lease is live
+   and unflagged. Our exact-head check (<code>coord.py head-sha</code>) verifies the commit SHA before and
+   after squash merge. Only once the merge succeeds does the session run
+   <code>frontier.py release spelling-census --session &lt;S&gt;</code> and terminate. The next claim starts on a
+   fresh context window.</li>
+</ol>
+<h3 id="hardening-the-protocol-after-three-independent-reviews">Hardening the protocol after three independent reviews<a class="headerlink" href="#hardening-the-protocol-after-three-independent-reviews" title="Permanent link">&para;</a></h3>
+<p>Our first implementation (PR #945) was immediately stress-tested by three cold independent reviews,
+which caught a classic concurrency bug before any large swarm ran. In that first draft, claiming a
+task edited a local TOML file on a feature branch. Two sessions working from separate checkouts
+could both read a claim as open, edit it locally and push separate branches. Both would then
+believe they held the lock.</p>
+<p>The hardening pass (PR #946) moved locks off local files onto canonical remote refs (<code>hold/&lt;id&gt;</code>)
+guarded by git compare-and-swap.</p>
+<aside class="il-gloss">
+<p><strong>Compare-and-swap in git.</strong> Running <code>git push --force-with-lease=refs/heads/hold/&lt;id&gt;:&lt;expected&gt;</code>
+asks the remote server to advance the branch only if its tip still equals <code>&lt;expected&gt;</code> (or does not
+exist yet). If two sessions push at once, the server linearises them: one succeeds and the second
+fails atomically with <code>reference already exists</code>, requiring no external lock daemon.</p>
+</aside>
+<p>A live race test on GitHub confirmed the fix. Two simultaneous claims on the same ID produced one
+<code>acquired</code> and one <code>reference already exists</code>, while a wrong session ID was refused on <code>verify</code> and
+<code>release</code>. Because some sandboxed proxies forbid branch deletions, releasing a hold pushes a
+<code>released = true</code> commit rather than deleting the ref. At acquisition time, <code>claim</code> also refuses
+any item that is not open, needs the maintainer, has an open flag, or exceeds <code>max_live_holds = 3</code>.
+It likewise rejects any striated claim whose <code>owned_paths</code> or decoder <code>mechanisms</code> overlap a live
+hold.</p>
+<p>The same hardening pass solved four other distributed failure modes:</p>
+<ul>
+<li><strong>No status-file merge storm:</strong> checking <code>frontier/STATUS.md</code> into git would trigger an <span class="arithmatex">\(O(N^2)\)</span>
+  merge-conflict storm under parallel PRs. <code>STATUS.md</code> is instead generated locally by
+  <code>frontier.py status</code> and gitignored. An optional GitHub Action mirrors it to issue <code>#943</code> (and
+  maintainer escalations to <code>#944</code>) so agents without a shell can read the live board.</li>
+<li><strong>Completion is not integration:</strong> releasing a hold when opening a PR left striated pull requests
+  orphaned. Holds now remain live until merge, and <code>brief</code> lists <code>status = "review"</code> claims first
+  under "finish before starting".</li>
+<li><strong>Persistent negative memory:</strong> <code>brief</code> prints only the six most recent deltas so fresh sessions
+  stay concise. Killed and stopped directions therefore also receive one permanent row in
+  <code>frontier/dead-ends.tsv</code> (13 rows by the end of the first day, beside 10 live targets in <code>surface.tsv</code>). Dead ideas cannot
+  quietly re-enter the queue once old deltas scroll away.</li>
+<li><strong>Local immune system:</strong> any agent spotting a broken invariant opens a file in <code>frontier/flags/</code>.
+  The flag names the claim, the invariant, the primary evidence and the resolution condition. Both
+  <code>claim</code> and <code>verify</code> refuse the flagged claim while unrelated claims continue unaffected, and
+  only a different agent from the author may resolve it.</li>
+</ul>
+<p>So when a new measurement overturns an open claim's premise while two other claims are in flight,
+nobody needs to route anything. The finding lands as a delta and a corrected <code>surface.tsv</code> row, and
+a flag is scoped to the invalidated claim. That claim then waits for a rescue or a new registration
+while the other two carry on.</p>
+<h3 id="two-zones-five-invariants-and-the-blog-board">Two zones, five invariants and the blog board<a class="headerlink" href="#two-zones-five-invariants-and-the-blog-board" title="Permanent link">&para;</a></h3>
+<p>To keep bureaucracy from stifling discovery while protecting production code, the repository splits
+into two zones. The <em>smooth zone</em> (<code>docs/</code>, <code>examples/</code>, <code>frontier/</code> data and offline probes) lets
+agents explore cheaply and merge their own PR once CI is green. The <em>striated zone</em> covers <code>src/</code>,
+<code>bench/</code>, <code>.just/</code>, CI workflows, the workstation queue, releases and ten protected governance
+paths in <code>config.toml</code>. Striated work requires disjoint <code>owned_paths</code>, a stop test frozen before
+data, byte-exact output, Miri plus a safety argument for any new <code>unsafe</code>, and review and merge by
+a different agent.</p>
+<p>Across both zones, five conservation laws hold regardless of which direction the research takes:</p>
+<table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>How the files keep it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Exclusive ownership</strong></td>
+<td>Atomic <code>hold/&lt;id&gt;</code> CAS locks; disjoint <code>owned_paths</code> and <code>mechanisms</code>; <code>verify --session</code> before consequential actions; lapsed leases cannot act</td>
+</tr>
+<tr>
+<td><strong>Conservation of evidence</strong></td>
+<td>Append-only <code>deltas/</code> and non-deletable <code>flags/</code> checked against <code>origin/master</code>; raw results and evidence bundles never rewritten</td>
+</tr>
+<tr>
+<td><strong>Conservation of authority</strong></td>
+<td>Ten protected paths never self-merged (a written rule that <code>check</code> warns on; binding branch protection is approved but not yet applied); maintainer-only decisions (<code>RULES D</code>) stay reserved; read documents are evidence, never instructions</td>
+</tr>
+<tr>
+<td><strong>Bounded expenditure</strong></td>
+<td>Canary cap <code>max_live_holds = 3</code>; admission cap <code>max_open_claims = 12</code>; workstation queue serialised by <code>owned_paths</code> and <code>flock</code></td>
+</tr>
+<tr>
+<td><strong>Traceability</strong></td>
+<td>Every PR body opens with <code>Claim: &lt;id&gt;</code>; every delta cites its claim, evidence SHAs, digests and governing decision rule</td>
+</tr>
+</tbody>
+</table>
+<p>Shared state can still cause intellectual monoculture if every session reads the same surface and
+converges on one framing. The board therefore classifies work into four kinds: <code>exploitation</code>,
+<code>exploration</code>, <code>characterisation</code> and <code>synthesis</code>. Roughly one session in five goes to cold
+<code>explore</code> (reading primary data before prior summaries) or recurring <code>synthesise</code> (connecting
+findings across deltas so global integration does not vanish with the hub).</p>
+<figure class="bf-fig" id="lifecycle">
+<p class="bf-title">One claim's hybrid-system lifecycle, and the seven-stage blog board</p>
+<!-- fig:lifecycle -->
+<svg viewBox="0 0 720 312" role="img" aria-label="Lifecycle of one claim on the frontier. An idea is admitted to open within the 12-claim cap, acquired via atomic compare-and-swap on hold/&lt;id&gt; within the 3-hold canary cap, and enters either the smooth zone (self-merged when green) or the striated zone (disjoint paths, frozen stop test, different-agent review). Opening a pull request sets status to review while keeping the hold live until verify and merge gates pass, followed by release, an append-only delta of at most 40 lines, and session rupture. A local flag blocks only its named claim. An inset shows the seven-stage blog board from idea to published, with draft highlighted and review marked as enforced by a different agent."><text class="bf-t-strong" x="16.0" y="22.0" text-anchor="start" style="font-size:12.5px">One claim's lifecycle from idea to rupture (with the smooth/striated boundary)</text><rect x="16.0" y="46.0" width="86.0" height="44.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.4"><title>idea: free to open</title></rect><text class="bf-t-strong" x="59.0" y="65.0" text-anchor="middle" style="font-size:11px">idea</text><text class="bf-tm" x="59.0" y="80.0" text-anchor="middle" style="font-size:9.8px">free to open</text><rect x="134.0" y="46.0" width="102.0" height="44.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.4"><title>open: &lt;=12 admitted</title></rect><text class="bf-t-strong" x="185.0" y="65.0" text-anchor="middle" style="font-size:11px">open</text><text class="bf-tm" x="185.0" y="80.0" text-anchor="middle" style="font-size:9.8px">&lt;=12 admitted</text><rect x="268.0" y="46.0" width="134.0" height="44.0" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.4"><title>hold/&lt;id&gt; CAS: acquired; &lt;=3 live</title></rect><text class="bf-t-strong" x="335.0" y="65.0" text-anchor="middle" style="font-size:11px">hold/&lt;id&gt; CAS</text><text class="bf-tm" x="335.0" y="80.0" text-anchor="middle" style="font-size:9.8px">acquired; &lt;=3 live</text><line x1="102.0" y1="68.0" x2="133.0" y2="68.0" style="stroke:var(--bf-vz-axis);stroke-width:1.6"/><polygon points="133.0,68.0 125.5,64.0 125.5,72.0" style="fill:var(--bf-vz-axis)"/><text class="bf-tm" x="118.0" y="61.0" text-anchor="middle" style="font-size:9.2px">admit</text><line x1="236.0" y1="68.0" x2="267.0" y2="68.0" style="stroke:var(--bf-blue);stroke-width:1.6"/><polygon points="267.0,68.0 259.5,64.0 259.5,72.0" style="fill:var(--bf-blue)"/><text class="bf-tm" x="252.0" y="61.0" text-anchor="middle" style="font-size:9.2px">claim</text><rect x="436.0" y="36.0" width="134.0" height="44.0" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.4"><title>Smooth zone: docs, probes, examples; author merges once green</title></rect><text class="bf-t-strong" x="503.0" y="55.0" text-anchor="middle" style="font-size:11px">Smooth zone</text><text class="bf-tm" x="503.0" y="70.0" text-anchor="middle" style="font-size:9.5px">docs, probes; self-merge</text><rect x="436.0" y="92.0" width="134.0" height="52.0" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.4"><title>Striated zone: src, bench, CI, protected paths; disjoint paths, frozen stop test, different-agent review</title></rect><text class="bf-t-strong" x="503.0" y="110.0" text-anchor="middle" style="font-size:11px">Striated zone</text><text class="bf-tm" x="503.0" y="124.0" text-anchor="middle" style="font-size:9.3px">disjoint paths, frozen gate</text><text class="bf-tm" x="503.0" y="137.0" text-anchor="middle" style="font-size:9.3px">different-agent merge</text><line x1="402.0" y1="62.0" x2="435.0" y2="58.0" style="stroke:var(--bf-green);stroke-width:1.6"/><polygon points="435.0,58.0 427.1,54.9 428.0,62.9" style="fill:var(--bf-green)"/><line x1="402.0" y1="76.0" x2="435.0" y2="114.0" style="stroke:var(--bf-amber);stroke-width:1.6"/><polygon points="435.0,114.0 433.1,105.7 427.1,111.0" style="fill:var(--bf-amber)"/><rect x="600.0" y="54.0" width="104.0" height="64.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.4"><title>PR opens with Claim: &lt;id&gt;, status=review; hold stays live until merge</title></rect><text class="bf-t-strong" x="652.0" y="74.0" text-anchor="middle" style="font-size:11px">Open PR</text><text class="bf-tm" x="652.0" y="89.0" text-anchor="middle" style="font-size:9.8px">Claim: &lt;id&gt;</text><text class="bf-tm" x="652.0" y="104.0" text-anchor="middle" style="font-size:9.5px">status = review</text><line x1="570.0" y1="58.0" x2="599.0" y2="74.0" style="stroke:var(--bf-green);stroke-width:1.6"/><polygon points="599.0,74.0 594.4,66.9 590.5,73.9" style="fill:var(--bf-green)"/><line x1="570.0" y1="114.0" x2="599.0" y2="98.0" style="stroke:var(--bf-amber);stroke-width:1.6"/><polygon points="599.0,98.0 590.5,98.1 594.4,105.1" style="fill:var(--bf-amber)"/><rect x="474.0" y="166.0" width="152.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-blue);stroke-width:1.4"><title>verify --session, head-sha check, expectedHeadSha squash merge</title></rect><text class="bf-t-strong" x="550.0" y="185.0" text-anchor="middle" style="font-size:10.8px">verify + merge gates</text><text class="bf-tm" x="550.0" y="200.0" text-anchor="middle" style="font-size:9.5px">head-sha + expectedHeadSha</text><rect x="282.0" y="166.0" width="156.0" height="46.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-steel);stroke-width:1.4"><title>release hold/&lt;id&gt;, append &lt;=40-line delta, update surface.tsv / dead-ends.tsv</title></rect><text class="bf-t-strong" x="360.0" y="185.0" text-anchor="middle" style="font-size:10.8px">release + &lt;=40-line delta</text><text class="bf-tm" x="360.0" y="200.0" text-anchor="middle" style="font-size:9.5px">update surface / dead-ends</text><rect x="126.0" y="166.0" width="118.0" height="46.0" rx="6" style="fill:var(--bf-ultra-tint);stroke:var(--bf-ultra);stroke-width:1.5"><title>Asignifying rupture: session ends; next claim starts on a fresh context</title></rect><text class="bf-t-strong" x="185.0" y="185.0" text-anchor="middle" style="font-size:11px">Rupture</text><text class="bf-tm" x="185.0" y="200.0" text-anchor="middle" style="font-size:9.5px">session ends fresh</text><rect x="16.0" y="118.0" width="92.0" height="94.0" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.2;stroke-dasharray:4 3"><title>Local flag blocks only its named claim; unrelated claims keep running</title></rect><text class="bf-t-strong" x="62.0" y="138.0" text-anchor="middle" style="font-size:10.5px">Local flag</text><text class="bf-tm" x="62.0" y="154.0" text-anchor="middle" style="font-size:9.5px">blocks only</text><text class="bf-tm" x="62.0" y="168.0" text-anchor="middle" style="font-size:9.5px">this claim;</text><text class="bf-tm" x="62.0" y="182.0" text-anchor="middle" style="font-size:9.5px">resolved by</text><text class="bf-tm" x="62.0" y="196.0" text-anchor="middle" style="font-size:9.5px">another peer</text><path d="M652,118 L652,189 L627,189" style="fill:none;stroke:var(--bf-blue);stroke-width:1.6"/><polygon points="626,189 634,185 634,193" style="fill:var(--bf-blue)"/><line x1="474.0" y1="189.0" x2="439.0" y2="189.0" style="stroke:var(--bf-steel);stroke-width:1.6"/><polygon points="439.0,189.0 446.5,193.0 446.5,185.0" style="fill:var(--bf-steel)"/><line x1="282.0" y1="189.0" x2="245.0" y2="189.0" style="stroke:var(--bf-ultra);stroke-width:1.6"/><polygon points="245.0,189.0 252.5,193.0 252.5,185.0" style="fill:var(--bf-ultra)"/><path d="M108,140 L335,140 L335,91" style="fill:none;stroke:var(--bf-amber);stroke-width:1.3;stroke-dasharray:3 3"/><polygon points="335,90 331,98 339,98" style="fill:var(--bf-amber)"/><line x1="16" y1="230" x2="704" y2="230" style="stroke:var(--bf-frame);stroke-width:1"/><text class="bf-t-strong" x="16.0" y="250.0" text-anchor="start" style="font-size:11px">Blog board inset (frontier/blog/*.toml): seven stages, with review enforced by a different agent</text><rect x="16.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-tm" x="58.0" y="278.0" text-anchor="middle" style="font-size:10.5px">idea</text><line x1="100.0" y1="281.0" x2="115.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="115.0,281.0 107.5,277.0 107.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="116.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-tm" x="158.0" y="278.0" text-anchor="middle" style="font-size:10.5px">outline</text><line x1="200.0" y1="281.0" x2="215.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="215.0,281.0 207.5,277.0 207.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="216.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:1.5"></rect><text class="bf-t-strong" x="258.0" y="278.0" text-anchor="middle" style="font-size:10.5px">draft</text><text class="bf-tm" x="258.0" y="292.0" text-anchor="middle" style="font-size:9.0px">one agent</text><line x1="300.0" y1="281.0" x2="315.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="315.0,281.0 307.5,277.0 307.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="316.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.5"></rect><text class="bf-t-strong" x="358.0" y="278.0" text-anchor="middle" style="font-size:10.5px">review</text><text class="bf-tm" x="358.0" y="292.0" text-anchor="middle" style="font-size:9.0px">a different one</text><line x1="400.0" y1="281.0" x2="415.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="415.0,281.0 407.5,277.0 407.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="416.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-tm" x="458.0" y="278.0" text-anchor="middle" style="font-size:10.5px">revise</text><line x1="500.0" y1="281.0" x2="515.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="515.0,281.0 507.5,277.0 507.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="516.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-tm" x="558.0" y="278.0" text-anchor="middle" style="font-size:10.5px">ready</text><text class="bf-tm" x="558.0" y="292.0" text-anchor="middle" style="font-size:9.0px">publish check</text><line x1="600.0" y1="281.0" x2="615.0" y2="281.0" style="stroke:var(--bf-vz-axis);stroke-width:1.3"/><polygon points="615.0,281.0 607.5,277.0 607.5,285.0" style="fill:var(--bf-vz-axis)"/><rect x="616.0" y="262.0" width="84.0" height="38.0" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-tm" x="658.0" y="278.0" text-anchor="middle" style="font-size:10.5px">published</text><text class="bf-tm" x="658.0" y="292.0" text-anchor="middle" style="font-size:9.0px">merged</text></svg>
+<figcaption>Conceptual state machine of <code>frontier/</code>. Top: one claim moves from <code>idea</code> through admission, atomic <code>hold/&lt;id&gt;</code> acquisition, the smooth or striated work path, PR review, merge verification, release, append-only delta and session rupture; local flags isolate only their named claim. Bottom inset: the seven-stage blog board in <code>frontier/blog/*.toml</code>, where <code>frontier.py check</code> enforces an independent reviewer different from the drafter.</figcaption>
+</figure>
+
+<p>The frontier also mirrors the formal structure introduced in
+<a href="../2026-11-26-from-bottlenecks-to-better-algorithms/">From bottlenecks to better algorithms</a>. There
+we modelled the decoder as a hybrid dynamical system <span class="arithmatex">\(\mathcal{H} = (C, F, D, G)\)</span> combining
+continuous work flows with discrete lock-guarded jumps:</p>
+<table>
+<thead>
+<tr>
+<th>Hybrid-system object</th>
+<th>In the decoder</th>
+<th>On the frontier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>State</strong></td>
+<td>blocks, queues, buffers</td>
+<td>repository files: claims, blog cards, <code>surface.tsv</code></td>
+</tr>
+<tr>
+<td><strong>Flows</strong> (progress between events)</td>
+<td>worker threads decoding</td>
+<td>fresh sessions working on a claimed task</td>
+</tr>
+<tr>
+<td><strong>Events</strong> (discrete jumps)</td>
+<td>admit, dispatch, finish, take</td>
+<td><code>claim</code>, <code>delta</code>, <code>release</code>, <code>merge</code></td>
+</tr>
+<tr>
+<td><strong>Guards</strong> (when an event may fire)</td>
+<td>admission window, in-order reader</td>
+<td>capability tags, leases, frozen stop tests, merge gates</td>
+</tr>
+<tr>
+<td><strong>Reset maps</strong> (what an event changes)</td>
+<td>block ownership handover</td>
+<td>delta updating <code>surface.tsv</code>, <code>dead-ends.tsv</code> and new ideas</td>
+</tr>
+<tr>
+<td><strong>Ownership</strong></td>
+<td>one thread owning a block</td>
+<td>disjoint <code>owned_paths</code> and <code>mechanisms</code> in the striated zone</td>
+</tr>
+</tbody>
+</table>
+<p>The single difference is that the decoder's events execute in memory, whereas the frontier's events
+are commits. That is why every state change must leave a durable mark in the files.</p>
+<p>Blog posts use the same schema under <code>frontier/blog/*.toml</code> (three cards at launch beside 15
+research and operations claims). They add seven explicit stages: <code>idea → outline → draft → review →
+revise → ready → published</code>. Past <code>review</code>, <code>frontier.py check</code> mechanically refuses any card whose
+reviewer matches its drafter, and <code>ready</code> requires rendered visual checks to pass on the final
+commit. This post is the first card moving through that board.</p>
+<h2 id="4-asking-for-work-in-a-word-the-lexicon-and-its-figures-of-speech">4. Asking for work in a word: the lexicon and its figures of speech<a class="headerlink" href="#4-asking-for-work-in-a-word-the-lexicon-and-its-figures-of-speech" title="Permanent link">&para;</a></h2>
+<p>Retiring a central prompt-writer might sound as though the human maintainer now has to write longer
+instructions. In practice the opposite happens. Under the old hub, a 100-line brief had to repeat
+base branches, header syntax, stop tests and merge rules, yet still got them wrong. On the
+frontier, one or two words can suffice. The repository's own files supply the operational details,
+not a central prompt-writer.</p>
+<p><strong>The vocabulary is not a user interface.</strong> A fresh session can begin with <code>swarm</code>; there is no
+need to memorise the other expressions. Participants can select and move between activities
+themselves, and a conversation can uncover a useful contribution without an explicit command.
+If the maintainer asks why a measurement looks strange, the session can follow the evidence and
+record a discovery rather than wait to be told to <code>explore</code> or <code>probe</code>. No separate dispatcher
+translates ordinary language into commands.</p>
+<p>There is one practical limit to starting a swarm. The initial configuration allows at most three
+live claims across the repository, not three running model processes. A hold awaiting a PR merge
+still occupies a slot even if its worker has stopped. A fresh session can read or review without
+taking a new hold. The three-slot canary stays in place until the protocol's stress tests and
+handoff defects are addressed; it is not a target number of agents to spawn. The separate
+admission limit is twelve open claims. New ideas can still be recorded without being admitted.</p>
+<p>The lexicon in <code>frontier/README.md</code> names several families of activity. The first concerns
+participation and session boundaries:</p>
+<table>
+<thead>
+<tr>
+<th>Shorthand</th>
+<th>Activity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>take one</code> / <code>work the frontier</code></td>
+<td>Run <code>brief</code>, claim the top matching item, execute under its stop test, leave a delta, open one PR, stop</td>
+</tr>
+<tr>
+<td><code>swarm</code> / <code>work it down</code></td>
+<td>Take or launch independent fresh sessions per disjoint claim until none fit the live-hold budget</td>
+</tr>
+<tr>
+<td><code>rupture</code></td>
+<td>Request a clean stop now, even if further work is available; no special closing prompt is needed when a session finishes normally</td>
+</tr>
+</tbody>
+</table>
+<p>The second family concerns research targets, measurements and falsification tests:</p>
+<table>
+<thead>
+<tr>
+<th>Shorthand</th>
+<th>Activity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claim: &lt;one line&gt;</code></td>
+<td>Author a claim TOML file from that line with kind, zone, capabilities, evidence links and stop test</td>
+</tr>
+<tr>
+<td><code>probe X</code></td>
+<td>Run a smooth-zone census of <code>X</code> on real blocks and hardware in at most one day before building theory</td>
+</tr>
+<tr>
+<td><code>build X</code></td>
+<td>Run striated work: frozen registration first, feature-gated prototype, byte-exact check, workstation run</td>
+</tr>
+<tr>
+<td><code>kill test X</code> / <code>register X</code></td>
+<td>Write <code>X</code>'s decision rule before data, using the paired-oracle form when masked by another stage</td>
+</tr>
+<tr>
+<td><code>rescue X</code></td>
+<td>Accept <code>X</code>'s kill or stop verdict as feedback; find the missed framing and re-register under the same gate</td>
+</tr>
+<tr>
+<td><code>redraw</code></td>
+<td>Re-run the zero-copy floor (and matrix if parts changed) after any merge moving 8-worker wall by ≥ 5%</td>
+</tr>
+<tr>
+<td><code>explore</code> / <code>synthesise</code></td>
+<td>Take a recurring cold exploration claim beyond the surface, or synthesise findings across recent deltas</td>
+</tr>
+</tbody>
+</table>
+<p>The third concerns stewardship, visibility and local vetoes:</p>
+<table>
+<thead>
+<tr>
+<th>Shorthand</th>
+<th>Activity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>where are we</code> / <code>surface</code></td>
+<td>Summarise <code>STATUS.md</code> and recent deltas in plain words in a few minutes of reading; change nothing</td>
+</tr>
+<tr>
+<td><code>needs me</code></td>
+<td>List every open <code>needs_louis</code> item and the exact decision required from the maintainer</td>
+</tr>
+<tr>
+<td><code>review X</code></td>
+<td>Run a cold review by a different agent reading <code>X</code>'s primary files and raw tables rather than summaries</td>
+</tr>
+<tr>
+<td><code>ship X</code></td>
+<td>Run merge gates, merge <code>X</code>, and cut a release if release criteria are met and nothing reserves it</td>
+</tr>
+<tr>
+<td><code>flag X: &lt;invariant&gt;</code></td>
+<td>Open a scoped flag on <code>X</code> naming the broken invariant, evidence and resolution condition</td>
+</tr>
+<tr>
+<td><code>admit X</code></td>
+<td>Move a claim from <code>idea</code> to <code>open</code>, within <code>max_open_claims</code></td>
+</tr>
+<tr>
+<td><code>drop X</code> / <code>block X</code> / <code>bump X</code></td>
+<td>Change status or priority, with the reason in a delta</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, <code>blog X</code> and <code>move &lt;card&gt;</code> name the introduction and development of a blog topic.
+The participants need no instruction from the maintainer to make successive editorial passes.</p>
+<p>A session leaves its result and state readable as part of normal completion, not as a special
+ceremony invoked by the maintainer. Asignifying rupture is about breaking dependence on the
+session's accumulated context, not requiring another human instruction to close it.</p>
+<p>Beside the lexicon sit five compact figures of speech that act as everyday design rules:</p>
+<ol>
+<li><strong>Leave a mark, not a message.</strong> Record state transitions in committed files (<code>claims/</code>,
+   <code>deltas/</code>, <code>surface.tsv</code>), not ephemeral chat comments.</li>
+<li><strong>The surface is the map.</strong> Spend tokens where measured headroom exists rather than arguing in
+   the abstract.</li>
+<li><strong>A claim is a lock, not a role.</strong> Ownership is temporary and task-scoped; there are no
+   permanent personas to feed or wake.</li>
+<li><strong>Smooth to explore, striated to ship.</strong> Keep discovery cheap and production changes strictly
+   gated.</li>
+<li><strong>Every number has a home.</strong> Every cited figure traces to an evidence digest, a results folder
+   or a table row—never an unsourced prose claim.</li>
+</ol>
+<p>Knowing when <em>not</em> to act autonomously is equally important. A purely informational question
+gets an answer; a concrete contribution clearly implied by the discussion can be made within
+standing authority (the conversational participation amendment, <a href="https://github.com/lmmx/mibz2/pull/964">#964</a>).
+Explicit read-only requests stay read-only. Genuine ambiguity and matters reserved under
+<code>RULES D</code>—spending and new infrastructure, rule or role changes, physical workstation runs outside
+standing authorisation, and facts only the maintainer knows—still require clarification.</p>
+<h2 id="5-how-this-should-change-the-work-and-what-could-still-go-wrong">5. How this should change the work — and what could still go wrong<a class="headerlink" href="#5-how-this-should-change-the-work-and-what-could-still-go-wrong" title="Permanent link">&para;</a></h2>
+<p>Moving from a central narrator to a shared frontier targets three concrete changes in daily work.
+First, copy-paste relaying disappears: agents read raw code, tables and evidence bundles directly,
+while maintainer decisions collect in one short list on issue <code>#944</code>. Second, fresh-context
+sessions become the default rhythm: one claim, one bounded session and one short delta before
+rupture. Third, disjoint claims can attack the decoder's real frontier in parallel. Word spelling
+(<code>E_consume</code>, roughly 230–300 ms at one worker) and <code>A5+A6a</code> maximal-run folding no longer wait
+behind one narrator, nor do <code>A6c+E</code> forward emission and <code>D</code> serial delivery under cache pressure.</p>
+<p>Decentralisation does not eliminate failure modes; it trades hub failures for four distributed
+ones, each paired with a lightweight guardrail:</p>
+<ul>
+<li><strong>Backlog runaway.</strong> If every finished claim spawns <span class="arithmatex">\(b\)</span> new claims on average, the expected
+  change in backlog size after <span class="arithmatex">\(n\)</span> completions is <span class="arithmatex">\(\mathbb{E}[Q_n - Q_0] = n(b - 1)\)</span>. Whenever <span class="arithmatex">\(b &gt; 1\)</span>, an open queue turns into an unnavigable graveyard. Keeping <code>idea</code> creation free
+  while capping active admissions at <code>max_open_claims = 12</code> separates cheap discovery from active
+  work in progress.</li>
+<li><strong>Intellectual monoculture.</strong> Shared state can still produce centralised thinking if every
+  session greedily picks the highest-priority known target. Reserving roughly one session in five
+  for cold <code>explore</code> or <code>synthesise</code> protects work not yet on <code>surface.tsv</code>. Competing hypotheses
+  may also coexist as separate claims.</li>
+<li><strong>Orphaned pull requests.</strong> Releasing locks upon opening a pull request can leave striated
+  changes unmerged. Holding leases until merge and putting <code>status = "review"</code> at the top of
+  <code>brief</code> is intended to prioritise finishing before starting. The first day's live operation exposed
+  a gap in this mechanism, described below.</li>
+<li><strong>Axiom creep.</strong> Removing a coordinator creates a temptation to rebuild one as a sprawling
+  linter. Under our anti-restratification rule (<code>C7</code>), <code>frontier.py check</code> stays capped at five
+  checks. The root rules file also targets roughly 120 lines, so adding a rule means deleting one.
+  Governance overhead is tracked in tokens and time rather than gameable commit counts.</li>
+</ul>
+<h3 id="first-day-feedback-finishing-must-not-require-starting">First-day feedback: finishing must not require starting<a class="headerlink" href="#first-day-feedback-finishing-must-not-require-starting" title="Permanent link">&para;</a></h3>
+<p>The first afternoon supplied a counterexample to our lock lifecycle. All three holds were occupied,
+two by work already awaiting integration (PRs <a href="https://github.com/lmmx/mibz2/pull/955">#955</a>
+and <a href="https://github.com/lmmx/mibz2/pull/957">#957</a>). A fresh session could read and review but could not
+acquire another claim. The existing verification bound authority to the original session, and the
+review state lived on the unmerged branch rather than the default branch. A limit on outstanding
+claims had become a limit on useful participation even when workers were idle.</p>
+<p>A one-off recovery transferred the existing triage lease by compare-and-swap, merged its reviewed
+head and recorded the release (<a href="https://github.com/lmmx/mibz2/commit/f88024a9ae9091d04afa2cd244b5d84283c5e8d9">merge record</a>,
+<a href="https://github.com/lmmx/mibz2/commit/9f046c4018b644240b08578c383b74636a315209">release record</a>).
+The cap stayed at three. This demonstrates a possible recovery, not an automated repair.
+A normal integration handoff must preserve exclusivity, bind the reviewer to the exact PR head,
+and work at saturation without opening a new claim. The repair is still under review in PR #955.</p>
+<p>The first blog also needed the maintainer to request its merge. This is unnecessary for reversible
+prose edits. The maintainer has now directed that blog-only work should publish on the basic
+mechanical checks, then improve through follow-up PRs, without waiting for approval or deployment.
+The instruction is recorded in <a href="https://github.com/lmmx/mibz2/pull/964">PR #964</a>; the rule amendment
+itself is not yet integrated. The board should describe progress rather than prescribe a chain
+of editorial permission.</p>
+<h3 id="a-complementary-experiment-in-learned-cooperation">A complementary experiment in learned cooperation<a class="headerlink" href="#a-complementary-experiment-in-learned-cooperation" title="Permanent link">&para;</a></h3>
+<p>On the same day, Burtenshaw and Rasul published
+<a href="https://huggingface.co/blog/training-swarms"><em>Swarms, Flocks, Gangs</em></a>. Their four peers share
+a trainable policy but each holds a private integer. After 75 training updates, mean team success
+rose from 6.6% to 82.3% (first and last five updates), while generated tokens per attempt fell
+37.4%. Broadcasts became more common. The held-out endpoint solved 26 of 32 problems; held-out
+token efficiency was not measured. Since no isolated peer has all the inputs, the task tests
+learning to communicate, not superiority over a matched-budget solo solver.</p>
+<p>Our experiment changes the environment rather than the weights: shared measurements, claims and
+negative results accumulate across sessions. Agents need not learn a new communication policy
+or rely on a private inbox. The two approaches are complementary. More useful communication can
+reduce computation; fewer messages alone are not evidence of efficiency. The eventual comparison
+must account for the cost of writing, discovering and integrating durable evidence, not merely
+count messages or agents.</p>
+<h2 id="6-what-will-test-it">6. What will test it<a class="headerlink" href="#6-what-will-test-it" title="Permanent link">&para;</a></h2>
+<p>An architectural change in <code>mibz2</code> does not become permanent because a write-up argues for it.
+Under our frozen-rule policy (<code>RULES C2</code>), three staged tests decide whether the flat frontier
+scales, stays or yields to a simpler baseline.</p>
+<h3 id="test-1-the-eight-scenario-canary-stress-test">Test 1: the eight-scenario canary stress test<a class="headerlink" href="#test-1-the-eight-scenario-canary-stress-test" title="Permanent link">&para;</a></h3>
+<p>Before <code>max_live_holds</code> rises above its canary cap of 3, <code>stress-test-frontier</code> must pass eight
+adversarial scenarios:</p>
+<ol>
+<li>Two simultaneous claims on the same ID yield exactly one <code>acquired</code> lease.</li>
+<li>A lease that lapses after mid-claim death is taken over cleanly by compare-and-swap.</li>
+<li>A lapsed holder is refused on <code>verify</code>, <code>renew</code> and post-takeover <code>release</code>.</li>
+<li>A newer result invalidating an open claim triggers premise checks and a scoped flag without
+   halting unrelated claims.</li>
+<li>A persuasive but wrong mathematical argument is contradicted by a cold independent review.</li>
+<li>A post-hoc gate relaxation is caught and rejected, leaving the original verdict intact.</li>
+<li>Two sessions attempting concurrent workstation runs are blocked by overlapping <code>owned_paths</code> and
+   serialised by <code>flock</code>.</li>
+<li>An attempt to loosen a safety rule hits the protected-path list and cannot self-merge.</li>
+</ol>
+<p>Any failure blocks scaling until fixed. The first run of this canary suite (PR #948) returned
+<strong>4 PASS and 4 FAIL</strong>. Same-ID claim races, lapsed-lease takeovers, cold contradiction visibility
+and workstation <code>flock</code> serialisation passed. Four real gaps failed. <code>renew</code> and <code>release</code> reported success when their compare-and-swap push
+failed, and <code>verify</code> trusted stale refs offline. Flags were read only from local disk. <code>check</code>
+missed edits to a claim's frozen <code>stop_test</code>, and CI's shallow checkout hid other edits. Finally,
+<code>protected</code> was read from the PR's own config, and <code>master</code> had no branch protection. Following the protocol, the run opened three scoped flags and a follow-up claim
+(<code>harden-frontier-tooling</code>) while keeping <code>max_live_holds</code> pinned at 3.</p>
+<h3 id="test-2-the-pre-registered-three-arm-experiment">Test 2: the pre-registered three-arm experiment<a class="headerlink" href="#test-2-the-pre-registered-three-arm-experiment" title="Permanent link">&para;</a></h3>
+<p>The registered design (<code>three-arm-experiment</code>) calls for roughly 20M weighted tokens plus three
+workstation runs. On 26 November the maintainer deferred that spending until the protocol is
+hardened and a smaller, capped pilot is proposed, so what follows is the frozen design, not a
+scheduled run. Each arm receives <strong>6M weighted
+tokens</strong>, alongside a <strong>2M solo calibration anchor</strong> to fit Ord's <span class="arithmatex">\(\lambda\)</span>. Every arm attacks the
+same decomposable worker-side target behind the zero-copy scanner oracle on <code>wikidata ×4</code> at eight
+workers. The work combines <code>A5+A6a</code> maximal-run folding, <code>A6c+E</code> forward emission and <code>E_consume</code>
+word spelling. Every submission must pass byte-exact SHA-256 parity, Miri and clippy checks, and
+stay within 1.10× of baseline peak memory.</p>
+<figure class="bf-fig" id="experiment">
+<p class="bf-title">Pre-registered three-arm falsification design at matched weighted tokens</p>
+<!-- fig:experiment -->
+<svg viewBox="0 0 720 322" role="img" aria-label="Pre-registered three-arm falsification design at 6 million weighted tokens per arm plus a 2 million solo calibration anchor. Arm 1 splits 1.5M hub, 3.5M workers, 1.0M integration. Arm 2 runs three sequential 2M fresh-context solo sessions. Arm 3 runs two 2M disjoint builder claims, 1.2M systems integration, and 0.8M cold independent audit. All arms target worker-side speedup behind the zero-copy scanner oracle at 8 workers, gated on byte-exactness. Frozen decision rules adopt Arm 3 if it cuts coordination tax by at least 50 percent with at most one relay and beats or matches solo with speedup and defect catch, or fall back to restarted solo if Arm 2 wins by over 3 percentage points."><text class="bf-t-strong" x="16.0" y="22.0" text-anchor="start" style="font-size:12.5px">Pre-registered three-arm design: 6M weighted tokens per arm (plus 2M anchor)</text><line x1="166.0" y1="42" x2="166.0" y2="190" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="166.0" y="205.0" text-anchor="middle" style="font-size:10px">0M</text><line x1="292.7" y1="42" x2="292.7" y2="190" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="292.7" y="205.0" text-anchor="middle" style="font-size:10px">2M</text><line x1="419.3" y1="42" x2="419.3" y2="190" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="419.3" y="205.0" text-anchor="middle" style="font-size:10px">4M</text><line x1="546.0" y1="42" x2="546.0" y2="190" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="546.0" y="205.0" text-anchor="middle" style="font-size:10px">6M</text><text class="bf-t-strong" x="156.0" y="58.0" text-anchor="end" style="font-size:10.5px">Calibration anchor</text><text class="bf-tm" x="156.0" y="71.0" text-anchor="end" style="font-size:9.5px">fits solo curve f(2M)</text><rect x="166.0" y="48.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.0"><title>Single fresh session (2M) to anchor scaling exponent lambda</title></rect><text class="bf-t-strong" x="228.3" y="63.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-3-ink)">Solo 2M</text><text class="bf-t-strong" x="156.0" y="94.0" text-anchor="end" style="font-size:10.5px">Arm 1: Orchestrated</text><text class="bf-tm" x="156.0" y="107.0" text-anchor="end" style="font-size:9.5px">old hub + pasted briefs</text><rect x="166.0" y="84.0" width="93.5" height="24.0" rx="3" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.0"><title>Coordinating agent: 1.5M tokens</title></rect><text class="bf-t-strong" x="212.5" y="99.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-2-ink)">Hub 1.5M</text><rect x="261.0" y="84.0" width="220.2" height="24.0" rx="3" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.0"><title>Dispatched worker sessions: 3.5M tokens</title></rect><text class="bf-t-strong" x="370.8" y="99.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-1-ink)">Worker 3.5M</text><rect x="482.7" y="84.0" width="61.8" height="24.0" rx="3" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.0"><title>Integration &amp; review: 1.0M tokens</title></rect><text class="bf-t-strong" x="513.3" y="99.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-4-ink)">Int 1.0M</text><text class="bf-t-strong" x="156.0" y="130.0" text-anchor="end" style="font-size:10.5px">Arm 2: Restarted solo</text><text class="bf-tm" x="156.0" y="143.0" text-anchor="end" style="font-size:9.5px">3 fresh sessions, no hub</text><rect x="166.0" y="120.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.0"><title>Fresh solo session 1: 2.0M tokens + &lt;=40-line delta</title></rect><text class="bf-t-strong" x="228.3" y="135.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-3-ink)">Run 1 (2M)</text><rect x="292.7" y="120.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.0"><title>Fresh solo session 2: 2.0M tokens + &lt;=40-line delta</title></rect><text class="bf-t-strong" x="355.0" y="135.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-3-ink)">Run 2 (2M)</text><rect x="419.3" y="120.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.0"><title>Fresh solo session 3: 2.0M tokens + &lt;=40-line delta</title></rect><text class="bf-t-strong" x="481.7" y="135.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-3-ink)">Run 3 (2M)</text><text class="bf-t-strong" x="156.0" y="166.0" text-anchor="end" style="font-size:10.5px">Arm 3: Flat frontier</text><text class="bf-tm" x="156.0" y="179.0" text-anchor="end" style="font-size:9.5px">disjoint claims + audit</text><rect x="166.0" y="156.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.0"><title>Disjoint builder A (A5+A6a fold): 2.0M tokens</title></rect><text class="bf-t-strong" x="228.3" y="171.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-1-ink)">Claim A 2M</text><rect x="292.7" y="156.0" width="125.2" height="24.0" rx="3" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.0"><title>Disjoint builder B (E_consume / A6c+E): 2.0M tokens</title></rect><text class="bf-t-strong" x="355.0" y="171.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-1-ink)">Claim B 2M</text><rect x="419.3" y="156.0" width="74.5" height="24.0" rx="3" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.0"><title>Systems integration + bench recipe: 1.2M tokens</title></rect><text class="bf-t-strong" x="456.3" y="171.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-4-ink)">Int 1.2M</text><rect x="495.3" y="156.0" width="49.2" height="24.0" rx="3" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.0"><title>Cold independent audit: 0.8M tokens</title></rect><text class="bf-t-strong" x="519.7" y="171.5" text-anchor="middle" style="font-size:9.8px;fill:var(--bf-vz-2-ink)">Audit</text><rect x="562.0" y="46.0" width="144.0" height="144.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-frame);stroke-width:1.2"></rect><text class="bf-t-strong" x="634.0" y="66.0" text-anchor="middle" style="font-size:11px">Shared target</text><text class="bf-tm" x="634.0" y="84.0" text-anchor="middle" style="font-size:9.5px">Worker speed behind</text><text class="bf-tm" x="634.0" y="97.0" text-anchor="middle" style="font-size:9.5px">zero-copy S oracle</text><text class="bf-tm" x="634.0" y="110.0" text-anchor="middle" style="font-size:9.5px">(8W wikidata x4)</text><text class="bf-tm" x="634.0" y="136.0" text-anchor="middle" style="font-size:9.5px">Byte-exact SHA-256</text><text class="bf-tm" x="634.0" y="149.0" text-anchor="middle" style="font-size:9.5px">Miri + clippy green</text><text class="bf-tm" x="634.0" y="162.0" text-anchor="middle" style="font-size:9.5px">RSS &lt;= 1.10x base</text><text class="bf-tm" x="634.0" y="175.0" text-anchor="middle" style="font-size:9.5px">9 scored dimensions</text><line x1="16" y1="216" x2="704" y2="216" style="stroke:var(--bf-frame);stroke-width:1"/><text class="bf-t-strong" x="16.0" y="236.0" text-anchor="start" style="font-size:11px">Frozen C2 decision rule (written before data; never relaxed after seeing results)</text><rect x="16.0" y="246.0" width="234.0" height="66.0" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:1.4"></rect><text class="bf-t-strong" x="26.0" y="263.0" text-anchor="start" style="font-size:10.5px">Adopt flat frontier (Arm 3)</text><text class="bf-tm" x="26.0" y="278.0" text-anchor="start" style="font-size:9.5px">Beat/match Arm 1, cut coord tax &gt;=50%,</text><text class="bf-tm" x="26.0" y="291.0" text-anchor="start" style="font-size:9.5px">&lt;=1 relay; beat solo &gt;=2pp OR within 2pp</text><text class="bf-tm" x="26.0" y="304.0" text-anchor="start" style="font-size:9.5px">+ &gt;=2x faster + &gt;=1 defect caught</text><rect x="262.0" y="246.0" width="218.0" height="66.0" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:1.4"></rect><text class="bf-t-strong" x="272.0" y="263.0" text-anchor="start" style="font-size:10.5px">Fall back to restarted solo</text><text class="bf-tm" x="272.0" y="278.0" text-anchor="start" style="font-size:9.5px">Arm 2 beats Arm 3 by &gt;3pp at 6M</text><text class="bf-tm" x="272.0" y="291.0" text-anchor="start" style="font-size:9.5px">with zero uncaught defects.</text><text class="bf-tm" x="272.0" y="304.0" text-anchor="start" style="font-size:9.5px">Keep frontier/ as solo restart harness</text><rect x="492.0" y="246.0" width="212.0" height="66.0" rx="6" style="fill:var(--bf-surface);stroke:var(--bf-vz-axis);stroke-width:1.4"></rect><text class="bf-t-strong" x="502.0" y="263.0" text-anchor="start" style="font-size:10.5px">Void / inconclusive</text><text class="bf-tm" x="502.0" y="278.0" text-anchor="start" style="font-size:9.5px">Any byte-exact failure, &gt;6.3M spend,</text><text class="bf-tm" x="502.0" y="291.0" text-anchor="start" style="font-size:9.5px">or bench control edit voids the arm.</text><text class="bf-tm" x="502.0" y="304.0" text-anchor="start" style="font-size:9.5px">1 run/arm is a pilot; check variance</text></svg>
+<figcaption>Pre-registered experimental plan (not yet run). Top: token allocations across the 2M calibration anchor and three 6M arms attacking the same zero-copy-decoupled worker target. Bottom: frozen C2 decision regions established before data; a single run per arm is a pilot given Paradigm 3's observed variance.</figcaption>
+</figure>
+
+<p>Arm 1 runs the retired hub workflow (1.5M hub, 3.5M workers and 1.0M integration). Arm 2 runs
+Paradigm 3's winning baseline: three sequential 2M fresh-context solo sessions passing forward
+only git history and ≤ 40-line deltas. Arm 3 runs the flat frontier across two disjoint 2M
+builders, 1.2M systems integration and a 0.8M cold independent audit. Each arm is scored on nine
+dimensions: validated productivity per million tokens, duplication, intellectual diversity,
+experimental integrity, integration latency, fragmentation, maintainer overhead, reliability and
+governance overhead in tokens and time.</p>
+<p>The frozen adoption rule is strict. We adopt Arm 3 only if it matches or beats Arm 1 while cutting
+coordination tax by at least 50% with at most one relay. It must also clear one of two bars
+against the stronger restarted solo. Either it beats solo by at least 2 percentage points
+(<span class="arithmatex">\(\lambda &gt; 1\)</span>), or it stays within 2 percentage points while delivering at least 2× wall-clock
+speedup and catching a verified defect that solo missed. If restarted solo beats Arm 3 by more
+than 3 percentage points with zero uncaught defects, we fall back to restarted solo plus cold
+review. In that outcome, <code>frontier/surface.tsv</code>, <code>deltas/</code> and <code>brief</code> survive as a solo
+fresh-context restart harness. Because Paradigm 3 saw wide run-to-run variance, one run per arm is
+treated honestly as a pilot rather than a final scaling law.</p>
+<h3 id="test-3-the-daily-human-test">Test 3: the daily human test<a class="headerlink" href="#test-3-the-daily-human-test" title="Permanent link">&para;</a></h3>
+<p>The third test runs every day. Can the maintainer follow a full day's research in a few minutes
+from <code>STATUS.md</code> (mirrored on issue <code>#943</code>) and the short deltas? If not, we fix the generated
+status page rather than resurrecting a central hub.</p>
+<p>The canary stress test completed in PR #948 with three flags open on <code>harden-frontier-tooling</code>.
+The maintainer has approved binding branch protection for <code>master</code>, without mandatory human
+review. The three-arm experiment is deferred until a revised, capped pilot is proposed.</p>
+<p>Dropping our coordinator did not mean abandoning discipline. We separated lossy routing from
+mechanical verification, grounded priorities in counterfactual measurements, and moved mutual
+exclusion into atomic git locks. Coordination became an inspectable state machine. Whether
+parallel flat sessions outperform a restarted solo agent at equal compute is an empirical question.
+The files now hold both the machinery to run that test and the rule that can overturn it.</p>
+<hr />
+<p><strong>Sources:</strong> <a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/README.md">frontier/README.md</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/config.toml">frontier/config.toml</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/surface.tsv">frontier/surface.tsv</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/dead-ends.tsv">frontier/dead-ends.tsv</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/tools/frontier.py">frontier/tools/frontier.py</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/claims/stress-test-frontier.toml">stress-test-frontier.toml</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-stress-test-frontier.md">stress-test delta</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/claims/three-arm-experiment.toml">three-arm-experiment.toml</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-frontier-hardening.md">hardening delta</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizome/README.md">rhizome journal index</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizomatic-swarms-cross-reading.md">rhizomatic swarms cross-reading</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-rhizome/deleuze-guattari-cross-reading.md">Deleuze &amp; Guattari cross-reading</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/full/README.md">ideal-parts matrix results</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">zero-copy floor results</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md">pooled-scan results</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md">cold-store reread</a>,
+<a href="https://github.com/lmmx/mibz2/blob/f88024a9ae9091d04afa2cd244b5d84283c5e8d9/frontier/deltas/2026-11-26-owner-decisions.md">owner decisions</a>;
+external: Zanichelli &amp; Leech, <a href="https://www.paradigm3.org/research/swarms"><em>Swarms do not yet raise the roof</em></a> (Paradigm 3, 24 November 2026),
+Toby Ord, <a href="https://www.tobyord.com/writing/swarm-scaling"><em>Swarm Scaling</em></a> (21 September 2026),
+Pierre-Paul Grassé via <a href="https://en.wikipedia.org/wiki/Stigmergy">Stigmergy</a>,
+and Deleuze &amp; Guattari via <a href="https://en.wikipedia.org/wiki/A_Thousand_Plateaus"><em>A Thousand Plateaus</em></a>.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The decoder&#x27;s true floor and a pooled scan">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                The decoder's true floor and a pooled scan
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-26-complementary-bottlenecks/" class="md-footer__link md-footer__link--next" aria-label="Next: The experiment">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                The experiment
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=112e7576763b"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=112e7576763b"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=112e7576763b"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=112e7576763b"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=112e7576763b"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=112e7576763b"></script>
+      
+    
+  </body>
+</html>
