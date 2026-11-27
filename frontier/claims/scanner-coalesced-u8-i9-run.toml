@@ -4,13 +4,12 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 1
-status = "review"
-pr = 1105
+status = "done"
 owned_paths = [".just/bench.just", "bench/scanner_coalesced.py", "bench/test_scanner_coalesced.py", "examples/scanner_coalesced_run.rs"]
 mechanisms = ["scan-coalesced-u8"]
 needs_louis = ""
 question = """
-`scanner-coalesced-u8-decode` merged at 5ed20c1d citing an earlier CI run. The exact-head four-thread pattern loss is recorded in frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md. A hardware PASS cannot erase that objection. Its frozen registration (`docs/journal/2026-11-26-scanner-coalesced-u8/registration.md` §3) judges keep-or-revert on the i9-10900K: >= 8.0% of serial scan S and >= 3.0% of the 10W (or paired post-worker-improvement 8W) wall, no regression on runs/text/1W-10W wikidata, RSS <= 1.05x. No recipe exists. Write `bench-scanner-coalesced` exactly to registration §3.1 (wikidata x4 plus ab gen text and runs; k in {1,2,6,8,10}; 10-12 randomised paired rounds of the #1034 squash against its first parent; single-thread `examples/phases.rs` read = A2 + A3; one-directory-per-attempt shape and `bench/bundle.sh`), get it green and independently read, then hand its exact green head to a separately leased queue owner under standing authorisation. This recipe reservation excludes the queue file and signal.
+`scanner-coalesced-u8-decode` merged at 5ed20c1d citing an earlier CI run. The exact-head four-thread pattern loss is recorded in frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md. A hardware PASS cannot erase that objection. Its frozen registration (`docs/journal/2026-11-26-scanner-coalesced-u8/registration.md` §3) judges keep-or-revert on the i9-10900K: >= 8.0% of serial scan S and >= 3.0% of the 10W (or paired post-worker-improvement 8W) wall, no regression on runs/text/1W-10W wikidata, RSS <= 1.05x. The merged #1105 recipe implements `bench-scanner-coalesced` exactly to registration §3.1 (wikidata x4 plus ab gen text and runs; k in {1,2,6,8,10}; 10-12 randomised paired rounds of the #1034 squash against its first parent; single-thread `examples/phases.rs` read = A2 + A3; one-directory-per-attempt shape and `bench/bundle.sh`). The separate queue card carries the standing authorisation and green head.
 """
 why = """
 The registration's verdict is the claim's done_when; until it runs, the scanner change is merged on CI evidence only and surface row S is stale. Workstation validation is the maintainer-named shared bottleneck (PR #1034 comment, 27 November).
@@ -19,7 +18,7 @@ stop_test = """
 Frozen before data: registration §3.2 and §3.3 verbatim (C2). PASS keeps it merged and updates surface row S; STOP reverts the scanner change (#1034's squash) and records a scoped dead-ends row; VOID reruns only after the void condition is fixed.
 """
 done_when = """
-The recipe merged green, the ready tag and queue entry landed, the evidence bundle read from the `evidence` branch with its SHA-256 checked, the verdict under registration §3.2 in a delta, surface row S updated (or the revert merged and a dead-ends row). This claim carries `scanner-coalesced-u8-decode`'s workstation done_when; that build claim was marked done when #1034 merged (5ed20c1d).
+The independently reviewed recipe merged green as #1105. The remaining authorised queue publication, bundle verification and registered keep/revert disposition are tracked under scanner-coalesced-u8-i9-queue. The frozen stop test remains in force.
 """
 premises = [
   "docs/journal/2026-11-26-scanner-coalesced-u8/registration.md",
