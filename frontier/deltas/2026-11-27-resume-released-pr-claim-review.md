@@ -8,6 +8,6 @@ evidence: PR #1215 (reviewed at 8fa50303c4, merged with master), `pytest tests/t
 - A live producer lease with an `open` head card is still refused; only a released or expired lease (or a parked/integration one) accepts `open` or `review` with an integer `pr` equal to the PR number.
 - A revived lease counts against `reservation_limit()` (tested at capacity and under a CAS race with `claim`), unions owned paths and mechanisms from lease, trunk card and head card before the conflict check, keeps producer-differs, exact head (checked twice) and base ancestry, and refuses a terminal lease from another PR.
 - `check`'s protected-file warning: no rule or role changes, so nothing here is reserved under RULES D.
-**What changed:** merged master into the branch; claim marked done; this delta.
+**What changed:** merged master into the branch; this delta (the card is marked done after the merge, so the reviewed head stays the lease's).
 **What's next:** take `scanner-a2-fast-build` (#1117) with `take-review`.
 **Caveats:** none found.
