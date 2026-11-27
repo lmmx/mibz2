@@ -31,12 +31,12 @@ This single discriminating i9 run isolates **pinning**, **settle gap**, and **pa
 - **Corpus:** `wikidata x4` (`4x` multistream concatenation of `corpora/wikidata.bz2`, verified SHA-256 `0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e`, 838,800,784 B uncompressed, 47,419,732 B compressed), materialized shallow-safely via `corpora/wikidata.bz2` or `git fetch --depth=1 --no-tags origin bench-data` + `examples/windows.rs`.
 - **Decoder & build:** Default `mibz2` arm at clean `HEAD`, built with `rustc 1.99.1` via `cargo build --release --locked --example ab --example windows` into a strictly isolated `CARGO_TARGET_DIR` with default baseline x86-64 codegen (`RUSTFLAGS`, `CARGO_BUILD_RUSTFLAGS`, `CARGO_ENCODED_RUSTFLAGS` unset).
 - **Parity check (untimed, pre-sweep):** Independently verify decompressed byte count via Python `bz2.open` (libbzip2), verify `ab child libbzip2 1 <wikidata-x4>` matches, and verify `ab child mibz2 6 <wikidata-x4>` matches C `libbzip2`'s exact `(out, hash)` with `err == ""`.
-- **Factorial grid (`2 x 2 x 2` at both `1T` and `6T`, `ROUNDS = 12`):**
+- **Factorial grid (`2 x 3 x 2` at both `1T` and `6T`, `ROUNDS = 12`, pre-data amendment for `#1240`):**
   - **Threads:** `1` (targets mode (a)) and `6` (targets mode (b)).
   - **Pinning:** `pinned` (`taskset -c <core0_cpu0>` for `1T`; `taskset -c <first sibling of cores 0..5>` for `6T`) vs `unpinned` (all 20 CPUs, no `taskset`).
-  - **Settle gap (`settle_s`):** `0.0 s` (immediate launch) vs `0.2 s` (`time.sleep(0.2)` before each run in the pair).
+  - **Settle gap (`settle_s`):** `0.0 s` (immediate launch), `0.2 s` (`time.sleep(0.2)`, matching `text-knee`'s `--settle 0.2`), and **`2.0 s`** (`time.sleep(2.0)`, matching `ab`'s default `--settle 2` production-like gap, added pre-data in response to flag `2026-11-27-clock-modes-settle-levels` / `#1240` so the probe directly tests whether mode (b) is eliminated by a 2 s inter-run gap vs pinning).
   - **Pair position (`pair_pos`):** `0` vs `1` (each `(threads, pinning, settle_s)` cell executes two back-to-back runs in order `pos 0`, `pos 1`).
-  - **Ordering:** Within each of the 12 rounds, the 8 `(threads, pinning, settle_s)` pair-cells are shuffled with deterministic seed `1189` (`16` runs/round, `192` timed runs total; estimated ~3–4 minutes on the i9-10900K, well under the 15-minute workstation budget).
+  - **Ordering:** Within each of the 12 rounds, the 12 `(threads, pinning, settle_s)` pair-cells are shuffled with deterministic seed `1189` (`24` runs/round, `288` timed runs total; estimated ~`7.5` minutes on the i9-10900K — `~4.0 min` decode + `~3.5 min` settle gaps — well inside the 15-minute workstation budget).
   - **Optional secondary arm:** `--prespin-ms` accepts comma-separated values (default `0`; e.g., `--prespin-ms 0,100`) to test prespin alongside the core factors without altering the frozen default grid.
 
 ## 4. Per-child telemetry
@@ -62,7 +62,7 @@ For each thread count $t \in \{1, 6\}$ independently:
        - **`slow_instructions` (`extra_instructions`):** `ipb_ratio >= 1.15` (genuinely extra executed instructions, e.g. spin-loop or retry work).
      - `slow_mixed`: wall-slow with `cpb_ratio` outside `±3%` and `< 1.20`.
      - `slow_unclassified`: wall-slow with PMU cycles unavailable.
-3. **Factor / two-way interaction explanation:** Evaluate every single-factor level (`pinning`, `settle_s`, `pair_pos`) and every two-way interaction cell (`pinning x settle_s`, `pinning x pair_pos`, `settle_s x pair_pos`) for `explained_share = slow_clock_in_cell / n_slow_clock`, requiring `explained_share >= 0.80` and `slow_rate > complement_slow_rate`, with a minimum noise guard `min_slow_runs = 3` (so a single stray outlier out of 96 runs cannot falsely trigger `1/1 = 100%`).
+3. **Factor / two-way interaction explanation:** Evaluate every single-factor level (`pinning`, `settle_s`, `pair_pos`, plus the ordered short-vs-long settle contrast `settle_band` = `short(<2.0s)` vs `long(>=2.0s)` when `len(settles) > 2`, so slow mode spanning `{0.0, 0.2}` s vs `2.0` s is captured as one settle factor) and every non-redundant two-way interaction cell for `explained_share = slow_clock_in_cell / n_slow_clock`, requiring `explained_share >= 0.80` and `slow_rate > complement_slow_rate`, with a minimum noise guard `min_slow_runs = 3` (so a single stray outlier out of 144 runs cannot falsely trigger `1/1 = 100%`).
 4. **Verdict:**
    - **VOID** if any prerequisite or data-integrity invariant fails (non-i9 host, restricted affinity or CPU quota, dirty tracked tree, wrong `rustc`, non-empty `RUSTFLAGS`, corpus/parity mismatch, missing/duplicate cell, decode error, non-finite wall/RSS).
    - **PASS (mechanism found)** if either `1T` or `6T` has `>= 3` `slow_clock` runs and one factor or two-way interaction explains `>= 80%` of them.

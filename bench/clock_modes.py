@@ -45,7 +45,7 @@ WIKIDATA_X4_SHA256 = "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c8
 
 THREADS = (1, 6)
 PINNINGS = ("pinned", "unpinned")
-SETTLES = (0.0, 0.2)
+SETTLES = (0.0, 0.2, 2.0)
 PAIR_POSITIONS = (0, 1)
 DEFAULT_PRESPIN_MS = (0,)
 ROUNDS = 12
@@ -1114,6 +1114,18 @@ def evaluate_factors(
     if len(prespin_levels) > 1:
         factors.append("prespin_ms")
 
+    settle_levels = sorted({float(item["row"].get("settle_s", 0.0)) for item in classified})
+    max_settle = settle_levels[-1] if settle_levels else 0.0
+    has_settle_band = len(settle_levels) > 2
+    if has_settle_band:
+        factors.append("settle_band")
+
+    def _factor_val(row: dict[str, Any], name: str) -> Any:
+        if name == "settle_band":
+            s = float(row.get("settle_s", 0.0))
+            return f"short(<{max_settle:g}s)" if s < max_settle else f"long(>={max_settle:g}s)"
+        return row.get(name)
+
     total_target = sum(1 for item in classified if item["mode"] == target_mode)
     total_wall_slow = sum(1 for item in classified if item["is_wall_slow"])
 
@@ -1122,10 +1134,10 @@ def evaluate_factors(
         for fnames in factor_tuples:
             by_level: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
             for item in classified:
-                key = tuple(item["row"].get(f) for f in fnames)
+                key = tuple(_factor_val(item["row"], f) for f in fnames)
                 by_level[key].append(item)
             eta2 = _eta_squared_log_wall(
-                classified, lambda row, fs=fnames: tuple(row.get(f) for f in fs)
+                classified, lambda row, fs=fnames: tuple(_factor_val(row, f) for f in fs)
             )
             for level, members in sorted(by_level.items()):
                 n_target = sum(1 for m in members if m["mode"] == target_mode)
@@ -1167,7 +1179,10 @@ def evaluate_factors(
 
     single_tuples = [(f,) for f in factors]
     twoway_tuples = [
-        (factors[i], factors[j]) for i in range(len(factors)) for j in range(i + 1, len(factors))
+        (factors[i], factors[j])
+        for i in range(len(factors))
+        for j in range(i + 1, len(factors))
+        if {factors[i], factors[j]} != {"settle_s", "settle_band"}
     ]
     singles = _eval_candidates(single_tuples)
     twoways = _eval_candidates(twoway_tuples)
@@ -1902,7 +1917,7 @@ def run_probe(
     out.mkdir(parents=True, exist_ok=True)
     strict_i9 = not (smoke or allow_any_host)
     eff_rounds = rounds if rounds is not None else (2 if smoke else ROUNDS)
-    eff_settles = (0.0, 0.05) if (smoke and settles == SETTLES) else settles
+    eff_settles = (0.0, 0.05, 0.1) if (smoke and settles == SETTLES) else settles
     eff_min_slow = 1 if smoke else MIN_SLOW_RUNS
 
     if strict_i9:
@@ -2053,7 +2068,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--settles",
         type=_parse_float_tuple,
         default=SETTLES,
-        help="Settle gaps in seconds (default: 0.0,0.2)",
+        help="Settle gaps in seconds (default: 0.0,0.2,2.0)",
     )
     p_run.add_argument(
         "--prespin-ms",

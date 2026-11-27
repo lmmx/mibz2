@@ -127,16 +127,17 @@ def make_factorial_rows(
 
 
 class FactorialDesignTests(unittest.TestCase):
-    def test_default_2x2x2_plan_is_balanced_and_deterministic(self):
+    def test_default_2x3x2_plan_is_balanced_and_deterministic(self):
         p1 = cm.factorial_plan()
         p2 = cm.factorial_plan()
         self.assertEqual(p1, p2)
-        # 12 rounds * 2 threads * 2 pinnings * 2 settles * 2 pair_pos = 192 runs
-        self.assertEqual(len(p1), 192)
+        # 12 rounds * 2 threads * 2 pinnings * 3 settles * 2 pair_pos = 288 runs
+        self.assertEqual(len(p1), 288)
+        self.assertEqual(cm.SETTLES, (0.0, 0.2, 2.0))
         round_orders = []
         for r in range(cm.ROUNDS):
             r_items = [x for x in p1 if x["round"] == r]
-            self.assertEqual(len(r_items), 16)
+            self.assertEqual(len(r_items), 24)
             # Every consecutive pair shares pair_id and goes pos 0 -> pos 1.
             pair_seq = []
             for idx in range(0, len(r_items), 2):
@@ -147,18 +148,35 @@ class FactorialDesignTests(unittest.TestCase):
                 for key in ("threads", "pinning", "settle_s", "prespin_ms"):
                     self.assertEqual(a[key], b[key])
                 pair_seq.append((a["threads"], a["pinning"], a["settle_s"]))
-            self.assertEqual(len(set(pair_seq)), 8)
+            self.assertEqual(len(set(pair_seq)), 12)
             round_orders.append(tuple(pair_seq))
         # Shuffling must vary across rounds.
         self.assertGreater(len(set(round_orders)), 1)
 
     def test_prespin_arm_expands_factorial_cleanly(self):
         plan = cm.factorial_plan(rounds=4, prespin_ms_values=(0, 100))
-        self.assertEqual(len(plan), 4 * 2 * 2 * 2 * 2 * 2)
+        self.assertEqual(len(plan), 4 * 2 * 2 * 3 * 2 * 2)
         counts = {0: 0, 100: 0}
         for item in plan:
             counts[item["prespin_ms"]] += 1
         self.assertEqual(counts[0], counts[100])
+
+    def test_short_settle_band_explains_slow_mode_across_0_and_0_2_vs_2_0(self):
+        # #1240 hypothesis: mode (b) occurs at 6T for settle in {0.0, 0.2} s, vanishes at 2.0 s.
+        def wall_fn(item, base):
+            if item["threads"] == 6 and item["settle_s"] < 2.0:
+                return base * 1.45
+            return base
+
+        rows = make_factorial_rows(wall_fn=wall_fn)
+        res = cm.score(rows, REF)
+        self.assertEqual(res["verdict"], "PASS (mechanism found)")
+        best = res["per_thread"]["6"]["best_explainer"]
+        self.assertIsNotNone(best)
+        self.assertEqual(best["label"], "settle_band=short(<2s)")
+        self.assertAlmostEqual(best["explained_share"], 1.0, places=4)
+        self.assertAlmostEqual(best["slow_rate"], 1.0, places=4)
+        self.assertAlmostEqual(best["complement_slow_rate"], 0.0, places=4)
 
 
 class StopTestClassifierTests(unittest.TestCase):
@@ -174,7 +192,7 @@ class StopTestClassifierTests(unittest.TestCase):
         self.assertEqual(res["verdict"], "PASS (mechanism found)")
         pt6 = res["per_thread"]["6"]
         self.assertEqual(pt6["verdict"], "PASS (mechanism found)")
-        self.assertEqual(pt6["mode_counts"]["slow_clock"], 24)
+        self.assertEqual(pt6["mode_counts"]["slow_clock"], 36)
         self.assertEqual(pt6["mode_counts"]["slow_work"], 0)
         self.assertEqual(pt6["best_explainer"]["label"], "pinning=unpinned & pair_pos=1")
         self.assertAlmostEqual(pt6["best_explainer"]["explained_share"], 1.0)
@@ -241,9 +259,9 @@ class StopTestClassifierTests(unittest.TestCase):
         res_cpi = cm.score(rows_cpi, REF)
         self.assertEqual(res_cpi["verdict"], "PASS (mode is real work)")
         pt6_cpi = res_cpi["per_thread"]["6"]
-        self.assertEqual(pt6_cpi["mode_counts"]["slow_work"], 48)
+        self.assertEqual(pt6_cpi["mode_counts"]["slow_work"], 72)
         self.assertEqual(pt6_cpi["mode_counts"]["slow_clock"], 0)
-        self.assertEqual(pt6_cpi["work_sub_counts"]["slow_cpi"], 48)
+        self.assertEqual(pt6_cpi["work_sub_counts"]["slow_cpi"], 72)
         self.assertEqual(pt6_cpi["work_sub_counts"]["slow_instructions"], 0)
         self.assertEqual(pt6_cpi["work_diagnosis"], "uncore_or_memory_stall")
         self.assertGreaterEqual(pt6_cpi["median_slow_cpb_ratio"], 1.20)
@@ -262,8 +280,8 @@ class StopTestClassifierTests(unittest.TestCase):
         res_ins = cm.score(rows_ins, REF)
         self.assertEqual(res_ins["verdict"], "PASS (mode is real work)")
         pt6_ins = res_ins["per_thread"]["6"]
-        self.assertEqual(pt6_ins["mode_counts"]["slow_work"], 48)
-        self.assertEqual(pt6_ins["work_sub_counts"]["slow_instructions"], 48)
+        self.assertEqual(pt6_ins["mode_counts"]["slow_work"], 72)
+        self.assertEqual(pt6_ins["work_sub_counts"]["slow_instructions"], 72)
         self.assertEqual(pt6_ins["work_sub_counts"]["slow_cpi"], 0)
         self.assertEqual(pt6_ins["work_diagnosis"], "extra_instructions")
         self.assertGreaterEqual(pt6_ins["median_slow_ipb_ratio"], 1.15)
@@ -295,7 +313,7 @@ class StopTestClassifierTests(unittest.TestCase):
 
         res_unif = cm.score(make_factorial_rows(wall_fn=uniform_slow), REF)
         self.assertEqual(res_unif["verdict"], "STOP")
-        self.assertEqual(res_unif["per_thread"]["6"]["mode_counts"]["slow_clock"], 32)
+        self.assertEqual(res_unif["per_thread"]["6"]["mode_counts"]["slow_clock"], 48)
 
         # 4. Wall-slow runs without PMU cycles -> slow_unclassified -> STOP (cannot claim clock)
         def unpinned_slow(item, base):
@@ -304,7 +322,7 @@ class StopTestClassifierTests(unittest.TestCase):
         rows_noperf = make_factorial_rows(wall_fn=unpinned_slow, cycles_fn=lambda _i, _b: None)
         res_noperf = cm.score(rows_noperf, REF)
         self.assertEqual(res_noperf["verdict"], "STOP")
-        self.assertEqual(res_noperf["per_thread"]["6"]["mode_counts"]["slow_unclassified"], 48)
+        self.assertEqual(res_noperf["per_thread"]["6"]["mode_counts"]["slow_unclassified"], 72)
 
     def test_void_conditions(self):
         base = make_factorial_rows()
