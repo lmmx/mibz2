@@ -245,6 +245,10 @@ jobs:
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
+      # bench/run_requests.py against a scratch origin and a fake GitHub API: run requests on
+      # refs become ready/hold tags only when eligible; receipts, withdrawal, replay, malformed
+      - name: Run requests reconciled into ready signals
+        run: python3 bench/test_run_requests.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
