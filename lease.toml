@@ -1,0 +1,9 @@
+id = "a6b-endpoint-successor-queue"
+holder = "antigravity"
+session = "f43bff4635d5"
+claimed_at = "2026-11-27T07:53:52+00:00"
+expires = "2026-11-27T15:53:52+00:00"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+base = "ae3edfe26b58357a8903666acf9811ae7ed1253c"
+released = false
