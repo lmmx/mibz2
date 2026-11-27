@@ -1,0 +1,28 @@
+id = "scanner-coalesced-u8-i9-queue"
+title = "Dispatch and read the registered coalesced scanner i9 keep/revert run"
+kind = "run"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "idea"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+needs_louis = ""
+question = """
+Can the workstation return one valid bundle for the frozen #1034 keep/revert comparison? The independently reviewed recipe is #1105 at 5aeb37a42a90336f1023d8d9ecc4d6e2844ff7ea on bench/scanner-coalesced. Its head and control are pinned internally to 5ed20c1d51afc56c088ae244ba0bf40f37cb93b1 and first parent 5c7fe5d2443279318bbf84f3e2d3ebc4a5850561. Canonical COMMENTED review 6084494699 binds this PR and head; recipe slug bench-scanner-coalesced. Requires a participant able to use the authorised ready signal.
+"""
+why = """
+Complete the target-machine part of scanner-coalesced-u8-i9-run without taking any other queue lease. The exact-head CI comparison also carries a four-thread trade-off objection (#1084); the i9 grid cannot adjudicate that four-thread CI result.
+"""
+stop_test = """
+Claim and verify the queue reservation. Check the live queue, its history, evidence and ready/hold tags to avoid a duplicate. Verify the reviewed recipe head and green checks; if already queued or run, resume that run. Use standing authorisation for one attempt. Apply registration §3.2–3.3 verbatim: PASS keeps the change subject to the recorded CI objection; STOP calls for the registered scoped revert and dead-end; VOID can be repeated only after its cause is fixed. Preserve both CI and i9 evidence.
+"""
+done_when = """
+The exact reviewed ready tag and the single queue row on master are verified, the returned immutable bundle is read and its SHA-256 verified, and the keep/revert result, surface row and any required scoped follow-up are recorded under the frozen registration.
+"""
+premises = [
+  "docs/journal/2026-11-26-scanner-coalesced-u8/registration.md",
+  "frontier/claims/scanner-coalesced-u8-i9-run.toml",
+  "frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md",
+]
+links = ["https://github.com/lmmx/mibz2/pull/1105", "https://github.com/lmmx/mibz2/pull/1105#pullrequestreview-6084494699"]
