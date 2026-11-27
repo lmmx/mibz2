@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=93b53f8af205">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=80ff08c9f3f4">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=93b53f8af205">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3996,8 +3996,8 @@ machine and one workload. Forecast rows and the copying-and-contention row above
 workers, or 2.7% of the shipped 194.6 ms decode at eight. That misses low at every count — whether
 compared against the floor report's 14–19 ms one-worker label or the per-count forecasts above —
 and closes pipeline plumbing as a target. Residual A was reported unscored. At one worker it
-exceeds its forecast because that configuration reads the oracles' stores cold from main memory,
-adding about 55–65 ms to its 298 ms word-spelling figure
+exceeds its forecast because that configuration reads the oracles' stores cold from main memory:
+about 55–65 ms of its 298 ms word-spelling figure is that traffic, not the decoder's work
 (<a href="https://github.com/lmmx/mibz2/blob/2aaded3a3ba00f140d2621813e87a365758e975b/docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md">the cold-store reread</a>,
 <a href="https://github.com/lmmx/mibz2/pull/952">PR #952</a>). From eight to ten workers Residual A stays flat
 (42.4, 42.9 and 40.5 ms), confirming that the earlier rise to 142 ms was the old oracles' copying.
@@ -4485,19 +4485,19 @@ main post's matrix, at the part of the decoder where it could pay.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/bench.js?v=93b53f8af205"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=93b53f8af205"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/blog.js?v=93b53f8af205"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=93b53f8af205"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/observatory.js?v=93b53f8af205"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=80ff08c9f3f4"></script>
+        <script src="../../assets/javascripts/katex.js?v=93b53f8af205"></script>
       
     
   </body>
