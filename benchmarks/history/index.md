@@ -588,6 +588,12 @@ With no releases named, it compares the newest release tag with the one before i
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
 
+### 0.5.17
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17>)
+
+**Changes:** observational agent presence, apart from reservations ([\#1191](<https://github.com/lmmx/mibz2/pull/1191>)); harden run\_requests security and frontier authority gates ([\#1124](<https://github.com/lmmx/mibz2/pull/1124>)); recalibrate OpenCells admission to \[0.10, 0.21) m\<=0.27\*n post-\#1080 ([\#1222](<https://github.com/lmmx/mibz2/pull/1222>)); disjoint 32 KiB slabs, inline LONG fast-path, and noinline run ([\#1217](<https://github.com/lmmx/mibz2/pull/1217>)).
+
 ### 0.5.16
 
 27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0516---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16>)
