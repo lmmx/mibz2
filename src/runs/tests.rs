@@ -1114,6 +1114,130 @@ fn miri_runs_trusted_fill_parity_and_invalidation() {
     }
 }
 
+/// Edge-case and Miri verification for 64-symbol `u64` Pass 1, branchless 256-bit `YMM_STEPS`,
+/// `second()` transitions, `s >= 0x8000` clamping, `RunTooLong`/`BlockTooLong`/`no-EOB`, dirty
+/// `Runs` reuse, and `cfg(test)` `per` parity across all available kernels.
+#[test]
+fn miri_runs_front_word_boundaries_and_edges() {
+    let make_sym = |syms: Vec<u16>, eob: u16, max_len: usize| -> Symbols {
+        let mut s2u = [0u8; 256];
+        for (i, slot) in s2u.iter_mut().enumerate() {
+            // Non-identity bijection so byte-vs-index bugs are caught immediately
+            *slot = (i as u8).wrapping_mul(37).wrapping_add(11);
+        }
+        Symbols {
+            syms,
+            eob,
+            seq_to_unseq: s2u,
+            orig_ptr: 0,
+            crc: 0,
+            max_len,
+        }
+    };
+
+    let mut cases: Vec<(&str, Symbols)> = vec![
+        ("empty_syms", make_sym(vec![], 257, 1000)),
+        ("empty_eob_only", make_sym(vec![2], 2, 1000)),
+        ("single_lit_eob", make_sym(vec![2, 257], 257, 1000)),
+        ("no_eob_short", make_sym(vec![0, 1, 2, 3], 257, 1000)),
+        ("no_eob_exact64", make_sym(vec![2; 64], 257, 1000)),
+        ("eob_is_runa", make_sym(vec![0, 2, 3], 0, 1000)),
+        ("eob_is_runb", make_sym(vec![1, 2, 3], 1, 1000)),
+        (
+            "high_syms_u16_msb",
+            make_sym(
+                vec![
+                    2, 16, 17, 32, 33, 64, 65, 255, 256, 300, 0x8000, 0xffff, 257,
+                ],
+                257,
+                1000,
+            ),
+        ),
+        ("btl_opening", make_sym(vec![1, 1, 1, 1, 5], 5, 10)),
+        ("btl_lit", make_sym(vec![2, 3, 4, 5], 5, 2)),
+    ];
+
+    // EOB at exact 0/1/63/64/65/127/128 boundaries (with trailing garbage after EOB)
+    let eob_positions: &[usize] = if cfg!(miri) {
+        &[0, 1, 63, 64, 65]
+    } else {
+        &[0, 1, 31, 32, 62, 63, 64, 65, 126, 127, 128]
+    };
+    for &pos in eob_positions {
+        let mut syms = Vec::with_capacity(pos + 5);
+        for i in 0..pos {
+            // Mix RUNA/RUNB, s<17, 17..=32, 33..=64, >=65, and >=0x8000
+            let s = match i % 7 {
+                0 => 0,
+                1 => 2 + (i % 15) as u16,
+                2 => 17 + (i % 16) as u16,
+                3 => 33 + (i % 32) as u16,
+                4 => 65 + (i % 190) as u16,
+                5 => 1,
+                _ => 0x8000 + (i as u16),
+            };
+            syms.push(s);
+        }
+        syms.push(257);
+        // Trailing symbols after EOB must be completely ignored
+        syms.extend([0, 0, 0, 2, 3, 4]);
+        cases.push(("eob_pos", make_sym(syms, 257, 900_000)));
+    }
+
+    // Run lengths 0..=22 crossing word boundaries 63/64/65/127/128 (22 triggers RunTooLong)
+    let run_range: &[usize] = if cfg!(miri) {
+        &[0, 1, 7, 8, 22]
+    } else {
+        &[0, 1, 2, 6, 7, 8, 12, 20, 21, 22]
+    };
+    let offsets: &[usize] = if cfg!(miri) {
+        &[0, 63, 64]
+    } else {
+        &[0, 1, 31, 32, 62, 63, 64, 65, 127, 128]
+    };
+    for &offset in offsets {
+        for &run_syms in run_range {
+            let mut syms = vec![2u16; offset];
+            for j in 0..run_syms {
+                syms.push((j & 1) as u16);
+            }
+            syms.extend([3, 17, 32, 33, 64, 65, 256, 0x8000, 257]);
+            cases.push(("word_run", make_sym(syms, 257, 5_000_000)));
+        }
+    }
+
+    // Exercise dirty `Runs` reuse across all cases (alternating valid and failing blocks)
+    let tt_cap = if cfg!(miri) { 512 } else { 10_000 };
+    for k in kernels() {
+        let mut r = Runs::default();
+        let mut r_scalar = Runs::default();
+        for (idx, (label, b)) in cases.iter().enumerate() {
+            let want = front_scalar(b, &mut r_scalar);
+            let got = front(b, &mut r, k);
+            assert_eq!(got, want, "case {idx} ({label}), {k:?}: result mismatch");
+            if let Ok(n) = want {
+                assert_eq!(r.runs, r_scalar.runs, "case {idx} ({label}), {k:?}: runs");
+                assert_eq!(
+                    r.counts, r_scalar.counts,
+                    "case {idx} ({label}), {k:?}: counts"
+                );
+                assert_eq!(r.per, r_scalar.per, "case {idx} ({label}), {k:?}: per");
+                assert_eq!(r.trusted, n < (1 << 24));
+                assert_eq!(r.len, n);
+                if n <= tt_cap {
+                    let mut tt_got = bwt::TVector::new();
+                    let mut tt_want = bwt::TVector::new();
+                    assert!(fill(&r, n, &mut tt_got, k));
+                    assert!(fill(&r_scalar, n, &mut tt_want, Kernels::scalar()));
+                    assert_eq!(tt_got.0, tt_want.0, "case {idx} ({label}), {k:?}: TT");
+                }
+            } else {
+                assert!(!r.trusted, "case {idx} ({label}), {k:?}: trusted after err");
+            }
+        }
+    }
+}
+
 /// Research only (`mtf-fold`): the fold (src/runs/fold.rs and the open kernel's sink) against
 /// the shipped path, block for block: the runs it sends are the records' maximal runs and its
 /// record count theirs; it gives up only where the shipped front errs or its AVX2 kernel leaves

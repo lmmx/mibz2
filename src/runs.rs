@@ -134,8 +134,10 @@ pub struct Runs {
     /// (research only, `ideal-mtf`) zero-copy shared run records replayed from the frozen store
     #[cfg(feature = "ideal-mtf")]
     shared_runs: Option<std::sync::Arc<[u16]>>,
-    /// each byte's rows, and its records
+    /// each byte's rows
     counts: [u32; 256],
+    /// each byte's records (unused in production; kept for internal tests and `ideal-mtf`)
+    #[cfg(any(test, feature = "ideal-mtf"))]
     per: [u32; 256],
     /// the symbols' bitmaps (the AVX2 kernel's): not a run symbol; not RUNA
     lit: Vec<u64>,
@@ -155,6 +157,7 @@ impl Default for Runs {
             #[cfg(feature = "ideal-mtf")]
             shared_runs: None,
             counts: [0; 256],
+            #[cfg(any(test, feature = "ideal-mtf"))]
             per: [0; 256],
             lit: Vec::new(),
             one: Vec::new(),
@@ -333,6 +336,7 @@ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
 }
 
 fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usize, ErrorKind> {
+    #[cfg(any(test, feature = "ideal-mtf"))]
     fn close(open: (u8, u32), runs: &mut Vec<u16>, per: &mut [u32; 256]) {
         let (c, mut left) = open;
         while left > 0 {
@@ -342,12 +346,25 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
             left -= len;
         }
     }
+    #[cfg(not(any(test, feature = "ideal-mtf")))]
+    fn close(open: (u8, u32), runs: &mut Vec<u16>) {
+        let (c, mut left) = open;
+        while left > 0 {
+            let len = left.min(CAP);
+            runs.push((c as u16) << 8 | len as u16);
+            left -= len;
+        }
+    }
     r.trusted = false;
     r.len = 0;
-    let (runs, counts, per) = (&mut r.runs, &mut r.counts, &mut r.per);
+    let (runs, counts) = (&mut r.runs, &mut r.counts);
     runs.clear();
     *counts = [0; 256];
-    *per = [0; 256];
+    #[cfg(any(test, feature = "ideal-mtf"))]
+    let per = {
+        r.per = [0; 256];
+        &mut r.per
+    };
     let mut list: [u8; 256] = std::array::from_fn(|i| i as u8);
     let (mut run, mut weight) = (0u32, 1u32);
     let mut n = 0usize;
@@ -384,12 +401,18 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
         list.copy_within(0..nn, 1);
         list[0] = v;
         let c = b.seq_to_unseq[v as usize];
+        #[cfg(any(test, feature = "ideal-mtf"))]
         close(open, runs, per);
+        #[cfg(not(any(test, feature = "ideal-mtf")))]
+        close(open, runs);
         open = (c, 1);
         counts[c as usize] += 1;
         n += 1;
     }
+    #[cfg(any(test, feature = "ideal-mtf"))]
     close(open, runs, per);
+    #[cfg(not(any(test, feature = "ideal-mtf")))]
+    close(open, runs);
     r.trusted = n < (1 << 24);
     r.len = n;
     Ok(n)
@@ -398,8 +421,8 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
 /// `src/mtf.rs`'s first level, the list's bytes 0-31 as two 16-byte sub-lists in registers
 /// (`f0`, `f1`), with its move of an index nn < 32 as four byte shuffles and two ors: row nn
 /// holds `f0`'s new bytes' places in `f0` (`a`) and in `f1` (`b`), and `f1`'s in `f1` (`c`) and
-/// in `f0` (`d`)
-#[cfg(target_arch = "x86_64")]
+/// in `f0` (`d`). Kept for `src/runs/fold.rs` (`mtf-fold`).
+#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
 #[repr(C, align(64))]
 #[derive(Clone, Copy)]
 struct Step {
@@ -409,7 +432,7 @@ struct Step {
     d: [u8; 16],
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
 const fn steps() -> [Step; 32] {
     const Z: u8 = 0x80; // a shuffle's zero
     let mut t = [Step {
@@ -455,8 +478,67 @@ const fn steps() -> [Step; 32] {
     t
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
 static STEPS: [Step; 32] = steps();
+
+/// Branchless 256-bit first-level MTF table for `nn < 32`, holding `[f0 | f1]` in a single YMM
+/// register (`f01`): each move executes `vpermq $0x4e` (lane swap) + 2×`vpshufb` (`same` on
+/// `f01`, `cross` on swapped `f01`) + `vpor` — 3 Port-5 uops and 2 aligned 32-byte loads instead
+/// of 4 Port-5 uops and 4 loads across separate `(f0, f1)` XMM registers
+/// (`docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md`).
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(64))]
+#[derive(Clone, Copy)]
+struct YmmStep {
+    same: [u8; 32],
+    cross: [u8; 32],
+}
+
+#[cfg(target_arch = "x86_64")]
+const fn ymm_steps() -> [YmmStep; 32] {
+    const Z: u8 = 0x80; // vpshufb zero lane
+    let mut t = [YmmStep {
+        same: [0; 32],
+        cross: [Z; 32],
+    }; 32];
+    let mut nn = 0;
+    while nn < 32 {
+        let mut i = 0;
+        while i < 16 {
+            if nn < 16 {
+                // index nn to the front of f0; f1 unchanged; no cross-lane bytes
+                t[nn].same[i] = if i == 0 {
+                    nn as u8
+                } else if i <= nn {
+                    (i - 1) as u8
+                } else {
+                    i as u8
+                };
+                t[nn].same[16 + i] = i as u8;
+            } else {
+                // f1[nn - 16] crosses into f0[0]; f0[15] crosses into f1[0]; rest shift in-lane
+                t[nn].same[i] = if i == 0 { Z } else { (i - 1) as u8 };
+                t[nn].same[16 + i] = if i == 0 {
+                    Z
+                } else if i <= nn - 16 {
+                    (i - 1) as u8
+                } else {
+                    i as u8
+                };
+                if i == 0 {
+                    t[nn].cross[0] = (nn - 16) as u8;
+                    t[nn].cross[16] = 15;
+                }
+            }
+            i += 1;
+        }
+        nn += 1;
+    }
+    t
+}
+
+#[cfg(target_arch = "x86_64")]
+static YMM_STEPS: [YmmStep; 32] = ymm_steps();
 
 /// `src/mtf.rs`'s second level: the move of its byte t (the list's t + 32), returned; the
 /// bytes before it a byte on, `f1`'s last byte in at 0. Seven aligned rows of 32 at `tail`.
@@ -510,14 +592,21 @@ unsafe fn second(
 /// counts are left for `front_scalar` to overwrite.
 ///
 /// What it writes, and why each write is in bounds:
-/// - the bitmaps: `words` words each, reserved, every one written before the length is set;
-/// - the records: one for each literal, of which there are fewer than the symbols, and the
-///   further records of a run over 127 rows, which are taken from `slack` and refused past it;
-/// - the second level's rows: an index is clamped to 255, as `mtf_avx2` clamps it.
+/// - the bitmaps: `words = m / 64 + 3` `u64` words reserved each; Pass 1 writes `wi` words up
+///   to and including the word holding `end` (`wi <= m / 64 + 1`) plus 2 trailing zero words
+///   (`wi + 2 <= words`), then sets `len = wi + 2` so every word in `0..len` is initialized;
+/// - the records: one for each literal, of which there are fewer than `m`, and the further
+///   records of a run over 127 rows, which are taken from `slack` and refused past it;
+/// - the byte counts: `[u32; 256]` on the stack cannot overflow `u32::MAX` — at most `m < 2^24`
+///   short runs (`<= 127` rows each -> `< 2^31`) plus long runs guarded by `big <= max_len < 2^31`
+///   sum to `< 2^32 - 1` across all 256 bytes combined;
+/// - the second level's rows: `AlignedRows` is 64-byte aligned with 224 bytes initialized from
+///   `seq_to_unseq[32..256]`, and an index is clamped to 255 before subtracting 32 (`< 224`).
 ///
-/// What it reads: a symbol at a set bit of `lit`, all of which are below `end`; whole words of
-/// `lit` and `one` up to the word holding `end`; and 8 bytes of `one` from the byte holding
-/// the bit after a literal's, inside the two words of zeros after the last symbol's.
+/// What it reads: a symbol at a set bit of `lit`, all of which are strictly below `end < m`;
+/// whole words of `lit` and `one` up to `last = end / 64 < wi`; and 8 unaligned bytes of `one`
+/// from byte `from >> 3` where `from = q + 1 <= end`, accessing at most bytes
+/// `(end >> 3)..(end >> 3) + 8 <= 8 * last + 15 < 8 * (last + 2) <= 8 * (wi + 1) < 8 * (wi + 2)`.
 ///
 /// # Safety
 ///
@@ -526,6 +615,7 @@ unsafe fn second(
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
 unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
     use std::arch::x86_64::*;
+    use std::mem::MaybeUninit;
     f.trusted = false;
     f.len = 0;
     let m = syms.len();
@@ -534,15 +624,14 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
         return None;
     }
 
-    // ---- the bitmaps, 32 symbols a step, to the first end-of-block symbol ----
+    // ---- Pass 1: 64-symbol `u64` bitmaps with `vptest` EOB fast path ----
     let words = m / 64 + 3;
     f.lit.clear();
     f.lit.reserve(words);
     f.one.clear();
     f.one.reserve(words);
-    let lit32 = f.lit.as_mut_ptr() as *mut u32;
-    let one32 = f.one.as_mut_ptr() as *mut u32;
-    let v1 = _mm256_set1_epi16(1);
+    let lit_base = f.lit.as_mut_ptr();
+    let one_base = f.one.as_mut_ptr();
     let v0 = _mm256_setzero_si256();
     let ve = _mm256_set1_epi16(b.eob as i16);
     // 32 words' compares as 32 bits, in the symbols' order
@@ -552,89 +641,131 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
                 as u32
         };
     }
-    let mut end = usize::MAX;
-    let mut ci = 0usize;
-    while end == usize::MAX && ci * 32 + 32 <= m {
-        // SAFETY: symbols ci·32 .. ci·32 + 32 are below m
-        let x = _mm256_loadu_si256(sp.add(ci * 32) as *const __m256i);
-        let y = _mm256_loadu_si256(sp.add(ci * 32 + 16) as *const __m256i);
-        let run = bits!(
-            _mm256_cmpeq_epi16(_mm256_min_epu16(x, v1), x),
-            _mm256_cmpeq_epi16(_mm256_min_epu16(y, v1), y)
+    let mut end = m;
+    let mut found_eob = false;
+    let mut wi = 0usize;
+    let n64 = m >> 6;
+    while wi < n64 {
+        // SAFETY: `wi < m >> 6`, so `wi * 64 + 64 <= m`; all four 32-byte unaligned loads
+        // (`0..16`, `16..32`, `32..48`, `48..64` `u16`s) are within `syms[..m]`.
+        let p0 = sp.add(wi * 64);
+        let x0 = _mm256_loadu_si256(p0 as *const __m256i);
+        let y0 = _mm256_loadu_si256(p0.add(16) as *const __m256i);
+        let x1 = _mm256_loadu_si256(p0.add(32) as *const __m256i);
+        let y1 = _mm256_loadu_si256(p0.add(48) as *const __m256i);
+
+        // Unsigned `s <= 1` iff `(s >> 1) == 0` (exact across all `u16`, including `>= 0x8000`)
+        let r0 = bits!(
+            _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>(x0), v0),
+            _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>(y0), v0)
         );
-        let runa = bits!(_mm256_cmpeq_epi16(x, v0), _mm256_cmpeq_epi16(y, v0));
-        // (an end-of-block symbol of 0 or 1 would be a run symbol, as it is to `mtf`)
-        let eob = bits!(_mm256_cmpeq_epi16(x, ve), _mm256_cmpeq_epi16(y, ve)) & !run;
-        let (mut l, mut o) = (!run, !runa);
-        if eob != 0 {
-            let t = eob.trailing_zeros();
-            end = ci * 32 + t as usize;
-            // its own bit stays in `one` alone, and the symbols after it are never read
-            let keep = ((2u64 << t) - 1) as u32;
-            l &= keep >> 1;
-            o &= keep;
-        }
-        // SAFETY: ci < 2·words (ci·32 < m, words > m / 64)
-        *lit32.add(ci) = l;
-        *one32.add(ci) = o;
-        ci += 1;
-    }
-    if end == usize::MAX {
-        // the last symbols, fewer than 32
-        let (mut l, mut o) = (0u32, 0u32);
-        for (t, &s) in syms[ci * 32..].iter().enumerate() {
-            o |= ((s != 0) as u32) << t;
-            if s > 1 {
-                if s == b.eob {
-                    end = ci * 32 + t;
-                    break;
-                }
-                l |= 1 << t;
+        let r1 = bits!(
+            _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>(x1), v0),
+            _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>(y1), v0)
+        );
+        let a0 = bits!(_mm256_cmpeq_epi16(x0, v0), _mm256_cmpeq_epi16(y0, v0));
+        let a1 = bits!(_mm256_cmpeq_epi16(x1, v0), _mm256_cmpeq_epi16(y1, v0));
+
+        let ex0 = _mm256_cmpeq_epi16(x0, ve);
+        let ey0 = _mm256_cmpeq_epi16(y0, ve);
+        let ex1 = _mm256_cmpeq_epi16(x1, ve);
+        let ey1 = _mm256_cmpeq_epi16(y1, ve);
+        let eob_any = _mm256_or_si256(_mm256_or_si256(ex0, ey0), _mm256_or_si256(ex1, ey1));
+
+        let run64 = (r0 as u64) | ((r1 as u64) << 32);
+        let runa64 = (a0 as u64) | ((a1 as u64) << 32);
+        let mut l64 = !run64;
+        let mut o64 = !runa64;
+
+        if _mm256_testz_si256(eob_any, eob_any) == 0 {
+            // (an end-of-block symbol of 0 or 1 would be a run symbol, as it is to `mtf`)
+            let e0 = bits!(ex0, ey0) as u64;
+            let e1 = bits!(ex1, ey1) as u64;
+            let eob64 = (e0 | (e1 << 32)) & !run64;
+            if eob64 != 0 {
+                let t = eob64.trailing_zeros();
+                end = wi * 64 + t as usize;
+                found_eob = true;
+                // EOB's own bit stays in `one` alone; symbols after it are never read
+                let keep = if t == 63 { u64::MAX } else { (2u64 << t) - 1 };
+                l64 &= keep >> 1;
+                o64 &= keep;
+                // SAFETY: `wi < n64 <= m / 64 < words`
+                *lit_base.add(wi) = l64;
+                *one_base.add(wi) = o64;
+                wi += 1;
+                break;
             }
         }
-        // SAFETY: ci·32 <= m, so ci < 2·words
-        *lit32.add(ci) = l;
-        *one32.add(ci) = o;
-        ci += 1;
+        // SAFETY: `wi < n64 <= m / 64 < words`
+        *lit_base.add(wi) = l64;
+        *one_base.add(wi) = o64;
+        wi += 1;
     }
-    for i in ci..2 * words {
-        // SAFETY: below the 2·words halves reserved
-        *lit32.add(i) = 0;
-        *one32.add(i) = 0;
+    if !found_eob && (wi * 64) < m {
+        // the last symbols, fewer than 64
+        let (mut l64, mut o64) = (0u64, 0u64);
+        let rem = m - wi * 64;
+        // SAFETY: `wi * 64 + rem == m`, so `tail_p.add(t)` is within `syms[..m]` for `t < rem`
+        let tail_p = sp.add(wi * 64);
+        for t in 0..rem {
+            let s = *tail_p.add(t);
+            o64 |= ((s != 0) as u64) << t;
+            if s > 1 {
+                if s == b.eob {
+                    end = wi * 64 + t;
+                    found_eob = true;
+                    break;
+                }
+                l64 |= 1u64 << t;
+            }
+        }
+        // SAFETY: here `wi == n64 == m / 64 < words`
+        *lit_base.add(wi) = l64;
+        *one_base.add(wi) = o64;
+        wi += 1;
     }
-    // SAFETY: all `words` words of each were written above
-    f.lit.set_len(words);
-    f.one.set_len(words);
-    if end == usize::MAX {
+    // Two trailing zero words for unaligned 8-byte `count!` reads past `end` (no `memset` tail).
+    // SAFETY: `wi <= m / 64 + 1` (exact multiple of 64 skips tail so `wi <= m / 64`), hence
+    // `wi + 1 <= m / 64 + 2 < words = m / 64 + 3`, and `wi + 2 <= words` reserved capacity.
+    *lit_base.add(wi) = 0;
+    *one_base.add(wi) = 0;
+    *lit_base.add(wi + 1) = 0;
+    *one_base.add(wi + 1) = 0;
+    f.lit.set_len(wi + 2);
+    f.one.set_len(wi + 2);
+    if !found_eob {
         return None;
     }
 
-    // ---- the literals ----
-    // the list as bytes, as `mtf_avx2` holds it: the front is the byte with no lookup
+    // ---- Pass 2: literals via 256-bit `YMM_STEPS` and stack `[u32; 256]` counts ----
+    // Hold the first 32 bytes `[f0 | f1]` in one YMM register (`f01`), with the remaining 224
+    // bytes in 64-byte-aligned stack storage for `second()`.
     let s2u = &b.seq_to_unseq;
-    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
-    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
+    // SAFETY: `s2u` has 256 bytes, so loading bytes `0..32` and copying `32..256` are in bounds.
+    let mut f01 = _mm256_loadu_si256(s2u.as_ptr() as *const __m256i);
     #[repr(align(64))]
-    struct Rows([u8; 224]);
-    let mut rows = Rows([0u8; 224]);
-    rows.0.copy_from_slice(&s2u[32..]);
-    let tail = rows.0.as_mut_ptr();
+    struct AlignedRows {
+        _data: [u8; 224],
+    }
+    let mut rows = MaybeUninit::<AlignedRows>::uninit();
+    let tail = rows.as_mut_ptr() as *mut u8;
+    std::ptr::copy_nonoverlapping(s2u.as_ptr().add(32), tail, 224);
     let idx = _mm256_setr_epi8(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
-    let steps = STEPS.as_ptr();
-    // a record for each literal and one for the block's first run, and `slack` more for the
-    // runs over 127 rows: a block within `max_len` needs at most max_len / 127 of those
+    let ymm_steps = YMM_STEPS.as_ptr();
+    // A record for each literal and one for the block's first run, plus `slack` for runs > 127
+    // rows: a block within `max_len` needs at most `max_len / 127` extra records.
     let mut slack = b.max_len / CAP as usize + 1;
     f.runs.clear();
     f.runs.reserve(m + slack + 2);
     let out0 = f.runs.as_mut_ptr();
     let mut out = out0;
-    // each byte's rows (low half) and records (high half). The low halves cannot carry: the
-    // runs of at most 127 rows are fewer than 2^24 (m), and `big`, the rows of the longer
-    // ones, is refused past `max_len`, itself below 2^31
-    let mut cnt = [0u64; 256];
+    // Stack `[u32; 256]` (1 KiB, half of `[u64; 256]`): frees a GPR for hoisting `YMM_STEPS` and
+    // eliminates `movabs $0x100000000; or` on every literal. Cannot overflow `u32::MAX` (see doc).
+    let mut cnt = [0u32; 256];
     let mut big = 0u64;
     let litp = f.lit.as_ptr();
     let onep = f.one.as_ptr();
@@ -649,13 +780,14 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
                 return None;
             }
             slack -= more;
-            cnt[c as usize] += total | recs << 32;
+            cnt[c as usize] += total as u32;
             let mut left = total;
             while left > 0 {
                 let len = left.min(CAP as u64);
-                // SAFETY: within the m + slack + 2 reserved: this run's first record is its
-                // literal's (or the block's first), the rest taken from `slack` above
-                *out = (c << 8 | len) as u16;
+                // SAFETY: within the `m + slack + 2` reserved slots: this run's first record is
+                // its literal's (or the block's opening run), and the `more` extra records were
+                // deducted from `slack` above.
+                *out = ((c << 8) | len) as u16;
                 out = out.add(1);
                 left -= len;
             }
@@ -672,17 +804,16 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
                 }
                 long!(c, total);
             } else {
-                // SAFETY: the literal's own record, within the m reserved for them. (The
-                // record's two bytes apart: low the length, high the byte)
+                // SAFETY: the literal's own record, within the `m` reserved for literals. Writing
+                // the two bytes separately avoids lengthening `c`'s register chain before store.
                 *(out as *mut u8) = total as u8;
                 *(out as *mut u8).add(1) = c as u8;
                 out = out.add(1);
-                cnt[c as usize] += total | 1 << 32;
+                cnt[c as usize] += total as u32;
             }
         }};
     }
-    // the literals' bits are walked a word at a time: `w`, word `wi`'s bits not yet taken.
-    // The next literal's bit in its word, or None when there is none before `end`
+    // Walk literal bits a word at a time: `w` holds remaining set bits of `lit[wi]`.
     let last = end / 64;
     let (mut wi, mut w) = (0usize, *litp);
     macro_rules! seek {
@@ -697,66 +828,72 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
                     break None;
                 }
                 wi += 1;
-                // SAFETY: wi <= last = end / 64 < words
+                // SAFETY: `wi <= last = end / 64 < f.lit.len()`
                 w = *litp.add(wi);
             }
         }};
     }
-    // 1 + the count after the symbol at q, up to the symbol at q2 that is not a run symbol:
-    // the q2 - q - 1 run symbols' bits of `one`, with q2's own bit as their leading one
+    // 1 + the count after the symbol at q, up to the non-run symbol at q2:
+    // the `q2 - q - 1` run symbols' bits of `one`, with q2's own bit as their leading one
     macro_rules! count {
         ($q:expr, $q2:expr) => {{
             let from = $q + 1;
-            // SAFETY: from <= end + 1, so the 8 bytes from byte from / 8 are inside the
-            // `words` words (end / 64 + 2 < words, the last two zero)
+            // SAFETY: `from <= end`, so `from >> 3 <= end >> 3 <= 8 * last + 7`, and reading 8
+            // unaligned bytes stays inside `0..(8 * (last + 2)) < 8 * f.one.len()` (two zero
+            // slack words written past `last`).
             let bits =
                 ((onep as *const u8).add(from >> 3) as *const u64).read_unaligned() >> (from & 7);
             _bzhi_u64(bits, ($q2 - $q) as u32)
         }};
     }
-    // the count that opens the block, of the list's first byte: as a literal's at -1, less the
-    // one row the literal would have been
+    // Opening run of the list's first byte (at virtual index -1, less the one row a literal adds)
     let first = seek!();
     let q = first.map_or(end, |t| wi * 64 + t);
     if q > 21 {
         return None;
     }
-    long!(*s2u.as_ptr() as u64, _bzhi_u64(*onep, q as u32 + 1) - 1);
+    let open_len = _bzhi_u64(*onep, q as u32 + 1) - 1;
+    if open_len > 0 {
+        long!(*s2u.as_ptr() as u64, open_len);
+    }
     if let Some(mut tz) = first {
-        // word `wi` of `one`, a bit down, so that the bits after a literal's start at its own
-        // place; and the word's symbols
+        // Word `wi` of `one`, shifted down 1 bit so run bits after a literal start at its own bit.
         let mut after = *onep.add(wi) >> 1;
         let mut spw = sp.add(wi * 64);
         loop {
-            // a literal (a symbol of 2 or more): its byte to the front. SAFETY: its bit is
-            // set in `lit`, so it is below `end` < m
+            // SAFETY: bit `tz` was set in `lit[wi]`, so `wi * 64 + tz < end < m` and `s >= 2`.
             let s = *spw.add(tz) as usize;
             if s < 33 {
-                // SAFETY: s - 1 < 32 rows of STEPS
-                let t = steps.add(s - 1);
-                let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
-                let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
-                let cc = _mm_load_si128((*t).c.as_ptr() as *const __m128i);
-                let dd = _mm_load_si128((*t).d.as_ptr() as *const __m128i);
-                let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
-                f1 = _mm_or_si128(_mm_shuffle_epi8(f1, cc), _mm_shuffle_epi8(f0, dd));
-                f0 = g0;
+                // SAFETY: `2 <= s <= 32`, so `s - 1 < 32` is within `YMM_STEPS: [YmmStep; 32]`;
+                // `YmmStep` is `#[repr(C, align(64))]`, so `same` (offset 0) and `cross`
+                // (offset 32) are 32-byte aligned for `_mm256_load_si256`.
+                let t = ymm_steps.add(s - 1);
+                let same = _mm256_load_si256((*t).same.as_ptr() as *const __m256i);
+                let cross = _mm256_load_si256((*t).cross.as_ptr() as *const __m256i);
+                let swapped = _mm256_permute4x64_epi64::<0x4e>(f01);
+                f01 = _mm256_or_si256(
+                    _mm256_shuffle_epi8(f01, same),
+                    _mm256_shuffle_epi8(swapped, cross),
+                );
             } else {
-                // SAFETY: (s - 1).min(255) - 32 < 224
-                let v = second(tail, (s - 1).min(255) - 32, f1, idx);
-                f1 = _mm_alignr_epi8::<15>(f1, f0);
-                f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
+                let f0_l = _mm256_castsi256_si128(f01);
+                let f1_l = _mm256_extracti128_si256::<1>(f01);
+                // SAFETY: `s >= 33`, so `(s - 1).min(255) - 32 < 224`; `tail` is 64-byte aligned
+                // with 224 initialized bytes.
+                let v = second(tail, (s - 1).min(255) - 32, f1_l, idx);
+                let nf1 = _mm_alignr_epi8::<15>(f1_l, f0_l);
+                let nf0 = _mm_or_si128(_mm_slli_si128::<1>(f0_l), _mm_cvtsi32_si128(v as i32));
+                f01 = _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(nf0), nf1);
             }
-            let c = _mm_cvtsi128_si32(f0) as u8 as u64;
+            let c = _mm_cvtsi128_si32(_mm256_castsi256_si128(f01)) as u8 as u64;
             if w != 0 {
-                // the next literal is in this word, as nearly all are: the count between is
-                // `after`'s bits from this literal's place to below the next one's
+                // Next literal is in this word: run bits lie between `tz` and `t2`.
                 let t2 = w.trailing_zeros() as usize;
                 w &= w - 1;
                 emit!(c, _bzhi_u64(after, t2 as u32) >> tz, t2 - tz);
                 tz = t2;
             } else {
-                // in a later word, or there is none and the count runs to `end`
+                // In a later word, or none left and the count runs to `end`.
                 let q = wi * 64 + tz;
                 let next = seek!();
                 let q2 = next.map_or(end, |t| wi * 64 + t);
@@ -772,15 +909,19 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
         }
     }
     // (every `mtf` check on the length is this one: the rows only grow, a literal adds one)
-    let n: u64 = cnt.iter().map(|&x| x & 0xffff_ffff).sum();
+    let n: u64 = cnt.iter().map(|&x| x as u64).sum();
     if n > b.max_len as u64 {
         return None;
     }
-    // SAFETY: the records up to `out` were written, inside the capacity (see above)
+    // SAFETY: `out0..out` were all written within `f.runs`'s `m + slack + 2` reserved capacity.
     f.runs.set_len(out.offset_from(out0) as usize);
-    for (c, &x) in cnt.iter().enumerate() {
-        f.counts[c] = x as u32;
-        f.per[c] = (x >> 32) as u32;
+    f.counts = cnt;
+    #[cfg(any(test, feature = "ideal-mtf"))]
+    {
+        f.per = [0; 256];
+        for &rec in &f.runs {
+            f.per[(rec >> 8) as usize] += 1;
+        }
     }
     let n = n as usize;
     f.trusted = n < (1 << 24);
