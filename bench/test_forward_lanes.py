@@ -205,10 +205,14 @@ class TestForwardLanesRecipe(unittest.TestCase):
             self.assertEqual(git(runner, "rev-parse", "HEAD"), runner_head)
 
     def test_plan_matches_frozen_registration(self) -> None:
-        """build_plan pins exact #1110 commits, 15 alternating AB/BA rounds, and §3 thresholds."""
+        """build_plan pins v0.5.17 for both arms, 15 alternating AB/BA rounds, and §3 thresholds."""
         plan = fl.build_plan()
-        self.assertEqual(plan["base"]["commit"], fl.BASE_SHA)
-        self.assertEqual(plan["cand"]["commit"], fl.CANDIDATE_SHA)
+        tag = "01acd74d17bfea0ab891e75eb4fc2ef3838f5cd8"
+        self.assertEqual(plan["base"]["commit"], tag)
+        self.assertEqual(plan["cand"]["commit"], tag)
+        self.assertEqual(plan["base"]["features"], "")
+        self.assertNotEqual(plan["cand"]["commit"], plan["superseded_cand"])
+        self.assertEqual(plan["registration"], fl.REGISTRATIONS[-1])
         self.assertEqual(plan["cand"]["features"], "forward-anchor-lanes")
         self.assertEqual(plan["repeats"], 15)
         self.assertEqual(len(plan["schedule"]), 15)
@@ -221,6 +225,16 @@ class TestForwardLanesRecipe(unittest.TestCase):
         self.assertEqual(plan["thresholds"]["kill"]["r1_lo_min"], 0.980)
         self.assertEqual(plan["thresholds"]["kill"]["r8s_lo_min"], 1.000)
         self.assertEqual(plan["thresholds"]["kill"]["r8_lo_min"], 1.020)
+
+    def test_registrations_present_and_name_the_pin(self) -> None:
+        """Both frozen registrations ship with the recipe; the re-pin names the exact arms."""
+        for rel in fl.REGISTRATIONS:
+            self.assertTrue((fl.ROOT / rel).is_file(), rel)
+        text = (fl.ROOT / fl.REGISTRATIONS[-1]).read_text(encoding="utf-8")
+        self.assertIn(fl.BASE_SHA, text)
+        self.assertIn(fl.SUPERSEDED_CANDIDATE_SHA[:8], text)
+        for bound in ("0.950", "0.975", "1.010", "0.980", "1.000", "1.020"):
+            self.assertIn(bound, text)
 
     def test_verdict_pass_when_all_section3_clauses_satisfied(self) -> None:
         """All four PASS upper bounds met produces PASS with finite bootstrap CIs."""

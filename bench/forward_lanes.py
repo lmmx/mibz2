@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Executable i9-10900K kill-test recipe for #1110 (`forward-anchor-lanes`).
+"""Executable i9-10900K kill-test recipe for `forward-anchor-lanes` (disjoint-slab walk).
 
 Implements the frozen registration in
-`docs/journal/2026-11-27-forward-emission/registration.md` (§2, §3, §5) with no
-threshold changes (RULES C2):
+`docs/journal/2026-11-27-forward-emission/registration.md` (§2, §3, §5), re-pinned
+by `registration-disjoint-slabs.md` to the #1217 implementation, with no threshold
+changes (RULES C2):
 
     python3 bench/forward_lanes.py <OUT_DIR>
     python3 bench/forward_lanes.py plan   <OUT_DIR>
@@ -11,10 +12,11 @@ threshold changes (RULES C2):
     python3 bench/forward_lanes.py report <RUNS_JSONL> [--out <DIR>]
 
 Arms:
-  - `base`: merge base of #1110 (7beb5e9b), default features
-  - `cand`: #1110 squash (7a7a207a), `--features forward-anchor-lanes`
+  - `base`: v0.5.17 (01acd74d), default features
+  - `cand`: the same commit, `--features forward-anchor-lanes` (#1217's walk)
   - For 8W `S ideal` (plus matched `none` trace for the <= 5% scan-residual gate),
-    both commits are additionally built with `scan-oracle` + trace features.
+    both arms are additionally built with `scan-oracle` + trace features.
+  - The #1110 arm (7a7a207a) is superseded and never run.
 
 Cells (15 interleaved AB/BA paired repeats each, output hashed on every repeat):
   - `wikidata x4` at k = 1 (forced Open route, `mibz2-workers-lazy`, §5)
@@ -44,8 +46,14 @@ import tempfile
 from mtf_fold import SCAN_RESIDUAL_MAX, fastest_core, paired_ratio_ci, run_child, topology
 import wikidata
 
-BASE_SHA = "7beb5e9ba4730feb1f38d12b40100dace34b2d4e"
-CANDIDATE_SHA = "7a7a207adfc2fee830b1b46f7fa6707d61271f0a"
+# registration-disjoint-slabs.md: both arms at v0.5.17; only the feature differs.
+BASE_SHA = "01acd74d17bfea0ab891e75eb4fc2ef3838f5cd8"
+CANDIDATE_SHA = BASE_SHA
+SUPERSEDED_CANDIDATE_SHA = "7a7a207adfc2fee830b1b46f7fa6707d61271f0a"
+REGISTRATIONS = (
+    "docs/journal/2026-11-27-forward-emission/registration.md",
+    "docs/journal/2026-11-27-forward-emission/registration-disjoint-slabs.md",
+)
 FEATURE = "forward-anchor-lanes"
 TRACE_FEATURES = "mtf-fold scan-oracle ideal-parts trace phase-counters"
 ROOT = Path(__file__).resolve().parents[1]
@@ -113,7 +121,9 @@ def build_plan() -> dict:
     ]
     return {
         "claim": "forward-emission-run",
-        "registration": "docs/journal/2026-11-27-forward-emission/registration.md",
+        "registration": REGISTRATIONS[-1],
+        "registrations": list(REGISTRATIONS),
+        "superseded_cand": SUPERSEDED_CANDIDATE_SHA,
         "base": {"commit": BASE_SHA, "features": ""},
         "cand": {"commit": CANDIDATE_SHA, "features": FEATURE},
         "trace_features": TRACE_FEATURES,
@@ -221,9 +231,8 @@ def prepare(out: Path, tmp: Path):
     cand_src = tmp / "src-cand"
     checkout_commit(ROOT, base_src, BASE_SHA)
     checkout_commit(ROOT, cand_src, CANDIDATE_SHA)
-    (out / "registration.md").write_bytes(
-        (cand_src / "docs/journal/2026-11-27-forward-emission/registration.md").read_bytes()
-    )
+    for rel in REGISTRATIONS:
+        (out / Path(rel).name).write_bytes((ROOT / rel).read_bytes())
     binaries = build_binaries(base_src, cand_src, tmp)
     binary_digests = {a: {k: digest(p) for k, p in b.items()} for a, b in binaries.items()}
     assert_distinct_binaries(binary_digests)

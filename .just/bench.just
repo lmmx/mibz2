@@ -2154,7 +2154,7 @@ bench-jcc-aligned-release:
     trap finish EXIT
     python3 bench/jcc_aligned.py "$out"
 
-# Frozen i9-10900K kill test for #1110 forward-anchor-lanes (C1a).
+# Frozen i9-10900K kill test for forward-anchor-lanes, the disjoint-slab walk at v0.5.17 (C1a).
 bench-forward-lanes:
     #!/usr/bin/env bash
     set -euo pipefail
