@@ -1,0 +1,42 @@
+id = "a6b-endpoint-build"
+title = "Fused A6b setup, safe 64K u16-link inline15 SoA induction, and generation-tagged dictionary in src/open/endpoint.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
+mechanisms = ["construction-induction-dict"]
+needs_louis = ""
+question = """
+`a6b-combined-redesign` passed its frozen >= 3.0% 1W wall non-overlapping gate on all 4 build x emission cells (baseline x86-64 and `-C target-cpu=native`, shipped bidi and matched forward emit; 431/431 wikidata blocks 100% byte-exact, 0 `unsafe`): the winning `comb_nobc_soa_gen` design cut `A6b` by `-27.4%..-28.8%` (`setup -41.7%`, `steps -31.1%..-31.8%`, `dict -13.5%..-14.5%`), cutting full `C + E` by `-5.4%..-7.6%` (`0.9245x..0.9457x`, non-overlapping `[min..max]` on wall and thread-CPU across all 4 cells) with `<= +0.32%` `A7` delta (`246,683` vs `246,680` dict entries, `-54.6%` rule allocations), projecting `+48.7..+67.7 ms` (`+3.73%..+5.18%` of the `1,306 ms` 1W wall, `~+8.2..+9.1 ms/worker` at 8W).
+
+Implement the combined `A6b` redesign in `src/open/endpoint.rs` (and the strip hand-off in `src/open.rs:420-470`, sequencing cleanly with `forward-emission` on `src/open.rs`), behind a research feature flag first for paired i9 A/B evaluation:
+1. Fused single-pass `A6b-setup` over `strips_raw` with packed `u64` `image_order64` (`to:20 | width:20 | sid:16`, eliminating random `strips_raw` gathers in the image-gap pass) and branchless sentinel-0 `order` appends.
+2. Safe zero-bounds-check `Box<[NodeLinks; 65536]>` + `Box<[u32; 65536]>` + `Box<[u128; 65536]>` `Narrow` SoA indexed by `usize::from(u16)` (zero `unsafe`; preserving `Wide` fallback for `most > 65_536` and `SPIRALS = true` for `widest > CERTIFIED_WIDTH`), `inline15` `u128` words, and direct `aw == bw` in-place replace (`pop_tail(x, 0) + replace(y, x, 0) + pop_tail(y, 1)`).
+3. Generation-tagged L1d-hot `contents[4096]` (16 KiB) + `pairs[1024]` (8 KiB, long words only) eliminating per-block 24 KiB zero-fill, direct `u128` short-word extraction, node-cached outer band loop, `bottom` stored in dead `(prev1, next1)` `u16` pair, and dead `stats` gated behind `#[cfg(any(test, feature = "census"))]`.
+"""
+why = """
+`C-A6b` (`216.0 ms` at 1W, `30.4 ms/w` at 8W) is the largest unheld worker-side construction phase. Realising `~50–65 ms` at 1W (`~8–9 ms/worker` at 8W) composes additively with `mtf-fold-build` (A5+A6a) and `forward-emission` (A6c+A7) and uses 100% safe Rust with zero `A7` regression.
+"""
+stop_test = """
+Frozen before data: write an adoption registration before queuing the i9-10900K run comparing shipped `Open` vs the redesigned `A6b` behind a research feature on `wikidata x4` at `k = 1, 8, 10` (paired with `scan-oracle` / `S ideal` if scan binds at `k = 8`, plus `text` / `PERFORMANCE-POLICY.md` non-wikidata corpus check). Adopt as default only if:
+(1) 100% byte- and CRC-identical on all unit tests (`src/open/{checks,b5,dense,spirals,mux}.rs`), fuzz smoke, `wikidata x4`, and non-wikidata text/dense corpora;
+(2) zero new `unsafe` and Miri clean;
+(3) on i9-10900K `wikidata x4`, 1W wall drops by >= 3.0% (`>= 39 ms`, non-overlapping 95% CI) and 8W worker-busy (`wkr_busy`) drops by >= 3.5% (`>= 6.5 ms/w`) with zero wall regression (`<= +1.0%`) at `k = 8` or `k = 10` (checking that the `1.75 MiB` virtual / `~273-420 KiB` touched per-worker SoA arrays do not regress k=8-10 L3/RSS or `text` fallback).
+Otherwise STOP/KILL and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR implementing the combined `A6b` redesign in `src/open/endpoint.rs` (+ `src/open.rs` strip hand-off), all unit/fuzz/Miri tests green, adoption registration frozen and reviewed, follow-on i9 workstation run queued, delta written, and `frontier/surface.tsv` row `C-A6b` updated.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/a6b-combined-redesign.md",
+  "examples/a6b_combined_probe.rs",
+  "src/open/endpoint.rs",
+  "src/open.rs",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+]
+links = [
+  "frontier/claims/a6b-combined-redesign.toml",
+  "docs/journal/2026-11-26-explore/a6b-combined-redesign.md",
+]
