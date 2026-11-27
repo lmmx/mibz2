@@ -593,21 +593,135 @@ class TestFrontierStress(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("needs news", r.stdout)
         self.assertIn("news_kind", r.stdout)
-        news = 'news = "A new induction order rebuilds text with a third fewer steps."\nnews_kind = "discovery"\n'
+        news = (
+            'news = "A new induction order rebuilds text with a third fewer steps."\n'
+            'news_kind = "discovery"\n'
+            'evidence = ["frontier/surface.tsv"]\n'
+        )
         (blog / "b-draft.toml").write_text(card("b-draft", "draft", news))
         r = self.sb.run_frontier(a, "check")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        (blog / "b-other.toml").write_text(card("b-other", "outline", news.replace("discovery", "advance")))
+        (blog / "b-other.toml").write_text(
+            card("b-other", "outline", news.replace("discovery", "advance"))
+        )
         r = self.sb.run_frontier(a, "check")
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("2 posts in progress", r.stdout)
         (blog / "b-other.toml").write_text(card("b-other", "outline", news + "legacy = true\n"))
         r = self.sb.run_frontier(a, "check")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        (blog / "b-other.toml").write_text(card("b-other", "outline", news.replace("discovery", "negative-result")))
+        (blog / "b-other.toml").write_text(
+            card("b-other", "outline", news.replace("discovery", "negative-result"))
+        )
         r = self.sb.run_frontier(a, "check")
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("lab-notebook entry", r.stdout)
+
+    def test_blog_advance_cites_ledger_and_master_and_discovery_cites_evidence(self) -> None:
+        """Advance cards require ledgered merged PRs; discovery cards require existing evidence."""
+        a = self.sb.clone("agent-a")
+        blog = a / "frontier" / "blog"
+        blog.mkdir(parents=True, exist_ok=True)
+
+        # Merge PR #501 onto origin/master and record PR #501 (merged) and #502 (unmerged) in ledger.
+        (a / "src").mkdir(exist_ok=True)
+        (a / "src" / "lib.rs").write_text("pub fn v() -> u32 { 1 }\n")
+        _git(a, "add", "src/lib.rs")
+        _git(a, "commit", "-m", "perf: bound decoder memory (#501)")
+        _git(a, "push", "origin", "master")
+        _git(a, "fetch", "-q", "origin")
+
+        (a / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "501\t2026-11-27\tBounds peak memory on zeros.\tdefault\t-50% RSS on zeros, local\tPR #501\n"
+            "502\t2026-11-27\tUnmerged candidate.\texperimental\tnot measured\tPR #502\n"
+        )
+
+        def adv_card(extra: str) -> str:
+            base = _claim_toml("b-adv").replace('kind = "probe"', 'kind = "blog"')
+            return (
+                base
+                + 'stage = "draft"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n'
+                + 'news = "Decoder memory stays flat on compressible streams."\n'
+                + 'news_kind = "advance"\n'
+                + extra
+            )
+
+        # (1a) Advance card with no changes -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card(""))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("changes", r.stdout)
+
+        # (1b) Advance card naming an unledgered PR (#999) -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [999]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no row in frontier/ledger.tsv", r.stdout)
+
+        # (1c) Advance card naming a ledgered but unmerged PR (#502) -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [502]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no merge commit on origin/master", r.stdout)
+
+        # (2) Advance card naming a ledgered PR merged on origin/master (#501) -> passes check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [501]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+        # (3) Discovery card with missing evidence path -> fails; existing path -> passes.
+        (blog / "b-adv.toml").unlink()
+        disc_base = (
+            _claim_toml("b-disc").replace('kind = "probe"', 'kind = "blog"')
+            + 'stage = "outline"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n'
+            + 'news = "Memory traffic saturates before eight workers."\n'
+            + 'news_kind = "discovery"\n'
+        )
+        (blog / "b-disc.toml").write_text(disc_base + 'evidence = ["docs/does-not-exist.md"]\n')
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("evidence path does not exist", r.stdout)
+
+        (blog / "b-disc.toml").write_text(disc_base + 'evidence = ["frontier/surface.tsv"]\n')
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_frontier_news_lists_unposted_default_and_experimental_changes(self) -> None:
+        """`frontier.py news` lists unposted default/experimental ledger rows since last post."""
+        a = self.sb.clone("agent-a")
+        blog_posts = a / "docs" / "site" / "blog"
+        blog_posts.mkdir(parents=True, exist_ok=True)
+        (blog_posts / "2026-11-26-previous-post.md").write_text("# Previous\n")
+
+        (a / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "600\t2026-11-25\tOlder default change.\tdefault\tnot measured\tPR #600\n"
+            "601\t2026-11-27\tUnposted default change.\tdefault\t-50% RSS on zeros, local\tPR #601\n"
+            "602\t2026-11-27\tAlready covered default change.\tdefault\t-4% wall on text, CI\tPR #602\n"
+            "603\t2026-11-27\tUnposted experimental flag.\texperimental\t-7% CPU on wikidata, VM\tPR #603\n"
+            "604\t2026-11-27\tResearch prototype only.\tprototype\tnot measured\tPR #604\n"
+            "605\t2026-11-27\tThroughput target only.\ttarget\tnot measured\tdocs/model.md\n"
+        )
+
+        blog_cards = a / "frontier" / "blog"
+        blog_cards.mkdir(parents=True, exist_ok=True)
+        covered = (
+            _claim_toml("b-covered").replace('kind = "probe"', 'kind = "blog"')
+            + 'stage = "published"\npost = "docs/site/blog/2026-11-26-previous-post.md"\n'
+            + 'drafted_by = "agent-a"\nreviewed_by = "agent-b"\n'
+            + 'news = "Faster text decoding."\nnews_kind = "advance"\nchanges = [602]\n'
+        )
+        (blog_cards / "b-covered.toml").write_text(covered)
+
+        r = self.sb.run_frontier(a, "news")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("#601", r.stdout)
+        self.assertIn("#603", r.stdout)
+        self.assertNotIn("#600", r.stdout)
+        self.assertNotIn("#602", r.stdout)
+        self.assertNotIn("#604", r.stdout)
+        self.assertNotIn("#605", r.stdout)
 
     def test_release_due_is_recognised_and_release_claims_are_p1(self) -> None:
         """Software merged since the last tag with no live release claim is a due release (P1)."""

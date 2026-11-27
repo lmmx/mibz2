@@ -3,6 +3,7 @@
     frontier.py brief [--can shell,rust,...]        what to read, what is held, what you can take
     frontier.py status                              rewrite frontier/STATUS.md from files and open PRs
     frontier.py check                               validate the frontier's files
+    frontier.py news                                list unposted default/experimental ledger changes
     frontier.py claim ID --by AGENT [--hours N]     acquire a hold, atomically, on origin
     frontier.py verify ID --session S               exit 0 iff S holds ID live and no open flag names it
     frontier.py renew ID --session S [--hours N]    extend your hold
@@ -893,10 +894,117 @@ def release_due(claims):
     return (tag, commits) if commits and not live_release else None
 
 
+LEDGER_STATES = {"default", "experimental", "awaiting-review", "prototype", "target"}
+POST_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
+PR_SUBJECT_RE = re.compile(r"\(#(\d+)\)")
+
+
+def _ledger_rows():
+    """Return parsed rows of frontier/ledger.tsv, or None if the file is absent."""
+    p = ROOT / "ledger.tsv"
+    if not p.is_file():
+        return None
+    lines = p.read_text(encoding="utf-8").splitlines()
+    if not lines:
+        return []
+    cols = lines[0].split("\t")
+    rows = []
+    for raw in lines[1:]:
+        if not raw.strip():
+            continue
+        parts = raw.split("\t")
+        if len(parts) != len(cols):
+            continue
+        rec = dict(zip(cols, (x.strip() for x in parts)))
+        pr_str = rec.get("pr", "")
+        if not re.fullmatch(r"\d+", pr_str):
+            continue
+        rec["pr"] = int(pr_str)
+        rows.append(rec)
+    return rows
+
+
+def _merged_prs_on_master():
+    """Return (pr_set, err) for PR numbers merged on origin/master (first-parent)."""
+    rc, _ = git("rev-parse", "--verify", "--quiet", "refs/remotes/origin/master")
+    if rc != 0:
+        ok, out = _fetch_master(strict=False)
+        if not ok:
+            return None, f"cannot verify merged PRs without origin/master: {out}"
+    rc, log = git("log", "--first-parent", "--format=%s", "origin/master")
+    if rc != 0:
+        return None, f"git log origin/master failed: {log}"
+    prs = set()
+    for subject in log.splitlines():
+        for m in PR_SUBJECT_RE.findall(subject):
+            prs.add(int(m))
+    return prs, None
+
+
+def _newest_published_post_date(cards):
+    """Return the newest YYYY-MM-DD date among published blog posts, or None."""
+    dates = []
+    blog_dir = REPO / "docs" / "site" / "blog"
+    if blog_dir.is_dir():
+        for entry in blog_dir.iterdir():
+            if entry.is_file() and entry.suffix == ".md":
+                m = POST_DATE_RE.match(entry.name)
+                if m:
+                    dates.append(m.group(1))
+    for c in cards:
+        if c.get("stage") == "published" and c.get("post"):
+            m = POST_DATE_RE.match(pathlib.Path(c["post"]).name)
+            if m:
+                dates.append(m.group(1))
+    return max(dates) if dates else None
+
+
+def news():
+    """List default/experimental ledger changes merged since the newest published post."""
+    rows = _ledger_rows()
+    if rows is None:
+        print("error: frontier/ledger.tsv not found", file=sys.stderr)
+        return 1
+    cards = load("blog")
+    since = _newest_published_post_date(cards)
+    named = {
+        pr
+        for c in cards
+        if c.get("status") != "dropped"
+        for pr in c.get("changes", [])
+        if type(pr) is int
+    }
+    fresh = [
+        r
+        for r in rows
+        if r.get("state") in ("default", "experimental")
+        and (since is None or r.get("merged", "") >= since)
+        and r["pr"] not in named
+    ]
+    header = (
+        f"Unposted ledger changes (default/experimental, merged >= {since}):"
+        if since
+        else "Unposted ledger changes (default/experimental, no published posts yet):"
+    )
+    print(header)
+    if not fresh:
+        print("- none")
+        return 0
+    for r in fresh:
+        print(
+            f"- #{r['pr']} ({r.get('merged', '?')}, {r.get('state', '?')}): "
+            f"{r.get('effect', '')} [measured: {r.get('measured', 'not measured')}]"
+        )
+    return 0
+
+
 def check(pr_event=None):
     """Validate the frontier's files (five checks); return 1 on any error."""
     errs, warn = [], []
     claims, cards = load("claims"), load("blog")
+    ledger_rows = None
+    merged_prs = None
+    merged_err = None
     # 1. claims and cards: fields, enums, and premises
     for c in claims + cards:
         n = c["_path"].name
@@ -916,11 +1024,58 @@ def check(pr_event=None):
                     f"{n}: past idea, a blog card needs news: one plain sentence saying what a "
                     "reader outside the project learns (process and negative results go in docs/notebook/)"
                 )
-            if c.get("news_kind") not in NEWS_KINDS:
+            kind = c.get("news_kind")
+            if kind not in NEWS_KINDS:
                 errs.append(
-                    f"{n}: news_kind {c.get('news_kind')!r} not in {sorted(NEWS_KINDS)}; "
+                    f"{n}: news_kind {kind!r} not in {sorted(NEWS_KINDS)}; "
                     "anything else is a lab-notebook entry, not a post"
                 )
+            elif kind == "advance":
+                changes = c.get("changes")
+                if (
+                    not isinstance(changes, list)
+                    or not changes
+                    or not all(type(x) is int and x > 0 for x in changes)
+                ):
+                    errs.append(
+                        f"{n}: news_kind 'advance' past idea requires non-empty changes = [<PR numbers>]"
+                    )
+                else:
+                    if ledger_rows is None:
+                        ledger_rows = _ledger_rows()
+                    if ledger_rows is None:
+                        errs.append(
+                            f"{n}: cannot verify advance changes without frontier/ledger.tsv"
+                        )
+                    else:
+                        ledger_prs = {r["pr"] for r in ledger_rows}
+                        if merged_prs is None and merged_err is None:
+                            merged_prs, merged_err = _merged_prs_on_master()
+                        if merged_err is not None:
+                            errs.append(f"{n}: {merged_err}")
+                        for pr_num in changes:
+                            if pr_num not in ledger_prs:
+                                errs.append(
+                                    f"{n}: change #{pr_num} has no row in frontier/ledger.tsv"
+                                )
+                            if merged_prs is not None and pr_num not in merged_prs:
+                                errs.append(
+                                    f"{n}: change #{pr_num} has no merge commit on origin/master"
+                                )
+            elif kind == "discovery":
+                evidence = c.get("evidence")
+                if (
+                    not isinstance(evidence, list)
+                    or not evidence
+                    or not all(isinstance(p, str) and p.strip() for p in evidence)
+                ):
+                    errs.append(
+                        f"{n}: news_kind 'discovery' past idea requires non-empty evidence = [paths]"
+                    )
+                else:
+                    for ev_path in evidence:
+                        if not (REPO / ev_path).exists():
+                            errs.append(f"{n}: evidence path does not exist: {ev_path}")
         late = c in cards and STAGES.index(c.get("stage", "idea")) > STAGES.index("review")
         if late and (not c.get("reviewed_by") or c.get("reviewed_by") == c.get("drafted_by")):
             errs.append(
@@ -1221,6 +1376,8 @@ def main(argv):
         print("wrote frontier/STATUS.md")
     elif cmd == "check":
         return check(opt("--pr-event"))
+    elif cmd == "news":
+        return news()
     elif cmd == "holds":
         for k, (sha, v) in sorted(holds().items()):
             state = "live" if live(v) else ("released" if v.get("released") else "expired")

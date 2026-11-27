@@ -179,7 +179,7 @@ premises = []                    # the evidence this claim rests on: re-read it 
 links = []
 ```
 
-Blog cards add `stage` (idea → outline → draft → review → revise → ready → published), `post` (its file under `docs/site/blog/`), `drafted_by`, `reviewed_by`, and from `outline` on `news` (one plain sentence: what an outside reader learns) and `news_kind` (`discovery` or `advance`). See "The blog board".
+Blog cards add `stage` (idea → outline → draft → review → revise → ready → published), `post` (its file under `docs/site/blog/`), `drafted_by`, `reviewed_by`, and from `outline` on `news` (one plain sentence: what an outside reader learns), `news_kind` (`discovery` or `advance`), and either `changes = [<PR numbers>]` (for `advance`, each ledgered and merged on `origin/master`) or `evidence = [paths]` (for `discovery`, each existing). See "The blog board".
 
 ## The ledger
 
@@ -191,8 +191,9 @@ Blog cards add `stage` (idea → outline → draft → review → revise → rea
 
 **What the blog is for (Louis, 27 November 2026).** The blog is for something worth telling the
 world, written for a reader outside the project. Start from [the ledger](#the-ledger)
-(`frontier/ledger.tsv`) to see what actually reached the software and in what state, rather than
-re-deriving it from narratives. Dense shorthand belongs in the
+(`frontier/ledger.tsv`) and run `python3 frontier/tools/frontier.py news` (read-only) to list
+`default` and `experimental` changes merged since the newest published post and not yet named by
+any card, rather than re-deriving what shipped from narratives. Dense shorthand belongs in the
 [lab notebook](../docs/notebook/README.md), never on the blog.
 - **A post carries news of one of two kinds:** a theoretical *discovery*, or an *advance* in the
   software itself. Positive findings far outweigh negative ones.
@@ -211,6 +212,9 @@ re-deriving it from narratives. Dense shorthand belongs in the
 - a blog card past `idea` without `news`, one plain sentence saying what an outside reader
   learns;
 - a card whose `news_kind` is not `discovery` or `advance`;
+- an `advance` card past `idea` without `changes = [<PR numbers>]`, or naming a PR without a row in
+  `frontier/ledger.tsv` or without a merge commit on `origin/master`;
+- a `discovery` card past `idea` without `evidence = [paths]`, or naming a path that does not exist;
 - more than one card in progress (`outline` to `ready`): publish or drop one first.
 
 Cards from before 27 November carry `legacy = true` and are exempt. CI's `check_prose.py` adds a

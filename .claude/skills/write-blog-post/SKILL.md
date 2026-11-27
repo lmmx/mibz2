@@ -24,6 +24,13 @@ The rules come from three sources, cited by tag:
 
 ## First: is it a post at all?
 
+**Start from what actually shipped, not from narratives.** Before pitching a software advance, run
+`python3 frontier/tools/frontier.py news` (read-only) to list `default` and `experimental` rows in
+`frontier/ledger.tsv` merged since the newest published post and not yet named by any card.
+An `advance` card past `idea` must list `changes = [<PR numbers>]` (verified by `frontier.py check`
+against `frontier/ledger.tsv` and `origin/master`); a `discovery` card must list existing paths in
+`evidence = [...]`.
+
 **The blog is for something worth telling the world** (Louis, 27 November 2026: "process
 narration is extremely uninteresting, theoretical discovery and advancement of the software
 itself is interesting, and positive findings far outweigh negative results"). Before writing,
