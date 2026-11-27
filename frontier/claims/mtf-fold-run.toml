@@ -3,8 +3,9 @@ title = "The MTF-into-construction fold's kill test on the i9 (bench and queue)"
 kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
-priority = 1
-status = "open"
+priority = 2
+status = "blocked"
+pr = 1041
 mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
 # (overlaps mtf-fold-build's paths on purpose: `claim` refuses this one until that hold is
 # released, i.e. until the prototype's PR has merged)
@@ -18,8 +19,6 @@ Not yet runnable from master, which lacks two things the registration's binary n
 Then review, green, ready tag and queue entry (standing authorisation), and read the bundle against registration §3.3.
 """
 why = """
-27 November: P1 because #1041's reusable oracle harness and overlapping holds block multiple next builds. Finish B5 review and integration. Evidence #1059/#1064 recommends against spending the next i9 slot on the superseded direct fold: reuse the harness for the improved fold with a distinct appropriate pre-data registration. Preserve the original frozen test and resolve its disposition explicitly; do not mark it as a measured verdict.
-
 mtf-fold-build's prototype is exact (bytes and errors, Miri on the scalar fold) but untimed. The census predicts ~40-85 ms at 1w and ~6-13 ms/w at 8w behind S ideal; only the i9 run decides it.
 """
 stop_test = """

@@ -116,7 +116,17 @@ pub(crate) fn wants(b: &Symbols) -> bool {
     if crate::ideal::rle1::mode() != crate::ideal::Mode::Real {
         return false;
     }
-    enabled() && b.max_len <= MAX_LEN && b.syms.len() >= MIN_SYMS
+    let syms_len = {
+        #[cfg(feature = "scan-oracle")]
+        {
+            crate::scan_oracle::with_syms(b, |syms| syms.len())
+        }
+        #[cfg(not(feature = "scan-oracle"))]
+        {
+            b.syms.len()
+        }
+    };
+    enabled() && b.max_len <= MAX_LEN && syms_len >= MIN_SYMS
 }
 
 /// The least literals with which a block of bound `max_len` is refused by the open kernel's
@@ -140,27 +150,63 @@ pub(crate) fn front<S: Sink>(
     sink: &mut S,
     lits_refused: usize,
 ) -> Result<(usize, usize), Outcome> {
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| front_with_syms(b, syms, f, k, sink, lits_refused))
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        front_with_syms(b, &b.syms, f, k, sink, lits_refused)
+    }
+}
+
+fn front_with_syms<S: Sink>(
+    b: &Symbols,
+    syms: &[u16],
+    f: &mut Runs,
+    k: Kernels,
+    sink: &mut S,
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
     #[cfg(target_arch = "x86_64")]
     if super::front_fast(k) {
         // SAFETY: `front_fast` holds only when AVX2, BMI1, BMI2, LZCNT and POPCNT were
         // detected (`Kernels::avx2` is set only when AVX2 and BMI1 were)
-        return unsafe { front_avx2(b, f, sink, lits_refused) };
+        return unsafe { front_avx2(b, syms, f, sink, lits_refused) };
     }
     let _ = (k, f);
-    front_scalar(b, sink, lits_refused)
+    front_scalar_with_syms(b, syms, sink, lits_refused)
 }
 
 /// `runs::front_scalar`'s loop with each record group sent to the sink: `Bailed` wherever it
 /// errs, `NotOpen` (before any run is sent) once the literals before the first end-of-block
 /// symbol reach `lits_refused`
+#[allow(dead_code)]
 pub(crate) fn front_scalar<S: Sink>(
     b: &Symbols,
     sink: &mut S,
     lits_refused: usize,
 ) -> Result<(usize, usize), Outcome> {
-    if lits_refused < b.syms.len() {
-        let lits = b
-            .syms
+    #[cfg(feature = "scan-oracle")]
+    {
+        crate::scan_oracle::with_syms(b, |syms| {
+            front_scalar_with_syms(b, syms, sink, lits_refused)
+        })
+    }
+    #[cfg(not(feature = "scan-oracle"))]
+    {
+        front_scalar_with_syms(b, &b.syms, sink, lits_refused)
+    }
+}
+
+fn front_scalar_with_syms<S: Sink>(
+    b: &Symbols,
+    syms: &[u16],
+    sink: &mut S,
+    lits_refused: usize,
+) -> Result<(usize, usize), Outcome> {
+    if lits_refused < syms.len() {
+        let lits = syms
             .iter()
             .take_while(|&&s| s != b.eob || s <= 1)
             .filter(|&&s| s > 1)
@@ -180,7 +226,7 @@ pub(crate) fn front_scalar<S: Sink>(
     let (mut run, mut weight) = (0u32, 1u32);
     let mut n = 0usize;
     let mut open = (0u8, 0u32);
-    for &s in &b.syms {
+    for &s in syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
                 return Err(Outcome::Bailed);
@@ -238,14 +284,15 @@ pub(crate) fn front_scalar<S: Sink>(
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
 unsafe fn front_avx2<S: Sink>(
     b: &Symbols,
+    syms: &[u16],
     f: &mut Runs,
     sink: &mut S,
     lits_refused: usize,
 ) -> Result<(usize, usize), Outcome> {
     use super::{second, STEPS};
     use std::arch::x86_64::*;
-    let m = b.syms.len();
-    let sp = b.syms.as_ptr();
+    let m = syms.len();
+    let sp = syms.as_ptr();
     if b.max_len >= 1 << 31 || m >= 1 << 24 {
         return Err(Outcome::Bailed);
     }
@@ -294,7 +341,7 @@ unsafe fn front_avx2<S: Sink>(
     }
     if end == usize::MAX {
         let (mut l, mut o) = (0u32, 0u32);
-        for (t, &s) in b.syms[ci * 32..].iter().enumerate() {
+        for (t, &s) in syms[ci * 32..].iter().enumerate() {
             o |= ((s != 0) as u32) << t;
             if s > 1 {
                 if s == b.eob {

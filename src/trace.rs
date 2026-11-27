@@ -141,6 +141,9 @@ pub enum Kind {
     ///   the build's end (`WalkSetupEnd`), is how late the leader joins the walk.
     LeadStart,
     LeadEnd,
+    /// - a worker on the open kernel: the end of construction's first pass (`A6a`, or fused
+    ///   `A5+A6a` under `mtf-fold`), immediately before `finish` (`A6b+A6c`) and `walk` (`A7`).
+    OpenPass1End,
 }
 
 /// No block: the place of a mark that has none
