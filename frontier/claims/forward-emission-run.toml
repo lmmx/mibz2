@@ -4,7 +4,7 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 1  # sixteenth synthesis pass: the verdict gates Cells-route retirement at t=1..7; re-pinned to #1217 (registration-disjoint-slabs.md)
-status = "review"
+status = "blocked"
 pr = 1168
 owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
 mechanisms = ["forward-lanes-workstation-validation"]
