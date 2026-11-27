@@ -6,4 +6,4 @@ expires = "2026-11-27T15:31:22+00:00"
 owned_paths = ["src/parallel.rs"]
 mechanisms = ["worker-side-ready-cap"]
 base = "7beb5e9ba4730feb1f38d12b40100dace34b2d4e"
-released = false
+released = true
