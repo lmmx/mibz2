@@ -34,10 +34,11 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import two_arm as ta  # noqa: E402
+from scanner_seam_identity import OUTPUT_BYTES  # noqa: E402
 
 RSS_GATE = 1.10
 MODEL = "i9-10900K"
-WIKIDATA_X4_OUT = 4 * 209_700_196
+WIKIDATA_X4_OUT = OUTPUT_BYTES
 WORKER = re.compile(r"^mibz2-\d+$")
 
 
@@ -74,7 +75,7 @@ def workers(r):
     return sum(1 for n in names.split() if WORKER.match(n))
 
 
-def load(path, arm, threads, rounds, corpus, out_bytes, errors):
+def load(path, arm, threads, rounds, corpus, out_bytes, expected_hash, errors):
     """{(arm, threads, round): record} once every record is checked; errors appended."""
     ref, cand = f"{arm}@build-base", arm
     want = {(a, t, r) for a in (ref, cand) for t in threads for r in range(rounds)}
@@ -99,7 +100,7 @@ def load(path, arm, threads, rounds, corpus, out_bytes, errors):
             continue
         if r.get("corpus") != corpus:
             errors.append(f"{where}: corpus {r.get('corpus')!r}, not {corpus!r}")
-        key = (r.get("arm"), r.get("threads"), r.get("round"))
+        key = (ta.canonical(r.get("arm")), r.get("threads"), r.get("round"))
         if key not in want:
             errors.append(f"{where}: unexpected key {key}")
             continue
@@ -107,7 +108,7 @@ def load(path, arm, threads, rounds, corpus, out_bytes, errors):
             errors.append(f"{where}: duplicate key {key}")
             continue
         got[key] = r
-        if r.get("termination") != "success" or r.get("err") is not None:
+        if r.get("termination") != "success" or r.get("err") != "":
             errors.append(
                 f"{where}: {key} failed (termination={r.get('termination')!r}, err={r.get('err')!r})"
             )
@@ -120,12 +121,12 @@ def load(path, arm, threads, rounds, corpus, out_bytes, errors):
             errors.append(f"{where}: {key} ran beside a spinner")
         if r.get("out") != out_bytes:
             errors.append(f"{where}: {key} wrote {r.get('out')!r} bytes, not {out_bytes}")
-        if workers(r) is None:
+        if not workers(r):
             errors.append(f"{where}: {key} observed_threads {r.get('observed_threads')!r} missing")
         hashes.add(r.get("hash"))
     for key in sorted(want - set(got)):
         errors.append(f"missing {key}")
-    if len(hashes) > 1 or None in hashes:
+    if hashes != {expected_hash}:
         errors.append(f"the outputs differ: hashes {sorted(map(str, hashes))}")
     return got
 
@@ -172,6 +173,7 @@ def clock_split(got, arm, t, rounds):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("runs")
+    ap.add_argument("--identity", required=True, help="the untimed SHA-256 reference JSON")
     ap.add_argument("--env", required=True, help="the machine as `ab env` recorded it")
     ap.add_argument("--lscpu", required=True)
     ap.add_argument("--arm", default="mibz2")
@@ -202,7 +204,18 @@ def main(argv=None):
             print(f"DRY: not applied: {e}")
     else:
         errors += host
-    got = load(a.runs, a.arm, threads, a.rounds, a.corpus, a.out_bytes, errors)
+    expected_hash = None
+    try:
+        with open(a.identity) as f:
+            identity = json.load(f)
+        if (not isinstance(identity, dict) or identity.get("out") != a.out_bytes
+                or not re.fullmatch("[0-9a-f]{64}", str(identity.get("sha256")))
+                or not re.fullmatch("[0-9a-f]{16}", str(identity.get("hash")))):
+            raise ValueError("missing or malformed digest or output length")
+        expected_hash = identity["hash"]
+    except (OSError, ValueError) as e:
+        errors.append(f"invalid output reference: {e}")
+    got = load(a.runs, a.arm, threads, a.rounds, a.corpus, a.out_bytes, expected_hash, errors)
     plan = {} if errors else plan_check(got, a.arm, threads, a.rounds, errors)
     cells = {}
     if not errors:

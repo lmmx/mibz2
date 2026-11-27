@@ -1957,8 +1957,10 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
     #!/usr/bin/env bash
     set -uo pipefail
     HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" PRESPIN="{{PRESPIN}}" dry="{{DRY}}"
+    unset AB_SHA256 AB_READ_BUF
     COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=10,12 SUPPORTING=6,8,9 LAZY=8,9,10
-    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
+    TRACE_ROUNDS=3
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; TRACE_ROUNDS=1; }
     [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-scanner-seam-window: HEAD_REF '$HEAD_REF' is not a branch name"; exit 1; }
     [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \
       || { echo "bench-scanner-seam-window: HEAD_SHA '$HEAD_SHA' must be a 40-char SHA or empty"; exit 1; }
@@ -2087,6 +2089,7 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
       : > "$X4"
       for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
       sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+      echo "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  $X4" | sha256sum --check
     }
     machine() {
       "$AB" env > "$O/env.json"
@@ -2097,6 +2100,9 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
       uname -a > "$O/uname.txt"
       cat "$O/env.json"
     }
+    exactness() {
+      python3 bench/scanner_seam_identity.py reference "$X4" "$BAB" "$AB" > "$O/identity.json"
+    }
     timed() {
       "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
         --settle $SETTLE $WARM "$X4"
@@ -2104,7 +2110,7 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
       date -u +%FT%TZ > "$O/timed.txt"
     }
     verdict() {
-      python3 bench/scanner_seam_window.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      python3 bench/scanner_seam_window.py "$O/main.jsonl" --identity "$O/identity.json" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
         --arm mibz2 --judged $JUDGED --supporting $SUPPORTING --rounds $ROUNDS \
         --corpus wikidata-x$COPIES ${dry:+--dry} | tee "$O/verdict.txt"
     }
@@ -2114,7 +2120,7 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
       "$AB" summary "$O/lazy.jsonl" --ref "mibz2-workers-lazy@$BAB" | tee "$O/lazy-summary.txt"
     }
     lazy_report() {
-      python3 bench/scanner_seam_window.py "$O/lazy.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      python3 bench/scanner_seam_window.py "$O/lazy.jsonl" --identity "$O/identity.json" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
         --arm mibz2-workers-lazy --judged "" --supporting $LAZY --rounds $ROUNDS \
         --corpus wikidata-x$COPIES --diagnostic ${dry:+--dry} | tee "$O/lazy.txt"
     }
@@ -2131,8 +2137,10 @@ bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESP
     phase build-head resolve build head
     phase inputs build-head inputs
     phase machine build-head machine
-    phase timed build-base,build-head,inputs,machine timed
-    phase verdict timed verdict
-    phase lazy build-base,build-head,inputs,machine lazy
+    phase exactness build-base,build-head,inputs exactness
+    phase timed exactness,machine timed
+    phase lazy exactness,machine lazy
     phase lazy-report lazy lazy_report
-    phase trace-diag build-base,build-head,inputs trace_diag
+    phase trace-diag exactness trace_diag
+    phase trace-parity trace-diag python3 bench/scanner_seam_identity.py trace "$O/identity.json" "$TRACE_ROUNDS" "$O/trace-base.jsonl" "$O/trace-head.jsonl"
+    phase verdict timed,lazy-report,trace-parity verdict

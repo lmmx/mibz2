@@ -40,7 +40,9 @@ Frozen before data, verbatim from `frontier/claims/scanner-seam-window.toml`:
 Specifically:
 - Zero new `unsafe` in `src/parallel.rs` or `src/trace.rs`.
 - `cargo test` (including `channel_source_tests`, `phase`/`phase_off`, `service_default`, and all integration suites) and CI `fuzz-smoke` pass cleanly.
-- Every timed and diagnostic decode on `wikidata ×4` produces exactly `838,800,784` bytes (`4 × 209,700,196`) with identical SHA-256 across all rounds and both arms (`base` and `head`).
+- Every timed and diagnostic decode on `wikidata ×4` must match the independent output reference as specified below.
+
+**Pre-data exactness clarification (27 November, review of aa737185).** The original wording required SHA-256 on every timed and diagnostic decode. The timing harness computes SHA-256 inside the decode clock and reserves that mode for untimed checks. Before timing, stream the registered input through an independent libbz2 decoder and record the SHA-256 and byte count. For each binary, arm and registered thread count, run an untimed `ab child` with SHA-256 enabled. Require the independent SHA-256, exactly 838,800,784 bytes and the same 64-bit streaming hash on all sixteen checks. Require that byte count and streaming hash on every main, lazy and occupancy record across both builds. A missing check, an output mismatch or a decode error voids the experiment. The timed binaries retain their usual sink. The estimators, counts and thresholds in §5 are unchanged.
 
 ---
 

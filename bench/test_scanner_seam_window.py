@@ -2,6 +2,8 @@
 """Unit tests for bench/scanner_seam_window.py against the frozen C6 adoption registration
 (docs/journal/2026-11-27-scanner-seam-window/registration.md)."""
 
+import bz2
+import hashlib
 import io
 import json
 import os
@@ -9,8 +11,11 @@ import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import scanner_seam_identity as ident  # noqa: E402
 import scanner_seam_window as ssw  # noqa: E402
 
 GOOD_ENV = {
@@ -48,6 +53,8 @@ def write_fixture(
         json.dump(GOOD_ENV if env is None else env, f)
     with open(lscpu_p, "w") as f:
         f.write(lscpu)
+    with open(os.path.join(td, "identity.json"), "w") as f:
+        json.dump({"out": ssw.WIKIDATA_X4_OUT, "sha256": "ab" * 32, "hash": "deadbeef" * 2}, f)
     rows = []
     for t in threads:
         w = WORKERS_FOR.get(t, t)
@@ -59,7 +66,7 @@ def write_fixture(
             base_rss = 60_000
             head_rss = int(round(base_rss * rss_ratios[t]))
             for name, wall, rss in (
-                (f"{arm}@build-base", base_wall, base_rss),
+                (f"{arm}@/work/target/scanner-seam-window/build-base/target/release/examples/ab", base_wall, base_rss),
                 (arm, head_wall, head_rss),
             ):
                 rows.append(
@@ -69,14 +76,14 @@ def write_fixture(
                         "threads": t,
                         "round": r,
                         "termination": "success",
-                        "err": None,
+                        "err": "",
                         "wall": wall,
                         "cpu": wall * w,
                         "rss_kb": rss,
                         "cpus": "all",
                         "held_spinner": None,
                         "out": ssw.WIKIDATA_X4_OUT,
-                        "hash": "deadbeef" * 8,
+                        "hash": "deadbeef" * 2,
                         "observed_threads": make_threads(w),
                         "cycles_per_ref": 1.32,
                     }
@@ -92,7 +99,8 @@ def write_fixture(
 def run_verdict(runs_p, env_p, lscpu_p, extra=()):
     buf = io.StringIO()
     with redirect_stdout(buf):
-        rc = ssw.main([runs_p, "--env", env_p, "--lscpu", lscpu_p, *extra])
+        identity = os.path.join(os.path.dirname(runs_p), "identity.json")
+        rc = ssw.main([runs_p, "--identity", identity, "--env", env_p, "--lscpu", lscpu_p, *extra])
     return rc, buf.getvalue()
 
 
@@ -155,6 +163,55 @@ class TestScannerSeamWindow(unittest.TestCase):
             rc, out = run_verdict(*p)
             self.assertEqual(rc, 1, out)
             self.assertIn("the outputs differ", out)
+
+    def test_success_still_rejects_decoder_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = write_fixture(td, mutate=lambda rows: rows[0].update(err="bad CRC"))
+            rc, out = run_verdict(*p)
+            self.assertEqual(rc, 1, out)
+            self.assertIn("bad CRC", out)
+
+    def test_equal_but_wrong_outputs_fail_the_independent_reference(self):
+        with tempfile.TemporaryDirectory() as td:
+            def wrong(rows):
+                for row in rows:
+                    row["hash"] = "0123456789abcdef"
+
+            rc, out = run_verdict(*write_fixture(td, mutate=wrong))
+            self.assertEqual(rc, 1, out)
+            self.assertIn("the outputs differ", out)
+
+    def test_reference_checks_every_child_against_libbz2(self):
+        data = b"first stream" + b"second stream"
+        record = {"err": "", "out": len(data), "hash": "01" * 8,
+                  "sha256": hashlib.sha256(data).hexdigest()}
+        with tempfile.TemporaryDirectory() as td:
+            corpus = Path(td) / "fixture.bz2"
+            corpus.write_bytes(bz2.compress(b"first stream") + bz2.compress(b"second stream"))
+            with patch.object(ident, "OUTPUT_BYTES", len(data)), patch.object(
+                ident.subprocess, "run"
+            ) as call:
+                call.return_value.stdout = json.dumps(record)
+                checked = ident.reference(corpus, "base", "head")
+                self.assertEqual(len(checked["checks"]), 16)
+                call.return_value.stdout = json.dumps({**record, "sha256": "ab" * 32})
+                with self.assertRaisesRegex(ValueError, "differs from reference"):
+                    ident.reference(corpus, "base", "head")
+
+    def test_trace_hash_checked_across_reports_and_modes(self):
+        ref = {"hash": "01" * 8, "out": 42}
+        rows = [{"round": 0, "threads": 10, "mode": mode,
+                 "line": f"err=- out=42 hash={ref['hash']}"}
+                for mode in ("off", "timeline", "full")]
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "trace-base.jsonl"
+            report = {"parity": True, "output_bytes": 42, "runs": rows}
+            path.write_text(json.dumps(report))
+            ident.check_trace(path, ref, 1)
+            rows[-1]["line"] = "err=- out=42 hash=ffffffffffffffff"
+            path.write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, "invalid trace output"):
+                ident.check_trace(path, ref, 1)
 
     def test_void_on_worker_plan_drift(self):
         def bad_plan(rows):
