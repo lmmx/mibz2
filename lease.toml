@@ -6,4 +6,4 @@ expires = "2026-11-27T13:03:42+00:00"
 owned_paths = ["src/open.rs", "src/open/outq.rs"]
 mechanisms = ["construction-wiring", "emission-walk"]
 base = "f90e924613e0597d42c3d2fa283fede597e457f1"
-released = false
+released = true
