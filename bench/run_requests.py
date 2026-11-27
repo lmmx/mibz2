@@ -266,16 +266,22 @@ class World:
         self.tags()
         return self._raw.get(name, "")
 
-    def receipt_times(self, recipe):
-        """When each receipt for the recipe was written (its tagger date)."""
+    def receipt_times(self, recipe, holds):
+        """When each of the recipe's ready receipts (holds=False) or hold receipts (holds=True)
+        was written: its tagger date."""
         if not any(n.startswith(f"run-receipt/{recipe}/") for n in self.tags()):
             return []
         local = f"refs/reconcile/receipt/{recipe}/"
         self._fetch(f"+refs/tags/run-receipt/{recipe}/*:{local}*")
-        out = _git(self.cwd, "for-each-ref", "--format=%(taggerdate:unix)", local).stdout
-        return [
-            dt.datetime.fromtimestamp(int(x), dt.timezone.utc) for x in out.split() if x.isdigit()
-        ]
+        out = _git(
+            self.cwd, "for-each-ref", "--format=%(refname:lstrip=-1) %(taggerdate:unix)", local
+        ).stdout
+        times = []
+        for line in out.splitlines():
+            name, _, stamp = line.partition(" ")
+            if name.startswith("hold-") == holds and stamp.isdigit():
+                times.append(dt.datetime.fromtimestamp(int(stamp), dt.timezone.utc))
+        return times
 
     # the GitHub API
     def pr(self, n):
@@ -378,10 +384,15 @@ def check_ci(world, sha):
     missing = REQUIRED_CHECKS - {r.get("name") for r in got}
     if missing:
         raise Refused(f"required check(s) {sorted(missing)} have not reported on {sha[:12]}")
+
+    # by name, across workflows: a superseded run's twin lives in another workflow run's suite
+    # (on #1104, `mirror` was cancelled in one run and skipped in another), so keying on the
+    # suite would hold every request on routine duplicates
+    def key(r):
+        return r.get("name")
+
     passed = {
-        r.get("name")
-        for r in got
-        if r.get("status") == "completed" and r.get("conclusion") in PASSED
+        key(r) for r in got if r.get("status") == "completed" and r.get("conclusion") in PASSED
     }
 
     def waiting_macos(r):
@@ -393,7 +404,7 @@ def check_ci(world, sha):
             continue
         if waiting_macos(run):
             continue  # CLAUDE.md: a macOS job waiting for a runner never holds a merge
-        if status == "completed" and concl == "cancelled" and name in passed:
+        if status == "completed" and concl == "cancelled" and key(run) in passed:
             continue  # a superseded duplicate of a job that passed or was skipped
         raise Refused(f"check {name!r} is {status}/{concl}")
     suites = world.suites(sha)
@@ -430,10 +441,11 @@ def names_recipe(claim, recipe):
     return re.search(rf"(?<![a-z0-9-]){re.escape(recipe)}(?![a-z0-9-])", text) is not None
 
 
-def older_than_a_signal(world, recipe, when):
-    """A request published before the recipe's latest request-made signal is retired by it:
-    after that signal is cleared, an older request can't revive the run (or the hold)."""
-    latest = max(world.receipt_times(recipe), default=None)
+def older_than_a_signal(world, recipe, when, holds):
+    """A request published before the recipe's latest request-made signal of its own kind is
+    retired by it: after that signal is cleared, an older request can't revive the run, nor an
+    older hold the hold. Only like retires like, so a ready receipt never retires a hold."""
+    latest = max(world.receipt_times(recipe, holds), default=None)
     if latest is not None and when < latest:
         raise Refused(f"published before the latest signal for {recipe} ({latest.isoformat()})")
 
@@ -442,7 +454,7 @@ def evaluate_ready(world, req, now, when):
     recipe, sha, tags = req["recipe"], req["sha"], world.tags()
     if f"run-receipt/{recipe}/{sha}" in tags:
         return "done", "already signalled from a request (receipt exists)"
-    older_than_a_signal(world, recipe, when)
+    older_than_a_signal(world, recipe, when, holds=False)
     if f"hold/{recipe}" in tags:
         raise Refused(f"hold/{recipe} is set")
     if world.queue().get(recipe) != req["branch"]:
@@ -505,10 +517,20 @@ def evaluate_ready(world, req, now, when):
     return "eligible", ""
 
 
+def _is_hold(text):
+    try:
+        return tomllib.loads(text or "").get("action") == "hold"
+    except (tomllib.TOMLDecodeError, TypeError, ValueError):
+        return False
+
+
 def reconcile(world, now, apply=False):
     decisions = []
     queue_cache = None
-    for ref, commit, when, text in world.requests():
+    # holds first: a hold published in the same pass as a ready request always takes precedence
+    found = world.requests()
+    found.sort(key=lambda r: (not _is_hold(r[3]), r[2], r[0]))
+    for ref, commit, when, text in found:
         recipe = REQUEST_REF.match(ref).group(1)
         d = Decision(ref, recipe, "refused")
         try:
@@ -527,7 +549,7 @@ def reconcile(world, now, apply=False):
                 elif recipe not in queue_cache:
                     raise Refused(f"the queue does not list {recipe}")
                 else:
-                    older_than_a_signal(world, recipe, when)
+                    older_than_a_signal(world, recipe, when, holds=True)
                     is_set = f"hold/{recipe}" in world.tags()
                     d.outcome = "eligible"
                     d.reason = f"hold/{recipe} is already set" if is_set else ""

@@ -78,7 +78,9 @@ replayed one or a new one, even after `ready/<recipe>` has been cleared. A reque
 before the recipe's latest receipt is retired by it. So after someone clears a request-made
 signal, an older pending request for another commit can't take its place on the next pass. A
 hold request leaves `run-receipt/<recipe>/hold-<request commit>`, so clearing a hold is never
-undone by the same request. A deliberate repeat at the same commit goes through manual
+undone by the same request. Only like retires like: a ready receipt never retires a hold
+request. Within a pass, holds are decided before ready requests, so a hold published alongside
+a ready request always wins. A deliberate repeat at the same commit goes through manual
 dispatch, with a delta saying why (CLAUDE.md, 16 November). A manual `clear` of a manually set
 tag leaves no receipt, so whoever clears it should also withdraw or hold any pending request
 for that recipe.
@@ -97,5 +99,10 @@ for that recipe.
   they always fail closed here. They stay manual dispatches.
 - **Request age** comes from the publisher's own commit date, so the 72-hour limit is advisory.
   The authority lies in the lease and the receipts.
+- **A workflow that never starts** (one waiting for approval, say) holds every request for
+  its commit. This fails closed, so use manual dispatch.
+- **Cancelled twins** are matched by job name across workflows. A superseded run's twin is in
+  another workflow run (on #1104, `mirror` was cancelled in one run and skipped in another), so
+  a cancelled job is excused when a job with the same name passed anywhere on the commit.
 - **Cleanup:** nothing deletes request refs, since some proxies refuse deletions. A request
   older than 72 hours is ignored, and a received one is reported `done`.

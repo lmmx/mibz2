@@ -366,6 +366,19 @@ class Refusal(Fixture):
         self.publish()
         self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
 
+    def test_cancelled_twin_in_another_workflow_does_not_hold(self):
+        # as on #1104: `mirror` cancelled in one workflow run, skipped in another
+        self.api.checks[self.sha]["check_runs"].append(
+            {
+                "name": "bench",
+                "status": "completed",
+                "conclusion": "cancelled",
+                "check_suite": {"id": 9},
+            }
+        )
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
     def test_cancelled_job_without_a_passed_twin_holds(self):
         self.api.checks[self.sha]["check_runs"].append(
             {"name": "miri", "status": "completed", "conclusion": "cancelled"}
@@ -642,6 +655,28 @@ class Hold(Fixture):
         git(self.work, "push", "-q", "origin", "--delete", f"refs/tags/hold/{RECIPE}")
         self.assertEqual([d.outcome for d in self.reconcile()], ["done"])
         self.assertIsNone(self.tag(f"hold/{RECIPE}"))
+
+    def test_a_hold_in_the_same_pass_as_a_ready_request_wins(self):
+        self.publish()  # the ready request, published first
+        rr.publish(
+            remote=str(self.origin),
+            cwd=self.work,
+            now=NOW + dt.timedelta(minutes=5),
+            action="hold",
+            recipe=RECIPE,
+        )
+        report = rr.reconcile(self.world(), now=NOW + dt.timedelta(minutes=10), apply=True)
+        self.assertIsNotNone(self.tag(f"hold/{RECIPE}"))
+        self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+        self.assertEqual(sorted(d.outcome for d in report), ["activated", "refused"])
+
+    def test_a_ready_receipt_does_not_retire_a_later_pass_hold(self):
+        self.publish()
+        self.reconcile()  # ready activated, receipt written at NOW
+        early = NOW - dt.timedelta(minutes=1)  # a hold published before that receipt
+        rr.publish(remote=str(self.origin), cwd=self.work, now=early, action="hold", recipe=RECIPE)
+        self.reconcile()
+        self.assertIsNotNone(self.tag(f"hold/{RECIPE}"))
 
     def test_hold_request_for_unqueued_recipe_is_refused(self):
         rr.publish(
