@@ -1,0 +1,9 @@
+id = "release-0-5-17"
+holder = "antigravity"
+session = "11f8fc374b57"
+claimed_at = "2026-11-27T21:19:09+00:00"
+expires = "2026-11-28T05:19:09+00:00"
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
+base = "6a677f47f833680fba15fd57096ecc31f8f6ae3f"
+released = false
