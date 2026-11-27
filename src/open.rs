@@ -356,6 +356,7 @@ impl Kernel {
         cap: Cap,
         out: &mut Vec<u8>,
     ) -> Option<(Counts, u32, u32)> {
+        ch!(begin A6a);
         // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
         out.resize(n as usize + INLINE, 0);
         let mut pass = self.begin(&mut out[..], cap.m, cap.strips);
@@ -369,9 +370,14 @@ impl Kernel {
             self.spill.taken = pass.queues.chunks();
         }
         if over || f.m > cap.m || ns > cap.strips {
+            ch!(end A6a);
             return None;
         }
-        Some(self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads))
+        ch!(end A6a);
+        ch!(begin A6b);
+        let done = self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads);
+        ch!(end A6c);
+        Some(done)
     }
 
     /// The construction after its first pass `f` (`records` read again only without `QUEUE`;
@@ -519,6 +525,8 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
+        ch!(end A6b);
+        ch!(begin A6c);
         if QUEUE && !wide && m >= 65_536 {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
@@ -619,14 +627,44 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
+        // (research only, `supplied-codes`: the stages timed, and the emitter's input switched
+        // by `supplied_codes::mode`; in its `open` mode the kernel as shipped, `supplied.rs`,
+        // its walks inside `character`'s A7)
+        #[cfg(feature = "supplied-codes")]
+        {
+            self.supplied_run::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
+        #[cfg(not(feature = "supplied-codes"))]
+        {
+            let (stats, mark, bits) =
+                self.construct_for::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+            ch!(begin A7);
+            self.walk(n, stats.retained, mark, bits, out);
+            ch!(end A7);
+            Some(stats)
+        }
+    }
+
+    /// The construction emission is handed: `construct_capped`, or under `ideal-construction`
+    /// its oracle's hand-over point (`construct_or_replay`)
+    #[inline(always)]
+    pub(crate) fn construct_for<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+        cap: Cap,
+        out: &mut Vec<u8>,
+    ) -> Option<(Counts, u32, u32)> {
         #[cfg(feature = "ideal-construction")]
-        let (stats, mark, bits) =
-            self.construct_or_replay::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+        {
+            self.construct_or_replay::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
         #[cfg(not(feature = "ideal-construction"))]
-        let (stats, mark, bits) =
-            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
-        self.walk(n, stats.retained, mark, bits, out);
-        Some(stats)
+        {
+            self.construct_capped::<INDUCE, QUEUE>(records, n, p, limit, cap, out)
+        }
     }
 
     /// (research only, `ideal-construction`) Factor C's hand-over point: in `Real`, runs
@@ -648,7 +686,9 @@ impl Kernel {
         if mode == Mode::Replay {
             std::hint::black_box(records);
             if let Some(idx) = crate::ideal::current_block() {
-                match ic::replay(
+                // (`character`: the replay's copy is C's handover, apart from A6a to A6c)
+                ch!(begin HandC);
+                let replayed = ic::replay(
                     idx,
                     n,
                     &mut self.predecessor,
@@ -658,7 +698,9 @@ impl Kernel {
                     &mut self.inline16,
                     &mut self.lens,
                     begin_inline,
-                ) {
+                );
+                ch!(end HandC);
+                match replayed {
                     ic::Replay::Built { m, mark, bits } => {
                         let stats = Counts {
                             n: n as usize,
@@ -825,6 +867,14 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         true
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
+        #[cfg(feature = "character")]
+        use crate::character::route;
+        #[cfg(feature = "character")]
+        let mut way = route::SKIPPED;
+        #[cfg(feature = "character")]
+        if crate::character::features_on() {
+            crate::character::block_features(r.records());
+        }
         if let Some(cap) = Self::cap(r.records().len(), n, p) {
             let ran = self
                 .open
@@ -838,14 +888,27 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 {
                     self.opened += 1;
                 }
+                ch!(point Route, u64::MAX, route::pack(
+                    if cap.m == Cap::NONE.m { route::OPEN } else { route::OPEN_DENSE },
+                    n,
+                    r.records().len()
+                ));
                 return true;
             }
             #[cfg(test)]
             {
                 self.capped += 1;
             }
+            #[cfg(feature = "character")]
+            {
+                way = route::REFUSED;
+            }
         }
-        self.lazy.invert_runs(r, n, p, out, k)
+        ch!(point Route, u64::MAX, route::pack(way, n, r.records().len()));
+        ch!(begin A8);
+        let done = self.lazy.invert_runs(r, n, p, out, k);
+        ch!(end A8);
+        done
     }
     fn invert(&mut self, l: &[u8], c: &[u32; 256], p: u32, out: &mut Vec<u8>) {
         self.lazy.invert(l, c, p, out);
@@ -1126,6 +1189,9 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod outq;
+// (research only: the emitter on supplied output-order word codes, bench-supplied-codes)
+#[cfg(feature = "supplied-codes")]
+mod supplied;
 
 #[cfg(test)]
 mod checks;

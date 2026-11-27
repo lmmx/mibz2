@@ -41,8 +41,8 @@ pub(super) struct Spill {
 }
 
 impl Spill {
-    /// (test only) the scratch it keeps, in bytes
-    #[cfg(test)]
+    /// (test only, and `supplied-codes`' scratch record) the scratch it keeps, in bytes
+    #[cfg(any(test, feature = "supplied-codes"))]
     pub(super) fn scratch(&self) -> usize {
         4 * self.next.capacity() + BYTES * self.ovf.capacity() + 1024 * self.cuts.capacity()
     }
