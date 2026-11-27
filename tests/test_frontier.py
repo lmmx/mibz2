@@ -1920,13 +1920,48 @@ class TestPresence(unittest.TestCase):
                        mod.presence_body({**good, "instance": "fedcba9876543210"})
                        + "#" * 4096 + "\n")
         self._push_raw(a, "refs/heads/presence/flat", mod.presence_body(good))
+        self._push_raw(a, "refs/heads/presence/agent/1111111111111111",
+                       "a = " + "[" * 1020 + "]" * 1020 + "\n")  # RecursionError in tomllib
+        self._push_raw(a, "refs/heads/presence/agent/2222222222222222",
+                       mod.presence_body({**good, "instance": "2222222222222222"})
+                       .replace("schema = 1", "schema = true"))
+        self._push_raw(a, "refs/heads/presence/agent/3333333333333333",
+                       mod.presence_body({**good, "instance": "3333333333333333"})
+                       .replace('claim = ""', "claim = false"))
+        # presence.toml as a tree, sorting first: must not desynchronise later records.
+        sub = subprocess.run(["git", "-C", str(a), "mktree"], input="", capture_output=True,
+                             text=True, check=True).stdout.strip()
+        blob = subprocess.run(["git", "-C", str(a), "hash-object", "-w", "--stdin"],
+                              input="x" * 300, capture_output=True, text=True,
+                              check=True).stdout.strip()
+        inner = subprocess.run(["git", "-C", str(a), "mktree"],
+                               input=f"100644 blob {blob}\tz\n040000 tree {sub}\ty\n",
+                               capture_output=True, text=True, check=True).stdout.strip()
+        tree = subprocess.run(["git", "-C", str(a), "mktree"],
+                              input=f"040000 tree {inner}\tpresence.toml\n",
+                              capture_output=True, text=True, check=True).stdout.strip()
+        _git(a, "push", "-q", "origin",
+             f"{_git(a, 'commit-tree', tree, '-m', 'tree')}:refs/heads/presence/aaa/0000000000000000")
+        ok_ref = "refs/heads/presence/zzz/4444444444444444"
+        self._push_raw(a, ok_ref, mod.presence_body(
+            {**good, "participant": "zzz", "instance": "4444444444444444",
+             "last_seen": mod.now().isoformat()}))
         lines = "\n".join(mod.presence_population())
-        self.assertIn("5 malformed", lines)
-        self.assertIn("0 fresh", lines)
+        self.assertIn("9 malformed", lines)
+        self.assertIn("1 fresh", lines, "a record after a hostile one is still read correctly")
+        self.assertIn("zzz/44444444", lines)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), mock.patch.object(
+            mod, "read_open_prs", return_value=([], None)
+        ):
+            mod.brief({"shell"})
+        self.assertIn("9 malformed", buf.getvalue())
+        with mock.patch.object(mod, "presence_records", side_effect=RecursionError):
+            self.assertIn("unknown (error", mod.presence_population()[0])
         t = mod.now() + dt.timedelta(days=30)
         with mock.patch.object(mod, "now", return_value=t):
-            self.assertEqual(mod.presence_prune(), 0)
-        self.assertEqual(len(self._refs()), 5)
+            self.assertEqual(mod.presence_prune(), 1, "only the well-formed record is pruned")
+        self.assertEqual(len(self._refs()), 9)
 
     def test_unavailable_remote_and_refused_presence_never_block_claim_work(self) -> None:
         """Presence failure is reported; claims still succeed and population says unknown."""

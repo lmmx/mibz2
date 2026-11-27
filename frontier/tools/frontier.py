@@ -1465,14 +1465,15 @@ def _presence_time(value):
 
 def presence_validate(rec, participant=None, instance=None):
     """Return the record if it is a well-formed presence snapshot (optionally for this ref)."""
-    if not isinstance(rec, dict) or set(rec) != _PRESENCE_KEYS or rec["schema"] != 1:
+    if not isinstance(rec, dict) or set(rec) != _PRESENCE_KEYS or type(rec["schema"]) is not int \
+            or rec["schema"] != 1:
         raise ValueError("unexpected keys or schema")
     _presence_token(rec["participant"], "participant")
     if not isinstance(rec["instance"], str) or not _INSTANCE.fullmatch(rec["instance"]):
         raise ValueError("bad instance")
     if rec["state"] not in PRESENCE_STATES:
         raise ValueError("bad state")
-    if rec["claim"] and not (isinstance(rec["claim"], str) and _CLAIM_ID.fullmatch(rec["claim"])):
+    if not isinstance(rec["claim"], str) or (rec["claim"] and not _CLAIM_ID.fullmatch(rec["claim"])):
         raise ValueError("bad claim")
     if not isinstance(rec["capabilities"], list) or rec["capabilities"] != _presence_caps(
         rec["capabilities"]
@@ -1637,24 +1638,46 @@ def presence_records(fetch=True):
     entries = entries[:PRESENCE_MAX_RECORDS]
     if not entries:
         return out
-    rc, raw = _pgit(
-        "cat-file", "--batch",
-        inp="".join(f"{sha}:presence.toml\n" for sha, _ in entries).encode(), binary=True,
+    # Size and type first, so an oversized or non-blob record is never read into memory.
+    rc, checks = _pgit(
+        "cat-file", "--batch-check",
+        inp="".join(f"{sha}:presence.toml\n" for sha, _ in entries),
     )
-    blobs, pos = [], 0
-    for _ in entries:
-        if rc:
-            blobs.append(None)
-            continue
-        nl = raw.index(b"\n", pos)
-        header = raw[pos:nl].split()
-        pos = nl + 1
-        if len(header) == 3 and header[1] == b"blob":
-            size = int(header[2])
-            blobs.append(raw[pos : pos + size])
-            pos += size + 1
-        else:
-            blobs.append(None)
+    lines = checks.splitlines() if rc == 0 else []
+    blobs = [None] * len(entries)
+    small = []
+    for i in range(len(entries)):
+        fields = lines[i].split() if i < len(lines) else []
+        if len(fields) == 3 and fields[1] == "blob" and fields[2].isdigit():
+            if int(fields[2]) <= PRESENCE_MAX_BYTES:
+                small.append((i, fields[0]))
+            else:
+                blobs[i] = "oversized"
+    if small:
+        rc, raw = _pgit(
+            "cat-file", "--batch", inp="".join(f"{oid}\n" for _, oid in small).encode(),
+            binary=True,
+        )
+        pos = 0
+        for k, (i, _oid) in enumerate(small):
+            try:
+                if rc:
+                    raise ValueError("cat-file failed")
+                nl = raw.index(b"\n", pos)
+                header = raw[pos:nl].split()
+                pos = nl + 1
+                if len(header) != 3:
+                    raise ValueError("bad cat-file header")
+                size = int(header[2])
+                if header[1] != b"blob" or size > PRESENCE_MAX_BYTES or pos + size > len(raw):
+                    raise ValueError("unexpected object")
+                blobs[i] = raw[pos : pos + size]
+                pos += size + 1
+            except ValueError:
+                # Out of step: everything from here on is unreadable, not misattributed.
+                for j, _oid in small[k:]:
+                    blobs[j] = None
+                break
     for (sha, ref), blob in zip(entries, blobs):
         tail = ref[len("refs/remotes/origin/presence/") :].split("/")
         rec, reason = None, ""
@@ -1662,12 +1685,12 @@ def presence_records(fetch=True):
             if len(tail) != 2:
                 raise ValueError("unexpected ref shape")
             if blob is None:
-                raise ValueError("no presence.toml")
-            if len(blob) > PRESENCE_MAX_BYTES:
+                raise ValueError("no readable presence.toml blob")
+            if blob == "oversized":
                 raise ValueError("record too large")
             rec = presence_validate(tomllib.loads(blob.decode("utf-8")), tail[0], tail[1])
-        except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
-            rec, reason = None, str(exc)[:80]
+        except Exception as exc:  # noqa: BLE001 - untrusted input: RecursionError, TypeError...
+            rec, reason = None, (str(exc) or type(exc).__name__)[:80]
         out["records"].append((f"{PRESENCE_PREFIX}/{'/'.join(tail)}", sha, rec, reason))
     return out
 
@@ -1713,7 +1736,15 @@ def presence_prune(limit=PRESENCE_PRUNE_MAX):
 
 
 def presence_population(all_holds=None, fetch=True):
-    """Lines describing observed instances, kept apart from live reservations."""
+    """Lines describing observed instances, kept apart from live reservations; never raises."""
+    try:
+        return _presence_population(all_holds, fetch)
+    except Exception as exc:  # noqa: BLE001 - presence must never break brief or status
+        return [f"- observed instances: unknown (error: {type(exc).__name__})"]
+
+
+def _presence_population(all_holds, fetch):
+    """Build presence_population's lines."""
     found = presence_records(fetch=fetch)
     lines = []
     if found["error"]:
