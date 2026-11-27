@@ -1,9 +1,9 @@
-id = "a6b-endpoint-successor-queue"
+id = "synthesise"
 holder = "antigravity"
-session = "f43bff4635d5"
-claimed_at = "2026-11-27T07:53:52+00:00"
-expires = "2026-11-27T15:53:52+00:00"
-owned_paths = ["bench/workstation-queue.txt"]
-mechanisms = ["workstation-queue"]
-base = "ae3edfe26b58357a8903666acf9811ae7ed1253c"
+session = "e79e3db4394f"
+claimed_at = "2026-11-27T08:06:14+00:00"
+expires = "2026-11-27T16:06:14+00:00"
+owned_paths = []
+mechanisms = []
+base = "c3db2e396ad61b6fbcdef58d8a5f9285234b22be"
 released = false
