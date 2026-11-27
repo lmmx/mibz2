@@ -87,6 +87,7 @@ DEAD_COLS = ["claim", "verdict", "what it showed", "evidence"]
 SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "evidence", "claims"]
 WORKSTATION_RE = re.compile(r"\b(?:workstation|i9(?:-\d+[a-z]*)?|workstation-queue)\b", re.IGNORECASE)
 RECENT_QUEUE_TAIL = 3
+PROVENANCE_RUN_KEYS = ("recipe", "head", "commit")
 
 
 def config(ref=None):
@@ -853,6 +854,17 @@ def _bundle_commits(ev_sha, rel_path):
                 if fh is not None:
                     text = fh.read().decode("utf-8", errors="replace").lower()
                     commits.update(re.findall(r"\b[0-9a-f]{40}\b", text))
+            elif name == "provenance.json":
+                # Newer recipes record the run's commit here, under a recipe-specific key; only
+                # the run identity keys count (never source/base commits or tree/blob ids).
+                fh = tf.extractfile(member)
+                if fh is not None:
+                    data = json.loads(fh.read().decode("utf-8", errors="replace"))
+                    if isinstance(data, dict):
+                        for key in PROVENANCE_RUN_KEYS:
+                            val = data.get(key)
+                            if isinstance(val, str) and re.fullmatch(r"[0-9a-f]{40}", val.lower()):
+                                commits.add(val.lower())
     return commits
 
 

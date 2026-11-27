@@ -2086,11 +2086,14 @@ class TestWorkstationPressure(unittest.TestCase):
 
     def _publish_evidence(
         self,
-        bundles: dict[str, str | None],
+        bundles: dict[str, str | dict | None],
         *,
         message: str = "evidence: fixture/run-20261127T000000Z",
     ) -> str:
-        """Create or advance orphan `origin/evidence` with `.tar.gz` bundles containing `commit.txt`."""
+        """Create or advance orphan `origin/evidence` with `.tar.gz` bundles.
+
+        A string value is written as `commit.txt`; a dict as `provenance.json`.
+        """
         seed = self.sb.seed
         index = self.sb.tmp / f"ev-index-{secrets_counter[0]}"
         secrets_counter[0] += 1
@@ -2099,7 +2102,12 @@ class TestWorkstationPressure(unittest.TestCase):
             stamp = pathlib.PurePosixPath(rel_path).name.removesuffix(".tar.gz")
             buf = io.BytesIO()
             with tarfile.open(fileobj=buf, mode="w:gz") as tf:
-                if commit_sha is not None:
+                if isinstance(commit_sha, dict):
+                    data = json.dumps(commit_sha).encode()
+                    ti = tarfile.TarInfo(name=f"{stamp}/provenance.json")
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+                elif commit_sha is not None:
                     data = f"{commit_sha}\n".encode()
                     ti = tarfile.TarInfo(name=f"{stamp}/commit.txt")
                     ti.size = len(data)
@@ -2233,6 +2241,41 @@ class TestWorkstationPressure(unittest.TestCase):
             p.name: p.read_text() for p in sorted((reader / "frontier" / "claims").glob("*.toml"))
         }
         self.assertEqual(before_toml, after_toml)
+
+    # Regression (integration review of #1093): newer recipes record the run in provenance.json
+    def test_wp_provenance_json_counts_as_archived_evidence(self) -> None:
+        """A bundle's provenance.json `recipe`/`head` marks the tagged run as evidenced; `source` does not."""
+        old_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._reset_claims(
+            {"other-p2": _claim_toml("other-p2", kind="probe", priority=2)},
+            queue_text="# repo: lmmx/mibz2\nbench-a bench/a run a\nbench-b bench/b run b\n",
+        )
+        new_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._tag_ready("bench-a", old_sha)
+        self._tag_ready("bench-b", new_sha)
+        self._publish_evidence(
+            {
+                "a/run-20261127T135104Z.tar.gz": {"recipe": old_sha, "source": new_sha},
+                "b/run-20261127T172728Z.tar.gz": {"head": new_sha, "head_src_tree": old_sha},
+            },
+            message="evidence: provenance bundles",
+        )
+        reader = self.sb.clone("reader-prov")
+        mod = _load_frontier_module(reader)
+        state = mod.read_workstation_queue_state(fetch=True)
+        self.assertEqual(state["state"], "starved", state)
+
+        # A provenance file naming the tagged commit only as a source/base is not evidence of the run.
+        self._publish_evidence(
+            {
+                "a/run-20261127T135104Z.tar.gz": {"recipe": old_sha, "source": new_sha},
+                "b/run-20261127T172728Z.tar.gz": {"head": old_sha, "source": new_sha},
+            },
+            message="evidence: provenance source only",
+        )
+        state = mod.read_workstation_queue_state(fetch=True)
+        self.assertEqual(state["state"], "replenished", state)
+        self.assertEqual([r for r, _ in state["runnable"]], ["bench-b"])
 
     # Scenario 2: nonempty/running queue -> pressure decays on replenishment & re-activates on drain
     def test_wp2_replenished_queue_decays_pressure_and_redrains_on_evidence(self) -> None:
