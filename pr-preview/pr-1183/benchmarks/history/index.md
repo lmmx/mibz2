@@ -45,6 +45,44 @@ Each table gives an arm's median wall time. It also gives the geometric mean of 
 
 ### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.17** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.17>)
+
+**`wikidata`**
+
+| threads | 0.5.17 wall (median) | lbzip2 2.5 wall (median) | 0.5.16 wall (median) | lbzip2 2.5 against 0.5.17 | 0.5.16 against 0.5.17 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.351 s | 2.510 s | 0.352 s | \+597.7% (+573.6, +622.7) **slower** | \+0.3% (−3.7, +4.5) |
+| 2 | 0.219 s | 1.335 s | 0.213 s | \+510.5% (+503.3, +517.8) **slower** | −1.9% (−4.7, +1.0) |
+| 4 | 0.132 s | 0.714 s | 0.134 s | \+436.3% (+427.2, +445.5) **slower** | \+0.4% (−1.8, +2.5) |
+| 8 | 0.067 s | 0.513 s | 0.066 s | \+655.6% (+648.4, +662.9) **slower** | −2.6% (−3.3, −1.8) **faster** |
+| 10 | 0.060 s | 0.506 s | 0.059 s | \+742.6% (+737.1, +748.2) **slower** | −1.5% (−2.4, −0.5) **faster** |
+| 12 | 0.060 s | 0.508 s | 0.060 s | \+726.6% (+694.8, +759.6) **slower** | −2.0% (−6.6, +2.8) |
+| 16 | 0.063 s | 0.501 s | 0.060 s | \+678.0% (+646.2, +711.1) **slower** | −1.6% (−8.0, +5.3) |
+| 20 | 0.061 s | 0.492 s | 0.060 s | \+683.7% (+646.2, +723.0) **slower** | −4.1% (−9.0, +1.0) |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.16** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16>)
+
+**`wikidata`**
+
+| threads | 0.5.16 wall (median) | lbzip2 2.5 wall (median) | 0.5.15 wall (median) | lbzip2 2.5 against 0.5.16 | 0.5.15 against 0.5.16 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.351 s | 2.509 s | 0.352 s | \+604.7% (+586.8, +623.1) **slower** | \+1.2% (−1.1, +3.5) |
+| 2 | 0.211 s | 1.340 s | 0.213 s | \+527.8% (+514.6, +541.2) **slower** | \+0.3% (−2.0, +2.6) |
+| 4 | 0.132 s | 0.713 s | 0.133 s | \+437.1% (+426.7, +447.8) **slower** | −0.6% (−3.6, +2.5) |
+| 8 | 0.066 s | 0.513 s | 0.066 s | \+679.1% (+677.0, +681.2) **slower** | \+0.5% (−0.1, +1.1) |
+| 10 | 0.059 s | 0.505 s | 0.059 s | \+750.6% (+746.4, +754.8) **slower** | \+0.7% (−0.8, +2.2) |
+| 12 | 0.060 s | 0.508 s | 0.062 s | \+719.2% (+678.1, +762.4) **slower** | −0.5% (−5.8, +5.0) |
+| 16 | 0.061 s | 0.497 s | 0.059 s | \+708.9% (+690.4, +727.8) **slower** | −1.6% (−4.5, +1.5) |
+| 20 | 0.060 s | 0.492 s | 0.061 s | \+717.1% (+699.5, +735.1) **slower** | \+2.5% (−2.6, +7.9) |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.15** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15>)
 
 **`wikidata`**
@@ -568,6 +606,29 @@ With no releases named, it compares the newest release tag with the one before i
 ## What changed, release by release
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
+
+### 0.5.17
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17>)
+
+- Recalibrated `OpenCells` admission and direct `Segmented` fallback (\#1222). `OpenCellsOf::cap` in `src/open.rs` now admits run-route blocks in `1/64 = 0.21` (and `< 1/64`) directly to `Segmented` (dropping the dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`).
+- The paired run on CI compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run 46069227845, AMD EPYC 7763 64-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Features reviewed: none was removed; the `[features]` table is unchanged since 0.5.16 (the same 20 research features).
+- Worker counts: not recalibrated.
+
+**Changes:** observational agent presence, apart from reservations ([\#1191](<https://github.com/lmmx/mibz2/pull/1191>)); harden run\_requests security and frontier authority gates ([\#1124](<https://github.com/lmmx/mibz2/pull/1124>)); recalibrate OpenCells admission to \[0.10, 0.21) m\<=0.27\*n post-\#1080 ([\#1222](<https://github.com/lmmx/mibz2/pull/1222>)); disjoint 32 KiB slabs, inline LONG fast-path, and noinline run ([\#1217](<https://github.com/lmmx/mibz2/pull/1217>)); L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone, stopped at its local gates ([\#1132](<https://github.com/lmmx/mibz2/pull/1132>)).
+
+### 0.5.16
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0516---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16>)
+
+- Faster decoding of compressible non-Wikidata blocks (\#1175). The Runs route now admits blocks whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at least 12.5% of their symbols are runs in the widened band.
+- Faster `BZ2Reader.readall()` from Python (\#1176): read in 1 MiB chunks and joined, with a fast path for `read()`.
+- The paired run on CI compared v0.5.15 at `aaaee363` with master at `66511da9` (Benchmark run 46035127124, AMD EPYC 9V74 80-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Features reviewed: none was removed; the `[features]` table is unchanged since 0.5.15 (the same 20 research features).
+- Worker counts: not recalibrated.
+
+**Changes:** widen takes\_runs admission to 75% with 12.5% widened-band guard ([\#1175](<https://github.com/lmmx/mibz2/pull/1175>)); add 1 MiB chunked BZ2Reader.readall() and fast read() path ([\#1176](<https://github.com/lmmx/mibz2/pull/1176>)).
 
 ### 0.5.15
 
