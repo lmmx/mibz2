@@ -3,7 +3,7 @@ title = "Generate copy-ready social announcements for every published blog post"
 kind = "ops"
 zone = "striated"
 needs = ["shell", "repo-write"]
-priority = 2
+priority = 1
 status = "open"
 pr = 0
 owned_paths = []
@@ -15,7 +15,7 @@ Exact clipboard text for the example:
 📣 mibz2 blog ⠶ The decoder's true floor and the limits of a pooled scan https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/
 """
 why = """
-Expedite at the maintainer's explicit request: prioritise admission and the smallest complete implementation over discretionary exploration and ordinary site work, without preempting existing reservations or P1 workstation work. The maintainer manually announces mibz2 blog posts on socials with a fixed title-and-link format and wants the copy produced in the repository/site, not by a chat notification. The existing blog index is already maintained with each publication; deriving copy during the build removes repeated work without a new agent role or publication gate.
+P1 at the maintainer's explicit direction: expedite admission and the smallest complete implementation in parallel with other P1 work, without preempting existing reservations or bypassing normal checks. The maintainer manually announces mibz2 blog posts on socials with a fixed title-and-link format and wants the copy produced in the repository/site, not by a chat notification. The existing blog index is already maintained with each publication; deriving copy during the build removes repeated work without a new agent role or publication gate.
 """
 stop_test = """
 Freeze tests before implementation: exact sample clipboard line (including the 📣 emoji, Braille separator, punctuation and canonical trailing slash), correct title and canonical URL for each published article including technical companions, no draft/index entries or duplicate controls, correct HTML escaping/entity decoding and UTF-8, and automatic inclusion of a newly indexed post. Verify clicking the control copies the complete single line without navigating, gives success feedback only after a successful clipboard write, and exposes an accessible selectable fallback when clipboard access fails. Verify the icon-only loudhailer control has an accessible name, responsive touch targets, keyboard access, dark/light appearance, and no regression to existing card navigation. Keep the site design discreet; no new page required for the primary action. Verify strict site build and render checks. No external social actions, new spending, scheduled notifications, redirects or additional publication approval.
