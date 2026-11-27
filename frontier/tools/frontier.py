@@ -515,8 +515,8 @@ def check_review_pr(cid, number, head, *, merged=False):
     return pr
 
 
-def review_card(cid, number, head):
-    """Fetch the immutable PR head and require the producer's existing review declaration."""
+def review_card(cid, number, head, *, statuses=("review",)):
+    """Fetch the immutable PR head and require the producer's PR card declaration."""
     rc, out = git("fetch", "-q", "--no-tags", "origin", f"refs/pull/{number}/head")
     if rc or git("rev-parse", "FETCH_HEAD")[1] != head:
         sys.exit(f"cannot fetch exact PR #{number} head: {out}")
@@ -524,7 +524,12 @@ def review_card(cid, number, head):
         rc, body = git("show", f"{head}:frontier/{dirname}/{cid}.toml")
         if rc == 0:
             c = tomllib.loads(body)
-            if c.get("id") == cid and c.get("status") == "review" and c.get("pr") == number:
+            if (
+                c.get("id") == cid
+                and c.get("status") in statuses
+                and type(c.get("pr")) is int
+                and c.get("pr") == number
+            ):
                 return c
     sys.exit(f"PR #{number} has not declared this claim ready for handoff")
 
@@ -544,13 +549,13 @@ def _trunk_item(cid):
 
 
 def take_review(cid, number, head, by, hours):
-    """Transfer a submitted claim's existing reservation, without acquiring another work slot."""
+    """Transfer a live claim reservation, or resume a released/expired PR claim into integration."""
     if not re.fullmatch(r"[A-Za-z0-9_-]+", cid):
         sys.exit("invalid claim id")
     if not by or by == "unknown" or hours <= 0:
         sys.exit("integration requires a named participant and positive lease duration")
     check_review_pr(cid, number, head)
-    c = review_card(cid, number, head)
+    c = review_card(cid, number, head, statuses=("open", "review"))
     _fetch_master(strict=True)
     trunk = _trunk_item(cid)
     if not trunk or trunk.get("status") not in ("open", "review") or trunk.get("needs_louis"):
@@ -560,33 +565,67 @@ def take_review(cid, number, head, by, hours):
     admission = admission_snapshot()
     all_holds = holds()
     sha, lease = all_holds.get(cid, (None, None))
-    if not lease or lease.get("released"):
+    if not lease:
         sys.exit(f"{cid} has no existing reservation to transfer")
-    if not live(lease) and sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
-        sys.exit("expired reservation cannot be revived at capacity")
-    if lease.get("phase") == "integration" and dt.datetime.fromisoformat(lease["expires"]) > now():
+    is_live = live(lease)
+    if is_live and lease.get("phase") is None and c.get("status") != "review":
+        sys.exit(f"PR #{number} has not declared this claim ready for handoff")
+    if not is_live and sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
+        state = "released" if lease.get("released") else "expired"
+        sys.exit(f"{state} reservation cannot be revived at capacity")
+    if (
+        is_live
+        and lease.get("phase") == "integration"
+        and dt.datetime.fromisoformat(lease["expires"]) > now()
+    ):
         sys.exit(f"{cid} already has an integration holder; wait for yield or expiry")
     if lease.get("phase") in ("integration", "parked") and lease.get("pr") != number:
         sys.exit(f"{cid} is reserved for a different PR")
+    if lease.get("terminal") and lease.get("pr") != number:
+        sys.exit(f"{cid} was already closed for a different PR")
     producer = lease.get("producer", lease.get("holder"))
     if not producer or by == producer:
         sys.exit("integration handoff requires a participant different from the producer")
     if not lease.get("base") or git("merge-base", "--is-ancestor", lease["base"], head)[0]:
         sys.exit("PR head does not descend from the reserved work base")
-    hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
+    trunk_paths = trunk.get("owned_paths", []) if trunk.get("zone") == "striated" else []
+    card_paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+    owned_paths = list(
+        dict.fromkeys(list(lease.get("owned_paths", [])) + list(trunk_paths) + list(card_paths))
+    )
+    mechanisms = list(
+        dict.fromkeys(
+            list(lease.get("mechanisms", []))
+            + list(trunk.get("mechanisms", []))
+            + list(c.get("mechanisms", []))
+        )
+    )
+    hit = conflicts(cid, owned_paths, mechanisms, all_holds)
     if hit:
         sys.exit(f"{cid} overlaps another live reservation: {hit[0]}")
     check_review_pr(cid, number, head)
     updated = {
-        **lease, "holder": by, "producer": producer, "session": secrets.token_hex(6),
-        "phase": "integration", "pr": number, "pr_head": head,
-        "expires": (now() + dt.timedelta(hours=hours)).isoformat(), "released": False,
+        **lease,
+        "holder": by,
+        "producer": producer,
+        "session": secrets.token_hex(6),
+        "owned_paths": owned_paths,
+        "mechanisms": mechanisms,
+        "phase": "integration",
+        "pr": number,
+        "pr_head": head,
+        "expires": (now() + dt.timedelta(hours=hours)).isoformat(),
+        "released": False,
     }
+    updated.pop("terminal", None)
     ok, out = write_lease(cid, updated, sha, sha, admission)
     if not ok:
         sys.exit(f"integration not acquired: {out}")
     print(f"acquired integration {cid} for PR #{number}; your session is {updated['session']}")
-    print("Existing reservation transferred; verify exact head and all normal merge gates.")
+    if is_live:
+        print("Existing reservation transferred; verify exact head and all normal merge gates.")
+    else:
+        print("Fresh integration reservation acquired; verify exact head and all normal merge gates.")
 
 
 def yield_review(cid, session):

@@ -1718,6 +1718,281 @@ class TestFrontierStress(unittest.TestCase):
                 f"must fail closed for payload: {payload}",
             )
 
+    def _released_pr_handoff(
+        self,
+        cid: str = "run-a",
+        *,
+        status: str = "open",
+        number: int = 42,
+        include_pr: bool = True,
+        release: bool = True,
+        expire: bool = False,
+    ):
+        """Claim `cid`, open a PR with the given head card, and release or expire the hold."""
+        author = self.sb.clone(f"producer-{cid}-{number}")
+        res = self.sb.run_frontier(author, "claim", cid, "--by", "producer")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        session = _extract_session(res.stdout)
+        _git(author, "switch", "-c", f"handed-back-{cid}-{number}")
+        card = author / "frontier" / "claims" / f"{cid}.toml"
+        replacement = f'status = "{status}"' + (f"\npr = {number}" if include_pr else "")
+        card.write_text(card.read_text().replace('status = "open"', replacement, 1))
+        _git(author, "add", str(card))
+        _git(author, "commit", "--allow-empty", "-m", f"hand back {cid} on PR #{number}")
+        _git(author, "push", "origin", f"HEAD:refs/pull/{number}/head")
+        head = _git(author, "rev-parse", "HEAD")
+        if release:
+            rel = self.sb.run_frontier(author, "release", cid, "--session", session)
+            self.assertEqual(rel.returncode, 0, rel.stdout + rel.stderr)
+        elif expire:
+            mod = _load_frontier_module(author)
+            sha, lease = mod.holds()[cid]
+            expired = {**lease, "expires": "2000-01-01T00:00:00+00:00"}
+            self.assertTrue(mod.write_lease(cid, expired, sha, sha)[0])
+        pr = {
+            "number": number,
+            "body": f"Claim: {cid}",
+            "head": {"sha": head},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+            "merged": False,
+        }
+        return author, head, pr
+
+    def test_resume_released_pr_claim_open_and_review_head_cards(self) -> None:
+        """Released or expired holds with an open/review PR card can be resumed via take-review."""
+        author, head, pr = self._released_pr_handoff("run-a", status="open", number=42)
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+
+        # `claim` still refuses because an open PR already exists for the claim.
+        with (
+            mock.patch.object(mod, "github_repository", return_value="test-owner/test-repo"),
+            mock.patch.object(mod, "read_open_prs", return_value=([pr], None)),
+        ):
+            with self.assertRaises(SystemExit) as cm:
+                mod.claim("run-a", "reviewer", 1)
+            self.assertIn("already has a pending PR", str(cm.exception))
+
+        # `take_review` acquires a fresh integration lease on the exact PR head.
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            mod.take_review("run-a", 42, head, "reviewer", 1)
+            lease = mod.holds()["run-a"][1]
+            self.assertFalse(lease["released"])
+            self.assertTrue(mod.live(lease))
+            self.assertEqual(lease["phase"], "integration")
+            self.assertEqual(lease["holder"], "reviewer")
+            self.assertEqual(lease["producer"], "producer")
+            self.assertEqual(lease["pr"], 42)
+            self.assertEqual(lease["pr_head"], head)
+            self.assertEqual(lease["owned_paths"], ["bench/workstation-queue.txt"])
+            self.assertEqual(lease["mechanisms"], ["queue"])
+            self.assertEqual(
+                mod.main(["frontier", "verify", "run-a", "--session", lease["session"]]),
+                0,
+            )
+
+            # Yielding and handing off to a second independent reviewer still works on an open card.
+            mod.yield_review("run-a", lease["session"])
+            mod.take_review("run-a", 42, head, "reviewer-2", 1)
+            self.assertEqual(mod.holds()["run-a"][1]["holder"], "reviewer-2")
+
+        # Terminal merge recovery releases the resumed integration lease cleanly.
+        _git(author, "push", "origin", "HEAD:master")
+        merged = {**pr, "state": "closed", "merged": True, "merge_commit_sha": head}
+        with mock.patch.object(mod, "read_pr", return_value=merged):
+            mod.finish_review("run-a", 42, head)
+        self.assertTrue(mod.holds()["run-a"][1]["released"])
+
+        # Released lease with a `review` head card also resumes cleanly.
+        _, head_c1, pr_c1 = self._released_pr_handoff("c1", status="review", number=43)
+        with mock.patch.object(mod, "read_pr", return_value=pr_c1):
+            mod.take_review("c1", 43, head_c1, "reviewer", 1)
+        self.assertEqual(mod.holds()["c1"][1]["phase"], "integration")
+        self.assertEqual(mod.holds()["c1"][1]["pr_head"], head_c1)
+
+        # Expired (unreleased) producer lease with an `open` head card also resumes cleanly.
+        _, head_c2, pr_c2 = self._released_pr_handoff(
+            "c2", status="open", number=44, release=False, expire=True
+        )
+        with mock.patch.object(mod, "read_pr", return_value=pr_c2):
+            mod.take_review("c2", 44, head_c2, "reviewer", 1)
+        self.assertEqual(mod.holds()["c2"][1]["phase"], "integration")
+        self.assertEqual(mod.holds()["c2"][1]["pr_head"], head_c2)
+
+    def test_resume_released_pr_claim_enforces_head_pr_producer_and_ancestry(self) -> None:
+        """Resuming a released PR still enforces producer-differs, exact head, PR match, and base."""
+        author, head, pr = self._released_pr_handoff("run-a", status="open", number=42)
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            # Producer cannot self-certify its own released PR.
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("run-a", 42, head, "producer", 1)
+            self.assertIn("different from the producer", str(cm.exception))
+
+            # Wrong PR head SHA is refused.
+            with self.assertRaises(SystemExit):
+                mod.take_review("run-a", 42, "0" * 40, "reviewer", 1)
+
+        # Draft PR is refused.
+        with mock.patch.object(mod, "read_pr", return_value={**pr, "draft": True}):
+            with self.assertRaises(SystemExit):
+                mod.take_review("run-a", 42, head, "reviewer", 1)
+
+        # Wrong PR number (card says pr = 42, caller asks for PR #99) is refused.
+        _git(author, "push", "origin", "HEAD:refs/pull/99/head")
+        pr99 = {**pr, "number": 99}
+        with mock.patch.object(mod, "read_pr", return_value=pr99):
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("run-a", 99, head, "reviewer", 1)
+            self.assertIn("not declared this claim ready for handoff", str(cm.exception))
+
+        # Stale PR head after a new commit on the PR is refused.
+        _git(author, "commit", "--allow-empty", "-m", "advance PR head")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        new_head = _git(author, "rev-parse", "HEAD")
+        with mock.patch.object(mod, "read_pr", return_value={**pr, "head": {"sha": new_head}}):
+            with self.assertRaises(SystemExit):
+                mod.take_review("run-a", 42, head, "reviewer", 1)
+
+        # Head card without `pr = N` is refused even when the lease is released.
+        _, head_nopr, pr_nopr = self._released_pr_handoff(
+            "c1", status="open", number=45, include_pr=False
+        )
+        with mock.patch.object(mod, "read_pr", return_value=pr_nopr):
+            with self.assertRaises(SystemExit):
+                mod.take_review("c1", 45, head_nopr, "reviewer", 1)
+
+        # A claim that was never reserved (no hold ref) is still refused.
+        unclaimed = self.sb.clone("unclaimed-author")
+        _git(unclaimed, "switch", "-c", "unclaimed-c4")
+        c4_card = unclaimed / "frontier" / "claims" / "c4.toml"
+        c4_card.write_text(c4_card.read_text().replace('status = "open"', 'status = "open"\npr = 77', 1))
+        _git(unclaimed, "add", str(c4_card))
+        _git(unclaimed, "commit", "-m", "unreserved PR for c4")
+        _git(unclaimed, "push", "origin", "HEAD:refs/pull/77/head")
+        c4_head = _git(unclaimed, "rev-parse", "HEAD")
+        c4_pr = {**pr, "number": 77, "body": "Claim: c4", "head": {"sha": c4_head}}
+        with mock.patch.object(mod, "read_pr", return_value=c4_pr):
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("c4", 77, c4_head, "reviewer", 1)
+            self.assertIn("no existing reservation", str(cm.exception))
+
+        # A PR head that does not descend from the reserved work base is refused.
+        _, head_c2, pr_c2 = self._released_pr_handoff("c2", status="open", number=46)
+        sha_c2, lease_c2 = mod.holds()["c2"]
+        self.assertTrue(mod.write_lease("c2", {**lease_c2, "base": "f" * 40}, sha_c2, sha_c2)[0])
+        with mock.patch.object(mod, "read_pr", return_value=pr_c2):
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("c2", 46, head_c2, "reviewer", 1)
+            self.assertIn("does not descend from the reserved work base", str(cm.exception))
+
+        # A terminal ordinary lease from an earlier merged PR is refused for a new PR.
+        _, head_c3, pr_c3 = self._released_pr_handoff("c3", status="open", number=47)
+        sha_c3, lease_c3 = mod.holds()["c3"]
+        self.assertTrue(
+            mod.write_lease("c3", {**lease_c3, "terminal": "a" * 40}, sha_c3, sha_c3)[0]
+        )
+        with mock.patch.object(mod, "read_pr", return_value=pr_c3):
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("c3", 47, head_c3, "reviewer", 1)
+            self.assertIn("closed for a different PR", str(cm.exception))
+
+        # Lease stayed released throughout all refusals.
+        self.assertTrue(mod.holds()["run-a"][1]["released"])
+
+    def test_resume_released_pr_claim_respects_reservation_limit_and_cas_race(self) -> None:
+        """Resuming a released PR consumes a slot, refuses at capacity, and serializes via CAS."""
+        _, head, pr = self._released_pr_handoff("run-a", status="open", number=42)
+        seed = self.sb.clone("filler")
+        sessions = {}
+        for cid in ("c1", "c2", "c3"):
+            res = self.sb.run_frontier(seed, "claim", cid, "--by", "filler")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            sessions[cid] = _extract_session(res.stdout)
+
+        # At 3/3 live holds, resuming a released lease MUST fail.
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            with self.assertRaises(SystemExit) as cm:
+                mod.take_review("run-a", 42, head, "reviewer", 1)
+            self.assertIn("capacity", str(cm.exception))
+        self.assertTrue(mod.holds()["run-a"][1]["released"])
+        self.assertEqual(sum(mod.live(v) for _, v in mod.holds().values()), 3)
+
+        # Free one slot (2/3 live) and race take_review(run-a) against claim(c4) on the last slot.
+        rel = self.sb.run_frontier(seed, "release", "c3", "--session", sessions["c3"])
+        self.assertEqual(rel.returncode, 0, rel.stdout + rel.stderr)
+
+        rev_mod = _load_frontier_module(self.sb.clone("racer-review"))
+        clm_mod = _load_frontier_module(self.sb.clone("racer-claim"))
+        barrier = threading.Barrier(2)
+
+        def run_take_review() -> bool:
+            original = rev_mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with (
+                mock.patch.object(rev_mod, "read_pr", return_value=pr),
+                mock.patch.object(rev_mod, "write_lease", side_effect=write),
+            ):
+                try:
+                    rev_mod.take_review("run-a", 42, head, "reviewer", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        def run_claim() -> bool:
+            original = clm_mod.write_lease
+
+            def write(*args):
+                barrier.wait(timeout=10)
+                return original(*args)
+
+            with mock.patch.object(clm_mod, "write_lease", side_effect=write):
+                try:
+                    clm_mod.claim("c4", "contender", 1)
+                    return True
+                except SystemExit:
+                    return False
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            f1 = pool.submit(run_take_review)
+            f2 = pool.submit(run_claim)
+            results = [f1.result(), f2.result()]
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(sum(mod.live(v) for _, v in mod.holds().values()), 3)
+
+    def test_resume_released_pr_claim_refuses_overlapping_live_holds(self) -> None:
+        """Resuming a released PR never bypasses an overlapping path or mechanism live hold."""
+        _, head, pr = self._released_pr_handoff("run-a", status="open", number=42)
+        other = self.sb.clone("other")
+        mod = _load_frontier_module(self.sb.clone("reviewer"))
+
+        for blocker in ("run-b", "run-parent", "same-mech"):
+            res = self.sb.run_frontier(other, "claim", blocker, "--by", "other")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            session = _extract_session(res.stdout)
+            with mock.patch.object(mod, "read_pr", return_value=pr):
+                with self.assertRaises(SystemExit) as cm:
+                    mod.take_review("run-a", 42, head, "reviewer", 1)
+                self.assertIn("overlaps another live reservation", str(cm.exception))
+            self.assertTrue(mod.holds()["run-a"][1]["released"])
+            rel = self.sb.run_frontier(other, "release", blocker, "--session", session)
+            self.assertEqual(rel.returncode, 0, rel.stdout + rel.stderr)
+
+        # A disjoint sibling path does NOT block resuming the released PR.
+        res = self.sb.run_frontier(other, "claim", "run-sibling", "--by", "other")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        with mock.patch.object(mod, "read_pr", return_value=pr):
+            mod.take_review("run-a", 42, head, "reviewer", 1)
+        self.assertFalse(mod.holds()["run-a"][1]["released"])
+        self.assertEqual(mod.holds()["run-a"][1]["phase"], "integration")
+
 
 class TestPresence(unittest.TestCase):
     """Frozen fixtures for claim agent-presence: observational presence, apart from leases."""
