@@ -188,7 +188,7 @@ def dek_check(dek):
 
 def changed_posts(base):
     import subprocess
-    out = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD", "--",
+    out = subprocess.run(["git", "diff", "--name-only", "--diff-filter=d", f"{base}...HEAD", "--",
                           "docs/site/blog/"], capture_output=True, text=True, check=True)
     return [p for p in out.stdout.split() if p.endswith(".md") and not p.endswith("index.md")]
 
