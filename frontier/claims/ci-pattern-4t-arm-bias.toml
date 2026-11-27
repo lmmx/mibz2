@@ -1,0 +1,24 @@
+id = "ci-pattern-4t-arm-bias"
+title = "Why CI's paired bench penalises the head arm on pattern at four threads"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = []
+mechanisms = ["bench-ci"]
+needs_louis = ""
+question = """
+Over 18 PR bench runs that don't touch the scanner (docs/journal/2026-11-27-explore/ci-pattern-4t-null-bias.md), only `pattern` at 4T shows a head-arm bias: wall x1.0186 (run-cluster 95% CI 1.0027-1.0338), peak RSS x1.017, and 3 of 18 runs flagged slower by the 10-round interval. Strict-null runs with identical decoder code show it too. Find the mechanism with an A/A run: the same commit built twice as head and base arms (and, separately, one binary under both arm labels) through `ab run` with the bench's corpora, threads and rounds, on a CI runner or a 4-vCPU VM. Separate binary identity, harness version, arm label and process start-up.
+"""
+why = """
+A systematic bias plus an undercovering interval in one cell makes a single CI flag there weak evidence. It currently holds the #1034 flag's interpretation, and it will recur for any change judged on `pattern` 4T.
+"""
+stop_test = """
+Frozen before data: EXPLAINED if one factor (binary identity, arm label, or harness) reproduces a head/base ratio >= 1.010 on pattern 4T with its 95% interval excluding 1 while the A/A with that factor removed gives an interval containing 1; NOT REPRODUCED if the plain A/A (same binary both arms) and the two-build A/A both contain 1; otherwise INCONCLUSIVE. No change to the bench, its corpora, guards or statistics follows from this claim alone (PERFORMANCE-POLICY section 2, measurement changes).
+"""
+done_when = """
+A journal note and delta with the A/A results; a note on frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md if it bears on it.
+"""
+premises = ["docs/journal/2026-11-27-explore/ci-pattern-4t-null-bias.md"]
+links = ["frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md", "frontier/claims/scanner-per-block-fixed-cost.toml"]

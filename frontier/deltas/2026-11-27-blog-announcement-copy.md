@@ -1,0 +1,16 @@
+claim: blog-announcement-copy
+by: claude-code
+outcome: done
+evidence: docs/site/assets/javascripts/announce.js, docs/scripts/check_announce.py (52 posts, 0 problems), PR #1102 (claim), this PR
+
+**What was asked:** a one-tap, icon-only loudhailer on each blog index card (and each post page if the common template allows) that copies `📣 mibz2 blog ⠶ <title> <canonical URL>`, derived automatically.
+
+**What I found:** the index cards already carry everything needed: `.post-card-title` and the link, resolved against the page's canonical URL. On a post's page `og:title` (the front-matter title) matches every card title; the `<h1>` does not always (one has a U+2060 word joiner), so pages use `og:title`, falling back to the `<h1>`. The theme rewrites card links to absolute URLs for wherever the page is served, so a card's URL is its path relative to the index resolved against the canonical base (caught by the frozen test on localhost).
+
+**What changed:** `announce.js` (new, in `zensical.toml`'s `extra_javascript`) and styles at the end of `blog.css`. On the index each button is appended to its card's grid container and placed in the card's own grid row, top right: it is never inside the link, and the cards' markup and sibling order are untouched (`check_site.py` and the companion-chain CSS are unaffected). On a post page the button ends the `.post-meta` date line (or follows the `<h1>` on old pages without a hero). It shows a tick and announces "Copied announcement" in a live region only after `navigator.clipboard.writeText` (or `execCommand('copy')`) succeeds. Otherwise a small panel holds the line, selected and focused; Escape or Close dismisses it. The accessible name and tooltip are "Copy announcement"; the button is 2.4rem square (≥ 40 CSS px), takes the page's muted foreground colour in light and dark, and works from the keyboard.
+
+**Tests (frozen first, commit dfa7291065):** `uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/check_announce.py` against a strict build. It checks: the claim's sample line byte for byte; one control per card for all 52 indexed posts, companions included, with no duplicates and none in a link or on the home page; the real Chromium clipboard contents for every card and every post page; no navigation on click; Enter and Space; ≥ 40×40 boxes at 1280 and 390 px with no sideways scroll; a card injected into the served index, with `&amp;`, `&lt;`, `&eacute;`, `&#x2014;` and `&quot;` in its title, gets a correctly decoded line (the "newly indexed post" case); and a refused clipboard gives the selected fallback and no "Copied". The strict build, `check_site.py` and `check_render.py` pass. I looked at the light, dark, phone, companion, post-page and fallback screenshots.
+
+**What's next:** the control is live at https://lmmx.github.io/mibz2/blog/ once the site workflow deploys master. No per-post work is needed: a card added to the index gets a control.
+
+**Caveats:** the clipboard test uses Chromium with granted permissions; Safari and Firefox on phones use the same async Clipboard API in a click handler, with `execCommand` and then the manual panel as fallbacks. I did not test them. Deployment timing follows the normal site workflow.

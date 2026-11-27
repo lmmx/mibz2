@@ -335,6 +335,13 @@
     "section": " · Research blog",
     "title": "The decoder's true floor and the limits of a pooled scan"
   },
+  "assets/social/blog-2026-11-27-l2-cliff-register-wall-and-scanner-a2.png": {
+    "description": "Composing the worker stack hits two sharp hardware walls while safe header decoding cuts serial parsing by a third and flips the eight-worker knee.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "synthesis",
+    "section": " · Research blog",
+    "title": "The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee"
+  },
   "assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png": {
     "description": "Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.",
     "foot": "lmmx.github.io/mibz2 · 27 November 2026",
