@@ -1,9 +1,9 @@
-id = "scanner-coalesced-shallow-source"
+id = "a6b-endpoint-run"
 holder = "codex"
-session = "8b572ca8e673"
-claimed_at = "2026-11-27T07:37:01+00:00"
-expires = "2026-11-27T15:37:01+00:00"
-owned_paths = ["bench/scanner_coalesced.py", "bench/test_scanner_coalesced.py"]
-mechanisms = ["scan-coalesced-u8"]
-base = "a8b1747bde33ffb1de76247ad44f4fd07bb41c3f"
+session = "c64ddb3002ab"
+claimed_at = "2026-11-27T07:37:53+00:00"
+expires = "2026-11-27T15:37:53+00:00"
+owned_paths = ["bench/a6b_endpoint.py", "bench/test_a6b_endpoint.py"]
+mechanisms = ["a6b-workstation-validation"]
+base = "7ad3e0fa328ea3f9686c95316633931cc8c81be8"
 released = false
