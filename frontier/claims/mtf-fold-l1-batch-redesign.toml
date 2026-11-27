@@ -16,6 +16,8 @@ Cold dissection of #1010 (`docs/journal/2026-11-27-explore/mtf-fold-and-outq-dis
 4. Port-5 shuffle contention between `front_avx2`'s 4x `vpshufb` and `OutQ16`'s `vpbroadcastw`.
 
 Redesign `mtf-fold` (keeping it behind `--features mtf-fold`) to decouple the two hot loops via a 1 KiB L1d-resident `[u32; 256]` packed maximal-run batch (`(c << 24) | total`, checked once before the loop for injective `seq_to_unseq`), keeping `front_avx2` `#[inline(never)]` with zero `f0`/`f1`/GPR spills and no `CAP=127` splitting or `cnt[256]` RMW, flushing every 256 runs into a dedicated `#[inline(never)]` `Pass::take` + `OutQ16` with a power-of-2 guard zone (`CHUNK = 496, STRIDE = 512` [1024 B] or `CHUNK = 1008, STRIDE = 1024` [2048 B], cutting `push_slow` 6.2x-10.3x with 0 overflow chunks on Wikidata). Does this rescue redesign clear both the local wikidata gate and `mtf-fold/registration.md`'s frozen i9 kill test (K1-K4)?
+
+Note (smooth-zone probe, 27 Nov, `docs/journal/2026-11-27-explore/mtf-l1-batch-and-outq32.md`; `stop_test` untouched): `examples/outq_hoist_and_rle_probe.rs` (233/233 Open blocks + 27 stress cases exact, 0 `f0`/`f1` spills in `objdump -d`, JCC-aligned native control) showed that `[u32; 256]` + `496/512` *without* hoisting saves only `-17.2 ms` (`-10.5%` A5+A6a; `-12.8..-16.0 ms` joint A5+A6a+A6c ≈ `1.85-2.49%` of 1W `wkr_cpu_ms`, right at/below `2.5%`), whereas adding **batch-hoisted `p`/`EPOCH` + `OVF_BIT` single-branch `f + w <= C` `push_hoisted` + register-local `m` + fused Pass-1 `lits` popcount** (100% safe Rust) doubles the alignment-invariant gain to **`-28.2..-32.0 ms` (`-18.1%..-20.8%` A5+A6a; `-28.3 ms` bidi / `-25.0 ms` fwd ≈ `-4.1%..-4.6%` of 1W `wkr_cpu_ms`)**. Guard invariant requires `f + w <= C` (not `f < C`). Run-encoded `OutQ32` STOPPED (`+34.6%..+40.6%` joint A5+A6a+A6c). Include a JCC-aligned control alongside default builds to rule out 20-40 ms 32B branch-alignment swings.
 """
 why = """
 `A5 + A6a` is 332.7 ms at 1W (25.5% of wall) and 47.5 ms/w at 8W (25.7% of worker busy). Eliminating `124.5 MiB` of L2-spilling `runs: Vec<u16>`, `CAP=127` splitting, unused `counts`/`per`, `maximal()`, and `351,722` `OutQ16` tail-guard slow calls remains a substantial live opportunity once the register-spill and `FoldSink` aliasing pathologies are removed.
@@ -32,11 +34,13 @@ Redesigned `src/runs/fold.rs` + `src/open.rs` + `src/open/outq.rs` behind `--fea
 """
 premises = [
   "docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md",
+  "docs/journal/2026-11-27-explore/mtf-l1-batch-and-outq32.md",
   "docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md",
   "src/runs/fold.rs",
   "src/open/outq.rs",
 ]
 links = [
   "examples/mtf_a6a_dissection.rs",
+  "examples/outq_hoist_and_rle_probe.rs",
   "frontier/claims/mtf-fold-run.toml",
 ]
