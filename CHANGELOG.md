@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
+
+### <!-- 3 -->Performance
+
+- *(runs)* widen takes_runs admission to 75% with 12.5% widened-band guard ([#1175](https://github.com/lmmx/mibz2/pull/1175))
+- *(python)* add 1 MiB chunked BZ2Reader.readall() and fast read() path ([#1176](https://github.com/lmmx/mibz2/pull/1176))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* record 0.5.15 i9 crossover verdict and add #1176 ledger row ([#1180](https://github.com/lmmx/mibz2/pull/1180))
+- *(changelog)* 0.5.15 measured notes, feature review, moonshot lockfile, and partial delta ([#1171](https://github.com/lmmx/mibz2/pull/1171))
+- *(explore)* measure bzip2 Huffman self-synchronisation and the selector-count obstruction (STOP) ([#1166](https://github.com/lmmx/mibz2/pull/1166))
+
+### <!-- 6 -->Testing
+
+- *(in-place)* allow Runs-route exact block capacity in trace growth check ([#1185](https://github.com/lmmx/mibz2/pull/1185))
+
+### <!-- 9 -->Other
+
+- record workstation-pressure integration blocked by agent-presence path hold ([#1187](https://github.com/lmmx/mibz2/pull/1187))
+- open release-0-5-16 at P1 ([#1186](https://github.com/lmmx/mibz2/pull/1186))
+- frozen i9 recipe for the text-panel knee probe (text-knee-i9) ([#1139](https://github.com/lmmx/mibz2/pull/1139))
+- dissect src/rle.rs 2-load m1 filter & zero-vzeroupper raw-AVX2 unrle (PASS) ([#1178](https://github.com/lmmx/mibz2/pull/1178))
+- *(parallel)* dissect v0.5.15 5T/7T/9T crossover cliffs and stale LAZY_FROM_THREADS ([#1182](https://github.com/lmmx/mibz2/pull/1182))
+- admit segmented-fused-postwalk (idea -> open) ([#1181](https://github.com/lmmx/mibz2/pull/1181))
+- open crc32-avx2-ring-barrett-build ([#1177](https://github.com/lmmx/mibz2/pull/1177))
+- Record 0.5.15 i9 release-scaling run and close release-0-5-15 ([#1174](https://github.com/lmmx/mibz2/pull/1174))
+- admit post-1080-takes-runs (idea -> open) ([#1173](https://github.com/lmmx/mibz2/pull/1173))
+- record physical i9-10900K STOP verdict for jcc-aligned-release-build ([#1172](https://github.com/lmmx/mibz2/pull/1172))
+
+- **Faster decoding of compressible non-Wikidata blocks (#1175).** The Runs route now admits blocks
+  whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at
+  least 12.5% of their symbols are runs in the widened band. Markdown, ELF, JSON, prose and source
+  blocks with 17–49% run symbols take the branchless run path: MTF plus inverse BWT CPU fell
+  −13% to −32% on markdown, −15% to −25% on ELF and −9% to −10% on JSON across baseline, native and
+  32-byte-aligned builds (local probe, 658/658 blocks exact). No block of Wikidata, `text`,
+  `random`, `records`, `runs`, `onebyte` or `pattern` changes route.
+- **Faster `BZ2Reader.readall()` from Python (#1176):** read in 1 MiB chunks and joined, with a
+  fast path for `read()`.
+
+**The paired run on CI** compared v0.5.15 at `aaaee363` with master at `66511da9` (Benchmark run
+[46035127124](https://github.com/lmmx/mibz2/actions/runs/46035127124), **AMD EPYC 9V74 80-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier data and version numbers from `66511da9` to the `v0.5.16` tag commit `4e261140`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. No corpus is faster or slower at any thread count; Wikidata
+  wall is −0.2% / −0.5% / +0.4% at 1/2/4 threads, every interval spanning no change; the
+  one-thread stage total is 5.83 → 5.91 c/B (+0.2% [−1.6%, +2.1%]).
+- **Why:** none of CI's seven corpora has blocks in the widened band, so #1175's gain is not
+  exercised there. That it routes no CI corpus differently is what the run confirms.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.15 (the same 20 research features). The follow-ons listed under 0.5.15 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1175 changes no block's route on Wikidata,
+the corpus the trims are measured on, and 0.5.15's crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5) and team threshold (RELEASING §5a):** queued on the i9-10900K at
+`v0.5.16` (`4e261140`, #1193; `ready/bench-release-scaling` and `ready/bench-crossover` confirmed
+on origin). Verdicts will be recorded here once the bundles land on `origin/evidence`.
+
 ## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
 
 ### <!-- 1 -->Features
