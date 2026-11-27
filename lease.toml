@@ -1,9 +1,9 @@
-id = "synthesise"
+id = "scanner-coalesced-u8-i9-queue"
 holder = "antigravity"
-session = "e79e3db4394f"
-claimed_at = "2026-11-27T08:06:14+00:00"
-expires = "2026-11-27T16:06:14+00:00"
-owned_paths = []
-mechanisms = []
-base = "c3db2e396ad61b6fbcdef58d8a5f9285234b22be"
+session = "888b8fb44679"
+claimed_at = "2026-11-27T08:11:53+00:00"
+expires = "2026-11-27T16:11:53+00:00"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+base = "3f98f2ae19bb8d4aa666a0dc0f423eb0f4470f2d"
 released = false
