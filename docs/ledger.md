@@ -65,10 +65,17 @@ Where the counts and bounds come from:
   `ready`, and one more is the reader's current block. A block that decodes to more than
   n + 64 bytes doubles its buffer.
 - **The input chunks:** 2 are queued (`INPUT_QUEUE`), 1 is held by the writer (filling or
-  sending it), and 1 is being appended to the window. `BzReader`'s feeder allocates each
-  chunk afresh.
-- **The scanner's window** keeps up to `COMPACT` (4 MiB) of bytes already read before it
-  drops them. So it holds under 4 MiB + its 2 MiB lookahead + one chunk, reserved by
+  sending it), and 1 is the next after the window's, waiting while the window still holds
+  bytes before it. `BzReader`'s feeder allocates each chunk afresh.
+- **The scanner's window** is a chunk, read in place, until a view reaches past its end
+  while it still holds bytes. Its held bytes then move into the seam, a buffer kept for
+  this, with only those bytes of the next chunk that views reach; once no byte before the
+  next chunk is held, that chunk is the window, uncopied, and the seam waits for the next
+  boundary. At the scanner's pattern the seam holds under two lookaheads (4 MiB), reserved
+  once at the first boundary; an input of one chunk allocates none. Where views reach past
+  the next chunk too (chunks shorter than the lookahead), the seam takes them whole and
+  keeps up to `COMPACT` (4 MiB) of bytes already read before it drops them. So the window
+  and the seam together hold under 4 MiB + its 2 MiB lookahead + one chunk, reserved by
   doubling.
 
 **The ledger at -9 (full blocks, the default window 4t, `SLOTS_PER_THREAD`; 4 MiB chunks;
@@ -253,8 +260,10 @@ reader can take a block before its `Ready` mark. Such a block counts as held for
   build contains no allocation-history state or recording. The CI bench's paired A/B
   remains the check for default performance.
 - **`trace` compiled in, level 0:** each mark is one relaxed atomic load. A block has two
-  more (`InvertStart`, `InvertEnd`), each input chunk one (`Window`), and the allocation
-  recorder one level check per successful inversion; it records nothing at level 0.
+  more (`InvertStart`, `InvertEnd`), each input chunk a few (`Window`: received, its first
+  bytes copied onto the seam as views reach them, the window moved to it), and the
+  allocation recorder one level check per successful inversion; it records nothing at
+  level 0.
 - **Levels 1 and 2:** each mark also costs a timestamp and a push to the thread's own
   buffer, now with two sizes (16 more bytes a mark). Reading a `Vec`'s length and
   capacity is two loads. Each successful inversion now also allocates a buffer-size

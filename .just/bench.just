@@ -1940,3 +1940,199 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# Frozen C6 adoption run for the input-chunk seam window (`scanner-seam-window`,
+# docs/journal/2026-11-27-scanner-seam-window/registration.md): compares HEAD_REF/HEAD_SHA
+# against its merge-base with origin/master on wikidata-x4 (4 copies of corpora/wikidata.bz2),
+# unpinned at 6, 8, 9, 10 and 12 threads, 16 paired rounds, settle 2 s, default 100 ms pre-spin
+# with --machine-state. ADOPTS iff 10 and 12 threads (8 workers) are both FASTER (95% CI upper
+# bound < 1.000), none of 6, 8 and 9 threads is SLOWER (lower bound > 1.000), and median peak
+# RSS head/base <= 1.10 at every count (bench/scanner_seam_window.py). Diagnostics (decide
+# nothing): mibz2-workers-lazy at 8, 9 and 10 explicit workers, plus --features trace occupancy
+# at 10 threads (8 workers).
+#   just submit bench-scanner-seam-window build/scanner-seam-window <40-char-sha> 100
+# DRY (4th positional arg: 2 rounds, no settle, machine not checked; wiring only, never evidence):
+#   just bench-scanner-seam-window build/scanner-seam-window "" 0 1
+bench-scanner-seam-window HEAD_REF="build/scanner-seam-window" HEAD_SHA="" PRESPIN="100" DRY="":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    HEAD_REF="{{HEAD_REF}}" HEAD_SHA="{{HEAD_SHA}}" PRESPIN="{{PRESPIN}}" dry="{{DRY}}"
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=10,12 SUPPORTING=6,8,9 LAZY=8,9,10
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; }
+    [[ $HEAD_REF =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bench-scanner-seam-window: HEAD_REF '$HEAD_REF' is not a branch name"; exit 1; }
+    [[ -z $HEAD_SHA || $HEAD_SHA =~ ^[0-9a-f]{40}$ ]] \
+      || { echo "bench-scanner-seam-window: HEAD_SHA '$HEAD_SHA' must be a 40-char SHA or empty"; exit 1; }
+    [[ -z $PRESPIN || $PRESPIN == 0 || ( $PRESPIN =~ ^[0-9]+$ && $PRESPIN -ge 10 && $PRESPIN -le 1000 ) ]] \
+      || { echo "bench-scanner-seam-window: PRESPIN '$PRESPIN' must be empty, 0, or 10..1000 ms"; exit 1; }
+    [[ $PRESPIN != 0 ]] || PRESPIN=
+    WARM=${PRESPIN:+--prespin-ms $PRESPIN --machine-state}
+    W=$PWD/target/scanner-seam-window
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-scanner-seam-window (docs/journal/2026-11-27-scanner-seam-window/registration.md) at $(git rev-parse HEAD): mibz2 at ${HEAD_SHA:-tip of} origin/$HEAD_REF vs merge-base with origin/master, unpinned at $THREADS threads (judged $JUDGED, supporting $SUPPORTING), $ROUNDS paired rounds, settle $SETTLE s${PRESPIN:+, prespin ${PRESPIN} ms}, wikidata-x$COPIES"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-scanner-seam-window: DRY RUN (wiring only, never evidence)" | tee "$O/DRY-RUN.txt"
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\trc\tstarted\tfinished\tlast\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=0
+      [ -z "$FAILED" ] || { echo "bench-scanner-seam-window: failed phases:$FAILED"; rc=1; }
+      date -u +%FT%TZ > "$O/finished.txt"
+      exec >&3 2>&4
+      wait "$TEE" 2>/dev/null || true
+      bash bench/bundle.sh "$O"
+      exit "$rc"
+    }
+    trap finish EXIT
+    phase() {
+      local name=$1 deps=$2; shift 2
+      local t0 d rc last
+      t0=$(date -u +%FT%TZ)
+      for d in ${deps//,/ }; do
+        [ "$d" = "-" ] && continue
+        if [[ " $FAILED " == *" $d "* ]]; then
+          printf '%s\tSKIPPED\t%s\t%s\tprerequisite %s failed\n' "$name" "$t0" "$t0" "$d" >> "$O/phases.tsv"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-scanner-seam-window: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    resolve() {
+      [ -z "$(git status --porcelain --untracked-files=no)" ] \
+        || { echo "bench-scanner-seam-window: checkout has local changes"; exit 1; }
+      git fetch -q origin "+refs/heads/master:refs/remotes/origin/master"
+      git fetch -q origin "+refs/heads/$HEAD_REF:refs/remotes/origin/$HEAD_REF" \
+        || echo "bench-scanner-seam-window: origin has no branch $HEAD_REF (pinned HEAD_SHA fetched directly)"
+      local head=$HEAD_SHA in_ref=no
+      if [ -z "$head" ]; then
+        head=$(git rev-parse --verify -q "refs/remotes/origin/$HEAD_REF^{commit}") \
+          || { echo "bench-scanner-seam-window: no HEAD_SHA and no origin/$HEAD_REF"; exit 1; }
+      fi
+      git cat-file -e "$head^{commit}" 2>/dev/null || git fetch -q origin "$head" || true
+      git cat-file -e "$head^{commit}" || { echo "bench-scanner-seam-window: $head is not on origin"; exit 1; }
+      ! git merge-base --is-ancestor "$head" "refs/remotes/origin/$HEAD_REF" 2>/dev/null || in_ref=yes
+      local master base changed beyond
+      master=$(git rev-parse refs/remotes/origin/master)
+      base=$(git merge-base "$head" "$master") \
+        || { echo "bench-scanner-seam-window: $head has no merge-base with master"; exit 1; }
+      [ "$base" != "$head" ] || { echo "bench-scanner-seam-window: $head is already on master"; exit 1; }
+      changed=$(git diff --name-only "$base" "$head" -- src Cargo.toml Cargo.lock build.rs rust-toolchain.toml examples tests)
+      [ -n "$changed" ] || { echo "bench-scanner-seam-window: source does not differ"; exit 1; }
+      beyond=$(printf '%s\n' "$changed" | grep -E '^(Cargo\.toml|Cargo\.lock|build\.rs|rust-toolchain\.toml|examples/ab\.rs)$' || true)
+      [ -z "$beyond" ] \
+        || { echo "bench-scanner-seam-window: build/harness inputs differ: $(echo "$beyond")"; exit 1; }
+      if [ -n "$PRESPIN" ]; then
+        git grep -q -e '"--prespin-ms"' "$head" -- examples/ab.rs \
+          || { echo "bench-scanner-seam-window: head harness lacks --prespin-ms"; exit 1; }
+      fi
+      printf '%s\n' "$changed" > "$O/src-changed.txt"
+      git diff "$base" "$head" -- src examples tests > "$O/src-head-against-base.diff"
+      git log --format='%H %s' "$base..$head" > "$O/head-commits.txt"
+      git rev-parse HEAD > "$O/commit.txt"
+      printf 'base %s\nhead %s\nhead_ref %s\nhead_sha_given %s\nhead_in_ref %s\nmaster %s\n' \
+        "$base" "$head" "$HEAD_REF" "${HEAD_SHA:-none}" "$in_ref" "$master" > "$O/builds.txt"
+      cat "$O/builds.txt"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-scanner-seam-window: rustc 1.99.1 is required"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      local b=$1 sha
+      sha=$(awk -v b="$b" '$1 == b { print $2 }' "$O/builds.txt")
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-scanner-seam-window: build-$b has local changes"; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-scanner-seam-window: build-$b not at $sha"; exit 1; }
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-scanner-seam-window: build-$b toolchain differs"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+      (cd "$W/build-$b" && cargo build -q --release --features trace --example occupancy)
+      sha256sum "$W/build-$b/target/release/examples/ab" "$W/build-$b/target/release/examples/occupancy" | tee -a "$O/binaries.sha256"
+    }
+    inputs() {
+      local want dir
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-scanner-seam-window: $corpus digest mismatch"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+    }
+    machine() {
+      "$AB" env > "$O/env.json"
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+      uname -a > "$O/uname.txt"
+      cat "$O/env.json"
+    }
+    timed() {
+      "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
+        --settle $SETTLE $WARM "$X4"
+      "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+      date -u +%FT%TZ > "$O/timed.txt"
+    }
+    verdict() {
+      python3 bench/scanner_seam_window.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+        --arm mibz2 --judged $JUDGED --supporting $SUPPORTING --rounds $ROUNDS \
+        --corpus wikidata-x$COPIES ${dry:+--dry} | tee "$O/verdict.txt"
+    }
+    lazy() {
+      "$AB" run "$O/lazy.jsonl" --arms "mibz2-workers-lazy@$BAB,mibz2-workers-lazy" --threads $LAZY \
+        --rounds $ROUNDS --settle $SETTLE $WARM "$X4"
+      "$AB" summary "$O/lazy.jsonl" --ref "mibz2-workers-lazy@$BAB" | tee "$O/lazy-summary.txt"
+    }
+    lazy_report() {
+      python3 bench/scanner_seam_window.py "$O/lazy.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+        --arm mibz2-workers-lazy --judged "" --supporting $LAZY --rounds $ROUNDS \
+        --corpus wikidata-x$COPIES --diagnostic ${dry:+--dry} | tee "$O/lazy.txt"
+    }
+    trace_diag() {
+      local t_rounds=3
+      [ -z "$dry" ] || t_rounds=1
+      "$W/build-base/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$t_rounds" \
+        --out "$O/trace-base.jsonl" | tee "$O/trace-base.txt"
+      "$W/build-head/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$t_rounds" \
+        --out "$O/trace-head.jsonl" | tee "$O/trace-head.txt"
+    }
+    phase resolve - resolve
+    phase build-base resolve build base
+    phase build-head resolve build head
+    phase inputs build-head inputs
+    phase machine build-head machine
+    phase timed build-base,build-head,inputs,machine timed
+    phase verdict timed verdict
+    phase lazy build-base,build-head,inputs,machine lazy
+    phase lazy-report lazy lazy_report
+    phase trace-diag build-base,build-head,inputs trace_diag
