@@ -1,0 +1,9 @@
+id = "workstation-pressure"
+holder = "antigravity"
+session = "5e1171995885"
+claimed_at = "2026-11-27T05:59:46+00:00"
+expires = "2026-11-27T13:59:46+00:00"
+owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
+mechanisms = []
+base = "c5443ce91478d45b14c56cc3b12be0e1df5beddb"
+released = false
