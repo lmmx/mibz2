@@ -77,7 +77,7 @@ logs, elf) the median r is **0.64**, with a range of 0.58–0.85. That is in the
 
 ## Supplementary: walls on this VM (not under the rule)
 
-`bzcat` at a window of 4 × workers, 7 interleaved rounds, median (min) in ms. bzcat runs a
+`bzcat` at a window of 4 × workers, 7 interleaved rounds, median (min) in ms (`station-balance/walls.tsv`). bzcat runs a
 stdin thread, the scanner, k workers and the writer. So at k = 3 it has six threads on 4
 vCPUs, and the k = 3 figures are oversubscribed.
 
