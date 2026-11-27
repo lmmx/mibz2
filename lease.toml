@@ -6,4 +6,4 @@ expires = "2026-11-27T09:06:06+00:00"
 owned_paths = ["src/open.rs"]
 mechanisms = ["record-count-precheck"]
 base = "46f050ad61b6321f552975a293a9498176472aeb"
-released = false
+released = true
