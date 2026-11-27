@@ -1,0 +1,24 @@
+id = "scanner-seam-window-queue"
+title = "Queue the registered input-chunk seam-window run on the i9"
+kind = "run"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+needs_louis = ""
+question = """
+Can the workstation runner execute the exact reviewed #1031 branch before adoption and return its one registered attempt to the seam-window integration holder?
+"""
+why = """
+The scanner-seam-window integration lease owns the candidate source paths. This claim owns the workstation queue entry and its ready signal under the standing 9 November authorisation. The i9 queue currently has no seam run. The seam registration requires a candidate distinct from master.
+"""
+stop_test = """
+Use #1031's frozen registration and the runner's normal queue entry point. Verify current exact candidate, independent C6 review, applicable green checks, runner invocation, admission/lease, absence of an existing attempt or signal, and absence of a hold tag. Queue one bench-scanner-seam-window run. Stop on a live conflict, moved candidate, material review objection, failed check, or existing evidence for this attempt. The candidate and registration remain with their existing claim holder.
+"""
+done_when = """
+The queue entry has landed and its ready tag names the independently reviewed and green recipe commit. Record the queue line, tag object and candidate for the integration holder, or record the concrete blocker. The original claim retains interpretation of the evidence and the adoption decision.
+"""
+premises = ["frontier/claims/scanner-seam-window.toml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/workstation-queue.txt"]
+links = ["https://github.com/lmmx/mibz2/pull/1031"]
