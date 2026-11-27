@@ -20,7 +20,7 @@
 //! column to length 8 and ternary to 5, at every mark and five limits, and the B5 tests decode
 //! arbitrary columns against the plain inverse. [`OpenCells`] admits only blocks with
 //! `0 < n <= 900_000` and `p < n`, the kernel's own entry condition.
-use crate::bwt::{InverseBwt, LazyCells};
+use crate::bwt::{InverseBwt, Segmented};
 use crate::{runs::Runs, Kernels};
 
 /// A block's construction counts (the journal's; read by the tests and the arrow audit)
@@ -829,18 +829,23 @@ fn walk_slices(
 /// i9: bench-open-return, the moonshot runs)
 pub(crate) const LIMIT: u32 = 16;
 
-/// The dense band's density line: the open kernel takes a block up to `DENSE.0` records in
-/// `DENSE.1` rows (r/n below 0.28; text starts there) where `LazyCells`' own line (r/n 0.15)
-/// refuses it. Wikidata's five full blocks between the two lie at r/n 0.151 to 0.206
-/// (blocks 41, 56, 165, 270 and 278 of the bench corpus), and went to Segmented.
-const DENSE: (usize, usize) = (7, 25);
-/// The dense band's structural gate, from the first pass (the Mechanisms line's cycle 18,
-/// `docs/journal/2026-11-21-carbon-cycle18-aht-whole-corpus.md` on
-/// `research/carbon-word-transport`): at most `DENSE_M` retained rows and 3 in 10 of the
-/// block's, and at most `DENSE_STRIPS` thick strips. Wikidata's five keep 199,189 to 231,600
-/// retained rows and 568 to 2,729 strips. Past either the block goes to `LazyCells` as before,
-/// and the first pass has taken no more than the cap's queues and strips.
+/// Post-#1080 + #1210 two-tier open-kernel admission
+/// (`docs/journal/2026-11-27-explore/route-crossover-post-1080.md`,
+/// `docs/journal/2026-11-27-explore/composed-post-0516-stack.md`):
+/// - `1/64 <= r/n < 0.10` (`OPEN_OUTRIGHT`): admitted outright (`Cap::NONE`), zero `within_cap`
+///   overhead on 194/233 full `wikidata` blocks;
+/// - `0.10 <= r/n < 0.21` (`OPEN_BAND`): checked by `within_cap` against `Cap::dense(n)`
+///   (`m <= min(256_000, 0.27 * n)`, `strips <= 16_384`), keeping all 233/233 full `wikidata`
+///   blocks (including the 5 dense blocks at `r/n = 0.151..0.206`, `m/n = 0.221..0.257`) inside
+///   `OpenCells` so 8-worker `OpenCells` workers never allocate `Segmented`'s ~6.5–8.4 MiB/worker
+///   scratch (`<= 1.01x` 8W RSS), while catching high-`m/n` `text` blocks (`r/n = 0.142..0.146`,
+///   `m/n = 0.42`) and routing them straight to `Segmented`;
+/// - `r/n >= 0.21` (and `r/n < 1/64`): straight to `Segmented` without running `within_cap`,
+///   dropping the dead `[0.21, 0.28)` dense tail.
+const OPEN_OUTRIGHT: (usize, usize) = (1, 10);
+const OPEN_BAND: (usize, usize) = (21, 100);
 const DENSE_M: u32 = 256_000;
+const DENSE_M_RATIO: (u64, u64) = (27, 100);
 const DENSE_STRIPS: usize = 16_384;
 
 /// What the open kernel may take of a block, checked by its first pass
@@ -853,26 +858,25 @@ pub(crate) struct Cap {
 }
 
 impl Cap {
-    /// No cap: the blocks `LazyCells`' count gates admit, and the test route
+    /// No cap: blocks in `1/64 <= r/n < 0.10` (`OPEN_OUTRIGHT`), and the test route
     pub(crate) const NONE: Cap = Cap {
         m: u32::MAX,
         strips: usize::MAX,
     };
 
-    /// The dense band's, for a block of `n` rows
+    /// Structural cap for `0.10 <= r/n < 0.21` (`m <= min(256_000, 0.27 * n)`)
     pub(crate) fn dense(n: usize) -> Cap {
         Cap {
-            m: DENSE_M.min((n as u64 * 3 / 10) as u32),
+            m: DENSE_M.min((n as u64 * DENSE_M_RATIO.0 / DENSE_M_RATIO.1) as u32),
             strips: DENSE_STRIPS,
         }
     }
 }
 
-/// The workers' kernel wherever production ran `LazyCells` (from 0.5.7): the open kernel on
-/// every run-route block that `LazyCells`' record-count gates admit (its density line and the
-/// sparse gate, `cells_lazy::lazy_counts_admit`), and on the dense band above that density line
-/// (`DENSE`) that the first pass finds within `Cap::dense`; `LazyCells` as shipped on every
-/// other block and on the column route. The output is the same either way.
+/// The workers' default inverse-BWT kernel: the open kernel outright on run-route blocks in
+/// `1/64 <= r/n < 0.10`, and in `0.10 <= r/n < 0.21` when `within_cap` finds `m <= 0.27 * n`
+/// and `strips <= 16_384`; `Segmented` directly on every other block (`r/n >= 0.21`, `r/n < 1/64`,
+/// and the column route). The output is the same either way.
 pub type OpenCells = OpenCellsOf<false>;
 /// Test and fuzz route: the open kernel on every run-route block its entry condition admits,
 /// whatever the record count (`OpenCells` otherwise)
@@ -884,11 +888,11 @@ pub type ForcedOpenCells = OpenCellsOf<true>;
 #[derive(Default)]
 pub struct OpenCellsOf<const FORCED: bool> {
     open: Kernel,
-    lazy: LazyCells,
+    fallback: Segmented,
     /// (test only) blocks the open kernel inverted
     #[cfg(test)]
     pub(crate) opened: usize,
-    /// (test only) blocks the open kernel's first pass refused (past `Cap::dense`)
+    /// (test only) blocks refused by `within_cap` or the open kernel's first pass
     #[cfg(test)]
     pub(crate) capped: usize,
 }
@@ -896,14 +900,20 @@ pub struct OpenCellsOf<const FORCED: bool> {
 impl<const FORCED: bool> OpenCellsOf<FORCED> {
     /// What the open kernel may take of a run-route block of `records` records in `n` rows
     /// with the walk's row `p`, by its record count and the kernel's own entry condition:
-    /// all of it where `LazyCells`' record-count gates admit the block (and when `FORCED`),
-    /// `Cap::dense` in the dense band above their density line, nothing (`None`) elsewhere
+    /// `Cap::NONE` for `1/64 <= r/n < 0.10` (and when `FORCED`), `Cap::dense(n)` for
+    /// `0.10 <= r/n < 0.21`, and `None` (`Segmented`) elsewhere
     pub(crate) fn cap(records: usize, n: usize, p: u32) -> Option<Cap> {
         if n == 0 || n > 900_000 || p as usize >= n {
             None
-        } else if FORCED || crate::cells::lazy_counts_admit(records, n) {
+        } else if FORCED {
             Some(Cap::NONE)
-        } else if records * 64 >= n && records * DENSE.1 < n * DENSE.0 {
+        } else if crate::cells::lazy_counts_admit(records, n) {
+            if records * OPEN_OUTRIGHT.1 < n * OPEN_OUTRIGHT.0 {
+                Some(Cap::NONE)
+            } else {
+                Some(Cap::dense(n))
+            }
+        } else if records * 64 >= n && records * OPEN_BAND.1 < n * OPEN_BAND.0 {
             Some(Cap::dense(n))
         } else {
             None
@@ -1230,7 +1240,7 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 {
                     self.capped += 1;
                 }
-                return self.lazy.invert_runs(r, n, p, out, k);
+                return self.fallback.invert_runs(r, n, p, out, k);
             }
             let ran = self
                 .open
@@ -1251,16 +1261,16 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 self.capped += 1;
             }
         }
-        self.lazy.invert_runs(r, n, p, out, k)
+        self.fallback.invert_runs(r, n, p, out, k)
     }
     fn invert(&mut self, l: &[u8], c: &[u32; 256], p: u32, out: &mut Vec<u8>) {
-        self.lazy.invert(l, c, p, out);
+        self.fallback.invert(l, c, p, out);
     }
     fn invert_in_place(&mut self, l: &mut Vec<u8>, c: &[u32; 256], p: u32) -> bool {
-        self.lazy.invert_in_place(l, c, p)
+        self.fallback.invert_in_place(l, c, p)
     }
     fn wants_checkpoints(&self) -> bool {
-        self.lazy.wants_checkpoints()
+        self.fallback.wants_checkpoints()
     }
     fn invert_checkpointed(
         &mut self,
@@ -1270,7 +1280,7 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         p: u32,
         out: &mut Vec<u8>,
     ) {
-        self.lazy.invert_checkpointed(l, c, checkpoints, p, out);
+        self.fallback.invert_checkpointed(l, c, checkpoints, p, out);
     }
 }
 
