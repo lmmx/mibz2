@@ -25,7 +25,8 @@ from the recipe checkout (the re-pin is not in v0.5.17's tree).
   that both registrations ship and name the pin and the frozen bounds.
 - Build of every recipe binary at `01acd74d` (default, `forward-anchor-lanes`, trace +
   `scan-oracle`) with Rust 1.99.1 in a VM, through `build_binaries` and
-  `assert_distinct_binaries`: in progress.
+  `assert_distinct_binaries`: all build, digests distinct. Smoke: both arms' `a6b_endpoint_run`
+  at k = 1 on `text` match libbzip2's SHA-256 (`8329e51e…`).
 
 ## Next (result to release)
 Merge -> `ready/bench-forward-lanes` at the merge commit (run-signal.yml) -> queue entry (queue-only
