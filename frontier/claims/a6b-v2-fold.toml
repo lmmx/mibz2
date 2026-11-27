@@ -1,0 +1,24 @@
+id = "a6b-v2-fold"
+title = "Fold #1079's safe V2_u128 A6b refinements into src/open/endpoint.rs when next touched"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 4
+status = "idea"
+owned_paths = ["src/open/endpoint.rs"]
+mechanisms = ["a6b"]
+needs_louis = ""
+question = """
+#1079 (scoped STOP at its frozen 15% gate) found V2_u128_base/lazy (zero-call empty join, no `pairs` cache, gen8+fp8 fingerprint in 16 KiB contents_4k, tag < 8 64-bit dict fast path) cuts the post-#1046 A6b by -12.2..-13.6% on all three builds, disjoint, about 80 LOC, ~2.7-3.0 ms/w at 8W derived. Fold it into the `a6b-endpoint-redesign` code under PERFORMANCE-POLICY section 2 when that file is next changed, after the #1085 i9 verdict.
+"""
+why = """
+Small, safe, measured room on an Open worker station. Below the k = 8 tie margin (tenth synthesis pass), so it is CPU and k = 9-10 value, not a 6 GB/s lever; hence P4.
+"""
+stop_test = """
+Frozen before data: byte-exact on the test suite and wikidata; CI paired bench passes PERFORMANCE-POLICY section 2 with the feature on; otherwise STOP with a dead-end row.
+"""
+done_when = """
+PR merged behind the existing feature, or dead-end row.
+"""
+premises = ["docs/journal/2026-11-27-explore/a6b-v2-dissection.md"]
+links = ["frontier/claims/a6b-endpoint-run.toml"]

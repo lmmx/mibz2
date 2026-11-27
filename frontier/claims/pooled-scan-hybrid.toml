@@ -3,7 +3,7 @@ title = "A hybrid scan: idle workers scan ahead from slack only"
 kind = "write"
 zone = "smooth"
 needs = ["long-context"]
-priority = 4
+priority = 3
 status = "idea"
 mechanisms = ["scan"]
 owned_paths = []
@@ -18,6 +18,7 @@ Note (synthesis ninth pass, 27 Nov, derived): slack-only hybrid helps only when 
 """
 why = """
 The scan is still 179 ms of the 195 ms wall at 8 workers when the workers are free.
+Synthesis tenth pass: the slack-only condition S' - W'/8 > ~5.5 ms holds at k = 8 on text (gap ~0.15-0.43 S', #1075) and on JCC-aligned wikidata (~6-22 ms, derived from #1076/#1077), failing only for unaligned wikidata. Register with the corpus and codegen it is priced on.
 """
 stop_test = """
 Design only: a registration frozen before any data.

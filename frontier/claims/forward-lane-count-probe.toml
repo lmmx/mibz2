@@ -4,7 +4,7 @@ kind = "probe"
 zone = "smooth"
 needs = ["shell", "rust"]
 priority = 3
-status = "idea"
+status = "dropped"   # answered by #1076 (w4-v3-mlp-layout-probe): K = 6/8/10 coupled regress from 15-GPR spills; dead-ends.tsv row (synthesis tenth pass)
 owned_paths = []
 mechanisms = ["emission-walk"]
 needs_louis = ""
