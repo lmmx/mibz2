@@ -3,7 +3,7 @@ title = "Fast safe-Rust A2a..d scanner setup: direct run-length MTF, multi-symbo
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 3
+priority = 2
 status = "idea"
 owned_paths = ["src/block.rs", "src/huff.rs"]
 mechanisms = ["scanner-a2-build"]
@@ -19,6 +19,7 @@ Once PR `#1034` (`scanner-coalesced-u8-decode`) lands on `src/block.rs` and `src
 3. `A2d_direct_g64` (or per-table `group_uses[g] >= 16` `A2d_direct_t16`): single-write fused `K=2` root LUT fill with `split_at_mut` and tail-only (`1024 - filled_to`, mean `9.1` entries on wikidata) long-code/sub-LUT construction, dropping `d_arr[0..1024]` and redundant `K=1` overwrites.
 """
 why = """
+Priority 3 -> 2 (synthesis ninth pass, 27 Nov): its value is conditional on the knee. At k = 8 the composed workers (W'/8 ~135-145 ms, #1067) bind and mask most of this cut; at k = 9 (8/9 x the worker demand, ~124-129 ms derived) the scanner binds again and this is the largest remaining serial lever. Admit as soon as #1034 lands on src/block.rs and src/huff.rs; it is the dependency.
 Post-`#1034` serial scan `S'` is `~145 ms` on i9-10900K, making `A2a..d` (`~13-14%` of `S'`) the largest unoptimized serial component on the scan critical path. Cutting `S'` by `-4.44%..-7.38%` removes `~6.4-10.7 ms` directly from serial `S'` (`~145 -> ~134-139 ms`) in 100% safe Rust with zero extra memory, lowering the 8-10W scan ceiling and relaxing the `140 ms` slack-hybrid contour.
 """
 stop_test = """
