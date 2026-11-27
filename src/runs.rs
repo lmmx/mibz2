@@ -128,6 +128,12 @@ pub struct Runs {
     /// the symbols' bitmaps (the AVX2 kernel's): not a run symbol; not RUNA
     lit: Vec<u64>,
     one: Vec<u64>,
+    /// Whether `runs` and `counts` were produced by a completed `front_scalar` or `front_avx2`
+    /// call for `len < 2^24` rows and have not been modified since: guarantees every record has
+    /// `1 <= len <= CAP`, each byte's record lengths sum to `counts[c]`, and the total is `len`.
+    trusted: bool,
+    /// The block row count validated when `trusted` is true.
+    len: usize,
 }
 
 impl Default for Runs {
@@ -140,6 +146,8 @@ impl Default for Runs {
             per: [0; 256],
             lit: Vec::new(),
             one: Vec::new(),
+            trusted: false,
+            len: 0,
         }
     }
 }
@@ -194,6 +202,8 @@ impl Runs {
         counts: &[u32; 256],
         per: &[u32; 256],
     ) {
+        self.trusted = false;
+        self.len = 0;
         self.shared_runs = Some(runs);
         self.counts = *counts;
         self.per = *per;
@@ -228,6 +238,8 @@ impl Runs {
 
     /// The records, to break them
     pub(crate) fn records_mut(&mut self) -> &mut Vec<u16> {
+        self.trusted = false;
+        self.len = 0;
         &mut self.runs
     }
 }
@@ -318,6 +330,8 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
             left -= len;
         }
     }
+    r.trusted = false;
+    r.len = 0;
     let (runs, counts, per) = (&mut r.runs, &mut r.counts, &mut r.per);
     runs.clear();
     *counts = [0; 256];
@@ -364,6 +378,8 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
         n += 1;
     }
     close(open, runs, per);
+    r.trusted = n < (1 << 24);
+    r.len = n;
     Ok(n)
 }
 
@@ -498,6 +514,8 @@ unsafe fn second(
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
 unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
     use std::arch::x86_64::*;
+    f.trusted = false;
+    f.len = 0;
     let m = syms.len();
     let sp = syms.as_ptr();
     if b.max_len >= 1 << 31 || m >= 1 << 24 {
@@ -752,7 +770,10 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
         f.counts[c] = x as u32;
         f.per[c] = (x >> 32) as u32;
     }
-    Some(n as usize)
+    let n = n as usize;
+    f.trusted = n < (1 << 24);
+    f.len = n;
+    Some(n)
 }
 
 /// The block's LF table from its records (as `front` left them in `r`, for a block of `n`
@@ -770,7 +791,9 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
 /// below n, and once the records' lengths reach exactly n, every slot of [0, n) has been
 /// written, in order, once. That makes `tt` a T-vector in the walks' sense (every link below
 /// its length), walked backward: from `orig_ptr`, the block's bytes last to first
-/// (`bwt::walk_back_room`).
+/// (`bwt::walk_back_room`). When `r` was produced by `front` for `n` rows and has not been
+/// modified since (`r.trusted && n == r.len`), `front` has already established those exact
+/// tiling invariants, so the AVX2 kernel runs without per-record bounds checks.
 pub fn fill(r: &Runs, n: usize, tt: &mut TVector, k: Kernels) -> bool {
     tt.0.clear();
     if n >= 1 << 24 {
@@ -790,6 +813,17 @@ pub fn fill(r: &Runs, n: usize, tt: &mut TVector, k: Kernels) -> bool {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
+            if r.trusted && n == r.len {
+                // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant);
+                // `r.trusted && n == r.len` is set only on a completed `front_scalar` or
+                // `front_avx2` call for `n < 2^24` rows (which clears `shared_runs`, and is
+                // cleared on any mutation of `r` including `load_shared` and `records_mut`),
+                // establishing that `runs` tiles `[0, n)` with `1 <= len <= CAP`, each byte's
+                // records sum to `r.counts[c]`, and `next` holds the exclusive prefix sums
+                // summing to `n`.
+                unsafe { fill_avx2_trusted(runs, n as u32, next, &mut tt.0) };
+                return true;
+            }
             // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
             return unsafe { fill_avx2(runs, n as u32, next, &lim, &mut tt.0) };
         }
@@ -878,6 +912,53 @@ unsafe fn fill_avx2(
     // stores (the slack a record wrote past its end written again by the records after it)
     tt.set_len(n as usize);
     true
+}
+
+/// `fill_avx2` for a `Runs` produced by `front` and not modified since: `front` has already
+/// established that every record has `1 <= len <= CAP`, each byte's record lengths sum to
+/// `r.counts[c]`, and the total length is `n < 2^24`. That eliminates the per-record bounds
+/// checks against `n - q` and `lim[c] - next[c]` and the `lim` array on the stack.
+///
+/// # Safety
+///
+/// AVX2 must be available. `runs` must tile `[0, n)` with `n < (1 << 24)`: every record has
+/// `1 <= (x & 0xff) <= 127`, the records for each byte `c` sum to `r.counts[c]`, and `next`
+/// holds the exclusive prefix sums of `r.counts` (whose total sum is `n`).
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn fill_avx2_trusted(runs: &[u16], n: u32, mut next: [u32; 256], tt: &mut Vec<u32>) {
+    use std::arch::x86_64::*;
+    tt.reserve(n as usize + 8);
+    let out = tt.as_mut_ptr();
+    let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
+    let step = _mm256_set1_epi32(2048);
+    let mut q = 0usize;
+    for &x in runs {
+        let c = (x >> 8) as usize;
+        let len = (x & 0xff) as usize;
+        let cur = next[c];
+        next[c] = cur + len as u32;
+        let e = (c as u32) | (cur << 8);
+        let mut v = _mm256_add_epi32(_mm256_set1_epi32(e as i32), lanes);
+        let end = q + len;
+        let mut w = q;
+        loop {
+            // SAFETY: by the tiling precondition `1 <= len` and `end <= n`, so `w < end <= n`
+            // and `w + 8 <= n + 7`, within the `n + 8` elements reserved in `tt`.
+            unsafe { _mm256_storeu_si256(out.add(w) as *mut __m256i, v) };
+            w += 8;
+            if w >= end {
+                break;
+            }
+            v = _mm256_add_epi32(v, step);
+        }
+        q = end;
+    }
+    debug_assert_eq!(q, n as usize);
+    // SAFETY: the records tile `[0, n)` in order (each with `len >= 1`), so every slot in
+    // `[0, n)` was written with its final LF entry (slack past a record's end is overwritten
+    // by the following records, and slack past `n` is cut off by `set_len(n)`).
+    unsafe { tt.set_len(n as usize) };
 }
 
 // ---- The fill on a team's threads (`coop::RunsBuild`) ----

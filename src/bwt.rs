@@ -170,19 +170,27 @@ pub struct Segmented {
 
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
-        build(ll, counts, &mut self.tt);
-        walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        if build_lf(ll, counts, &mut self.tt) {
+            walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        } else {
+            build(ll, counts, &mut self.tt);
+            walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        }
     }
 
     // The build is `ll`'s last read: it copies every byte and link the walk needs into the
     // table. The walk (segmented, or plain for a short block) then reads only the table and
-    // the segment scratch, so its output can go over `ll`. Both writers (`walk`,
-    // `SegScratch::assemble`) clear their output and write exactly the table's n rows, and
-    // n = ll.len() fits the capacity `ll` already has. So the success contract holds, and
-    // Segmented never falls back.
+    // the segment scratch, so its output can go over `ll`. Both writers (`walk`/`walk_back`,
+    // `SegScratch::assemble`/`assemble_reversed`) clear their output and write exactly the
+    // table's n rows, and n = ll.len() fits the capacity `ll` already has. So the success
+    // contract holds, and Segmented never falls back.
     fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
-        build(ll, counts, &mut self.tt);
-        walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        if build_lf(ll, counts, &mut self.tt) {
+            walk_back_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        } else {
+            build(ll, counts, &mut self.tt);
+            walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        }
         true
     }
 
@@ -203,7 +211,7 @@ impl InverseBwt for Segmented {
         if !crate::runs::fill(r, n, &mut self.tt, k) {
             return false;
         }
-        walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        walk_back_room_with_kernels(&mut self.tt, orig_ptr, out, &mut self.seg, k);
         true
     }
 
@@ -357,7 +365,7 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
             if !crate::runs::fill(r, n, &mut self.tt, k) {
                 return false;
             }
-            walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+            walk_back_room_with_kernels(&mut self.tt, orig_ptr, out, &mut self.seg, k);
             return true;
         };
         if !crate::runs::cuts(r, n, &mut self.cuts) {
@@ -376,7 +384,7 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
             pool,
             FLAGGED_SEGMENTS * K,
         );
-        self.seg.assemble_reversed(out);
+        self.seg.assemble_reversed_with(out, k);
         true
     }
 
@@ -429,6 +437,92 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
     if !build_one_pass(ll, counts, &mut tt.0) {
         build_two_pass(ll, counts, &mut tt.0);
     }
+}
+
+/// The LF table of the last column `ll`, whose bytes `counts` counts, into `tt`:
+/// `tt[i] = ll[i] | LF(i) << 8`, with `LF(i) = C(ll[i]) + occ(ll[i], i)`.
+///
+/// Unlike `build` (which scatters row `i` into its byte's bucket at `s = ftab[c]`, doing a
+/// random write into a 3.6 MB table and a second random read of `ll[s]`), this reads `ll`
+/// sequentially and writes `tt` sequentially: zero random stores, zero `ll` random loads,
+/// with only the 1 KiB `ftab` cursor array hot in L1. Equal-byte runs of 8 rows advance the
+/// bucket cursor once and write 8 consecutive entries directly.
+///
+/// Returns `true` when `n < 2^24` and `counts` matches `ll` (verified after the pass by
+/// `ftab == lim`), establishing `TVector`'s invariant that every link `(e >> 8)` is below `n`.
+/// Otherwise leaves `tt` empty and returns `false` so the caller can fall back to `build`.
+pub(crate) fn build_lf(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) -> bool {
+    let n = ll.len();
+    tt.0.clear();
+    if n >= 1 << 24 || counts.iter().map(|&c| c as usize).sum::<usize>() != n {
+        return false;
+    }
+    let (mut ftab, mut lim) = ([0u32; 256], [0u32; 256]);
+    let mut cum = 0u32;
+    for b in 0..256 {
+        ftab[b] = cum;
+        cum += counts[b];
+        lim[b] = cum;
+    }
+    tt.0.reserve(n);
+    let src = ll.as_ptr();
+    let dst = tt.0.as_mut_ptr();
+    let mut i = 0usize;
+    while i + 8 <= n {
+        // SAFETY: `i + 8 <= n`, so `src.add(i)` is valid for an unaligned 8-byte read.
+        let w = unsafe { (src.add(i) as *const u64).read_unaligned() };
+        if w == w.rotate_left(8) {
+            let c = (w & 0xff) as usize;
+            let s = ftab[c];
+            ftab[c] = s.wrapping_add(8);
+            let base = (c as u32) | (s << 8);
+            // SAFETY: `i + 8 <= n`, within `tt.0`'s reserved capacity `n`.
+            unsafe {
+                let d = dst.add(i);
+                *d = base;
+                *d.add(1) = base.wrapping_add(1 << 8);
+                *d.add(2) = base.wrapping_add(2 << 8);
+                *d.add(3) = base.wrapping_add(3 << 8);
+                *d.add(4) = base.wrapping_add(4 << 8);
+                *d.add(5) = base.wrapping_add(5 << 8);
+                *d.add(6) = base.wrapping_add(6 << 8);
+                *d.add(7) = base.wrapping_add(7 << 8);
+            }
+            i += 8;
+        } else {
+            // SAFETY: `i + 8 <= n`, within `ll` and `tt.0`'s reserved capacity `n`.
+            unsafe {
+                for k in 0..8 {
+                    let c = *src.add(i + k) as usize;
+                    let s = ftab[c];
+                    ftab[c] = s.wrapping_add(1);
+                    *dst.add(i + k) = (c as u32) | (s << 8);
+                }
+            }
+            i += 8;
+        }
+    }
+    while i < n {
+        // SAFETY: `i < n`, within `ll` and `tt.0`'s reserved capacity `n`.
+        unsafe {
+            let c = *src.add(i) as usize;
+            let s = ftab[c];
+            ftab[c] = s.wrapping_add(1);
+            *dst.add(i) = (c as u32) | (s << 8);
+        }
+        i += 1;
+    }
+    if ftab != lim {
+        return false;
+    }
+    // SAFETY:
+    // 1. Every slot in `0..n` was written sequentially above (`i` stepped from `0` to `n`).
+    // 2. Every cursor `ftab[c]` started at `cum[c]`, incremented only by positive counts
+    //    summing in total to `n < 2^24` (so no `wrapping_add` can wrap `u32`), and ended at
+    //    `lim[c]`. Therefore every written link `s` satisfied `cum[c] <= s < lim[c] <= n`,
+    //    establishing `TVector`'s invariant that every `(e >> 8) < n`.
+    unsafe { tt.0.set_len(n) };
+    true
 }
 
 /// `build` in one pass, as `coop::build_fused` builds at one core: each entry written whole,
@@ -783,6 +877,66 @@ fn repeat_cycle<T: Copy>(out: &mut [T], m: usize) {
     }
 }
 
+/// Reverse-copy `len` bytes from `src` to `dst` (`dst[len - 1 - i] = src[i]`): 8 bytes at a
+/// time via `u64::swap_bytes`, then one byte at a time for the remainder.
+///
+/// # Safety
+///
+/// `src` must be valid for reads of `len` initialized bytes, `dst` must be valid for writes of
+/// `len` bytes, and `[src, src + len)` must not overlap `[dst, dst + len)`.
+#[inline(always)]
+unsafe fn reverse_copy_scalar(src: *const u8, dst: *mut u8, len: usize) {
+    let mut i = 0usize;
+    while i + 8 <= len {
+        // SAFETY: `i + 8 <= len`, so both `src.add(i)` and `dst.add(len - i - 8)` are within
+        // their respective non-overlapping `len`-byte ranges.
+        unsafe {
+            let w = (src.add(i) as *const u64).read_unaligned().swap_bytes();
+            (dst.add(len - i - 8) as *mut u64).write_unaligned(w);
+        }
+        i += 8;
+    }
+    while i < len {
+        // SAFETY: `i < len`, so `len - 1 - i < len`, within both non-overlapping ranges.
+        unsafe {
+            *dst.add(len - 1 - i) = *src.add(i);
+        }
+        i += 1;
+    }
+}
+
+/// Reverse-copy `len` bytes from `src` to `dst` using 32-byte AVX2 `pshufb` + `vperm2i128`
+/// chunks, followed by `reverse_copy_scalar` for the `< 32`-byte tail.
+///
+/// # Safety
+///
+/// AVX2 must be available. `src` must be valid for reads of `len` initialized bytes, `dst`
+/// must be valid for writes of `len` bytes, and the two ranges must not overlap.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn reverse_copy_avx2(src: *const u8, dst: *mut u8, len: usize) {
+    use core::arch::x86_64::*;
+    let rev = _mm256_setr_epi8(
+        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6,
+        5, 4, 3, 2, 1, 0,
+    );
+    let mut i = 0usize;
+    while i + 32 <= len {
+        // SAFETY: `i + 32 <= len`, so `src.add(i)` is valid for a 32-byte unaligned load and
+        // `dst.add(len - i - 32)` is valid for a 32-byte unaligned store.
+        unsafe {
+            let v = _mm256_loadu_si256(src.add(i) as *const __m256i);
+            let s = _mm256_shuffle_epi8(v, rev);
+            let r = _mm256_permute2x128_si256::<0x01>(s, s);
+            _mm256_storeu_si256(dst.add(len - i - 32) as *mut __m256i, r);
+        }
+        i += 32;
+    }
+    // SAFETY: `i <= len`; the remaining `len - i` bytes at `src.add(i)` reverse into the
+    // leading `len - i` bytes of `dst` (non-overlapping, within bounds).
+    unsafe { reverse_copy_scalar(src.add(i), dst, len - i) };
+}
+
 impl SegScratch {
     /// The room walk's segments of an LF table walked backward (`walk_back_room`): joined
     /// in the order `assemble` joins them, which is the block's bytes last to first, and
@@ -790,6 +944,13 @@ impl SegScratch {
     /// `out` holds the block first to last. The join stops where it comes back to its first
     /// segment: the primary index's cycle is then complete (`repeat_cycle`).
     pub(crate) fn assemble_reversed(&self, out: &mut Vec<u8>) {
+        self.assemble_reversed_with(out, crate::Kernels::detect());
+    }
+
+    /// `assemble_reversed` with an explicit `Kernels` dispatch token (so callers with
+    /// `Kernels::scalar()` force the portable path even on AVX2 CPUs, while `k.avx2` remains
+    /// a type-enforced `Kernels` invariant).
+    pub(crate) fn assemble_reversed_with(&self, out: &mut Vec<u8>, k: crate::Kernels) {
         let n = self.n;
         out.clear();
         out.reserve(n);
@@ -799,10 +960,26 @@ impl SegScratch {
         while at > 0 {
             let b = &self.bufs[seg];
             let len = b.len().min(at);
-            for (d, &x) in dst[at - len..at].iter_mut().rev().zip(&b[..len]) {
-                d.write(x);
-            }
             at -= len;
+            let d = dst[at..at + len].as_mut_ptr().cast::<u8>();
+            #[cfg(target_arch = "x86_64")]
+            if k.avx2 && len >= 32 {
+                // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant);
+                // `b[..len]` is `len` initialized readable bytes, `d` points to `len` writable
+                // bytes of `out.spare_capacity_mut()`, and `&self` vs `&mut out` cannot overlap.
+                unsafe { reverse_copy_avx2(b.as_ptr(), d, len) };
+            } else {
+                // SAFETY: `b[..len]` and `d[..len]` are valid non-overlapping `len`-byte ranges
+                // (`&self` and `&mut out` are disjoint).
+                unsafe { reverse_copy_scalar(b.as_ptr(), d, len) };
+            }
+            #[cfg(not(target_arch = "x86_64"))]
+            {
+                let _ = k;
+                // SAFETY: `b[..len]` and `d[..len]` are valid non-overlapping `len`-byte ranges
+                // (`&self` and `&mut out` are disjoint).
+                unsafe { reverse_copy_scalar(b.as_ptr(), d, len) };
+            }
             seg = self.next[seg];
             if seg == self.first {
                 break;
@@ -850,6 +1027,21 @@ pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mu
     }
     room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
     s.assemble_reversed(out);
+}
+
+/// `walk_back_room` with an explicit `Kernels` dispatch token for reverse assembly.
+pub(crate) fn walk_back_room_with_kernels(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    k: crate::Kernels,
+) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk_back(tt, orig_ptr, out);
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    s.assemble_reversed_with(out, k);
 }
 
 /// `walk_back_room` in its two parts, as `walk_segments_room_parts`: the room walk of the LF
@@ -2467,5 +2659,142 @@ pub(crate) mod tests {
                 check_segments(&tt, &seg, "flagged walk");
             }
         }
+    }
+
+    /// `build_lf` + `walk_back_room`, `Segmented::invert`/`invert_in_place`, and vectorized
+    /// `reverse_copy` match the reference paths across length boundaries, 8-byte equal runs,
+    /// periodic cycles (`repeat_cycle`), and forged counts (fallback to `build`).
+    #[test]
+    fn miri_build_lf_and_reverse_copy() {
+        // 1. Reverse copy parity across every length 0..=135 (32-byte, 8-byte, 1-byte edges)
+        for len in 0..=135usize {
+            let src: Vec<u8> = (0..len).map(|i| ((i * 37 + 13) & 0xff) as u8).collect();
+            let want: Vec<u8> = src.iter().rev().copied().collect();
+            let mut got_scalar = vec![0xaa; len];
+            // SAFETY: non-overlapping `len`-byte slices.
+            unsafe { reverse_copy_scalar(src.as_ptr(), got_scalar.as_mut_ptr(), len) };
+            assert_eq!(got_scalar, want, "reverse_copy_scalar len={len}");
+            #[cfg(target_arch = "x86_64")]
+            if std::is_x86_feature_detected!("avx2") {
+                let mut got_avx2 = vec![0x55; len];
+                // SAFETY: AVX2 detected; non-overlapping `len`-byte slices.
+                unsafe { reverse_copy_avx2(src.as_ptr(), got_avx2.as_mut_ptr(), len) };
+                assert_eq!(got_avx2, want, "reverse_copy_avx2 len={len}");
+            }
+        }
+
+        // 2. build_lf vs plain build+walk on short, run-heavy, random, periodic, and segmented blocks
+        let mut x = 0x517c_c1b7_2722_0a95u64;
+        let mut cases: Vec<Vec<u8>> = Vec::new();
+        for n in [0, 1, 2, 7, 8, 9, 15, 16, 17, 31, 32, 33, 64, 129] {
+            let v: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x & 0xff) as u8
+                })
+                .collect();
+            cases.push(v);
+        }
+        // Equal-byte runs hitting the 8-byte fast path at aligned and unaligned offsets
+        cases.push(vec![b'a'; 64]);
+        cases.push(
+            [
+                b"xy".as_slice(),
+                &[b'z'; 24],
+                b"q",
+                &[b'w'; 16],
+                b"1234567",
+                &[b'm'; 8],
+            ]
+            .concat(),
+        );
+        // Periodic block exercising `repeat_cycle` in `assemble_reversed_with`
+        let seg_n = if cfg!(miri) {
+            600
+        } else {
+            MIN_SEGMENTED + 1024
+        };
+        cases.push((0..seg_n).map(|i| b"abc"[i % 3]).collect());
+        cases.push(
+            (0..seg_n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % 19) as u8
+                })
+                .collect(),
+        );
+
+        let mut plain_k = Plain::default();
+        let mut seg_k = Segmented::default();
+        for ll in &cases {
+            let mut counts = [0u32; 256];
+            for &c in ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            assert!(build_lf(ll, &counts, &mut tt));
+            assert_eq!(tt.len(), ll.len());
+            if ll.is_empty() {
+                continue;
+            }
+            for orig_ptr in [0, ll.len() as u32 / 2, ll.len() as u32 - 1] {
+                let (mut want, mut got) = (Vec::new(), Vec::new());
+                plain_k.invert(ll, &counts, orig_ptr, &mut want);
+                seg_k.invert(ll, &counts, orig_ptr, &mut got);
+                assert_eq!(got, want, "Segmented::invert len={}", ll.len());
+
+                let mut in_place = ll.clone();
+                assert!(seg_k.invert_in_place(&mut in_place, &counts, orig_ptr));
+                assert_eq!(
+                    in_place,
+                    want,
+                    "Segmented::invert_in_place len={}",
+                    ll.len()
+                );
+
+                // Verify assemble_reversed_with(scalar) == assemble_reversed_with(detect)
+                let mut tt_lf = TVector::new();
+                assert!(build_lf(ll, &counts, &mut tt_lf));
+                let mut s = SegScratch::default();
+                room_segments::<FLAGGED_LANES, PREFETCH, true>(&mut tt_lf, orig_ptr, &mut s, 32);
+                let (mut a_scalar, mut a_detect) = (Vec::new(), Vec::new());
+                s.assemble_reversed_with(&mut a_scalar, crate::Kernels::scalar());
+                assert_eq!(a_scalar, want, "assemble_reversed scalar len={}", ll.len());
+                s.assemble_reversed_with(&mut a_detect, crate::Kernels::detect());
+                assert_eq!(a_detect, want, "assemble_reversed detect len={}", ll.len());
+            }
+        }
+
+        // 3. Forged/mismatched counts are rejected by build_lf (tt left empty) and safely handled
+        let ll = b"abracadabraaaaaaaaa!".to_vec();
+        let mut counts = [0u32; 256];
+        for &c in &ll {
+            counts[c as usize] += 1;
+        }
+        let mut bad_sum = counts;
+        bad_sum[b'a' as usize] += 1;
+        let mut tt = TVector(vec![1, 2, 3]);
+        assert!(!build_lf(&ll, &bad_sum, &mut tt));
+        assert!(tt.is_empty());
+
+        let mut bad_bucket = counts;
+        bad_bucket[b'a' as usize] -= 1;
+        bad_bucket[b'b' as usize] += 1;
+        let mut tt2 = TVector(vec![1, 2, 3]);
+        assert!(!build_lf(&ll, &bad_bucket, &mut tt2));
+        assert!(tt2.is_empty());
+
+        // Segmented falls back cleanly when counts don't match ll (exact same output as Plain)
+        let (mut want, mut got) = (Vec::new(), Vec::new());
+        plain_k.invert(&ll, &bad_bucket, 3, &mut want);
+        seg_k.invert(&ll, &bad_bucket, 3, &mut got);
+        assert_eq!(got, want);
+        let mut in_place = ll.clone();
+        assert!(seg_k.invert_in_place(&mut in_place, &bad_bucket, 3));
+        assert_eq!(in_place, want);
     }
 }

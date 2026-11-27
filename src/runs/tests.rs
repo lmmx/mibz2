@@ -975,6 +975,73 @@ fn miri_runs_of_column_is_the_scan() {
     let r = Runs::of_column(&ll);
     let (runs, per) = runs_of_column(&ll);
     assert!(r.runs == runs && r.per == per && r.counts == crate::run_fed::counts_of(&ll));
+    assert!(!r.trusted);
+}
+
+/// `front` sets `trusted` only on valid completion (`n < 2^24`), `fill` via `fill_avx2_trusted`
+/// matches `fill_scalar` and `lf_of` identically, wrong `n` is refused, and both `records_mut`
+/// and a subsequent failing `front` clear `trusted`.
+#[test]
+fn miri_runs_trusted_fill_parity_and_invalidation() {
+    let mut rng = Rng(0x7257_ed11_c0de_5eed);
+    let cases = if cfg!(miri) { 8 } else { 200 };
+    for i in 0..cases {
+        let mut b = synthetic(&mut rng, if cfg!(miri) { 120 } else { 2000 });
+        b.max_len = 1 << 20;
+        let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+        let Ok(want_n) = mtf::mtf_scalar(&b, &mut ll, &mut counts) else {
+            continue;
+        };
+        let want_lf = lf_of(&ll);
+        for k in kernels() {
+            let mut r = Runs::default();
+            assert!(!r.trusted);
+            let n = front(&b, &mut r, k).expect("mtf_scalar succeeded");
+            assert_eq!(n, want_n);
+            assert!(
+                r.trusted,
+                "case {i}, {k:?}: front did not mark Runs trusted"
+            );
+            assert_eq!(r.len, n);
+
+            let mut tt = bwt::TVector::new();
+            assert!(fill(&r, n, &mut tt, k));
+            assert_eq!(tt.0, want_lf, "case {i}, {k:?}: trusted fill mismatch");
+
+            // Wrong `n` must be rejected and leave `tt` empty
+            let mut bad_tt = bwt::TVector(vec![7; 3]);
+            assert!(!fill(&r, n + 1, &mut bad_tt, k));
+            assert!(bad_tt.0.is_empty());
+            if n > 0 {
+                let mut bad_tt2 = bwt::TVector(vec![7; 3]);
+                assert!(!fill(&r, n - 1, &mut bad_tt2, k));
+                assert!(bad_tt2.0.is_empty());
+            }
+
+            // Mutating records via `records_mut` must clear `trusted` so tampering is caught
+            if !r.runs.is_empty() {
+                r.records_mut()[0] &= 0xff00; // invalid zero-length record
+                assert!(!r.trusted);
+                let mut tampered_tt = bwt::TVector(vec![9; 2]);
+                assert!(!fill(&r, n, &mut tampered_tt, k));
+                assert!(tampered_tt.0.is_empty());
+            }
+        }
+    }
+
+    // A failing `front` after a trusted `front` must clear `trusted`
+    let mut rng2 = Rng(0xbadf_00d5_1234_5678);
+    let mut ok_block = synthetic(&mut rng2, 200);
+    ok_block.max_len = 1 << 20;
+    let mut r = Runs::default();
+    let n = front(&ok_block, &mut r, Kernels::detect()).expect("valid block");
+    assert!(r.trusted && r.len == n);
+    let mut fail_block = ok_block;
+    fail_block.max_len = 0;
+    if n > 0 {
+        assert!(front(&fail_block, &mut r, Kernels::detect()).is_err());
+        assert!(!r.trusted);
+    }
 }
 
 /// Research only (`mtf-fold`): the fold (src/runs/fold.rs and the open kernel's sink) against
