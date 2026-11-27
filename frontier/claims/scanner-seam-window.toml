@@ -1,0 +1,36 @@
+id = "scanner-seam-window"
+title = "Copy only the straddling bytes at input-chunk boundaries (seam window), re-registered at production's 8 workers"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/parallel.rs", "src/trace.rs"]
+mechanisms = ["scanner-input-seam"]
+needs_louis = ""
+question = """
+`ChannelSource::view` (`src/parallel.rs:1038-1062`) drains the held window and re-copies each new input chunk into it on the serial scanner thread whenever a block's look-ahead straddles a chunk boundary. The trace calls this `in_maint`: 11.2 ms at 8 workers and 12.8 ms at 10 (pooled-scan `c71c4a56`, fifth-pass table 1), on the station that ties at 8 and binds from 9. PR #857 (`perf/scanner-window`, 946ba572, `src/parallel.rs` and `src/trace.rs` only) replaces the copy with a reused seam buffer holding only the straddling bytes. Combined with #846's symbol-buffer fix as #861, it ran twice on the i9 (journal §77, §79). Its point estimates were below 1 at every count from 8: FASTER at 10 and 12 threads (0.982, 0.977) and 0.921/0.936 at explicit 9/10 workers. It was NOT ADOPTED only because the judged 9-thread count is the noisiest (±4-5%). §79 decided on a re-registration at production's default counts once production moved to 8 workers. Production has moved (§76), and the re-registration was never written (coordinator retired 26 November).
+Rebase #857 alone onto master and write that registration before its data. The symbol-buffer half (#846, `src/block.rs`) is the same change as `scanner-coalesced-u8-decode`'s lever 3 and belongs to that claim's paths. It stays out of this one, so the two holds are disjoint. The run can share a workstation slot with that claim's run if both are frozen.
+"""
+why = """
+A measured, low-risk serial-scanner cost with two i9 runs pointing the same way, stranded by the coordinator's retirement rather than by a verdict. At the 8-worker tie its realised wall gain is capped near 4% (fifth pass §1). Where the scanner binds (9-10 workers, or 8 once the fold and forward emission land) it transfers close to 1:1, measured at 0.92-0.94 for the combined fix. It is also a precondition for reading the scanner levers' combined effect cleanly.
+"""
+stop_test = """
+Frozen before data, the decision rule for the registration: #857 rebased onto master is 100% byte- and error-identical on `cargo test`, fuzz smoke and wikidata x4 (including inputs that end mid-seam and single-chunk inputs), with no new `unsafe`. On the i9, wikidata x4, unpinned, 16 paired rounds against the merge base, it ADOPTS iff 10 and 12 threads (production's default counts, 8 workers) are both FASTER (95% CI upper bound < 1.000), none of 6, 8 and 9 threads is SLOWER (lower bound > 1.000), and median peak RSS head/base <= 1.10 at every count. The traced diagnostic, which decides nothing, should show `in_maint` at 8 workers falling by >= 80%. A NOT ADOPTED here is final for this mechanism under this production (no repeat of the same registration). Record it in `dead-ends.tsv`.
+"""
+done_when = """
+#857 rebased (or superseded by a fresh PR carrying `Claim: scanner-seam-window`), registration frozen before data, workstation run queued under the standing authorisation, verdict recorded with a delta, and #857 merged or closed with #846/#861 reconciled against `scanner-coalesced-u8-decode`.
+"""
+premises = [
+  "docs/journal/2026-11-26-synthesis/fifth-pass.md",
+  "docs/journal/2026-11-24-algorithm-level.md",
+  "docs/journal/2026-11-24-algorithm-level/math-targets/data/scanner-plumbing-combined/summary.txt",
+  "docs/journal/2026-11-24-algorithm-level/reviews/neon-course-mining.md",
+  "src/parallel.rs",
+]
+links = [
+  "https://github.com/lmmx/mibz2/pull/857",
+  "https://github.com/lmmx/mibz2/pull/861",
+  "https://github.com/lmmx/mibz2/pull/846",
+  "frontier/claims/scanner-coalesced-u8-decode.toml",
+]

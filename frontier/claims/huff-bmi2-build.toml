@@ -14,6 +14,7 @@ Implement runtime BMI2 detection in `Kernels` (preserving public API compatibili
 """
 why = """
 After `multi-symbol-huffman-table` (#986) stopped B=10 K=3/K=4 tables, runtime BMI2 dispatch is the only serial-algorithmic/ISA lever left on row S. On i9-10900K (Comet Lake, same 3-uop/2-cycle `shl %cl` vs 1-uop/1-cycle `shlx` microarchitecture as Haswell), cutting A3 (~144 ms, ~81% of the 177.5 ms scan) by -7.9%..-9.6% projects ~11.4-13.8 ms off the serial scan (~6.4-7.8% of the 8W wall once worker improvements push S'(8) below 164 ms), with zero table bloat, zero L1d spill, and zero algorithmic risk.
+Synthesis fifth pass (stop test untouched): at 8 workers the scan-bound (C 184.4 ms) and worker-bound (S 185.0 ms) walls tie, so any scanner-only lever is capped near 8 ms of realised 8W wall until worker wins land; the i9 scanner-plumbing runs (§77, §79) measured that transfer (0.975-0.991 at 8, 0.92-0.94 at explicit 9-10 workers). #1011 measured BMI2 on full S (A2+A3+syms) at about -4.5%, against this probe's -9% of A3; the 4.0% scan-phase gate has less margin than the A3 figure suggests, and it shares `src/huff.rs`/`src/block.rs` with `scanner-coalesced-u8-decode`, so registering the two together (2x2, one baseline) avoids judging either against a baseline the other moved.
 """
 stop_test = """
 Frozen before data: write a brief adoption registration before queuing the i9 run (comparing `Kernels::detect()` with BMI2 vs BMI2 restricted off via `Kernels` on wikidata x4 at k=1 and k=8, plus scan-only timing, 7+ interleaved repeats). Adopt as default only if: (1) 100% byte-, CRC-, and error-identical on all tests, fuzz smoke, and wikidata x4; (2) Miri clean on scalar path and `Kernels` soundness tests pass; (3) `objdump -d` on release baseline x86-64 binary verifies `shlx` and `shrx` with 0 `shl %cl` and 0 `vzeroupper` in the BMI2 block-decode loop; (4) on i9-10900K, scan-phase wall drops by >= 4.0% (non-overlapping 95% CI, corresponding to >= ~7 ms off the 177.5 ms serial scan) with zero regression (> +1.0% 95% lower bound) on 1W or 8W wall and <= 1.01x RSS. Otherwise KILL/STOP and record in `frontier/dead-ends.tsv`.
@@ -26,6 +27,7 @@ premises = [
   "examples/huff_bmi2_ablation.rs",
   "docs/journal/2026-11-26-explore/multi-symbol-huffman-table.md",
   "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+  "docs/journal/2026-11-26-synthesis/fifth-pass.md",
   "src/huff.rs",
   "src/block.rs",
   "src/lib.rs",
