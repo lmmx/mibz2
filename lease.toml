@@ -1,9 +1,9 @@
-id = "release-terminal-holds"
+id = "forward-4lane-anchor-probe"
 holder = "antigravity"
-session = "9977d2bbe9f5"
-claimed_at = "2026-11-27T01:47:17+00:00"
-expires = "2026-11-27T09:47:17+00:00"
-owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
-mechanisms = []
-base = "16e969d17d51e9e72a924d3cf566df8ab645427b"
+session = "c0daa21dc759"
+claimed_at = "2026-11-27T02:08:11+00:00"
+expires = "2026-11-27T10:08:11+00:00"
+owned_paths = []
+mechanisms = ["forward-anchor-wiring"]
+base = "f2845b84bd3e8958745488f34af644d55481d005"
 released = false
