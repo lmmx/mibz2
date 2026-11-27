@@ -18,6 +18,7 @@ def lightweight(path):
         "docs/STEWARDSHIP.md",
         "docs/RELEASING.md",
         "frontier/config.toml",
+        "frontier/limits.toml",
         "frontier/surface.tsv",
         "frontier/dead-ends.tsv",
     }:
@@ -64,7 +65,7 @@ def classify():
 
 
 def self_test():
-    assert not full_suite(["frontier/config.toml", "frontier/flags/example.md"])
+    assert not full_suite(["frontier/config.toml", "frontier/limits.toml", "frontier/flags/example.md"])
     assert not full_suite(["docs/journal/entry.md", "docs/site/blog/post.md"])
     assert not full_suite(["frontier/claims/new.toml", "frontier/surface.tsv"])
     for path in (
