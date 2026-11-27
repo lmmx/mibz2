@@ -1,0 +1,9 @@
+id = "forward-emission-run"
+holder = "antigravity"
+session = "590375097c16"
+claimed_at = "2026-11-27T13:36:18+00:00"
+expires = "2026-11-27T21:36:18+00:00"
+owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
+mechanisms = ["forward-lanes-workstation-validation"]
+base = "dd93541881b29d7137066e07236095c70cd7ca1d"
+released = false
