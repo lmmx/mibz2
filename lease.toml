@@ -1,9 +1,9 @@
 id = "scanner-coalesced-u8-i9-queue"
-holder = "codex"
-session = "f0c5cf47c2eb"
-claimed_at = "2026-11-27T07:27:12+00:00"
-expires = "2026-11-27T15:27:12+00:00"
+holder = "antigravity"
+session = "888b8fb44679"
+claimed_at = "2026-11-27T08:11:53+00:00"
+expires = "2026-11-27T16:11:53+00:00"
 owned_paths = ["bench/workstation-queue.txt"]
 mechanisms = ["workstation-queue"]
-base = "35847946829a4d9c8dbc09f84af0683f8759fc36"
-released = true
+base = "3f98f2ae19bb8d4aa666a0dc0f423eb0f4470f2d"
+released = false
