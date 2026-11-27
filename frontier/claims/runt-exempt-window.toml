@@ -13,6 +13,7 @@ question = """
 """
 why = """
 A pipeline-starvation cost that the bench corpus shows only weakly at 8W on the i9, but that grows on small and oversubscribed machines, which is where many real users decode Wikimedia-style files. It is a few lines in admission, disjoint from scanner and worker kernels, and it complements them: a faster worker shortens the window's horizon further.
+Premise defect (synthesis eleventh pass, 27 Nov, before any data): the symbol bound (n_sel x 50) does not bound rows or decoded bytes. A run-only block is a runt by it (RUNA/RUNB code ~900,000 zeros in a few dozen symbols) yet decodes to ~46 MB, so "runt places holding <= 64 KiB" is false and the exemption would let up to 2 x slots such blocks in flight (docs/journal/2026-11-27-explore/expansive-block-memory.md). Classify by rows n after the scan, or land `ready-cap-worker-gate` first. Stop test 1's restated bound is therefore false on run-only input, and its corpora cannot reveal that; the stop test is frozen (C2) and is not edited here. A holder should either take `ready-cap-worker-gate` first or re-register with a rows-based runt test and a run-only RSS check.
 """
 stop_test = """
 Frozen before data:
@@ -23,6 +24,7 @@ done_when = """
 A PR on src/parallel.rs passing (1) and (2), with a delta; the i9 leg queued under the standing workstation authority only once frozen, reviewed and green.
 """
 premises = [
+  "docs/journal/2026-11-27-synthesis/eleventh-pass.md",
   "docs/journal/2026-11-27-explore/encoder-dependence.md",
   "docs/journal/2026-11-27-explore/eight-worker-coupling.md",
   "docs/journal/2026-11-05-window.md",
