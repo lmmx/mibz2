@@ -1,0 +1,24 @@
+id = "allocator-fixed-threshold-buffers"
+title = "Keep the scanner's syms buffer across Item::End and decode Seq::read_to_end in place, measured under a fixed-threshold allocator (macOS wheels)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/block.rs", "src/stream.rs", "src/read.rs"]
+mechanisms = ["allocation"]
+needs_louis = ""
+question = """
+#1192 (read-io-and-block-framing, axis C) found that src/block.rs:195 and src/stream.rs:161 free the 1.80 MiB `syms` buffer on every `Item::End`. glibc's dynamic M_MMAP_THRESHOLD hides it after stream 0; under a fixed 128 KiB threshold (MALLOC_MMAP_THRESHOLD_=131072) keeping `syms` cut multi-stream scan CPU -32..-36% and full t=1 decode -6.7..-8.6% (disjoint). Its axis A found `Seq::read_to_end` decoding straight into the caller's Vec cuts wikidata t=1 CPU -6..-8% and zeros_100m ~-50% CPU / -41% RSS. CI.yml ships two macOS wheels, whose allocator uses fixed thresholds. Do both changes (zero unsafe) pay on a macOS runner and under the fixed glibc threshold, with no regression on default glibc?
+"""
+why = """
+Sixteenth synthesis pass, section 3: three explores (#1190, #1192, #1200) each found glibc absorbing an allocation cost; the shipped macOS wheels do not get that absorption. Small, safe, worker-independent changes.
+"""
+stop_test = """
+To be frozen by the taker before data (C1a): paired fresh-subprocess runs, base vs candidate, on (a) default glibc, (b) glibc with MALLOC_MMAP_THRESHOLD_=131072, (c) a macOS CI runner if available, on single- and multi-stream corpora at t=1 and t=4; byte-exact outputs. Adopt if (b) or (c) improves by a disjoint interval and (a) shows no disjoint regression.
+"""
+done_when = """
+Merged with the measurements, or a dead-ends row scoped to the allocators tested.
+"""
+premises = ["docs/journal/2026-11-27-explore/read-io-and-block-framing-dissection.md", "docs/notebook/2026-11-27-synthesis-sixteenth-pass.md"]
+links = ["frontier/deltas/2026-11-27-explore-read-io-and-block-framing.md", "frontier/deltas/2026-11-27-explore-page-layer.md"]

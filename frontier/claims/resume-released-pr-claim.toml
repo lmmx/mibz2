@@ -1,0 +1,26 @@
+id = "resume-released-pr-claim"
+title = "Let an independent participant resume a claim whose producer released its hold and left the PR open"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+needs_louis = ""
+question = """
+A producer can hand a claim back by releasing its hold and setting the claim to `open` with `pr = N` on the PR head (scanner-a2-fast-build, #1117, 27 November). `brief` then lists it under "Awaiting review or merge" and points at `take-review`, but no command can acquire it:
+- `claim` exits "already has a pending PR" (review_projection sees the `Claim:` header);
+- `take-review` exits because the head card is `open`, not `review` (review_card), and would exit again because the lease is `released` ("no existing reservation to transfer").
+Fix: in `take_review`, when the head card has `pr == N` and status `open` or `review`, and the existing lease is released (or expired), acquire a fresh integration lease through the same CAS write, counting it against `reservation_limit()` like `claim` does and keeping the conflict and producer-differs checks. Alternatively let `claim` proceed when every pending PR for the id is the one the head card names, recording `phase = "integration"`, `pr`, `pr_head`.
+"""
+why = """
+Without it, any handed-back PR is stranded until its producer returns: #1117 (scanner A2, correct and reviewed, gated on an i9 recipe) is unownable. Writing the lease by hand bypasses the tool's checks and is refused (27 November).
+"""
+stop_test = """
+Done when a test reproduces both refusals on a released lease with an open head card and passes with the fix, acquiring only on the exact verified PR head, within the reservation limit, and never when another live hold overlaps.
+"""
+done_when = """
+A PR with the change and its test, and a delta.
+"""
+premises = ["frontier/deltas/2026-11-27-scanner-a2-fast-build-unownable.md"]
+links = ["frontier/claims/scanner-a2-fast-build.toml"]
