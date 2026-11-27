@@ -98,3 +98,77 @@ def test_source_exception_propagates():
     with mibz2.open(Broken(), threads=1) as f:
         with pytest.raises(RuntimeError, match="the source broke"):
             f.read()
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_reader_zero_huge_and_closed(threads):
+    from mibz2._mibz2 import Reader
+
+    r = Reader(io.BytesIO(COMPRESSED), threads=threads)
+    assert r.read(0) == b""
+    assert not r.verified
+    first = r.read(7)
+    assert first == DATA[:7]
+    assert r.read(0) == b""
+    out = bytearray(first)
+    # Huge size must cap at the lent decoded block rather than over-allocating
+    while chunk := r.read(1 << 40):
+        out += chunk
+    assert bytes(out) == DATA
+    assert r.verified
+    assert r.read(0) == b""
+    assert r.read(16) == b""
+    r.close()
+    with pytest.raises(ValueError, match="closed"):
+        r.read(0)
+    with pytest.raises(ValueError, match="closed"):
+        r.read(16)
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_reader_nonblocking_and_empty(threads):
+    from mibz2._mibz2 import Reader
+
+    class NonBlocking:
+        def __init__(self, payload: bytes) -> None:
+            self.payload = payload
+            self.pos = 0
+            self.calls = 0
+
+        def read(self, size: int) -> bytes | None:
+            self.calls += 1
+            if self.calls % 3 == 1 and self.pos < len(self.payload):
+                return None
+            chunk = self.payload[self.pos : self.pos + min(size, 4096)]
+            self.pos += len(chunk)
+            return chunk
+
+    r = Reader(NonBlocking(COMPRESSED), threads=threads)
+    out = bytearray()
+    while chunk := r.read(65_536):
+        out += chunk
+    assert bytes(out) == DATA
+    assert r.verified
+    r.close()
+
+    empty = Reader(io.BytesIO(bz2.compress(b"")), threads=threads)
+    assert empty.read(0) == b""
+    assert not empty.verified
+    assert empty.read(1024) == b""
+    assert empty.verified
+    empty.close()
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_reader_corrupt_persists_on_zero_read(threads):
+    from mibz2._mibz2 import Reader
+
+    bad = bytearray(COMPRESSED)
+    bad[len(bad) // 2] ^= 0xFF
+    r = Reader(io.BytesIO(bytes(bad)), threads=threads)
+    with pytest.raises(mibz2.DecodeError):
+        while r.read(65_536):
+            pass
+    with pytest.raises(mibz2.DecodeError):
+        r.read(0)
+    r.close()

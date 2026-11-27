@@ -1,0 +1,18 @@
+claim: bwt-contraction-constructor-rescue
+by: antigravity
+outcome: done
+evidence: examples/bwt_contraction_rescue.rs; docs/journal/2026-11-24-algorithm-level/bwt-contraction-rescue/protocol.md; docs/journal/2026-11-24-algorithm-level/bwt-contraction-rescue/results.md; corpora/wikidata.bz2 (sha256 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915)
+
+**What was asked:** Cold constructive cost dissection of `#1013` (`bwt-digram-return-map`), pricing contingent vs algorithmic constructor costs and testing up to two genuinely distinct pre-registered constructor redesigns under the frozen `>= 39.18 ms` 1-worker gate, guard no-regression, and `#1013` STOP preservation.
+
+**What I found:** **STOP — Scoped Obstruction (feasible budget exhausted for post-A6c `F`-bucket contraction).** Both pre-registered redesigns passed `8,406 / 8,406` byte-identical checks (`4,203` baseline + `4,203` native across synthetic 11, wikidata admitted 233, wikidata forced 198, `runs`, forced `text`):
+- **Cold dissection (`train[0..117]`):** `72.4%` (`27.3 MiB`) of `#1013`'s `spelling` writes were redundant re-copies of already-stored `c0 == LONG` prefixes; `15.2%` of chains `>8` hops carry `~69%` of all `E` hops; `prep_score` (`3.39 ms`) fuses into A6b, whereas `wire_dual_space` (`32.52 ms`, `2.20x` `fwd_A6c`) and `wire_forward_fused_elim` (`+3.66 ms` vs `prep_tag 3.44 ms`) break `Reader::wire` SIMD. Wavefront chase (`41–46 ms`), `Edge8` (`A7 +22..+39%`), 6-state/hop-pool 4-lane, and `LIMIT=24/32` all lost on train and were retained in the ledger.
+- **Redesign 1 (`r1_clean1_2part` — 1-lane + zero-copy 2-part `c0 == LONG` + stack `[u8; 16]` + 4096-slot L1d `dm_cache` + O(1) guard):** Cuts `contr` **`-9.0%` baseline (`108.69 -> 98.86 ms`) / `-13.9%` native (`111.44 -> 95.94 ms`)**, matches `ctrl_shipped_bidi`, and eliminates `runs.bz2` regression (`1.015x / 1.018x` vs `1.586x / 1.375x`), but on held-out 116 blocks (7 interleaved repeats) still loses **`1.142x` (`-135.6 ms` i9) base / `1.079x` (`-78.9 ms` i9) native** vs `ctrl_fwd_1lane`, **`1.141x / 1.083x`** vs `ctrl_fwd_4lane_onl`, **`1.299x / 1.261x`** vs `ctrl_fwd_4lane_ora`, and regresses forced `text.bz2` (`1.327x / 1.257x`).
+- **Redesign 2 (`r2_mlp4_buf_bump` — 4-lane full-chain L1d-buf chase + zero-hash bump compact 4B dict):** Loses **`1.177x` base / `1.140x` native** vs `ctrl_fwd_1lane` (`contr = 104.62 / 111.18 ms`, `A7 = 44.01 / 47.74 ms`), proving why 4-lane byte-collecting chase cannot approach bare `pure_chase4` (`27.2 ms`): `67.7%` of 4-lane iterations have a terminating lane (`56.4%` K->K + random 1..219 chains), flushing OoO MLP, while dropping dedup bloats `inline16` (`~107 -> ~200 KiB/blk`).
+- **Budget obstruction:** Even with zero assembly/dict/write cost, `prep_tag + pure_chase4` (`30.6 ms` train) already exceeds the `~24–25 ms` VM budget to beat `ctrl_fwd_4lane_ora` by `+39.18 ms` i9, and beating `ctrl_fwd_1lane` requires `contr <= 55–64 ms` (at/below bare `prep_tag + pure_chase1 = 55 ms`).
+
+**What changed:** Added `#![forbid(unsafe_code)]` prototype `examples/bwt_contraction_rescue.rs`, frozen `protocol.md`, full `results.md`, scoped `dead-ends.tsv` row (preserving `#1013` row intact), updated `surface.tsv`, marked `bwt-contraction-constructor-rescue` `done`.
+
+**What's next:** Shelve post-A6c `F`-bucket contraction over Open's `edges[0..m]` graph. Keep `forward-emission` and `mtf-fold-build` as the active `C+E` path, and leave non-edge-chasing operators to `computational-permutation-structure`.
+
+**Caveats:** 2-vCPU Haswell Xeon VM (no vPMU); prior `#1013` selection exposure on `admitted[117..233]` disclosed (no confirmatory pass claimed); zero `src/` edits, zero spending, `#1013` STOP preserved.

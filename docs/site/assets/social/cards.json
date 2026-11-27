@@ -335,6 +335,27 @@
     "section": " · Research blog",
     "title": "The decoder's true floor and the limits of a pooled scan"
   },
+  "assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png": {
+    "description": "Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls"
+  },
+  "assets/social/blog-2026-11-27-reopening-a6b-and-segmented.png": {
+    "description": "A safe fixed-size redesign cuts Open's middle stage by 28% and a fallback stack speeds off-Wikidata blocks by 16%, while contraction hits a floor.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Reopening Open's middle and the off-Wikidata decoder"
+  },
+  "assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png": {
+    "description": "Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "synthesis",
+    "section": " · Research blog",
+    "title": "The architecture of a 6 GB/s bzip2 decoder"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

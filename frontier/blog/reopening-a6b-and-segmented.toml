@@ -1,0 +1,36 @@
+id = "reopening-a6b-and-segmented"
+title = "Reopening Open's middle and the off-Wikidata decoder"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "done"
+pr = 1054
+owned_paths = []
+needs_louis = ""
+stage = "review"
+post = "docs/site/blog/2026-11-27-reopening-a6b-and-segmented.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Write up the four merged 27 November results connecting off-Wikidata decoding and Open's middle stage:
+- Off-Wikidata dense-band cap precheck (#1040, shipped) and Segmented fallback dissection (#1042, PASS: -15.44% base / -16.05% native on prose/text+source, -18.43% / -18.54% across all 6 corpora at zero extra memory, plus LF^2 dead end);
+- Reopening C-A6b (#1046, PASS: comb_nobc_soa_gen cutting A6b -27.4%..-28.8% and full C+E -5.4%..-7.6% across all 4 build x emit cells with 0 unsafe and 0 A7 regression);
+- Honest contrast with contracted return-map constructor rescue (#1038, scoped STOP on bare 30.6 ms 4-lane chase floor).
+"""
+why = """
+Primary results merged after the off-Wikidata route census post that ship one production win, admit two major builds (#1049, #1051) and one follow-on probe (#1050), and record one honest structural stop (#1038).
+"""
+stop_test = """
+The site's rules: no agent names, no redirects, KaTeX maths, every figure traced to primary evidence on origin/master, strict zensical build, check_site.py, check_render.py, and check_prose.py clean.
+"""
+done_when = """
+Published under standing blog-publishing authority.
+"""
+links = [
+  "frontier/deltas/2026-11-27-dense-cap-precheck.md",
+  "docs/journal/2026-11-27-explore/segmented-fallback-dissection.md",
+  "docs/journal/2026-11-26-explore/a6b-combined-redesign.md",
+  "docs/journal/2026-11-24-algorithm-level/bwt-contraction-rescue/results.md",
+  "docs/site/blog/2026-11-27-reopening-a6b-and-segmented.md",
+]

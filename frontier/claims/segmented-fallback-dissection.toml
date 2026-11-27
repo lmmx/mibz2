@@ -1,0 +1,36 @@
+id = "segmented-fallback-dissection"
+title = "Dissect Segmented fallback inverse-BWT phases and candidate levers on non-wikidata corpora (84% of off-wikidata full blocks)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["segmented-fallback"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/route-census.md` (#1023) established that off Wikidata, `OpenCells` takes only 17 of 107 full blocks (16%); the remaining 84% across prose, Rust/Python source, JSON, ELF, DNA, and random run the `Segmented` fallback (`src/bwt.rs` + `src/runs.rs::fill`), via either the column route (`build` + `walk_segments_room`, 55/107) or the run-route fallback (`runs::fill` + `walk_back_room`, 35/107). `PERFORMANCE-POLICY.md` treats `text` (ordinary prose/text) alongside `wikidata` as a primary corpus. Where exactly does `Segmented`'s time go (front/MTF, LF/Psi T-vector build, segmented walk, segment assembly/reversal, RLE1/CRC) across `ab gen text`, prose, source code, JSON, and ELF, and does a concrete, 100% byte-exact lever on `Segmented` cut its total inverse-BWT time (`build + walk`, including assembly) by >= 10.0%?
+"""
+why = """
+`Segmented` is completely unheld with zero open claims, yet it executes 84% of non-wikidata full blocks including primary `text` / prose workloads under `PERFORMANCE-POLICY.md`. Any gain in `Segmented` improves primary `text` (and all off-wikidata workloads) with zero impact on Wikidata's 233 Open blocks.
+"""
+stop_test = """
+Frozen before any timing or probe code (C1a / C2):
+1. Smooth-zone probe in `examples/segmented_dissection_probe.rs` (zero `src/` edits).
+2. 100% byte-exact output verified on every block of the non-wikidata corpora (reusing `route_census.rs`'s deterministic local corpora: repo/system prose, Rust/Python source, JSON, ELF, plus `ab gen text`) against shipped `mibz2::decode`.
+3. Measure 7 interleaved repeats on BOTH baseline x86-64 AND `-C target-cpu=native`, dissecting `Segmented`'s exact phase breakdown (front/MTF, LF/Psi T-vector construction, walk, segment assembly, RLE1/CRC) and testing concrete, non-duplicative candidate levers on `Segmented` (e.g., sequential LF build vs random-scatter Psi build on column route, run-fill small-run dispatch, branchless/batched START walk + lane/prefetch/tile tuning, SIMD/word-wise segment reversal).
+4. PASS (admit a striated build claim `segmented-fallback-build` at `status = "idea"`) ONLY IF a concrete, 100% byte-exact lever cuts `Segmented`'s total inverse-BWT time (`build + walk`, including assembly) by >= 10.0% with non-overlapping `[min..max]` spreads on BOTH baseline x86-64 and `-C target-cpu=native` on the prose/text + source corpora. Otherwise STOP and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Probe `examples/segmented_dissection_probe.rs`, full results note `docs/journal/2026-11-27-explore/segmented-fallback-dissection.md`, delta `frontier/deltas/2026-11-27-segmented-fallback-dissection.md`, claim marked `done`, and either `segmented-fallback-build` opened at `idea` (on PASS) or a scoped row appended to `frontier/dead-ends.tsv` (on STOP), merged cleanly to master.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/route-census.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/bwt.rs",
+  "src/runs.rs",
+]
+links = [
+  "examples/route_census.rs",
+  "frontier/claims/dense-cap-precheck.toml",
+]

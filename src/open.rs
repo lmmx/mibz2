@@ -958,6 +958,39 @@ impl<const FORCED: bool> OpenCellsOf<FORCED> {
     }
 }
 
+/// One pass over the run records checking whether the block fits within `cap` (retained rows
+/// `m <= cap.m` and thick strips `ns <= cap.strips`), stopping early once either cap is exceeded.
+/// Matches `maximal` + `split` + `Pass::take` identically: consecutive records of one byte merge
+/// (cap-127 splits), runs of at most `limit` rows add to `m`, and longer runs add one thick strip
+/// (or, when holding the marked row `p`, one retained row plus up to two thick fragments).
+fn within_cap(records: &[u16], p: u32, limit: u32, cap: Cap) -> bool {
+    let (mut pos, mut m, mut ns) = (0u32, 0u32, 0usize);
+    let mut i = 0;
+    while i < records.len() {
+        let rec = records[i];
+        let c = rec >> 8;
+        let mut width = u32::from(rec & 0xFF);
+        i += 1;
+        while i < records.len() && (records[i] >> 8) == c {
+            width += u32::from(records[i] & 0xFF);
+            i += 1;
+        }
+        if width <= limit {
+            m += width;
+        } else if p.wrapping_sub(pos) >= width {
+            ns += 1;
+        } else {
+            m += 1;
+            ns += usize::from(pos < p) + usize::from(p + 1 < pos + width);
+        }
+        if m > cap.m || ns > cap.strips {
+            return false;
+        }
+        pos += width;
+    }
+    true
+}
+
 impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     fn reads_runs(&self) -> bool {
         true
@@ -979,6 +1012,13 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
         if let Some(cap) = Self::cap(r.records().len(), n, p) {
+            if cap.m != u32::MAX && !within_cap(r.records(), p, LIMIT, cap) {
+                #[cfg(test)]
+                {
+                    self.capped += 1;
+                }
+                return self.lazy.invert_runs(r, n, p, out, k);
+            }
             let ran = self
                 .open
                 .try_run::<true, true>(r.records(), n, p, LIMIT, cap, out);

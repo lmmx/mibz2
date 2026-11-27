@@ -1,0 +1,39 @@
+id = "segmented-fallback-build"
+title = "Implement sequential LF column build, invariant-checked runs::fill_avx2, and AVX2 reverse assembly in Segmented"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = ["src/bwt.rs", "src/runs.rs"]
+mechanisms = ["segmented-fallback"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/segmented-fallback-dissection.md` showed that three zero-extra-memory changes in `Segmented` (`src/bwt.rs`, `src/runs.rs`) cut inverse-BWT time by -15.4% baseline / -16.1% native on prose/text+source (-18.4% across all 6 non-wikidata corpora; -11.7%..-15.9% on primary `ab gen text`, -24.4%..-26.4% on `elf`, -20.5%..-21.8% on `prose`) with 100% byte exactness and zero impact on Wikidata's 233 Open blocks:
+1. Column route (`Segmented::invert`, `Segmented::invert_in_place` in `src/bwt.rs`): build the backward `LF` table sequentially (with an 8-byte identical-run fast path) and walk via `walk_back_room`, replacing random-scatter `Ψ` `bwt::build` + `walk_segments_room`.
+2. Run-route fallback (`runs::fill_avx2` in `src/runs.rs`): record a private `trusted: bool` + `len: usize` invariant on `Runs` set only by `runs::front` so `fill_avx2` verifies `r.trusted && n == r.len` once in O(1) and skips the per-run `len == 0 || len > n - q || len > lim[c] - next[c]` branch and `lim[256]` array (retaining the checked loop for synthetic/test `Runs`).
+3. Reverse assembly (`SegScratch::assemble_reversed` in `src/bwt.rs`): reverse segments 32 bytes at a time with AVX2 `pshufb` + `vperm2i128` (runtime-dispatched via `Kernels::avx2()`, with 8-byte `u64::swap_bytes` scalar fallback).
+Does shipping these three mechanisms in `src/bwt.rs` and `src/runs.rs` deliver a statistically significant primary wall-time gain on `text` under `PERFORMANCE-POLICY.md` with zero Wikidata regression and clean Miri/B5 safety?
+"""
+why = """
+Directly accelerates the primary `text` corpus and all 84%+ off-wikidata full blocks (prose, source, JSON, ELF, DNA, random) with zero extra memory and zero impact on Wikidata's Open path. Completely disjoint from `OpenCells`, scanner, and `mtf-fold` holds.
+"""
+stop_test = """
+Frozen before code:
+1. 100% byte-identical and error-identical on `cargo test`, Miri (scalar paths and all unsafe invariants justified under B5), `fuzz-smoke`, and all 6 non-wikidata corpora + wikidata; zero Wikidata route changes (233 Open).
+2. On CI's paired bench (and local paired A/B), meets `PERFORMANCE-POLICY.md` §2: statistically significant primary wall-time gain on `text` (95% CI wholly below 1.000), no primary loss on `wikidata` or `text` at any thread count, bounded secondary losses (<= 5%), and peak RSS ratio <= 1.05 (expected ~1.00, zero extra memory). If `text` fails to show a primary gain or any primary regression appears, STOP and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Production implementation in `src/bwt.rs` and `src/runs.rs` with B5 safety arguments for any unsafe SIMD/pointer blocks, Miri + unit/differential tests + CI paired bench passing `PERFORMANCE-POLICY.md` §2, independent B5 review if new unsafe is added, merged cleanly with a delta.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/segmented-fallback-dissection.md",
+  "docs/journal/2026-11-27-explore/route-census.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/bwt.rs",
+  "src/runs.rs",
+]
+links = [
+  "examples/segmented_dissection_probe.rs",
+  "frontier/claims/segmented-fallback-dissection.toml",
+]

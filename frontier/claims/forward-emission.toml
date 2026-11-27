@@ -3,8 +3,8 @@ title = "Forward links and multi-lane emission (A6c + E together)"
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 3
-status = "idea"
+priority = 2
+status = "open"
 mechanisms = ["construction-wiring", "emission-walk"]
 owned_paths = ["src/open.rs", "src/open/outq.rs"]
 needs_louis = ""
@@ -12,13 +12,15 @@ question = """
 Replace XOR-linked two-ended traversal with forward-only links and several forward lanes from sampled anchors (more anchors than lanes, by order statistics, E[L_max] ~ m H_K / K). It should simplify A6c's wiring (161 ms) and expose memory-level parallelism in the walk. Design first, then a census of cycle lengths and anchor spacings, then a prototype.
 """
 why = """
-E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work. Measured since (#958, rauzy-census/results-2): single-lane forward wiring and emit (`prod_forward_emit`) alone cuts C+E to 0.856–0.871x, +142–157 ms (+10.9–12.1% of the 1-worker wall), byte-exact. Measured further (#992, #998 on held-out wikidata): on uncontracted Open (`edges = 455.5 KiB/blk` > 256 KiB L2), single-lane forward (MLP=1) regresses vs shipped bidirectional (MLP=2) in cold mode (+3.4..+16.5%) and is flat on native warm E, whereas prebuilt 4-lane forward (MLP=4) cuts E to 0.731–0.818x warm / 0.643–0.697x cold vs 1-lane fwd, projecting +215–270 ms at 1W (+28.9–36.5 ms/w at 8W) on C+E before sampled-anchor overhead — crossing pooled-scan-hybrid's S(8) <= 158–165 ms trigger even without mtf-fold (synthesis fourth-pass §2–§3). It supersedes `preshifted-inline-back`, queues on `src/open.rs` behind `mtf-fold-build`, and also unlocks upstream RLE1+CRC fusion (`forward-rle1-crc-fusion`, after #988's standalone STOP).
+E-walk 16.5% at 1 worker plus A6c's 161 ms; the design analysis forecasts 280–340 ms of 1-worker work. Measured since (#958, rauzy-census/results-2): single-lane forward wiring and emit (`prod_forward_emit`) alone cuts C+E to 0.856–0.871x, +142–157 ms (+10.9–12.1% of the 1-worker wall), byte-exact. Measured further (#992, #998 on held-out wikidata): on uncontracted Open (`edges = 455.5 KiB/blk` > 256 KiB L2), single-lane forward (MLP=1) regresses vs shipped bidirectional (MLP=2) in cold mode (+3.4..+16.5%) and is flat on native warm E, whereas prebuilt 4-lane forward (MLP=4) cuts E to 0.731–0.818x warm / 0.643–0.697x cold vs 1-lane fwd, projecting +215–270 ms at 1W (+28.9–36.5 ms/w at 8W) on C+E before sampled-anchor overhead — crossing pooled-scan-hybrid's S(8) <= 158–165 ms trigger even without mtf-fold (synthesis fourth-pass §2–§3). It supersedes `preshifted-inline-back`, queues on `src/open.rs` behind `a6b-endpoint-build`, and also unlocks upstream RLE1+CRC fusion (`forward-rle1-crc-fusion` / `forward-rle1-crc-vectored-build`, after #988's standalone STOP).
+Note (synthesis seventh-pass §2, 27 Nov): Open PR #1045 (`forward-rle1-crc-fusion`) showed 4-lane vectored zero-scratch tile fusion passes (+49.9 ms warm / +31.8 ms cold native, -53.4% writes) while contiguous 4-lane stitching STOPs (74.9% memmove, -18.6% writes). Keep Open's 4-lane emission boundary vectored (ordered slices inside a recycled block buffer drained sequentially by `BzReader::fill_buf` / scatter-copied in `parallel::decode`) rather than hard-baking a contiguous stitch so `forward-rle1-crc-vectored-build` composes cleanly.
+PROVED end-to-end with PAID sampled anchors (`forward-4lane-anchor-probe`, #1050, PASS, 11,961/11,961 byte-exact, `#![forbid(unsafe_code)]`): unmodified SIMD `Reader::wire` + O(S) bit-31 anchor tagging on `S=16` uniform row indices (`can_tag` 233/233, `single_cycle` 233/233, ~30 ns/blk) + dynamic 4-lane counted loop (`((ed0|ed1|ed2|ed3) as i32) < 0`, `eff_K=3.153`) with 32 KiB slab-continuation arena (`<= 992 KiB` inside `out`, 0 B extra output buffer, ~41.6 ordered slices/blk) cuts paid `A6c+A7` by **-30.99%..-35.78% vs bidi** and **-14.67%..-33.43% vs 1-lane fwd** (disjoint FASTER on both baseline & native in both warm & L3-cold, capturing 92–93% warm and 97.4–99.95% cold of the free oracle; modeled +208–235 ms 1W / +29–33 ms/w at 8W), while drop-in stitched contiguous `out` still cuts `A6c+A7` by -25.69%..-31.53% vs bidi (+175–208 ms modeled 1W). Design and census are now complete.
 """
 stop_test = """
 A registration before data; exact bytes; the kill test against S ideal at 8 workers and at 1 worker.
 """
 done_when = """
-The design note, the census, a registration, a prototype PR, a delta.
+A frozen registration, a prototype PR implementing paid S=16 sampled-anchor forward wiring (`Reader::wire` + bit-31 tags) and dynamic 4-lane slab emission (contiguous stitch or vectored RLE1+CRC), paired workstation kill-test results, and a delta. (Design note and cycle/anchor census completed in `docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md`.)
 """
 premises = [
   "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
@@ -27,5 +29,6 @@ premises = [
   "docs/journal/2026-11-26-explore/rle1-crc-census.md",
   "docs/journal/2026-11-26-synthesis/second-pass.md",
   "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+  "docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md",
 ]
 links = ["research/neon-movement/IDEAL-PARTS-2.md (7fab624e) §5 proposal 3"]
