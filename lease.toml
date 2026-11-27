@@ -1,13 +1,13 @@
 id = "workstation-pressure"
 holder = "claude-code"
-session = "042057b93af1"
+session = "613e66031b2c"
 claimed_at = "2026-11-27T05:59:46+00:00"
-expires = "2026-11-28T01:42:39+00:00"
+expires = "2026-11-28T01:46:35+00:00"
 owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
 mechanisms = []
 base = "c5443ce91478d45b14c56cc3b12be0e1df5beddb"
 released = false
 producer = "antigravity"
-phase = "parked"
+phase = "integration"
 pr = 1093
-pr_head = "007e65ab228e9e2fd2ca88a072189f2752e3894f"
+pr_head = "a56ea1ac5230fe48277240b7fe5ae4de10906781"
