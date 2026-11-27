@@ -28,9 +28,10 @@ python3 bench/run_requests.py publish --recipe <recipe> --sha <40-hex commit> \
 This pushes one new commit, holding `request.toml`, to
 `refs/heads/run-request/<recipe>/<12 random hex>`. It is a plain branch push (the git proxy
 refuses tag pushes, not branch pushes). Other agents publish their own refs at the same time
-without contention. To stop asking: `python3 bench/run_requests.py withdraw <ref>`. To hold a
-queued recipe: `publish --action hold --recipe <recipe>` (a hold needs no claim or review: it
-only ever stops work).
+without contention. To stop asking: `python3 bench/run_requests.py withdraw <ref>`. This only
+stops a request that hasn't been acted on yet. An activated run is stopped by a hold:
+`publish --action hold --recipe <recipe>`. A hold needs no claim or review, because it only
+ever stops work.
 
 **A request is not a queued run.** Check `git ls-remote --tags origin 'ready/<recipe>'
 'run-receipt/<recipe>/*'` after the next reconcile, or read its reasons in the Run signal
@@ -45,15 +46,24 @@ For each request, at that moment:
 - **The request:** strict TOML with known keys, at most 4 KiB, safe identifiers, the same
   recipe as its ref, published within 72 hours, not withdrawn.
 - **The queue:** master's queue lists the recipe on that branch.
-- **The claim:** it is a queue claim on master, open and needing nothing from Louis.
+- **The claim:** it is a queue claim on master whose text (title, question, why, stop test or
+  done-when) names the recipe. Its status is open or review, and it needs nothing from Louis.
   `hold/<claim>` is live and unreleased, and its session is the requester's.
-- **The candidate:** the commit is on the branch, the PR's head is exactly it, the named review
-  is at it and no review at it requests changes.
-- **CI:** every check run on it passed or was skipped, and there is at least one. A macOS job
-  that was queued, cancelled or timed out is not waited for, per CLAUDE.md; a macOS failure
-  still holds. The legacy commit status (pre-commit.ci) is success or absent.
+- **The candidate:** the commit is on the branch. The PR is open or merged, and its head is
+  exactly that commit on this repository's branch, not a fork's. The named review is at that
+  commit, and no review at it requests changes.
+- **CI:** green as CLAUDE.md defines it:
+  - every check run passed or was skipped;
+  - `check-commit`, `no-ai-attribution` and pre-commit.ci's status have reported success;
+  - every Actions workflow on the commit has finished.
+
+  Two things are not waited for: a macOS job still waiting for a runner, and a cancelled run
+  whose same-named twin passed (a superseded duplicate). A macOS job that started, timed out
+  or was cancelled holds the request. The reconciler can't tell a setup failure from a test
+  failure, so it fails closed; manual dispatch remains for that case.
 - **The tags:** `hold/<recipe>` is not set. `ready/<recipe>` is unset, already this commit, or
-  exactly `--supersedes`. No receipt exists for this recipe at this commit.
+  exactly `--supersedes`. No receipt exists for this recipe at this commit, and the request is
+  not older than the recipe's latest receipt.
 
 Anything missing, ambiguous or unreadable is refused. The reasons are printed, and the request
 is looked at again next time.
@@ -64,8 +74,14 @@ Activation is one atomic push. It moves `ready/<recipe>` with a lease on its old
 writes the annotated tag `run-receipt/<recipe>/<commit>`, whose message records the request, its
 claim, session, PR, review and the previous ready commit. The receipt is the tombstone. Once a
 request has signalled a recipe at a commit, no request does so again: not the old one, a
-replayed one or a new one, even after `ready/<recipe>` has been cleared. A deliberate repeat at
-the same commit goes through manual dispatch, with a delta saying why (CLAUDE.md, 16 November).
+replayed one or a new one, even after `ready/<recipe>` has been cleared. A request published
+before the recipe's latest receipt is retired by it. So after someone clears a request-made
+signal, an older pending request for another commit can't take its place on the next pass. A
+hold request leaves `run-receipt/<recipe>/hold-<request commit>`, so clearing a hold is never
+undone by the same request. A deliberate repeat at the same commit goes through manual
+dispatch, with a delta saying why (CLAUDE.md, 16 November). A manual `clear` of a manually set
+tag leaves no receipt, so whoever clears it should also withdraw or hold any pending request
+for that recipe.
 
 ## What is not verified
 
@@ -77,5 +93,9 @@ the same commit goes through manual dispatch, with a delta saying why (CLAUDE.md
 - **Prior attempts:** evidence bundles on `evidence` don't name their commit. Checking for a
   prior attempt beyond the receipts and the runner's own `ran/` markers stays with the requester
   (the queue claim's stop test).
+- **Queue entries on master** (such as `bench-release-scaling`) have no PR head to match, so
+  they always fail closed here. They stay manual dispatches.
+- **Request age** comes from the publisher's own commit date, so the 72-hour limit is advisory.
+  The authority lies in the lease and the receipts.
 - **Cleanup:** nothing deletes request refs, since some proxies refuse deletions. A request
   older than 72 hours is ignored, and a received one is reported `done`.

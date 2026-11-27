@@ -35,11 +35,6 @@ on:
 permissions:
   contents: write
 
-# manual signals and the reconciler take turns, so neither reads tags the other is moving
-concurrency:
-  group: run-signal
-  cancel-in-progress: false
-
 jobs:
   signal:
     if: github.event_name == 'workflow_dispatch' && inputs.signal != 'reconcile'
@@ -89,6 +84,12 @@ jobs:
       (github.event_name == 'schedule' || inputs.signal == 'reconcile')
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
+    # one reconcile at a time; a newer pending one replacing an older is harmless (each is a
+    # full idempotent pass). Manual signals are not in this group, so none is ever cancelled:
+    # the reconciler's leased atomic push refuses a tag that moved under it.
+    concurrency:
+      group: run-requests
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: read

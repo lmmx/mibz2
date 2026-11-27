@@ -21,6 +21,15 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import run_requests as rr  # noqa: E402
 
+# the module's own git calls (publish, withdraw) need an identity on a bare CI runner
+for _k, _v in (
+    ("GIT_AUTHOR_NAME", "t"),
+    ("GIT_AUTHOR_EMAIL", "t@t"),
+    ("GIT_COMMITTER_NAME", "t"),
+    ("GIT_COMMITTER_EMAIL", "t@t"),
+):
+    os.environ.setdefault(_k, _v)
+
 NOW = dt.datetime(2026, 11, 27, 9, 0, tzinfo=dt.timezone.utc)
 RECIPE = "bench-demo"
 BRANCH = "bench/demo"
@@ -47,20 +56,22 @@ class FakeAPI:
     """The GitHub API the reconciler reads, as plain data; a missing entry is an API error."""
 
     def __init__(self):
-        self.prs, self.reviews, self.checks, self.statuses = {}, {}, {}, {}
+        self.prs, self.reviews, self.checks, self.statuses, self.suites = {}, {}, {}, {}, {}
         self.down = False
 
     def get(self, path):
         if self.down:
             raise rr.Unavailable(f"api down: {path}")
         parts = path.split("?")[0].strip("/").split("/")
-        # repos/o/r/pulls/N, repos/o/r/pulls/N/reviews, repos/o/r/commits/S/check-runs, .../status
+        # repos/o/r/pulls/N[/reviews], repos/o/r/commits/S/{check-runs,check-suites,status}
         if parts[3] == "pulls" and len(parts) == 5:
             table, key = self.prs, int(parts[4])
         elif parts[3] == "pulls" and parts[5] == "reviews":
             table, key = self.reviews, int(parts[4])
         elif parts[5] == "check-runs":
             table, key = self.checks, parts[4]
+        elif parts[5] == "check-suites":
+            table, key = self.suites, parts[4]
         elif parts[5] == "status":
             table, key = self.statuses, parts[4]
         else:
@@ -68,6 +79,43 @@ class FakeAPI:
         if key not in table:
             raise rr.Unavailable(f"404 {path}")
         return table[key]
+
+
+def green():
+    """A head that is green as CLAUDE.md defines it: one finished Actions suite whose runs
+    passed or were skipped, the required checks among them, and pre-commit.ci's status."""
+    suite = {"id": 1}
+    runs = [
+        ("rust", "success"),
+        ("bench", "skipped"),
+        ("check-commit", "success"),
+        ("no-ai-attribution", "success"),
+    ]
+    return (
+        {
+            "total_count": len(runs),
+            "check_runs": [
+                {"name": n, "status": "completed", "conclusion": c, "check_suite": suite}
+                for n, c in runs
+            ],
+        },
+        {
+            "total_count": 1,
+            "check_suites": [
+                {
+                    "id": 1,
+                    "status": "completed",
+                    "conclusion": "success",
+                    "app": {"slug": "github-actions"},
+                }
+            ],
+        },
+        {
+            "state": "success",
+            "total_count": 1,
+            "statuses": [{"context": "pre-commit.ci - pr", "state": "success"}],
+        },
+    )
 
 
 class Fixture(unittest.TestCase):
@@ -99,7 +147,7 @@ class Fixture(unittest.TestCase):
         self.api.prs[7] = {
             "state": "open",
             "merged": False,
-            "head": {"sha": self.sha, "ref": BRANCH},
+            "head": {"sha": self.sha, "ref": BRANCH, "repo": {"full_name": "o/r"}},
         }
         self.api.reviews[7] = [
             {
@@ -109,14 +157,10 @@ class Fixture(unittest.TestCase):
                 "body": "Independent recipe review passed.",
             }
         ]
-        self.api.checks[self.sha] = {
-            "total_count": 2,
-            "check_runs": [
-                {"name": "rust", "status": "completed", "conclusion": "success"},
-                {"name": "pre-commit", "status": "completed", "conclusion": "skipped"},
-            ],
-        }
-        self.api.statuses[self.sha] = {"state": "success", "total_count": 1}
+        self.make_green(self.sha)
+
+    def make_green(self, sha):
+        self.api.checks[sha], self.api.suites[sha], self.api.statuses[sha] = green()
 
     def write_claim(self, **over):
         fields = {
@@ -124,6 +168,7 @@ class Fixture(unittest.TestCase):
             "status": "open",
             "mechanisms": ["workstation-queue"],
             "owned_paths": ["bench/workstation-queue.txt"],
+            "stop_test": f"Queue {RECIPE} once, and bench-other too.",
         }
         fields.update(over)
         lines = [f"{k} = {json.dumps(v)}" for k, v in fields.items()]
@@ -278,19 +323,112 @@ class Refusal(Fixture):
         self.publish()
         self.refused("status")
 
-    def test_macos_setup_outage_does_not_hold(self):
-        self.api.checks[self.sha]["check_runs"].append(
-            {"name": "wheel (macos-14)", "status": "queued", "conclusion": None}
-        )
-        self.publish()
-        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
-
     def test_macos_real_failure_holds(self):
         self.api.checks[self.sha]["check_runs"].append(
             {"name": "wheel (macos-14)", "status": "completed", "conclusion": "failure"}
         )
         self.publish()
         self.refused("check")
+
+    def test_macos_waiting_for_a_runner_does_not_hold(self):
+        self.api.checks[self.sha]["check_runs"].append(
+            {
+                "name": "wheel (macos-14)",
+                "status": "queued",
+                "conclusion": None,
+                "check_suite": {"id": 2},
+            }
+        )
+        self.api.suites[self.sha]["check_suites"].append(
+            {"id": 2, "status": "in_progress", "app": {"slug": "github-actions"}}
+        )
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
+    def test_macos_started_holds(self):
+        self.api.checks[self.sha]["check_runs"].append(
+            {"name": "macos (macos-15)", "status": "in_progress", "conclusion": None}
+        )
+        self.publish()
+        self.refused("check")
+
+    def test_macos_timed_out_holds(self):
+        self.api.checks[self.sha]["check_runs"].append(
+            {"name": "macos (macos-15)", "status": "completed", "conclusion": "timed_out"}
+        )
+        self.publish()
+        self.refused("check")
+
+    def test_cancelled_duplicate_of_a_passed_job_does_not_hold(self):
+        self.api.checks[self.sha]["check_runs"].append(
+            {"name": "bench", "status": "completed", "conclusion": "cancelled"}
+        )
+        self.publish()
+        self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
+
+    def test_cancelled_job_without_a_passed_twin_holds(self):
+        self.api.checks[self.sha]["check_runs"].append(
+            {"name": "miri", "status": "completed", "conclusion": "cancelled"}
+        )
+        self.publish()
+        self.refused("check")
+
+    def test_required_check_absent_holds(self):
+        runs = self.api.checks[self.sha]["check_runs"]
+        runs[:] = [r for r in runs if r["name"] != "no-ai-attribution"]
+        self.api.checks[self.sha]["total_count"] = len(runs)
+        self.publish()
+        self.refused("required")
+
+    def test_required_status_absent_holds(self):
+        self.api.statuses[self.sha] = {"state": "pending", "total_count": 0, "statuses": []}
+        self.publish()
+        self.refused("pre-commit.ci")
+
+    def test_workflow_not_finished_holds(self):
+        self.api.suites[self.sha]["check_suites"].append(
+            {"id": 3, "status": "queued", "app": {"slug": "github-actions"}}
+        )
+        self.publish()
+        self.refused("workflow")
+
+    def test_malformed_lease_refuses_without_stopping_the_batch(self):
+        blob = git(self.work, "hash-object", "-w", "--stdin", input="not [[ toml")
+        tree = git(self.work, "mktree", input=f"100644 blob {blob}\tlease.toml\n")
+        commit = git(self.work, "commit-tree", tree, "-m", "bad lease")
+        git(self.work, "push", "-qf", "origin", f"{commit}:refs/heads/hold/{CLAIM}")
+        self.publish()
+        self.refused("lease")
+
+    def test_claim_not_naming_the_recipe(self):
+        self.write_claim(stop_test="Queue bench-demo-two only.")
+        git(self.work, "commit", "-qam", "c")
+        git(self.work, "push", "-q", "origin", "master")
+        self.publish()
+        self.refused("does not name")
+
+    def test_claim_with_unknown_status(self):
+        self.write_claim(status="paused")
+        git(self.work, "commit", "-qam", "c")
+        git(self.work, "push", "-q", "origin", "master")
+        self.publish()
+        self.refused("claim")
+
+    def test_fork_pr_with_the_same_branch_name(self):
+        self.api.prs[7]["head"]["repo"]["full_name"] = "someone/fork"
+        self.publish()
+        self.refused("head")
+
+    def test_closed_unmerged_pr(self):
+        self.api.prs[7]["state"] = "closed"
+        self.publish()
+        self.refused("closed")
+
+    def test_boolean_version_is_refused(self):
+        with self.assertRaises(rr.Refused):
+            rr.parse(
+                rr.render(dict(version=True, action="hold", recipe=RECIPE, created=NOW.isoformat()))
+            )
 
     def test_api_unavailable_fails_closed(self):
         self.api.down = True
@@ -436,6 +574,47 @@ class Replay(Fixture):
         self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
         self.assertEqual(self.tag(f"ready/{RECIPE}"), self.sha)
 
+    def test_an_older_request_does_not_revive_a_cleared_run(self):
+        old = self.publish(note="older, for the same recipe")
+        git(self.work, "checkout", "-q", BRANCH)
+        (self.work / "recipe.txt").write_text("candidate 2\n")
+        git(self.work, "commit", "-qam", "candidate 2")
+        sha2 = git(self.work, "rev-parse", "HEAD")
+        git(self.work, "push", "-q", "origin", BRANCH)
+        git(self.work, "checkout", "-q", "master")
+        self.make_green(sha2)
+        self.api.prs[7]["head"]["sha"] = sha2
+        self.api.reviews[7].append(
+            {
+                "id": 101,
+                "commit_id": sha2,
+                "state": "COMMENTED",
+                "body": "Reviewed at the new head.",
+            }
+        )
+        later = NOW + dt.timedelta(minutes=5)
+        rr.publish(
+            remote=str(self.origin),
+            cwd=self.work,
+            now=later,
+            recipe=RECIPE,
+            sha=sha2,
+            branch=BRANCH,
+            claim=CLAIM,
+            session=SESSION,
+            pr=7,
+            review=101,
+        )
+        report = {d.ref: d for d in rr.reconcile(self.world(), now=later, apply=True)}
+        self.assertEqual(report[old].outcome, "refused")  # the PR's head had moved on
+        self.assertEqual(self.tag(f"ready/{RECIPE}"), sha2)
+        git(self.work, "push", "-q", "origin", "--delete", f"refs/tags/ready/{RECIPE}")
+        self.api.prs[7]["head"]["sha"] = self.sha  # even were the old head eligible again
+        report = {d.ref: d for d in rr.reconcile(self.world(), now=later, apply=True)}
+        self.assertEqual(report[old].outcome, "refused", report[old])
+        self.assertIn("published before", report[old].reason)
+        self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+
     def test_supersedes_must_match_the_current_tag(self):
         git(
             self.work,
@@ -456,6 +635,13 @@ class Hold(Fixture):
         rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, action="hold", recipe=RECIPE)
         self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
         self.assertIsNotNone(self.tag(f"hold/{RECIPE}"))
+
+    def test_a_cleared_hold_is_not_reapplied(self):
+        rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, action="hold", recipe=RECIPE)
+        self.reconcile()
+        git(self.work, "push", "-q", "origin", "--delete", f"refs/tags/hold/{RECIPE}")
+        self.assertEqual([d.outcome for d in self.reconcile()], ["done"])
+        self.assertIsNone(self.tag(f"hold/{RECIPE}"))
 
     def test_hold_request_for_unqueued_recipe_is_refused(self):
         rr.publish(

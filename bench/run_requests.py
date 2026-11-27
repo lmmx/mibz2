@@ -20,22 +20,28 @@ ready/<recipe> only when, at that moment, all of these hold:
     the same recipe; it is under 72 hours old and not withdrawn;
   - the default branch's bench/workstation-queue.txt lists the recipe on that branch;
   - the default branch's claim C is a queue claim (mechanism workstation-queue, or it owns the
-    queue file), needs nothing from Louis, and hold/C is live, unreleased, with session X;
-  - S is on origin's B, PR N's head is exactly S on B, review ID is at S and no review at S
-    requests changes;
-  - every check run on S passed or was skipped (a macOS job that never completed, was
-    cancelled or timed out is not waited for, per CLAUDE.md; a macOS failure still holds),
-    there is at least one, and the legacy commit status is success or absent;
+    queue file) whose text names the recipe, with status open or review and nothing needing
+    Louis; hold/C is live, unreleased, with session X;
+  - S is on origin's B; PR N is open or merged, its head exactly S on this repository's B;
+    review ID is at S and no review at S requests changes;
+  - green as CLAUDE.md defines it: every check run on S passed or was skipped, the required
+    checks (check-commit, no-ai-attribution) and pre-commit.ci's status have reported success,
+    and every Actions workflow on S has finished. Not waited for: a macOS job still waiting for
+    a runner, and a cancelled run whose same-named twin passed. A macOS job that started,
+    timed out or was cancelled holds (fail closed: use manual dispatch);
   - hold/<recipe> is not set; ready/<recipe> is unset, already S, or exactly SUPERSEDES;
-  - no receipt run-receipt/<recipe>/<S> exists.
+  - no receipt run-receipt/<recipe>/<S> exists, and the request is not older than the
+    recipe's latest receipt (so a request can't revive a run or hold after it was cleared).
 
-Activation is one atomic push of ready/<recipe> (with a lease on its old value) and the
-annotated receipt run-receipt/<recipe>/<S>. The receipt is the tombstone: once a run has been
-signalled from a request, no request (old, replayed or new) signals that recipe at that commit
-again, even after ready/<recipe> is cleared. A deliberate repeat at the same commit still goes
+Activation is one atomic push of ready/<recipe> (leased on its old value) and the annotated
+receipt run-receipt/<recipe>/<S>. The receipt is the tombstone: once a run has been signalled
+from a request, no request (old, replayed or new) signals that recipe at that commit again,
+even after ready/<recipe> is cleared. A deliberate repeat at the same commit still goes
 through the manual dispatch of run-signal.yml, with a delta saying why. A hold request needs
-only a queued recipe: it can only stop work. Nothing here executes request content, checks
-out a candidate or interpolates request text into a shell.
+only a queued recipe (it can only stop work) and leaves run-receipt/<recipe>/hold-<request
+commit>, so a manual clear is never undone by the same request. Withdrawal only stops a
+request not yet acted on; an activated run is stopped by a hold. Nothing here executes request
+content, checks out a candidate or interpolates request text into a shell.
 """
 
 from __future__ import annotations
@@ -78,7 +84,13 @@ OPTIONAL_KEYS = {"supersedes", "note"}
 HOLD_KEYS = {"version", "action", "recipe", "created"}
 WITHDRAW_KEYS = {"version", "action", "recipe", "created"}
 PASSED = {"success", "neutral", "skipped"}
-MACOS_OUTAGE = {"cancelled", "timed_out", "startup_failure", "action_required", "stale"}
+# CLAUDE.md: a macOS job waiting for a runner never holds a merge; one that started and then
+# failed, timed out or was cancelled may be a real result, so it holds (fail closed)
+MACOS_WAITING = {"queued", "waiting", "pending", "requested"}
+# a head is green only once these have reported: absent is not green
+REQUIRED_CHECKS = {"check-commit", "no-ai-attribution"}
+REQUIRED_STATUSES = {"pre-commit.ci - pr"}
+CLAIM_OK = {"open", "review"}
 
 
 class Unavailable(Exception):
@@ -98,6 +110,15 @@ class Decision:
 
     def line(self):
         return f"{self.outcome:<9} {self.ref}{': ' + self.reason if self.reason else ''}"
+
+
+def _toml(text, what):
+    """Parse TOML read from origin (a lease any agent can push, a claim): bad data refuses."""
+    try:
+        table = tomllib.loads(text)
+    except (tomllib.TOMLDecodeError, TypeError, ValueError):
+        raise Refused(f"{what} is not valid TOML") from None
+    return table
 
 
 def render(fields: dict) -> str:
@@ -190,7 +211,7 @@ class World:
 
     def claim(self, claim_id):
         text = self._show("refs/reconcile/default", f"frontier/claims/{claim_id}.toml")
-        return tomllib.loads(text) if text else None
+        return _toml(text, f"claim {claim_id}") if text else None
 
     def lease(self, claim_id):
         p = _git(
@@ -207,7 +228,7 @@ class World:
                 return None
             raise Unavailable(f"hold/{claim_id}: {p.stderr.strip()[:200]}")
         text = self._show(f"refs/reconcile/hold/{claim_id}", "lease.toml", MAX_BYTES)
-        return tomllib.loads(text) if text else None
+        return _toml(text, f"hold/{claim_id}'s lease") if text else None
 
     def on_branch(self, sha, branch):
         local = f"refs/reconcile/branch/{branch}"
@@ -237,7 +258,24 @@ class World:
                 name = ref[len("refs/tags/") :]
                 (peeled if name.endswith("^{}") else plain)[name.removesuffix("^{}")] = sha
             self._tags = {**plain, **peeled}
+            self._raw = plain
         return self._tags
+
+    def raw(self, name):
+        """A tag's own value (the tag object, for an annotated tag): what a lease compares."""
+        self.tags()
+        return self._raw.get(name, "")
+
+    def receipt_times(self, recipe):
+        """When each receipt for the recipe was written (its tagger date)."""
+        if not any(n.startswith(f"run-receipt/{recipe}/") for n in self.tags()):
+            return []
+        local = f"refs/reconcile/receipt/{recipe}/"
+        self._fetch(f"+refs/tags/run-receipt/{recipe}/*:{local}*")
+        out = _git(self.cwd, "for-each-ref", "--format=%(taggerdate:unix)", local).stdout
+        return [
+            dt.datetime.fromtimestamp(int(x), dt.timezone.utc) for x in out.split() if x.isdigit()
+        ]
 
     # the GitHub API
     def pr(self, n):
@@ -249,13 +287,17 @@ class World:
     def checks(self, sha):
         return self.api.get(f"repos/{self.repo}/commits/{sha}/check-runs?per_page=100")
 
+    def suites(self, sha):
+        return self.api.get(f"repos/{self.repo}/commits/{sha}/check-suites?per_page=100")
+
     def status(self, sha):
-        return self.api.get(f"repos/{self.repo}/commits/{sha}/status")
+        return self.api.get(f"repos/{self.repo}/commits/{sha}/status?per_page=100")
 
     # the one write: an atomic push of tags, each with a lease on its old value
-    def push_tags(self, updates):
-        """updates: [(tag name, target commit, annotation or None, expected old commit or '')]"""
+    def push_tags(self, updates, now):
+        """updates: [(tag name, target commit, annotation or None, expected old value or '')]"""
         args, specs = [], []
+        when = {"GIT_COMMITTER_DATE": now.isoformat()}  # the receipt's tagger date
         for name, target, message, old in updates:
             if message is None:
                 specs.append(f"{target}:refs/tags/{name}")
@@ -273,12 +315,15 @@ class World:
                     message,
                     name,
                     target,
+                    env=when,
                 )
                 specs.append(f"refs/tags/{name}:refs/tags/{name}")
             args.append(f"--force-with-lease=refs/tags/{name}:{old}")
         _git(self.cwd, "push", "-q", "--atomic", *args, self.remote, *specs)
-        for name, target, _, _ in updates:
+        for name, target, message, _ in updates:
             self.tags()[name] = target
+            if message is None:
+                self._raw[name] = target
 
 
 # ---------------------------------------------------------------- deciding
@@ -299,7 +344,7 @@ def parse(text):
     extra = keys - allowed - (OPTIONAL_KEYS if action == "ready" else {"note"})
     if extra or allowed - keys:
         raise Refused(f"keys: missing {sorted(allowed - keys)}, unknown {sorted(extra)}")
-    if req["version"] != 1:
+    if type(req["version"]) is not int or req["version"] != 1:
         raise Refused("version is not 1")
     checks = [("recipe", RECIPE)]
     if action == "ready":
@@ -324,27 +369,80 @@ def parse(text):
 
 
 def check_ci(world, sha):
+    """Green as CLAUDE.md defines it: every check run and the legacy commit status, with every
+    workflow finished and the required ones present (absent or not yet reported is not green)."""
     runs = world.checks(sha)
     got = runs.get("check_runs", [])
-    if not got:
-        raise Refused(f"no check runs on {sha[:12]}")
     if runs.get("total_count", 0) > len(got):
         raise Refused("more than 100 check runs: not all could be read")
+    missing = REQUIRED_CHECKS - {r.get("name") for r in got}
+    if missing:
+        raise Refused(f"required check(s) {sorted(missing)} have not reported on {sha[:12]}")
+    passed = {
+        r.get("name")
+        for r in got
+        if r.get("status") == "completed" and r.get("conclusion") in PASSED
+    }
+
+    def waiting_macos(r):
+        return "macos" in str(r.get("name", "")).lower() and r.get("status") in MACOS_WAITING
+
     for run in got:
         name, status, concl = run.get("name", "?"), run.get("status"), run.get("conclusion")
-        if "macos" in name.lower() and (status != "completed" or concl in MACOS_OUTAGE):
-            continue  # CLAUDE.md: GitHub's macOS runners never hold a merge
-        if status != "completed" or concl not in PASSED:
-            raise Refused(f"check {name!r} is {status}/{concl}")
+        if status == "completed" and concl in PASSED:
+            continue
+        if waiting_macos(run):
+            continue  # CLAUDE.md: a macOS job waiting for a runner never holds a merge
+        if status == "completed" and concl == "cancelled" and name in passed:
+            continue  # a superseded duplicate of a job that passed or was skipped
+        raise Refused(f"check {name!r} is {status}/{concl}")
+    suites = world.suites(sha)
+    listed = suites.get("check_suites", [])
+    if suites.get("total_count", 0) > len(listed):
+        raise Refused("more than 100 check suites: not all could be read")
+    for suite in listed:
+        if (suite.get("app") or {}).get("slug") != "github-actions":
+            continue
+        if suite.get("status") == "completed":
+            continue
+        pending = [
+            r
+            for r in got
+            if (r.get("check_suite") or {}).get("id") == suite.get("id")
+            and r.get("status") != "completed"
+        ]
+        if pending and all(waiting_macos(r) for r in pending):
+            continue
+        raise Refused(f"a workflow on {sha[:12]} is still {suite.get('status')}")
     st = world.status(sha)
-    if st.get("total_count", 0) and st.get("state") != "success":
+    contexts = {x.get("context"): x.get("state") for x in st.get("statuses", [])}
+    for context in sorted(REQUIRED_STATUSES):
+        if contexts.get(context) != "success":
+            raise Refused(f"status {context!r} is {contexts.get(context, 'absent')}")
+    if st.get("state") != "success":
         raise Refused(f"commit status is {st.get('state')}")
 
 
-def evaluate_ready(world, req, now):
+def names_recipe(claim, recipe):
+    text = " ".join(
+        str(claim.get(k, "")) for k in ("title", "question", "why", "stop_test", "done_when")
+    )
+    return re.search(rf"(?<![a-z0-9-]){re.escape(recipe)}(?![a-z0-9-])", text) is not None
+
+
+def older_than_a_signal(world, recipe, when):
+    """A request published before the recipe's latest request-made signal is retired by it:
+    after that signal is cleared, an older request can't revive the run (or the hold)."""
+    latest = max(world.receipt_times(recipe), default=None)
+    if latest is not None and when < latest:
+        raise Refused(f"published before the latest signal for {recipe} ({latest.isoformat()})")
+
+
+def evaluate_ready(world, req, now, when):
     recipe, sha, tags = req["recipe"], req["sha"], world.tags()
     if f"run-receipt/{recipe}/{sha}" in tags:
         return "done", "already signalled from a request (receipt exists)"
+    older_than_a_signal(world, recipe, when)
     if f"hold/{recipe}" in tags:
         raise Refused(f"hold/{recipe} is set")
     if world.queue().get(recipe) != req["branch"]:
@@ -352,12 +450,14 @@ def evaluate_ready(world, req, now):
     claim = world.claim(req["claim"])
     if not claim:
         raise Refused(f"no claim {req['claim']} on the default branch")
-    if claim.get("needs_louis") or claim.get("status") in ("done", "dropped", "idea", "blocked"):
+    if claim.get("needs_louis") or claim.get("status") not in CLAIM_OK:
         raise Refused(f"claim {req['claim']} is {claim.get('status')} or needs Louis")
     if "workstation-queue" not in claim.get(
         "mechanisms", []
     ) and "bench/workstation-queue.txt" not in claim.get("owned_paths", []):
         raise Refused(f"claim {req['claim']} is not a workstation queue claim")
+    if not names_recipe(claim, recipe):
+        raise Refused(f"claim {req['claim']} does not name {recipe}")
     lease = world.lease(req["claim"])
     if (
         not lease
@@ -374,8 +474,15 @@ def evaluate_ready(world, req, now):
     if not world.on_branch(sha, req["branch"]):
         raise Refused(f"{sha[:12]} is not on {req['branch']}")
     pr = world.pr(req["pr"])
-    if pr.get("head", {}).get("sha") != sha or pr.get("head", {}).get("ref") != req["branch"]:
-        raise Refused(f"PR #{req['pr']}'s head is not {sha[:12]} on {req['branch']}")
+    head = pr.get("head") or {}
+    if (
+        head.get("sha") != sha
+        or head.get("ref") != req["branch"]
+        or (head.get("repo") or {}).get("full_name") != world.repo
+    ):
+        raise Refused(f"PR #{req['pr']}'s head is not {sha[:12]} on {world.repo}'s {req['branch']}")
+    if not (pr.get("state") == "open" or pr.get("merged") is True):
+        raise Refused(f"PR #{req['pr']} is closed without merging")
     reviews = world.reviews(req["pr"])
     if len(reviews) >= 100:
         raise Refused("100 or more reviews: not all could be read")
@@ -413,18 +520,36 @@ def reconcile(world, now, apply=False):
             if req["action"] == "withdraw":
                 d.outcome = "withdrawn"
             elif req["action"] == "hold":
+                receipt_name = f"run-receipt/{recipe}/hold-{commit}"
                 queue_cache = queue_cache if queue_cache is not None else world.queue()
-                if recipe not in queue_cache:
+                if receipt_name in world.tags():
+                    d.outcome, d.reason = "done", "already applied (receipt exists)"
+                elif recipe not in queue_cache:
                     raise Refused(f"the queue does not list {recipe}")
-                if f"hold/{recipe}" in world.tags():
-                    d.outcome, d.reason = "done", f"hold/{recipe} is set"
                 else:
+                    older_than_a_signal(world, recipe, when)
+                    is_set = f"hold/{recipe}" in world.tags()
                     d.outcome = "eligible"
+                    d.reason = f"hold/{recipe} is already set" if is_set else ""
                     if apply:
-                        world.push_tags([(f"hold/{recipe}", world.default_head(), None, "")])
+                        receipt = json.dumps(
+                            {
+                                "request": ref,
+                                "request_commit": commit,
+                                "recipe": recipe,
+                                "action": "hold",
+                                "at": now.isoformat(),
+                            },
+                            indent=1,
+                        )
+                        head = world.default_head()
+                        updates = [(receipt_name, head, receipt, "")]
+                        if not is_set:
+                            updates.insert(0, (f"hold/{recipe}", head, None, ""))
+                        world.push_tags(updates, now)
                         d.outcome = "activated"
             else:
-                d.outcome, d.reason = evaluate_ready(world, req, now)
+                d.outcome, d.reason = evaluate_ready(world, req, now, when)
                 if d.outcome == "eligible" and apply:
                     sha = req["sha"]
                     old = world.tags().get(f"ready/{recipe}", "")
@@ -433,6 +558,7 @@ def reconcile(world, now, apply=False):
                             "request": ref,
                             "request_commit": commit,
                             "recipe": recipe,
+                            "action": "ready",
                             "sha": sha,
                             "branch": req["branch"],
                             "claim": req["claim"],
@@ -446,8 +572,10 @@ def reconcile(world, now, apply=False):
                     )
                     updates = [(f"run-receipt/{recipe}/{sha}", sha, receipt, "")]
                     if old != sha:
-                        updates.insert(0, (f"ready/{recipe}", sha, None, old))
-                    world.push_tags(updates)
+                        updates.insert(
+                            0, (f"ready/{recipe}", sha, None, world.raw(f"ready/{recipe}"))
+                        )
+                    world.push_tags(updates, now)
                     d.outcome = "activated"
         except Refused as e:
             d.outcome, d.reason = "refused", str(e)
