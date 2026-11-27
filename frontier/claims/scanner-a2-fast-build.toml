@@ -1,0 +1,41 @@
+id = "scanner-a2-fast-build"
+title = "Fast safe-Rust A2a..d scanner setup: direct run-length MTF, multi-symbol delta LUT, single-write K=2 Huff build"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/block.rs", "src/huff.rs"]
+mechanisms = ["scanner-a2-build"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/scanner-a2-dissection.md` (`examples/scanner_a2_dissection.rs`, `#![forbid(unsafe_code)]`, 1,002/1,002 synthetic edge-case tables + 2,009/2,009 real tables bit-identical LUTs + 100% symbol/bit-pos exact across 6 corpora) passed its frozen stop test across all three compiler builds (baseline x86-64, `-C target-cpu=native`, and `-C target-cpu=native` + Intel JCC-erratum 32B branch alignment control):
+- Standalone `A2a..d` cut **-32.3% base / -37.7% native / -31.6% JCC-32B** (non-overlapping 7-repeat thread CPU);
+- Full post-`#1034` serial scan `S'` (`A2a..d + A3`) cut **-5.71% base / -7.38% native / -4.44% JCC-32B** (`S_all_g64`, non-overlapping; `S_all_t16` **-6.40% / -5.77% / -4.98%** non-overlapping) with zero regressions on all 5 off-wikidata guard corpora (`text` -2.47..-3.96%, `records` -0.20..-1.96%, `random` -0.37..-0.58%, `runs` -14.55..+0.70%, `onebyte` exact).
+
+Once PR `#1034` (`scanner-coalesced-u8-decode`) lands on `src/block.rs` and `src/huff.rs`, implement the three orthogonal safe-Rust `A2` levers on top of `#1034`:
+1. `A2b_direct_runs`: branchless 1-iteration-per-run `leading_zeros()` selector MTF emitting `(group: u8, run_len: u16)` directly into `scratch.runs` (replacing `sel_buf` byte storage and eliminating `#1034`'s `501k`-byte `sel_buf` re-scan inside `A3`);
+2. `A2c_lut_multi`: `4 KiB` compile-time 8-bit multi-symbol delta code-length LUT (`DELTA_LUT_MULTI`, 3.46-5.25 lens/lookup, O(1) range guard + slow fallback);
+3. `A2d_direct_g64` (or per-table `group_uses[g] >= 16` `A2d_direct_t16`): single-write fused `K=2` root LUT fill with `split_at_mut` and tail-only (`1024 - filled_to`, mean `9.1` entries on wikidata) long-code/sub-LUT construction, dropping `d_arr[0..1024]` and redundant `K=1` overwrites.
+"""
+why = """
+Post-`#1034` serial scan `S'` is `~145 ms` on i9-10900K, making `A2a..d` (`~13-14%` of `S'`) the largest unoptimized serial component on the scan critical path. Cutting `S'` by `-4.44%..-7.38%` removes `~6.4-10.7 ms` directly from serial `S'` (`~145 -> ~134-139 ms`) in 100% safe Rust with zero extra memory, lowering the 8-10W scan ceiling and relaxing the `140 ms` slack-hybrid contour.
+"""
+stop_test = """
+Frozen before data:
+1. Correctness & safety: 100% safe Rust (`#![forbid(unsafe_code)]` in modified paths), bit-identical `Huff` LUTs vs `#1034`'s `build_into` across all unit/synthetic edge cases (`alpha = 258`, `sym = 256`, `eob = 257`, incomplete/oversubscribed trees), `cargo test --lib` (including libbzip2 parity), `fuzz-smoke`, and Miri clean.
+2. Workstation i9-10900K registration (frozen before any workstation run, paired A/B against post-`#1034` master on `wikidata x4`, 7+ interleaved repeats): must cut serial scan `S'` (`A2 + A3`) by >= 3.0% (non-overlapping 95% CI / spreads) with <= 1.02x peak RSS and no > 2.0% regression on guard corpora (`text`, `records`, `random`, `runs`, `onebyte`). Otherwise STOP and record a scoped dead-end in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR on `src/block.rs` and `src/huff.rs` queued behind `#1034`, passing all exactness/Miri/fuzz-smoke checks, frozen workstation registration, i9-10900K evidence bundle under the frozen stop test, delta, and `surface.tsv` row `S` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/scanner-a2-dissection.md",
+  "examples/scanner_a2_dissection.rs",
+  "docs/journal/2026-11-26-explore/scanner-full-dissection.md",
+  "frontier/claims/scanner-coalesced-u8-decode.toml",
+]
+links = [
+  "frontier/claims/scanner-coalesced-u8-decode.toml",
+  "frontier/deltas/2026-11-27-explore-scanner-a2-dissection.md",
+]
