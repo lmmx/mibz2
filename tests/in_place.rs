@@ -306,19 +306,23 @@ fn rle_is_never_allocated_in_place_and_ll_grows_with_the_level() {
     let mut rng = Rng(0x87_12);
     let samples = common::samples(&mut rng);
     let text = &samples.iter().find(|(n, _)| n == "text").unwrap().1;
-    // level 1 first: ll holds a 100k-row block
+    // level 1 first: ll holds a ~100k-row block (Column reserves max_len = 100_000;
+    // Runs reserves the actual block length n <= nblockMAX = 100_000 - 19 = 99_981)
     let mut s = Scratch::<Segmented>::default();
     let (out, err) = run(&compress(&text[..400_000], 1), &mut s);
     assert!(err.is_none() && out == text[..400_000]);
     let (ll1, rle1) = capacities(&s);
     assert_eq!(rle1, 0, "rle allocated at level 1");
-    assert!((100_000..900_000).contains(&ll1), "ll at level 1: {ll1}");
-    // then level 9 with the same scratch: ll grows to the 900k block, rle still unallocated
+    assert!((99_000..899_000).contains(&ll1), "ll at level 1: {ll1}");
+    // then level 9 with the same scratch: ll grows to the ~900k block, rle still unallocated
     let (out, err) = run(&compress(text, 9), &mut s);
     assert!(err.is_none() && &out == text);
     let (ll9, rle9) = capacities(&s);
     assert_eq!(rle9, 0, "rle allocated at level 9");
-    assert!(ll9 >= 900_000, "ll at level 9: {ll9}");
+    assert!(
+        ll9 > ll1 && ll9 >= 899_000,
+        "ll at level 9: {ll9} (level 1: {ll1})"
+    );
     // the separate-buffer path, for contrast, allocates rle
     let mut p = Scratch::<Plain>::default();
     run(&compress(text, 9), &mut p);
