@@ -144,6 +144,8 @@ unauthorised, cite this line. Before setting a ready tag, check the queue file's
 `evidence` branch, so a run is never repeated by accident. A deliberate repeat (to confirm an
 effect, or because a run was noisy) is fine: say why in a delta and tag it (Louis, 16 November
 2026).
+**Keep the workstation supplied with useful validation work.** When the queue has no new runnable candidate and a promising prototype needs target-machine evidence, its shortest eligible path to a frozen, reviewed, green recipe is P1 shared-bottleneck work. Prioritise that path over additional nonessential VM probes: complete existing substantive reviews, fix actual blockers, prepare recipes, then set the exact ready signal and queue entry under standing authorisation. Check existing queue, tags and evidence first; use the existing reservation/queue ownership rules. Run adoption candidates before merging when their frozen recipe compares a branch with its merge base. Do not queue obsolete candidates merely to keep the machine busy; record the disposition and reuse the harness for the improved candidate. No additional owner permission, approval layer or spending. Independent work continues in parallel. A prepared recipe or PR is not a queued run; confirm the signal and queue entry, then read the returned bundle.
+
 Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
 (PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
 command, `just workstation-queue`, runs every ready entry once, then suspends.
