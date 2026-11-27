@@ -1,9 +1,9 @@
-id = "scanner-coalesced-u8-decode"
+id = "python-read-single-copy"
 holder = "antigravity"
-session = "db56e3b77b1b"
-claimed_at = "2026-11-27T00:20:23+00:00"
-expires = "2026-11-27T08:20:23+00:00"
-owned_paths = ["src/huff.rs", "src/block.rs", "src/bits.rs"]
-mechanisms = ["scan-coalesced-u8"]
+session = "26c731b56be0"
+claimed_at = "2026-11-27T00:20:56+00:00"
+expires = "2026-11-27T08:20:56+00:00"
+owned_paths = ["src/python.rs"]
+mechanisms = ["delivery"]
 base = "a98ea9f5d707173abf219e62ac03d2be728a09f4"
 released = false
