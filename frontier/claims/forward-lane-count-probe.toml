@@ -1,0 +1,27 @@
+id = "forward-lane-count-probe"
+title = "Probe: 6 and 8 interleaved lanes in forward A7 emission (memory-level parallelism)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = []
+mechanisms = ["emission-walk"]
+needs_louis = ""
+question = """
+#1068 showed the 4-lane forward A7 loop is latency-bound on `edges[j]` misses: the unified `inline16[code]` dict work hides in their out-of-order shadow, and any added branch costs more than it saves. The remaining A7 levers are therefore branchless: more independent chains in flight. With paid `S = 16` bit-31 anchors (#1057) a block already has 16 segments, so K = 6 or 8 lanes need no new anchor cost. In a smooth-zone example (zero `src/` edits, `#![forbid(unsafe_code)]`), compose K = 4 / 6 / 8 lanes on the #1067 W4_v2 stack (32 KiB cold-outlined slab RLE1+CRC, hoisted OutQ16) over the 233 wikidata Open blocks, warm and L3-cold, with default, native and JCC-aligned builds. Report A7 and A7+A9, register pressure (spills), and lane-imbalance tail cost.
+"""
+why = """
+A7+A9 is 46% of the composed worker (#1062) and the workers now bind at k = 8 (synthesis ninth pass). Comet Lake has 12 L1d fill buffers, so a 4-lane loop leaves memory-level parallelism unused if spills stay bounded.
+"""
+stop_test = """
+Frozen before data: K = 6 or K = 8 must cut A7 (forward, 4-lane control) by >= 5.0% with disjoint 7-repeat [min..max] on both the default and the JCC-aligned native build, warm and L3-cold, byte- and CRC-exact on 233/233 blocks; otherwise STOP with a scoped dead-end row. A PASS opens a build claim; VM numbers are diagnostics (C5).
+"""
+done_when = """
+Example, journal note, delta, and either a build claim at idea or a dead-end row.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/direct-literal-4lane-emit.md",
+  "docs/journal/2026-11-27-explore/composed-worker-v2-probe.md",
+]
+links = ["frontier/claims/forward-rle1-crc-vectored-build.toml", "frontier/claims/forward-emission.toml"]
