@@ -6,4 +6,4 @@ expires = "2026-11-27T07:08:55+00:00"
 owned_paths = []
 mechanisms = ["bwt-digram-contraction"]
 base = "4083fd0266e1c5f771ae85fb98222c13986ad397"
-released = false
+released = true
