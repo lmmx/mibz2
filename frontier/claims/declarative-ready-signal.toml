@@ -1,0 +1,25 @@
+id = "declarative-ready-signal"
+title = "Make workstation ready signals accessible through reviewed repository changes"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+pr = 0
+owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
+mechanisms = ["workstation-ready-signal"]
+needs_louis = ""
+question = """
+Replace the requirement for every queue participant to have interactive workflow-dispatch capability with a repository-native, declarative request. A participant able to submit an ordinary PR should be able to prepare a run request under the existing standing authorisation. Prefer a minimal reviewed, merged exact-SHA manifest (or an additive queue record with explicit candidate SHA), consumed by a trusted default-branch reconciliation workflow that materialises existing ready tags. Compare this bridge against direct runner consumption; prefer compatibility with existing deployed runners and manual hold controls. Keep manual dispatch as a fallback. Do not execute untrusted PR code or grant new credentials to cloud sessions. Coordinate with workstation-pressure and existing queue holders through the frontier, without taking over their active reservations.
+"""
+why = """
+The current dispatch-only run-signal.yml requires access that at least one Codex cloud participant lacks (reported in #1086). The user explicitly requests a redesign. Queue changes via ordinary reviewed PRs are available to those participants. This is a shared P1 capacity obstruction distinct from priority discovery: pressure alone cannot make an inaccessible operation executable. The existing standing authority covers frozen, reviewed, green recipes only.
+"""
+stop_test = """
+Freeze tests before implementation. A normal reviewed/merged request for one eligible exact SHA must become an observable ready signal without interactive dispatch or new agent credentials. Validate the authoritative request, recipe identifier, candidate/branch ancestry, applicable independent review and exact-head CI, queue ownership and previous attempt/evidence before activation. Fail closed on missing/ambiguous data, unmerged or untrusted requests, moved or mismatched candidates, stale reviews, failed checks, malformed identifiers, conflicts, unavailable APIs, and revoked requests. Preserve hold precedence, one run per recipe+commit, no accidental retag or repeat, atomic machine lock and multi-repository compatibility. Reconciliation must be idempotent and must not clear or override manual holds; prevent stale/replayed requests reactivating cleared or completed runs. No pull_request_target execution of candidate code, arbitrary shell interpolation, broader token permissions than needed, or bypass of environment restrictions. Verify with hermetic fixtures or a non-executing dry run; do not dispatch a real benchmark as a test. Keep legacy tags and migration behaviour safe and explicit. If existing authority or trusted verification cannot be preserved, narrow scope or record the concrete owner-only decision.
+"""
+done_when = """
+A minimal independently reviewed implementation passes exact-head checks and demonstrates a normal PR-to-ready path, safe hold/revocation and replay handling, plus compatibility with existing runner behaviour. Document the new queue procedure and coordinate migration under applicable protected-path rules; record what remains unverified on the physical i9. No new coordinator, standing spending permission or approval layer.
+"""
+premises = ["frontier/claims/workstation-pressure.toml", "frontier/claims/scanner-seam-window-queue.toml", "frontier/deltas/2026-11-27-ready-signal-capability-handoff.md"]
+links = ["https://github.com/lmmx/mibz2/pull/1086", ".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "CLAUDE.md"]
