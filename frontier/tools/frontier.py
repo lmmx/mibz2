@@ -43,6 +43,7 @@ GitHub Actions.
 
 import contextlib
 import datetime as dt
+import io
 import json
 import os
 import pathlib
@@ -51,6 +52,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tarfile
 import tomllib
 import urllib.error
 import urllib.parse
@@ -83,6 +85,9 @@ DELTA_HEAD = ["claim:", "by:", "outcome:", "evidence:"]
 FLAG_HEAD = ["flags:", "invariant:", "by:", "status:"]
 DEAD_COLS = ["claim", "verdict", "what it showed", "evidence"]
 SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "evidence", "claims"]
+WORKSTATION_RE = re.compile(r"\b(?:workstation|i9(?:-\d+[a-z]*)?|workstation-queue)\b", re.IGNORECASE)
+RECENT_QUEUE_TAIL = 3
+PROVENANCE_RUN_KEYS = ("recipe", "head", "commit")
 
 
 def config(ref=None):
@@ -365,12 +370,14 @@ def open_flags(cid=None, *, claim_data=None, fetch=False, strict=False):
     return found
 
 
-def row(c):
+def row(c, effective_priority=None):
     """One Markdown line for a claim or card."""
     needs = ", ".join(c["needs"]) or "nothing"
-    return (
-        f"- **{c['id']}** (P{c['priority']}, {c['kind']}, {c['zone']}, needs {needs}): {c['title']}"
-    )
+    if effective_priority is not None and effective_priority < c["priority"]:
+        prio = f"P{effective_priority} effective, declared P{c['priority']}"
+    else:
+        prio = f"P{c['priority']}"
+    return f"- **{c['id']}** ({prio}, {c['kind']}, {c['zone']}, needs {needs}): {c['title']}"
 
 
 def table(rows):
@@ -809,10 +816,391 @@ def check_pr_lineage(event_path, items):
     return None
 
 
+def _dead_end_ids():
+    """Claim IDs with a terminal verdict in frontier/dead-ends.tsv."""
+    dead = set()
+    path = ROOT / "dead-ends.tsv"
+    if not path.exists():
+        return dead
+    for line in path.read_text(encoding="utf-8").splitlines()[1:]:
+        parts = line.split("\t")
+        if len(parts) >= 2 and parts[1].strip().upper() in (
+            "KILL",
+            "STOP",
+            "CLOSED",
+            "REFUTED",
+            "LOST",
+        ):
+            dead.add(parts[0].strip())
+    return dead
+
+
+def _bundle_commits(ev_sha, rel_path):
+    """Extract 40-hex commit SHAs from commit(s).txt inside an origin/evidence tarball."""
+    res = subprocess.run(
+        ["git", "-C", str(REPO), "cat-file", "blob", f"{ev_sha}:{rel_path}"],
+        capture_output=True,
+    )
+    if res.returncode != 0:
+        raise ValueError(f"cannot read evidence bundle {rel_path}")
+    commits = set()
+    with tarfile.open(fileobj=io.BytesIO(res.stdout), mode="r:gz") as tf:
+        for member in tf.getmembers():
+            if not member.isfile():
+                continue
+            name = pathlib.PurePosixPath(member.name).name
+            if name in ("commit.txt", "commits.txt"):
+                fh = tf.extractfile(member)
+                if fh is not None:
+                    text = fh.read().decode("utf-8", errors="replace").lower()
+                    commits.update(re.findall(r"\b[0-9a-f]{40}\b", text))
+            elif name == "provenance.json":
+                # Newer recipes record the run's commit here, under a recipe-specific key; only
+                # the run identity keys count (never source/base commits or tree/blob ids).
+                fh = tf.extractfile(member)
+                if fh is not None:
+                    data = json.loads(fh.read().decode("utf-8", errors="replace"))
+                    if isinstance(data, dict):
+                        for key in PROVENANCE_RUN_KEYS:
+                            val = data.get(key)
+                            if isinstance(val, str) and re.fullmatch(r"[0-9a-f]{40}", val.lower()):
+                                commits.add(val.lower())
+    return commits
+
+
+def read_workstation_queue_state(fetch=True):
+    """Inspect repository-local workstation queue starvation vs origin/evidence; fail closed."""
+    if fetch:
+        ok_m, _ = _fetch_master(strict=False)
+        if not ok_m:
+            return {
+                "state": "unknown",
+                "reason": "cannot fetch origin/master",
+                "runnable": [],
+                "ready_count": 0,
+                "held_tags": [],
+            }
+        rc_ev, _ = git(
+            "fetch",
+            "-q",
+            "--no-tags",
+            "origin",
+            "+refs/heads/evidence:refs/remotes/origin/evidence",
+        )
+        if rc_ev != 0:
+            return {
+                "state": "unknown",
+                "reason": "cannot fetch origin/evidence",
+                "runnable": [],
+                "ready_count": 0,
+                "held_tags": [],
+            }
+    rc_q, queue_body = git("show", "origin/master:bench/workstation-queue.txt")
+    if rc_q != 0:
+        return {
+            "state": "unknown",
+            "reason": "cannot read origin/master:bench/workstation-queue.txt",
+            "runnable": [],
+            "ready_count": 0,
+            "held_tags": [],
+        }
+    entries = []
+    for raw in queue_body.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) >= 2:
+            entries.append((parts[0], parts[1]))
+    rc_t, tag_out = git("ls-remote", "--tags", "origin")
+    if rc_t != 0:
+        return {
+            "state": "unknown",
+            "reason": "cannot list tags on origin",
+            "runnable": [],
+            "ready_count": 0,
+            "held_tags": [],
+        }
+    ready_tags, hold_tags = {}, set()
+    for line in tag_out.splitlines():
+        fields = line.split()
+        if len(fields) != 2:
+            continue
+        sha, ref = fields
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            continue
+        peeled = ref.endswith("^{}")
+        clean = ref[:-3] if peeled else ref
+        if clean.startswith("refs/tags/ready/"):
+            recipe = clean.removeprefix("refs/tags/ready/")
+            if peeled or recipe not in ready_tags:
+                ready_tags[recipe] = sha
+        elif clean.startswith("refs/tags/hold/"):
+            hold_tags.add(clean.removeprefix("refs/tags/hold/"))
+    rc_e, ev_sha = git("rev-parse", "--verify", "refs/remotes/origin/evidence^{commit}")
+    if rc_e != 0 or not re.fullmatch(r"[0-9a-f]{40}", ev_sha):
+        return {
+            "state": "unknown",
+            "reason": "origin/evidence ref is missing or invalid",
+            "runnable": [],
+            "ready_count": 0,
+            "held_tags": [],
+        }
+    rc_ls, tree_out = git("ls-tree", "-r", "--name-only", ev_sha)
+    if rc_ls != 0:
+        return {
+            "state": "unknown",
+            "reason": "cannot list origin/evidence tree",
+            "runnable": [],
+            "ready_count": 0,
+            "held_tags": [],
+        }
+    bundles_by_dir = {}
+    for rel in tree_out.splitlines():
+        if rel.endswith(".tar.gz") and "/" in rel:
+            top = rel.split("/", 1)[0]
+            bundles_by_dir.setdefault(top, []).append(rel)
+    for rels in bundles_by_dir.values():
+        rels.sort(reverse=True)
+    held_tags = [recipe for recipe, _ in entries if recipe in ready_tags and recipe in hold_tags]
+    ready_list = [
+        (recipe, branch, ready_tags[recipe])
+        for recipe, branch in entries
+        if recipe in ready_tags and recipe not in hold_tags
+    ]
+    if not ready_list:
+        return {
+            "state": "starved",
+            "reason": "0 runnable ready/* entries in bench/workstation-queue.txt",
+            "runnable": [],
+            "ready_count": 0,
+            "held_tags": held_tags,
+        }
+    bundle_cache = {}
+
+    def has_evidence(recipe, sha):
+        dirs = list(dict.fromkeys([recipe, recipe.removeprefix("bench-")]))
+        for d in dirs:
+            for rel in bundles_by_dir.get(d, []):
+                if rel not in bundle_cache:
+                    bundle_cache[rel] = _bundle_commits(ev_sha, rel)
+                if sha in bundle_cache[rel]:
+                    return True
+        return False
+
+    try:
+        watermark = -1
+        for pos in range(len(ready_list) - 1, -1, -1):
+            recipe, _, sha = ready_list[pos]
+            if has_evidence(recipe, sha):
+                watermark = pos
+                break
+        runnable = []
+        tail_start = max(0, len(ready_list) - RECENT_QUEUE_TAIL)
+        for pos in range(tail_start, max(tail_start, watermark)):
+            recipe, _, sha = ready_list[pos]
+            if not has_evidence(recipe, sha):
+                runnable.append((recipe, sha))
+        for pos in range(watermark + 1, len(ready_list)):
+            recipe, _, sha = ready_list[pos]
+            runnable.append((recipe, sha))
+    except (OSError, tarfile.TarError, EOFError, ValueError) as exc:
+        return {
+            "state": "unknown",
+            "reason": f"cannot inspect evidence bundle: {exc}",
+            "runnable": [],
+            "ready_count": len(ready_list),
+            "held_tags": held_tags,
+        }
+    if runnable:
+        return {
+            "state": "replenished",
+            "reason": f"{len(runnable)} runnable ready entry(ies) without archived evidence",
+            "runnable": runnable,
+            "ready_count": len(ready_list),
+            "held_tags": held_tags,
+        }
+    return {
+        "state": "starved",
+        "reason": f"all {len(ready_list)} ready/* queue entries already have archived evidence",
+        "runnable": [],
+        "ready_count": len(ready_list),
+        "held_tags": held_tags,
+    }
+
+
+def _eligible_ws_base(c, dead, flags):
+    """Whether claim `c` can participate in derived workstation replenishment pressure."""
+    return (
+        c.get("status") in ("open", "review")
+        and c.get("kind") in ("run", "build")
+        and not c.get("needs_louis")
+        and c["id"] not in dead
+        and not any(_flag_matches(h, c["id"], c) for _, h in flags)
+    )
+
+
+def _mentions_workstation(c):
+    """Whether a claim directly produces or queues a workstation validation recipe."""
+    if c.get("kind") == "run":
+        return True
+    if any(overlaps(p, "bench/") for p in c.get("owned_paths", []) or []):
+        return True
+    blob = " ".join(str(c.get(k, "")) for k in ("title", "question", "stop_test", "done_when"))
+    return bool(WORKSTATION_RE.search(blob))
+
+
+def workstation_pressure(
+    claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=None
+):
+    """Derive ephemeral effective P1 priority for shortest eligible workstation validation path."""
+    result = {
+        "queue_state": queue_state,
+        "active": False,
+        "status_note": "",
+        "effective_priority": {},
+        "tiers": {},
+        "review_ready": [],
+        "actionable": [],
+        "capability_blocked": [],
+        "in_progress": [],
+    }
+    if queue_state["state"] == "unknown":
+        result["status_note"] = f"inactive (fail-closed: {queue_state['reason']})"
+        return result
+    if prs is None or (review_lines and review_lines[0].startswith("- UNAVAILABLE:")):
+        reason = pr_error or "open PR discovery unavailable"
+        result["status_note"] = f"inactive (fail-closed: {reason})"
+        return result
+    if queue_state["state"] == "replenished":
+        result["status_note"] = "inactive (queue replenished; declared priorities govern)"
+        return result
+    dead = _dead_end_ids()
+    direct = {
+        c["id"]
+        for c in claims
+        if _eligible_ws_base(c, dead, flags) and _mentions_workstation(c)
+    }
+    linked_upstream = set()
+    for c in claims:
+        if c["id"] in direct and c.get("kind") == "run":
+            for link in c.get("links", []) or []:
+                m = re.fullmatch(r"frontier/claims/([a-z0-9][a-z0-9_-]*)\.toml", str(link))
+                if m:
+                    linked_upstream.add(m.group(1))
+    candidates = [
+        c
+        for c in claims
+        if _eligible_ws_base(c, dead, flags)
+        and (c["id"] in direct or c["id"] in linked_upstream)
+    ]
+    if not candidates:
+        result["status_note"] = (
+            "inactive (no eligible unfinished workstation-validation candidates; declared priorities govern)"
+        )
+        return result
+    ready_prs, draft_prs = {}, {}
+    for pr in prs:
+        cid = claim_header(pr.get("body"))
+        if not cid or cid == "none":
+            continue
+        target = draft_prs if pr.get("draft") else ready_prs
+        target.setdefault(cid, []).append(pr["number"])
+    live_holds = {k: v for k, (_, v) in all_holds.items() if live(v)}
+    for c in candidates:
+        cid = c["id"]
+        if cid in ready_prs:
+            result["review_ready"].append((c, sorted(ready_prs[cid])))
+        elif cid in draft_prs:
+            refs = ", ".join(f"#{n}" for n in sorted(draft_prs[cid]))
+            result["in_progress"].append((c, f"draft PR {refs}"))
+        elif c.get("status") == "review" or cid in pending:
+            result["in_progress"].append((c, "awaiting review pointer verification"))
+        elif cid in live_holds:
+            holder = live_holds[cid].get("holder", "unknown")
+            result["in_progress"].append((c, f"leased by {holder}"))
+        else:
+            paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+            hit = conflicts(cid, paths, c.get("mechanisms", []), all_holds)
+            if hit:
+                other_id, holder, shared = hit[0]
+                result["in_progress"].append(
+                    (c, f"blocked by live hold {other_id} ({holder}) on {', '.join(shared)}")
+                )
+            else:
+                tier = 1 if c.get("kind") == "run" else 2
+                missing = sorted(set(c.get("needs", [])) - can) if can else []
+                if missing:
+                    result["capability_blocked"].append((tier, c, missing))
+                else:
+                    result["actionable"].append((tier, c))
+                    result["effective_priority"][cid] = 1
+                    result["tiers"][cid] = tier
+    result["review_ready"].sort(key=lambda x: (x[0]["priority"], x[0]["id"]))
+    result["actionable"].sort(key=lambda x: (x[0], x[1]["priority"], x[1]["id"]))
+    result["capability_blocked"].sort(key=lambda x: (x[0], x[1]["priority"], x[1]["id"]))
+    result["in_progress"].sort(key=lambda x: (x[0]["priority"], x[0]["id"]))
+    if result["review_ready"] or result["actionable"]:
+        result["active"] = True
+        result["status_note"] = (
+            "active (derived effective P1 for shortest eligible path; declared claim priorities unchanged)"
+        )
+    elif result["capability_blocked"]:
+        result["status_note"] = (
+            "inactive for this worker's capabilities (capability-blocked handoff only; requires a capable participant)"
+        )
+    else:
+        result["status_note"] = (
+            "inactive (all eligible workstation-validation candidates are currently held or blocked)"
+        )
+    return result
+
+
+def format_pressure_lines(pressure):
+    """Render concise repository-local queue and derived replenishment pressure lines."""
+    qs = pressure["queue_state"]
+    if qs["state"] == "replenished":
+        names = ", ".join(r for r, _ in qs["runnable"])
+        q_line = f"- Repository queue: replenished ({qs['reason']}: {names})"
+    elif qs["state"] == "starved":
+        held_note = f"; held tags: {', '.join(qs['held_tags'])}" if qs["held_tags"] else ""
+        q_line = f"- Repository queue: starved ({qs['reason']}{held_note})"
+    else:
+        q_line = f"- Repository queue: unknown ({qs['reason']})"
+    lines = [
+        q_line,
+        "- Physical i9 state: unknown (runner state is local to the workstation and shared across other repositories; an empty repository queue never implies physical i9 idleness)",
+        f"- Replenishment pressure: {pressure['status_note']}",
+    ]
+    for c, nums in pressure["review_ready"]:
+        refs = ", ".join(f"#{n}" for n in nums)
+        lines.append(
+            f"- Shortest path (review PR): **{c['id']}** (PR {refs}, declared P{c['priority']}, {c['kind']}): {c['title']}"
+        )
+    for tier, c in pressure["actionable"]:
+        label = "run" if tier == 1 else "upstream build"
+        needs = ", ".join(c.get("needs", []))
+        needs_note = f", needs {needs}" if needs else ""
+        lines.append(
+            f"- Shortest path ({label}): **{c['id']}** (P1 effective, declared P{c['priority']}, {c['kind']}{needs_note}): {c['title']}"
+        )
+    for _, c, missing in pressure["capability_blocked"]:
+        lines.append(
+            f"- Capability-blocked handoff (needs {', '.join(missing)}; requires capable participant): **{c['id']}** (declared P{c['priority']}, {c['kind']}): {c['title']}"
+        )
+    for c, note in pressure["in_progress"]:
+        lines.append(
+            f"- In progress / held: **{c['id']}** ({note}, declared P{c['priority']}, {c['kind']})"
+        )
+    return lines
+
+
 def render():
     """STATUS.md from files and live PRs (live holds are in `brief` and `holds`)."""
     claims, cards = load("claims"), load("blog")
     every = claims + cards
+    queue_state = read_workstation_queue_state(fetch=True)
+    all_holds = holds(strict=False)
     prs, pr_error = read_open_prs()
     review_lines, pending = review_projection(every, prs, pr_error)
     _, head = git("rev-parse", "--short", "HEAD")
@@ -840,6 +1228,10 @@ def render():
     out += ["", "## Population (observed presence, not reservations)", ""]
     out += presence_population(holds(strict=False))
     out += ["", "## Awaiting review or merge", ""] + review_lines
+    pressure = workstation_pressure(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state
+    )
+    out += ["", "## Workstation replenishment pressure", ""] + format_pressure_lines(pressure)
     for state, title in (
         ("open", "Open claims, by priority"),
         ("blocked", "Blocked"),
@@ -1285,12 +1677,18 @@ def brief(can):
     print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(review_lines))
     print("Independent integration: take-review ID --pr N --head SHA --by AGENT; "
           "yield-review or finish-review. No additional work slot required.")
-    git("fetch", "-q", "origin", "evidence")
+    queue_state = read_workstation_queue_state(fetch=True)
     rc, ev = git("log", "-5", "--format=%h %cs %s", "origin/evidence")
     print(
         "\n## Recent workstation evidence (origin/evidence)\n"
         + (ev if rc == 0 and ev else "- unavailable")
     )
+    pressure = workstation_pressure(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=can
+    )
+    print("\n## Workstation replenishment pressure\n" + "\n".join(format_pressure_lines(pressure)))
+    eff_p = pressure["effective_priority"]
+    tiers = pressure["tiers"]
     take = [
         c
         for c in claims + cards
@@ -1301,12 +1699,20 @@ def brief(can):
         and (not can or set(c["needs"]) <= can)
         and not any(_flag_matches(h, c["id"], c) for _, h in flags)
     ]
-    take.sort(key=lambda c: (c["priority"], c["id"]))
+    take.sort(
+        key=lambda c: (
+            eff_p.get(c["id"], c["priority"]),
+            0 if c["priority"] == 1 else 1,
+            tiers.get(c["id"], 9),
+            c["priority"],
+            c["id"],
+        )
+    )
     print("\n## What you can take (highest priority first)")
     if review_lines[0].startswith("- UNAVAILABLE:"):
         print("- Review discovery unavailable: these local suggestions are not a verified queue.")
     for c in take:
-        print(row(c) + (f", stage {c['stage']}" if "stage" in c else ""))
+        print(row(c, eff_p.get(c["id"])) + (f", stage {c['stage']}" if "stage" in c else ""))
     other = [c for c in take if c["kind"] in ("explore", "synthesise")]
     if other:
         print(

@@ -20,6 +20,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import unittest
@@ -100,35 +101,45 @@ status: open
 def _claim_toml(
     cid: str,
     *,
+    kind: str = "probe",
     zone: str = "smooth",
+    needs: list[str] | None = None,
+    priority: int = 1,
     status: str = "open",
+    pr: int = 0,
     owned_paths: list[str] | None = None,
     mechanisms: list[str] | None = None,
     needs_louis: str = "",
     premises: list[str] | None = None,
     stop_test: str = "PASS iff exact bytes match.",
+    done_when: str = "Delta committed.",
+    links: list[str] | None = None,
 ) -> str:
     """Build a valid claim TOML document for test fixtures."""
     op = owned_paths or []
     mechs = mechanisms or []
     prems = premises or []
+    req_needs = needs if needs is not None else ["shell"]
+    lks = links or []
+    pr_line = f"pr = {pr}\n" if pr else ""
     return (
         f'id = "{cid}"\n'
         f'title = "Test claim {cid}"\n'
-        'kind = "probe"\n'
+        f'kind = "{kind}"\n'
         f'zone = "{zone}"\n'
-        'needs = ["shell"]\n'
-        "priority = 1\n"
-        f'status = "{status}"\n'
-        f"owned_paths = {op!r}\n".replace("'", '"')
+        f"needs = {req_needs!r}\n".replace("'", '"')
+        + f"priority = {priority}\n"
+        + f'status = "{status}"\n'
+        + pr_line
+        + f"owned_paths = {op!r}\n".replace("'", '"')
         + f"mechanisms = {mechs!r}\n".replace("'", '"')
         + f'needs_louis = "{needs_louis}"\n'
         + f'question = "Test question for {cid}"\n'
         + 'why = "Test why"\n'
         + f'stop_test = "{stop_test}"\n'
-        + 'done_when = "Delta committed."\n'
+        + f'done_when = "{done_when}"\n'
         + f"premises = {prems!r}\n".replace("'", '"')
-        + "links = []\n"
+        + f"links = {lks!r}\n".replace("'", '"')
     )
 
 
@@ -2046,6 +2057,662 @@ class TestPresence(unittest.TestCase):
         # A presence claiming c4 does not reserve it: another agent can still claim c4.
         r = self.sb.run_frontier(b, "claim", "c4", "--by", "b")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+
+class TestWorkstationPressure(unittest.TestCase):
+    """Frozen fixtures for `workstation-pressure` (eight stop_test scenarios + #1086 handoff)."""
+
+    def setUp(self) -> None:
+        """Create an isolated temporary frontier sandbox for each pressure test."""
+        self._td = tempfile.TemporaryDirectory(prefix="frontier-wp-")
+        self.sb = FrontierSandbox(pathlib.Path(self._td.name))
+
+    def tearDown(self) -> None:
+        """Remove the temporary frontier sandbox."""
+        self._td.cleanup()
+
+    def _reset_claims(self, claims: dict[str, str], *, queue_text: str = "# repo: lmmx/mibz2\n") -> None:
+        """Replace sandbox claims and workstation queue on `origin/master`."""
+        seed = self.sb.seed
+        cdir = seed / "frontier" / "claims"
+        for existing in list(cdir.glob("*.toml")):
+            existing.unlink()
+        for cid, body in claims.items():
+            (cdir / f"{cid}.toml").write_text(body)
+        (seed / "bench" / "workstation-queue.txt").write_text(queue_text)
+        _git(seed, "add", "-A", "frontier/claims", "bench/workstation-queue.txt")
+        _git(seed, "commit", "-m", "configure workstation-pressure fixture")
+        _git(seed, "push", "origin", "master")
+
+    def _publish_evidence(
+        self,
+        bundles: dict[str, str | dict | None],
+        *,
+        message: str = "evidence: fixture/run-20261127T000000Z",
+    ) -> str:
+        """Create or advance orphan `origin/evidence` with `.tar.gz` bundles.
+
+        A string value is written as `commit.txt`; a dict as `provenance.json`.
+        """
+        seed = self.sb.seed
+        index = self.sb.tmp / f"ev-index-{secrets_counter[0]}"
+        secrets_counter[0] += 1
+        env = {**os.environ, **GIT_ENV, "GIT_INDEX_FILE": str(index)}
+        for rel_path, commit_sha in bundles.items():
+            stamp = pathlib.PurePosixPath(rel_path).name.removesuffix(".tar.gz")
+            buf = io.BytesIO()
+            with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+                if isinstance(commit_sha, dict):
+                    data = json.dumps(commit_sha).encode()
+                    ti = tarfile.TarInfo(name=f"{stamp}/provenance.json")
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+                elif commit_sha is not None:
+                    data = f"{commit_sha}\n".encode()
+                    ti = tarfile.TarInfo(name=f"{stamp}/commit.txt")
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+            blob = subprocess.run(
+                ["git", "-C", str(seed), "hash-object", "-w", "--stdin"],
+                input=buf.getvalue(),
+                capture_output=True,
+                check=True,
+                env=env,
+            ).stdout.decode().strip()
+            _git(seed, "update-index", "--add", "--cacheinfo", f"100644,{blob},{rel_path}", env=env)
+        tree = _git(seed, "write-tree", env=env)
+        if index.exists():
+            index.unlink()
+        parent_res = subprocess.run(
+            ["git", "-C", str(seed), "rev-parse", "-q", "--verify", "refs/remotes/origin/evidence^{commit}"],
+            capture_output=True,
+            text=True,
+        )
+        parent = parent_res.stdout.strip() if parent_res.returncode == 0 else ""
+        args = ["commit-tree", tree, "-m", message]
+        if parent:
+            args += ["-p", parent]
+        ev_sha = _git(seed, *args)
+        _git(seed, "push", "origin", f"{ev_sha}:refs/heads/evidence")
+        _git(seed, "fetch", "-q", "origin", "+refs/heads/evidence:refs/remotes/origin/evidence")
+        return ev_sha
+
+    def _tag_ready(self, recipe: str, sha: str, *, hold: bool = False) -> None:
+        ref = f"refs/tags/{'hold' if hold else 'ready'}/{recipe}"
+        _git(self.sb.seed, "push", "-f", "origin", f"{sha}:{ref}")
+
+    def _run_brief_and_status(self, repo: pathlib.Path, *, can: set[str] | None = None, prs=None, pr_error=None):
+        mod = _load_frontier_module(repo)
+        pr_val = ([], None) if (prs is None and pr_error is None) else (prs, pr_error)
+        with mock.patch.object(mod, "read_open_prs", return_value=pr_val):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief(can or set())
+            brief_out = buf.getvalue()
+            status_out = mod.render()
+        return brief_out, status_out
+
+    # Scenario 1: verified empty/drained queue with eligible candidate
+    def test_wp1_verified_empty_and_drained_queue_elevates_shortest_path_without_mutating_priorities(self) -> None:
+        """Empty or drained repo queue derives effective P1 for shortest eligible path; TOML unchanged."""
+        master_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "ws-build": _claim_toml(
+                    "ws-build",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell", "rust"],
+                    owned_paths=["src/open/endpoint.rs"],
+                    done_when="Prototype PR and i9-10900K workstation registration ready.",
+                ),
+                "ws-run": _claim_toml(
+                    "ws-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell", "rust"],
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Queue frozen workstation recipe and read bundle.",
+                ),
+                "ws-review": _claim_toml(
+                    "ws-review",
+                    kind="build",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell", "rust"],
+                    owned_paths=["src/huff.rs"],
+                    done_when="Frozen workstation registration and i9 evidence bundle.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-old bench/old already ran\n",
+        )
+        self._tag_ready("bench-old", master_sha)
+        self._publish_evidence(
+            {"old/run-20261126T133034Z.tar.gz": master_sha},
+            message="evidence: old/run-20261126T133034Z",
+        )
+
+        reader = self.sb.clone("reader-wp1")
+        before_toml = {
+            p.name: p.read_text() for p in sorted((reader / "frontier" / "claims").glob("*.toml"))
+        }
+        pr_review = {
+            "number": 1053,
+            "body": "Claim: ws-review\n\nReady for review.",
+            "head": {"sha": "c" * 40},
+            "base": {"ref": "master"},
+            "state": "open",
+            "draft": False,
+        }
+        brief_out, status_out = self._run_brief_and_status(
+            reader, can={"shell", "rust"}, prs=[pr_review]
+        )
+
+        # Pressure active, physical i9 unknown, review PR surfaced first in shortest path
+        self.assertIn("## Workstation replenishment pressure", brief_out)
+        self.assertIn("Repository queue: starved", brief_out)
+        self.assertIn("Physical i9 state: unknown", brief_out)
+        self.assertIn("Replenishment pressure: active", brief_out)
+        pressure_sec = brief_out.split("## Workstation replenishment pressure", 1)[1].split("##", 1)[0]
+        self.assertLess(pressure_sec.index("ws-review"), pressure_sec.index("ws-run"))
+        self.assertLess(pressure_sec.index("ws-run"), pressure_sec.index("ws-build"))
+
+        # `What you can take` elevates ws-run (Tier 1) and ws-build (Tier 2) ahead of other-p2
+        take_sec = brief_out.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertIn("ws-run", take_sec)
+        self.assertIn("ws-build", take_sec)
+        self.assertIn("P1 effective, declared P2", take_sec)
+        self.assertIn("P1 effective, declared P3", take_sec)
+        self.assertNotIn("**ws-review**", take_sec)  # pending PR, not new claim
+        self.assertLess(take_sec.index("**ws-run**"), take_sec.index("**ws-build**"))
+        self.assertLess(take_sec.index("**ws-build**"), take_sec.index("**other-p2**"))
+
+        # `status` explains the signal clearly
+        self.assertIn("## Workstation replenishment pressure", status_out)
+        self.assertIn("Repository queue: starved", status_out)
+        self.assertIn("Physical i9 state: unknown", status_out)
+        self.assertIn("Replenishment pressure: active", status_out)
+
+        # Declared priorities in claim TOML files are byte-for-byte unchanged; no holds/tags mutated
+        after_toml = {
+            p.name: p.read_text() for p in sorted((reader / "frontier" / "claims").glob("*.toml"))
+        }
+        self.assertEqual(before_toml, after_toml)
+
+    # Regression (integration review of #1093): newer recipes record the run in provenance.json
+    def test_wp_provenance_json_counts_as_archived_evidence(self) -> None:
+        """A bundle's provenance.json `recipe`/`head` marks the tagged run as evidenced; `source` does not."""
+        old_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._reset_claims(
+            {"other-p2": _claim_toml("other-p2", kind="probe", priority=2)},
+            queue_text="# repo: lmmx/mibz2\nbench-a bench/a run a\nbench-b bench/b run b\n",
+        )
+        new_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._tag_ready("bench-a", old_sha)
+        self._tag_ready("bench-b", new_sha)
+        self._publish_evidence(
+            {
+                "a/run-20261127T135104Z.tar.gz": {"recipe": old_sha, "source": new_sha},
+                "b/run-20261127T172728Z.tar.gz": {"head": new_sha, "head_src_tree": old_sha},
+            },
+            message="evidence: provenance bundles",
+        )
+        reader = self.sb.clone("reader-prov")
+        mod = _load_frontier_module(reader)
+        state = mod.read_workstation_queue_state(fetch=True)
+        self.assertEqual(state["state"], "starved", state)
+
+        # A provenance file naming the tagged commit only as a source/base is not evidence of the run.
+        self._publish_evidence(
+            {
+                "a/run-20261127T135104Z.tar.gz": {"recipe": old_sha, "source": new_sha},
+                "b/run-20261127T172728Z.tar.gz": {"head": old_sha, "source": new_sha},
+            },
+            message="evidence: provenance source only",
+        )
+        state = mod.read_workstation_queue_state(fetch=True)
+        self.assertEqual(state["state"], "replenished", state)
+        self.assertEqual([r for r, _ in state["runnable"]], ["bench-b"])
+
+    # Scenario 2: nonempty/running queue -> pressure decays on replenishment & re-activates on drain
+    def test_wp2_replenished_queue_decays_pressure_and_redrains_on_evidence(self) -> None:
+        """Adding an un-evidenced ready entry or re-tagging decays pressure; evidence re-drains it."""
+        old_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "ws-build": _claim_toml(
+                    "ws-build",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell"],
+                    done_when="Frozen workstation recipe and i9 evidence.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-old bench/old prior run\nbench-next bench/next new run\n",
+        )
+        new_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._tag_ready("bench-old", old_sha)
+        self._tag_ready("bench-next", new_sha)
+        self._publish_evidence(
+            {"old/run-20261126T133034Z.tar.gz": old_sha},
+            message="evidence: old/run-20261126T133034Z",
+        )
+
+        reader = self.sb.clone("reader-wp2")
+        brief_out, status_out = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: replenished", brief_out)
+        self.assertIn("bench-next", brief_out)
+        self.assertIn("Replenishment pressure: inactive", brief_out)
+        self.assertIn("Repository queue: replenished", status_out)
+        take_sec = brief_out.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("P1 effective", take_sec)
+        # Declared priority order governs normally (other-p2 P2 ahead of ws-build P3)
+        self.assertLess(take_sec.index("**other-p2**"), take_sec.index("**ws-build**"))
+
+        # Archiving matching evidence for bench-next drains the queue -> pressure activates
+        self._publish_evidence(
+            {
+                "old/run-20261126T133034Z.tar.gz": old_sha,
+                "next/run-20261127T010000Z.tar.gz": new_sha,
+            },
+            message="evidence: next/run-20261127T010000Z",
+        )
+        brief_drained, _ = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: starved", brief_drained)
+        self.assertIn("Replenishment pressure: active", brief_drained)
+        take_drained = brief_drained.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertLess(take_drained.index("**ws-build**"), take_drained.index("**other-p2**"))
+
+        # Re-tagging bench-next to a brand-new commit decays pressure again
+        _git(self.sb.seed, "commit", "--allow-empty", "-m", "new commit for rerun")
+        rerun_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        self._tag_ready("bench-next", rerun_sha)
+        brief_rerun, _ = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: replenished", brief_rerun)
+        self.assertIn("Replenishment pressure: inactive", brief_rerun)
+
+        # Placing hold/bench-next pauses it -> queue becomes starved again
+        self._tag_ready("bench-next", rerun_sha, hold=True)
+        brief_held_tag, _ = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: starved", brief_held_tag)
+        self.assertIn("Replenishment pressure: active", brief_held_tag)
+
+    # Scenario 3: stale or unavailable data -> fail closed
+    def test_wp3_stale_or_unavailable_data_fails_closed(self) -> None:
+        """Missing origin/evidence, unreachable origin, missing queue, or failed PR query fail closed."""
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "ws-build": _claim_toml(
+                    "ws-build",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell"],
+                    done_when="Workstation i9 validation.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        reader = self.sb.clone("reader-wp3")
+
+        # (a) Missing origin/evidence -> fail closed
+        brief_no_ev, status_no_ev = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: unknown", brief_no_ev)
+        self.assertIn("Replenishment pressure: inactive (fail-closed", brief_no_ev)
+        self.assertIn("Repository queue: unknown", status_no_ev)
+        take_no_ev = brief_no_ev.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("P1 effective", take_no_ev)
+        self.assertLess(take_no_ev.index("**other-p2**"), take_no_ev.index("**ws-build**"))
+
+        # Publish evidence, then break PR API -> fail closed
+        self._publish_evidence({})
+        brief_bad_pr, _ = self._run_brief_and_status(
+            reader, can={"shell"}, prs=None, pr_error="GitHub open-PR query failed or was incomplete"
+        )
+        self.assertIn("Replenishment pressure: inactive (fail-closed", brief_bad_pr)
+        self.assertNotIn("P1 effective", brief_bad_pr)
+
+        # Break origin URL -> fail closed even with stale local refs
+        _git(reader, "remote", "set-url", "origin", str(self.sb.tmp / "nonexistent-origin.git"))
+        brief_offline, _ = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: unknown", brief_offline)
+        self.assertIn("Replenishment pressure: inactive (fail-closed", brief_offline)
+        self.assertNotIn("P1 effective", brief_offline)
+
+    # Scenario 4: multiple repositories -> never infer physical i9 idleness
+    def test_wp4_multiple_repositories_physical_i9_always_unknown(self) -> None:
+        """An empty repository queue reports physical i9 state as unknown, never idle."""
+        self._reset_claims(
+            {
+                "ws-run": _claim_toml(
+                    "ws-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell"],
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Queue workstation recipe.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        reader = self.sb.clone("reader-wp4")
+        brief_out, status_out = self._run_brief_and_status(reader, can={"shell"})
+        for out in (brief_out, status_out):
+            self.assertIn("Physical i9 state: unknown", out)
+            self.assertIn("other repositories", out.lower())
+            self.assertNotIn("Physical i9 state: idle", out)
+            self.assertNotIn("i9 is idle", out.lower())
+
+    # Scenario 5: leased dependencies -> live holds and overlapping paths respected
+    def test_wp5_leased_and_path_conflicting_dependencies_respected(self) -> None:
+        """Live holds and overlapping owned_paths are never bypassed or double-promoted."""
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "src-holder": _claim_toml(
+                    "src-holder",
+                    kind="probe",
+                    zone="striated",
+                    priority=2,
+                    owned_paths=["src/open.rs"],
+                ),
+                "ws-run": _claim_toml(
+                    "ws-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell"],
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Queue workstation recipe.",
+                ),
+                "ws-build-conflict": _claim_toml(
+                    "ws-build-conflict",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell"],
+                    owned_paths=["src/open.rs"],
+                    done_when="Workstation i9 validation.",
+                ),
+                "ws-build-free": _claim_toml(
+                    "ws-build-free",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell"],
+                    owned_paths=["src/huff.rs"],
+                    done_when="Workstation i9 validation.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        holder = self.sb.clone("holder-wp5")
+        self.assertEqual(
+            self.sb.run_frontier(holder, "claim", "ws-run", "--by", "agent-a").returncode, 0
+        )
+        self.assertEqual(
+            self.sb.run_frontier(holder, "claim", "src-holder", "--by", "agent-b").returncode, 0
+        )
+
+        reader = self.sb.clone("reader-wp5")
+        brief_out, _ = self._run_brief_and_status(reader, can={"shell"})
+        pressure_sec = brief_out.split("## Workstation replenishment pressure", 1)[1].split("##", 1)[0]
+        self.assertIn("ws-run", pressure_sec)
+        self.assertIn("leased by agent-a", pressure_sec)
+        self.assertIn("ws-build-conflict", pressure_sec)
+        self.assertIn("blocked by live hold src-holder", pressure_sec)
+
+        take_sec = brief_out.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("**ws-run**", take_sec)
+        self.assertIn("**ws-build-free** (P1 effective, declared P3", take_sec)
+        self.assertNotIn("**ws-build-conflict** (P1 effective", take_sec)
+        self.assertLess(take_sec.index("**ws-build-free**"), take_sec.index("**other-p2**"))
+        # Lease enforcement still refuses double-claim
+        self.assertNotEqual(
+            self.sb.run_frontier(reader, "claim", "ws-run", "--by", "agent-c").returncode, 0
+        )
+        self.assertNotEqual(
+            self.sb.run_frontier(reader, "claim", "ws-build-conflict", "--by", "agent-c").returncode,
+            0,
+        )
+
+    # Scenario 6: failed, blocked, dropped, done, flagged, or dead-end candidates never promoted
+    def test_wp6_failed_obsolete_blocked_flagged_and_dead_end_candidates_excluded(self) -> None:
+        """Blocked, dropped, done, flagged, and dead-end candidates are never promoted."""
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "mtf-fold-run": _claim_toml(
+                    "mtf-fold-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    status="blocked",
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Superseded workstation run.",
+                ),
+                "dropped-run": _claim_toml(
+                    "dropped-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    status="dropped",
+                    done_when="Dropped workstation run.",
+                ),
+                "done-run": _claim_toml(
+                    "done-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    status="done",
+                    done_when="Finished workstation run.",
+                ),
+                "flagged-init": _claim_toml(
+                    "flagged-init",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    status="open",
+                    done_when="Flagged workstation run.",
+                ),
+                "old-idea": _claim_toml(
+                    "old-idea",
+                    kind="build",
+                    zone="striated",
+                    priority=2,
+                    status="open",
+                    done_when="Dead-ended workstation i9 build.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        reader = self.sb.clone("reader-wp6")
+        brief_out, status_out = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: starved", brief_out)
+        self.assertIn("Replenishment pressure: inactive", brief_out)
+        self.assertIn("Replenishment pressure: inactive", status_out)
+        self.assertNotIn("P1 effective", brief_out)
+
+    # Scenario 7: owner-only blockers (`needs_louis`) never promoted
+    def test_wp7_owner_only_blockers_never_promoted(self) -> None:
+        """Claims with non-empty `needs_louis` are never promoted as runnable pressure targets."""
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "owner-ws-run": _claim_toml(
+                    "owner-ws-run",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    status="open",
+                    needs_louis="RULES D: owner workstation authorization needed",
+                    done_when="Queue workstation recipe.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        reader = self.sb.clone("reader-wp7")
+        brief_out, status_out = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: starved", brief_out)
+        self.assertIn("Replenishment pressure: inactive", brief_out)
+        self.assertIn("Replenishment pressure: inactive", status_out)
+        self.assertNotIn("P1 effective", brief_out)
+
+    # Scenario 8: no useful candidates -> inactive, no synthetic benchmark work
+    def test_wp8_no_useful_candidates_stays_inactive_no_synthetic_work(self) -> None:
+        """When only non-workstation or idea claims exist, pressure stays inactive."""
+        self._reset_claims(
+            {
+                "explore": _claim_toml("explore", kind="explore", priority=3),
+                "synthesise": _claim_toml("synthesise", kind="synthesise", priority=2),
+                "migrate-rules": _claim_toml(
+                    "migrate-rules", kind="write", zone="striated", priority=2
+                ),
+                "ci-only-build": _claim_toml(
+                    "ci-only-build",
+                    kind="build",
+                    zone="striated",
+                    priority=2,
+                    done_when="Unit tests and CI paired bench pass.",
+                ),
+                "future-ws-idea": _claim_toml(
+                    "future-ws-idea",
+                    kind="build",
+                    zone="striated",
+                    priority=2,
+                    status="idea",
+                    done_when="Future workstation i9 validation.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        reader = self.sb.clone("reader-wp8")
+        brief_out, status_out = self._run_brief_and_status(reader, can={"shell"})
+        self.assertIn("Repository queue: starved", brief_out)
+        self.assertIn("Replenishment pressure: inactive", brief_out)
+        self.assertIn("no eligible unfinished workstation-validation candidates", brief_out)
+        self.assertIn("Replenishment pressure: inactive", status_out)
+        self.assertNotIn("P1 effective", brief_out)
+
+    # Scenario 9 (#1086): capability-blocked dispatch dependency exposes handoff, never sends incapable workers
+    def test_wp9_capability_blocked_dispatch_handoff(self) -> None:
+        """Capability-blocked dispatch exposes handoff to capable workers and elevates next eligible work."""
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "ws-queue-dispatch": _claim_toml(
+                    "ws-queue-dispatch",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell", "workflow-dispatch"],
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Dispatch reviewed workstation recipe via run-signal workflow.",
+                ),
+                "ws-build-next": _claim_toml(
+                    "ws-build-next",
+                    kind="build",
+                    zone="striated",
+                    priority=3,
+                    needs=["shell", "rust"],
+                    owned_paths=["src/open/endpoint.rs"],
+                    done_when="Frozen workstation i9 registration and build ready.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        self._publish_evidence({})
+        reader = self.sb.clone("reader-wp9")
+
+        # (a) Incapable worker (lacks workflow-dispatch): sees capability-blocked handoff, gets next eligible build
+        brief_incap, status_out = self._run_brief_and_status(reader, can={"shell", "rust"})
+        pressure_incap = brief_incap.split("## Workstation replenishment pressure", 1)[1].split(
+            "##", 1
+        )[0]
+        self.assertIn("Repository queue: starved", pressure_incap)
+        self.assertIn("Replenishment pressure: active", pressure_incap)
+        self.assertIn("Capability-blocked handoff (needs workflow-dispatch", pressure_incap)
+        self.assertIn("ws-queue-dispatch", pressure_incap)
+        self.assertIn("Shortest path (upstream build): **ws-build-next**", pressure_incap)
+        take_incap = brief_incap.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("**ws-queue-dispatch**", take_incap)
+        self.assertIn("**ws-build-next** (P1 effective, declared P3", take_incap)
+        self.assertLess(take_incap.index("**ws-build-next**"), take_incap.index("**other-p2**"))
+
+        # Global status surfaces runtime capability requirement explicitly
+        pressure_status = status_out.split("## Workstation replenishment pressure", 1)[1].split(
+            "##", 1
+        )[0]
+        self.assertIn("ws-queue-dispatch", pressure_status)
+        self.assertIn("needs shell, workflow-dispatch", pressure_status)
+
+        # (b) Capable worker (has workflow-dispatch): receives ws-queue-dispatch as derived P1
+        brief_cap, _ = self._run_brief_and_status(reader, can={"shell", "workflow-dispatch"})
+        pressure_cap = brief_cap.split("## Workstation replenishment pressure", 1)[1].split(
+            "##", 1
+        )[0]
+        self.assertIn("Replenishment pressure: active", pressure_cap)
+        self.assertIn("Shortest path (run): **ws-queue-dispatch**", pressure_cap)
+        self.assertNotIn("Capability-blocked handoff (needs workflow-dispatch", pressure_cap)
+        self.assertIn("Capability-blocked handoff (needs rust", pressure_cap)
+        take_cap = brief_cap.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertIn("**ws-queue-dispatch** (P1 effective, declared P2", take_cap)
+        self.assertLess(take_cap.index("**ws-queue-dispatch**"), take_cap.index("**other-p2**"))
+
+        brief_full, _ = self._run_brief_and_status(
+            reader, can={"shell", "rust", "workflow-dispatch"}
+        )
+        pressure_full = brief_full.split("## Workstation replenishment pressure", 1)[1].split(
+            "##", 1
+        )[0]
+        self.assertNotIn("Capability-blocked handoff", pressure_full)
+        self.assertLess(
+            pressure_full.index("ws-queue-dispatch"), pressure_full.index("ws-build-next")
+        )
+
+        # (c) Only capability-blocked dispatch exists -> incapable worker continues independent work
+        self._reset_claims(
+            {
+                "other-p2": _claim_toml("other-p2", kind="probe", priority=2),
+                "ws-queue-dispatch": _claim_toml(
+                    "ws-queue-dispatch",
+                    kind="run",
+                    zone="striated",
+                    priority=2,
+                    needs=["shell", "workflow-dispatch"],
+                    owned_paths=["bench/workstation-queue.txt"],
+                    done_when="Dispatch reviewed workstation recipe via run-signal workflow.",
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\n",
+        )
+        reader_only = self.sb.clone("reader-wp9-only")
+        brief_only, _ = self._run_brief_and_status(reader_only, can={"shell", "rust"})
+        pressure_only = brief_only.split("## Workstation replenishment pressure", 1)[1].split(
+            "##", 1
+        )[0]
+        self.assertIn("Repository queue: starved", pressure_only)
+        self.assertIn("Replenishment pressure: inactive for this worker's capabilities", pressure_only)
+        self.assertIn("Capability-blocked handoff (needs workflow-dispatch", pressure_only)
+        take_only = brief_only.split("## What you can take", 1)[1].split("##", 1)[0]
+        self.assertNotIn("**ws-queue-dispatch**", take_only)
+        self.assertNotIn("P1 effective", take_only)
+        self.assertIn("**other-p2**", take_only)
+
+
+secrets_counter = [0]
 
 
 if __name__ == "__main__":
