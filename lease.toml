@@ -1,0 +1,9 @@
+id = "release-terminal-holds"
+holder = "antigravity"
+session = "9977d2bbe9f5"
+claimed_at = "2026-11-27T01:47:17+00:00"
+expires = "2026-11-27T09:47:17+00:00"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+mechanisms = []
+base = "16e969d17d51e9e72a924d3cf566df8ab645427b"
+released = false
