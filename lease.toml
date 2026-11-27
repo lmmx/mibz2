@@ -1,13 +1,13 @@
 id = "scanner-seam-window"
 holder = "codex"
-session = "98d8b81f6fcc"
+session = "63bd6c73b0bd"
 claimed_at = "2026-11-27T00:57:42+00:00"
-expires = "2026-11-27T14:08:35+00:00"
+expires = "2026-11-27T15:20:46+00:00"
 owned_paths = ["src/parallel.rs", "src/trace.rs"]
 mechanisms = ["scanner-input-seam"]
 base = "996b976ed524e7fb37e4267b91f4d7536c4f00da"
 released = false
 producer = "antigravity"
-phase = "parked"
+phase = "integration"
 pr = 1031
-pr_head = "fab9b0b7f165a84cb776e28630e0e174c556beb4"
+pr_head = "3ae44390ade27cf105fc301b702e2eca9ab25fe2"
