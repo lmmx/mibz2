@@ -6,4 +6,4 @@ expires = "2026-11-27T10:50:57+00:00"
 owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
 mechanisms = ["workstation-ready-signal"]
 base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
-released = false
+released = true
