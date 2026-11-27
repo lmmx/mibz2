@@ -2993,10 +2993,12 @@ class TestResultToRelease(unittest.TestCase):
     """Frozen fixtures for all 10 stop_test classes of `result-to-release`."""
 
     def setUp(self) -> None:
+        """Create an isolated temporary frontier sandbox for each result-to-release test."""
         self._td = tempfile.TemporaryDirectory(prefix="frontier-r2r-")
         self.sb = FrontierSandbox(pathlib.Path(self._td.name))
 
     def tearDown(self) -> None:
+        """Remove the temporary frontier sandbox."""
         self._td.cleanup()
 
     def _reset_state(
@@ -3038,9 +3040,17 @@ class TestResultToRelease(unittest.TestCase):
             cfg = re.sub(r"max_open_claims\s*=\s*\d+", f"max_open_claims = {max_open_claims}", cfg)
             (seed / "frontier" / "config.toml").write_text(cfg, encoding="utf-8")
         if max_live_holds is not None:
-            (seed / "frontier" / "limits.toml").write_text(
-                f"max_live_holds = {max_live_holds}\n", encoding="utf-8"
-            )
+            cfg_path = seed / "frontier" / "config.toml"
+            cfg_txt = cfg_path.read_text(encoding="utf-8")
+            if "limits_file" in cfg_txt:
+                (seed / "frontier" / "limits.toml").write_text(
+                    f"max_live_holds = {max_live_holds}\n", encoding="utf-8"
+                )
+            else:
+                cfg_txt = re.sub(
+                    r"max_live_holds\s*=\s*\d+", f"max_live_holds = {max_live_holds}", cfg_txt
+                )
+                cfg_path.write_text(cfg_txt, encoding="utf-8")
         _git(seed, "add", "-A", "frontier", "bench/workstation-queue.txt")
         _git(seed, "commit", "-m", "configure result-to-release fixture")
         _git(seed, "push", "origin", "master")
@@ -3138,6 +3148,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (1): promising probe with/without concrete successor & admission cap reached
     def test_r2r_01_promising_probe_successor_and_admission_cap(self) -> None:
+        """Promising probe surfaces missing successor, admission cap, or actionable admit."""
         self._publish_evidence({})
         # (a) Promising probe with NO successor -> planned / needs concrete successor
         self._reset_state(
@@ -3222,6 +3233,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (2): ordinary CI-accepted default change requiring no separate i9 adoption run
     def test_r2r_02_ordinary_ci_default_change_needs_no_i9_run(self) -> None:
+        """Ordinary CI-accepted default build requires no separate i9 adoption run."""
         self._publish_evidence({})
         ci_claim = (
             _claim_toml(
@@ -3247,6 +3259,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (3): reviewed recipe with missing queue row or pin
     def test_r2r_03_reviewed_recipe_missing_queue_row_or_pin(self) -> None:
+        """Reviewed recipe with missing queue row or ready pin is prepared and decays to queued."""
         self._publish_evidence({})
         run_claim = (
             _claim_toml(
@@ -3293,6 +3306,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (4): queued current pin without evidence
     def test_r2r_04_queued_current_pin_without_evidence(self) -> None:
+        """Queued current pin without archived evidence reports queued with no duplicate dispatch."""
         self._publish_evidence({})
         run_claim = (
             _claim_toml(
@@ -3321,6 +3335,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (5): matching archived unread evidence while another recipe is runnable, including parked claim
     def test_r2r_05_unread_evidence_while_another_recipe_runnable_including_parked(self) -> None:
+        """Archived unread evidence for a parked claim surfaces P1 even when queue is replenished."""
         parked_claim = (
             _claim_toml(
                 "adaptive-seam",
@@ -3395,6 +3410,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (6): diagnostic PASS needing adoption vs adoption PASS ready to integrate; never infer PASS from prose
     def test_r2r_06_diagnostic_pass_vs_adoption_pass_and_no_prose_inference(self) -> None:
+        """Distinguish diagnostic-pass from adoption-pass and never infer PASS from prose."""
         diag_claim = (
             _claim_toml(
                 "fwd-diag",
@@ -3474,7 +3490,17 @@ class TestResultToRelease(unittest.TestCase):
                 ),
             },
         )
-        prs = [{"number": 1117, "title": "A2 fast", "body": "Claim: a2-adopt", "draft": False}]
+        prs = [
+            {
+                "number": 1117,
+                "title": "A2 fast",
+                "body": "Claim: a2-adopt",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            }
+        ]
         r = self.sb.clone("r2r-06")
         brief_out, _ = self._run_brief_and_status(r, can={"shell", "repo-write"}, prs=prs)
         sec = self._section(brief_out, "## Result-to-release")
@@ -3492,6 +3518,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (7): STOP/KILL/VOID/INCOMPLETE and superseded pins
     def test_r2r_07_stop_kill_void_incomplete_and_superseded_pins(self) -> None:
+        """Handle STOP/VOID dispositions without promotion and ignore superseded pins."""
         stop_claim = (
             _claim_toml("stopped-line", kind="build", zone="striated", status="open", priority=2, owned_paths=["src/a.rs"])
             + 'recipe = "bench-stop"\n'
@@ -3563,6 +3590,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (8): accepted default merge awaiting tag + recalibration, then tagged release awaiting scaling/recording
     def test_r2r_08_default_merge_recalibration_and_post_tag_scaling(self) -> None:
+        """Default merge triggers P1 release + recalibration; tagged release tracks scaling."""
         self._publish_evidence({})
         self._reset_state({}, ledger_rows=[])
         seed = self.sb.seed
@@ -3633,6 +3661,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (9): experimental-only merge does not by itself imply a production performance release
     def test_r2r_09_experimental_only_merge_does_not_imply_production_release(self) -> None:
+        """Experimental-only merge does not trigger a production performance release."""
         self._publish_evidence({})
         self._reset_state({}, ledger_rows=[])
         seed = self.sb.seed
@@ -3660,6 +3689,7 @@ class TestResultToRelease(unittest.TestCase):
 
     # Fixture (10): missing/stale/ambiguous evidence, failed checks, owner-only, live hold, capability, cap, conflicting successors
     def test_r2r_10_fail_closed_unknown_blockers_caps_holds_capabilities_conflicts(self) -> None:
+        """Fail closed on corrupt/missing data, failed checks, caps, holds, and conflicts."""
         # (a) Corrupt .sha256 sidecar -> fail closed to unknown
         bad_claim = (
             _claim_toml("corrupt-ev", kind="run", zone="striated", status="blocked", priority=2, owned_paths=["bench/c.py"])
@@ -3801,6 +3831,9 @@ class TestResultToRelease(unittest.TestCase):
                 "number": 999,
                 "title": "FCI",
                 "body": "Claim: failed-ci",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
                 "draft": False,
                 "checks_failed": True,
             }
