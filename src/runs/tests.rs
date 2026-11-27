@@ -574,8 +574,8 @@ fn runs_path_taken_exactly_where_selected() {
         let mut b = synthetic(&mut rng, 3000);
         b.max_len = match rng.below(3) {
             0 => 1 << 20,
-            1 => 2 * b.syms.len(),
-            _ => (2 * b.syms.len()).saturating_sub(1),
+            1 => (4 * b.syms.len()).div_ceil(3),
+            _ => (4 * b.syms.len() / 3).saturating_sub(1),
         };
         let want = takes_runs(&b);
         for k in kernels() {
@@ -608,24 +608,94 @@ fn runs_path_taken_exactly_where_selected() {
     );
 }
 
-/// The selector's two bounds: below 2^24 rows, and at most a symbol per 2 rows of the bound
+/// The selector's bounds: below 2^24 rows, at most 3/4 symbols per row of the bound
+/// (`0.50`, `0.74`, `0.75` accepted; `0.76` rejected), and `RUN_SHARE` still rejects
+/// high-entropy blocks within the widened band
 #[test]
 fn runs_takes_runs_bounds() {
-    let mut b = Symbols {
+    let make = |max_len: usize, syms: Vec<u16>| Symbols {
         crc: 0,
         orig_ptr: 0,
         seq_to_unseq: [0; 256],
-        syms: vec![0; 10],
+        syms,
         eob: 2,
-        max_len: (1 << 24) - 1,
+        max_len,
     };
+    let mut b = make((1 << 24) - 1, vec![0; 10]);
     assert!(takes_runs(&b));
     b.max_len = 1 << 24;
     assert!(!takes_runs(&b), "a bound of 2^24 rows");
-    b.max_len = 20;
-    assert!(takes_runs(&b));
-    b.max_len = 19;
-    assert!(!takes_runs(&b), "more than a symbol per 2 rows");
+
+    // Exact boundary ratios: 0.50, 0.74, 0.75 accepted; 0.76 rejected
+    assert!(takes_runs(&make(100, vec![0; 50])), "0.50 accepted");
+    assert!(takes_runs(&make(100, vec![0; 74])), "0.74 accepted");
+    assert!(takes_runs(&make(100, vec![0; 75])), "0.75 accepted");
+    assert!(!takes_runs(&make(100, vec![0; 76])), "0.76 rejected");
+
+    // Non-divisible edge: 4 * 10 = 40 <= 3 * 14 = 42, while 4 * 10 = 40 > 3 * 13 = 39
+    assert!(takes_runs(&make(14, vec![0; 10])));
+    assert!(!takes_runs(&make(13, vec![0; 10])));
+
+    // High-entropy and sparse-run blocks (< 1/8 runs) within 0.50 < len/max_len <= 0.75 stay on Column
+    assert!(
+        !takes_runs(&make(100, vec![2; 64])),
+        "literal-only block at 0.64 rejected"
+    );
+    let mut sparse_runs = vec![2; 64];
+    sparse_runs[0] = 0;
+    sparse_runs[1] = 0;
+    sparse_runs[2] = 0; // 3/64 = 4.7% (like 26-letter random noise: > 1/32, < 1/8)
+    assert!(
+        !takes_runs(&make(100, sparse_runs)),
+        "sparse-run noise (< 1/8) in widened band stays on Column"
+    );
+    let mut dense_runs = vec![2; 64];
+    for slot in &mut dense_runs[..8] {
+        *slot = 0; // 8/64 = 12.5% = 1/8
+    }
+    assert!(
+        takes_runs(&make(100, dense_runs)),
+        "12.5% run share in widened band accepted"
+    );
+}
+
+/// Exact decode parity across `0.50 < len/max_len <= 0.75`: `Segmented` takes the run-records
+/// path and produces byte-identical output and errors to `Plain` (column path)
+#[test]
+fn runs_widened_band_decode_parity() {
+    let mut rng = Rng(0x75_b4ad_1080_0001);
+    let (mut sr, mut sp) = (Scratch::<Segmented>::default(), Scratch::<Plain>::default());
+    let mut checked = 0usize;
+    for i in 0..80 {
+        let mut b = synthetic(&mut rng, 1500);
+        if b.syms.len() < 40 {
+            continue;
+        }
+        // Place len / max_len squarely in (0.50, 0.75] (ratios ~0.55..0.75)
+        let num = 4 * b.syms.len();
+        b.max_len = match i % 4 {
+            0 => num.div_ceil(3),           // ~0.75
+            1 => (100 * b.syms.len()) / 74, // ~0.74
+            2 => (100 * b.syms.len()) / 62, // ~0.62
+            _ => (100 * b.syms.len()) / 52, // ~0.52
+        };
+        if !takes_runs(&b) {
+            continue;
+        }
+        assert!(2 * b.syms.len() > b.max_len, "must lie above old 0.50 cut");
+        checked += 1;
+        for k in kernels() {
+            let (mut a, mut c) = (Vec::new(), Vec::new());
+            let ra = decode_block(&b, k, &mut sr, &mut a);
+            let rc = decode_block(&b, k, &mut sp, &mut c);
+            assert_eq!(ra, rc, "case {i}, {k:?}");
+            assert_eq!(a, c, "case {i}, {k:?}: output mismatch");
+        }
+    }
+    assert!(
+        checked >= 20,
+        "expected >= 20 widened-band blocks, got {checked}"
+    );
 }
 
 /// A small block that decodes: "abc"'s indices, a run, and the end of block
