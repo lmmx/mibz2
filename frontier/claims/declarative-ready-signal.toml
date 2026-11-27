@@ -1,0 +1,25 @@
+id = "declarative-ready-signal"
+title = "Make workstation ready signals accessible through lightweight repository refs"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+pr = 0
+owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
+mechanisms = ["workstation-ready-signal"]
+needs_louis = ""
+question = """
+Remove per-run interactive dispatch AND per-run PR/merge ceremony. Prefer a lightweight per-recipe or per-request Git ref namespace (for example run-request/<recipe>/<request-id>), containing a small declarative exact-SHA request; ordinary supported branch/file operations must suffice. Reuse the existing lease/ref pattern, with immutable request identity, independent parallel publication and no shared hot manifest or master commits per signal. A trusted reconciler from the default branch discovers and batches requests, validates them as untrusted data, and materialises existing ready tags. Evaluate a fixed-cadence reconciler with optional safe event-driven acceleration; do not rely on workflows executing from untrusted request branches. Keep manual hold/dispatch controls and compatibility with existing runners. Separate durable recipe review/admission from transient run signalling: no extra PR or review merely to signal a previously reviewed, green, authorised run. Prefer including any static queue registration in the existing recipe PR; investigate an additive trusted request index for dynamic queue entries if necessary, without automated direct writes to master or new per-attempt PRs. Do not execute untrusted request code or grant new credentials to cloud sessions. Coordinate with workstation-pressure and existing queue holders through the frontier.
+"""
+why = """
+The dispatch-only run-signal.yml requires access that at least one Codex cloud participant lacks (#1086). The maintainer requests scalable repository-native signalling without a PR per ready signal. Existing ref/file operations are a candidate common capability. The shared P1 obstruction is execution capability, distinct from pressure discovery. Standing authority covers only frozen, reviewed, green recipes; request publication itself confers no authority.
+"""
+stop_test = """
+Freeze tests before implementation. An eligible exact-SHA request published through ordinary branch/file operations must become an observable ready signal without interactive dispatch, per-run PR, master commit or new agent credentials. Demonstrate independent concurrent publication and batched reconciliation without lost updates or one CI workflow per signal. Verify existing standing authority, authoritative claim and lease/handoff, recipe registration, candidate/branch ancestry, independent review and exact-head CI, queue eligibility and prior attempts/evidence before activation. Treat all request data as untrusted; do not infer authority from the ref name, self-asserted holder, or shared GitHub account. Fail closed on missing/ambiguous provenance, moved or mismatched candidates, stale reviews, failed checks, malformed identifiers, conflicts, unavailable APIs and revoked requests. Preserve hold precedence, once-only execution, atomic machine lock and multi-repository compatibility. Durable receipts/tombstones must make reconciliation idempotent and prevent old requests reactivating cleared, revoked or completed runs; never override a manual hold. Do not execute candidate code in a privileged workflow, interpolate request text into shell, broaden token permissions unnecessarily or bypass environment restrictions. Test without dispatching a real benchmark. Keep legacy tags and migration behaviour safe and explicit. If authority cannot be verified using the existing protocol, narrow scope and record the concrete dependency instead of silently weakening a gate.
+"""
+done_when = """
+A minimal independently reviewed implementation passes exact-head checks and demonstrates a lightweight ref-to-ready path, concurrent requests, batched reconciliation, safe hold/revocation and replay handling, and compatibility with existing runner behaviour. Document the lifecycle and cleanup of requests/receipts and the boundary between static queue admission and transient signalling. No per-run PR, coordinator, new spending authority or approval layer. Record remaining physical i9 verification.
+"""
+premises = ["frontier/claims/workstation-pressure.toml", "frontier/claims/scanner-seam-window-queue.toml", "frontier/deltas/2026-11-27-ready-signal-capability-handoff.md"]
+links = ["https://github.com/lmmx/mibz2/pull/1086", ".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "CLAUDE.md"]
