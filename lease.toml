@@ -1,9 +1,9 @@
-id = "release-0-5-15"
+id = "post-1080-takes-runs"
 holder = "antigravity"
-session = "cd5bb42c90e9"
-claimed_at = "2026-11-27T13:37:41+00:00"
-expires = "2026-11-27T21:37:41+00:00"
-owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
-mechanisms = ["release"]
-base = "dd93541881b29d7137066e07236095c70cd7ca1d"
+session = "5bee0a6e0f71"
+claimed_at = "2026-11-27T14:15:24+00:00"
+expires = "2026-11-27T22:15:24+00:00"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["takes-runs-threshold", "branchless-rle2-front"]
+base = "212b52bb84b58969823c8549ce2e66340d09a3b0"
 released = false
