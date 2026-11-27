@@ -1,9 +1,13 @@
 id = "branch-protection"
-holder = "claude-code"
-session = "b6c73c0e2c36"
+holder = "antigravity"
+session = "b59d96442ee2"
 claimed_at = "2026-11-27T00:31:36+00:00"
-expires = "2026-11-27T08:31:36+00:00"
+expires = "2026-11-27T08:49:07+00:00"
 owned_paths = []
 mechanisms = []
 base = "df682f8875fbc0c9952714ec09f0db708c46837e"
 released = false
+producer = "claude-code"
+phase = "integration"
+pr = 1018
+pr_head = "c108886c160cd33cd3fc5f3bd5405465bddcbbc0"
