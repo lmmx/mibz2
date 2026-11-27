@@ -8,17 +8,20 @@
 //! four of them and walk forward independently, so four loads are in flight. A lane that reaches
 //! a tagged row has finished a segment; it starts the next unstarted anchor in the same slab.
 //! The segments are chained back into cycle order from the marked row's and copied into `out`.
-//! Each lane writes into 32 KiB slabs of a reused per-worker arena. A word that does not fit
-//! the rest of a slab is split across two.
 //!
-//! The probe it ports is `examples/forward_4lane_probe.rs` (#1050): its "stitch" arm, with the
-//! same anchors, lanes and slabs, written afresh here with no `unsafe`.
+//! Each active lane owns a disjoint `Box<[u8; SLAB]>` slab (lazily allocated and recycled in a
+//! per-worker `Arena` pool). Fixed compile-time slab size `SLAB = 32 KiB` lets `o <= SLAB - INLINE`
+//! eliminate slab bounds and overflow checks in safe Rust, `LONG` words that fit in the current
+//! slab (`> 99%` of long words) stay inline without spilling to cold code, and `#[inline(never)]`
+//! keeps `run<K>` compact with zero register spills across `K = 4, 3, 2, 1`.
 //!
 //! **Bounds.** A valid construction's edges are a permutation of the retained rows, so the
 //! segments partition the rows on cycles holding an anchor: at most `m` steps in all, and at most
 //! `n` bytes (every row's word is part of the block). The walk counts both. Past either, it
 //! clears the tags and falls back to the shipped bounded walk (`super::emit`), whose wrong
 //! block the CRC rejects.
+
+#![forbid(unsafe_code)]
 
 use super::{emit, long_word, repeat, INLINE, LONG};
 
@@ -32,7 +35,7 @@ thread_local! {
 const ANCHORS: usize = 16;
 /// The tag on an anchor's edge: bit 31, free when every code fits in `31 - bits` bits
 const TAG: u32 = 1 << 31;
-/// One lane's slab
+/// One lane's slab (compile-time constant for bounds-check elimination)
 const SLAB: usize = 32 * 1024;
 /// Lanes walking at once
 const LANES: usize = 4;
@@ -49,21 +52,81 @@ pub(super) fn fits(wide: bool, words: usize, m: u32, bits: u32) -> bool {
 /// The walk's per-worker buffers, kept across blocks
 #[derive(Default)]
 pub(super) struct Arena {
-    bytes: Vec<u8>,
-    /// `(segment, start, end)` of each closed slice of `bytes`, in the order closed: a
-    /// segment's slices are in its own order
-    slices: Vec<(u8, u32, u32)>,
+    /// Reusable fixed-size 32 KiB slabs, lazily grown up to actual block demand
+    pool: Vec<Box<[u8; SLAB]>>,
+    /// Slabs retired during the current block walk, indexed by `slab_id: u16`
+    used: Vec<Box<[u8; SLAB]>>,
+    /// `(segment, slab_id, start, end)` of each closed slice, in forward order per segment
+    slices: Vec<(u8, u16, u16, u16)>,
+    /// Per-lane pending `(segment, start, end)` slices on the lane's currently open slab
+    pending: [Vec<(u8, u16, u16)>; LANES],
+    /// Total slabs handed out during the current walk (active + `used`), bounded by `max_slabs`
+    allocated: usize,
 }
 
-#[derive(Clone, Copy, Default)]
+impl Arena {
+    fn reset(&mut self) {
+        self.pool.append(&mut self.used);
+        self.slices.clear();
+        for p in &mut self.pending {
+            p.clear();
+        }
+        self.allocated = 0;
+    }
+
+    fn alloc_slab(&mut self, max_slabs: usize) -> Option<Box<[u8; SLAB]>> {
+        if self.allocated >= max_slabs {
+            return None;
+        }
+        self.allocated += 1;
+        match self.pool.pop() {
+            Some(b) => Some(b),
+            None => Some(vec![0u8; SLAB].into_boxed_slice().try_into().unwrap()),
+        }
+    }
+}
+
 struct Lane {
+    /// the lane's own fixed-size 32 KiB slab
+    slab: Box<[u8; SLAB]>,
     /// the next row
     j: u32,
-    seg: usize,
-    /// where its open slice starts, its cursor and its slab's end, in `bytes`
-    start: usize,
-    at: usize,
-    end: usize,
+    /// where its open slice starts and its cursor within `slab` (`0..=SLAB`)
+    start: u16,
+    off: u16,
+    /// active segment index (`0..ANCHORS`)
+    seg: u8,
+    /// index into `Arena::pending` (`0..LANES`)
+    slot: u8,
+}
+
+impl Lane {
+    fn flush_slab(&mut self, arena: &mut Arena, replacement: Box<[u8; SLAB]>) {
+        let pending = &mut arena.pending[usize::from(self.slot)];
+        if self.off > self.start {
+            pending.push((self.seg, self.start, self.off));
+        }
+        let old = std::mem::replace(&mut self.slab, replacement);
+        let slab_id = arena.used.len() as u16;
+        arena.used.push(old);
+        for (seg, a, b) in pending.drain(..) {
+            arena.slices.push((seg, slab_id, a, b));
+        }
+        self.start = 0;
+        self.off = 0;
+    }
+
+    fn retire(self, arena: &mut Arena) {
+        let pending = &mut arena.pending[usize::from(self.slot)];
+        if self.off > self.start {
+            pending.push((self.seg, self.start, self.off));
+        }
+        let slab_id = arena.used.len() as u16;
+        arena.used.push(self.slab);
+        for (seg, a, b) in pending.drain(..) {
+            arena.slices.push((seg, slab_id, a, b));
+        }
+    }
 }
 
 struct Walk<'a> {
@@ -73,10 +136,8 @@ struct Walk<'a> {
     lens: &'a [u8],
     bits: u32,
     mask: u32,
-    bytes: &'a mut [u8],
-    slices: &'a mut Vec<(u8, u32, u32)>,
-    /// the next free slab
-    top: usize,
+    arena: &'a mut Arena,
+    max_slabs: usize,
     steps: usize,
     m: usize,
     anchors: [u32; ANCHORS],
@@ -92,57 +153,41 @@ impl Walk<'_> {
         let code = (edge >> self.bits) as usize;
         lane.j = edge & self.mask;
         let len = self.lens[code];
-        if len != LONG && lane.at + INLINE <= lane.end {
-            self.bytes[lane.at..lane.at + INLINE].copy_from_slice(&self.inline[code]);
-            lane.at += usize::from(len);
+        let o = usize::from(lane.off);
+        if len != LONG && o <= SLAB - INLINE {
+            lane.slab[o..o + INLINE].copy_from_slice(&self.inline[code]);
+            lane.off = (o + usize::from(len)) as u16;
         } else {
-            self.word_slow(lane, code, len);
+            self.spill_word(lane, code, len);
         }
     }
 
-    /// A word past its slab's last 16 bytes, or a long one: split across slabs as needed
+    /// A word crossing a slab boundary (or a short word in the last 15 bytes of a slab): split
+    /// across slabs as needed
     #[cold]
     #[inline(never)]
-    fn word_slow(&mut self, lane: &mut Lane, code: usize, len: u8) {
-        let inline = self.inline;
-        let spelling = self.spelling;
+    fn spill_word(&mut self, lane: &mut Lane, code: usize, len: u8) {
         let mut word = if len == LONG {
-            long_word(&inline[code], spelling)
+            long_word(&self.inline[code], self.spelling)
         } else {
-            &inline[code][..usize::from(len)]
+            &self.inline[code][..usize::from(len)]
         };
         loop {
-            let take = word.len().min(lane.end - lane.at);
-            self.bytes[lane.at..lane.at + take].copy_from_slice(&word[..take]);
-            lane.at += take;
+            let o = usize::from(lane.off);
+            let take = word.len().min(SLAB.saturating_sub(o));
+            lane.slab[o..o + take].copy_from_slice(&word[..take]);
+            lane.off = (o + take) as u16;
             word = &word[take..];
             if word.is_empty() {
                 return;
             }
-            self.close(lane);
-            if !self.slab(lane) {
+            let Some(fresh) = self.arena.alloc_slab(self.max_slabs) else {
+                self.bad = true;
+                lane.off = SLAB as u16;
                 return;
-            }
+            };
+            lane.flush_slab(self.arena, fresh);
         }
-    }
-
-    fn close(&mut self, lane: &Lane) {
-        if lane.at > lane.start {
-            self.slices
-                .push((lane.seg as u8, lane.start as u32, lane.at as u32));
-        }
-    }
-
-    /// A fresh slab for `lane`, or `false` (and the walk bad) past the byte budget
-    fn slab(&mut self, lane: &mut Lane) -> bool {
-        if self.top + SLAB > self.bytes.len() {
-            self.bad = true;
-            lane.at = lane.end;
-            return false;
-        }
-        (lane.start, lane.at, lane.end) = (self.top, self.top, self.top + SLAB);
-        self.top += SLAB;
-        true
     }
 
     /// Start the next anchor's segment on `lane` (at its cursor) and settle it: `false` once no
@@ -153,10 +198,10 @@ impl Walk<'_> {
                 self.bad |= self.next < ANCHORS;
                 return false;
             }
-            lane.seg = self.next;
-            lane.start = lane.at;
+            lane.seg = self.next as u8;
+            lane.start = lane.off;
             self.next += 1;
-            let edge = self.edges[self.anchors[lane.seg] as usize] & !TAG;
+            let edge = self.edges[self.anchors[usize::from(lane.seg)] as usize] & !TAG;
             self.word(lane, edge);
             self.steps += 1;
             if !self.hit(lane) {
@@ -167,29 +212,35 @@ impl Walk<'_> {
 
     /// If `lane`'s next row is tagged, end its segment there: `true`
     #[inline(always)]
-    fn hit(&mut self, lane: &Lane) -> bool {
+    fn hit(&mut self, lane: &mut Lane) -> bool {
         if self.edges[lane.j as usize] & TAG == 0 {
             return false;
         }
-        self.ends[lane.seg] = lane.j;
-        self.close(lane);
+        self.ends[usize::from(lane.seg)] = lane.j;
+        if lane.off > lane.start {
+            self.arena.pending[usize::from(lane.slot)].push((lane.seg, lane.start, lane.off));
+        }
+        lane.start = lane.off;
         true
     }
 
     /// `K` lanes in step until one reaches a tagged row; `false` if the step budget runs out
-    /// first. The lanes' rows and cursors are kept in locals here, so the `K` loads of a step
-    /// are issued together.
-    #[inline(always)]
-    fn run<const K: usize>(&mut self, lanes: &mut [Lane; LANES]) -> bool {
-        let (edges, inline, lens) = (self.edges, self.inline, self.lens);
+    /// first. Kept `#[inline(never)]` so each `K` compiles to one tight register-allocated loop
+    /// without spilling across `K = 4, 3, 2, 1`.
+    #[inline(never)]
+    fn run<const K: usize>(&mut self, lanes: &mut [Lane]) -> bool {
+        let lanes = &mut lanes[..K];
+        let edges = self.edges;
+        let nw = self.lens.len().min(self.inline.len());
+        let lens = &self.lens[..nw];
+        let inline = &self.inline[..nw];
+        let spelling = self.spelling;
         let (bits, mask) = (self.bits, self.mask);
         let mut j: [u32; K] = std::array::from_fn(|i| lanes[i].j);
-        let mut at: [usize; K] = std::array::from_fn(|i| lanes[i].at);
-        let mut end: [usize; K] = std::array::from_fn(|i| lanes[i].end);
+        let mut off: [usize; K] = std::array::from_fn(|i| usize::from(lanes[i].off));
         let iters = (self.m - self.steps) / K;
         let mut done = 0;
         let mut hit = false;
-        let mut bytes = std::mem::take(&mut self.bytes);
         'walk: while done < iters {
             let e: [u32; K] = std::array::from_fn(|i| edges[j[i] as usize]);
             if (e.iter().fold(0, |a, &b| a | b) as i32) < 0 {
@@ -201,27 +252,40 @@ impl Walk<'_> {
                 let code = (e[i] >> bits) as usize;
                 j[i] = e[i] & mask;
                 let len = lens[code];
-                if len != LONG && at[i] + INLINE <= end[i] {
-                    bytes[at[i]..at[i] + INLINE].copy_from_slice(&inline[code]);
-                    at[i] += usize::from(len);
+                let o = off[i];
+                if len != LONG && o <= SLAB - INLINE {
+                    lanes[i].slab[o..o + INLINE].copy_from_slice(&inline[code]);
+                    off[i] = o + usize::from(len);
+                } else if len == LONG {
+                    let word = long_word(&inline[code], spelling);
+                    let wlen = word.len();
+                    if wlen <= SLAB - o {
+                        lanes[i].slab[o..o + wlen].copy_from_slice(word);
+                        off[i] = o + wlen;
+                    } else {
+                        lanes[i].j = j[i];
+                        lanes[i].off = o as u16;
+                        self.spill_word(&mut lanes[i], code, len);
+                        off[i] = usize::from(lanes[i].off);
+                        if self.bad {
+                            break 'walk;
+                        }
+                    }
                 } else {
-                    self.bytes = bytes;
-                    let mut lane = lanes[i];
-                    (lane.j, lane.at, lane.end) = (j[i], at[i], end[i]);
-                    self.word_slow(&mut lane, code, len);
-                    lanes[i] = lane;
-                    (at[i], end[i]) = (lane.at, lane.end);
-                    bytes = std::mem::take(&mut self.bytes);
+                    lanes[i].j = j[i];
+                    lanes[i].off = o as u16;
+                    self.spill_word(&mut lanes[i], code, len);
+                    off[i] = usize::from(lanes[i].off);
                     if self.bad {
                         break 'walk;
                     }
                 }
             }
         }
-        self.bytes = bytes;
         self.steps += K * done;
         for i in 0..K {
-            (lanes[i].j, lanes[i].at, lanes[i].end) = (j[i], at[i], end[i]);
+            lanes[i].j = j[i];
+            lanes[i].off = off[i] as u16;
         }
         if self.bad {
             return false;
@@ -255,11 +319,11 @@ pub(super) fn walk(
     for &a in &anchors {
         edges[a as usize] |= TAG;
     }
-    let slabs = n.div_ceil(SLAB) + LANES + 1;
-    if arena.bytes.len() < slabs * SLAB {
-        arena.bytes.resize(slabs * SLAB, 0);
-    }
-    arena.slices.clear();
+    arena.reset();
+    let max_slabs = n
+        .div_ceil(SLAB)
+        .saturating_add(LANES + 1)
+        .min(u16::MAX as usize);
     let mut w = Walk {
         edges,
         spelling,
@@ -267,9 +331,8 @@ pub(super) fn walk(
         lens,
         bits,
         mask: (1 << bits) - 1,
-        bytes: &mut arena.bytes[..slabs * SLAB],
-        slices: &mut arena.slices,
-        top: 0,
+        arena,
+        max_slabs,
         steps: 0,
         m,
         anchors,
@@ -277,17 +340,28 @@ pub(super) fn walk(
         next: 0,
         bad: false,
     };
-    let mut lanes = [Lane::default(); LANES];
-    let mut live = 0;
-    for _ in 0..LANES {
-        let mut lane = Lane::default();
-        if w.slab(&mut lane) && w.start(&mut lane) {
-            lanes[live] = lane;
-            live += 1;
+    let mut lanes: Vec<Lane> = Vec::with_capacity(LANES);
+    for slot in 0..LANES {
+        let Some(slab) = w.arena.alloc_slab(max_slabs) else {
+            w.bad = true;
+            break;
+        };
+        let mut lane = Lane {
+            slab,
+            j: 0,
+            start: 0,
+            off: 0,
+            seg: 0,
+            slot: slot as u8,
+        };
+        if w.start(&mut lane) {
+            lanes.push(lane);
+        } else {
+            lane.retire(w.arena);
         }
     }
-    while live > 0 && !w.bad {
-        let ok = match live {
+    while !lanes.is_empty() && !w.bad {
+        let ok = match lanes.len() {
             4 => w.run::<4>(&mut lanes),
             3 => w.run::<3>(&mut lanes),
             2 => w.run::<2>(&mut lanes),
@@ -298,16 +372,17 @@ pub(super) fn walk(
             break;
         }
         let mut i = 0;
-        while i < live {
-            let mut lane = lanes[i];
-            if w.hit(&lane) && !w.start(&mut lane) {
-                live -= 1;
-                lanes[i] = lanes[live];
+        while i < lanes.len() {
+            if w.hit(&mut lanes[i]) && !w.start(&mut lanes[i]) {
+                let retired = lanes.swap_remove(i);
+                retired.retire(w.arena);
                 continue;
             }
-            lanes[i] = lane;
             i += 1;
         }
+    }
+    for lane in lanes {
+        lane.retire(w.arena);
     }
     let (bad, ends) = (w.bad, w.ends);
     for &a in &anchors {
@@ -319,13 +394,17 @@ pub(super) fn walk(
     }
     // the marked row's cycle, segment by segment from its own (segment 0)
     out.clear();
+    out.reserve(n);
     let mut seg = 0;
     for _ in 0..ANCHORS {
-        for &(s, a, b) in arena.slices.iter() {
+        for &(s, slab_id, a, b) in arena.slices.iter() {
             if usize::from(s) == seg {
-                let take = (b - a) as usize;
-                let take = take.min(n - out.len());
-                out.extend_from_slice(&arena.bytes[a as usize..a as usize + take]);
+                let take = usize::from(b - a).min(n - out.len());
+                if take > 0 {
+                    let slab = &arena.used[usize::from(slab_id)];
+                    let start = usize::from(a);
+                    out.extend_from_slice(&slab[start..start + take]);
+                }
             }
         }
         if out.len() >= n || ends[seg] == mark {
@@ -347,6 +426,14 @@ mod tests {
 
     fn taken() -> usize {
         TAKEN.with(|t| t.get())
+    }
+
+    /// Encode a `LONG` word descriptor in `inline` matching `super::long_word`
+    fn encode_long_slot(start: usize, len: usize) -> [u8; INLINE] {
+        let mut slot = [0u8; INLINE];
+        slot[0..4].copy_from_slice(&(start as u32).to_ne_bytes());
+        slot[4..8].copy_from_slice(&(len as u32).to_ne_bytes());
+        slot
     }
 
     /// The four-lane walk through the shipped instance and the unqueued ones, into a poisoned
@@ -418,6 +505,125 @@ mod tests {
         }
     }
 
+    /// Direct boundary stress for inline `LONG` and slab-crossing `spill_word`:
+    /// exact `rem == wlen` (fills slab to byte 32,768), `rem == wlen - 1` (splits 1 byte onto
+    /// next slab), `rem == 0` (word starts at offset 32,768), multi-slab `LONG` words (`> 2*SLAB`),
+    /// short words in the last 15 bytes (`SLAB - 15..SLAB`), and `K = 4, 3, 2, 1` drain transitions.
+    #[test]
+    fn long_word_slab_boundaries_and_multi_slab_words() {
+        let mut arena = Arena::default();
+        let mut out = Vec::new();
+        let mut expected = Vec::new();
+
+        // Build spelling pool holding:
+        // - code 0: short 1-byte filler
+        // - code 1: short 16-byte filler
+        // - code 2: 2048-byte LONG (divides SLAB = 32768 evenly -> hits rem == wlen & rem == 0!)
+        // - code 3: 2049-byte LONG (misaligned -> hits rem == wlen - 1 and short-tail spills!)
+        // - code 4: 70_000-byte LONG (> 2 * SLAB -> spans 3 slabs in a single spill_word!)
+        let mut spelling = Vec::new();
+        let mut inline = Vec::new();
+        let mut lens = Vec::new();
+
+        let mut short1 = [0u8; INLINE];
+        short1[0] = b'A';
+        inline.push(short1);
+        lens.push(1u8);
+
+        let short16 = *b"0123456789abcdef";
+        inline.push(short16);
+        lens.push(INLINE as u8);
+
+        let mut push_long = |len: usize, seed: u8| {
+            let start = spelling.len();
+            for i in 0..len {
+                spelling.push(seed.wrapping_add((i * 31 + (i >> 5)) as u8));
+            }
+            inline.push(encode_long_slot(start, len));
+            lens.push(LONG);
+        };
+        push_long(2048, 0x10);
+        push_long(2049, 0x40);
+        push_long(70_000, 0x90);
+
+        // Single 320-row cycle (> MIN_ROWS = 256) with 16 anchors; craft codes so different
+        // segments hit exact slab fill (16 * 2048 == 32768), rem == wlen - 1, rem == 0,
+        // 15-byte short-word tail, multi-slab 70 KB word, and unequal segment lengths (K=4->3->2->1).
+        let m = 320usize;
+        let bits = 9u32; // 2^9 = 512 > 320
+        let mut codes = vec![0u32; m];
+        // Segment 0 (rows 0..20): 16 * 2048 = 32768 exact slab fill (rem == wlen), then rem == 0 LONG
+        for c in &mut codes[0..17] {
+            *c = 2;
+        }
+        codes[17] = 1; // short16 right on fresh slab
+        codes[18] = 3; // 2049 LONG
+        codes[19] = 0;
+        // Segment 1 (rows 20..40): 15 * 2048 + 2047? Use 15 * 2048 + 127*16 + 15*1 -> rem = 1!
+        // With 16 * 2048 - 1 via 15*2048 + 127*16 + ... we have 20 rows: put 15*2048 + 1*2049 ->
+        // at row 35 off = 30720, rem = 2048, wlen = 2049 => exact `rem == wlen - 1`!
+        for c in &mut codes[20..35] {
+            *c = 2;
+        }
+        codes[35] = 3; // rem == 2048 == wlen - 1 (1 byte spills to next slab!)
+        codes[36] = 4; // 70,000-byte LONG spanning 3 slabs
+        codes[37] = 1;
+        codes[38] = 0;
+        codes[39] = 3;
+        // Segment 2 (rows 40..60): short word in last 15 bytes of slab (off = 32753, rem = 15 < 16)
+        // 15*2048 = 30720; + 2049 = 32769 (off=1 on slab2). Instead on rows 40..60 put 16*2049:
+        // after 15*2049 = 30735, + 2049 crosses by 16; then after 15*2048 + 2049 + ... mix all codes.
+        for (idx, c) in codes[40..m].iter_mut().enumerate() {
+            *c = match idx % 7 {
+                0 | 1 => 2,
+                2 => 3,
+                3 => 1,
+                4 => 0,
+                5 if idx == 47 => 4, // second multi-slab word in a later anchor segment
+                _ => 1,
+            };
+        }
+
+        // Build a single cycle visiting rows in a non-trivial permutation so K=4->3->2->1 drain
+        // exercises unequal segment lengths.
+        let mut edges = vec![0u32; m];
+        let mut order: Vec<usize> = (0..m).collect();
+        // Rotate tail slightly while keeping 0 as mark
+        order[1..].rotate_left(13);
+        let mut n = 0usize;
+        for pos in 0..m {
+            let cur = order[pos];
+            let nxt = order[(pos + 1) % m];
+            let code = codes[pos];
+            edges[cur] = (code << bits) | (nxt as u32);
+            let w = if lens[code as usize] == LONG {
+                long_word(&inline[code as usize], &spelling)
+            } else {
+                &inline[code as usize][..usize::from(lens[code as usize])]
+            };
+            expected.extend_from_slice(w);
+            n += w.len();
+        }
+        let edges_before = edges.clone();
+
+        // Run twice reusing the same Arena to verify slab pool recycling leaves zero stale state.
+        for _ in 0..2 {
+            out.clear();
+            out.extend_from_slice(&[0xAA; 64]);
+            walk(
+                &mut edges, &spelling, &inline, &lens, n, 0, bits, &mut arena, &mut out,
+            );
+            assert_eq!(edges, edges_before, "tags must be cleared");
+            assert_eq!(out.len(), n);
+            assert_eq!(out, expected);
+        }
+
+        // Verify lazy pool stayed bounded and recycled all slabs cleanly.
+        let total_slabs = arena.pool.len() + arena.used.len();
+        assert!(total_slabs <= n.div_ceil(SLAB) + LANES + 1);
+        assert!(arena.used.len() <= total_slabs);
+    }
+
     /// Edges that are no permutation (every row to row 1, a cycle with no anchor; and a row
     /// pointing past the anchors' cycle back into itself): the walk ends, falls back to the
     /// bounded walk, gives `n` bytes and leaves no tag behind
@@ -465,7 +671,8 @@ mod tests {
         }
     }
 
-    /// Miri's case: one block past `MIN_ROWS` through the shipped instance
+    /// Miri's case: one block past `MIN_ROWS` through the shipped instance plus exact slab-edge
+    /// `LONG` boundary crossing under Miri
     #[test]
     fn miri_forward_anchor_lanes() {
         let mut g = Lcg(0x6d69_7269);
