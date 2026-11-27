@@ -1,0 +1,43 @@
+id = "parallel-decoder-pool-and-sysfs-cache"
+title = "Cache StreamDecoder::new sysfs topology and add reusable parallel DecoderPool for multi-file/batch workloads"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/parallel.rs", "src/lib.rs"]
+mechanisms = ["parallel-decoder-pool", "parallel-sysfs-topology-cache"]
+needs_louis = "Confirm whether to expose a public Rust/Python `DecoderPool` / reusable parallel decoder API alongside internal `StreamDecoder::new` sysfs caching and `decode_parallel` zero-copy `SliceSource`."
+question = """
+`docs/journal/2026-11-27-explore/parallel-lifecycle-ramp-drain-teardown.md` dissected the `StreamDecoder` / `BzReader::parallel` / `decode_parallel` lifecycle (`T_spawn`, `T_ramp`, `T_steady`, `T_drain`, `T_teardown`) against physical i9-10900K `1×` (`bce3914d`/`45ae3ff3`) vs `4×` (`9de7b6e0`) `wikidata` evidence and all 7 corpora on VM (`examples/parallel_lifecycle_probe.rs`, `#![forbid(unsafe_code)]`, 100% bit- & hash-exact):
+
+1. On physical i9-10900K, exact fixed per-call lifecycle cost `T_fixed = (4·T_1x − T_4x) / 3` is `6.55 ms` (`9.9%` of `66.25 ms`) at `6W` and **`16.13 ms` (`26.8%` of `60.15 ms`)** at `8W` (`0.0 ms` `runq_s`), with `text` regressing `+19.3%` (`k=6->8`) and `+35.5%` (`k=6->10`). ~55–65% of cold single-process `T_fixed` is 4-KiB anonymous `mmap` minor page faults (`13,050–21,063` faults) + `mmap_lock` contention (tracked separately by `#1190`'s THP/allocator study).
+2. `StreamDecoder::new` re-opens `/proc/self/status` + `2 × N_cpus` sysfs topology files on every call (`Plan::for_threads` + `trimmed_here` = 80+ sysfs opens on 20-CPU i9; `0.36–0.61 ms` on 2-vCPU VM, `~1.0–2.0 ms` projected on i9). Caching topology keyed on `Cpus_allowed_list` eliminates this overhead on both cold and warm calls with zero API change.
+3. Even in warm multi-file / batch processes, `StreamDecoder`'s single-use lifecycle still incurs **`3,103–10,937` minor page faults and `10–40 ms` kernel `stime` per call** from per-call worker thread spawn/teardown and glibc per-thread arena churn (`VmHWM` balloons `49 -> 96 MB` on `wikidata`, `71 -> 131 MB` on `random`). A `0`-unsafe persistent `WarmPool` reusing worker threads, warm `Scratch<OpenCells>`, and `free_syms`/`free_out` (built on `decode_owned` + `READY_BYTES` cap + zero-copy `SliceSource` for `&[u8]`) cuts warm wall by **`-12.6%` on `wikidata t=8`**, **`-42.0% / -19.5%` on `text t=4/8`**, **`-21.7%` on `random t=8`**, **`-35.0%` on `pattern`**, **`-35.7..-39.3%` on `runs`**, and **`-49.2..-56.8%` on `onebyte`** (0/14 regressions, `-71..-96%` fewer minor faults, `-55..-100%` less `stime`, and `0.23–0.94×` lower peak RSS on 12/14 cells).
+
+Does shipping (a) `Cpus_allowed_list`-keyed topology caching in `StreamDecoder::new` and (b) a `0`-unsafe reusable `DecoderPool` (on `decode_owned` + `READY_BYTES` cap + `SliceSource`) deliver clean warm multi-file and cold-startup gains with zero regressions and `<= 1.00×` peak RSS across all 7 corpora?
+"""
+why = """
+Multi-file and batch workloads (Rust `decode_parallel` loops, Python `mibz2.decompress()` / `mibz2.open()` pipelines over many `.bz2` archives) currently pay per-call thread spawn, glibc per-thread arena churn (`3,103–10,937` minor faults/call), sysfs re-discovery, and `Drop` `munmap` on every single file. Eliminating that churn in 100% safe Rust cuts wall time by 12–57% and cuts peak RSS by 6–77% on warm multi-file workloads while also shaving `~1–2 ms` of sysfs overhead off cold `StreamDecoder::new` calls on 20-CPU machines.
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & safety: 0 new `unsafe`; 100% bit-, CRC-, and error-exact parity against unmodified `mibz2` across `cargo test`, `fuzz-smoke`, panic/cancel/unwind tests, and all 7 corpora (`t = 1, 2, 4, 8`); `StreamDecoder::new` still reacts immediately to runtime `sched_setaffinity` / cgroup quota changes (cache keyed on `Cpus_allowed_list` + `with_machine` override preserved).
+2. Performance & memory (paired alternating A/B, baseline + JCC-32B, plus physical i9-10900K verification for any cold-process claim per C5):
+   - Warm multi-file (`DecoderPool` vs per-call `StreamDecoder`): `>= 5%` IQR-separated wall reduction on `wikidata` (`t = 4` or `8`) AND `>= 10%` on `text`, `0` regressions > 1.5% across all 7 corpora, and peak RSS `<= 1.00×` (including `pattern` via `decode_owned` + `READY_BYTES` cap).
+   - Cold single-process (`StreamDecoder::new` sysfs cache): `>= 50%` reduction in `StreamDecoder::new` constructor time with `0` regressions on `ab` / CI bench.
+   Otherwise STOP with a scoped dead-end row.
+"""
+done_when = """
+Striated PR on `src/parallel.rs` (and `src/lib.rs` if `decode_parallel` uses `SliceSource` / pool) after Louis confirms any public API shape (`needs_louis`), passing all tests, unwind/cancel safety checks, and the frozen stop test, merged cleanly with a delta and `surface.tsv` row `P` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/parallel-lifecycle-ramp-drain-teardown.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "src/parallel.rs",
+  "src/lib.rs",
+]
+links = [
+  "examples/parallel_lifecycle_probe.rs",
+  "frontier/deltas/2026-11-27-explore-parallel-lifecycle.md",
+]

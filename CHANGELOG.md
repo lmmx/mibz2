@@ -7,6 +7,212 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.17](https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17) - 2026-11-27
+
+### <!-- 1 -->Features
+
+- *(frontier)* observational agent presence, apart from reservations ([#1191](https://github.com/lmmx/mibz2/pull/1191))
+
+### <!-- 2 -->Bug Fixes
+
+- *(bench)* harden run_requests security and frontier authority gates ([#1124](https://github.com/lmmx/mibz2/pull/1124))
+
+### <!-- 3 -->Performance
+
+- *(open)* recalibrate OpenCells admission to [0.10, 0.21) m<=0.27*n post-#1080 ([#1222](https://github.com/lmmx/mibz2/pull/1222))
+- *(open/lanes)* disjoint 32 KiB slabs, inline LONG fast-path, and noinline run<K> ([#1217](https://github.com/lmmx/mibz2/pull/1217))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* why compression ratio moves the scaling ceiling ([#1211](https://github.com/lmmx/mibz2/pull/1211))
+- *(changelog)* distinguish median and maximum peak RSS for 0.5.16
+- *(changelog)* 0.5.16 measured notes, feature review, moonshot lockfile and partial delta ([#1196](https://github.com/lmmx/mibz2/pull/1196))
+- *(notebook)* explore the page layer (THP, faults, arena growth) on the OpenCells worker ([#1190](https://github.com/lmmx/mibz2/pull/1190))
+
+### <!-- 9 -->Other
+
+- open release-0-5-17 at P1 ([#1225](https://github.com/lmmx/mibz2/pull/1225))
+- *(ledger)* record #1222 post-1080-open-admission row ([#1223](https://github.com/lmmx/mibz2/pull/1223))
+- admit mtf-fold-batch-measure and freeze C1a stop_test ([#1221](https://github.com/lmmx/mibz2/pull/1221))
+- *(ledger)* record #1132 experimental mtf-fold-l1-batch-redesign row ([#1220](https://github.com/lmmx/mibz2/pull/1220))
+- admit post-1080-open-admission (idea -> open) ([#1219](https://github.com/lmmx/mibz2/pull/1219))
+- queue bench-scanner-adaptive-seam at 0fda2381 (scanner-adaptive-seam-window) ([#1218](https://github.com/lmmx/mibz2/pull/1218))
+- *(mtf-fold)* L1d-batched packed MTF fold and OutQ16 1008/1024 guard zone, stopped at its local gates ([#1132](https://github.com/lmmx/mibz2/pull/1132))
+- admit lanes-disjoint-slabs-build (idea -> open) ([#1216](https://github.com/lmmx/mibz2/pull/1216))
+- dissect src/runs.rs front_avx2 and fill_avx2_trusted ([#1202](https://github.com/lmmx/mibz2/pull/1202))
+- *(open)* dissect forward lanes spelling and non-stage overhead (Track A PASS, Track B STOP) ([#1197](https://github.com/lmmx/mibz2/pull/1197))
+- *(frontier)* admit resume-released-pr-claim ([#1214](https://github.com/lmmx/mibz2/pull/1214))
+- file low-thread OpenCells unification as an idea claim ([#1213](https://github.com/lmmx/mibz2/pull/1213))
+- record text-knee-i9 verdict CONFIRMED (text knee 5 vs wikidata 9 on the i9) ([#1204](https://github.com/lmmx/mibz2/pull/1204))
+- mark workstation-pressure done after #1093 ([#1212](https://github.com/lmmx/mibz2/pull/1212))
+- dissect EagerCells (src/cells.rs), src/run_fed.rs, and inline Seq/t=1..3 OpenCells (STOP) ([#1194](https://github.com/lmmx/mibz2/pull/1194))
+- scanner-a2-fast-build cannot be resumed after a released hand-back; idea claim resume-released-pr-claim ([#1203](https://github.com/lmmx/mibz2/pull/1203))
+- sixteenth synthesis pass: i9 slow mode is the unpinned default's majority state; #1110 gates the Cells route ([#1209](https://github.com/lmmx/mibz2/pull/1209))
+- *(frontier)* derive workstation replenishment pressure in brief and status ([#1093](https://github.com/lmmx/mibz2/pull/1093))
+- *(compose)* verify post-v0.5.16 7-PR stack and catch post-1080-open-admission 8W RSS jump ([#1210](https://github.com/lmmx/mibz2/pull/1210))
+- *(migrate-rules)* independent review of #1065; surface the RULES D1 decision ([#1205](https://github.com/lmmx/mibz2/pull/1205))
+- *(parallel)* dissect StreamDecoder lifecycle ramp/drain/teardown and WarmPool reuse (PASS) ([#1200](https://github.com/lmmx/mibz2/pull/1200))
+- Record 0.5.16 i9 release-scaling and crossover; close release-0-5-16 ([#1199](https://github.com/lmmx/mibz2/pull/1199))
+- admit i9-clock-modes (idea -> open) ([#1198](https://github.com/lmmx/mibz2/pull/1198))
+- *(read,block)* dissect Rust streaming I/O, Vec growth, multi-stream framing, and block.rs (STOP) ([#1192](https://github.com/lmmx/mibz2/pull/1192))
+- fifteenth synthesis pass: shipped trim hides the scanner on i9 Wikidata; i9 clock modes ([#1189](https://github.com/lmmx/mibz2/pull/1189))
+- queue bench-text-knee at af7ff482 (text-knee-i9) ([#1188](https://github.com/lmmx/mibz2/pull/1188))
+
+- **Recalibrated `OpenCells` admission and direct `Segmented` fallback (#1222).** `OpenCellsOf::cap`
+  in `src/open.rs` now admits run-route blocks in `1/64 <= r/n < 0.10` outright (`Cap::NONE`),
+  checks `0.10 <= r/n < 0.21` via `within_cap` against `m <= min(256_000, 0.27 * n)` and
+  `strips <= 16_384`, and routes `r/n >= 0.21` (and `< 1/64`) directly to `Segmented` (dropping the
+  dead `[0.21, 0.28)` dense tail and `LazyCells` fallback indirection, `0` new `unsafe`). All
+  233/233 full Wikidata blocks remain in `OpenCells` (zero `Segmented` fallback scratch allocation),
+  while high-`m/n` `text` blocks (`m/n = 0.42`) route straight to `Segmented`: paired native
+  `OpenCells` runs measured −1.9% CPU and −2.6% wall on Wikidata at 8 workers (0.99× peak memory at
+  1 and 4 workers) and −4.4% whole-decoder CPU on `text` at 1 worker.
+- **Opt-in experimental features (off by default, zero default-build change):**
+  - `forward-anchor-lanes` (#1217): disjoint recycled 32 KiB per-lane slabs, inline long-word fast
+    path, and out-of-line `run<K>` (`0` new `unsafe`).
+  - `mtf-fold` (#1132): L1d-batched packed MTF fold and 16-entry `OutQ16` guard zone (stopped at
+    its local gates, retained behind `--features mtf-fold`).
+
+**The paired run on CI** compared v0.5.16 at `4e261140` with master at `292854d3` (Benchmark run
+[46069227845](https://github.com/lmmx/mibz2/actions/runs/46069227845), **AMD EPYC 7763 64-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier metadata and version numbers from `292854d3` to the `v0.5.17` tag commit `01acd74d`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. Wikidata wall is +0.1% (−0.3%, +0.4%) at 1 thread, +0.9%
+  (−1.5%, +3.3%) at 2 threads, and +0.1% (−1.1%, +1.2%) at 4 threads (peak RSS 28 / 55 / 84 MB,
+  +0.1% / −0.3% / −0.0%); `random` is faster at 1 thread (−3.2% [−3.8%, −2.6%]) and 4 threads
+  (−4.4% [−6.0%, −2.7%]); `pattern` peak RSS fell −6.4% at 4 threads (38 → 36 MB; CPU +4.9%);
+  `text` wall is +0.8% (+0.2%, +1.5%) at 1 thread (CPU +0.7% [−0.0%, +1.5%]), −2.3% (−5.8%, +1.2%)
+  at 2 threads, and +1.7% (−1.7%, +5.2%) at 4 threads. The one-thread stage total is 6.86 → 6.78
+  c/B (−1.0% [−2.0%, −0.0%]; walk 3.28 → 3.19 c/B, −2.2% [−4.2%, −0.1%]).
+- **Why:** on CI's 4-CPU runner the default decoder runs eager `Cells` at 1–4 threads rather than
+  `OpenCells`, so #1222's admission change is not exercised on CI's 1–4 thread path, and #1217 and
+  #1132 are behind opt-in features. The i9 release-scaling and crossover runs (`01acd74d`, queued in
+  #1226) measure `OpenCells` directly across 1–20 threads.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.16 (the same 20 research features). The follow-ons listed under 0.5.15/0.5.16 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1222 keeps all 233/233 full Wikidata blocks
+in `OpenCells` with zero `Segmented` spill (#1217 and #1132 are off by default), and 0.5.16's
+crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5):** 0.5.17 against 0.5.16 on the i9-10900K
+(`release-scaling/run-20261127T213343Z`, evidence `5182d546`, sha256 `3b3af8b1…309b`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.17/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical): flat at 1–4 threads and 12–20 threads, and
+**+2.6% slower at 8 threads / +1.5% slower at 10 threads** (pinned `OpenCells`) while peak RSS
+stayed flat to slightly lower (confirming zero `Segmented` fallback spill).
+- **Pinned (1–10 threads, one CPU per core):** 0.5.16/0.5.17 wall is 1.003 [0.963, 1.045] at
+  1 thread, 0.981 [0.953, 1.010] at 2 (CPU 0.979 [0.961, 0.996]), 1.004 [0.982, 1.025] at 4,
+  **0.974 [0.967, 0.982]** at 8 (CPU 0.977 [0.970, 0.985]; 0.428 → 0.437 s) and
+  **0.985 [0.976, 0.995]** at 10 (CPU 0.982 [0.977, 0.987]; 0.440 → 0.448 s). The +8–9 ms
+  worker-CPU overhead matches `within_cap` scanning the 39 Wikidata blocks in `0.10 <= r/n < 0.15`
+  that previously entered `OpenCells` with `Cap::NONE` (to be addressed in a follow-up PR per
+  RELEASING §1).
+- **Unpinned (12–20 threads):** 0.980 [0.934, 1.028] at 12, 0.984 [0.920, 1.053] at 16 and 0.959
+  [0.910, 1.010] at 20 (each interval spanning 1). Across thread counts, median peak RSS over ten
+  rounds ranged from 27.7 to 67.1 MiB, within 1.4 MiB of 0.5.16 at every count (40.6 vs 42.0 MiB
+  at 8 threads). The highest individual peak was 71.6 MiB at four threads.
+- **Attribution (RELEASING §5b):** no thread count clears both the 3% magnitude bar and a 95%
+  interval excluding zero (8 threads is +2.63% [+1.8%, +3.4%], 10 threads +1.52%, 20 threads
+  +4.28% spanning zero); no row.
+
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T214442Z`, evidence
+`0ffba60b` (sha256 `facc37f5…56d4`, commit `01acd74d`, 10 rounds on Wikidata, 400/400 same bytes).
+No team arm is faster than the shipped decoder at any count: `mibz2-team2` is 1.224–2.315 wall and
+`mibz2-team3` is 1.395–2.317 wall at 4–10 threads. At the trimmed worker counts, `mibz2-workers-w`
+is 1.298 [1.275, 1.321] at 6 threads, 1.050 [1.029, 1.072] at 8 and 1.068 [1.030, 1.107] at 10;
+at 4 threads pinned, `mibz2-workers-w` (4 eager workers vs shipped 3) is 0.973 [0.958, 0.989] wall
+for 1.058 [1.047, 1.070] CPU and 84 vs 67 MB RSS. Sanity (the same plan as shipped): 0.982
+[0.953, 1.012] at 5, 0.988 [0.972, 1.004] at 7 and 0.992 [0.967, 1.018] at 9 threads, each
+spanning 1. SMT counts (12, 16, 20), reported only: `mibz2-workers-w` 1.003–1.111 wall (1.283–1.436
+CPU).
+
+## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
+
+### <!-- 3 -->Performance
+
+- *(runs)* widen takes_runs admission to 75% with 12.5% widened-band guard ([#1175](https://github.com/lmmx/mibz2/pull/1175))
+- *(python)* add 1 MiB chunked BZ2Reader.readall() and fast read() path ([#1176](https://github.com/lmmx/mibz2/pull/1176))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* record 0.5.15 i9 crossover verdict and add #1176 ledger row ([#1180](https://github.com/lmmx/mibz2/pull/1180))
+- *(changelog)* 0.5.15 measured notes, feature review, moonshot lockfile, and partial delta ([#1171](https://github.com/lmmx/mibz2/pull/1171))
+- *(explore)* measure bzip2 Huffman self-synchronisation and the selector-count obstruction (STOP) ([#1166](https://github.com/lmmx/mibz2/pull/1166))
+
+### <!-- 6 -->Testing
+
+- *(in-place)* allow Runs-route exact block capacity in trace growth check ([#1185](https://github.com/lmmx/mibz2/pull/1185))
+
+### <!-- 9 -->Other
+
+- record workstation-pressure integration blocked by agent-presence path hold ([#1187](https://github.com/lmmx/mibz2/pull/1187))
+- open release-0-5-16 at P1 ([#1186](https://github.com/lmmx/mibz2/pull/1186))
+- frozen i9 recipe for the text-panel knee probe (text-knee-i9) ([#1139](https://github.com/lmmx/mibz2/pull/1139))
+- dissect src/rle.rs 2-load m1 filter & zero-vzeroupper raw-AVX2 unrle (PASS) ([#1178](https://github.com/lmmx/mibz2/pull/1178))
+- *(parallel)* dissect v0.5.15 5T/7T/9T crossover cliffs and stale LAZY_FROM_THREADS ([#1182](https://github.com/lmmx/mibz2/pull/1182))
+- admit segmented-fused-postwalk (idea -> open) ([#1181](https://github.com/lmmx/mibz2/pull/1181))
+- open crc32-avx2-ring-barrett-build ([#1177](https://github.com/lmmx/mibz2/pull/1177))
+- Record 0.5.15 i9 release-scaling run and close release-0-5-15 ([#1174](https://github.com/lmmx/mibz2/pull/1174))
+- admit post-1080-takes-runs (idea -> open) ([#1173](https://github.com/lmmx/mibz2/pull/1173))
+- record physical i9-10900K STOP verdict for jcc-aligned-release-build ([#1172](https://github.com/lmmx/mibz2/pull/1172))
+
+- **Faster decoding of compressible non-Wikidata blocks (#1175).** The Runs route now admits blocks
+  whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at
+  least 12.5% of their symbols are runs in the widened band. Markdown, ELF, JSON, prose and source
+  blocks with 17–49% run symbols take the branchless run path: MTF plus inverse BWT CPU fell
+  −13% to −32% on markdown, −15% to −25% on ELF and −9% to −10% on JSON across baseline, native and
+  32-byte-aligned builds (local probe, 658/658 blocks exact). No block of Wikidata, `text`,
+  `random`, `records`, `runs`, `onebyte` or `pattern` changes route.
+- **Faster `BZ2Reader.readall()` from Python (#1176):** read in 1 MiB chunks and joined, with a
+  fast path for `read()`.
+
+**The paired run on CI** compared v0.5.15 at `aaaee363` with master at `66511da9` (Benchmark run
+[46035127124](https://github.com/lmmx/mibz2/actions/runs/46035127124), **AMD EPYC 9V74 80-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier data and version numbers from `66511da9` to the `v0.5.16` tag commit `4e261140`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. No corpus is faster or slower at any thread count; Wikidata
+  wall is −0.2% / −0.5% / +0.4% at 1/2/4 threads, every interval spanning no change; the
+  one-thread stage total is 5.83 → 5.91 c/B (+0.2% [−1.6%, +2.1%]).
+- **Why:** none of CI's seven corpora has blocks in the widened band, so #1175's gain is not
+  exercised there. That it routes no CI corpus differently is what the run confirms.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.15 (the same 20 research features). The follow-ons listed under 0.5.15 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1175 changes no block's route on Wikidata,
+the corpus the trims are measured on, and 0.5.15's crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5):** 0.5.16 against 0.5.15 on the i9-10900K
+(`release-scaling/run-20261127T170116Z`, evidence `4710ef99`, sha256 `13998ef2…ab8a`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical): **unchanged at every thread count**, as expected for
+a release that moves no Wikidata block's route.
+- **Pinned (1–10 threads, one CPU per core):** 0.5.15/0.5.16 wall is 1.012 [0.989, 1.035] at
+  1 thread, 1.003 [0.980, 1.026] at 2, 0.994 [0.964, 1.025] at 4, 1.005 [0.999, 1.011] at 8 and
+  1.007 [0.992, 1.022] at 10.
+- **Unpinned (12–20 threads):** 0.995 [0.942, 1.050] at 12, 0.984 [0.955, 1.015] at 16 and 1.025
+  [0.974, 1.079] at 20. Across thread counts, median peak RSS over ten rounds ranged from 28 to
+  71 MiB, within 4 MiB of 0.5.15 at each count. The highest individual peak was 75.6 MiB at four threads.
+- **Attribution (RELEASING §5b):** no step clears the bar; no row.
+
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T171216Z`, evidence
+`51183982` (sha256 `be8305bd…cd8f`, commit `4e261140`, 10 rounds on Wikidata, 400/400 same bytes).
+No forced arm is faster than the shipped decoder at any count where it changes the plan:
+`mibz2-workers-w` is 0.984 [0.959, 1.009] at 4 threads (CPU 1.066), 1.316 at 6, 1.057 at 8 and
+1.052 at 10; `mibz2-team2` and `mibz2-team3` are 1.21–2.35 wall at 4–10 threads. Sanity (the same
+plan as shipped): 1.002 [0.991, 1.014] at 5, 0.977 [0.951, 1.004] at 7 and 1.017 [0.992, 1.042]
+at 9 threads, each spanning 1. SMT counts (12, 16, 20), reported only: workers-w 1.025–1.144.
+
 ## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
 
 ### <!-- 1 -->Features

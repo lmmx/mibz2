@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "idea"
+status = "done"
 owned_paths = ["src/open.rs"]
 mechanisms = ["two-tier-open-admission", "post-1080-route-boundary"]
 needs_louis = ""
@@ -18,6 +18,8 @@ Does replacing `OpenCellsOf::cap` in `src/open.rs` with the zero-extra-memory tw
 """
 why = """
 Primary corpus `text` recovers -12.9%..-20.2% MTF+inverse-BWT CPU (-10.6%..-13.0% even under `#1053+#1110`), and off-Wikidata `prose`/`rustsrc`/`logs`/`json` recover -6.1%..-16.8% (up to -27.1% with O(1) `thin_rows`), with -1.2%..-3.7% faster Wikidata and zero regressions across 18/18 base+JCC-32B cells — in ~10 lines of 100% safe Rust with zero extra memory.
+
+Memory caution (#1194, eager-cells-and-seq-open-dissection.md §3.4): the two-tier `R2_2tier_m22` arm refuses 9 full wikidata blocks (4 MidRef + 5 Dense, m/n 0.221-0.257, r/n 0.15-0.17) that shipped OpenCells admits, so every worker permanently allocates the `Segmented` fallback (+7.8 / +12.8 / +15.7 MiB peak RSS at t = 1 / 2 / 3; projected +55-65 MiB at 8 workers). Any admission rule taken here must keep wikidata at 233/233 Open (e.g. m/n cap 0.26 over 0.10 <= r/n < 0.17, text Dense blocks being m/n >= 0.30) or free the fallback buffers, and should check peak RSS as well as CPU.
 """
 stop_test = """
 Frozen before data:
@@ -35,6 +37,7 @@ premises = [
   "docs/journal/2026-11-27-explore/segmented-fallback-dissection.md",
 ]
 links = [
+  "docs/journal/2026-11-27-explore/eager-cells-and-seq-open-dissection.md",
   "examples/route_crossover_probe.rs",
   "frontier/deltas/2026-11-27-explore-route-crossover.md",
   "frontier/claims/dense-cap-precheck.toml",

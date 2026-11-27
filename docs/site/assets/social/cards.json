@@ -356,6 +356,13 @@
     "section": " · Research blog",
     "title": "Stages built to fit together: a new shape for the decoder's workers"
   },
+  "assets/social/blog-2026-11-27-why-the-scaling-ceiling-moves.png": {
+    "description": "On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Why compression ratio moves the scaling ceiling"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

@@ -1,0 +1,42 @@
+id = "lanes-disjoint-slabs-build"
+title = "Safe disjoint-slab 4-lane forward emission with inline LONG fast-path in src/open/lanes.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "done"
+owned_paths = ["src/open/lanes.rs"]
+mechanisms = ["forward-lanes-disjoint-slabs", "forward-lanes-inline-long"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/open-lanes-spelling-and-b5-dissection.md` audited `objdump -d` of `#1110`'s `src/open/lanes.rs` (`--features forward-anchor-lanes`) and uncovered three compounding overheads in production `Walk::run::<4>`:
+1. `#[inline(always)] fn run<const K: usize>` inlines all four `K=4,3,2,1` loops into `<Kernel>::walk` (3,728 insns, `0x448` stack frame, `1,178` stack ops, `69` `vzeroupper`s on JCC-32B native), spilling `bits`, `mask`, `edges.ptr`, `lens`, `inline`, `j[0..4]`, `at[0..4]`, and `end[0..4]` to stack.
+2. Every `LONG` word (`1,708,133` steps = `6.43%` of steps / `23.3%` of `K=4` rounds) calls `#[cold] #[inline(never)] word_slow` with `std::mem::take(&mut self.bytes)` + 40-byte `Lane` stack copy, even though **`99.70%` (`1,702,999`) of `LONG` words fit in the current 32 KiB slab** (only `16,000` steps total cross a slab boundary — a `107.4x` unnecessary cold-call inflation).
+3. `bytes[at[i]..at[i] + INLINE]` fails to prove `at + 16 <= bytes.len()` from `at + 16 <= end[i]`, emitting 20 bounds/overflow checks per 4-lane iteration.
+
+In the 100% safe-Rust probe (`L3_disjoint_safe`: `#[inline(never)] run<K>` + per-lane owned `Box<[u8; 32768]>` slabs with compile-time `off <= SLAB - INLINE` + inline `LONG`-fits-in-slab + lazy slab pool + `out.reserve(n)` stitch; **zero `unsafe`**, 233/233 Wikidata Open + guard blocks 100% byte+CRC exact), `L3` shrinks `run<4>` to `531..567` insns (`0x98` frame, `0` `vzeroupper`), cuts `lanes::walk` by **-17.13% warm / -22.96% L3-cold** (baseline x86-64) and **-12.23% warm / -18.72% L3-cold** (JCC-32B native), cuts `lanes::walk + A9` by **-15.53% / -19.82%** (baseline) and **-10.67% / -16.91%** (JCC-32B, all 4/4 disjoint FASTER, ~`-11%` of `W_open` L3-cold), captures 99–100% of the `unsafe` zero-bounds-check ceiling (`L4`), AND shrinks per-worker `Arena` memory by **-95.8 KiB** (`1,056.8 -> 961.0 KiB`, `-766 KiB` at 8W).
+
+Does porting `L3_disjoint_safe` into `src/open/lanes.rs` (zero `unsafe`) preserve 100% exactness and Miri cleanliness while cutting `--features forward-anchor-lanes` worker CPU and peak RSS ahead of `forward-emission-run`?
+"""
+why = """
+Directly accelerates the #1 worker stage (`A7 = 44.8–47.6%` of `W_open` L3-cold) on Wikidata where `k* = 9.46` makes worker gains pay 1:1 at 8T/10T on physical i9-10900K, while simultaneously cutting per-worker Arena footprint by `-96 KiB` (`-766 KiB` at 8W) with zero new `unsafe` (ordinary author-owned integration).
+"""
+stop_test = """
+Frozen before code:
+1. Exactness & safety: zero `unsafe` in `src/open/lanes.rs`; 100% byte-, CRC-, and fallback-identical across all existing `lanes::tests::*`, `open::b5::*`, Miri (`miri_forward_anchor_lanes`), `fuzz-smoke`, and all 7 CI corpora under `--features forward-anchor-lanes`.
+2. Paired A/B performance (`examples/ab.rs --features forward-anchor-lanes` on Wikidata 1T/2T/4T + CI): statistically significant wall/CPU speedup on Wikidata under `--features forward-anchor-lanes` (expected >= 5% at 1T on `OpenCells` walk), zero regression on any guard corpus, and equal or lower peak RSS (`<= 1.00x` vs `#1110` `forward-anchor-lanes`).
+"""
+done_when = """
+Zero-`unsafe` PR updating `src/open/lanes.rs` passing `cargo test --features forward-anchor-lanes`, Miri, clippy, and paired `ab` verification against `#1110`, merged cleanly with a delta and `surface.tsv` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/open-lanes-spelling-and-b5-dissection.md",
+  "src/open/lanes.rs",
+  "docs/journal/2026-11-27-forward-emission/registration.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "examples/open_lanes_b5_dissection.rs",
+  "frontier/claims/forward-emission-run.toml",
+  "frontier/deltas/2026-11-27-explore-open-lanes-spelling-b5.md",
+]
