@@ -1,9 +1,9 @@
-id = "synthesise"
-holder = "claude-code"
-session = "e2b5d1862103"
-claimed_at = "2026-11-27T13:21:27+00:00"
-expires = "2026-11-27T16:21:27+00:00"
-owned_paths = []
-mechanisms = []
-base = "67fd22e013f7bbac3c5844829cd6d8415f7646bc"
+id = "forward-emission-run"
+holder = "antigravity"
+session = "590375097c16"
+claimed_at = "2026-11-27T13:36:18+00:00"
+expires = "2026-11-27T21:36:18+00:00"
+owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
+mechanisms = ["forward-lanes-workstation-validation"]
+base = "dd93541881b29d7137066e07236095c70cd7ca1d"
 released = false
