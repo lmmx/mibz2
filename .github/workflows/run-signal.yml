@@ -2,18 +2,29 @@
 #   ready/<recipe>  a lightweight tag at the exact commit to run;
 #   hold/<recipe>   stop the waiting script without running anything.
 # A tag pushed with GITHUB_TOKEN starts no other workflow.
+#
+# Run requests (claim declarative-ready-signal): a participant that can push a branch but not
+# dispatch this workflow publishes refs/heads/run-request/<recipe>/<id>
+# (python3 bench/run_requests.py publish ...). The reconcile job, on a schedule and only ever
+# from the default branch, reads every request as untrusted data and sets the same ready/hold
+# tags, with a receipt tag, only when the recipe is queued, the queue claim's lease is live,
+# the exact head is reviewed and green and nothing holds it (bench/run_requests.py's docstring
+# has every condition). It never checks out or runs a request or a candidate. A push to a
+# request branch starts nothing: `schedule` runs this file as it is on the default branch.
 name: Run signal
 
 on:
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       signal:
-        description: "ready, hold, or clear (delete both tags)"
+        description: "ready, hold, clear (delete both tags), or reconcile (decide run requests now)"
         required: true
         type: choice
-        options: [ready, hold, clear]
+        options: [ready, hold, clear, reconcile]
       recipe:
-        description: "the recipe, e.g. bench-pipelined-default"
+        description: "the recipe, e.g. bench-pipelined-default (any value for reconcile)"
         required: true
         type: string
       sha:
@@ -24,8 +35,14 @@ on:
 permissions:
   contents: write
 
+# manual signals and the reconciler take turns, so neither reads tags the other is moving
+concurrency:
+  group: run-signal
+  cancel-in-progress: false
+
 jobs:
   signal:
+    if: github.event_name == 'workflow_dispatch' && inputs.signal != 'reconcile'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,3 +81,31 @@ jobs:
             got=$(git ls-remote --tags origin "refs/tags/ready/$RECIPE" | awk '{print $1}')
             [[ "$got" == "$SHA" ]] || { echo "::error::ready/$RECIPE is at '${got:-nothing}' on origin, not $SHA"; exit 1; }
           fi
+
+  reconcile:
+    # scheduled runs use the default branch's copy of this file and of bench/run_requests.py;
+    # a manual reconcile must be dispatched on the default branch too
+    if: >-
+      (github.event_name == 'schedule' || inputs.signal == 'reconcile')
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      checks: read
+      statuses: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # history for the ancestry check, without the evidence branch's tarballs: blobs are
+          # fetched only when read (a request, a lease, the queue file, a claim)
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: true
+      - name: Decide the run requests and set the signals they earn
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          python3 bench/run_requests.py reconcile --apply --default "$DEFAULT_BRANCH"

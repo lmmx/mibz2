@@ -29,10 +29,18 @@ SESSION = "abcdef123456"
 
 
 def git(cwd, *args, input=None):
-    env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t",
-               GIT_COMMITTER_EMAIL="t@t", GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null")
-    return subprocess.run(["git", *args], cwd=cwd, env=env, check=True, capture_output=True,
-                          text=True, input=input).stdout.strip()
+    env = dict(
+        os.environ,
+        GIT_AUTHOR_NAME="t",
+        GIT_AUTHOR_EMAIL="t@t",
+        GIT_COMMITTER_NAME="t",
+        GIT_COMMITTER_EMAIL="t@t",
+        GIT_CONFIG_GLOBAL="/dev/null",
+        GIT_CONFIG_SYSTEM="/dev/null",
+    )
+    return subprocess.run(
+        ["git", *args], cwd=cwd, env=env, check=True, capture_output=True, text=True, input=input
+    ).stdout.strip()
 
 
 class FakeAPI:
@@ -73,40 +81,62 @@ class Fixture(unittest.TestCase):
         (w / "bench").mkdir()
         (w / "frontier" / "claims").mkdir(parents=True)
         (w / "bench" / "workstation-queue.txt").write_text(
-            "# repo: o/r\n# channel: 1\n"
-            f"{RECIPE:<28} {BRANCH:<24} the demo recipe\n")
+            f"# repo: o/r\n# channel: 1\n{RECIPE:<28} {BRANCH:<24} the demo recipe\n"
+        )
         self.write_claim()
-        git(w, "add", "-A"); git(w, "commit", "-qm", "master")
+        git(w, "add", "-A")
+        git(w, "commit", "-qm", "master")
         git(w, "push", "-q", "origin", "master")
         git(w, "checkout", "-qb", BRANCH)
         (w / "recipe.txt").write_text("candidate\n")
-        git(w, "add", "-A"); git(w, "commit", "-qm", "candidate")
+        git(w, "add", "-A")
+        git(w, "commit", "-qm", "candidate")
         self.sha = git(w, "rev-parse", "HEAD")
         git(w, "push", "-q", "origin", BRANCH)
         git(w, "checkout", "-q", "master")
         self.set_lease()
         self.api = FakeAPI()
-        self.api.prs[7] = {"state": "open", "merged": False,
-                           "head": {"sha": self.sha, "ref": BRANCH}}
-        self.api.reviews[7] = [{"id": 99, "commit_id": self.sha, "state": "COMMENTED",
-                                "body": "Independent recipe review passed."}]
-        self.api.checks[self.sha] = {"total_count": 2, "check_runs": [
-            {"name": "rust", "status": "completed", "conclusion": "success"},
-            {"name": "pre-commit", "status": "completed", "conclusion": "skipped"}]}
+        self.api.prs[7] = {
+            "state": "open",
+            "merged": False,
+            "head": {"sha": self.sha, "ref": BRANCH},
+        }
+        self.api.reviews[7] = [
+            {
+                "id": 99,
+                "commit_id": self.sha,
+                "state": "COMMENTED",
+                "body": "Independent recipe review passed.",
+            }
+        ]
+        self.api.checks[self.sha] = {
+            "total_count": 2,
+            "check_runs": [
+                {"name": "rust", "status": "completed", "conclusion": "success"},
+                {"name": "pre-commit", "status": "completed", "conclusion": "skipped"},
+            ],
+        }
         self.api.statuses[self.sha] = {"state": "success", "total_count": 1}
 
     def write_claim(self, **over):
-        fields = {"id": CLAIM, "status": "open", "mechanisms": ["workstation-queue"],
-                  "owned_paths": ["bench/workstation-queue.txt"]}
+        fields = {
+            "id": CLAIM,
+            "status": "open",
+            "mechanisms": ["workstation-queue"],
+            "owned_paths": ["bench/workstation-queue.txt"],
+        }
         fields.update(over)
         lines = [f"{k} = {json.dumps(v)}" for k, v in fields.items()]
         (self.work / "frontier" / "claims" / f"{CLAIM}.toml").write_text("\n".join(lines) + "\n")
 
-    def set_lease(self, session=SESSION, expires="2026-11-27T12:00:00+00:00", released=False,
-                  claim=CLAIM):
-        lease = (f'id = "{claim}"\nholder = "x"\nsession = "{session}"\n'
-                 f'claimed_at = "2026-11-27T06:00:00+00:00"\nexpires = "{expires}"\n'
-                 f'owned_paths = ["bench/workstation-queue.txt"]\nreleased = {str(released).lower()}\n')
+    def set_lease(
+        self, session=SESSION, expires="2026-11-27T12:00:00+00:00", released=False, claim=CLAIM
+    ):
+        lease = (
+            f'id = "{claim}"\nholder = "x"\nsession = "{session}"\n'
+            f'claimed_at = "2026-11-27T06:00:00+00:00"\nexpires = "{expires}"\n'
+            f'owned_paths = ["bench/workstation-queue.txt"]\nreleased = {str(released).lower()}\n'
+        )
         blob = git(self.work, "hash-object", "-w", "--stdin", input=lease)
         tree = git(self.work, "mktree", input=f"100644 blob {blob}\tlease.toml\n")
         commit = git(self.work, "commit-tree", tree, "-m", "lease")
@@ -116,8 +146,15 @@ class Fixture(unittest.TestCase):
         return rr.World(remote=str(self.origin), repo="o/r", api=self.api, cwd=self.work)
 
     def publish(self, **over):
-        fields = dict(recipe=RECIPE, sha=self.sha, branch=BRANCH, claim=CLAIM,
-                      session=SESSION, pr=7, review=99)
+        fields = dict(
+            recipe=RECIPE,
+            sha=self.sha,
+            branch=BRANCH,
+            claim=CLAIM,
+            session=SESSION,
+            pr=7,
+            review=99,
+        )
         fields.update(over)
         return rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, **fields)
 
@@ -125,8 +162,9 @@ class Fixture(unittest.TestCase):
         return rr.reconcile(self.world(), now=NOW, apply=True)
 
     def tag(self, name):
-        out = git(self.work, "ls-remote", str(self.origin), f"refs/tags/{name}",
-                  f"refs/tags/{name}^{{}}")
+        out = git(
+            self.work, "ls-remote", str(self.origin), f"refs/tags/{name}", f"refs/tags/{name}^{{}}"
+        )
         lines = dict(reversed(line.split("\t")) for line in out.splitlines())
         return lines.get(f"refs/tags/{name}^{{}}") or lines.get(f"refs/tags/{name}")
 
@@ -156,7 +194,8 @@ class Activation(Fixture):
         other = "bench-other"
         q = self.work / "bench" / "workstation-queue.txt"
         q.write_text(q.read_text() + f"{other:<28} {BRANCH:<24} another\n")
-        git(self.work, "commit", "-qam", "q"); git(self.work, "push", "-q", "origin", "master")
+        git(self.work, "commit", "-qam", "q")
+        git(self.work, "push", "-q", "origin", "master")
         a = self.publish()
         b = self.publish(recipe=other)
         self.assertNotEqual(a, b)
@@ -165,109 +204,147 @@ class Activation(Fixture):
         self.assertEqual(self.tag(f"ready/{other}"), self.sha)
 
     def test_two_requests_for_the_same_run_activate_once(self):
-        self.publish(); self.publish()
+        self.publish()
+        self.publish()
         outcomes = sorted(d.outcome for d in self.reconcile())
         self.assertEqual(outcomes, ["activated", "done"], outcomes)
 
 
 class Refusal(Fixture):
     def refused(self, needle):
+        before = self.tag(f"ready/{RECIPE}")
         report = self.reconcile()
         self.assertEqual(len(report), 1, report)
         self.assertEqual(report[0].outcome, "refused", report)
         self.assertIn(needle, report[0].reason)
-        self.assertIsNone(self.tag(f"ready/{RECIPE}"))
+        self.assertEqual(self.tag(f"ready/{RECIPE}"), before)  # refused: nothing moved
 
     def test_hold_tag_takes_precedence(self):
         git(self.work, "push", "-q", "origin", f"{self.sha}:refs/tags/hold/{RECIPE}")
-        self.publish(); self.refused("hold")
+        self.publish()
+        self.refused("hold")
 
     def test_no_queue_entry(self):
-        self.publish(recipe="bench-unlisted"); self.refused("queue")
+        self.publish(recipe="bench-unlisted")
+        self.refused("queue")
 
     def test_branch_mismatch_with_queue(self):
-        self.publish(branch="bench/elsewhere"); self.refused("queue")
+        self.publish(branch="bench/elsewhere")
+        self.refused("queue")
 
     def test_commit_not_on_branch(self):
-        stray = git(self.work, "rev-parse", "master")
+        # a commit on origin but not on the branch (master's commit is the branch's ancestor)
+        tree = git(self.work, "rev-parse", "master^{tree}")
+        stray = git(self.work, "commit-tree", tree, "-m", "stray")
+        git(self.work, "push", "-q", "origin", f"{stray}:refs/heads/elsewhere")
         self.api.prs[7]["head"]["sha"] = stray
-        self.publish(sha=stray); self.refused("not on")
+        self.publish(sha=stray)
+        self.refused("not on")
 
     def test_moved_pr_head(self):
         self.api.prs[7]["head"]["sha"] = "f" * 40
-        self.publish(); self.refused("head")
+        self.publish()
+        self.refused("head")
 
     def test_stale_review(self):
         self.api.reviews[7][0]["commit_id"] = "e" * 40
-        self.publish(); self.refused("review")
+        self.publish()
+        self.refused("review")
 
     def test_changes_requested_at_head(self):
-        self.api.reviews[7].append({"id": 100, "commit_id": self.sha,
-                                    "state": "CHANGES_REQUESTED", "body": "no"})
-        self.publish(); self.refused("changes")
+        self.api.reviews[7].append(
+            {"id": 100, "commit_id": self.sha, "state": "CHANGES_REQUESTED", "body": "no"}
+        )
+        self.publish()
+        self.refused("changes")
 
     def test_failed_check(self):
         self.api.checks[self.sha]["check_runs"][0]["conclusion"] = "failure"
-        self.publish(); self.refused("check")
+        self.publish()
+        self.refused("check")
 
     def test_pending_check(self):
         self.api.checks[self.sha]["check_runs"][0].update(status="in_progress", conclusion=None)
-        self.publish(); self.refused("check")
+        self.publish()
+        self.refused("check")
 
     def test_no_checks_at_all(self):
         self.api.checks[self.sha] = {"total_count": 0, "check_runs": []}
-        self.publish(); self.refused("check")
+        self.publish()
+        self.refused("check")
 
     def test_status_error_holds_like_a_red_check(self):
         self.api.statuses[self.sha] = {"state": "error", "total_count": 1}
-        self.publish(); self.refused("status")
+        self.publish()
+        self.refused("status")
 
     def test_macos_setup_outage_does_not_hold(self):
         self.api.checks[self.sha]["check_runs"].append(
-            {"name": "wheel (macos-14)", "status": "queued", "conclusion": None})
+            {"name": "wheel (macos-14)", "status": "queued", "conclusion": None}
+        )
         self.publish()
         self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
 
     def test_macos_real_failure_holds(self):
         self.api.checks[self.sha]["check_runs"].append(
-            {"name": "wheel (macos-14)", "status": "completed", "conclusion": "failure"})
-        self.publish(); self.refused("check")
+            {"name": "wheel (macos-14)", "status": "completed", "conclusion": "failure"}
+        )
+        self.publish()
+        self.refused("check")
 
     def test_api_unavailable_fails_closed(self):
         self.api.down = True
-        self.publish(); self.refused("unavailable")
+        self.publish()
+        self.refused("unavailable")
 
     def test_lease_session_mismatch(self):
-        self.publish(session="000000000000"); self.refused("lease")
+        self.publish(session="000000000000")
+        self.refused("lease")
 
     def test_lease_expired(self):
         self.set_lease(expires="2026-11-27T08:00:00+00:00")
-        self.publish(); self.refused("lease")
+        self.publish()
+        self.refused("lease")
 
     def test_lease_released(self):
         self.set_lease(released=True)
-        self.publish(); self.refused("lease")
+        self.publish()
+        self.refused("lease")
 
     def test_claim_without_queue_mechanism(self):
         self.write_claim(mechanisms=["other"], owned_paths=["src/"])
-        git(self.work, "commit", "-qam", "c"); git(self.work, "push", "-q", "origin", "master")
-        self.publish(); self.refused("claim")
+        git(self.work, "commit", "-qam", "c")
+        git(self.work, "push", "-q", "origin", "master")
+        self.publish()
+        self.refused("claim")
 
     def test_claim_needing_louis(self):
         self.write_claim(needs_louis="a decision")
-        git(self.work, "commit", "-qam", "c"); git(self.work, "push", "-q", "origin", "master")
-        self.publish(); self.refused("claim")
+        git(self.work, "commit", "-qam", "c")
+        git(self.work, "push", "-q", "origin", "master")
+        self.publish()
+        self.refused("claim")
 
     def test_ready_already_elsewhere_without_supersedes(self):
         other = git(self.work, "rev-parse", "master")
         git(self.work, "push", "-q", "origin", f"{other}:refs/tags/ready/{RECIPE}")
-        self.publish(); self.refused("ready/")
+        self.publish()
+        self.refused("ready/")
         self.assertEqual(self.tag(f"ready/{RECIPE}"), other)
 
     def test_expired_request(self):
-        rr.publish(remote=str(self.origin), cwd=self.work, now=NOW - dt.timedelta(hours=73),
-                   recipe=RECIPE, sha=self.sha, branch=BRANCH, claim=CLAIM, session=SESSION,
-                   pr=7, review=99)
+        rr.publish(
+            remote=str(self.origin),
+            cwd=self.work,
+            now=NOW - dt.timedelta(hours=73),
+            recipe=RECIPE,
+            sha=self.sha,
+            branch=BRANCH,
+            claim=CLAIM,
+            session=SESSION,
+            pr=7,
+            review=99,
+        )
         self.refused("expired")
 
 
@@ -279,9 +356,20 @@ class Malformed(Fixture):
         git(self.work, "push", "-q", "origin", f"{commit}:refs/heads/run-request/{recipe}/{name}")
 
     def test_malformed_requests_are_refused_not_crashing(self):
-        good = rr.render(dict(version=1, action="ready", recipe=RECIPE, sha=self.sha,
-                              branch=BRANCH, claim=CLAIM, session=SESSION, pr=7, review=99,
-                              created=NOW.isoformat()))
+        good = rr.render(
+            dict(
+                version=1,
+                action="ready",
+                recipe=RECIPE,
+                sha=self.sha,
+                branch=BRANCH,
+                claim=CLAIM,
+                session=SESSION,
+                pr=7,
+                review=99,
+                created=NOW.isoformat(),
+            )
+        )
         cases = {
             "aaaaaaaaaaa1": "not toml [[[",
             "aaaaaaaaaaa2": good.replace(self.sha, self.sha[:12]),
@@ -299,9 +387,20 @@ class Malformed(Fixture):
         self.assertIsNone(self.tag(f"ready/{RECIPE}"))
 
     def test_bad_ref_names_are_ignored(self):
-        good = rr.render(dict(version=1, action="ready", recipe=RECIPE, sha=self.sha,
-                              branch=BRANCH, claim=CLAIM, session=SESSION, pr=7, review=99,
-                              created=NOW.isoformat()))
+        good = rr.render(
+            dict(
+                version=1,
+                action="ready",
+                recipe=RECIPE,
+                sha=self.sha,
+                branch=BRANCH,
+                claim=CLAIM,
+                session=SESSION,
+                pr=7,
+                review=99,
+                created=NOW.isoformat(),
+            )
+        )
         self.raw_request(good, recipe="Bad_Recipe", name="0123456789ab")
         self.raw_request(good, name="short")
         self.assertEqual(self.reconcile(), [])
@@ -317,7 +416,8 @@ class Replay(Fixture):
         self.assertIsNone(self.tag(f"ready/{RECIPE}"))
 
     def test_new_request_for_a_received_run_is_done_not_rerun(self):
-        self.publish(); self.reconcile()
+        self.publish()
+        self.reconcile()
         git(self.work, "push", "-q", "origin", "--delete", f"refs/tags/ready/{RECIPE}")
         self.publish()
         self.assertEqual(sorted(d.outcome for d in self.reconcile()), ["done", "done"])
@@ -337,8 +437,13 @@ class Replay(Fixture):
         self.assertEqual(self.tag(f"ready/{RECIPE}"), self.sha)
 
     def test_supersedes_must_match_the_current_tag(self):
-        git(self.work, "push", "-q", "origin",
-            f"{git(self.work, 'rev-parse', 'master')}:refs/tags/ready/{RECIPE}")
+        git(
+            self.work,
+            "push",
+            "-q",
+            "origin",
+            f"{git(self.work, 'rev-parse', 'master')}:refs/tags/ready/{RECIPE}",
+        )
         self.publish(supersedes="d" * 40)
         report = self.reconcile()
         self.assertEqual(report[0].outcome, "refused")
@@ -348,14 +453,14 @@ class Replay(Fixture):
 class Hold(Fixture):
     def test_hold_request_sets_hold_without_review_or_ci(self):
         self.api.down = True  # a hold needs no API: it only ever stops work
-        rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, action="hold",
-                   recipe=RECIPE)
+        rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, action="hold", recipe=RECIPE)
         self.assertEqual([d.outcome for d in self.reconcile()], ["activated"])
         self.assertIsNotNone(self.tag(f"hold/{RECIPE}"))
 
     def test_hold_request_for_unqueued_recipe_is_refused(self):
-        rr.publish(remote=str(self.origin), cwd=self.work, now=NOW, action="hold",
-                   recipe="bench-unlisted")
+        rr.publish(
+            remote=str(self.origin), cwd=self.work, now=NOW, action="hold", recipe="bench-unlisted"
+        )
         self.assertEqual([d.outcome for d in self.reconcile()], ["refused"])
 
 
