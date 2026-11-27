@@ -1,0 +1,9 @@
+id = "branch-protection"
+holder = "claude-code"
+session = "b6c73c0e2c36"
+claimed_at = "2026-11-27T00:31:36+00:00"
+expires = "2026-11-27T08:31:36+00:00"
+owned_paths = []
+mechanisms = []
+base = "df682f8875fbc0c9952714ec09f0db708c46837e"
+released = false
