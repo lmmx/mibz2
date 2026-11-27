@@ -292,8 +292,11 @@ const MAX_PACKED_RUN: u64 = (1 << 24) - 1;
 #[repr(align(64))]
 struct MtfRows([u8; 224]);
 
+/// The AVX2 front's state between batches. `repr(C)` fixes `front` at offset 0 of a 64-aligned
+/// struct, which `fill_batch_avx2`'s aligned 16-byte loads and stores of it rely on (under the
+/// default layout the compiler may place it anywhere); `rows` is 64-aligned by its own type.
 #[cfg(target_arch = "x86_64")]
-#[repr(align(64))]
+#[repr(C, align(64))]
 struct BatchState {
     front: [u8; 32],
     rows: MtfRows,
@@ -486,7 +489,8 @@ unsafe fn fill_batch_avx2(
     use super::STEPS;
     use std::arch::x86_64::*;
 
-    // SAFETY: `BatchState` is 64-byte aligned, so `front` (offset 0) is 16-byte aligned
+    // SAFETY: `BatchState` is `repr(C, align(64))` with `front` first, so `front` is at offset 0
+    // of a 64-aligned value and both its halves are 16-byte aligned
     let mut f0 = _mm_load_si128(st.front.as_ptr() as *const __m128i);
     let mut f1 = _mm_load_si128(st.front.as_ptr().add(16) as *const __m128i);
     let tail = st.rows.0.as_mut_ptr();
