@@ -1,0 +1,25 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index b2edcf433e..87ea2413e9 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1173,6 +1173,7 @@ impl Source for ChannelSource<'_> {
+             if self.shared.lock().cancelled {
+                 return Err(ErrorKind::Cancelled);
+             }
++            mark!(WindowWorkEnd);
+         }
+         let i = (from - self.base) as usize;
+         Ok((self.buf.get(i..).unwrap_or(&[]), self.eof))
+diff --git a/src/trace.rs b/src/trace.rs
+index 354809f5c2..016eefd969 100644
+--- a/src/trace.rs
++++ b/src/trace.rs
+@@ -43,6 +43,8 @@ pub enum Kind {
+     InputWait,
+     InputGot,
+     InputEnd,
++    WindowResume,
++    WindowWorkEnd,
+     /// the scanner: before it looks for a slot, and once it has one
+     SlotWait,
+     SlotGot,

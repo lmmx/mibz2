@@ -2153,3 +2153,178 @@ bench-jcc-aligned-release:
     }
     trap finish EXIT
     python3 bench/jcc_aligned.py "$out"
+
+# Frozen C6 adoption run for the adaptive lookahead and one-shot seam window
+# (`scanner-adaptive-seam-window`, docs/journal/2026-11-27-scanner-adaptive-seam-window/registration.md):
+# HEAD_SHA against BASE_SHA (its merge base with master, checked in a private repository fetched
+# from origin: shallow-safe, bench/scanner_adaptive_seam_source.py) on wikidata-x4, unpinned at
+# 6, 8, 9, 10 and 12 threads, 16 paired rounds, settle 2 s, 100 ms pre-spin with --machine-state.
+# ADOPTS iff traced in_maint at 10 threads (8 workers) drops >= 85% with window capacity <= 1.00x,
+# 10 and 12 threads are both FASTER, none of 6, 8, 9 is SLOWER, and median peak RSS <= 1.05x at
+# every count (bench/scanner_adaptive_seam.py). Diagnostic (decides nothing): mibz2-workers-lazy
+# at 8, 9, 10 explicit workers.
+#   just submit bench-scanner-adaptive-seam <head-sha> <base-sha>
+# DRY (3rd arg: 2 rounds, no settle, machine not checked; wiring only, never evidence):
+#   just bench-scanner-adaptive-seam <head-sha> <base-sha> 1
+bench-scanner-adaptive-seam HEAD_SHA BASE_SHA DRY="":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    HEAD_SHA="{{HEAD_SHA}}" BASE_SHA="{{BASE_SHA}}" dry="{{DRY}}"
+    unset AB_SHA256 AB_READ_BUF
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=6,8,9,10,12 JUDGED=10,12 SUPPORTING=6,8,9 LAZY=8,9,10
+    TRACE_ROUNDS=3 PRESPIN=100
+    [ -z "$dry" ] || { ROUNDS=2; SETTLE=0; TRACE_ROUNDS=1; }
+    WARM="--prespin-ms $PRESPIN --machine-state"
+    W=$PWD/target/scanner-adaptive-seam
+    mkdir -p "$W" || exit 1
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O" || exit 1
+    exec 3>&1 4>&2
+    exec > >(tee -a "$O/console.log") 2>&1
+    TEE=$!
+    echo "bench-scanner-adaptive-seam (docs/journal/2026-11-27-scanner-adaptive-seam-window/registration.md) at $(git rev-parse HEAD): head $HEAD_SHA vs base $BASE_SHA, unpinned at $THREADS threads (judged $JUDGED, supporting $SUPPORTING), $ROUNDS paired rounds, settle $SETTLE s, prespin $PRESPIN ms, wikidata-x$COPIES"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$dry" ] || echo "bench-scanner-adaptive-seam: DRY RUN (wiring only, never evidence)" | tee "$O/DRY-RUN.txt"
+    P=$O/private
+    X4=$W/wikidata-x$COPIES.bz2
+    corpus=corpora/wikidata.bz2
+    AB=$P/build-head/target/release/examples/ab
+    BAB=$P/build-base/target/release/examples/ab
+    export RUSTUP_TOOLCHAIN=1.99.1
+    printf 'phase\trc\tstarted\tfinished\tlast\n' > "$O/phases.tsv"
+    FAILED=
+    finish() {
+      local rc=0
+      [ -z "$FAILED" ] || { echo "bench-scanner-adaptive-seam: failed phases:$FAILED"; rc=1; }
+      date -u +%FT%TZ > "$O/finished.txt"
+      exec >&3 2>&4
+      wait "$TEE" 2>/dev/null || true
+      # the private sources and builds are not evidence (their digests are)
+      rm -rf -- "$P"
+      bash bench/bundle.sh "$O"
+      exit "$rc"
+    }
+    trap finish EXIT
+    phase() {
+      local name=$1 deps=$2; shift 2
+      local t0 d rc last
+      t0=$(date -u +%FT%TZ)
+      for d in ${deps//,/ }; do
+        [ "$d" = "-" ] && continue
+        if [[ " $FAILED " == *" $d "* ]]; then
+          printf '%s\tSKIPPED\t%s\t%s\tprerequisite %s failed\n' "$name" "$t0" "$t0" "$d" >> "$O/phases.tsv"
+          FAILED="$FAILED $name"
+          return 0
+        fi
+      done
+      echo "== $t0 phase $name"
+      ( set -euo pipefail; "$@" ) 2>&1 | tee "$O/phase-$name.log"
+      rc=${PIPESTATUS[0]}
+      last=$(grep . "$O/phase-$name.log" | tail -1 | tr '\t' ' ' | cut -c1-300)
+      printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$rc" "$t0" "$(date -u +%FT%TZ)" "$last" >> "$O/phases.tsv"
+      if [ "$rc" != 0 ]; then
+        echo "bench-scanner-adaptive-seam: phase $name FAILED (exit $rc): $last; carrying on"
+        FAILED="$FAILED $name"
+      fi
+    }
+    resolve() {
+      git rev-parse HEAD > "$O/commit.txt"
+      python3 bench/scanner_adaptive_seam_source.py "$(git remote get-url origin)" "$HEAD_SHA" "$BASE_SHA" "$P" \
+        | tee "$O/sources.json"
+      git -C "$P/repo" diff "$BASE_SHA" "$HEAD_SHA" -- src examples tests > "$O/src-head-against-base.diff"
+      rustc -V | grep -q '^rustc 1\.99\.1 ' \
+        || { echo "bench-scanner-adaptive-seam: rustc 1.99.1 is required"; exit 1; }
+      { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    }
+    build() {
+      local b=$1
+      (cd "$P/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-scanner-adaptive-seam: build-$b toolchain differs"; exit 1; }
+      (cd "$P/build-$b" && cargo build -q --locked --release --example ab --example windows)
+      sha256sum "$P/build-$b/target/release/examples/ab" | tee -a "$O/binaries.sha256"
+    }
+    inputs() {
+      local want dir
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+        dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+        if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+          git fetch -q --depth 1 origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+            && git archive origin/bench-data "$dir" | tar -x || true
+        fi
+        python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+        mkdir -p corpora
+        python3 bench/wikidata.py build bench/wikidata.json "$dir" "$P/build-head/target/release/examples/windows" "$corpus"
+      fi
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+        || { echo "bench-scanner-adaptive-seam: $corpus digest mismatch"; exit 1; }
+      : > "$X4"
+      for i in $(seq $COPIES); do cat "$corpus" >> "$X4"; done
+      sha256sum "$corpus" "$X4" | tee "$O/inputs.sha256"
+      echo "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  $X4" | sha256sum --check
+    }
+    machine() {
+      "$AB" env > "$O/env.json"
+      lscpu > "$O/lscpu.txt"
+      lscpu -e > "$O/lscpu-e.txt" || true
+      grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+      cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+      uname -a > "$O/uname.txt"
+      cat "$O/env.json"
+    }
+    exactness() {
+      python3 bench/scanner_adaptive_seam_identity.py reference "$X4" "$BAB" "$AB" > "$O/identity.json"
+    }
+    timed() {
+      "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
+        --settle $SETTLE $WARM "$X4"
+      "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+      date -u +%FT%TZ > "$O/timed.txt"
+    }
+    lazy() {
+      "$AB" run "$O/lazy.jsonl" --arms "mibz2-workers-lazy@$BAB,mibz2-workers-lazy" --threads $LAZY \
+        --rounds $ROUNDS --settle $SETTLE $WARM "$X4"
+      "$AB" summary "$O/lazy.jsonl" --ref "mibz2-workers-lazy@$BAB" | tee "$O/lazy-summary.txt"
+    }
+    lazy_report() {
+      python3 bench/scanner_adaptive_seam.py "$O/lazy.jsonl" --identity "$O/identity.json" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+        --arm mibz2-workers-lazy --judged "" --supporting $LAZY --rounds $ROUNDS \
+        --corpus wikidata-x$COPIES --diagnostic ${dry:+--dry} | tee "$O/lazy.txt"
+    }
+    trace_diag() {
+      local b sha recipe_root=$PWD
+      # Instrument private copies (worktrees of the private repository, never the runner's
+      # checkout). Keep each applied diff and binary digest with its trace.
+      for b in base head; do
+        sha=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])" "$O/sources.json" "$b")
+        git -C "$P/repo" worktree add -q --detach "$P/trace-$b" "$sha"
+        git -C "$P/trace-$b" apply "$recipe_root/bench/scanner-adaptive-seam-occupancy.patch"
+        if [ "$b" = base ]; then
+          git -C "$P/trace-$b" apply "$recipe_root/bench/scanner-adaptive-seam-base.patch"
+        fi
+        git -C "$P/trace-$b" diff > "$O/trace-$b-instrumentation.diff"
+        (cd "$P/trace-$b" && cargo build -q --locked --release --features trace --example occupancy)
+        sha256sum "$P/trace-$b/target/release/examples/occupancy" >> "$O/binaries.sha256"
+        "$P/trace-$b/target/release/examples/occupancy" "$X4" --threads 10 --rounds "$TRACE_ROUNDS" \
+          --out "$O/trace-$b.jsonl" | tee "$O/trace-$b.txt"
+      done
+      python3 bench/scanner_adaptive_seam_trace.py "$O/trace-base.jsonl" "$O/trace-head.jsonl" \
+        "$TRACE_ROUNDS" "$O/in-maint.json" ${dry:+--dry} | tee "$O/in-maint.txt"
+    }
+    verdict() {
+      python3 bench/scanner_adaptive_seam.py "$O/main.jsonl" --identity "$O/identity.json" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+        --in-maint "$O/in-maint.json" --arm mibz2 --judged $JUDGED --supporting $SUPPORTING --rounds $ROUNDS \
+        --corpus wikidata-x$COPIES ${dry:+--dry} | tee "$O/verdict.txt"
+    }
+    phase resolve - resolve
+    phase build-base resolve build base
+    phase build-head resolve build head
+    phase inputs build-head inputs
+    phase machine build-head machine
+    phase exactness build-base,build-head,inputs exactness
+    phase timed exactness,machine timed
+    phase lazy exactness,machine lazy
+    phase lazy-report lazy lazy_report
+    phase trace-diag exactness trace_diag
+    phase trace-parity trace-diag python3 bench/scanner_adaptive_seam_identity.py trace "$O/identity.json" "$TRACE_ROUNDS" "$O/trace-base.jsonl" "$O/trace-head.jsonl"
+    phase verdict timed,lazy-report,trace-parity verdict

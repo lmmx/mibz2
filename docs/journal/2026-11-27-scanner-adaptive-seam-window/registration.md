@@ -107,3 +107,16 @@ This is an adoption registration deciding a production default. Under `CLAUDE.md
 
 1. One independent agent (different from the author) has reviewed both the code diff (`src/stream.rs`, `src/parallel.rs`, `src/trace.rs`) and this frozen registration;
 2. All CI checks on the PR head (including `rust`, `miri`, `fuzz-smoke`, `occupancy`, and paired `bench`) are green.
+
+---
+
+## 8. Recipe (added at review, before any data; the rule above is unchanged)
+
+`just bench-scanner-adaptive-seam <HEAD_SHA> <BASE_SHA>` (`.just/bench.just`), run through `just submit`:
+
+- **Sources** (`bench/scanner_adaptive_seam_source.py`): one private repository under the run directory fetches `HEAD_SHA`, `BASE_SHA` and `master` from the origin URL (`--depth 512 --no-tags`, never from the runner's checkout), verifies each fetched SHA, requires `merge-base(HEAD_SHA, master) == BASE_SHA` computed from the fetched history, and builds each arm in a detached worktree of it. Build inputs (`Cargo.toml`, `Cargo.lock`, `build.rs`, `rust-toolchain.toml`, `examples/ab.rs`) must not differ; `rustc 1.99.1` in both. `bench/test_scanner_adaptive_seam.py` reproduces a detached `--depth 1 --no-local` `file://` runner.
+- **Exactness** (`bench/scanner_adaptive_seam_identity.py`): §3.4 unchanged (independent `bz2` SHA-256 and `838,800,784` bytes; every `ab child` at every registered count on both builds; trace records checked against the same hash).
+- **Trace** (`bench/scanner_adaptive_seam_trace.py`): both arms get `bench/scanner-adaptive-seam-occupancy.patch` (production dispatch observed and recorded, `t.in_maint_ms` summed over `InputGot`/`WindowResume` -> `WindowWorkEnd`); `base` also gets `bench/scanner-adaptive-seam-base.patch` (the two `Kind`s and one `WindowWorkEnd` at the end of each `ChannelSource::view` loop iteration, the placement with which `#1118` measured `10.689 ms`). The summary records median timeline `in_maint`, spans and peak `window_cap_max_mb`; a plan other than 8 workers / 32 slots VOIDs.
+- **Verdict** (`bench/scanner_adaptive_seam.py`): §5 exactly: in_maint head/base `<= 0.15` and window capacity `<= 1.00`, 10 and 12 threads FASTER, none of 6/8/9 SLOWER, median peak RSS `<= 1.05` at every count.
+
+**Read against the fifteenth synthesis pass.** That pass finds the shipped i9 plan trims to 6–7 workers at *pinned* 8T/10T, where Wikidata is worker-bound. This registration gates *unpinned* runs and VOIDs unless the trace confirms 8 workers / 32 slots at 10 threads, the plan `#1118` measured (its 10T was FASTER for a 3.2 ms in_maint cut). The unpinned clock-mode mixture that pass identifies widens CIs; the balanced paired design stays unbiased, so it costs power, not validity.
