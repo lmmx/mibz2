@@ -1,9 +1,9 @@
-id = "declarative-ready-signal"
+id = "blog-announcement-copy"
 holder = "claude-code"
-session = "6395ce493133"
-claimed_at = "2026-11-27T06:34:34+00:00"
-expires = "2026-11-27T10:50:57+00:00"
-owned_paths = [".github/workflows/run-signal.yml", "bench/run-queue.sh", "bench/await-submit.sh", "bench/test_workstation_queue.py"]
-mechanisms = ["workstation-ready-signal"]
-base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
+session = "684209591fe6"
+claimed_at = "2026-11-27T06:55:58+00:00"
+expires = "2026-11-27T10:55:58+00:00"
+owned_paths = []
+mechanisms = ["blog-announcement-copy"]
+base = "7cc6319afe236744a323060c6de196909122c716"
 released = false
