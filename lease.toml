@@ -1,0 +1,9 @@
+id = "scanner-seam-window"
+holder = "antigravity"
+session = "6513527b965e"
+claimed_at = "2026-11-27T00:57:42+00:00"
+expires = "2026-11-27T08:57:42+00:00"
+owned_paths = ["src/parallel.rs", "src/trace.rs"]
+mechanisms = ["scanner-input-seam"]
+base = "996b976ed524e7fb37e4267b91f4d7536c4f00da"
+released = false
