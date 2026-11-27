@@ -1,0 +1,4583 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-six-gbs-decoder-architecture/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/">
+      
+      
+        <link rel="next" href="../2026-11-27-reopening-a6b-and-segmented/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>The architecture of a 6 GB/s bzip2 decoder - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=8ebee20700b0">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta property="og:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-six-gbs-decoder-architecture/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta name="twitter:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
+  <meta name="twitter:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The architecture of a 6 GB/s bzip2 decoder
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-hardware-verdicts-and-measurement-traps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  When the hardware says no
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The 256 KiB L2 cliff and the flipped knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The architecture of a 6 GB/s decoder
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The architecture of a 6 GB/s decoder
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping SIMD wiring untouched
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-three-designs-stopped" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why three designs stopped
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <code>fused_4l_tile4096_vec</code> passes
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A 160-byte inline <code>ReadyBlock</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Zero consumer tax and bounded RSS
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-direct-folding-regressed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why direct folding regressed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-two-part-rescue-1055" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The two-part rescue (<code>#1055</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The realized 8-worker wall-time law
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Zero-plumbing design and below-the-knee safety
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. How the five pieces fit and what builds next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reopening Open's middle and off-Wikidata
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-off-wikidata-and-eight-worker-coupling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Off Wikidata and inside the eight-worker tie
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder's true floor and a pooled scan
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-dropping-the-coordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dropping the coordinator
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Complementary bottlenecks
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_9">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Complementary bottlenecks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-complementary-bottlenecks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The experiment
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beyond it: the algorithms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The decoder as a queueing network
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_10">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  The decoder as a queueing network
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The story
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-25-the-decoder-as-a-queueing-network-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Beneath it: the theory
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-posing-the-inversion-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Posing the inversion problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-the-scanner-hides-the-emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Masked bottlenecks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-what-else-moves-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What else moves together
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-24-halving-the-single-row-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Halving the single-row steps
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Playing the hand you're dealt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-two-centuries-of-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_27" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_27" id="__nav_7_27_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_27_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_27">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_29" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_29">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_37" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_37" id="__nav_7_37_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_37_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_37">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  A new way back from the BWT
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The post
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Companion: compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_40">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_45" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_45" id="__nav_7_45_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_45_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_45">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_47" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_47" id="__nav_7_47_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_47_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_47">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping SIMD wiring untouched
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-three-designs-stopped" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why three designs stopped
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <code>fused_4l_tile4096_vec</code> passes
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A 160-byte inline <code>ReadyBlock</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Zero consumer tax and bounded RSS
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-direct-folding-regressed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why direct folding regressed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-two-part-rescue-1055" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The two-part rescue (<code>#1055</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The realized 8-worker wall-time law
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Zero-plumbing design and below-the-knee safety
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. How the five pieces fit and what builds next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-six-gbs-decoder-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="the-architecture-of-a-6-gbs-bzip2-decoder">The architecture of a 6 GB/s bzip2 decoder<a class="headerlink" href="#the-architecture-of-a-6-gbs-bzip2-decoder" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.</p>
+<p class="post-meta">27 November 2026 · 10 min read · <a href="#6-how-the-five-pieces-fit-and-what-builds-next">Research synthesis</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p><strong>Five freshly merged studies turn mibz2's ideal-parts matrix into one coherent 6 GB/s architecture.</strong> On our 10-core Intel i9-10900K, shipped mibz2 decodes 839 MB of Wikidata (<code>wikidata ×4</code>) in 192.9 to 194.6 ms at eight workers. That is 4.31 GB/s. Reaching 6 GB/s means finishing the same workload in 140 ms. No single stage can carry that drop alone. Five designs fit end to end across the worker pipeline and the eight-worker schedule. Together they pair sampled-anchor four-lane forward emission and vectored RLE1+CRC fusion with a zero-copy boundary, L1-batched MTF folding and slack-only hybrid scanning.</p>
+<p>This post builds on <a href="../2026-11-27-reopening-a6b-and-segmented/">Reopening Open's middle and the off-Wikidata decoder</a> and <a href="../2026-11-26-true-floor-and-pooled-scan/">The decoder's true floor and the limits of a pooled scan</a>. One evidence boundary belongs up front. The i9-10900K baselines (<code>1,306 ms</code> single-worker and <code>192.9–194.6 ms</code> eight-worker) are direct workstation measurements. The four stage studies (<code>#1057</code>, <code>#1045</code>, <code>#1058</code>, <code>#1055</code> and <code>#1048</code>) are steal-free probes on a 2-vCPU Haswell Xeon VM. Every arm passed byte-exact parity on every tested block. The eight-worker trajectory (<code>#1056</code>) replays <code>src/parallel.rs</code> deterministically against primary i9-10900K traces. Every projection below awaits production builds and direct 10-core i9-10900K confirmation.</p>
+<p><a href="#1-sampled-anchor-four-lane-forward-emission-1057">Section 1</a> shows how 16 scalar anchor tags unlock 4-lane forward emission without breaking SIMD wiring.
+<a href="#2-upstream-vectored-rle1crc-fusion-1045">Section 2</a> explains why zero-scratch tiled fusion beats both 1-lane emission and contiguous stitching.
+<a href="#3-the-zero-cost-vectored-delivery-boundary-1058">Section 3</a> prices a 160-byte vectored <code>ReadyBlock</code> across six real consumer paths and memory budgets.
+<a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">Section 4</a> diagnoses why direct MTF folding spilled registers and how L1 batching rescues it.
+<a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">Section 5</a> maps how slack-only helper scanning clears the 140 ms wall without regressing below the knee.
+<a href="#6-how-the-five-pieces-fit-and-what-builds-next">Section 6</a> summarizes the combined architecture and its workstation gates.</p>
+<p><strong>Takeaways</strong></p>
+<ul>
+<li><strong>Four-lane forward emission is paid in full (<code>#1057</code>, PASS).</strong> Tagging 16 uniform BWT-row anchors in bit 31 keeps unmodified SIMD wiring and cuts <code>A6c + A7</code> thread CPU by 31.0 to 35.8% with zero <code>unsafe</code>. Native L3-cold runs reach 97.4% of a prebuilt oracle and project +208 to +235 ms saved on one i9 worker.</li>
+<li><strong>Fusion only pays off if delivery stays vectored (<code>#1045</code>, PASS / scoped STOP).</strong> Zero-scratch in-place tile compaction with 64 KiB PCLMULQDQ CRC32 cuts <code>E + A9</code> writes by 53.4%. It projects +31.8 to +49.9 ms saved on one i9 worker, whereas contiguous stitching moves 74.9% of the output and erases the win.</li>
+<li><strong>Vectored delivery costs nothing at the boundary (<code>#1058</code>).</strong> An inline 160-byte <code>ReadyBlock</code> keeps all six consumer paths at 0.86× to 1.01× of contiguous delivery while holding RSS at 1.017× with zero Wikidata overflows.</li>
+<li><strong>L1 batching and guard zones rescue MTF folding (<code>#1048</code>, <code>#1055</code>, PASS).</strong> Direct per-run folding spilled <code>runs::front_avx2</code>'s 15 live registers and regressed up to +4.3%. A 2 KiB L1d batch plus a 496/512 <code>OutQ16</code> guard zone cuts <code>push_slow</code> 6.22×. Together they drop <code>A5 + A6a</code> by 12.1% baseline and 19.1% native.</li>
+<li><strong>Slack-only hybrid scanning crosses 6 GB/s (<code>#1056</code>).</strong> Offloading candidate finding to the 91.6%-idle reader thread and scanning only from worker <code>job_wait</code> slack pushes eight-worker wall time to 131.8 ms (6.36 GB/s) at <code>W'/8 = 125 ms</code>. Below the knee, <code>k = 6</code> stays at 0.997× to 0.999×.</li>
+</ul>
+<figure class="bf-fig">
+<div class="bf-title">End-to-end 6 GB/s decoder architecture assembled from five merged studies</div>
+<svg viewBox="0 0 640 286" role="img" aria-label="Architecture diagram of the 6 GB/s bzip2 decoder: reader thread runs AVX2 Finder into Arc Chunk OnceLock; serial scanner feeds Policy A slack-only helpers; each worker runs L1d-batched MTF and OutQ16 guard zone, safe 64K SoA A6b, SIMD Reader::wire with S=16 bit-31 anchor tags, 4-lane forward emission with zero-scratch tiled RLE1 and CRC32 into a 160-byte vectored ReadyBlock for BzReader and decode_parallel.">
+  <defs>
+    <marker id="arr6g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="var(--bf-ink-2)"/>
+    </marker>
+  </defs>
+  <!-- Top lane: Feeder & Scan plane -->
+  <text class="bf-t-strong" style="font-size:10.5px" x="14" y="18">INPUT &amp; SCAN PLANE (#1056)</text>
+  <rect x="14" y="26" width="166" height="58" rx="5" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:11px" x="97" y="45" text-anchor="middle">mibz2-read (91.6% idle)</text>
+  <text class="bf-ttiny" x="97" y="60" text-anchor="middle">AVX2 Finder → Arc&lt;Chunk&gt;</text>
+  <text class="bf-ttiny" x="97" y="74" text-anchor="middle">OnceLock cands (0 ms tax)</text>
+
+  <line x1="180" y1="55" x2="212" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
+
+  <rect x="214" y="26" width="184" height="58" rx="5" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:11px" x="306" y="45" text-anchor="middle">Serial Scanner (Policy A)</text>
+  <text class="bf-ttiny" x="306" y="60" text-anchor="middle">skip helper-verified blocks</text>
+  <text class="bf-ttiny" x="306" y="74" text-anchor="middle">11 seam blocks on serial path</text>
+
+  <line x1="398" y1="55" x2="430" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
+
+  <rect x="432" y="26" width="194" height="58" rx="5" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:11px" x="529" y="45" text-anchor="middle">Slack-Only Helpers</text>
+  <text class="bf-ttiny" x="529" y="60" text-anchor="middle">prio-1 decode, prio-2 scan</text>
+  <text class="bf-ttiny" x="529" y="74" text-anchor="middle">local L2 scratch · full_only</text>
+
+  <!-- Connector down to worker pipeline -->
+  <line x1="306" y1="84" x2="306" y2="108" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
+  <line x1="529" y1="84" x2="529" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <line x1="529" y1="96" x2="306" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
+
+  <!-- Middle lane: Worker pipeline -->
+  <rect x="14" y="110" width="612" height="92" rx="6" fill="none" stroke="var(--bf-rule)" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="24" y="126">PER-WORKER OPEN PIPELINE (×8 WORKERS, #![forbid(unsafe_code)] IN NEW KERNELS)</text>
+
+  <rect x="24" y="134" width="132" height="58" rx="4" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="90" y="151" text-anchor="middle">A5 + A6a (#1055)</text>
+  <text class="bf-ttiny" x="90" y="166" text-anchor="middle">2 KiB L1d run batch</text>
+  <text class="bf-ttiny" x="90" y="180" text-anchor="middle">OutQ16 496/512 guard</text>
+
+  <line x1="156" y1="163" x2="174" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
+
+  <rect x="176" y="134" width="114" height="58" rx="4" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="233" y="151" text-anchor="middle">A6b (#1046)</text>
+  <text class="bf-ttiny" x="233" y="166" text-anchor="middle">64K u16-link SoA</text>
+  <text class="bf-ttiny" x="233" y="180" text-anchor="middle">gen-tagged dict</text>
+
+  <line x1="290" y1="163" x2="308" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
+
+  <rect x="310" y="134" width="140" height="58" rx="4" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="380" y="151" text-anchor="middle">A6c + A7 (#1057)</text>
+  <text class="bf-ttiny" x="380" y="166" text-anchor="middle">SIMD Reader::wire</text>
+  <text class="bf-ttiny" x="380" y="180" text-anchor="middle">S=16 bit-31 · 4 lanes</text>
+
+  <line x1="450" y1="163" x2="468" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
+
+  <rect x="470" y="134" width="146" height="58" rx="4" fill="var(--bf-green)" opacity="0.28" stroke="var(--bf-green)" stroke-width="1.4"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="543" y="151" text-anchor="middle">Fused RLE1+CRC (#1045)</text>
+  <text class="bf-ttiny" x="543" y="166" text-anchor="middle">zero-scratch 4K tiles</text>
+  <text class="bf-ttiny" x="543" y="180" text-anchor="middle">64K CRC + GF(2) combine</text>
+
+  <!-- Connector down to delivery -->
+  <line x1="543" y1="192" x2="543" y2="218" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
+
+  <!-- Bottom lane: Vectored Delivery -->
+  <rect x="14" y="220" width="612" height="54" rx="5" fill="var(--bf-vz-1)" opacity="0.12" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
+  <text class="bf-t-strong" style="font-size:11px" x="320" y="239" text-anchor="middle">ZERO-COPY VECTORED DELIVERY BOUNDARY (#1058)</text>
+  <text class="bf-tm" x="320" y="256" text-anchor="middle">160 B ReadyBlock { buf, ranges: [(u32, u32); 16], count, total_len } → BzReader / Python / decode_parallel · RSS 1.017×</text>
+</svg>
+<figcaption>Each stage removes a separate currency: random-scatter stalls and register spills in <code>A5+A6a</code>, bounds checks in <code>A6b</code>, XOR wiring and 1-lane dependency chains in <code>A6c+A7</code>, full-block re-reads in <code>A9</code>, and serial-scan idle slack across 8 workers.</figcaption>
+</figure>
+
+<h2 id="1-sampled-anchor-four-lane-forward-emission-1057">1. Sampled-anchor four-lane forward emission (<code>#1057</code>)<a class="headerlink" href="#1-sampled-anchor-four-lane-forward-emission-1057" title="Permanent link">&para;</a></h2>
+<p>The single largest worker prize in mibz2 sits inside <code>A6c + A7</code> (<code>651.7 ms</code> on one i9 worker, or half of total single-worker time). Earlier work showed why shipped bidirectional emission is expensive. To walk two lanes per edge without knowing endpoints in advance, <code>wire_xor</code> stores XOR-linked adjacency in <code>A6c</code>. That scalar XOR wiring breaks SIMD throughput. Forward 1-lane emission removes XOR wiring yet pays a long pointer-chasing dependency chain across <code>A7</code>.</p>
+<p>The <a href="https://github.com/lmmx/mibz2/blob/7f5a1c6afac636c24a7db14987cca1681e9d9e8b/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md">sampled-anchor 4-lane probe</a> (<code>#1057</code>) resolves that tension cleanly with <code>#![forbid(unsafe_code)]</code>. Every arm matched byte for byte across all 11,961 checks on Wikidata and synthetic edge cases.</p>
+<h3 id="keeping-simd-wiring-untouched">Keeping SIMD wiring untouched<a class="headerlink" href="#keeping-simd-wiring-untouched" title="Permanent link">&para;</a></h3>
+<p>First, <code>A6c</code> keeps the unmodified SIMD <code>outq::Reader::wire</code> loop. On the VM, SIMD <code>Reader::wire</code> takes roughly <strong>30 ms warm</strong> and <strong>40 ms L3-cold</strong> across the 233 Open-admitted Wikidata blocks. Shipped <code>wire_xor</code> takes 91 ms warm and 108 ms cold. That is <strong>2.7× to 3.0× slower</strong>.</p>
+<p>Second, the probe checks bit 31 of <code>edges[u]</code>. Every Wikidata Open block packs a destination index (<code>max_bits = 18</code>) and a dictionary index (<code>max_dict = 1,712</code>). Because <span class="arithmatex">\(18 + 11 = 29 \le 31\)</span>, bit 31 is free on all 233 blocks.</p>
+<p>Third, after <code>Reader::wire</code> finishes, the probe marks <span class="arithmatex">\(S\)</span> uniform BWT-row anchor indices:</p>
+<div class="arithmatex">\[a_k = \left(\text{mark} + \left\lfloor \frac{k \cdot m}{S} \right\rfloor\right) \bmod m, \qquad k = 0, \dots, S - 1\]</div>
+<p>Tagging <span class="arithmatex">\(S = 16\)</span> anchor entries takes just 16 scalar writes per block. That adds roughly <strong>30 nanoseconds per block</strong>, or 7 microseconds across all 233 blocks.</p>
+<h3 id="why-s-16-beats-s-4-by-order-statistics">Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics<a class="headerlink" href="#why-s-16-beats-s-4-by-order-statistics" title="Permanent link">&para;</a></h3>
+<p>Choosing <span class="arithmatex">\(S\)</span> uniform BWT-row indices partitions the single cycle of length <span class="arithmatex">\(m\)</span> into <span class="arithmatex">\(S\)</span> random segments whose lengths behave like independent exponential spacings. With only <span class="arithmatex">\(S = 4\)</span> segments, four parallel lanes must wait for the longest of four exponential pieces. Its expected length follows the fourth harmonic number <span class="arithmatex">\(H_4 = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} = 2.083\times\)</span> the mean segment length. Measured across Wikidata at <span class="arithmatex">\(S = 4\)</span>, the longest segment is indeed <strong><span class="arithmatex">\(2.081\times\)</span></strong> the mean, leaving three lanes idle for over half the tail.</p>
+<p>Oversampling to <span class="arithmatex">\(S = 16\)</span> fixes load balance dynamically. Four lanes pull from the queue of 16 segments as each segment ends. Whenever any lane hits an anchor edge, a single sign-bit check catches all four lanes at once:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">ed0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed3</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">i32</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* retire hit lane, pull next anchor */</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>That branch fires only ~16 times per block (<strong>0.014%</strong> of iterations). At <span class="arithmatex">\(S = 16\)</span>, the longest single segment shrinks to <strong><span class="arithmatex">\(0.818 \times (m / 4)\)</span></strong> and effective lane parallelism rises to <strong><code>eff_K = 3.153</code></strong> across the whole block (including the <code>3 → 2 → 1</code> drain). Each segment writes into a <strong>32 KiB slab-continuation arena</strong> (<code>max_arena = 992 KiB</code>, averaging <code>41.6</code> ordered slices per block regardless of <span class="arithmatex">\(S\)</span>).</p>
+<table>
+<thead>
+<tr>
+<th><code>A6c + A7</code> arm (233 Wikidata Open blocks)</th>
+<th style="text-align: right;">Base warm (ms)</th>
+<th style="text-align: right;">Base L3-cold (ms)</th>
+<th style="text-align: right;">Native warm (ms)</th>
+<th style="text-align: right;">Native L3-cold (ms)</th>
+<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shipped_bidi</code> (baseline)</td>
+<td style="text-align: right;">335.89</td>
+<td style="text-align: right;">486.28</td>
+<td style="text-align: right;">328.07</td>
+<td style="text-align: right;">472.47</td>
+<td style="text-align: right;">0.0 / 0.0 ms</td>
+</tr>
+<tr>
+<td><code>fwd_4lane_oracle</code> (prebuilt ceiling)</td>
+<td style="text-align: right;">222.84</td>
+<td style="text-align: right;">323.46</td>
+<td style="text-align: right;">212.50</td>
+<td style="text-align: right;">295.66</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>fwd_4lane_sampled_S16_vec</code> (<strong>PASS</strong>)</td>
+<td style="text-align: right;"><strong>231.80 (−31.0%)</strong></td>
+<td style="text-align: right;"><strong>323.61 (−33.5%)</strong></td>
+<td style="text-align: right;"><strong>221.83 (−32.4%)</strong></td>
+<td style="text-align: right;"><strong>303.41 (−35.8%)</strong></td>
+<td style="text-align: right;"><strong>+208.4 / +221.3..+235.4 ms</strong></td>
+</tr>
+<tr>
+<td><code>fwd_4lane_sampled_S16_stitch</code></td>
+<td style="text-align: right;">249.60 (−25.7%)</td>
+<td style="text-align: right;">351.43 (−27.7%)</td>
+<td style="text-align: right;">239.44 (−27.0%)</td>
+<td style="text-align: right;">323.49 (−31.5%)</td>
+<td style="text-align: right;">+174.9 / +208.3 ms</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% disjoint spreads against <code>shipped_bidi</code>. Modeled i9 columns scale VM ratios to the 651.7 ms <code>A6c + A7</code> i9-10900K baseline.)</em></p>
+<p>The cold-cache result is striking. Under L3-cold pressure, <code>fwd_4lane_sampled_S16_vec</code> reaches <strong>1.000×</strong> of the prebuilt oracle on baseline (<code>323.61</code> vs <code>323.46 ms</code>). On native it reaches <strong>1.026×</strong>, or 97.4% of the oracle (<code>303.41</code> vs <code>295.66 ms</code>). That projects <strong>+208 to +235 ms</strong> saved on one i9 worker. That is 16.0% to 18.0% of single-worker time, or <strong>+29 to +33 ms/worker</strong> at eight workers.</p>
+<h2 id="2-upstream-vectored-rle1crc-fusion-1045">2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)<a class="headerlink" href="#2-upstream-vectored-rle1crc-fusion-1045" title="Permanent link">&para;</a></h2>
+<p>Once emission runs forward in four lanes, <code>A9</code> (RLE1 expansion plus CRC32) sits right behind it. On one i9 worker, <code>A9</code> takes 66.6 to 74.4 ms. Earlier standalone post-emit work (<code>#988</code>) stopped because a separate pass over the output buffer hit a 72.3% L1d-hot compute floor. Moving RLE1+CRC upstream into the 4-lane emitter seemed promising. Yet <a href="https://github.com/lmmx/mibz2/blob/e61ec1276a59ed3d164fe165de869d147555a95f/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md">the fusion probe</a> (<code>#1045</code>) showed that <strong>three of four candidate designs fail</strong>. Only one clears the gate. Every arm passed all 13,360 exactness checks across Wikidata and edge-case corpora.</p>
+<h3 id="why-three-designs-stopped">Why three designs stopped<a class="headerlink" href="#why-three-designs-stopped" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>1-lane fused (<code>fused_1lane</code> — STOP).</strong> Fusing RLE1+CRC into a single forward lane surrenders 4-lane memory-level parallelism. It regresses by <strong>−92 to −186 ms</strong> projected on one i9 worker.</li>
+<li><strong>Inline per-step FSM (<code>fused_4l_fsm</code> — STOP).</strong> Running the RLE1 state machine byte-by-byte inside the 4-lane pointer-chase loop bloats <code>WordMeta</code> and spills live lane state. It regresses by <strong>−126 to −205 ms</strong> projected on one i9 worker.</li>
+<li><strong>4-lane contiguous stitched (<code>fused_4l_tile4096_stitch</code> — STOP).</strong> Even when each lane fuses RLE1+CRC cleanly in 4 KiB tiles, compacting the four output segments back into one flat <code>Vec&lt;u8&gt;</code> destroys the win. On Wikidata, <strong>86.4%</strong> of lanes change length after RLE1 expansion. Re-packing lanes 1 to 3 moves 74.53 of 99.56 MiB (<strong>74.9%</strong> of all output). Across <code>wikidata ×4</code>, that copies <strong>598.9 MiB</strong> of extra bytes. Write savings drop from −53.4% to −18.6% (<code>1,718.2 → 1,398.8 MiB</code>), leaving timing flat at −23 to +11 ms projected.</li>
+</ol>
+<h3 id="why-fused_4l_tile4096_vec-passes">Why <code>fused_4l_tile4096_vec</code> passes<a class="headerlink" href="#why-fused_4l_tile4096_vec-passes" title="Permanent link">&para;</a></h3>
+<p>The winning arm (<code>fused_4l_tile4096_vec</code>) keeps the 4-lane pointer-chase loop clean and delivers vectored slices without stitching:</p>
+<ul>
+<li><strong>Zero-scratch single-pass in-place tile compaction.</strong> Each lane emits raw BWT bytes straight into its own output slice until it fills a 4 KiB tile. Then it expands RLE1 in place. Because <strong>89.4%</strong> of Wikidata 4-byte runs have <code>extra == 0</code> (four equal bytes followed by a zero repeat count), expansion shrinks the stream so <code>dst &lt;= src</code>. Only when a rare long repeat causes net growth does the tile spill its short suffix to a tiny scratch buffer. Across all 431 Wikidata blocks, <strong>zero</strong> RLE1 runs straddled a lane boundary.</li>
+<li><strong>L2-hot 64 KiB PCLMULQDQ CRC32 + GF(2) combine.</strong> Every 64 KiB of finalized lane output feeds hardware-accelerated CRC32 while still hot in L2 cache. At block end, four <code>crc32_combine</code> calls over <span class="arithmatex">\(\text{GF}(2)\)</span> fold the four lane CRCs into the exact bzip2 block CRC in microseconds.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>E + A9</code> arm (native VM, 233 Wikidata blocks)</th>
+<th style="text-align: right;">Warm (ms)</th>
+<th style="text-align: right;">L3-cold (ms)</th>
+<th style="text-align: right;">Logical writes (<code>wikidata ×4</code>)</th>
+<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>base_4lane_sep</code> (unfused baseline)</td>
+<td style="text-align: right;">112.35</td>
+<td style="text-align: right;">150.98</td>
+<td style="text-align: right;">1,718.2 MiB</td>
+<td style="text-align: right;">0.0 / 0.0 ms</td>
+</tr>
+<tr>
+<td><code>floor_4lane_plus_crc</code> (zero-RLE1 floor)</td>
+<td style="text-align: right;">101.20</td>
+<td style="text-align: right;">139.89</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td><code>fused_4l_tile4096_vec</code> (<strong>PASS</strong>)</td>
+<td style="text-align: right;"><strong>99.54 (0.886×)</strong></td>
+<td style="text-align: right;"><strong>139.89 (0.927×)</strong></td>
+<td style="text-align: right;"><strong>799.9 MiB (−53.4%)</strong></td>
+<td style="text-align: right;"><strong>+49.9 / +31.8 ms</strong></td>
+</tr>
+<tr>
+<td><code>fused_4l_tile4096_stitch</code> (STOP)</td>
+<td style="text-align: right;">116.40 (1.036×)</td>
+<td style="text-align: right;">148.55 (0.984×)</td>
+<td style="text-align: right;">1,398.8 MiB (−18.6%)</td>
+<td style="text-align: right;">−23.0 / +11.0 ms</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats. On warm runs <code>fused_4l_tile4096_vec</code> beats even the zero-RLE1 separate-CRC floor because 64 KiB tiled CRC stays L2-hot. On cold runs it matches the floor to 0.00 ms.)</em></p>
+<h2 id="3-the-zero-cost-vectored-delivery-boundary-1058">3. The zero-cost vectored delivery boundary (<code>#1058</code>)<a class="headerlink" href="#3-the-zero-cost-vectored-delivery-boundary-1058" title="Permanent link">&para;</a></h2>
+<p>Both <code>#1057</code> and <code>#1045</code> point to the same architectural need: stop forcing workers to stitch emitted slices into one flat <code>Vec&lt;u8&gt;</code>. Before touching <code>src/parallel.rs</code>, we priced the vectored delivery boundary in <a href="https://github.com/lmmx/mibz2/blob/28c4c8c43e633a04dd3b7aa14b639a2d5fa8201f/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md">a dedicated probe</a> (<code>#1058</code>). It uses <code>#![forbid(unsafe_code)]</code> and tests 200 MiB of real Wikidata blocks plus synthetic guards (<code>runs</code>, <code>onebyte</code>, <code>max16</code>).</p>
+<h3 id="a-160-byte-inline-readyblock">A 160-byte inline <code>ReadyBlock</code><a class="headerlink" href="#a-160-byte-inline-readyblock" title="Permanent link">&para;</a></h3>
+<p>Instead of heap-allocating a <code>Vec&lt;Vec&lt;u8&gt;&gt;</code> per block, a worker hands the reader an inline 160-byte struct:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ReadyBlock</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">buf</span><span class="p">:</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="kt">u8</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ranges</span><span class="p">:</span><span class="w"> </span><span class="p">[(</span><span class="kt">u32</span><span class="p">,</span><span class="w"> </span><span class="kt">u32</span><span class="p">);</span><span class="w"> </span><span class="mi">16</span><span class="p">],</span>
+<span class="w">    </span><span class="n">count</span><span class="p">:</span><span class="w"> </span><span class="kt">u8</span><span class="p">,</span>
+<span class="w">    </span><span class="n">total_len</span><span class="p">:</span><span class="w"> </span><span class="kt">u32</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>It allocates <strong>zero</strong> extra heap buffers. When the consumer finishes draining the last range, <code>into_buf()</code> recycles <code>buf</code> directly into <code>free_out</code> with zero changes to pool accounting, while <code>Ready::size</code> tracks logical <code>total_len</code>.</p>
+<h3 id="zero-consumer-tax-and-bounded-rss">Zero consumer tax and bounded RSS<a class="headerlink" href="#zero-consumer-tax-and-bounded-rss" title="Permanent link">&para;</a></h3>
+<p>We timed six real consumer paths across contiguous, stitched, 4-lane vectored and 16-segment vectored delivery. Those paths cover zero-copy <code>fill_buf_hash</code>, <code>read_64k</code> and <code>read_256k</code> (both single-slice and scatter-fill) and <code>decode_parallel</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Consumer path (native L3-cold, 200 MiB Wikidata)</th>
+<th style="text-align: right;"><code>contiguous_1slice</code></th>
+<th style="text-align: right;"><code>vectored_4lane</code></th>
+<th style="text-align: right;"><code>vectored_16seg</code></th>
+<th style="text-align: right;"><code>stitched_4lane</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fill_buf_hash</code> (zero-copy <code>BufRead</code>)</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;"><strong>0.92×–1.00×</strong></td>
+<td style="text-align: right;"><strong>0.94×–1.00×</strong></td>
+<td style="text-align: right;">+33%..+80%</td>
+</tr>
+<tr>
+<td><code>read_64k</code> / <code>read_256k</code> (scatter-fill)</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;"><strong>0.86×–1.01×</strong></td>
+<td style="text-align: right;"><strong>0.88×–1.01×</strong></td>
+<td style="text-align: right;">+33%..+80%</td>
+</tr>
+<tr>
+<td><code>decode_parallel</code> (parallel sink)</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;"><strong>0.95×–1.00×</strong></td>
+<td style="text-align: right;"><strong>0.96×–1.01×</strong></td>
+<td style="text-align: right;">+33%..+80%</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Stitched 4-lane adds +16 to +22 ms per 200 MiB, or roughly +64 to +88 ms across <code>wikidata ×4</code>. Vectored 4-lane and 16-segment stay at parity with contiguous delivery.)</em></p>
+<p>Python's single-copy <code>read(size)</code> path (<code>#1033</code>) also stays clean. At <code>K = 4</code>, single-<code>fill_buf</code> call counts rise <strong>+0.0%</strong> at <code>read(256K)</code> (<code>1,130</code> calls) and <strong>+13.5%</strong> at <code>read(64K)</code>. At <code>S = 16</code>, scatter-fill inside <code>Read::read</code> keeps calls completely flat at <code>3,200</code> (<code>64K</code>) and <code>800</code> (<code>256K</code>).</p>
+<p>Slab sizing turned up an equally important guard against naive headroom. A flat <code>+25%</code> (<code>span / 4</code>) per lane inflates Wikidata RSS to <strong>1.178×</strong> (<code>1,100 KiB</code> per block), breaching our <code>&lt;= 1.05×</code> budget. Worse, it still overflows pathological <code>runs</code> (<code>2.07×</code>) and <code>onebyte</code> (<code>51.8×</code>). Keeping shipped <code>+6.25% + 64 B</code> gives zero Wikidata overflows at <strong>1.0002×</strong> (<code>K = 4</code>) and <strong>1.0010×</strong> (<code>S = 16</code>). Adding <code>4,096 B</code> per lane for in-place tile headroom (<code>+16 KiB</code> per 900 KB block) holds peak RSS at <strong>1.017×</strong> with zero overflows, cleanly inside the <code>&lt;= 1.05×</code> gate.</p>
+<h2 id="4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)<a class="headerlink" href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" title="Permanent link">&para;</a></h2>
+<p>Earlier in the programme, <code>mtf-fold</code> (<code>#1010</code>) tried to remove the 1 MiB <code>runs</code> buffer between <code>A5</code> (<code>runs::front_avx2</code>) and <code>A6a</code> (<code>Open::from_runs</code>). It streamed each run straight into an inline <code>FoldSink</code>. In theory, folding should remove memory traffic. In practice, <a href="https://github.com/lmmx/mibz2/blob/5c57286dffa7c44a2efb88ec1e80c73499f60766/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md">our cold dissection</a> (<code>#1048</code>) caught that direct folding <strong>regressed</strong> <code>A5 + A6a</code>. Baseline ran <strong>+1.61%</strong> slower across all seven repeats, and native ran <strong>+4.33%</strong> slower.</p>
+<h3 id="why-direct-folding-regressed">Why direct folding regressed<a class="headerlink" href="#why-direct-folding-regressed" title="Permanent link">&para;</a></h3>
+<p>Disassembling <code>runs::front_avx2</code> exposed three compounding costs hidden inside the hot loop:</p>
+<ol>
+<li><strong>Register exhaustion (15 live x86-64 GPRs).</strong> Standalone <code>runs::front_avx2</code> is a tight 22-instruction loop that already occupies all 15 general-purpose registers. On baseline, inlining <code>FoldSink + Pass::take + OutQ16</code> spilled the <code>sink</code> pointer (reloaded 10 times per literal) plus seven GPRs. On native, it spilled the hot MTF-front registers <code>f0</code> and <code>f1</code> on every literal.</li>
+<li><strong>Zero-hit dead check.</strong> Direct folding ran a <code>c == self.c</code> merge check on every emitted run that triggered <strong>0 times in 15,141,602 runs</strong>.</li>
+<li><strong>Tail-overrun <code>push_slow</code> storm and <code>vzeroupper</code>.</strong> <code>OutQ16</code> called <code>push_slow</code> <strong>417,041 times</strong> across 233 Wikidata blocks. <strong>84.3%</strong> of those calls (<code>351,722</code>) were pure end-of-chunk <code>f + 16 &gt; 512</code> tail-overrun guards, not genuine thick-strip overflows. On baseline x86-64, every cold call across the AVX2 boundary also paid <code>vzeroupper</code>.</li>
+</ol>
+<h3 id="the-two-part-rescue-1055">The two-part rescue (<code>#1055</code>)<a class="headerlink" href="#the-two-part-rescue-1055" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/lmmx/mibz2/blob/3a2b770282ce2e56c52f7e74380b599eaac8face/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md">The L1-batch rescue probe</a> (<code>#1055</code>) fixed both halves together:</p>
+<ul>
+<li><strong>L1d-resident <code>[u32; 512]</code> packed run batch (2 KiB).</strong> <code>front_avx2</code> stays completely decoupled, emitting packed maximal runs <code>(c &lt;&lt; 24) | total</code> into a 2 KiB L1d stack buffer with <code>second_cold</code> kept out of line. That produces a 24-instruction hot loop with <strong>zero <code>f0</code>/<code>f1</code>/GPR spills and zero <code>vzeroupper</code></strong>. When the 512-run batch fills, <code>flush_batch_direct</code> consumes it from L1d with <code>m</code>, <code>in_out</code> and <code>f.runs</code> hoisted in registers.</li>
+<li><strong>Power-of-2 <code>OutQ16</code> guard zone (<code>496 / 512</code>).</strong> Reserving 16 guard slots at the end of each 1,024-byte chunk (<code>CHUNK = 496</code>, <code>STRIDE = 512</code>) lets the 16-wide SIMD write land unconditionally until <code>f &gt;= 496</code>. That cuts <code>push_slow</code> calls <strong>6.22×</strong> (<code>417,041 → 67,001</code>), driving <code>tail_guard</code> and <code>ovf_chunks</code> to <strong>zero</strong> with zero <code>A6c</code> readback regression.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>A5 + A6a</code> arm (233 Wikidata Open blocks)</th>
+<th style="text-align: right;">Base CPU (ms)</th>
+<th style="text-align: right;">Base ratio</th>
+<th style="text-align: right;">Native CPU (ms)</th>
+<th style="text-align: right;">Native ratio</th>
+<th style="text-align: right;">Modeled i9 1W Δ (base / nat)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shipped_two_pass</code> (1 MiB <code>runs</code> vec)</td>
+<td style="text-align: right;">188.79</td>
+<td style="text-align: right;">1.0000×</td>
+<td style="text-align: right;">187.58</td>
+<td style="text-align: right;">1.0000×</td>
+<td style="text-align: right;">0.0 / 0.0 ms</td>
+</tr>
+<tr>
+<td><code>direct_fold_1010</code> (<code>#1010</code> regression)</td>
+<td style="text-align: right;">191.83</td>
+<td style="text-align: right;">1.0161×</td>
+<td style="text-align: right;">195.70</td>
+<td style="text-align: right;">1.0433×</td>
+<td style="text-align: right;">−5.4 / −14.4 ms</td>
+</tr>
+<tr>
+<td><code>l1_batch_512_only</code> (no guard zone)</td>
+<td style="text-align: right;">176.95</td>
+<td style="text-align: right;">0.9373×</td>
+<td style="text-align: right;">162.80</td>
+<td style="text-align: right;">0.8679×</td>
+<td style="text-align: right;">+20.9 / +44.0 ms</td>
+</tr>
+<tr>
+<td><code>l1_batch_512_guard496</code> (<strong>PASS</strong>)</td>
+<td style="text-align: right;"><strong>166.88</strong></td>
+<td style="text-align: right;"><strong>0.8793×</strong></td>
+<td style="text-align: right;"><strong>151.41</strong></td>
+<td style="text-align: right;"><strong>0.8087×</strong></td>
+<td style="text-align: right;"><strong>+40.2 / +63.6 ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% bit-exact output and disjoint spreads on both builds. Both halves are required. L1d batching alone reaches only +1.60% 1W on baseline, below the 2.5% gate. Adding <code>guard496</code> clears +3.08% baseline and +4.87% native, or +5.7 to +9.1 ms/worker at 8W.)</em></p>
+<h2 id="5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)<a class="headerlink" href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" title="Permanent link">&para;</a></h2>
+<p>Stacking the four worker wins (<code>#1046</code>, <code>#1057</code>, <code>#1045</code> and <code>#1055</code>) pulls per-worker compute <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor (<span class="arithmatex">\(S' \approx 145\text{–}150\text{ ms}\)</span> on the i9-10900K). At that point, the serial scanner caps throughput around 150.9 ms (5.56 GB/s). Workers sit idle in <code>job_wait</code> for <strong>10.9 to 20.4 ms/worker</strong>.</p>
+<p>Our earlier pooled-scan prototype (<code>#942</code>) tried to break that ceiling by having workers scan unconditionally. It failed because helper scanning stole cycles below the knee (<code>1.105×–1.149×</code> slower at <code>k = 6..7</code>). It also paid 5.27 ms of <code>pool_copy</code> overhead plus 4.82 ms of candidate finding.</p>
+<p><a href="https://github.com/lmmx/mibz2/blob/72286cff15a6048c801def3549df86875806c5fb/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md">The slack-only hybrid scan study</a> (<code>#1056</code>) replayed <code>src/parallel.rs</code> deterministically against primary i9-10900K traces (<code>character-stage1</code> <code>r0..r3</code> and <code>pooled-scan</code> <code>c71c4a56</code>). It found that <strong>63.1% to 70.2%</strong> of post-worker <code>job_wait</code> idle time arrives in continuous bursts at least one full-block scan wide.</p>
+<h3 id="the-realized-8-worker-wall-time-law">The realized 8-worker wall-time law<a class="headerlink" href="#the-realized-8-worker-wall-time-law" title="Permanent link">&para;</a></h3>
+<p>Workers drain <code>job_queue</code> at priority 1. Only when <code>job_queue</code> is empty do they pull speculative scan candidates at priority 2. That lets the serial scanner and eight workers share scanning at 9-way capacity:</p>
+<div class="arithmatex">\[\text{wall}_{8\text{W}} \approx \frac{8 \cdot (W'/8) + S'}{9} + 4.85\text{ ms}\]</div>
+<p>The <code>4.85 ms</code> coupling residual breaks into <code>2.62 ms</code> startup, <code>1.15 ms</code> validated handoff residual and <code>0.83–1.18 ms</code> scheduling and drain tail. Using a smaller initial chunk 0 drops <code>in_wait</code> to <code>0.05 ms</code> and trims the residual to <strong>+3.50 ms</strong>.</p>
+<p>Breaking <strong>6 GB/s</strong> (<span class="arithmatex">\(\le 140.0\text{ ms}\)</span>) at <span class="arithmatex">\(S' = 145\text{ ms}\)</span> requires <span class="arithmatex">\(W'/8 \le 133.9\text{ ms}\)</span>, or <span class="arithmatex">\(\le 135.4\text{ ms}\)</span> with small chunk 0. With L1-batched MTF (<code>W'/8 = 125 ms</code>), eight-worker wall time reaches <strong>131.82 ms (6.36 GB/s)</strong>. That clears the 6 GB/s target with <strong>+8.18 ms</strong> to spare.</p>
+<figure class="bf-fig">
+<div class="bf-title">Coupled eight-worker wall time on wikidata ×4 (839 MB): trace-replay trajectory across the 6 GB/s line</div>
+<svg viewBox="0 0 640 270" role="img" aria-label="Horizontal bar chart of coupled 8-worker wall time on 839 MB wikidata x4 against the 140 ms (6 GB/s) target line: shipped mibz2 is 194.6 ms (4.31 GB/s); worker stack with serial scan hits 150.9 ms ceiling (5.56 GB/s); slack-only hybrid without MTF fold reaches 141.1 ms (139.7 ms small chunk 0); slack-only hybrid with MTF fold reaches 131.8 ms (6.36 GB/s). Bottom comparison shows k=6 non-regression at 0.998x vs killed pooled-scan at 1.105x.">
+  <line class="bf-rule" x1="192" y1="20" x2="192" y2="162"/>
+  <line class="bf-grid" x1="292" y1="20" x2="292" y2="162"/>
+  <line class="bf-grid" x1="392" y1="20" x2="392" y2="162"/>
+  <line class="bf-grid" x1="492" y1="20" x2="492" y2="162"/>
+  <line class="bf-grid" x1="592" y1="20" x2="592" y2="162"/>
+
+  <!-- 140 ms = 6 GB/s vertical dashed target line: x = 192 + 140 * 2.0 = 472 -->
+  <line x1="472" y1="14" x2="472" y2="168" style="stroke:var(--bf-green);stroke-width:2;stroke-dasharray:5 3"/>
+  <text class="bf-t-green" style="font-size:10.5px" x="477" y="25">6 GB/s (140 ms)</text>
+
+  <!-- Bars (scale: 2.0 px per ms, 0..200 ms -> 192..592) -->
+  <text class="bf-tm" x="184" y="47" text-anchor="end">Shipped mibz2 (i9 meas.)</text>
+  <rect x="192" y="34" width="389.2" height="18" rx="2" fill="var(--bf-vz-2)"/>
+  <text class="bf-ttiny" x="386" y="47" text-anchor="middle" style="fill:var(--bf-vz-2-ink)">194.6 ms · 4.31 GB/s</text>
+
+  <text class="bf-tm" x="184" y="77" text-anchor="end">Workers + serial scan (S'=145)</text>
+  <rect x="192" y="64" width="301.8" height="18" rx="2" fill="var(--bf-vz-1)"/>
+  <text class="bf-ttiny" x="342" y="77" text-anchor="middle" style="fill:var(--bf-vz-1-ink)">150.9 ms · 5.56 GB/s</text>
+
+  <text class="bf-tm" x="184" y="107" text-anchor="end">Slack hybrid, no MTF fold</text>
+  <rect x="192" y="94" width="282.2" height="18" rx="2" fill="var(--bf-vz-1)" opacity="0.72"/>
+  <text class="bf-ttiny" x="480" y="107">141.1 ms (139.7 small c0)</text>
+
+  <text class="bf-t-strong" style="font-size:11px" x="184" y="137" text-anchor="end">Slack hybrid + MTF fold</text>
+  <rect x="192" y="124" width="263.6" height="18" rx="2" fill="var(--bf-green)"/>
+  <text class="bf-ttiny" x="323" y="137" text-anchor="middle" style="fill:var(--bf-vz-3-ink)">131.8 ms · 6.36 GB/s</text>
+
+  <!-- Axis labels -->
+  <text class="bf-tm" x="192" y="178" text-anchor="middle">0</text>
+  <text class="bf-tm" x="292" y="178" text-anchor="middle">50</text>
+  <text class="bf-tm" x="392" y="178" text-anchor="middle">100</text>
+  <text class="bf-tm" x="492" y="178" text-anchor="middle">150</text>
+  <text class="bf-tm" x="592" y="178" text-anchor="middle">200 ms</text>
+
+  <!-- Bottom strip: k=6 non-regression guard -->
+  <line class="bf-rule" x1="18" y1="194" x2="622" y2="194"/>
+  <text class="bf-t-strong" style="font-size:10.5px" x="18" y="210">BELOW-THE-KNEE GUARD (k = 6 WORKERS, RATIO VS SERIAL SCAN; 1.000× = PARITY)</text>
+  <text class="bf-tm" x="184" y="230" text-anchor="end">Killed pooled-scan (#942 P)</text>
+  <rect x="192" y="219" width="221.0" height="14" rx="2" fill="var(--bf-vz-s5)"/>
+  <text class="bf-tm" x="420" y="230">1.105× (regressed +10.5%)</text>
+
+  <text class="bf-t-strong" style="font-size:10.5px" x="184" y="252" text-anchor="end">Slack-only hybrid (#1056)</text>
+  <rect x="192" y="241" width="199.6" height="14" rx="2" fill="var(--bf-green)"/>
+  <text class="bf-t-green" style="font-size:10.5px" x="399" y="252">0.998× (3–4 helper blocks, 0.5–0.7 ms)</text>
+</svg>
+<figcaption>Source: <code>docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md</code> (#1056). Shipped baseline is directly measured on the 10-core i9-10900K; post-worker and hybrid bars are discrete-event replays of <code>src/parallel.rs</code> driven by primary i9 traces at <code>S' = 145 ms</code> and <code>W'/8 = 135 ms</code> (no fold) or <code>125 ms</code> (with L1-batched MTF).</figcaption>
+</figure>
+
+<h3 id="zero-plumbing-design-and-below-the-knee-safety">Zero-plumbing design and below-the-knee safety<a class="headerlink" href="#zero-plumbing-design-and-below-the-knee-safety" title="Permanent link">&para;</a></h3>
+<p>Four concrete design choices eliminate every overhead that killed <code>#942</code>:</p>
+<ol>
+<li><strong>Offload AVX2 <code>Finder</code> to the 91.6%-idle reader thread (<code>0.00 ms</code> tax).</strong> Primary <code>per_k.tsv</code> traces show <code>mibz2-read</code> is active for just <strong>12.34 ms</strong> and sleeps in <code>feed_wait</code> for <strong>134.10 ms</strong> at <code>k = 8</code>. Wrapping each read chunk in <code>Arc&lt;Chunk { base, bytes, cands: OnceLock&lt;Vec&lt;Cand&gt;&gt; }&gt;</code> lets <code>mibz2-read</code> push chunk 0 immediately and populate K4's 4.82 ms AVX2 <code>Finder</code> (<code>9.84 GB/s</code>) while waiting on backpressure.</li>
+<li><strong>Eliminate <code>pool_copy</code> by skipping seam blocks (<code>5.27 → 0.00 ms</code>).</strong> Fewer than 0.7% of blocks (11 of 1,724) straddle a 4 MiB chunk boundary. Helpers simply skip seam-straddling candidates and leave them to the serial scanner's existing seam window (<code>#1031</code>).</li>
+<li><strong>Priority-1 decode draining plus <code>full_only</code> filtering.</strong> Helpers touch scan candidates only when <code>job_queue</code> is empty. At <code>k = 6</code>, that runs just <strong>3 to 4 helper blocks</strong> (<code>0.5–0.7 ms</code>). Wall time across <code>k = 6..7</code> stays at <strong>0.997× to 0.999×</strong>, versus <code>#942</code>'s <code>1.105×–1.149×</code>. Filtering <code>gap &gt;= 512 B</code> (<code>full_only</code>) cuts helper handoffs by <strong>−35% to −41%</strong>.</li>
+<li><strong>Policy A jump-ahead scanner and worker-local scratch.</strong> Instead of stalling on speculative validation (<code>#770</code>'s <code>+1.2–2.3 ms</code> <code>serial_wait</code>), the scanner verifies completed helper bit-chains asynchronously and jumps straight past validated blocks. Each worker keeps a thread-local <code>ScanScratch</code> and <code>Vec&lt;u16&gt;</code> (<code>~200 KiB</code>, L2-hot), avoiding cross-core <code>free_syms</code> coherence ping-pong (<code>#1034</code>).</li>
+</ol>
+<h2 id="6-how-the-five-pieces-fit-and-what-builds-next">6. How the five pieces fit and what builds next<a class="headerlink" href="#6-how-the-five-pieces-fit-and-what-builds-next" title="Permanent link">&para;</a></h2>
+<p>Viewed together, the five studies expose a clean architectural stack where each win amplifies the next:</p>
+<table>
+<thead>
+<tr>
+<th>Stage / boundary</th>
+<th>Primary study</th>
+<th>Mechanism</th>
+<th>VM / replay finding</th>
+<th>i9-10900K gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A5 + A6a</code></td>
+<td><code>#1048</code>, <code>#1055</code></td>
+<td>2 KiB L1d run batch + <code>OutQ16</code> 496/512 guard</td>
+<td>−12.1% base / −19.1% native (<code>A5 + A6a</code>)</td>
+<td>≥ 2.5% 1W, 0 <code>A6c</code> regression</td>
+</tr>
+<tr>
+<td><code>A6b</code></td>
+<td><code>#1046</code></td>
+<td>Fused setup + safe 64K SoA + gen-tagged dict</td>
+<td>−27.4%..−28.8% <code>A6b</code>, −5.4%..−7.6% <code>C+E</code></td>
+<td>RSS &amp; 8–10W L3 scaling</td>
+</tr>
+<tr>
+<td><code>A6c + A7</code></td>
+<td><code>#1057</code></td>
+<td>SIMD <code>Reader::wire</code> + <code>S=16</code> bit-31 + 4 lanes</td>
+<td>−31.0%..−35.8% <code>A6c+A7</code> (97.4% of oracle)</td>
+<td>+208..+235 ms 1W, 0 <code>unsafe</code></td>
+</tr>
+<tr>
+<td><code>E + A9</code></td>
+<td><code>#1045</code></td>
+<td>Zero-scratch 4K tiles + 64K CRC + GF(2)</td>
+<td>−53.4% writes, +31.8..+49.9 ms 1W proj.</td>
+<td>Vectored only (no stitch)</td>
+</tr>
+<tr>
+<td>Delivery</td>
+<td><code>#1058</code></td>
+<td>160 B inline <code>ReadyBlock</code>, <code>+16 KiB</code> tile slab</td>
+<td>0.86×–1.01× consumers, RSS 1.017×</td>
+<td>≤ 1.05× RSS, 0 overflows</td>
+</tr>
+<tr>
+<td>8W scan</td>
+<td><code>#1056</code></td>
+<td><code>mibz2-read</code> Finder + slack-only Policy A</td>
+<td>131.8 ms (6.36 GB/s) @ 8W, 0.998× @ 6W</td>
+<td>≥ 6 GB/s @ 8W, ≤ 1.005× @ 6W</td>
+</tr>
+</tbody>
+</table>
+<p>The dependency order for production builds is equally crisp. First, ship the independent worker kernels (<code>a6b-endpoint-build</code>, opt-in <code>forward-emission</code> and <code>mtf-l1-batch-build</code>) alongside the vectored <code>ReadyBlock</code> boundary (<code>#1058</code>). That lets upstream RLE1+CRC fusion (<code>#1045</code>) land without paying stitching's 74.9% copy tax. Second, verify on the 10-core i9-10900K that the worker stack pulls <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor. Then enable <code>pooled-scan-hybrid</code> (<code>#1056</code>) to turn newly exposed <code>job_wait</code> slack into 6 GB/s throughput with zero below-the-knee regressions.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The 256 KiB L2 cliff and the flipped knee">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                The 256 KiB L2 cliff and the flipped knee
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-footer__link md-footer__link--next" aria-label="Next: Reopening Open&#x27;s middle and off-Wikidata">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Reopening Open's middle and off-Wikidata
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=8ebee20700b0"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=8ebee20700b0"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=8ebee20700b0"></script>
+      
+        <script src="../../assets/javascripts/announce.js?v=8ebee20700b0"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=8ebee20700b0"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=8ebee20700b0"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=8ebee20700b0"></script>
+      
+    
+  </body>
+</html>
