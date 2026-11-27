@@ -21,16 +21,32 @@ An observation is a snapshot, not a consumed event. Multiple readers see the sam
 
 Safety requires a fresh check at the operation boundary, not merely a periodically refreshed display. A future protected tooling change should compare the actual running client version to authoritative master, and refuse stale or unavailable client state before mutation. A new client-side guard cannot retroactively constrain old clients or direct ref writers; verified rollout or server-enforced fencing remains necessary wherever applicable. The existing cap gate must not be weakened; this follow-on must not become an additional arbitrary precondition to the already authorised 3-to-6 transition. No automatic refresh should change a work branch, consume a hold, or grant authority.
 
-## Minimal read-only prototype
+## Prototype (read-only)
 
-From a clone with the prototype available:
-    
-    python research/frontier-checkpoint/checkpoint.py --repo .
-    python research/frontier-checkpoint/checkpoint.py --repo . --since LAST_OBSERVED_MASTER
+    python research/frontier-checkpoint/checkpoint.py --repo . --claim CLAIM --cursor .git/frontier-checkpoint
     python -m unittest discover -s research/frontier-checkpoint -p 'test_*.py'
+    (cd research/frontier-checkpoint && python measure.py)
 
-The prototype fetches master, compares the actual working-copy client blob to the authoritative one, and reports changed control paths since the supplied observation or merge-base. Exit 1 means client mismatch, exit 2 means unavailable. Exit 0 only means matching client blob; it is not permission to mutate. No working tree or hold writes, notifications or acknowledgements. Three hermetic bare-remote tests passed in an isolated local Python run. It does not yet project relevant flags or premises semantically, install a periodic poller, or enforce a production guard. Fetch updates a local remote-tracking ref; it never merges.
+One observation fetches master (only the remote-tracking ref moves; nothing merges), compares the working-copy client blob with master's, lists changed control paths, and for `--claim` projects the change onto that claim's declared premises, owned paths, card and open flags. It reports dirty files that master also changed, so integration can be done by hand or in a separate worktree, and the number of commits coalesced since the cursor. The cursor is a local, disposable file (put it in `.git/`), written only after a successful observation; it is not an acknowledgement. Every open flag on the claim is reported on every observation (`open_flags`), so moving the cursor never hides an active restriction; `new_flags` is only a convenience. Exit 1: client mismatch; exit 2: unavailable (a failed fetch never falls back to the cached ref and never moves the cursor); exit 0 grants nothing.
 
-## Next bounded step
+## Tests against the stop test (isolated temporary bare remotes)
 
-Test an active long-lived checkout with dirty research, a protocol update, an unrelated commit, a scope-specific flag and network failure. Demonstrate that the next safe checkpoint detects relevant changes, preserves work, and does not require directed messaging. Then propose the smallest protected-client integration that refuses stale authority and uses existing brief/verify rather than adding another management interface. Measure the latency and overhead of the observation path; coalesce and skip unchanged state. Test a mixed-version scenario honestly: an uninstrumented old client will not self-update. The current rollout remains with #987 and the separate cap PR. This is a small lifecycle improvement, not a new coordinator.
+Seven hermetic tests (`test_checkpoint.py`), all passing on 26 November 2026:
+- *Stale client detected at next observation*, including a locally patched client.
+- *Unrelated dirty work preserved:* HEAD and `git status` are byte-identical before and after; a dirty file that master also changed is reported, not touched.
+- *Relevant scope change surfaced:* a premise edit, a path-scoped flag and a re-frozen stop test are reported for the claim; an unrelated commit yields `continue current work`.
+- *Repeated snapshot idempotent:* identical output from the same cursor; three intermediate commits coalesce into one observation; an unchanged master takes a fast path.
+- *Unavailable origin never grants authority:* the cached (stale) ref is not used, the cursor stays put, the CLI exits 2.
+- *Mixed old-client limit explicit:* after a protocol change, a client that does not observe can still push a `hold/` ref to the remote. Nothing here fences it; `limits` says so.
+
+## Cost and safe-point latency (`measure.py`)
+
+Fixture: 40 claims, 20 flags, a dirty checkout, local bare remote, 0.2 s indivisible work batches, a 0.5 s observation interval standing in for five minutes. Observation cost: median 0.022 s unchanged (max 0.026), 0.118 s with claim scope (max 0.134; two flag-tree reads, each flag one `git show`). Against the real origin from a cloud session: 0.52 s wall, 0.15 s CPU, dominated by the fetch. Detection latency after the push, five runs: 0.07–0.53 s, all within the analytic bound interval + batch = 0.7 s (plus one observation). At the real five-minute target the bound is five minutes plus the longest indivisible step; a twenty-minute benchmark call is detected when it returns, never during it. Local remote only: the latency numbers exclude network variance.
+
+## Minimal protected integration (proposal; a separate, reviewed PR)
+
+1. In `frontier.py`, `claim`, `verify`, `take_review` and `finish_review` already call `_fetch_master(strict=True)` (as of 8f214b8); at those sites, and in `renew` and `release`, which do not yet fetch, add one comparison of `hash-object` of the running client file (`__file__`) with `origin/master:frontier/tools/frontier.py`, and refuse those mutations on mismatch or fetch failure, naming the refresh step. No new command, ref, queue or state.
+2. `brief` prints the same comparison and the claim's `open_flags`/`premise_changes` since a local cursor, so the long-work checkpoint is simply "run `brief --since` between batches"; `renew` (already the long-work boundary) is the natural five-minute safe point.
+3. README step 3 gains one sentence: observe at batch boundaries during long work. That is the only change to agent behaviour.
+
+This cannot reach a client that predates it (the old-client test): the first rollout still depends on agents reading master, as #987 did. Fencing a direct ref writer needs server-side protection (`branch-protection`), outside this claim.
