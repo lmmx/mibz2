@@ -16,6 +16,7 @@ evidence: #995 head 81527e94 (green: every check run and pre-commit.ci); squash 
 **What's next:**
 - **#979** edits the same entrypoints (CLAUDE.md, frontier/README.md) and will now conflict. Its author reconciles it against 97bd4416, keeping both policies.
 - **Under the new rule,** #1012, #1016 and #1010's producers can merge their own PRs once their heads are green.
+- **The selector over-selects on an active master.** On #1017's second head (e4163d90) the scope job saw 7 changed paths for a 1-file diff, because the event's `pull_request.base.sha` was older than the merge commit's first parent, and master's drift between the two counted as changed. This is conservative (the full suite ran) but wasteful. The fix is to diff `HEAD^1 HEAD` for pull_request events, which `fetch-depth: 2` already allows.
 - **Small follow-up:** class `frontier/limits.toml` as lightweight in `.github/ci_scope.py`. Today it selects the full suite, which is conservative but slow.
 **Caveats:**
 - **First live run (#1017, head 392392cd):** `scope` passed, and `rust`, `moonshot`, `fuzz-smoke`, `submit`, `python`, `typing`, `linux`, `windows`, `macos` and `sdist` were skipped. `check` and `no-ai-attribution` still ran.
