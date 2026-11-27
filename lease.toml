@@ -1,8 +1,8 @@
 id = "release-terminal-holds"
 holder = "claude-code"
-session = "734f059390fe"
+session = "74f0294cf9b6"
 claimed_at = "2026-11-27T01:47:17+00:00"
-expires = "2026-11-27T13:13:25+00:00"
+expires = "2026-11-27T13:17:40+00:00"
 owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
 mechanisms = []
 base = "16e969d17d51e9e72a924d3cf566df8ab645427b"
@@ -10,4 +10,4 @@ released = false
 producer = "antigravity"
 phase = "integration"
 pr = 1047
-pr_head = "f1ff20ca349e7b892b1c4fd81d9c7fd8c117f972"
+pr_head = "535c9fa815256ca23a56928d68d2f2bc460ef00b"
