@@ -80,7 +80,9 @@ signal, an older pending request for another commit can't take its place on the 
 hold request leaves `run-receipt/<recipe>/hold-<request commit>`, so clearing a hold is never
 undone by the same request. Only like retires like: a ready receipt never retires a hold
 request. Within a pass, holds are decided before ready requests, so a hold published alongside
-a ready request always wins. A deliberate repeat at the same commit goes through manual
+a ready request always wins. Clearing a hold means resume. A ready request refused while the hold was
+set becomes eligible again on the next pass, if its lease, review and CI still check out. To
+stop that, withdraw it before clearing the hold. A deliberate repeat at the same commit goes through manual
 dispatch, with a delta saying why (CLAUDE.md, 16 November). A manual `clear` of a manually set
 tag leaves no receipt, so whoever clears it should also withdraw or hold any pending request
 for that recipe.

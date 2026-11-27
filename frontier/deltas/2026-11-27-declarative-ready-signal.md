@@ -25,7 +25,7 @@ evidence: #1104; bench/run_requests.py; bench/test_run_requests.py (35 tests fro
 - an older request reviving after a clear;
 - the deny-listed claim status, fork and closed PRs, `version = true`, and leasing on a peeled tag.
 - Withdrawal-after-activation is now documented: use a hold.
-**Re-review at a9d21e3:** all earlier points confirmed fixed. One new defect: a ready receipt from the same pass retired a pending hold. Fixed with like-retires-like receipts and holds decided first, with tests. A nit asked to key cancelled twins by suite; it was declined, because real twins sit in different workflow runs (`mirror` on #1104). This is documented.
+**Re-review at a9d21e3:** all earlier points confirmed fixed. One new defect: a ready receipt from the same pass retired a pending hold. Fixed with like-retires-like receipts and holds decided first, with tests. A nit asked to key cancelled twins by suite; it was declined, because real twins sit in different workflow runs (`mirror` on #1104). This is documented. A third check at dce7544: pass with nits; the nit, that clearing a hold resumes older ready requests, is documented.
 **CI at 7f8e5c0, two failures, both class A:**
 - no-ai-attribution: the integration appended its footer to the PR body; stripped.
 - test: the module's git calls had no identity on the runner; the tests now set one.
