@@ -1046,6 +1046,17 @@ own terms and links each topic to its place in the companion.
 Each of these rules is traced to the posts, to the maintainer's edits, or to the
 calibration protocol.
 
+- **Headlines claim only `default`-state effects; name every other state in place** (Louis,
+  27 November 2026). A post's title and dek may claim a speed, memory or size effect only
+  for changes in state `default` in `frontier/ledger.tsv`, with the figure measured on a
+  named machine. Any change in another state (`experimental`, `awaiting-review`, `prototype`
+  or `target`) must be named in the sentence that reports it ("behind an experimental
+  feature", "awaiting review", "a prototype", "the target"). CI's `check_prose.py` fails a
+  new or edited title or dek carrying a throughput, percentage, time or memory figure unless
+  the post's blog card (`frontier/blog/*.toml`) lists `changes` whose ledger rows are all
+  `default`, and fails when the body's first mention of a ledgered non-default change omits
+  its state word (matched by a `/pull/<N>` link, `#<N>` citation or the card's optional
+  `[change_labels]` phrase, or across the body when unlinked).
 - **Report every run, the unfavourable ones too.** A result rests on all the runs of the
   question, not on the best one. Report each run with its machine, since CI's CPU model
   varies by run [P: agent-team post, "neither PR run was faster there beyond noise"; E:
