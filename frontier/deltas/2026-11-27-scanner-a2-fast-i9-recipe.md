@@ -1,6 +1,6 @@
 claim: scanner-a2-fast-i9-run
 by: claude-code
-outcome: partial
+outcome: review
 evidence: branch bench/scanner-a2-fast; head 689e55f7 (origin build/scanner-a2-fast-head) = #1117 merged with master 2af67a67; local smoke run of both arms (not timed)
 
 **What was asked:** the i9 recipe for gate 2 of `scanner-a2-fast-build`, run before #1117 merges.
