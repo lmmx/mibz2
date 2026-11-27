@@ -1,0 +1,9 @@
+id = "mtf-fold-l1-batch-redesign"
+holder = "antigravity"
+session = "928f14445ab2"
+claimed_at = "2026-11-27T07:38:09+00:00"
+expires = "2026-11-27T15:38:09+00:00"
+owned_paths = ["src/runs/fold.rs", "src/open.rs", "src/open/outq.rs"]
+mechanisms = ["mtf", "construction-first-pass"]
+base = "c5eb2bc2c9388c83b35c13d73cc8bba8131d1ae0"
+released = false
