@@ -1,0 +1,36 @@
+id = "huff-bmi2-build"
+title = "Runtime BMI2 (shlx/shrx) block-level dispatch for K=2 Huffman decode"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/lib.rs", "src/huff.rs", "src/block.rs"]
+mechanisms = ["scan-isa-dispatch"]
+needs_louis = ""
+question = """
+`huff-bmi2-dispatch` passed its frozen >= 5.0% non-overlapping gate nearly 2x over: on a baseline x86-64 release build over 7 interleaved repeats across all 431 wikidata blocks, isolated block-level `#[target_feature(enable = "bmi2")]` (`bmi2_all`) cut total A3 by -9.01% (75.508 -> 68.702 ms, non-overlapping `[71.344..78.610]` vs `[64.228..70.856]`; -9.51% in an earlier run), and combining AVX2+BMI1+BMI2 `build_into` with pure scalar BMI2 decode (`avx2_t_bmi2_d`, avoiding YMM/`vzeroupper` in the decode loop) cut A3 by -9.60% (non-overlapping). `objdump -d` confirmed 23/23 `shl %cl -> shlx` and 10/10 `shr %cl -> shrx` in decode, whereas per-group `#[target_feature]` dispatch (`bmi2_grp`) regressed decode +3.26%..+6.00%.
+Implement runtime BMI2 detection in `Kernels` (preserving public API compatibility and `Kernels::new_unchecked` soundness, e.g. `bmi2: std::is_x86_feature_detected!("bmi2")` in `Kernels::detect()`, `false` in `scalar()` and `new_unchecked()`), and hoist `#[target_feature(enable = "bmi2")]` dispatch to the block-level symbol group loop (with `decode_group_win` / `decode_group_slice` `#[inline(always)]` inside it, zero YMM/`vzeroupper` in decode, and optional AVX2+BMI2 `build_into`). Thread `Kernels` (or `use_bmi2: bool`) cleanly into `read_item_with_scratch` / `Scanner`, keeping the `unsafe` surface minimal (only calling the `#[target_feature]` entry point gated on `k.bmi2()`), Rust 1.80 MSRV compatible (`#[target_feature]` on `unsafe fn`), 100% byte- and error-identical, and Miri clean.
+"""
+why = """
+After `multi-symbol-huffman-table` (#986) stopped B=10 K=3/K=4 tables, runtime BMI2 dispatch is the only serial-algorithmic/ISA lever left on row S. On i9-10900K (Comet Lake, same 3-uop/2-cycle `shl %cl` vs 1-uop/1-cycle `shlx` microarchitecture as Haswell), cutting A3 (~144 ms, ~81% of the 177.5 ms scan) by -7.9%..-9.6% projects ~11.4-13.8 ms off the serial scan (~6.4-7.8% of the 8W wall once worker improvements push S'(8) below 164 ms), with zero table bloat, zero L1d spill, and zero algorithmic risk.
+"""
+stop_test = """
+Frozen before data: write a brief adoption registration before queuing the i9 run (comparing `Kernels::detect()` with BMI2 vs BMI2 restricted off via `Kernels` on wikidata x4 at k=1 and k=8, plus scan-only timing, 7+ interleaved repeats). Adopt as default only if: (1) 100% byte-, CRC-, and error-identical on all tests, fuzz smoke, and wikidata x4; (2) Miri clean on scalar path and `Kernels` soundness tests pass; (3) `objdump -d` on release baseline x86-64 binary verifies `shlx` and `shrx` with 0 `shl %cl` and 0 `vzeroupper` in the BMI2 block-decode loop; (4) on i9-10900K, scan-phase wall drops by >= 4.0% (non-overlapping 95% CI, corresponding to >= ~7 ms off the 177.5 ms serial scan) with zero regression (> +1.0% 95% lower bound) on 1W or 8W wall and <= 1.01x RSS. Otherwise KILL/STOP and record in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR with `Kernels.bmi2` + block-level `#[target_feature(enable = "bmi2")]` Huffman decode dispatch (behind a research feature or clean `Kernels` toggle for paired A/B), disassembly verified, CI + Miri green, adoption registration frozen and reviewed, follow-on workstation run queued per standing authorisation, delta written, and `surface.tsv` row S updated.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/huff-bmi2-dispatch.md",
+  "examples/huff_bmi2_ablation.rs",
+  "docs/journal/2026-11-26-explore/multi-symbol-huffman-table.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+  "src/huff.rs",
+  "src/block.rs",
+  "src/lib.rs",
+]
+links = [
+  "frontier/claims/huff-bmi2-dispatch.toml",
+  "docs/journal/2026-11-26-explore/huff-bmi2-dispatch.md",
+]
