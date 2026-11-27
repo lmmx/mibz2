@@ -1,9 +1,9 @@
-id = "forward-emission-run"
+id = "release-0-5-15"
 holder = "antigravity"
-session = "590375097c16"
-claimed_at = "2026-11-27T13:36:18+00:00"
-expires = "2026-11-27T21:36:18+00:00"
-owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
-mechanisms = ["forward-lanes-workstation-validation"]
+session = "cd5bb42c90e9"
+claimed_at = "2026-11-27T13:37:41+00:00"
+expires = "2026-11-27T21:37:41+00:00"
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
 base = "dd93541881b29d7137066e07236095c70cd7ca1d"
 released = false
