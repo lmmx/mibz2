@@ -1,0 +1,16 @@
+claim: dense-cap-precheck
+by: antigravity
+outcome: done
+evidence: src/open.rs (within_cap, OpenCellsOf::invert_runs); src/open/dense.rs (within_cap_matches_construction_and_skips_first_pass); docs/journal/2026-11-27-explore/route-census.md; examples/route_census.rs; wikidata.bz2 rebuilt from origin/bench-data (SHA-256 82f65ace checked, 209,700,196 bytes); local corpora (bzip2 -9, SHA-256 prefixes) prose 2ae90d16, pysrc 79333a3f, rustsrc 0ebfeb71, json 80aad730, elf a6ee39af, dna ca86495f, random 54bd5fed
+
+**What was asked:** Check the dense-band structural cap (`Cap::dense`) from the run records before entering `OpenCells`' first pass, eliminating the 1.13–1.48x fallback regression off wikidata without changing wikidata's route or 1-worker wall (frozen stop_test: exactness + 233 Open on wikidata; dense-band refused blocks <= 1.05x Segmented across 7 interleaved repeats; wikidata 1w wall <= 1.005x baseline).
+**What I found:**
+- Added safe `within_cap(records, p, LIMIT, cap)` in `src/open.rs` and gated `OpenCellsOf::invert_runs` on `cap.m != u32::MAX && !within_cap(...)` (dense band only; non-dense blocks take zero precheck work). Consecutive same-byte records merge identically to `maximal` + `split` + `Pass::take` (including thick-run splits around `p`) and return `false` as soon as `m > cap.m || ns > cap.strips`. Zero new `unsafe`.
+- **Correctness (stop_test 1, PASS):** `open::` debug tests (40/40 including new `within_cap_matches_construction_and_skips_first_pass` verifying exact `(m, ns)` boundary parity and `spill.taken == 0` on precheck refusal), `--features mtf-fold` tests, `service_default`, and byte-identical output + exact block-route parity across all 8 corpora (`wikidata.bz2` 233/233 Open; 24 dense-band refused blocks across 5 local corpora).
+- **Dense-band refused blocks (stop_test 2a, PASS):** 7 interleaved `ROUTE_SHADOW=1` repeats across 24 refused dense-band blocks (`prose` 7, `pysrc` 3, `rustsrc` 3, `json` 3, `elf` 8):
+  - Baseline: median-of-block-ratios `1.5364x` (sum ratio `1.4041x`; per corpus: `elf 1.4316x`, `json 1.4921x`, `prose 1.4861x`, `pysrc 1.1644x`, `rustsrc 1.4448x`).
+  - Candidate: median-of-block-ratios `1.0272x` (sum ratio `0.9838x`; per corpus: `elf 1.0357x`, `json 0.8727x`, `prose 0.9501x`, `pysrc 0.8884x`, `rustsrc 1.0395x`), clearing `<= 1.05x` overall and on every corpus.
+- **Wikidata 1w guard (stop_test 2b, PASS):** On wikidata's 5 dense blocks, `within_cap` adds ~0.27 ms combined (~0.03% of 1w wall). Across 26 paired interleaved `bzcat 1` repeats (15 + 11): CPU ratio geom `0.9808x` (95% CI `[0.9654, 0.9964]`) in batch 1 and median `1.0001x` (`786.3 -> 785.6 ms`, geom `1.0031x`) in quiet batch 2; wall geom `0.9772x` / `0.9853x` (base median `802.2 ms` quiet).
+**What changed:** Implemented `within_cap` precheck in `src/open.rs`, added exact boundary and skip-first-pass tests in `src/open/dense.rs`, marked `dense-cap-precheck` done. No surface row changed (surface prices wikidata, unchanged).
+**What's next:** Integrate on green CI (`rust`, `fuzz-smoke`, `miri`, `bench`, `pre-commit.ci`) and release `hold/dense-cap-precheck`.
+**Caveats:** VM timings are noisy on wall clock under shared load (wide wall CI in batch 1, tracked via CPU time alongside wall); no i9 workstation run is required by `done_when`.

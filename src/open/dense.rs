@@ -206,3 +206,77 @@ fn dense_band_routes_and_decodes_exactly() {
         "outright {outright}, banded {banded}, capped {capped}, refused {refused}"
     );
 }
+
+/// `within_cap` matches the uncapped construction's `(retained, thick)` counts at exact boundary
+/// caps across dense columns and marked-row positions (start, interior and end of a thick run,
+/// including cap-127 split records), and refusing a dense-band block skips Open's first pass.
+#[test]
+fn within_cap_matches_construction_and_skips_first_pass() {
+    let mut g = Lcg(0x7072_6563);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    for (n, long) in [(3_000usize, 6u32), (30_000, 12), (100_000, 40)] {
+        let l = dense_column(&mut g, n, long);
+        let r = Runs::of_column(&l);
+        // Find a thick maximal run (and one spanning a cap-127 split if present) to place `p`
+        // at its start, interior and end.
+        let mut marks = vec![0u32, n as u32 / 2, n as u32 - 1];
+        maximal(r.records(), |_, pos, width| {
+            if width > LIMIT && marks.len() < 9 {
+                marks.push(pos);
+                marks.push(pos + width / 2);
+                marks.push(pos + width - 1);
+            }
+        });
+        for p in marks {
+            let s = k.run::<true, true>(r.records(), n, p, LIMIT, &mut out);
+            let (m, ns) = (s.retained as u32, s.thick);
+            assert!(within_cap(r.records(), p, LIMIT, Cap { m, strips: ns }));
+            assert!(!within_cap(
+                r.records(),
+                p,
+                LIMIT,
+                Cap {
+                    m: m - 1,
+                    strips: ns
+                }
+            ));
+            if ns > 0 {
+                assert!(!within_cap(
+                    r.records(),
+                    p,
+                    LIMIT,
+                    Cap { m, strips: ns - 1 }
+                ));
+            }
+        }
+    }
+
+    // A refused dense-band block skips `Kernel::try_run` entirely (zero queue chunks taken).
+    let mut cells = OpenCells::default();
+    let mut tested_refusal = false;
+    for i in 0..40 {
+        let l = dense_column(&mut g, 40_000, 75 + i);
+        let r = Runs::of_column(&l);
+        if let Some(cap) = OpenCells::cap(r.records().len(), l.len(), 7) {
+            if cap.m != u32::MAX && !within_cap(r.records(), 7, LIMIT, cap) {
+                let before_taken = cells.open.spill.taken;
+                let before_capped = cells.capped;
+                out.clear();
+                assert!(cells.invert_runs(&r, l.len(), 7, &mut out, Kernels::detect()));
+                assert!(out == plain(&l, 7));
+                assert_eq!(cells.capped, before_capped + 1);
+                assert_eq!(
+                    cells.open.spill.taken, before_taken,
+                    "precheck refusal must not enter Open's first pass"
+                );
+                tested_refusal = true;
+                break;
+            }
+        }
+    }
+    assert!(
+        tested_refusal,
+        "expected at least one refused dense-band block"
+    );
+}
