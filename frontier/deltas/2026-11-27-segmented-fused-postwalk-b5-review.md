@@ -1,7 +1,7 @@
 claim: segmented-fused-postwalk
 by: claude-code
-outcome: partial
-evidence: PR #1183 (author head e12e0aa1; merged-with-master head 8121ebdc); src/bwt.rs; src/lib.rs; src/rle.rs; src/open.rs; src/cells.rs; src/cells_lazy.rs; src/runs.rs
+outcome: blocked
+evidence: PR #1183 (author head e12e0aa1; exact head 56049aeb, CI bench run 46084269815 vs merge base 3d8fc66, Xeon Platinum 8573C); src/bwt.rs; src/lib.rs; src/rle.rs; src/open.rs; src/cells.rs; src/cells_lazy.rs; src/runs.rs
 
 **What was asked:** the independent B5 review that #1183 asks for, then integration under the claim's frozen stop_test.
 
@@ -20,4 +20,14 @@ evidence: PR #1183 (author head e12e0aa1; merged-with-master head 8121ebdc); src
 
 PASS on both: merge, mark `done`. Otherwise mark `blocked` with the failing cell. A dead-ends row goes in only if `text` shows no primary win or a guard breaches beyond noise.
 
-**What's next / caveats:** the CI runner is Zen 3, so i9 behaviour is unmeasured; the claim's projected ≥6% at 1T is a projection, not a bar. The `u64`-store `build_lf` (mechanism 2) was dropped by the author after the first Zen 3 read and is not shipped here.
+**Verdict on the exact head (56049aeb vs 3d8fc66, one run, read as frozen above): BLOCKED, not merged.**
+- *Timing PASS:* `text` wall -4.2% (-5.0, -3.3) 1T, -8.9% (-12.0, -5.8) 2T, -6.7% (-9.4, -4.0) 4T; `wikidata` -0.7/-1.7/-1.1%, all faster; `runs` -6.7..-20.2% and `onebyte` -8.3..-19.8%; no secondary cell above +2% (`random` 1T +1.5% (+0.8, +2.2), slower but inside the bar); same bytes everywhere.
+- *Peak RSS <= 1.02x FAIL:* `pattern` 4T +4.3%, beyond noise ("more"); `wikidata` 2T +3.0%, not significant. Both are over 1.02 on the point estimate. Policy §4's 10% line is not breached, so this is no dead end, and `text` won, but the claim's own frozen bound is not relaxed.
+
+**What's next:** a revision that removes the extra peak RSS, measured once on its own exact head under the same bar; that counts as a new arm, not a re-run. Candidates to price first:
+- the `start == 0` first-growth estimate in `grow_out`, used while `consumed < 1024` (`rem_in + rem_in/16 + 32 KiB`), and the `raw/100 + 16 KiB` headroom on expansive blocks (`pattern`, 17,563x);
+- `decode_block`'s `s.ll.reserve(n)`, kept only for the trace ledger, which now sits beside a grown `out`;
+- `out.reserve(n + 64)` against pooled exact-size buffers in the parallel workers at 2/4T.
+The B5 review above stands for any revision that leaves those unsafe blocks unchanged.
+
+**Caveats:** the CI runner is Intel Xeon here (Zen 3 on the first run), and the i9 is unmeasured. The claim's projected >= 6% at 1T is a projection, not a bar. The `u64`-store `build_lf` (mechanism 2) was dropped by the author and is not in this PR.
