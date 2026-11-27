@@ -1308,6 +1308,92 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(fresh.live(holds["c4"][1]))
         self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
 
+    def test_direct_merge_done_hold_finish_and_auto_reconcile(self):
+        """A direct-merged done claim's stranded hold reconciles safely and unblocks overlapping paths."""
+        seed = self.sb.seed
+        (seed / "frontier/claims/c1.toml").write_text(
+            _claim_toml("c1", zone="striated", owned_paths=["docs/team/"])
+        )
+        (seed / "frontier/claims/c2.toml").write_text(
+            _claim_toml("c2", zone="striated", owned_paths=["docs/team/RULES.md"])
+        )
+        _git(seed, "add", "frontier/claims/c1.toml", "frontier/claims/c2.toml")
+        _git(seed, "commit", "-m", "striated overlapping claims")
+        _git(seed, "push", "origin", "master")
+
+        author = self.sb.clone("direct-author")
+        res = self.sb.run_frontier(author, "claim", "c1", "--by", "producer")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "done"\npr = 42'))
+        _git(author, "add", str(card))
+        _git(author, "commit", "-m", "complete c1 directly")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        head = _git(author, "rev-parse", "HEAD")
+        _git(author, "push", "origin", "HEAD:master")
+
+        merged = {
+            "number": 42, "state": "closed", "draft": False, "merged": True,
+            "merge_commit_sha": head, "body": "Claim: c1\n\ndone",
+            "base": {"ref": "master"}, "head": {"sha": head},
+        }
+        closed_unmerged = {**merged, "merged": False}
+        fresh = _load_frontier_module(self.sb.clone("direct-fresh"))
+        # cancel-review must never release a live work hold that never entered integration.
+        with mock.patch.object(fresh, "read_pr", return_value=closed_unmerged):
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, head, cancelled=True)
+        # Fail closed when GitHub PR lookup is unavailable.
+        with mock.patch.object(fresh, "read_pr", side_effect=SystemExit("offline")):
+            with self.assertRaises(SystemExit):
+                fresh.claim("c2", "agent", 1)
+        self.assertFalse(fresh.holds()["c1"][1]["released"])
+
+        # With verified merged PR, acquiring c2 reconciles c1 and succeeds.
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.claim("c2", "agent", 1)
+            fresh.finish_review("c1", 42, head)  # idempotent retry
+        holds = fresh.holds()
+        self.assertTrue(holds["c1"][1]["released"])
+        self.assertEqual(holds["c1"][1]["terminal"], head)
+        self.assertTrue(fresh.live(holds["c2"][1]))
+
+    def test_direct_merge_recovery_rejects_open_or_stale_pr(self):
+        """Direct-merge recovery refuses if trunk is still open or PR predates the lease base."""
+        author = self.sb.clone("guard-author")
+        res = self.sb.run_frontier(author, "claim", "c1", "--by", "producer")
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        _git(author, "commit", "--allow-empty", "-m", "partial PR while still open")
+        _git(author, "push", "origin", "HEAD:refs/pull/42/head")
+        head = _git(author, "rev-parse", "HEAD")
+        _git(author, "push", "origin", "HEAD:master")
+
+        merged = {
+            "number": 42, "state": "closed", "draft": False, "merged": True,
+            "merge_commit_sha": head, "body": "Claim: c1\n\npartial",
+            "base": {"ref": "master"}, "head": {"sha": head},
+        }
+        mod = _load_frontier_module(self.sb.clone("guard-checker"))
+        with mock.patch.object(mod, "read_pr", return_value=merged):
+            with self.assertRaises(SystemExit):
+                mod.finish_review("c1", 42, head)
+        self.assertFalse(mod.holds()["c1"][1]["released"])
+
+        # Advance trunk with status = "done" & pr = 42, then move lease base past PR #42's head:
+        # stale PR #42 must not release a reservation whose base is strictly newer.
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "done"\npr = 42'))
+        _git(author, "add", str(card))
+        _git(author, "commit", "-m", "mark done on trunk after PR")
+        _git(author, "push", "origin", "HEAD:master")
+        newer_base = _git(author, "rev-parse", "HEAD")
+        sha, lease = mod.holds()["c1"]
+        self.assertTrue(mod.write_lease("c1", {**lease, "base": newer_base}, sha, sha)[0])
+        with mock.patch.object(mod, "read_pr", return_value=merged):
+            with self.assertRaises(SystemExit):
+                mod.finish_review("c1", 42, head)
+        self.assertFalse(mod.holds()["c1"][1]["released"])
+
 
 if __name__ == "__main__":
     unittest.main()
