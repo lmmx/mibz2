@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
+
+### <!-- 3 -->Performance
+
+- *(runs)* widen takes_runs admission to 75% with 12.5% widened-band guard ([#1175](https://github.com/lmmx/mibz2/pull/1175))
+- *(python)* add 1 MiB chunked BZ2Reader.readall() and fast read() path ([#1176](https://github.com/lmmx/mibz2/pull/1176))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* record 0.5.15 i9 crossover verdict and add #1176 ledger row ([#1180](https://github.com/lmmx/mibz2/pull/1180))
+- *(changelog)* 0.5.15 measured notes, feature review, moonshot lockfile, and partial delta ([#1171](https://github.com/lmmx/mibz2/pull/1171))
+- *(explore)* measure bzip2 Huffman self-synchronisation and the selector-count obstruction (STOP) ([#1166](https://github.com/lmmx/mibz2/pull/1166))
+
+### <!-- 6 -->Testing
+
+- *(in-place)* allow Runs-route exact block capacity in trace growth check ([#1185](https://github.com/lmmx/mibz2/pull/1185))
+
+### <!-- 9 -->Other
+
+- record workstation-pressure integration blocked by agent-presence path hold ([#1187](https://github.com/lmmx/mibz2/pull/1187))
+- open release-0-5-16 at P1 ([#1186](https://github.com/lmmx/mibz2/pull/1186))
+- frozen i9 recipe for the text-panel knee probe (text-knee-i9) ([#1139](https://github.com/lmmx/mibz2/pull/1139))
+- dissect src/rle.rs 2-load m1 filter & zero-vzeroupper raw-AVX2 unrle (PASS) ([#1178](https://github.com/lmmx/mibz2/pull/1178))
+- *(parallel)* dissect v0.5.15 5T/7T/9T crossover cliffs and stale LAZY_FROM_THREADS ([#1182](https://github.com/lmmx/mibz2/pull/1182))
+- admit segmented-fused-postwalk (idea -> open) ([#1181](https://github.com/lmmx/mibz2/pull/1181))
+- open crc32-avx2-ring-barrett-build ([#1177](https://github.com/lmmx/mibz2/pull/1177))
+- Record 0.5.15 i9 release-scaling run and close release-0-5-15 ([#1174](https://github.com/lmmx/mibz2/pull/1174))
+- admit post-1080-takes-runs (idea -> open) ([#1173](https://github.com/lmmx/mibz2/pull/1173))
+- record physical i9-10900K STOP verdict for jcc-aligned-release-build ([#1172](https://github.com/lmmx/mibz2/pull/1172))
+
 ## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
 
 ### <!-- 1 -->Features
