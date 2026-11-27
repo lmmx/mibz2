@@ -1,0 +1,9 @@
+id = "i9-clock-modes"
+holder = "antigravity"
+session = "fdc518877a8b"
+claimed_at = "2026-11-27T17:23:03+00:00"
+expires = "2026-11-28T01:23:03+00:00"
+owned_paths = ["bench/clock_modes.py", "bench/test_clock_modes.py", ".just/clock-modes.just"]
+mechanisms = ["measurement", "clock-modes"]
+base = "14d656dfaaa9124bfd6f5ad24f34f7555346df60"
+released = false
