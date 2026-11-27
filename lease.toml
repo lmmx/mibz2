@@ -6,4 +6,4 @@ expires = "2026-11-28T04:17:00+00:00"
 owned_paths = ["src/open/outq.rs", "examples/mtf_a6a_dissection.rs"]
 mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
 base = "559ca20682e9eff51ac0e62033cf3a0dc35a33a8"
-released = false
+released = true
