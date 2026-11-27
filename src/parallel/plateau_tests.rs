@@ -533,6 +533,16 @@ fn run_only_high_expansion_bounded_by_worker_cap() {
                 let mut got_len = 0usize;
                 let mut non_zero = false;
                 let mut buf = vec![0u8; 256 << 10];
+                if threads <= 4 {
+                    // Hold the reader until at least one worker deterministically parks behind
+                    // the worker-side ready cap (even under slow debug / occupancy builds).
+                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+                    while shared.lock().worker_capped_waits == 0
+                        && std::time::Instant::now() < deadline
+                    {
+                        std::thread::sleep(std::time::Duration::from_millis(2));
+                    }
+                }
                 let err = loop {
                     match dec.read(&mut buf) {
                         Ok(0) => break None,
@@ -540,9 +550,6 @@ fn run_only_high_expansion_bounded_by_worker_cap() {
                             got_len += n;
                             if buf[..n].iter().any(|&b| b != 0) {
                                 non_zero = true;
-                            }
-                            if threads <= 4 {
-                                std::thread::yield_now();
                             }
                         }
                         Err(e) => break Some(e),
@@ -573,7 +580,7 @@ fn run_only_high_expansion_bounded_by_worker_cap() {
             ready_hwm <= limit,
             "{what}: ready_bytes_hwm {ready_hwm} exceeded floor-bounded limit {limit} (free_bytes={free_bytes})"
         );
-        if FULL && threads <= 4 {
+        if threads <= 4 {
             assert!(
                 worker_waits > 0,
                 "{what}: worker cap never bound despite slots={slots} > floor={floor}"
@@ -616,8 +623,15 @@ fn worker_cap_cancel_wakes_and_exits_cleanly() {
         let mut b = [0u8; 1];
         assert_eq!(dec.read(&mut b).unwrap(), 1);
         assert_eq!(b[0], 0);
-        // Give workers a brief moment to park on worker_cv, then cancel and join cleanly
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        // Wait deterministically for at least one worker to park on worker_cv, then cancel
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while shared.lock().workers_waiting == 0 && std::time::Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        assert!(
+            shared.lock().workers_waiting > 0,
+            "expected worker parked on worker_cv before cancel"
+        );
         dec.cancel();
         dec.join();
         feeder.join().unwrap();
