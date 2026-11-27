@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
+        <meta name="description" content="Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-six-gbs-decoder-architecture/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-stages-built-to-fit-together/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -21,10 +21,10 @@
         
       
       
-        <link rel="prev" href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/">
+        <link rel="prev" href="../2026-11-27-faster-decoding-for-ordinary-text/">
       
       
-        <link rel="next" href="../2026-11-27-reopening-a6b-and-segmented/">
+        <link rel="next" href="../2026-11-26-true-floor-and-pooled-scan/">
       
       
         
@@ -35,7 +35,7 @@
     
     
       
-        <title>The architecture of a 6 GB/s bzip2 decoder - mibz2</title>
+        <title>Stages built to fit together: a new shape for the decoder's workers - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=52b19684d021">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -91,19 +91,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The architecture of a 6 GB/s bzip2 decoder">
-  <meta property="og:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-six-gbs-decoder-architecture/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
+  <meta property="og:title" content="Stages built to fit together: a new shape for the decoder's workers">
+  <meta property="og:description" content="Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-stages-built-to-fit-together/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-stages-built-to-fit-together.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta property="og:image:alt" content="Stages built to fit together: a new shape for the decoder's workers">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The architecture of a 6 GB/s bzip2 decoder">
-  <meta name="twitter:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
-  <meta name="twitter:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta name="twitter:title" content="Stages built to fit together: a new shape for the decoder's workers">
+  <meta name="twitter:description" content="Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-stages-built-to-fit-together.png">
+  <meta name="twitter:image:alt" content="Stages built to fit together: a new shape for the decoder's workers">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The architecture of a 6 GB/s bzip2 decoder
+              Stages built to fit together: a new shape for the decoder's workers
             
           </span>
         </div>
@@ -1158,10 +1158,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1217,14 +1213,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-hardware-verdicts-and-measurement-traps/" class="md-nav__link">
+      <a href="../2026-11-27-bounded-memory-on-highly-compressible-input/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  When the hardware says no
+  Half the memory on compressible files
 
     
   </span>
@@ -1244,14 +1240,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-nav__link">
+      <a href="../2026-11-27-faster-decoding-for-ordinary-text/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  The 256 KiB L2 cliff and the flipped knee
+  Faster decoding for ordinary text
 
     
   </span>
@@ -1287,7 +1283,7 @@
   <span class="md-ellipsis">
     
   
-  The architecture of a 6 GB/s decoder
+  Stages built to fit together
 
     
   </span>
@@ -1304,7 +1300,7 @@
   <span class="md-ellipsis">
     
   
-  The architecture of a 6 GB/s decoder
+  Stages built to fit together
 
     
   </span>
@@ -1330,205 +1326,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+  <a href="#1-where-a-workers-time-goes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+        1. Where a worker's time goes
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keeping SIMD wiring untouched
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+  <a href="#2-walking-the-cycle-in-four-lanes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+        2. Walking the cycle in four lanes
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-three-designs-stopped" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why three designs stopped
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <code>fused_4l_tile4096_vec</code> passes
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+  <a href="#3-keeping-the-output-in-pieces" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+        3. Keeping the output in pieces
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        A 160-byte inline <code>ReadyBlock</code>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero consumer tax and bounded RSS
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+  <a href="#4-a-fixed-size-middle-for-construction" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+        4. A fixed-size middle for construction
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-direct-folding-regressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why direct folding regressed
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-two-part-rescue-1055" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The two-part rescue (<code>#1055</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+  <a href="#5-feeding-construction-without-a-megabyte-buffer" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
+        5. Feeding construction without a megabyte buffer
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The realized 8-worker wall-time law
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero-plumbing design and below-the-knee safety
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
+  <a href="#6-composing-the-worker" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. How the five pieces fit and what builds next
+        6. Composing the worker
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-where-the-pieces-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Where the pieces stand
       </span>
     </span>
   </a>
@@ -1539,60 +1406,6 @@
   
 </nav>
       
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Reopening Open's middle and off-Wikidata
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-off-wikidata-and-eight-worker-coupling/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Off Wikidata and inside the eight-worker tie
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1673,10 +1486,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_7" >
         
           
-          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_7" id="__nav_7_7_label" tabindex="0">
             
   
   
@@ -1694,8 +1507,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_9">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_7_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_7">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1788,10 +1601,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
         
           
-          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
             
   
   
@@ -1809,8 +1622,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_10">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_8">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2335,10 +2148,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_27" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_25" >
         
           
-          <label class="md-nav__link" for="__nav_7_27" id="__nav_7_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_25" id="__nav_7_25_label" tabindex="0">
             
   
   
@@ -2356,8 +2169,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_27_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_27">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_25_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_25">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2477,10 +2290,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_27" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_27" id="__nav_7_27_label" tabindex="0">
             
   
   
@@ -2498,8 +2311,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_29">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_27_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_27">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2781,10 +2594,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_37" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
         
           
-          <label class="md-nav__link" for="__nav_7_37" id="__nav_7_37_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
             
   
   
@@ -2802,8 +2615,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_37_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_37">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2950,10 +2763,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_38" >
         
           
-          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_38" id="__nav_7_38_label" tabindex="0">
             
   
   
@@ -2971,8 +2784,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_40">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_38_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_38">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3173,10 +2986,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_45" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_43" >
         
           
-          <label class="md-nav__link" for="__nav_7_45" id="__nav_7_45_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_43" id="__nav_7_43_label" tabindex="0">
             
   
   
@@ -3194,8 +3007,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_45_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_45">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_43_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_43">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3315,10 +3128,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_47" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_45" >
         
           
-          <label class="md-nav__link" for="__nav_7_47" id="__nav_7_47_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_45" id="__nav_7_45_label" tabindex="0">
             
   
   
@@ -3336,8 +3149,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_47_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_47">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_45_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_45">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3709,205 +3522,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+  <a href="#1-where-a-workers-time-goes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+        1. Where a worker's time goes
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keeping SIMD wiring untouched
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+  <a href="#2-walking-the-cycle-in-four-lanes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+        2. Walking the cycle in four lanes
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-three-designs-stopped" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why three designs stopped
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <code>fused_4l_tile4096_vec</code> passes
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+  <a href="#3-keeping-the-output-in-pieces" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+        3. Keeping the output in pieces
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        A 160-byte inline <code>ReadyBlock</code>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero consumer tax and bounded RSS
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+  <a href="#4-a-fixed-size-middle-for-construction" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+        4. A fixed-size middle for construction
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-direct-folding-regressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why direct folding regressed
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-two-part-rescue-1055" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The two-part rescue (<code>#1055</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+  <a href="#5-feeding-construction-without-a-megabyte-buffer" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
+        5. Feeding construction without a megabyte buffer
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The realized 8-worker wall-time law
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero-plumbing design and below-the-knee safety
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
+  <a href="#6-composing-the-worker" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. How the five pieces fit and what builds next
+        6. Composing the worker
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-where-the-pieces-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Where the pieces stand
       </span>
     </span>
   </a>
@@ -3936,7 +3620,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-six-gbs-decoder-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-stages-built-to-fit-together.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -3947,461 +3631,321 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-architecture-of-a-6-gbs-bzip2-decoder">The architecture of a 6 GB/s bzip2 decoder<a class="headerlink" href="#the-architecture-of-a-6-gbs-bzip2-decoder" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.</p>
-<p class="post-meta">27 November 2026 · 10 min read · <a href="#6-how-the-five-pieces-fit-and-what-builds-next">Research synthesis</a></p>
+<h1 id="stages-built-to-fit-together-a-new-shape-for-the-decoders-workers">Stages built to fit together: a new shape for the decoder's workers<a class="headerlink" href="#stages-built-to-fit-together-a-new-shape-for-the-decoders-workers" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.</p>
+<p class="post-meta">27 November 2026 · 14 min read · <a href="#7-where-the-pieces-stand">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p><strong>Five freshly merged studies turn mibz2's ideal-parts matrix into one coherent 6 GB/s architecture.</strong> On our 10-core Intel i9-10900K, shipped mibz2 decodes 839 MB of Wikidata (<code>wikidata ×4</code>) in 192.9 to 194.6 ms at eight workers. That is 4.31 GB/s. Reaching 6 GB/s means finishing the same workload in 140 ms. No single stage can carry that drop alone. Five designs fit end to end across the worker pipeline and the eight-worker schedule. Together they pair sampled-anchor four-lane forward emission and vectored RLE1+CRC fusion with a zero-copy boundary, L1-batched MTF folding and slack-only hybrid scanning.</p>
-<p>This post builds on <a href="../2026-11-27-reopening-a6b-and-segmented/">Reopening Open's middle and the off-Wikidata decoder</a> and <a href="../2026-11-26-true-floor-and-pooled-scan/">The decoder's true floor and the limits of a pooled scan</a>. One evidence boundary belongs up front. The i9-10900K baselines (<code>1,306 ms</code> single-worker and <code>192.9–194.6 ms</code> eight-worker) are direct workstation measurements. The four stage studies (<code>#1057</code>, <code>#1045</code>, <code>#1058</code>, <code>#1055</code> and <code>#1048</code>) are steal-free probes on a 2-vCPU Haswell Xeon VM. Every arm passed byte-exact parity on every tested block. The eight-worker trajectory (<code>#1056</code>) replays <code>src/parallel.rs</code> deterministically against primary i9-10900K traces. Every projection below awaits production builds and direct 10-core i9-10900K confirmation.</p>
-<p><a href="#1-sampled-anchor-four-lane-forward-emission-1057">Section 1</a> shows how 16 scalar anchor tags unlock 4-lane forward emission without breaking SIMD wiring.
-<a href="#2-upstream-vectored-rle1crc-fusion-1045">Section 2</a> explains why zero-scratch tiled fusion beats both 1-lane emission and contiguous stitching.
-<a href="#3-the-zero-cost-vectored-delivery-boundary-1058">Section 3</a> prices a 160-byte vectored <code>ReadyBlock</code> across six real consumer paths and memory budgets.
-<a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">Section 4</a> diagnoses why direct MTF folding spilled registers and how L1 batching rescues it.
-<a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">Section 5</a> maps how slack-only helper scanning clears the 140 ms wall without regressing below the knee.
-<a href="#6-how-the-five-pieces-fit-and-what-builds-next">Section 6</a> summarizes the combined architecture and its workstation gates.</p>
+<p>mibz2 is a parallel <a href="https://sourceware.org/bzip2/">bzip2</a> decoder written in Rust. A bzip2 file is a sequence of independent
+blocks of up to 900,000 bytes, and mibz2 decodes them in three kinds of thread. One thread, the
+scanner, reads the compressed bits in order and decodes each block's Huffman codes, because a
+block's start can only be found by finishing the one before it. A pool of workers then turns
+each block's symbols back into text, one block per worker, in parallel. A reader hands the
+finished blocks to the caller in order. The project's reference machine is a ten-core Intel i9-10900K. There the shipped decoder turns
+838.8 MB of a Wikidata dump back into text in 194.6 ms with eight workers, about 4.31 GB/s, and in
+1,306 ms with one.</p>
+<p>Each worker runs a chain of stages, and for most of the project each stage was improved on its
+own. That has a cost which is easy to miss. A stage inherits the form of its input from the
+stage before it and must hand its output in the form the next one expects, so a stage can be
+locked into a slow design by a neighbour. The fastest way to walk the text, for instance, writes
+it in pieces, and that only pays if everything downstream can take pieces. This post reports a
+redesign of the workers' stages as a set, each shaped around the others, and what it measured.</p>
 <p><strong>Takeaways</strong></p>
 <ul>
-<li><strong>Four-lane forward emission is paid in full (<code>#1057</code>, PASS).</strong> Tagging 16 uniform BWT-row anchors in bit 31 keeps unmodified SIMD wiring and cuts <code>A6c + A7</code> thread CPU by 31.0 to 35.8% with zero <code>unsafe</code>. Native L3-cold runs reach 97.4% of a prebuilt oracle and project +208 to +235 ms saved on one i9 worker.</li>
-<li><strong>Fusion only pays off if delivery stays vectored (<code>#1045</code>, PASS / scoped STOP).</strong> Zero-scratch in-place tile compaction with 64 KiB PCLMULQDQ CRC32 cuts <code>E + A9</code> writes by 53.4%. It projects +31.8 to +49.9 ms saved on one i9 worker, whereas contiguous stitching moves 74.9% of the output and erases the win.</li>
-<li><strong>Vectored delivery costs nothing at the boundary (<code>#1058</code>).</strong> An inline 160-byte <code>ReadyBlock</code> keeps all six consumer paths at 0.86× to 1.01× of contiguous delivery while holding RSS at 1.017× with zero Wikidata overflows.</li>
-<li><strong>L1 batching and guard zones rescue MTF folding (<code>#1048</code>, <code>#1055</code>, PASS).</strong> Direct per-run folding spilled <code>runs::front_avx2</code>'s 15 live registers and regressed up to +4.3%. A 2 KiB L1d batch plus a 496/512 <code>OutQ16</code> guard zone cuts <code>push_slow</code> 6.22×. Together they drop <code>A5 + A6a</code> by 12.1% baseline and 19.1% native.</li>
-<li><strong>Slack-only hybrid scanning crosses 6 GB/s (<code>#1056</code>).</strong> Offloading candidate finding to the 91.6%-idle reader thread and scanning only from worker <code>job_wait</code> slack pushes eight-worker wall time to 131.8 ms (6.36 GB/s) at <code>W'/8 = 125 ms</code>. Below the knee, <code>k = 6</code> stays at 0.997× to 0.999×.</li>
+<li><strong>The text is now walked forward in four lanes at once,</strong> from sixteen starting points chosen
+  in advance. Construction's wiring and the walk together take 31–36% less time, close to a
+  version given its starting points for free.</li>
+<li><strong>The output stays in pieces until the caller reads it.</strong> That lets the run expansion and the
+  checksum run inside each piece while it is still in cache, writing 53% fewer bytes, and
+  handing pieces to the caller costs nothing measurable.</li>
+<li><strong>The middle of construction was rebuilt around fixed-size tables,</strong> which lets the compiler
+  remove every bounds check in safe Rust; with two layout changes it takes 27–29% less time.</li>
+<li><strong>Composed, the pieces add up.</strong> All four worker changes together cut a worker's time by 25.6%
+  on warm caches, matching the sum of their separate savings to within a tenth of a percent, and
+  by 21–25% on cold caches.</li>
+<li><strong>Two hardware limits set the shape.</strong> A 256 KiB private L2 cache is why each lane writes into
+  32 KiB slabs, and x86-64's small register file is why there are four lanes, not eight.</li>
+<li><strong>These are prototype measurements on a cloud test machine.</strong> Two pieces are in the code behind
+  experimental build options and two are in review. The one timed on the i9 so far, the fixed-size
+  middle, was 1.8% faster with one worker and unchanged at eight and ten, short of its bar. The
+  6 GB/s that the project aims for at eight workers is a target, not a result.</li>
 </ul>
-<figure class="bf-fig">
-<div class="bf-title">End-to-end 6 GB/s decoder architecture assembled from five merged studies</div>
-<svg viewBox="0 0 640 286" role="img" aria-label="Architecture diagram of the 6 GB/s bzip2 decoder: reader thread runs AVX2 Finder into Arc Chunk OnceLock; serial scanner feeds Policy A slack-only helpers; each worker runs L1d-batched MTF and OutQ16 guard zone, safe 64K SoA A6b, SIMD Reader::wire with S=16 bit-31 anchor tags, 4-lane forward emission with zero-scratch tiled RLE1 and CRC32 into a 160-byte vectored ReadyBlock for BzReader and decode_parallel.">
-  <defs>
-    <marker id="arr6g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="var(--bf-ink-2)"/>
-    </marker>
-  </defs>
-  <!-- Top lane: Feeder & Scan plane -->
-  <text class="bf-t-strong" style="font-size:10.5px" x="14" y="18">INPUT &amp; SCAN PLANE (#1056)</text>
-  <rect x="14" y="26" width="166" height="58" rx="5" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="97" y="45" text-anchor="middle">mibz2-read (91.6% idle)</text>
-  <text class="bf-ttiny" x="97" y="60" text-anchor="middle">AVX2 Finder → Arc&lt;Chunk&gt;</text>
-  <text class="bf-ttiny" x="97" y="74" text-anchor="middle">OnceLock cands (0 ms tax)</text>
-
-  <line x1="180" y1="55" x2="212" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <rect x="214" y="26" width="184" height="58" rx="5" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="306" y="45" text-anchor="middle">Serial Scanner (Policy A)</text>
-  <text class="bf-ttiny" x="306" y="60" text-anchor="middle">skip helper-verified blocks</text>
-  <text class="bf-ttiny" x="306" y="74" text-anchor="middle">11 seam blocks on serial path</text>
-
-  <line x1="398" y1="55" x2="430" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <rect x="432" y="26" width="194" height="58" rx="5" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="529" y="45" text-anchor="middle">Slack-Only Helpers</text>
-  <text class="bf-ttiny" x="529" y="60" text-anchor="middle">prio-1 decode, prio-2 scan</text>
-  <text class="bf-ttiny" x="529" y="74" text-anchor="middle">local L2 scratch · full_only</text>
-
-  <!-- Connector down to worker pipeline -->
-  <line x1="306" y1="84" x2="306" y2="108" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-  <line x1="529" y1="84" x2="529" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
-  <line x1="529" y1="96" x2="306" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
-
-  <!-- Middle lane: Worker pipeline -->
-  <rect x="14" y="110" width="612" height="92" rx="6" fill="none" stroke="var(--bf-rule)" stroke-width="1.2" stroke-dasharray="4 3"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="24" y="126">PER-WORKER OPEN PIPELINE (×8 WORKERS, #![forbid(unsafe_code)] IN NEW KERNELS)</text>
-
-  <rect x="24" y="134" width="132" height="58" rx="4" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="90" y="151" text-anchor="middle">A5 + A6a (#1055)</text>
-  <text class="bf-ttiny" x="90" y="166" text-anchor="middle">2 KiB L1d run batch</text>
-  <text class="bf-ttiny" x="90" y="180" text-anchor="middle">OutQ16 496/512 guard</text>
-
-  <line x1="156" y1="163" x2="174" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="176" y="134" width="114" height="58" rx="4" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="233" y="151" text-anchor="middle">A6b (#1046)</text>
-  <text class="bf-ttiny" x="233" y="166" text-anchor="middle">64K u16-link SoA</text>
-  <text class="bf-ttiny" x="233" y="180" text-anchor="middle">gen-tagged dict</text>
-
-  <line x1="290" y1="163" x2="308" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="310" y="134" width="140" height="58" rx="4" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="380" y="151" text-anchor="middle">A6c + A7 (#1057)</text>
-  <text class="bf-ttiny" x="380" y="166" text-anchor="middle">SIMD Reader::wire</text>
-  <text class="bf-ttiny" x="380" y="180" text-anchor="middle">S=16 bit-31 · 4 lanes</text>
-
-  <line x1="450" y1="163" x2="468" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="470" y="134" width="146" height="58" rx="4" fill="var(--bf-green)" opacity="0.28" stroke="var(--bf-green)" stroke-width="1.4"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="543" y="151" text-anchor="middle">Fused RLE1+CRC (#1045)</text>
-  <text class="bf-ttiny" x="543" y="166" text-anchor="middle">zero-scratch 4K tiles</text>
-  <text class="bf-ttiny" x="543" y="180" text-anchor="middle">64K CRC + GF(2) combine</text>
-
-  <!-- Connector down to delivery -->
-  <line x1="543" y1="192" x2="543" y2="218" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <!-- Bottom lane: Vectored Delivery -->
-  <rect x="14" y="220" width="612" height="54" rx="5" fill="var(--bf-vz-1)" opacity="0.12" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="320" y="239" text-anchor="middle">ZERO-COPY VECTORED DELIVERY BOUNDARY (#1058)</text>
-  <text class="bf-tm" x="320" y="256" text-anchor="middle">160 B ReadyBlock { buf, ranges: [(u32, u32); 16], count, total_len } → BzReader / Python / decode_parallel · RSS 1.017×</text>
-</svg>
-<figcaption>Each stage removes a separate currency: random-scatter stalls and register spills in <code>A5+A6a</code>, bounds checks in <code>A6b</code>, XOR wiring and 1-lane dependency chains in <code>A6c+A7</code>, full-block re-reads in <code>A9</code>, and serial-scan idle slack across 8 workers.</figcaption>
+<p><a href="#1-where-a-workers-time-goes">Section 1</a> shows where a worker's time goes. <a href="#2-walking-the-cycle-in-four-lanes">Section 2</a>
+explains the four-lane walk and the order statistics that set its sixteen starting points, and
+<a href="#3-keeping-the-output-in-pieces">section 3</a> why its output is never stitched back together.
+<a href="#4-a-fixed-size-middle-for-construction">Section 4</a> covers the middle of construction and
+<a href="#5-feeding-construction-without-a-megabyte-buffer">section 5</a> the stage before it. <a href="#6-composing-the-worker">Section 6</a>
+composes the worker and shows the two hardware limits, and <a href="#7-where-the-pieces-stand">section 7</a>
+says where each piece stands and what eight workers need.</p>
+<figure class="bf-fig" id="pipeline">
+<p class="bf-title">The decoder's stages, and what replaces each</p>
+<!-- fig:pipeline -->
+<svg viewBox="0 0 720 496" role="img" aria-label="The decoder as a pipeline: a serial scanner feeds parallel workers, whose stages are undoing move-to-front, construction in three parts, the emission walk, and run expansion with the checksum, then the reader. Each stage is shown with its one-worker time on the i9-10900K and the redesign that replaces it, with its measured effect on the test machine; emission, expansion and the reader are joined by ordered slices instead of one contiguous buffer."><text class="bf-t-strong" x="18.0" y="22.0" text-anchor="start" style="font-size:12px">Stage</text><text class="bf-t-strong" x="246.0" y="22.0" text-anchor="end" style="font-size:12px">i9, 1 worker</text><text class="bf-t-strong" x="266.0" y="22.0" text-anchor="start" style="font-size:12px">What replaces it</text><text class="bf-t-strong" x="702.0" y="22.0" text-anchor="end" style="font-size:12px">Effect on the test VM</text><rect x="18" y="34" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-4);stroke-width:2"><title>Scanner (serial)</title></rect><text class="bf-t-strong" x="26.0" y="51.0" text-anchor="start" style="font-size:12px">Scanner (serial)</text><text class="bf-tm" x="26.0" y="66.0" text-anchor="start" style="font-size:11px">Huffman codes, block headers</text><text class="bf-t" x="246.0" y="59.0" text-anchor="end" style="font-size:12px">173 ms</text><text class="bf-t" x="266.0" y="51.0" text-anchor="start" style="font-size:11.5px">Headers parsed with whole-run and</text><text class="bf-t" x="266.0" y="66.0" text-anchor="start" style="font-size:11.5px">multi-symbol table lookups</text><text class="bf-t-strong" x="702.0" y="59.0" text-anchor="end" style="font-size:11.5px">header setup 32–38% less</text><line x1="102" y1="75" x2="102" y2="87" style="stroke:var(--bf-muted);stroke-width:1.5"/><polygon points="98,83 106,83 102,89" style="fill:var(--bf-muted)"/><rect x="18" y="90" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-1);stroke-width:2"><title>Undo move-to-front</title></rect><text class="bf-t-strong" x="26.0" y="107.0" text-anchor="start" style="font-size:12px">Undo move-to-front</text><text class="bf-tm" x="26.0" y="122.0" text-anchor="start" style="font-size:11px">and the zero-run code</text><text class="bf-t" x="246.0" y="115.0" text-anchor="end" style="font-size:12px">132 ms</text><text class="bf-t" x="266.0" y="107.0" text-anchor="start" style="font-size:11.5px">Runs batched in 2 KiB of L1;</text><text class="bf-t" x="266.0" y="122.0" text-anchor="start" style="font-size:11.5px">a guard zone ends the slow path</text><text class="bf-t-strong" x="702.0" y="115.0" text-anchor="end" style="font-size:11.5px">12–19% less, both stages</text><line x1="102" y1="131" x2="102" y2="143" style="stroke:var(--bf-muted);stroke-width:1.5"/><polygon points="98,139 106,139 102,145" style="fill:var(--bf-muted)"/><rect x="18" y="146" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-1);stroke-width:2"><title>Construction, first pass</title></rect><text class="bf-t-strong" x="26.0" y="163.0" text-anchor="start" style="font-size:12px">Construction, first pass</text><text class="bf-tm" x="26.0" y="178.0" text-anchor="start" style="font-size:11px">runs into strips</text><text class="bf-t" x="246.0" y="171.0" text-anchor="end" style="font-size:12px">200 ms</text><text class="bf-t" x="266.0" y="163.0" text-anchor="start" style="font-size:11.5px">fed straight from the batch:</text><text class="bf-t" x="266.0" y="178.0" text-anchor="start" style="font-size:11.5px">no 1 MiB buffer between them</text><line x1="102" y1="187" x2="102" y2="199" style="stroke:var(--bf-muted);stroke-width:1.5"/><polygon points="98,195 106,195 102,201" style="fill:var(--bf-muted)"/><rect x="18" y="202" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-2);stroke-width:2"><title>Construction, middle</title></rect><text class="bf-t-strong" x="26.0" y="219.0" text-anchor="start" style="font-size:12px">Construction, middle</text><text class="bf-tm" x="26.0" y="234.0" text-anchor="start" style="font-size:11px">interval-exchange induction</text><text class="bf-t" x="246.0" y="227.0" text-anchor="end" style="font-size:12px">216 ms</text><text class="bf-t" x="266.0" y="219.0" text-anchor="start" style="font-size:11.5px">Fixed 65,536-entry tables, split</text><text class="bf-t" x="266.0" y="234.0" text-anchor="start" style="font-size:11.5px">fields, generation-tagged caches</text><text class="bf-t-strong" x="702.0" y="227.0" text-anchor="end" style="font-size:11.5px">27–29% less</text><line x1="102" y1="243" x2="102" y2="255" style="stroke:var(--bf-muted);stroke-width:1.5"/><polygon points="98,251 106,251 102,257" style="fill:var(--bf-muted)"/><rect x="18" y="258" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:2"><title>Construction, wiring</title></rect><text class="bf-t-strong" x="26.0" y="275.0" text-anchor="start" style="font-size:12px">Construction, wiring</text><text class="bf-tm" x="26.0" y="290.0" text-anchor="start" style="font-size:11px">links between retained rows</text><text class="bf-t" x="246.0" y="283.0" text-anchor="end" style="font-size:12px">161 ms</text><text class="bf-t" x="266.0" y="275.0" text-anchor="start" style="font-size:11.5px">Forward links only, SIMD-built;</text><text class="bf-t" x="266.0" y="290.0" text-anchor="start" style="font-size:11.5px">16 anchors marked in a spare bit</text><text class="bf-t-strong" x="702.0" y="283.0" text-anchor="end" style="font-size:11.5px">together: 31–36% less</text><line x1="102" y1="299" x2="102" y2="311" style="stroke:var(--bf-muted);stroke-width:1.5"/><polygon points="98,307 106,307 102,313" style="fill:var(--bf-muted)"/><rect x="18" y="314" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:2"><title>Emission walk</title></rect><text class="bf-t-strong" x="26.0" y="331.0" text-anchor="start" style="font-size:12px">Emission walk</text><text class="bf-tm" x="26.0" y="346.0" text-anchor="start" style="font-size:11px">the text, byte by byte</text><text class="bf-t" x="246.0" y="339.0" text-anchor="end" style="font-size:12px">490 ms</text><text class="bf-t" x="266.0" y="331.0" text-anchor="start" style="font-size:11.5px">Four lanes walk the cycle at once</text><text class="bf-t" x="266.0" y="346.0" text-anchor="start" style="font-size:11.5px">into 32 KiB slabs, kept as slices</text><line x1="102" y1="355" x2="102" y2="367" style="stroke:var(--bf-muted);stroke-width:1.5" stroke-dasharray="4 3"/><polygon points="98,363 106,363 102,369" style="fill:var(--bf-muted)"/><text class="bf-tm" x="112.0" y="366.0" text-anchor="start" style="font-style:italic;font-size:11px">ordered slices</text><rect x="18" y="370" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:2"><title>Run expansion, checksum</title></rect><text class="bf-t-strong" x="26.0" y="387.0" text-anchor="start" style="font-size:12px">Run expansion, checksum</text><text class="bf-tm" x="26.0" y="402.0" text-anchor="start" style="font-size:11px">first-stage runs, CRC-32</text><text class="bf-t" x="246.0" y="395.0" text-anchor="end" style="font-size:12px">76 ms</text><text class="bf-t" x="266.0" y="387.0" text-anchor="start" style="font-size:11.5px">Fused into each slab in place;</text><text class="bf-t" x="266.0" y="402.0" text-anchor="start" style="font-size:11.5px">four CRCs combined at the end</text><text class="bf-t-strong" x="702.0" y="395.0" text-anchor="end" style="font-size:11.5px">53% fewer bytes written</text><line x1="102" y1="411" x2="102" y2="423" style="stroke:var(--bf-muted);stroke-width:1.5" stroke-dasharray="4 3"/><polygon points="98,419 106,419 102,425" style="fill:var(--bf-muted)"/><text class="bf-tm" x="112.0" y="422.0" text-anchor="start" style="font-style:italic;font-size:11px">ordered slices</text><rect x="18" y="426" width="168" height="40" rx="5" style="fill:var(--bf-surface);stroke:var(--bf-vz-3);stroke-width:2"><title>Reader</title></rect><text class="bf-t-strong" x="26.0" y="443.0" text-anchor="start" style="font-size:12px">Reader</text><text class="bf-tm" x="26.0" y="458.0" text-anchor="start" style="font-size:11px">blocks back in order</text><text class="bf-t" x="266.0" y="443.0" text-anchor="start" style="font-size:11.5px">Accepts up to 16 slices a block</text><text class="bf-t" x="266.0" y="458.0" text-anchor="start" style="font-size:11.5px">in one 160-byte record</text><text class="bf-t-strong" x="702.0" y="451.0" text-anchor="end" style="font-size:11.5px">costs nothing measurable</text><line x1="10" y1="90" x2="10" y2="410" style="stroke:var(--bf-frame);stroke-width:2"/><text class="bf-tm" x="18.0" y="482.0" text-anchor="start" style="font-size:11px">Parallel workers run the six middle stages, one block each. Dashed arrows: output passed on as slices, never stitched.</text></svg>
+<figcaption>The middle column is measured on the i9-10900K with one worker on the Wikidata sample, the shipped decoder. The right-hand column is measured on the cloud test machine, in prototypes, against the shipped stage on the same machine; ranges span compiler settings and cache states. The worker stages run in parallel, one block per worker.</figcaption>
 </figure>
 
-<h2 id="1-sampled-anchor-four-lane-forward-emission-1057">1. Sampled-anchor four-lane forward emission (<code>#1057</code>)<a class="headerlink" href="#1-sampled-anchor-four-lane-forward-emission-1057" title="Permanent link">&para;</a></h2>
-<p>The single largest worker prize in mibz2 sits inside <code>A6c + A7</code> (<code>651.7 ms</code> on one i9 worker, or half of total single-worker time). Earlier work showed why shipped bidirectional emission is expensive. To walk two lanes per edge without knowing endpoints in advance, <code>wire_xor</code> stores XOR-linked adjacency in <code>A6c</code>. That scalar XOR wiring breaks SIMD throughput. Forward 1-lane emission removes XOR wiring yet pays a long pointer-chasing dependency chain across <code>A7</code>.</p>
-<p>The <a href="https://github.com/lmmx/mibz2/blob/7f5a1c6afac636c24a7db14987cca1681e9d9e8b/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md">sampled-anchor 4-lane probe</a> (<code>#1057</code>) resolves that tension cleanly with <code>#![forbid(unsafe_code)]</code>. Every arm matched byte for byte across all 11,961 checks on Wikidata and synthetic edge cases.</p>
-<h3 id="keeping-simd-wiring-untouched">Keeping SIMD wiring untouched<a class="headerlink" href="#keeping-simd-wiring-untouched" title="Permanent link">&para;</a></h3>
-<p>First, <code>A6c</code> keeps the unmodified SIMD <code>outq::Reader::wire</code> loop. On the VM, SIMD <code>Reader::wire</code> takes roughly <strong>30 ms warm</strong> and <strong>40 ms L3-cold</strong> across the 233 Open-admitted Wikidata blocks. Shipped <code>wire_xor</code> takes 91 ms warm and 108 ms cold. That is <strong>2.7× to 3.0× slower</strong>.</p>
-<p>Second, the probe checks bit 31 of <code>edges[u]</code>. Every Wikidata Open block packs a destination index (<code>max_bits = 18</code>) and a dictionary index (<code>max_dict = 1,712</code>). Because <span class="arithmatex">\(18 + 11 = 29 \le 31\)</span>, bit 31 is free on all 233 blocks.</p>
-<p>Third, after <code>Reader::wire</code> finishes, the probe marks <span class="arithmatex">\(S\)</span> uniform BWT-row anchor indices:</p>
-<div class="arithmatex">\[a_k = \left(\text{mark} + \left\lfloor \frac{k \cdot m}{S} \right\rfloor\right) \bmod m, \qquad k = 0, \dots, S - 1\]</div>
-<p>Tagging <span class="arithmatex">\(S = 16\)</span> anchor entries takes just 16 scalar writes per block. That adds roughly <strong>30 nanoseconds per block</strong>, or 7 microseconds across all 233 blocks.</p>
-<h3 id="why-s-16-beats-s-4-by-order-statistics">Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics<a class="headerlink" href="#why-s-16-beats-s-4-by-order-statistics" title="Permanent link">&para;</a></h3>
-<p>Choosing <span class="arithmatex">\(S\)</span> uniform BWT-row indices partitions the single cycle of length <span class="arithmatex">\(m\)</span> into <span class="arithmatex">\(S\)</span> random segments whose lengths behave like independent exponential spacings. With only <span class="arithmatex">\(S = 4\)</span> segments, four parallel lanes must wait for the longest of four exponential pieces. Its expected length follows the fourth harmonic number <span class="arithmatex">\(H_4 = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} = 2.083\times\)</span> the mean segment length. Measured across Wikidata at <span class="arithmatex">\(S = 4\)</span>, the longest segment is indeed <strong><span class="arithmatex">\(2.081\times\)</span></strong> the mean, leaving three lanes idle for over half the tail.</p>
-<p>Oversampling to <span class="arithmatex">\(S = 16\)</span> fixes load balance dynamically. Four lanes pull from the queue of 16 segments as each segment ends. Whenever any lane hits an anchor edge, a single sign-bit check catches all four lanes at once:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">ed0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed3</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">i32</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* retire hit lane, pull next anchor */</span><span class="w"> </span><span class="p">}</span>
-</code></pre></div>
-<p>That branch fires only ~16 times per block (<strong>0.014%</strong> of iterations). At <span class="arithmatex">\(S = 16\)</span>, the longest single segment shrinks to <strong><span class="arithmatex">\(0.818 \times (m / 4)\)</span></strong> and effective lane parallelism rises to <strong><code>eff_K = 3.153</code></strong> across the whole block (including the <code>3 → 2 → 1</code> drain). Each segment writes into a <strong>32 KiB slab-continuation arena</strong> (<code>max_arena = 992 KiB</code>, averaging <code>41.6</code> ordered slices per block regardless of <span class="arithmatex">\(S\)</span>).</p>
-<table>
-<thead>
-<tr>
-<th><code>A6c + A7</code> arm (233 Wikidata Open blocks)</th>
-<th style="text-align: right;">Base warm (ms)</th>
-<th style="text-align: right;">Base L3-cold (ms)</th>
-<th style="text-align: right;">Native warm (ms)</th>
-<th style="text-align: right;">Native L3-cold (ms)</th>
-<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>shipped_bidi</code> (baseline)</td>
-<td style="text-align: right;">335.89</td>
-<td style="text-align: right;">486.28</td>
-<td style="text-align: right;">328.07</td>
-<td style="text-align: right;">472.47</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
-</tr>
-<tr>
-<td><code>fwd_4lane_oracle</code> (prebuilt ceiling)</td>
-<td style="text-align: right;">222.84</td>
-<td style="text-align: right;">323.46</td>
-<td style="text-align: right;">212.50</td>
-<td style="text-align: right;">295.66</td>
-<td style="text-align: right;">—</td>
-</tr>
-<tr>
-<td><code>fwd_4lane_sampled_S16_vec</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>231.80 (−31.0%)</strong></td>
-<td style="text-align: right;"><strong>323.61 (−33.5%)</strong></td>
-<td style="text-align: right;"><strong>221.83 (−32.4%)</strong></td>
-<td style="text-align: right;"><strong>303.41 (−35.8%)</strong></td>
-<td style="text-align: right;"><strong>+208.4 / +221.3..+235.4 ms</strong></td>
-</tr>
-<tr>
-<td><code>fwd_4lane_sampled_S16_stitch</code></td>
-<td style="text-align: right;">249.60 (−25.7%)</td>
-<td style="text-align: right;">351.43 (−27.7%)</td>
-<td style="text-align: right;">239.44 (−27.0%)</td>
-<td style="text-align: right;">323.49 (−31.5%)</td>
-<td style="text-align: right;">+174.9 / +208.3 ms</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% disjoint spreads against <code>shipped_bidi</code>. Modeled i9 columns scale VM ratios to the 651.7 ms <code>A6c + A7</code> i9-10900K baseline.)</em></p>
-<p>The cold-cache result is striking. Under L3-cold pressure, <code>fwd_4lane_sampled_S16_vec</code> reaches <strong>1.000×</strong> of the prebuilt oracle on baseline (<code>323.61</code> vs <code>323.46 ms</code>). On native it reaches <strong>1.026×</strong>, or 97.4% of the oracle (<code>303.41</code> vs <code>295.66 ms</code>). That projects <strong>+208 to +235 ms</strong> saved on one i9 worker. That is 16.0% to 18.0% of single-worker time, or <strong>+29 to +33 ms/worker</strong> at eight workers.</p>
-<h2 id="2-upstream-vectored-rle1crc-fusion-1045">2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)<a class="headerlink" href="#2-upstream-vectored-rle1crc-fusion-1045" title="Permanent link">&para;</a></h2>
-<p>Once emission runs forward in four lanes, <code>A9</code> (RLE1 expansion plus CRC32) sits right behind it. On one i9 worker, <code>A9</code> takes 66.6 to 74.4 ms. Earlier standalone post-emit work (<code>#988</code>) stopped because a separate pass over the output buffer hit a 72.3% L1d-hot compute floor. Moving RLE1+CRC upstream into the 4-lane emitter seemed promising. Yet <a href="https://github.com/lmmx/mibz2/blob/e61ec1276a59ed3d164fe165de869d147555a95f/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md">the fusion probe</a> (<code>#1045</code>) showed that <strong>three of four candidate designs fail</strong>. Only one clears the gate. Every arm passed all 13,360 exactness checks across Wikidata and edge-case corpora.</p>
-<h3 id="why-three-designs-stopped">Why three designs stopped<a class="headerlink" href="#why-three-designs-stopped" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>1-lane fused (<code>fused_1lane</code> — STOP).</strong> Fusing RLE1+CRC into a single forward lane surrenders 4-lane memory-level parallelism. It regresses by <strong>−92 to −186 ms</strong> projected on one i9 worker.</li>
-<li><strong>Inline per-step FSM (<code>fused_4l_fsm</code> — STOP).</strong> Running the RLE1 state machine byte-by-byte inside the 4-lane pointer-chase loop bloats <code>WordMeta</code> and spills live lane state. It regresses by <strong>−126 to −205 ms</strong> projected on one i9 worker.</li>
-<li><strong>4-lane contiguous stitched (<code>fused_4l_tile4096_stitch</code> — STOP).</strong> Even when each lane fuses RLE1+CRC cleanly in 4 KiB tiles, compacting the four output segments back into one flat <code>Vec&lt;u8&gt;</code> destroys the win. On Wikidata, <strong>86.4%</strong> of lanes change length after RLE1 expansion. Re-packing lanes 1 to 3 moves 74.53 of 99.56 MiB (<strong>74.9%</strong> of all output). Across <code>wikidata ×4</code>, that copies <strong>598.9 MiB</strong> of extra bytes. Write savings drop from −53.4% to −18.6% (<code>1,718.2 → 1,398.8 MiB</code>), leaving timing flat at −23 to +11 ms projected.</li>
-</ol>
-<h3 id="why-fused_4l_tile4096_vec-passes">Why <code>fused_4l_tile4096_vec</code> passes<a class="headerlink" href="#why-fused_4l_tile4096_vec-passes" title="Permanent link">&para;</a></h3>
-<p>The winning arm (<code>fused_4l_tile4096_vec</code>) keeps the 4-lane pointer-chase loop clean and delivers vectored slices without stitching:</p>
-<ul>
-<li><strong>Zero-scratch single-pass in-place tile compaction.</strong> Each lane emits raw BWT bytes straight into its own output slice until it fills a 4 KiB tile. Then it expands RLE1 in place. Because <strong>89.4%</strong> of Wikidata 4-byte runs have <code>extra == 0</code> (four equal bytes followed by a zero repeat count), expansion shrinks the stream so <code>dst &lt;= src</code>. Only when a rare long repeat causes net growth does the tile spill its short suffix to a tiny scratch buffer. Across all 431 Wikidata blocks, <strong>zero</strong> RLE1 runs straddled a lane boundary.</li>
-<li><strong>L2-hot 64 KiB PCLMULQDQ CRC32 + GF(2) combine.</strong> Every 64 KiB of finalized lane output feeds hardware-accelerated CRC32 while still hot in L2 cache. At block end, four <code>crc32_combine</code> calls over <span class="arithmatex">\(\text{GF}(2)\)</span> fold the four lane CRCs into the exact bzip2 block CRC in microseconds.</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th><code>E + A9</code> arm (native VM, 233 Wikidata blocks)</th>
-<th style="text-align: right;">Warm (ms)</th>
-<th style="text-align: right;">L3-cold (ms)</th>
-<th style="text-align: right;">Logical writes (<code>wikidata ×4</code>)</th>
-<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>base_4lane_sep</code> (unfused baseline)</td>
-<td style="text-align: right;">112.35</td>
-<td style="text-align: right;">150.98</td>
-<td style="text-align: right;">1,718.2 MiB</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
-</tr>
-<tr>
-<td><code>floor_4lane_plus_crc</code> (zero-RLE1 floor)</td>
-<td style="text-align: right;">101.20</td>
-<td style="text-align: right;">139.89</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">—</td>
-</tr>
-<tr>
-<td><code>fused_4l_tile4096_vec</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>99.54 (0.886×)</strong></td>
-<td style="text-align: right;"><strong>139.89 (0.927×)</strong></td>
-<td style="text-align: right;"><strong>799.9 MiB (−53.4%)</strong></td>
-<td style="text-align: right;"><strong>+49.9 / +31.8 ms</strong></td>
-</tr>
-<tr>
-<td><code>fused_4l_tile4096_stitch</code> (STOP)</td>
-<td style="text-align: right;">116.40 (1.036×)</td>
-<td style="text-align: right;">148.55 (0.984×)</td>
-<td style="text-align: right;">1,398.8 MiB (−18.6%)</td>
-<td style="text-align: right;">−23.0 / +11.0 ms</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats. On warm runs <code>fused_4l_tile4096_vec</code> beats even the zero-RLE1 separate-CRC floor because 64 KiB tiled CRC stays L2-hot. On cold runs it matches the floor to 0.00 ms.)</em></p>
-<h2 id="3-the-zero-cost-vectored-delivery-boundary-1058">3. The zero-cost vectored delivery boundary (<code>#1058</code>)<a class="headerlink" href="#3-the-zero-cost-vectored-delivery-boundary-1058" title="Permanent link">&para;</a></h2>
-<p>Both <code>#1057</code> and <code>#1045</code> point to the same architectural need: stop forcing workers to stitch emitted slices into one flat <code>Vec&lt;u8&gt;</code>. Before touching <code>src/parallel.rs</code>, we priced the vectored delivery boundary in <a href="https://github.com/lmmx/mibz2/blob/28c4c8c43e633a04dd3b7aa14b639a2d5fa8201f/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md">a dedicated probe</a> (<code>#1058</code>). It uses <code>#![forbid(unsafe_code)]</code> and tests 200 MiB of real Wikidata blocks plus synthetic guards (<code>runs</code>, <code>onebyte</code>, <code>max16</code>).</p>
-<h3 id="a-160-byte-inline-readyblock">A 160-byte inline <code>ReadyBlock</code><a class="headerlink" href="#a-160-byte-inline-readyblock" title="Permanent link">&para;</a></h3>
-<p>Instead of heap-allocating a <code>Vec&lt;Vec&lt;u8&gt;&gt;</code> per block, a worker hands the reader an inline 160-byte struct:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ReadyBlock</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">buf</span><span class="p">:</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="kt">u8</span><span class="o">&gt;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ranges</span><span class="p">:</span><span class="w"> </span><span class="p">[(</span><span class="kt">u32</span><span class="p">,</span><span class="w"> </span><span class="kt">u32</span><span class="p">);</span><span class="w"> </span><span class="mi">16</span><span class="p">],</span>
-<span class="w">    </span><span class="n">count</span><span class="p">:</span><span class="w"> </span><span class="kt">u8</span><span class="p">,</span>
-<span class="w">    </span><span class="n">total_len</span><span class="p">:</span><span class="w"> </span><span class="kt">u32</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>It allocates <strong>zero</strong> extra heap buffers. When the consumer finishes draining the last range, <code>into_buf()</code> recycles <code>buf</code> directly into <code>free_out</code> with zero changes to pool accounting, while <code>Ready::size</code> tracks logical <code>total_len</code>.</p>
-<h3 id="zero-consumer-tax-and-bounded-rss">Zero consumer tax and bounded RSS<a class="headerlink" href="#zero-consumer-tax-and-bounded-rss" title="Permanent link">&para;</a></h3>
-<p>We timed six real consumer paths across contiguous, stitched, 4-lane vectored and 16-segment vectored delivery. Those paths cover zero-copy <code>fill_buf_hash</code>, <code>read_64k</code> and <code>read_256k</code> (both single-slice and scatter-fill) and <code>decode_parallel</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Consumer path (native L3-cold, 200 MiB Wikidata)</th>
-<th style="text-align: right;"><code>contiguous_1slice</code></th>
-<th style="text-align: right;"><code>vectored_4lane</code></th>
-<th style="text-align: right;"><code>vectored_16seg</code></th>
-<th style="text-align: right;"><code>stitched_4lane</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>fill_buf_hash</code> (zero-copy <code>BufRead</code>)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.92×–1.00×</strong></td>
-<td style="text-align: right;"><strong>0.94×–1.00×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-<tr>
-<td><code>read_64k</code> / <code>read_256k</code> (scatter-fill)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.86×–1.01×</strong></td>
-<td style="text-align: right;"><strong>0.88×–1.01×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-<tr>
-<td><code>decode_parallel</code> (parallel sink)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.95×–1.00×</strong></td>
-<td style="text-align: right;"><strong>0.96×–1.01×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Stitched 4-lane adds +16 to +22 ms per 200 MiB, or roughly +64 to +88 ms across <code>wikidata ×4</code>. Vectored 4-lane and 16-segment stay at parity with contiguous delivery.)</em></p>
-<p>Python's single-copy <code>read(size)</code> path (<code>#1033</code>) also stays clean. At <code>K = 4</code>, single-<code>fill_buf</code> call counts rise <strong>+0.0%</strong> at <code>read(256K)</code> (<code>1,130</code> calls) and <strong>+13.5%</strong> at <code>read(64K)</code>. At <code>S = 16</code>, scatter-fill inside <code>Read::read</code> keeps calls completely flat at <code>3,200</code> (<code>64K</code>) and <code>800</code> (<code>256K</code>).</p>
-<p>Slab sizing turned up an equally important guard against naive headroom. A flat <code>+25%</code> (<code>span / 4</code>) per lane inflates Wikidata RSS to <strong>1.178×</strong> (<code>1,100 KiB</code> per block), breaching our <code>&lt;= 1.05×</code> budget. Worse, it still overflows pathological <code>runs</code> (<code>2.07×</code>) and <code>onebyte</code> (<code>51.8×</code>). Keeping shipped <code>+6.25% + 64 B</code> gives zero Wikidata overflows at <strong>1.0002×</strong> (<code>K = 4</code>) and <strong>1.0010×</strong> (<code>S = 16</code>). Adding <code>4,096 B</code> per lane for in-place tile headroom (<code>+16 KiB</code> per 900 KB block) holds peak RSS at <strong>1.017×</strong> with zero overflows, cleanly inside the <code>&lt;= 1.05×</code> gate.</p>
-<h2 id="4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)<a class="headerlink" href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" title="Permanent link">&para;</a></h2>
-<p>Earlier in the programme, <code>mtf-fold</code> (<code>#1010</code>) tried to remove the 1 MiB <code>runs</code> buffer between <code>A5</code> (<code>runs::front_avx2</code>) and <code>A6a</code> (<code>Open::from_runs</code>). It streamed each run straight into an inline <code>FoldSink</code>. In theory, folding should remove memory traffic. In practice, <a href="https://github.com/lmmx/mibz2/blob/5c57286dffa7c44a2efb88ec1e80c73499f60766/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md">our cold dissection</a> (<code>#1048</code>) caught that direct folding <strong>regressed</strong> <code>A5 + A6a</code>. Baseline ran <strong>+1.61%</strong> slower across all seven repeats, and native ran <strong>+4.33%</strong> slower.</p>
-<h3 id="why-direct-folding-regressed">Why direct folding regressed<a class="headerlink" href="#why-direct-folding-regressed" title="Permanent link">&para;</a></h3>
-<p>Disassembling <code>runs::front_avx2</code> exposed three compounding costs hidden inside the hot loop:</p>
-<ol>
-<li><strong>Register exhaustion (15 live x86-64 GPRs).</strong> Standalone <code>runs::front_avx2</code> is a tight 22-instruction loop that already occupies all 15 general-purpose registers. On baseline, inlining <code>FoldSink + Pass::take + OutQ16</code> spilled the <code>sink</code> pointer (reloaded 10 times per literal) plus seven GPRs. On native, it spilled the hot MTF-front registers <code>f0</code> and <code>f1</code> on every literal.</li>
-<li><strong>Zero-hit dead check.</strong> Direct folding ran a <code>c == self.c</code> merge check on every emitted run that triggered <strong>0 times in 15,141,602 runs</strong>.</li>
-<li><strong>Tail-overrun <code>push_slow</code> storm and <code>vzeroupper</code>.</strong> <code>OutQ16</code> called <code>push_slow</code> <strong>417,041 times</strong> across 233 Wikidata blocks. <strong>84.3%</strong> of those calls (<code>351,722</code>) were pure end-of-chunk <code>f + 16 &gt; 512</code> tail-overrun guards, not genuine thick-strip overflows. On baseline x86-64, every cold call across the AVX2 boundary also paid <code>vzeroupper</code>.</li>
-</ol>
-<h3 id="the-two-part-rescue-1055">The two-part rescue (<code>#1055</code>)<a class="headerlink" href="#the-two-part-rescue-1055" title="Permanent link">&para;</a></h3>
-<p><a href="https://github.com/lmmx/mibz2/blob/3a2b770282ce2e56c52f7e74380b599eaac8face/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md">The L1-batch rescue probe</a> (<code>#1055</code>) fixed both halves together:</p>
-<ul>
-<li><strong>L1d-resident <code>[u32; 512]</code> packed run batch (2 KiB).</strong> <code>front_avx2</code> stays completely decoupled, emitting packed maximal runs <code>(c &lt;&lt; 24) | total</code> into a 2 KiB L1d stack buffer with <code>second_cold</code> kept out of line. That produces a 24-instruction hot loop with <strong>zero <code>f0</code>/<code>f1</code>/GPR spills and zero <code>vzeroupper</code></strong>. When the 512-run batch fills, <code>flush_batch_direct</code> consumes it from L1d with <code>m</code>, <code>in_out</code> and <code>f.runs</code> hoisted in registers.</li>
-<li><strong>Power-of-2 <code>OutQ16</code> guard zone (<code>496 / 512</code>).</strong> Reserving 16 guard slots at the end of each 1,024-byte chunk (<code>CHUNK = 496</code>, <code>STRIDE = 512</code>) lets the 16-wide SIMD write land unconditionally until <code>f &gt;= 496</code>. That cuts <code>push_slow</code> calls <strong>6.22×</strong> (<code>417,041 → 67,001</code>), driving <code>tail_guard</code> and <code>ovf_chunks</code> to <strong>zero</strong> with zero <code>A6c</code> readback regression.</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th><code>A5 + A6a</code> arm (233 Wikidata Open blocks)</th>
-<th style="text-align: right;">Base CPU (ms)</th>
-<th style="text-align: right;">Base ratio</th>
-<th style="text-align: right;">Native CPU (ms)</th>
-<th style="text-align: right;">Native ratio</th>
-<th style="text-align: right;">Modeled i9 1W Δ (base / nat)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>shipped_two_pass</code> (1 MiB <code>runs</code> vec)</td>
-<td style="text-align: right;">188.79</td>
-<td style="text-align: right;">1.0000×</td>
-<td style="text-align: right;">187.58</td>
-<td style="text-align: right;">1.0000×</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
-</tr>
-<tr>
-<td><code>direct_fold_1010</code> (<code>#1010</code> regression)</td>
-<td style="text-align: right;">191.83</td>
-<td style="text-align: right;">1.0161×</td>
-<td style="text-align: right;">195.70</td>
-<td style="text-align: right;">1.0433×</td>
-<td style="text-align: right;">−5.4 / −14.4 ms</td>
-</tr>
-<tr>
-<td><code>l1_batch_512_only</code> (no guard zone)</td>
-<td style="text-align: right;">176.95</td>
-<td style="text-align: right;">0.9373×</td>
-<td style="text-align: right;">162.80</td>
-<td style="text-align: right;">0.8679×</td>
-<td style="text-align: right;">+20.9 / +44.0 ms</td>
-</tr>
-<tr>
-<td><code>l1_batch_512_guard496</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>166.88</strong></td>
-<td style="text-align: right;"><strong>0.8793×</strong></td>
-<td style="text-align: right;"><strong>151.41</strong></td>
-<td style="text-align: right;"><strong>0.8087×</strong></td>
-<td style="text-align: right;"><strong>+40.2 / +63.6 ms</strong></td>
-</tr>
-</tbody>
-</table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% bit-exact output and disjoint spreads on both builds. Both halves are required. L1d batching alone reaches only +1.60% 1W on baseline, below the 2.5% gate. Adding <code>guard496</code> clears +3.08% baseline and +4.87% native, or +5.7 to +9.1 ms/worker at 8W.)</em></p>
-<h2 id="5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)<a class="headerlink" href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" title="Permanent link">&para;</a></h2>
-<p>Stacking the four worker wins (<code>#1046</code>, <code>#1057</code>, <code>#1045</code> and <code>#1055</code>) pulls per-worker compute <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor (<span class="arithmatex">\(S' \approx 145\text{–}150\text{ ms}\)</span> on the i9-10900K). At that point, the serial scanner caps throughput around 150.9 ms (5.56 GB/s). Workers sit idle in <code>job_wait</code> for <strong>10.9 to 20.4 ms/worker</strong>.</p>
-<p>Our earlier pooled-scan prototype (<code>#942</code>) tried to break that ceiling by having workers scan unconditionally. It failed because helper scanning stole cycles below the knee (<code>1.105×–1.149×</code> slower at <code>k = 6..7</code>). It also paid 5.27 ms of <code>pool_copy</code> overhead plus 4.82 ms of candidate finding.</p>
-<p><a href="https://github.com/lmmx/mibz2/blob/72286cff15a6048c801def3549df86875806c5fb/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md">The slack-only hybrid scan study</a> (<code>#1056</code>) replayed <code>src/parallel.rs</code> deterministically against primary i9-10900K traces (<code>character-stage1</code> <code>r0..r3</code> and <code>pooled-scan</code> <code>c71c4a56</code>). It found that <strong>63.1% to 70.2%</strong> of post-worker <code>job_wait</code> idle time arrives in continuous bursts at least one full-block scan wide.</p>
-<h3 id="the-realized-8-worker-wall-time-law">The realized 8-worker wall-time law<a class="headerlink" href="#the-realized-8-worker-wall-time-law" title="Permanent link">&para;</a></h3>
-<p>Workers drain <code>job_queue</code> at priority 1. Only when <code>job_queue</code> is empty do they pull speculative scan candidates at priority 2. That lets the serial scanner and eight workers share scanning at 9-way capacity:</p>
-<div class="arithmatex">\[\text{wall}_{8\text{W}} \approx \frac{8 \cdot (W'/8) + S'}{9} + 4.85\text{ ms}\]</div>
-<p>The <code>4.85 ms</code> coupling residual breaks into <code>2.62 ms</code> startup, <code>1.15 ms</code> validated handoff residual and <code>0.83–1.18 ms</code> scheduling and drain tail. Using a smaller initial chunk 0 drops <code>in_wait</code> to <code>0.05 ms</code> and trims the residual to <strong>+3.50 ms</strong>.</p>
-<p>Breaking <strong>6 GB/s</strong> (<span class="arithmatex">\(\le 140.0\text{ ms}\)</span>) at <span class="arithmatex">\(S' = 145\text{ ms}\)</span> requires <span class="arithmatex">\(W'/8 \le 133.9\text{ ms}\)</span>, or <span class="arithmatex">\(\le 135.4\text{ ms}\)</span> with small chunk 0. With L1-batched MTF (<code>W'/8 = 125 ms</code>), eight-worker wall time reaches <strong>131.82 ms (6.36 GB/s)</strong>. That clears the 6 GB/s target with <strong>+8.18 ms</strong> to spare.</p>
-<figure class="bf-fig">
-<div class="bf-title">Coupled eight-worker wall time on wikidata ×4 (839 MB): trace-replay trajectory across the 6 GB/s line</div>
-<svg viewBox="0 0 640 270" role="img" aria-label="Horizontal bar chart of coupled 8-worker wall time on 839 MB wikidata x4 against the 140 ms (6 GB/s) target line: shipped mibz2 is 194.6 ms (4.31 GB/s); worker stack with serial scan hits 150.9 ms ceiling (5.56 GB/s); slack-only hybrid without MTF fold reaches 141.1 ms (139.7 ms small chunk 0); slack-only hybrid with MTF fold reaches 131.8 ms (6.36 GB/s). Bottom comparison shows k=6 non-regression at 0.998x vs killed pooled-scan at 1.105x.">
-  <line class="bf-rule" x1="192" y1="20" x2="192" y2="162"/>
-  <line class="bf-grid" x1="292" y1="20" x2="292" y2="162"/>
-  <line class="bf-grid" x1="392" y1="20" x2="392" y2="162"/>
-  <line class="bf-grid" x1="492" y1="20" x2="492" y2="162"/>
-  <line class="bf-grid" x1="592" y1="20" x2="592" y2="162"/>
-
-  <!-- 140 ms = 6 GB/s vertical dashed target line: x = 192 + 140 * 2.0 = 472 -->
-  <line x1="472" y1="14" x2="472" y2="168" style="stroke:var(--bf-green);stroke-width:2;stroke-dasharray:5 3"/>
-  <text class="bf-t-green" style="font-size:10.5px" x="477" y="25">6 GB/s (140 ms)</text>
-
-  <!-- Bars (scale: 2.0 px per ms, 0..200 ms -> 192..592) -->
-  <text class="bf-tm" x="184" y="47" text-anchor="end">Shipped mibz2 (i9 meas.)</text>
-  <rect x="192" y="34" width="389.2" height="18" rx="2" fill="var(--bf-vz-2)"/>
-  <text class="bf-ttiny" x="386" y="47" text-anchor="middle" style="fill:var(--bf-vz-2-ink)">194.6 ms · 4.31 GB/s</text>
-
-  <text class="bf-tm" x="184" y="77" text-anchor="end">Workers + serial scan (S'=145)</text>
-  <rect x="192" y="64" width="301.8" height="18" rx="2" fill="var(--bf-vz-1)"/>
-  <text class="bf-ttiny" x="342" y="77" text-anchor="middle" style="fill:var(--bf-vz-1-ink)">150.9 ms · 5.56 GB/s</text>
-
-  <text class="bf-tm" x="184" y="107" text-anchor="end">Slack hybrid, no MTF fold</text>
-  <rect x="192" y="94" width="282.2" height="18" rx="2" fill="var(--bf-vz-1)" opacity="0.72"/>
-  <text class="bf-ttiny" x="480" y="107">141.1 ms (139.7 small c0)</text>
-
-  <text class="bf-t-strong" style="font-size:11px" x="184" y="137" text-anchor="end">Slack hybrid + MTF fold</text>
-  <rect x="192" y="124" width="263.6" height="18" rx="2" fill="var(--bf-green)"/>
-  <text class="bf-ttiny" x="323" y="137" text-anchor="middle" style="fill:var(--bf-vz-3-ink)">131.8 ms · 6.36 GB/s</text>
-
-  <!-- Axis labels -->
-  <text class="bf-tm" x="192" y="178" text-anchor="middle">0</text>
-  <text class="bf-tm" x="292" y="178" text-anchor="middle">50</text>
-  <text class="bf-tm" x="392" y="178" text-anchor="middle">100</text>
-  <text class="bf-tm" x="492" y="178" text-anchor="middle">150</text>
-  <text class="bf-tm" x="592" y="178" text-anchor="middle">200 ms</text>
-
-  <!-- Bottom strip: k=6 non-regression guard -->
-  <line class="bf-rule" x1="18" y1="194" x2="622" y2="194"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="18" y="210">BELOW-THE-KNEE GUARD (k = 6 WORKERS, RATIO VS SERIAL SCAN; 1.000× = PARITY)</text>
-  <text class="bf-tm" x="184" y="230" text-anchor="end">Killed pooled-scan (#942 P)</text>
-  <rect x="192" y="219" width="221.0" height="14" rx="2" fill="var(--bf-vz-s5)"/>
-  <text class="bf-tm" x="420" y="230">1.105× (regressed +10.5%)</text>
-
-  <text class="bf-t-strong" style="font-size:10.5px" x="184" y="252" text-anchor="end">Slack-only hybrid (#1056)</text>
-  <rect x="192" y="241" width="199.6" height="14" rx="2" fill="var(--bf-green)"/>
-  <text class="bf-t-green" style="font-size:10.5px" x="399" y="252">0.998× (3–4 helper blocks, 0.5–0.7 ms)</text>
-</svg>
-<figcaption>Source: <code>docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md</code> (#1056). Shipped baseline is directly measured on the 10-core i9-10900K; post-worker and hybrid bars are discrete-event replays of <code>src/parallel.rs</code> driven by primary i9 traces at <code>S' = 145 ms</code> and <code>W'/8 = 135 ms</code> (no fold) or <code>125 ms</code> (with L1-batched MTF).</figcaption>
+<h2 id="1-where-a-workers-time-goes">1. Where a worker's time goes<a class="headerlink" href="#1-where-a-workers-time-goes" title="Permanent link">&para;</a></h2>
+<p>bzip2 compresses a block in several layers, and decoding undoes them in reverse order: the scanner
+removes the Huffman coding, and the worker the rest. The scanner's Huffman decoding yields symbols in a move-to-front code with runs of zeros abbreviated; the worker's first stage
+undoes both, recovering the last column of the block's sorted rotations, the
+<a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/">Burrows–Wheeler transform</a>. The next
+two stages invert that transform, which is where most of the time goes. bzip2 also shortened every
+run of four or more equal bytes before sorting, so the last worker stage expands those runs again
+and checks the block's CRC-32 checksum.</p>
+<p>On Wikidata, mibz2 inverts the transform with <a href="../2026-11-19-open-returns/">Open</a>, a kernel that
+keeps only about one row in eight of the sorted table, the rows in short runs, and works out
+where the walk goes from each kept row to the next and which bytes it spells on the way.
+Construction does that in three parts. A first pass groups the runs into strips. A middle stage
+shrinks the map between kept rows by <a href="../2026-11-10-rauzy-veech-reconstruction/">interval-exchange induction</a>,
+recording the words it skips as rules in a dictionary. A last part wires each kept row to the
+next. Emission then walks that cycle of kept rows, writing a word at each step.</p>
+<aside class="il-gloss">
+<p><strong>Interval-exchange induction</strong> is a classical move from the study of
+dynamical systems, herein turned to decoding. Where one run of rows lands on the end of another,
+the rows it lands on tell the decoder nothing new, so they can be deleted, and the run that landed
+there jumps straight to where they would have gone, recording a two-letter word for its two moves. Repeated, it shrinks the block's map while the
+dictionary of words grows; <a href="../2026-11-10-rauzy-veech-reconstruction/">the post that introduced it</a>
+works it by hand on a three-byte block.</p>
+</aside>
+<p>At one worker on the i9, a worker is busy for 1,280 ms, and the walk alone takes 490 ms of it. The
+three parts of construction take 200, 216 and 161 ms in order. Undoing move-to-front takes 132 ms,
+the run expansion and checksum 76 ms, and the scanner spends 173 ms on the same input. Those
+proportions say where a redesign must start: the walk, and the wiring it depends on.</p>
+<p>Every new measurement below comes from one cloud test machine, a two-core virtual machine on an
+Intel Xeon. Like the i9, it has 32 KiB of L1 data cache and 256 KiB of L2 per core; its shared L3
+holds 45 MiB. Each
+figure is the median of seven interleaved repeats of the CPU time the timed thread itself used, so
+that time stolen by other tenants does not count. Runs with warm caches reuse one worker's
+buffers; cold runs rotate through more buffers than the L3 holds and flush it in between. The
+corpus is the 233 blocks of a 210 MB Wikidata sample that the shipped decoder sends to Open, and
+every variant produced byte-identical output on all of them.</p>
+<h2 id="2-walking-the-cycle-in-four-lanes">2. Walking the cycle in four lanes<a class="headerlink" href="#2-walking-the-cycle-in-four-lanes" title="Permanent link">&para;</a></h2>
+<p>The shipped decoder stores each link in the cycle as the XOR of its two neighbours, which lets
+emission start at one marked row and walk in both directions at once. That gives two chains of
+memory reads in flight, but each step must know where it came from, and the XOR links can only be
+built one scattered update at a time. The redesign keeps only each row's successor. Those links
+are built by a simple vectorised loop that is 2.7–3.0 times faster than the XOR wiring, and they
+allow the cycle to be walked <a href="../2026-11-26-from-bottlenecks-to-better-algorithms/#8-forward-wiring-and-multi-lane-emission">forward from any point</a>.</p>
+<p>The walk is a chain of dependent reads: the next row's address is only known once the current
+row has arrived. A single chain therefore spends most of its time waiting on memory. Four chains
+walked in one loop keep four reads in flight, so the processor overlaps their waits. For that the
+cycle must be cut into pieces in advance, which needs starting points. Rather than store them
+separately, the redesign hides them in the links. Every Wikidata block needs at most 29 bits for a
+link and its word, so bit 31 is free. Setting it on sixteen evenly spaced rows costs sixteen
+stores, about 30 ns a block. The loop loads all four lanes' next links and tests their top bits
+with one branch, which fires about sixteen times a block, once in seven thousand steps. When a
+lane reaches a marked row it closes its piece and takes the next unstarted one.</p>
+<p>The number of starting points comes from order statistics. The pieces between evenly spaced rows
+of the sorted table are not even pieces of the text, because the text visits those rows in an
+order that is, for this purpose, close to random. The pieces then behave like the gaps between <span class="arithmatex">\(S\)</span> points thrown at random on
+a circle of length <span class="arithmatex">\(m\)</span>, and the expected longest of <span class="arithmatex">\(S\)</span> such gaps is</p>
+<div class="arithmatex">\[
+\mathbb{E}[L_{\max}] = \frac{m}{S}\,H_S, \qquad H_S = 1 + \tfrac12 + \dots + \tfrac1S.
+\]</div>
+<p>With four points and four lanes, the walk is not done until the longest piece is, and that piece
+averages <span class="arithmatex">\(H_4 = 2.08\)</span> times an even quarter. Measured over the 233 blocks, it is 2.081 times.
+With sixteen points, a lane that finishes a short piece takes another, and the longest piece falls
+to 0.82 of a quarter. On average 3.15 of the four lanes are busy, against 1.90 with four points.
+Beyond sixteen the gain is small, while each extra point adds a piece to hand on.</p>
+<figure class="bf-fig" id="anchors">
+<p class="bf-title">Random gaps, predicted and measured</p>
+<!-- fig:anchors -->
+<svg viewBox="0 0 720 300" role="img" aria-label="Longest arc of the cycle, as a multiple of an even quarter share, against the number of anchors: the order-statistics prediction 4 H_S over S, and the values measured over 233 Wikidata blocks, which lie on it: 2.08 at 4 anchors, 1.31 at 8, 0.82 at 16, 0.51 at 32. Below, the average number of lanes busy rises from 1.9 at 4 anchors to 3.15 at 16 and 3.49 at 32."><line x1="90" y1="220.0" x2="690" y2="220.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="82.0" y="224.0" text-anchor="end" style="font-size:11px">0.0×</text><line x1="90" y1="182.5" x2="690" y2="182.5" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="82.0" y="186.5" text-anchor="end" style="font-size:11px">0.5×</text><line x1="90" y1="145.0" x2="690" y2="145.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="82.0" y="149.0" text-anchor="end" style="font-size:11px">1.0×</text><line x1="90" y1="107.5" x2="690" y2="107.5" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="82.0" y="111.5" text-anchor="end" style="font-size:11px">1.5×</text><line x1="90" y1="70.0" x2="690" y2="70.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="82.0" y="74.0" text-anchor="end" style="font-size:11px">2.0×</text><line x1="90" y1="145.0" x2="690" y2="145.0" style="stroke:var(--bf-ink);stroke-width:1.2;stroke-dasharray:5 3"/><text class="bf-tm" x="690.0" y="139.0" text-anchor="end" style="font-size:11px">an even quarter of the cycle</text><polyline points="108.8,36.7 127.5,63.7 146.2,83.0 165.0,97.5 183.8,108.9 202.5,118.1 221.2,125.7 240.0,132.1 258.8,137.6 277.5,142.4 296.2,146.6 315.0,150.3 333.8,153.6 352.5,156.6 371.2,159.3 390.0,161.7 408.8,164.0 427.5,166.0 446.2,167.9 465.0,169.7 483.8,171.3 502.5,172.8 521.2,174.2 540.0,175.5 558.8,176.8 577.5,177.9 596.2,179.0 615.0,180.1 633.8,181.0 652.5,182.0 671.2,182.8 690.0,183.7" style="fill:none;stroke:var(--bf-vz-2);stroke-width:2"><title>prediction: 4 H_S / S</title></polyline><circle cx="127.5" cy="63.9" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>4 anchors: measured 2.081×, predicted 2.083×</title></circle><circle cx="202.5" cy="121.7" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>8 anchors: measured 1.310×, predicted 1.359×</title></circle><circle cx="277.5" cy="142.8" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>12 anchors: measured 1.029×, predicted 1.034×</title></circle><circle cx="352.5" cy="158.7" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>16 anchors: measured 0.818×, predicted 0.845×</title></circle><circle cx="502.5" cy="174.3" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>24 anchors: measured 0.609×, predicted 0.629×</title></circle><circle cx="652.5" cy="182.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>32 anchors: measured 0.507×, predicted 0.507×</title></circle><text class="bf-t" x="137.5" y="67.9" text-anchor="start" style="font-size:11.5px">measured 2.08×, predicted 2.08×</text><text class="bf-t-strong" x="354.5" y="180.7" text-anchor="start" style="font-size:12px">16 anchors: 0.82×</text><circle cx="490" cy="22" r="5" style="fill:var(--bf-vz-1)"/><text class="bf-tm" x="500.0" y="26.0" text-anchor="start" style="font-size:11px">measured</text><line x1="570" y1="22" x2="590" y2="22" style="stroke:var(--bf-vz-2);stroke-width:2"/><text class="bf-tm" x="596.0" y="26.0" text-anchor="start" style="font-size:11px">4 H(S) / S</text><text class="bf-t-strong" x="18.0" y="26.0" text-anchor="start" style="font-size:12px">Longest arc ÷ even share</text><text class="bf-t" x="127.5" y="238.0" text-anchor="middle" style="font-size:12px">4</text><text class="bf-t-strong" x="127.5" y="270.0" text-anchor="middle" style="font-size:12px">1.90</text><text class="bf-t" x="202.5" y="238.0" text-anchor="middle" style="font-size:12px">8</text><text class="bf-t-strong" x="202.5" y="270.0" text-anchor="middle" style="font-size:12px">2.65</text><text class="bf-t" x="277.5" y="238.0" text-anchor="middle" style="font-size:12px">12</text><text class="bf-t-strong" x="277.5" y="270.0" text-anchor="middle" style="font-size:12px">2.91</text><text class="bf-t" x="352.5" y="238.0" text-anchor="middle" style="font-size:12px">16</text><text class="bf-t-strong" x="352.5" y="270.0" text-anchor="middle" style="font-size:12px">3.15</text><text class="bf-t" x="502.5" y="238.0" text-anchor="middle" style="font-size:12px">24</text><text class="bf-t-strong" x="502.5" y="270.0" text-anchor="middle" style="font-size:12px">3.36</text><text class="bf-t" x="652.5" y="238.0" text-anchor="middle" style="font-size:12px">32</text><text class="bf-t-strong" x="652.5" y="270.0" text-anchor="middle" style="font-size:12px">3.49</text><text class="bf-tm" x="82.0" y="238.0" text-anchor="end" style="font-size:11px">anchors</text><text class="bf-tm" x="82.0" y="270.0" text-anchor="end" style="font-size:11px">lanes busy</text><text class="bf-tm" x="82.0" y="284.0" text-anchor="end" style="font-size:11px">(of four)</text></svg>
+<figcaption>Measured over the 233 Wikidata blocks: the longest piece of the cycle as a multiple of an even quarter (points), against the order-statistics prediction $4H_S/S$ (line), and the average number of the four lanes busy. That the points sit on the line is consistent with the rows' order along the text being as good as random for this purpose.</figcaption>
 </figure>
 
-<h3 id="zero-plumbing-design-and-below-the-knee-safety">Zero-plumbing design and below-the-knee safety<a class="headerlink" href="#zero-plumbing-design-and-below-the-knee-safety" title="Permanent link">&para;</a></h3>
-<p>Four concrete design choices eliminate every overhead that killed <code>#942</code>:</p>
-<ol>
-<li><strong>Offload AVX2 <code>Finder</code> to the 91.6%-idle reader thread (<code>0.00 ms</code> tax).</strong> Primary <code>per_k.tsv</code> traces show <code>mibz2-read</code> is active for just <strong>12.34 ms</strong> and sleeps in <code>feed_wait</code> for <strong>134.10 ms</strong> at <code>k = 8</code>. Wrapping each read chunk in <code>Arc&lt;Chunk { base, bytes, cands: OnceLock&lt;Vec&lt;Cand&gt;&gt; }&gt;</code> lets <code>mibz2-read</code> push chunk 0 immediately and populate K4's 4.82 ms AVX2 <code>Finder</code> (<code>9.84 GB/s</code>) while waiting on backpressure.</li>
-<li><strong>Eliminate <code>pool_copy</code> by skipping seam blocks (<code>5.27 → 0.00 ms</code>).</strong> Fewer than 0.7% of blocks (11 of 1,724) straddle a 4 MiB chunk boundary. Helpers simply skip seam-straddling candidates and leave them to the serial scanner's existing seam window (<code>#1031</code>).</li>
-<li><strong>Priority-1 decode draining plus <code>full_only</code> filtering.</strong> Helpers touch scan candidates only when <code>job_queue</code> is empty. At <code>k = 6</code>, that runs just <strong>3 to 4 helper blocks</strong> (<code>0.5–0.7 ms</code>). Wall time across <code>k = 6..7</code> stays at <strong>0.997× to 0.999×</strong>, versus <code>#942</code>'s <code>1.105×–1.149×</code>. Filtering <code>gap &gt;= 512 B</code> (<code>full_only</code>) cuts helper handoffs by <strong>−35% to −41%</strong>.</li>
-<li><strong>Policy A jump-ahead scanner and worker-local scratch.</strong> Instead of stalling on speculative validation (<code>#770</code>'s <code>+1.2–2.3 ms</code> <code>serial_wait</code>), the scanner verifies completed helper bit-chains asynchronously and jumps straight past validated blocks. Each worker keeps a thread-local <code>ScanScratch</code> and <code>Vec&lt;u16&gt;</code> (<code>~200 KiB</code>, L2-hot), avoiding cross-core <code>free_syms</code> coherence ping-pong (<code>#1034</code>).</li>
-</ol>
-<h2 id="6-how-the-five-pieces-fit-and-what-builds-next">6. How the five pieces fit and what builds next<a class="headerlink" href="#6-how-the-five-pieces-fit-and-what-builds-next" title="Permanent link">&para;</a></h2>
-<p>Viewed together, the five studies expose a clean architectural stack where each win amplifies the next:</p>
+<p>Each lane writes its bytes into a 32 KiB slab inside the block's own output buffer, and a lane
+that takes a new piece continues in the same slab, so the pieces need no extra memory. On the test
+machine, wiring and walk together took 31–32% less time than the shipped pair with warm caches and
+33–36% less with cold caches. A version handed its sixteen starting points for free, without the
+marking or the extra branch, shows what the marking costs. With cold caches the real design reached
+97.4% of its speed on one build and matched it on the other. With warm caches it was 7–9% slower
+than that ideal.</p>
+<h2 id="3-keeping-the-output-in-pieces">3. Keeping the output in pieces<a class="headerlink" href="#3-keeping-the-output-in-pieces" title="Permanent link">&para;</a></h2>
+<p>The four lanes leave a block's text as about 42 pieces, in the right order but at scattered places
+in the buffer. The obvious next step is to copy them together into one contiguous block, which is
+what the rest of the decoder expects. The redesign leaves them where they are, for the sake of the stage that comes next.</p>
+<p>The last worker stage expands bzip2's first-stage runs: four equal bytes followed by a count of
+further copies. On Wikidata, 89.4% of those counts are zero, so expansion mostly shrinks a piece,
+and 86.4% of the lanes' pieces change length. Stitching them first therefore moves 74.9% of the
+block's bytes, and expanding them after the copy reads everything again. The redesign instead
+expands each lane's output in place, 4 KiB at a time as the lane writes it, which is safe because
+a shrinking expansion never overtakes the bytes it reads. The rare growth spills a short tail to a
+small side buffer. The CRC-32 is computed over each 64 KiB of finished output with the processor's
+carry-less multiply while it is still in L2, and the four lanes' checksums are combined at the end
+of the block.</p>
+<aside class="il-gloss">
+<p><strong>Combining checksums</strong> is possible because a CRC is the remainder of a
+polynomial division over GF(2), the field of two elements, in which addition is XOR. The CRC of two
+pieces joined is the first piece's CRC multiplied by a power of <span class="arithmatex">\(x\)</span> set by the second's length, plus
+the second's CRC, all modulo the CRC's polynomial. Four lanes' checksums thereby become the block's
+in microseconds.</p>
+</aside>
+<p>Over the Wikidata workload this writes 53.4% fewer bytes than separate passes. With warm caches
+it took 11.4% less time than walking in four lanes and then expanding separately, and 7.3% less
+with cold caches, where it matched the time of a pass that only computes the checksum. Stitching
+first undid the gain: the same fused design, followed by a contiguous copy, wrote only 18.6% fewer
+bytes, was slower than the separate passes with warm caches and barely faster with cold ones.</p>
+<p>The pieces must then travel to the caller, and the reader expected one contiguous buffer per
+block. A redesigned hand-over passes a 160-byte record holding the buffer and up to sixteen
+ranges, with no extra allocation. Timed across six real ways of reading the output, from a
+zero-copy buffered reader to scatter-filling 256 KiB reads, delivery in pieces stayed within
+measurement noise of a single contiguous slice, while stitching first cost a third to four-fifths
+more. Reserving room for the in-place expansion, 4 KiB a lane, raises the decoder's peak memory by
+1.7%, with no block on Wikidata outgrowing its buffer.</p>
+<h2 id="4-a-fixed-size-middle-for-construction">4. A fixed-size middle for construction<a class="headerlink" href="#4-a-fixed-size-middle-for-construction" title="Permanent link">&para;</a></h2>
+<p>The middle of construction, the induction and its dictionary, is the second-largest piece of a
+worker's time, and earlier changes to it, each tried alone, had been projected at no more than
+2.5% of a decode. The redesign changed all three of its parts at once.</p>
+<p>The induction keeps a node for each surviving run, with links to its neighbours, a width and a
+word, and every step edits a few neighbouring nodes. A Wikidata block has about 9,700 nodes on
+average, far below 65,536. The redesign therefore stores each field in its own array of exactly
+65,536 entries and indexes it with a 16-bit integer. The compiler can then prove every index in
+range and drops every bounds check, in safe Rust with no unsafe code. That alone saved about 8 ms
+over the same design with growable vectors, and a block with more nodes keeps the old path. Separate arrays, rather than one record per node, keep
+the links a step edits densely packed in cache. They beat 24- and 32-byte records by 4–7 ms. Short words of up to fifteen bytes live inline in a 16-byte integer, which cut
+the rules the step allocates by 54.6%, and steps between runs of equal width now update in place.
+A single forward pass replaced the setup's scattered reads, and the dictionary's per-block caches
+are reused across blocks with a generation tag instead of being cleared, which removes 24 KiB of
+zeroing a block.</p>
+<p>Each part fell. Setup went from 26.5 to 15.4 ms and the dictionary from 40.7 to 34.8 ms. The steps
+went from 64.2 to 43.8 ms, or from 24.1 to 16.4 ns a step. The middle stage took 27.4–28.8% less time in all four
+combinations of compiler setting and emission design. All of construction and emission together
+took 5.4–7.6% less. One tempting shortcut failed instructively. Dropping the deduplication of
+dictionary entries saved another 5.5 ms but made the dictionary 73.3% larger. The walk reads the
+dictionary at every step, so it slowed by 1.5–2.1% and gave the time back. The fixed
+arrays reserve 1.75 MiB of address space a worker, of which a block touches about 273 KiB on
+average.</p>
+<p>On the i9 the redesign has since been timed against the shipped decoder, fifteen paired rounds on
+the Wikidata sample. With one worker it was 1.8% faster (a ratio of 0.982, interval 0.978–0.987),
+against a registered bar of 3%. At eight and ten workers it made no measurable difference, and it
+used 4–5% more memory. So it stays behind its build option. The stage is about a sixth of a
+worker's time on the i9 (216 of 1,280 ms), so a 28% cut could move a one-worker decode by about 5%
+at most. The i9 gave 1.8%, and why the rest didn't arrive is not yet known. At eight workers the
+scanner, not the workers, sets the pace: the
+<a href="../2026-11-26-complementary-bottlenecks/">complementary bottlenecks</a> again.</p>
+<h2 id="5-feeding-construction-without-a-megabyte-buffer">5. Feeding construction without a megabyte buffer<a class="headerlink" href="#5-feeding-construction-without-a-megabyte-buffer" title="Permanent link">&para;</a></h2>
+<p>The first worker stage undoes move-to-front and hands construction's first pass a list of runs,
+up to a megabyte of it. Streaming each run straight into the first pass looks like an obvious
+saving, yet a direct attempt made the two stages 1.6–4.3% slower. The machine code showed why. The
+move-to-front loop already uses all fifteen general-purpose registers that x86-64 offers a
+program, and inlining the first pass into it pushed the loop's hottest values out to the stack,
+to be reloaded on every symbol.</p>
+<p>The redesign keeps the two loops apart but close. The first stage packs up to 512 runs into a 2 KiB
+buffer that stays in the L1 cache, a byte and a count in each 32-bit entry. The first pass then
+drains it in a separate tight loop. A second change removed most of a slow path that the first pass
+took 417,041 times on the workload. In 84.3% of those calls the only reason was that a 16-wide
+vector write might cross the end of a 512-entry chunk. Reserving the last sixteen entries of each chunk as a guard zone lets the
+write go ahead unchecked and cut those calls 6.2-fold. Together the two stages took 12.1% less
+time on the baseline build and 19.1% less with code compiled for the native processor, and the
+megabyte buffer is gone.</p>
+<h2 id="6-composing-the-worker">6. Composing the worker<a class="headerlink" href="#6-composing-the-worker" title="Permanent link">&para;</a></h2>
+<p>Changes measured one at a time can fight once combined, over registers or over cache. A prototype
+worker therefore ran all four changes together, from the scanner's symbols to verified,
+checksummed bytes, adding one at a time, with each change also run alone for comparison.</p>
+<figure class="bf-fig" id="ladder">
+<p class="bf-title">One worker's time as the redesigned stages are added</p>
+<!-- fig:ladder -->
+<svg viewBox="0 0 720 300" role="img" aria-label="Stacked bars of one worker's CPU time over 233 Wikidata blocks on the test VM as each redesigned piece is added: 737 ms shipped, 679 with batched move-to-front, 650 with the fixed-size middle stage, 553 with the four-lane walk kept as slices, and 548 with fused expansion and checksum. The sum of the four pieces' separate savings predicts 548 ms."><rect x="206" y="10" width="12" height="12" rx="2" style="fill:var(--bf-vz-1)"/><text class="bf-tm" x="223.0" y="20.0" text-anchor="start" style="font-size:11px">move-to-front, first pass</text><rect x="389.0" y="10" width="12" height="12" rx="2" style="fill:var(--bf-vz-2)"/><text class="bf-tm" x="406.0" y="20.0" text-anchor="start" style="font-size:11px">middle stage</text><rect x="494.0" y="10" width="12" height="12" rx="2" style="fill:var(--bf-vz-3)"/><text class="bf-tm" x="511.0" y="20.0" text-anchor="start" style="font-size:11px">wiring</text><rect x="563.0" y="10" width="12" height="12" rx="2" style="fill:var(--bf-vz-4)"/><text class="bf-tm" x="580.0" y="20.0" text-anchor="start" style="font-size:11px">walk, expansion, CRC</text><line x1="206.0" y1="34" x2="206.0" y2="236" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="206.0" y="252.0" text-anchor="middle" style="font-size:11px">0</text><line x1="330.0" y1="34" x2="330.0" y2="236" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="330.0" y="252.0" text-anchor="middle" style="font-size:11px">200</text><line x1="454.0" y1="34" x2="454.0" y2="236" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="454.0" y="252.0" text-anchor="middle" style="font-size:11px">400</text><line x1="578.0" y1="34" x2="578.0" y2="236" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="578.0" y="252.0" text-anchor="middle" style="font-size:11px">600</text><line x1="702.0" y1="34" x2="702.0" y2="236" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="702.0" y="252.0" text-anchor="middle" style="font-size:11px">800 ms</text><text class="bf-t" x="198.0" y="59.0" text-anchor="end" style="font-size:12px">Shipped worker</text><rect x="206.0" y="44" width="127.9" height="22" style="fill:var(--bf-vz-1)"><title>move-to-front, first pass: 206.4 ms</title></rect><rect x="333.9" y="44" width="81.4" height="22" style="fill:var(--bf-vz-2)"><title>middle stage: 131.3 ms</title></rect><rect x="415.3" y="44" width="63.9" height="22" style="fill:var(--bf-vz-3)"><title>wiring: 103.0 ms</title></rect><rect x="479.2" y="44" width="186.9" height="22" style="fill:var(--bf-vz-4)"><title>walk, expansion, CRC: 301.5 ms</title></rect><text class="bf-t-strong" x="669.0" y="59.0" text-anchor="start" style="font-size:12px">737 ms</text><text class="bf-t" x="198.0" y="97.0" text-anchor="end" style="font-size:12px">+ batched move-to-front</text><rect x="206.0" y="82" width="94.8" height="22" style="fill:var(--bf-vz-1)"><title>move-to-front, first pass: 152.8 ms</title></rect><rect x="300.8" y="82" width="80.1" height="22" style="fill:var(--bf-vz-2)"><title>middle stage: 129.2 ms</title></rect><rect x="380.8" y="82" width="53.5" height="22" style="fill:var(--bf-vz-3)"><title>wiring: 86.2 ms</title></rect><rect x="434.3" y="82" width="186.7" height="22" style="fill:var(--bf-vz-4)"><title>walk, expansion, CRC: 301.1 ms</title></rect><text class="bf-t-strong" x="632.8" y="97.0" text-anchor="start" style="font-size:12px">679 ms</text><text class="bf-t" x="198.0" y="135.0" text-anchor="end" style="font-size:12px">+ fixed-size middle stage</text><rect x="206.0" y="120" width="100.5" height="22" style="fill:var(--bf-vz-1)"><title>move-to-front, first pass: 162.1 ms</title></rect><rect x="306.5" y="120" width="58.4" height="22" style="fill:var(--bf-vz-2)"><title>middle stage: 94.2 ms</title></rect><rect x="364.9" y="120" width="58.2" height="22" style="fill:var(--bf-vz-3)"><title>wiring: 93.8 ms</title></rect><rect x="423.1" y="120" width="189.0" height="22" style="fill:var(--bf-vz-4)"><title>walk, expansion, CRC: 304.8 ms</title></rect><text class="bf-t-strong" x="615.2" y="135.0" text-anchor="start" style="font-size:12px">650 ms</text><text class="bf-t" x="198.0" y="173.0" text-anchor="end" style="font-size:12px">+ four-lane walk, slices</text><rect x="206.0" y="158" width="96.4" height="22" style="fill:var(--bf-vz-1)"><title>move-to-front, first pass: 155.4 ms</title></rect><rect x="302.4" y="158" width="66.6" height="22" style="fill:var(--bf-vz-2)"><title>middle stage: 107.4 ms</title></rect><rect x="368.9" y="158" width="21.0" height="22" style="fill:var(--bf-vz-3)"><title>wiring: 33.8 ms</title></rect><rect x="389.9" y="158" width="162.7" height="22" style="fill:var(--bf-vz-4)"><title>walk, expansion, CRC: 262.4 ms</title></rect><text class="bf-t-strong" x="555.0" y="173.0" text-anchor="start" style="font-size:12px">553 ms</text><text class="bf-t" x="198.0" y="211.0" text-anchor="end" style="font-size:12px">+ fused expansion, CRC</text><rect x="206.0" y="196" width="103.7" height="22" style="fill:var(--bf-vz-1)"><title>move-to-front, first pass: 167.2 ms</title></rect><rect x="309.7" y="196" width="59.0" height="22" style="fill:var(--bf-vz-2)"><title>middle stage: 95.1 ms</title></rect><rect x="368.7" y="196" width="21.4" height="22" style="fill:var(--bf-vz-3)"><title>wiring: 34.5 ms</title></rect><rect x="390.0" y="196" width="155.9" height="22" style="fill:var(--bf-vz-4)"><title>walk, expansion, CRC: 251.5 ms</title></rect><text class="bf-t-strong" x="552.0" y="211.0" text-anchor="start" style="font-size:12px">548 ms</text><line x1="545.7" y1="190" x2="545.7" y2="226" style="stroke:var(--bf-ink);stroke-width:2;stroke-dasharray:3 2"/><text class="bf-tm" x="541.7" y="236.0" text-anchor="end" style="font-size:11px">sum of the four separate savings predicts 548 ms</text><text class="bf-tm" x="206.0" y="272.0" text-anchor="start" style="font-size:11px">CPU time of one worker over 233 Wikidata blocks (test VM, baseline x86-64, caches warm)</text></svg>
+<figcaption>Measured on the cloud test machine, baseline build, caches warm: one worker's CPU time over the 233 Wikidata blocks, split by stage. The dashed mark is the shipped time less the sum of the four changes' separate savings. Stage medians need not sum exactly to the total's median.</figcaption>
+</figure>
+
+<p>With warm caches on the baseline build, the composed worker took 548.5 ms against the shipped
+737.1 ms, or 25.6% less. The separate savings predicted 548.0 ms. On the native build the composed
+worker did better than the sum, by 3.8% of the shipped time; with cold caches on the baseline build
+it fell short of the sum by 2.0%. The fused expansion also halved the memory the pieces would
+otherwise need. Without it a worker kept 6.7 MiB of scratch for raw slabs and expanded output; with
+it, 3.4 MiB, against 2.8 MiB for the shipped worker.</p>
+<p>Two hardware limits then set the design's dimensions. The first is the L2 cache. Doubling the
+lanes' slabs from 32 to 64 KiB, to compact and checksum half as often, made the walk and expansion
+slower in every build and cache state, by up to 22 ms. Four lanes of 64 KiB slabs fill all 256 KiB of a
+core's private L2, on the test machine and on the i9 alike, so each slab's start is evicted while
+the lanes still chase links through the rest of the table, and the in-place expansion then reads
+from L3. At 32 KiB the active slabs take half of L2 and the links have the rest. Marking the
+expansion routine as cold, so the compiler stops inlining it five times into the lane loop, saved
+another 5–16 ms. The final composed worker took 21.6–24.6% less time than the shipped one with cold
+caches, and 27.4% less with warm caches on the native build.</p>
+<p>The second limit is the register file. A core of either machine can keep ten misses from its L1
+cache outstanding at once, so six, eight or ten lanes looked possible. More lanes were indeed busy, up to 7.7 on average with ten,
+yet every wider design was slower. With cold caches, total worker time rose by 8.0% at six lanes,
+10.8% at eight and 14.4% at ten.
+At eight lanes the compiler had to spill all eight loaded links to the stack and reload the lanes'
+write positions on every step. The table mostly sits in L3 rather than main memory, so the extra
+overlap could not repay those stack round trips. Splitting the lanes' chasing from
+their writing, to free registers, was slower still, because it stopped the processor overlapping
+the dictionary copies with the misses. Four lanes was the fastest width tried, and the eight-lane
+machine code shows why: at eight, the lanes' working state no longer fits in the registers.</p>
+<h2 id="7-where-the-pieces-stand">7. Where the pieces stand<a class="headerlink" href="#7-where-the-pieces-stand" title="Permanent link">&para;</a></h2>
+<p>Each dimension of the design now has a reason. There are four lanes because of the registers,
+32 KiB slabs because of L2 and sixteen starting points because of the order statistics. The output
+stays in pieces because expansion changes their lengths, and the induction has a fixed size because
+its nodes stay far below 65,536. None of it is yet the default decoder.</p>
 <table>
 <thead>
 <tr>
-<th>Stage / boundary</th>
-<th>Primary study</th>
-<th>Mechanism</th>
-<th>VM / replay finding</th>
-<th>i9-10900K gate</th>
+<th>Piece</th>
+<th>State on 27 November</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>A5 + A6a</code></td>
-<td><code>#1048</code>, <code>#1055</code></td>
-<td>2 KiB L1d run batch + <code>OutQ16</code> 496/512 guard</td>
-<td>−12.1% base / −19.1% native (<code>A5 + A6a</code>)</td>
-<td>≥ 2.5% 1W, 0 <code>A6c</code> regression</td>
+<td>Fixed-size middle of construction</td>
+<td>In the code, behind an experimental build option; on the i9, 1.8% faster with one worker and unchanged at eight and ten, short of its bar, so not adopted</td>
 </tr>
 <tr>
-<td><code>A6b</code></td>
-<td><code>#1046</code></td>
-<td>Fused setup + safe 64K SoA + gen-tagged dict</td>
-<td>−27.4%..−28.8% <code>A6b</code>, −5.4%..−7.6% <code>C+E</code></td>
-<td>RSS &amp; 8–10W L3 scaling</td>
+<td>Four-lane walk from sixteen marked rows</td>
+<td>In the code, behind an experimental build option, in the form that stitches its pieces; workstation test to come</td>
 </tr>
 <tr>
-<td><code>A6c + A7</code></td>
-<td><code>#1057</code></td>
-<td>SIMD <code>Reader::wire</code> + <code>S=16</code> bit-31 + 4 lanes</td>
-<td>−31.0%..−35.8% <code>A6c+A7</code> (97.4% of oracle)</td>
-<td>+208..+235 ms 1W, 0 <code>unsafe</code></td>
+<td>Batched move-to-front with a guard zone</td>
+<td>Implemented, in review</td>
 </tr>
 <tr>
-<td><code>E + A9</code></td>
-<td><code>#1045</code></td>
-<td>Zero-scratch 4K tiles + 64K CRC + GF(2)</td>
-<td>−53.4% writes, +31.8..+49.9 ms 1W proj.</td>
-<td>Vectored only (no stitch)</td>
+<td>Faster block-header parsing in the scanner</td>
+<td>Implemented, in review</td>
 </tr>
 <tr>
-<td>Delivery</td>
-<td><code>#1058</code></td>
-<td>160 B inline <code>ReadyBlock</code>, <code>+16 KiB</code> tile slab</td>
-<td>0.86×–1.01× consumers, RSS 1.017×</td>
-<td>≤ 1.05× RSS, 0 overflows</td>
+<td>Fused expansion and checksum; delivery in pieces</td>
+<td>Prototypes on the test machine</td>
 </tr>
 <tr>
-<td>8W scan</td>
-<td><code>#1056</code></td>
-<td><code>mibz2-read</code> Finder + slack-only Policy A</td>
-<td>131.8 ms (6.36 GB/s) @ 8W, 0.998× @ 6W</td>
-<td>≥ 6 GB/s @ 8W, ≤ 1.005× @ 6W</td>
+<td>The composed worker</td>
+<td>A prototype on the test machine</td>
 </tr>
 </tbody>
 </table>
-<p>The dependency order for production builds is equally crisp. First, ship the independent worker kernels (<code>a6b-endpoint-build</code>, opt-in <code>forward-emission</code> and <code>mtf-l1-batch-build</code>) alongside the vectored <code>ReadyBlock</code> boundary (<code>#1058</code>). That lets upstream RLE1+CRC fusion (<code>#1045</code>) land without paying stitching's 74.9% copy tax. Second, verify on the 10-core i9-10900K that the worker stack pulls <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor. Then enable <code>pooled-scan-hybrid</code> (<code>#1056</code>) to turn newly exposed <code>job_wait</code> slack into 6 GB/s throughput with zero below-the-knee regressions.</p>
+<p>The scanner received one change of its own. Parsing each block's header, its table choices and
+Huffman code lengths, took about a tenth of the scanner's time. Most table choices repeat the
+previous table, so one leading-zero count now reads a whole run of them. Most code lengths differ
+from the last by a delta coded in one or three bits, so a 4 KiB table decodes about 3.5 of them a
+lookup. Header
+parsing took a third less time, 31.6–37.7% across builds, and the whole scanner 4.4–7.4% less.</p>
+<p>Eight workers are where the project's aim lies. Decoding the 838.8 MB in about 140 ms would be
+6 GB/s, against 194.6 ms today. There the <a href="../2026-11-25-the-decoder-as-a-queueing-network/">scanner and workers limit the decode together</a>,
+so shrinking only the workers moves the limit to the scanner. One design under study lets idle
+workers scan ahead from the slack between their own blocks, while the reader thread, idle 91.6% of
+the time, finds the block boundaries. A model of the decoder replayed against the i9's own timings
+puts eight-worker time at about the scanner's and eight workers' busy time shared nine ways, plus
+4.85 ms. It reached 140 ms only with a scanner change the i9 since declined to adopt and worker
+times below what the composed worker reaches with cold caches. With today's figures our
+arithmetic on the same model gives about 147–152 ms, a route to the target rather than its arrival.</p>
+<p>The next measurements are on the i9: each piece as it reaches the code, then the composed worker,
+then eight workers together. The general lesson is a modest one. When stages are redesigned as a
+set, a change that looks unprofitable alone, such as walking in pieces, can be the one that makes
+its neighbours' gains possible.</p>
+<hr />
+<p><strong>Sources:</strong></p>
+<ul>
+<li>The i9-10900K baseline: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">the zero-copy floor run</a> (838.8 MB in 194.6 ms at eight workers) and <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/DECODER.md">the decoder baseline</a>; one-worker stage times from <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt">the stage-1 report</a>.</li>
+<li>The four-lane walk: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md">the sampled-starting-point probe</a> (#1050, #1057); the build behind an experimental option, <a href="https://github.com/lmmx/mibz2/pull/1110">#1110</a>, with <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-forward-emission/registration.md">its registration</a>.</li>
+<li>Fused expansion and checksum: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md">the fusion probe</a> (#1045). Delivery in pieces: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md">the delivery probe</a> (#1058).</li>
+<li>The middle of construction: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-26-explore/a6b-combined-redesign.md">the combined redesign probe</a> (#1046); the build behind an experimental option, <a href="https://github.com/lmmx/mibz2/pull/1053">#1053</a>, with <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-a6b-endpoint-build/registration.md">its registration</a>; the first workstation attempt, <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/deltas/2026-11-27-a6b-workstation-incomplete.md">recorded as incomplete</a>.</li>
+<li>Batched move-to-front: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md">the register-spill dissection</a> (#1048) and <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md">the batching probe</a> (#1055); the implementation in review, <a href="https://github.com/lmmx/mibz2/pull/1132">#1132</a>.</li>
+<li>The composed worker: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/composed-worker-stack-probe.md">the first composition</a> (#1062), <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/composed-worker-v2-probe.md">the slab-size and outlining round</a> (#1067) and <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/w4-v3-mlp-layout-probe.md">the lane-count and layout probe</a> (#1076).</li>
+<li>The scanner's headers: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/scanner-a2-dissection.md">the header dissection</a> (#1069); the implementation in review, <a href="https://github.com/lmmx/mibz2/pull/1117">#1117</a>.</li>
+<li>Eight workers: <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md">the slack-only scanning study</a> (#1056) and <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/pooled-scan/hybrid-registration.md">its registration</a> (#1142); the scanner change not adopted, <a href="https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/deltas/2026-11-27-scanner-seam-window-i9-verdict.md">the i9 verdict</a> (#1118).</li>
+</ul>
 
 
 
@@ -4444,7 +3988,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The 256 KiB L2 cliff and the flipped knee">
+          <a href="../2026-11-27-faster-decoding-for-ordinary-text/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Faster decoding for ordinary text">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -4454,20 +3998,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                The 256 KiB L2 cliff and the flipped knee
+                Faster decoding for ordinary text
               </div>
             </div>
           </a>
         
         
           
-          <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-footer__link md-footer__link--next" aria-label="Next: Reopening Open&#x27;s middle and off-Wikidata">
+          <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-footer__link md-footer__link--next" aria-label="Next: The decoder&#x27;s true floor and a pooled scan">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Reopening Open's middle and off-Wikidata
+                The decoder's true floor and a pooled scan
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4562,21 +4106,21 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/bench.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/couriers.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/blog.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/announce.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/frontier.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/observatory.js?v=52b19684d021"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/katex.js?v=52b19684d021"></script>
       
     
   </body>

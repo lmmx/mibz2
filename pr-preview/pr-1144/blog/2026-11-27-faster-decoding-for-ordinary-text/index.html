@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
+        <meta name="description" content="Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-faster-decoding-for-ordinary-text/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -21,10 +21,10 @@
         
       
       
-        <link rel="prev" href="../2026-11-27-reopening-a6b-and-segmented/">
+        <link rel="prev" href="../2026-11-27-bounded-memory-on-highly-compressible-input/">
       
       
-        <link rel="next" href="../2026-11-26-true-floor-and-pooled-scan/">
+        <link rel="next" href="../2026-11-27-stages-built-to-fit-together/">
       
       
         
@@ -35,7 +35,7 @@
     
     
       
-        <title>Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls - mibz2</title>
+        <title>Faster decoding for ordinary text, not just Wikidata - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=52b19684d021">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=8ebee20700b0">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=52b19684d021">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -91,19 +91,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
-  <meta property="og:description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png">
+  <meta property="og:title" content="Faster decoding for ordinary text, not just Wikidata">
+  <meta property="og:description" content="Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/blog/2026-11-27-faster-decoding-for-ordinary-text/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-faster-decoding-for-ordinary-text.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
+  <meta property="og:image:alt" content="Faster decoding for ordinary text, not just Wikidata">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
-  <meta name="twitter:description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png">
-  <meta name="twitter:image:alt" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
+  <meta name="twitter:title" content="Faster decoding for ordinary text, not just Wikidata">
+  <meta name="twitter:description" content="Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1144/assets/social/blog-2026-11-27-faster-decoding-for-ordinary-text.png">
+  <meta name="twitter:image:alt" content="Faster decoding for ordinary text, not just Wikidata">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls
+              Faster decoding for ordinary text, not just Wikidata
             
           </span>
         </div>
@@ -1158,10 +1158,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1217,95 +1213,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-hardware-verdicts-and-measurement-traps/" class="md-nav__link">
+      <a href="../2026-11-27-bounded-memory-on-highly-compressible-input/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  When the hardware says no
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  The 256 KiB L2 cliff and the flipped knee
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-six-gbs-decoder-architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  The architecture of a 6 GB/s decoder
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Reopening Open's middle and off-Wikidata
+  Half the memory on compressible files
 
     
   </span>
@@ -1341,7 +1256,7 @@
   <span class="md-ellipsis">
     
   
-  Off Wikidata and inside the eight-worker tie
+  Faster decoding for ordinary text
 
     
   </span>
@@ -1358,7 +1273,7 @@
   <span class="md-ellipsis">
     
   
-  Off Wikidata and inside the eight-worker tie
+  Faster decoding for ordinary text
 
     
   </span>
@@ -1384,10 +1299,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-happens-when-the-decoder-leaves-wikidata" class="md-nav__link">
+  <a href="#1-which-blocks-can-the-fast-kernel-take" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What happens when the decoder leaves Wikidata
+        1. Which blocks can the fast kernel take?
       </span>
     </span>
   </a>
@@ -1395,10 +1310,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" class="md-nav__link">
+  <a href="#2-what-does-a-refusal-cost-and-can-it-be-foreseen" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why the eight-worker tie leaves 8 to 9 ms on the table
+        2. What does a refusal cost, and can it be foreseen?
       </span>
     </span>
   </a>
@@ -1406,71 +1321,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" class="md-nav__link">
+  <a href="#3-where-does-the-general-purpose-kernel-spend-its-time" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Chunk maintenance stalls and runt-diluted slots
+        3. Where does the general-purpose kernel spend its time?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Chunk maintenance stalls and runt-diluted slots">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-the-irreducible-queueing-floor-and-cross-talk" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4. The irreducible queueing floor and cross-talk
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-changes-next" class="md-nav__link">
+  <a href="#4-how-much-of-that-reached-the-decoder" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What changes next
+        4. How much of that reached the decoder?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-this-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What this changes
       </span>
     </span>
   </a>
@@ -1481,6 +1357,33 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-stages-built-to-fit-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stages built to fit together
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1561,10 +1464,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_7" >
         
           
-          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_7" id="__nav_7_7_label" tabindex="0">
             
   
   
@@ -1582,8 +1485,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_9">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_7_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_7">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1676,10 +1579,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
         
           
-          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
             
   
   
@@ -1697,8 +1600,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_10">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_8">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2223,10 +2126,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_27" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_25" >
         
           
-          <label class="md-nav__link" for="__nav_7_27" id="__nav_7_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_25" id="__nav_7_25_label" tabindex="0">
             
   
   
@@ -2244,8 +2147,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_27_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_27">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_25_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_25">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2365,10 +2268,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_27" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_27" id="__nav_7_27_label" tabindex="0">
             
   
   
@@ -2386,8 +2289,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_29">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_27_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_27">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2669,10 +2572,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_37" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
         
           
-          <label class="md-nav__link" for="__nav_7_37" id="__nav_7_37_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
             
   
   
@@ -2690,8 +2593,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_37_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_37">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -2838,10 +2741,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_40" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_38" >
         
           
-          <label class="md-nav__link" for="__nav_7_40" id="__nav_7_40_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_38" id="__nav_7_38_label" tabindex="0">
             
   
   
@@ -2859,8 +2762,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_40">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_38_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_38">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3061,10 +2964,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_45" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_43" >
         
           
-          <label class="md-nav__link" for="__nav_7_45" id="__nav_7_45_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_43" id="__nav_7_43_label" tabindex="0">
             
   
   
@@ -3082,8 +2985,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_45_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_45">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_43_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_43">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3203,10 +3106,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_47" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_45" >
         
           
-          <label class="md-nav__link" for="__nav_7_47" id="__nav_7_47_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_45" id="__nav_7_45_label" tabindex="0">
             
   
   
@@ -3224,8 +3127,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_47_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_47">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_45_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_45">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -3597,10 +3500,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-happens-when-the-decoder-leaves-wikidata" class="md-nav__link">
+  <a href="#1-which-blocks-can-the-fast-kernel-take" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What happens when the decoder leaves Wikidata
+        1. Which blocks can the fast kernel take?
       </span>
     </span>
   </a>
@@ -3608,10 +3511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" class="md-nav__link">
+  <a href="#2-what-does-a-refusal-cost-and-can-it-be-foreseen" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why the eight-worker tie leaves 8 to 9 ms on the table
+        2. What does a refusal cost, and can it be foreseen?
       </span>
     </span>
   </a>
@@ -3619,71 +3522,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" class="md-nav__link">
+  <a href="#3-where-does-the-general-purpose-kernel-spend-its-time" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Chunk maintenance stalls and runt-diluted slots
+        3. Where does the general-purpose kernel spend its time?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Chunk maintenance stalls and runt-diluted slots">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-the-irreducible-queueing-floor-and-cross-talk" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4. The irreducible queueing floor and cross-talk
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-changes-next" class="md-nav__link">
+  <a href="#4-how-much-of-that-reached-the-decoder" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What changes next
+        4. How much of that reached the decoder?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-this-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What this changes
       </span>
     </span>
   </a>
@@ -3712,7 +3576,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-faster-decoding-for-ordinary-text.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -3723,410 +3587,271 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="off-wikidata-and-inside-the-eight-worker-tie-route-refusals-and-coupled-stalls">Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls<a class="headerlink" href="#off-wikidata-and-inside-the-eight-worker-tie-route-refusals-and-coupled-stalls" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.</p>
-<p class="post-meta">27 November 2026 · 8 min read · <a href="#4-what-changes-next">Research result</a></p>
+<h1 id="faster-decoding-for-ordinary-text-not-just-wikidata">Faster decoding for ordinary text, not just Wikidata<a class="headerlink" href="#faster-decoding-for-ordinary-text-not-just-wikidata" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.</p>
+<p class="post-meta">27 November 2026 · 12 min read · <a href="#5-what-this-changes">Research synthesis</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p><strong>Two measurements from primary traces sharpen where mibz2 should spend its next engineering effort.</strong> First, moving off our Wikidata benchmark exposes a blind spot. Across seven other corpora, 84% of full blocks bypass the Open inverse-BWT kernel completely, and every block in Open's dense admission band is refused <em>after</em> paying for a failed first pass. Second, replaying per-block timestamps at eight workers on Wikidata explains the 8 to 9 millisecond gap between shipped wall time and the bottleneck lower bound. Most of that gap is either already targeted by our seam-window patch or part of an irreducible queueing floor, leaving no hidden 3% lever in pipeline coordination.</p>
-<p>Both findings follow directly from <a href="../2026-11-26-true-floor-and-pooled-scan/">The decoder's true floor and the limits of a pooled scan</a>. That post established that on our 10-core Intel i9-10900K machine, decoding four copies of Wikidata (838.8 MB uncompressed) at eight workers puts the serial Huffman scanner (<code>S</code>) and the eight workers (<code>W/8</code>) in a near-exact tie near 185 ms, while shipped wall time sits at 192.9 to 194.6 ms. Two natural questions remained open: how much of our Wikidata-tuned worker surface actually runs on ordinary files, and whether the 8 to 9 ms coupling gap at the eight-worker tie hides an unowned speedup.</p>
-<p>This post answers both from primary evidence.
-<a href="#1-what-happens-when-the-decoder-leaves-wikidata">Section 1</a> reports the off-Wikidata route census and the exact cost of dense-band refusals.
-<a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table">Section 2</a> corrects a common accounting mistake about our 5.2 ms plumbing floor and validates a discrete-event replay of the parallel decoder.
-<a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots">Section 3</a> isolates the two mechanisms driving mid-stream stalls and prices the remaining floor at a future 150 ms tie.
-<a href="#4-what-changes-next">Section 4</a> sets out the concrete changes these measurements justify.</p>
+<p>mibz2 is a bzip2 decoder, written in Rust, that decodes a file's blocks in parallel. Each bzip2
+block holds up to 900,000 bytes, stored in the order produced by the Burrows–Wheeler transform
+(BWT), and most of the work of decoding a block is undoing that transform. The classical way back
+is a walk through the sorted rows of the block, one row at a time, each step a lookup that depends
+on the one before; <a href="../2026-11-08-inverse-bwt-navigation/">The mathematical structure of inverse-BWT navigation</a>
+works it through. This month mibz2 found a faster route. Adjacent rows that hold the same byte, a
+<em>run</em>, move together, so a kernel can follow one row of each run and let the rest come for free
+(<a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a>). The kernel built on
+that idea, published as <a href="../2026-11-19-open-returns/">Open</a>, keeps only the rows that sit in short
+runs and jumps between them, writing whole words at a time. Below we call it the fast kernel.</p>
+<p>The fast kernel was designed and tuned on one corpus, an 11.9 MB extract of a <a href="https://www.wikidata.org/">Wikidata</a> dump that decompresses
+to 210 MB of JSON. There
+it takes all 233 full-size blocks, and in our single-thread timings it inverts them in under half
+the time of the older kernel it replaced. That older kernel, the general-purpose kernel, builds a
+table with one entry per byte of the block and walks it in 512 segments, 32 at a time
+(<a href="../2026-10-31-room-walk-overlap/">32 lanes, 8.6 chains</a>). It can decode any block, and the
+decoder falls back on it whenever the fast kernel declines one.</p>
+<p>This post asks what happens on everything else: prose, source code, JSON, executables. The answer
+is that the fast kernel mostly does not apply. Across seven ordinary corpora it took only 17 of
+107 full blocks, about 16%, and the general-purpose kernel did the rest. Worse, on the dense blocks
+typical of prose and source code, the fast kernel ran its first pass up to a limit before giving
+up, so those blocks paid for both kernels. We found that every such refusal can be predicted, in
+one cheap pass, from a list the decoder already holds. We then turned to the kernel that ordinary
+text actually uses, and made it faster. Both changes are now in mibz2's default decoder on its
+main branch.</p>
 <p><strong>Takeaways</strong></p>
 <ul>
-<li><strong>Off Wikidata, Open runs on only 16% of full blocks.</strong> Across seven local corpora (107 full blocks), 90 blocks run the Segmented fallback instead of Open, and all 25 blocks in Open's dense band (<span class="arithmatex">\(r/n \in [0.15, 0.28]\)</span>) are refused after running Open's first pass to its cap.</li>
-<li><strong>Dense-band refusals cost 13 to 48% extra inverse time on refused blocks.</strong> On ordinary prose, that wasted pass makes production 1.09 to 1.32 times slower than Segmented alone. A single pass over the run records predicts every refusal before Open begins.</li>
-<li><strong>Do not subtract 5.2 ms of empty-pipeline plumbing from the eight-worker tie gap.</strong> When real work runs, per-block handoffs overlap behind active stages. Unoverlapped handoff overhead is only 1.12 to 1.16 ms.</li>
-<li><strong>Chunk maintenance amplifies the eight-worker tie by about 2.15 ms.</strong> Eleven discrete 0.53 to 1.54 ms copy-and-drain stalls in <code>ChannelSource::view</code> skew the scanner across the four corpus copies. Removing them via a reused seam buffer recovers that coupling loss on top of its 10 to 11 ms direct scan reduction.</li>
-<li><strong>No standalone 3% lever hides in the remaining coupling gap.</strong> Post-seam at a balanced 150 ms tie, about 4.5 ms is an irreducible queueing, startup and handoff floor. The remaining unowned levers (runt-exempt slots and a smaller initial read chunk) cap near 2.5 ms combined, or 1.6% of wall time.</li>
+<li><strong>The fast kernel is a Wikidata specialist.</strong> It takes all of Wikidata's full blocks, but only
+  16% of those in seven other corpora; the other 84% go to the general-purpose kernel.</li>
+<li><strong>On dense blocks, it wasted work before declining.</strong> All 25 dense blocks it met outside
+  Wikidata were refused only after its first pass had reached its limit. On a single thread, that
+  added up to 48% to their inversion time and made a whole prose file 1.09 to 1.32 times slower to
+  decode than with the general-purpose kernel alone.</li>
+<li><strong>One pass over the block's runs foresees every refusal.</strong> Checking the limit before the fast
+  kernel starts brings those blocks down to the general-purpose kernel's own time. On the
+  project's cloud benchmark, four-thread decoding of a text corpus became 3.7% faster, and
+  Wikidata was unchanged.</li>
+<li><strong>The general-purpose kernel's hidden cost is building its table.</strong> Three changes that need no
+  extra memory cut its inversion time by 15 to 16% on prose and source code in a controlled probe.
+  In the shipped decoder, the cloud benchmark measured text decoding 2.7% faster on one thread and
+  4.3% faster on two.</li>
 </ul>
-<h2 id="1-what-happens-when-the-decoder-leaves-wikidata">1. What happens when the decoder leaves Wikidata<a class="headerlink" href="#1-what-happens-when-the-decoder-leaves-wikidata" title="Permanent link">&para;</a></h2>
-<p>Almost every worker-side speedup we have measured so far targets the <a href="../2026-11-19-open-returns/">Open Returns</a> inverse-BWT kernel (<code>OpenCells</code>). On our Wikidata benchmark (<code>corpora/wikidata.bz2</code>, 431 blocks), all 233 full blocks enter Open because their run-to-row ratio <span class="arithmatex">\(r/n\)</span> sits near 0.068. To test how often Open actually runs on other data, we ran a <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/route-census.md">route census</a> across Wikidata and seven container-built <code>bzip2 -9</code> corpora spanning prose, source code, JSON, binaries, DNA and random bytes.</p>
-<p>Each full block (<span class="arithmatex">\(n \ge 100{,}000\)</span>) takes one of three routes:</p>
-<ol>
-<li><strong>Column route (<code>Segmented</code>):</strong> move-to-front keeps the flat BWT column because runs are too short to compress into run records.</li>
-<li><strong>Open route (<code>OpenCells</code>):</strong> run records pass admission and stay within Open's retained-row and thick-strip caps.</li>
-<li><strong>Run-route fallback (<code>Segmented</code>):</strong> run records enter the run path, fail Open's gates or its dense-band cap, and fall back to Segmented inversion.</li>
-</ol>
+<h2 id="1-which-blocks-can-the-fast-kernel-take">1. Which blocks can the fast kernel take?<a class="headerlink" href="#1-which-blocks-can-the-fast-kernel-take" title="Permanent link">&para;</a></h2>
+<p>The fast kernel reads a block as runs rather than as bytes. While the decoder undoes bzip2's
+move-to-front stage, it can note at almost no cost where each run of repeated bytes begins and how
+long it is. <a href="../2026-11-08-bwt-runs-from-mtf-codes/">Reading the BWT's runs off bzip2's move-to-front codes</a>
+shows why the codes already contain that list, which we call the block's <em>run records</em>. A block of
+long runs has few records for its length. The ratio of records to rows, written <span class="arithmatex">\(r/n\)</span>, therefore
+measures how dense a block is with short runs.</p>
+<aside class="il-gloss">
+<p><strong>Run records</strong> are pairs of a byte and a length. The six bytes
+<code>nnbaaa</code> make three of them: (<code>n</code>, 2), (<code>b</code>, 1) and (<code>a</code>, 3). A Wikidata block of 900,000 bytes,
+whose <span class="arithmatex">\(r/n\)</span> sits near 0.068, has about 61,000.</p>
+</aside>
+<p>The fast kernel's advantage comes from long runs, which it can skip, so it accepts only blocks of
+low density. Between 1/64 and 0.15 it takes a block outright. Between 0.15 and 0.28, the <em>dense
+band</em>, it must also check how many rows it would have to handle one by one: those lying in runs of
+at most 16. It takes the block only if that count stays within <span class="arithmatex">\(\min(256{,}000,\ 0.3n)\)</span>, a limit
+set when <a href="../2026-11-21-a-memory-gain-is-a-gain/">dense blocks were first admitted</a> so as to take
+Wikidata's five. Blocks outside both ranges go to the general-purpose kernel. So do blocks of nearly random
+bytes, for which the decoder never forms run records at all, since they would cost more than they
+save; we call that the <em>column route</em>.</p>
+<p>To see how often each case occurs, we built seven corpora from files any Linux machine holds:
+prose from documentation, Python's standard library, Rust source from the cargo registry, JSON,
+ELF executables, a DNA-like stream of four letters, and random bytes. We compressed each with
+<code>bzip2 -9</code> and logged the route of every full block, meaning every block of at least 100,000
+bytes. Where each corpus's full blocks went:</p>
+<figure class="bf-fig" id="routes">
+<p class="bf-title">Where the full blocks go: Wikidata against seven ordinary corpora</p>
+<!-- fig:routes -->
+<svg viewBox="0 0 720 372" role="img" aria-label="Stacked bars of where each corpus's full blocks go. Wikidata: all 233 to the fast kernel. Across seven ordinary corpora, 107 full blocks: 17 to the fast kernel, 25 refused after a wasted first pass, 10 more sent from the run route to the fallback, and 55 on the column route."><rect x="20.0" y="12.0" width="12.0" height="12.0" rx="2" style="fill:var(--bf-vz-1)"></rect><text class="bf-tm" x="38.0" y="22.0" text-anchor="start" style="font-size:12px">fast kernel</text><rect x="150.0" y="12.0" width="12.0" height="12.0" rx="2" style="fill:var(--bf-vz-2)"></rect><text class="bf-tm" x="168.0" y="22.0" text-anchor="start" style="font-size:12px">refused after a wasted first pass</text><rect x="390.0" y="12.0" width="12.0" height="12.0" rx="2" style="fill:var(--bf-vz-3)"></rect><text class="bf-tm" x="408.0" y="22.0" text-anchor="start" style="font-size:12px">run route, sent to fallback</text><rect x="20.0" y="32.0" width="12.0" height="12.0" rx="2" style="fill:var(--bf-vz-4)"></rect><text class="bf-tm" x="38.0" y="42.0" text-anchor="start" style="font-size:12px">column route, fallback</text><text class="bf-tm" x="690.0" y="42.0" text-anchor="end" style="font-size:12px">share of a corpus's full blocks</text><line x1="170.0" y1="58.0" x2="170.0" y2="346.0" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="170.0" y="362.0" text-anchor="middle" style="font-size:11px">0%</text><line x1="300.0" y1="58.0" x2="300.0" y2="346.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="300.0" y="362.0" text-anchor="middle" style="font-size:11px">25%</text><line x1="430.0" y1="58.0" x2="430.0" y2="346.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="430.0" y="362.0" text-anchor="middle" style="font-size:11px">50%</text><line x1="560.0" y1="58.0" x2="560.0" y2="346.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="560.0" y="362.0" text-anchor="middle" style="font-size:11px">75%</text><line x1="690.0" y1="58.0" x2="690.0" y2="346.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="690.0" y="362.0" text-anchor="middle" style="font-size:11px">100%</text><text class="bf-tm" x="162.0" y="79.0" text-anchor="end" style="font-size:12px">Wikidata (benchmark) · 233</text><rect x="170.0" y="64.0" width="520.0" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>Wikidata (benchmark): 233 of 233 full blocks, fast kernel</title></rect><text x="430.0" y="79.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">233</text><text class="bf-tm" x="162.0" y="111.0" text-anchor="end" style="font-size:12px">prose · 8</text><rect x="170.0" y="96.0" width="65.0" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>prose: 1 of 8 full blocks, fast kernel</title></rect><text x="202.5" y="111.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">1</text><rect x="235.0" y="96.0" width="455.0" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>prose: 7 of 8 full blocks, refused after a wasted first pass</title></rect><text x="462.5" y="111.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">7</text><text class="bf-tm" x="162.0" y="143.0" text-anchor="end" style="font-size:12px">Python source · 11</text><rect x="170.0" y="128.0" width="47.3" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>Python source: 1 of 11 full blocks, fast kernel</title></rect><text x="193.6" y="143.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">1</text><rect x="217.3" y="128.0" width="94.5" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>Python source: 2 of 11 full blocks, refused after a wasted first pass</title></rect><text x="264.5" y="143.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">2</text><rect x="311.8" y="128.0" width="330.9" height="22.0" rx="0" style="fill:var(--bf-vz-3)"><title>Python source: 7 of 11 full blocks, run route, sent to fallback</title></rect><text x="477.3" y="143.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-3-ink)">7</text><rect x="642.7" y="128.0" width="47.3" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>Python source: 1 of 11 full blocks, column route, fallback</title></rect><text x="666.4" y="143.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">1</text><text class="bf-tm" x="162.0" y="175.0" text-anchor="end" style="font-size:12px">Rust source · 16</text><rect x="170.0" y="160.0" width="260.0" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>Rust source: 8 of 16 full blocks, fast kernel</title></rect><text x="300.0" y="175.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">8</text><rect x="430.0" y="160.0" width="260.0" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>Rust source: 8 of 16 full blocks, refused after a wasted first pass</title></rect><text x="560.0" y="175.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">8</text><text class="bf-tm" x="162.0" y="207.0" text-anchor="end" style="font-size:12px">JSON · 16</text><rect x="170.0" y="192.0" width="227.5" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>JSON: 7 of 16 full blocks, fast kernel</title></rect><text x="283.8" y="207.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">7</text><rect x="397.5" y="192.0" width="130.0" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>JSON: 4 of 16 full blocks, refused after a wasted first pass</title></rect><text x="462.5" y="207.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">4</text><rect x="527.5" y="192.0" width="162.5" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>JSON: 5 of 16 full blocks, column route, fallback</title></rect><text x="608.8" y="207.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">5</text><text class="bf-tm" x="162.0" y="239.0" text-anchor="end" style="font-size:12px">ELF binaries · 33</text><rect x="170.0" y="224.0" width="63.0" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>ELF binaries: 4 of 33 full blocks, refused after a wasted first pass</title></rect><text x="201.5" y="239.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">4</text><rect x="233.0" y="224.0" width="31.5" height="22.0" rx="0" style="fill:var(--bf-vz-3)"><title>ELF binaries: 2 of 33 full blocks, run route, sent to fallback</title></rect><text x="248.8" y="239.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-3-ink)">2</text><rect x="264.5" y="224.0" width="425.5" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>ELF binaries: 27 of 33 full blocks, column route, fallback</title></rect><text x="477.3" y="239.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">27</text><text class="bf-tm" x="162.0" y="271.0" text-anchor="end" style="font-size:12px">DNA-like · 14</text><rect x="170.0" y="256.0" width="37.1" height="22.0" rx="0" style="fill:var(--bf-vz-3)"><title>DNA-like: 1 of 14 full blocks, run route, sent to fallback</title></rect><text x="188.6" y="271.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-3-ink)">1</text><rect x="207.1" y="256.0" width="482.9" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>DNA-like: 13 of 14 full blocks, column route, fallback</title></rect><text x="448.6" y="271.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">13</text><text class="bf-tm" x="162.0" y="303.0" text-anchor="end" style="font-size:12px">random bytes · 9</text><rect x="170.0" y="288.0" width="520.0" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>random bytes: 9 of 9 full blocks, column route, fallback</title></rect><text x="430.0" y="303.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">9</text><line x1="20.0" y1="314.0" x2="690.0" y2="314.0" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-t-strong" x="162.0" y="335.0" text-anchor="end" style="font-size:12px">all seven · 107</text><rect x="170.0" y="320.0" width="82.6" height="22.0" rx="0" style="fill:var(--bf-vz-1)"><title>all seven: 17 of 107 full blocks, fast kernel</title></rect><text x="211.3" y="335.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-1-ink)">17</text><rect x="252.6" y="320.0" width="121.5" height="22.0" rx="0" style="fill:var(--bf-vz-2)"><title>all seven: 25 of 107 full blocks, refused after a wasted first pass</title></rect><text x="313.4" y="335.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-2-ink)">25</text><rect x="374.1" y="320.0" width="48.6" height="22.0" rx="0" style="fill:var(--bf-vz-3)"><title>all seven: 10 of 107 full blocks, run route, sent to fallback</title></rect><text x="398.4" y="335.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-3-ink)">10</text><rect x="422.7" y="320.0" width="267.3" height="22.0" rx="0" style="fill:var(--bf-vz-4)"><title>all seven: 55 of 107 full blocks, column route, fallback</title></rect><text x="556.4" y="335.0" text-anchor="middle" style="font-size:11.5px;font-weight:600;fill:var(--bf-vz-4-ink)">55</text></svg>
+<figcaption>Measured: the route each full block took, from the route census (the number after each
+name is its count of full blocks). "Refused after a wasted first pass" are the dense-band blocks;
+"run route, sent to fallback" are blocks outside the fast kernel's range of densities; the column route never forms run
+records.</figcaption>
+</figure>
+
+<p>On Wikidata the fast kernel takes everything, but elsewhere it takes 17 of 107 blocks. The column
+route takes 55, nearly all from the executables, the DNA-like data and the random bytes. The run
+route sends another 35 to the general-purpose kernel, and 25 of those are dense-band blocks from
+prose, source code, JSON and executables. Where the fast kernel does run, it is as good off
+Wikidata as on it. It inverts JSON blocks in 0.38 of the general-purpose kernel's time and Rust
+source in 0.76, against 0.48 on Wikidata itself. The kernel is not weak on ordinary text; it is
+simply rarely eligible.</p>
+<h2 id="2-what-does-a-refusal-cost-and-can-it-be-foreseen">2. What does a refusal cost, and can it be foreseen?<a class="headerlink" href="#2-what-does-a-refusal-cost-and-can-it-be-foreseen" title="Permanent link">&para;</a></h2>
+<p>All 25 dense-band blocks outside Wikidata were refused, and every one was refused late. The fast
+kernel learns how many rows it must keep by running its first pass, and stops only when the count
+crosses the limit. By then the pass has done most of its work, and the general-purpose kernel
+starts again from nothing. We timed each refused block twice on one thread, once through the
+decoder as shipped and once through the general-purpose kernel directly:</p>
 <table>
 <thead>
 <tr>
-<th>Corpus</th>
-<th style="text-align: right;">Full blocks</th>
-<th style="text-align: right;">Column (<code>Segmented</code>)</th>
-<th style="text-align: right;"><code>Open</code></th>
-<th style="text-align: right;">Run-route fallback (<code>Segmented</code>)</th>
-<th><span class="arithmatex">\(r/n\)</span> p10 / p50 / p90</th>
+<th>corpus</th>
+<th style="text-align: right;">refused blocks</th>
+<th style="text-align: right;">as shipped, ms</th>
+<th style="text-align: right;">general-purpose alone, ms</th>
+<th style="text-align: right;">ratio</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>wikidata</code></td>
-<td style="text-align: right;">233</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">233</td>
-<td style="text-align: right;">0</td>
-<td>0.063 / 0.068 / 0.115</td>
-</tr>
-<tr>
-<td><code>prose</code></td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">7</td>
-<td>0.162 / 0.170 / 0.175</td>
-</tr>
-<tr>
-<td><code>pysrc</code></td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">9</td>
-<td>0.226 / 0.294 / 0.314</td>
-</tr>
-<tr>
-<td><code>rustsrc</code></td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">8</td>
-<td>0.053 / 0.158 / 0.229</td>
-</tr>
-<tr>
-<td><code>json</code></td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">4</td>
-<td>0.053 / 0.070 / 0.217</td>
-</tr>
-<tr>
-<td><code>elf</code></td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">6</td>
-<td>0.232 / 0.261 / 0.413</td>
-</tr>
-<tr>
-<td><code>dna</code></td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td>0.724</td>
-</tr>
-<tr>
-<td><code>random</code></td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p>The split is stark. Off Wikidata, Open admits only <strong>17 of 107 full blocks (16%)</strong>. The column route takes 55 blocks and the run-route fallback takes 35, putting <strong>84% of non-Wikidata full blocks</strong> onto the Segmented kernel. Where Open does admit a block off Wikidata, it wins cleanly: 0.38 times Segmented on <code>json</code> (<span class="arithmatex">\(r/n &lt; 0.15\)</span>) and 0.76 times on <code>rustsrc</code>, matching its 0.48 ratio on Wikidata.</p>
-<p>The real surprise sits in the dense band (<span class="arithmatex">\(r/n \in [0.15, 0.28]\)</span>). In <a href="../2026-11-21-a-memory-gain-is-a-gain/">Admitting dense blocks to Open</a>, we added a bounded cap (<code>Cap::dense</code>: at most <span class="arithmatex">\(\min(256{,}000, 0.3n)\)</span> retained rows and 16,384 thick strips) fitted to Wikidata's five dense blocks. All five Wikidata blocks pass that cap and finish in 0.78 times Segmented's time. Off Wikidata, however, <strong>all 25 blocks in the dense band fail the cap</strong> — after Open has already executed its first pass up to the limit.</p>
-<table>
-<thead>
-<tr>
-<th>Corpus and dense-band outcome</th>
-<th style="text-align: right;">Blocks</th>
-<th style="text-align: right;">Production inverse (ms)</th>
-<th style="text-align: right;"><code>Segmented</code> inverse (ms)</th>
-<th style="text-align: right;">Ratio</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>prose</code> (refused)</td>
+<td>prose</td>
 <td style="text-align: right;">7</td>
 <td style="text-align: right;">21.0</td>
 <td style="text-align: right;">17.1</td>
 <td style="text-align: right;">1.23</td>
 </tr>
 <tr>
-<td><code>rustsrc</code> (refused)</td>
+<td>Rust source</td>
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">28.0</td>
 <td style="text-align: right;">20.6</td>
 <td style="text-align: right;">1.36</td>
 </tr>
 <tr>
-<td><code>json</code> (refused)</td>
+<td>JSON</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">17.6</td>
 <td style="text-align: right;">11.8</td>
 <td style="text-align: right;">1.48</td>
 </tr>
 <tr>
-<td><code>elf</code> (refused)</td>
+<td>ELF executables</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">16.4</td>
 <td style="text-align: right;">14.5</td>
 <td style="text-align: right;">1.13</td>
 </tr>
 <tr>
-<td><code>pysrc</code> (refused)</td>
+<td>Python source</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">7.0</td>
 <td style="text-align: right;">6.9</td>
 <td style="text-align: right;">1.02</td>
 </tr>
-<tr>
-<td><code>wikidata</code> (admitted)</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">11.4</td>
-<td style="text-align: right;">14.6</td>
-<td style="text-align: right;">0.78</td>
-</tr>
 </tbody>
 </table>
-<p><em>(Single-thread timings on a 4-vCPU Xeon VM, production vs Segmented on the same blocks; shares and ratios are diagnostic, not workstation adoption evidence.)</em></p>
-<p>Those 25 refused blocks waste about 19 ms (~0.8 ms per block), or 13 to 48% on top of the fallback's own inverse time. On the whole <code>prose</code> file, production finishes 1.09 to 1.32 times slower than running Segmented directly. Yet the refusal is completely predictable before Open allocates or scans anything. Retained rows are simply the rows belonging to maximal runs of at most 16 bytes, plus the marked row. Summing thin runs across the run records in one cheap pass separates the two populations cleanly: every refused block exceeds 256,000 retained rows (the smallest is 257,495 on <code>elf</code>, and <code>prose</code> spans 311,318 to 380,411), while every admitted Wikidata block lies between 199,189 and 231,600. Thick strips never bind (at most 8,081 against 16,384).</p>
-<p>This reveals a sharp corpus asymmetry. Serial Huffman scanner improvements benefit every corpus equally because every route reads the same compressed bitstream. Open-kernel worker speedups cover 100% of Wikidata's full blocks but only 16% off Wikidata. Fixing the dense-band pre-check and dissecting the unowned Segmented fallback are therefore essential for ordinary text and source code.</p>
-<h2 id="2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table">2. Why the eight-worker tie leaves 8 to 9 ms on the table<a class="headerlink" href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" title="Permanent link">&para;</a></h2>
-<p>Turning back to eight workers on Wikidata (<code>wikidata ×4</code>, 1,724 blocks, 838.8 MB output on our i9-10900K), the operational lower bound is</p>
-<div class="arithmatex">\[
-L = \max\!\left(S,\;\frac{W}{k}\right),
-\]</div>
-<p>where <span class="arithmatex">\(S\)</span> is total serial scanner busy time and <span class="arithmatex">\(W/k\)</span> is mean worker busy time across <span class="arithmatex">\(k = 8\)</span> workers. Across three primary i9-10900K evidence bundles — <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt">character stage 1</a> (48 grid runs plus 4 complete nanosecond per-block traces), the <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">zero-copy floor</a> (<code>cc8ba137</code>), and the <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md">pooled-scan run</a> (<code>c71c4a56</code>) — shipped wall time exceeds <span class="arithmatex">\(L\)</span> by <strong>7.6 to 9.1 ms</strong> (4.0 to 4.7% of wall):</p>
-<table>
-<thead>
-<tr>
-<th>Primary i9-10900K bundle (<code>k = 8</code>, medians, ms)</th>
-<th style="text-align: right;">Untimed wall</th>
-<th style="text-align: right;">Traced wall</th>
-<th style="text-align: right;"><code>scan_busy</code></th>
-<th style="text-align: right;"><code>wkr_busy/8</code></th>
-<th style="text-align: right;"><code>wall − max</code></th>
-<th style="text-align: right;"><code>slot_wait</code> (waits)</th>
-<th style="text-align: right;"><code>in_wait</code></th>
-<th style="text-align: right;"><code>job_wait/8</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>character-stage1</code> grid <code>none</code> (<span class="arithmatex">\(n = 48\)</span>)</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">192.27</td>
-<td style="text-align: right;">184.45</td>
-<td style="text-align: right;">182.67</td>
-<td style="text-align: right;"><strong>7.57</strong></td>
-<td style="text-align: right;">3.25 (13)</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">8.41</td>
-</tr>
-<tr>
-<td><code>character-stage1</code> traced <code>r0</code>–<code>r3</code> mean</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">195.61</td>
-<td style="text-align: right;">184.99</td>
-<td style="text-align: right;">185.64</td>
-<td style="text-align: right;"><strong>9.13</strong></td>
-<td style="text-align: right;">5.20 (19)</td>
-<td style="text-align: right;">1.43</td>
-<td style="text-align: right;">9.57</td>
-</tr>
-<tr>
-<td><code>zero-copy-floor</code> <code>none</code> (pinned CPU 6)</td>
-<td style="text-align: right;">194.57</td>
-<td style="text-align: right;">194.36</td>
-<td style="text-align: right;">184.35</td>
-<td style="text-align: right;">186.35</td>
-<td style="text-align: right;"><strong>8.01</strong></td>
-<td style="text-align: right;">6.10 (24)</td>
-<td style="text-align: right;">1.26</td>
-<td style="text-align: right;">6.94</td>
-</tr>
-<tr>
-<td><code>pooled-scan</code> <code>none</code> (unpinned)</td>
-<td style="text-align: right;">192.93</td>
-<td style="text-align: right;">193.72</td>
-<td style="text-align: right;">184.79</td>
-<td style="text-align: right;">184.86</td>
-<td style="text-align: right;"><strong>8.86</strong></td>
-<td style="text-align: right;">4.11 (14)</td>
-<td style="text-align: right;">1.34</td>
-<td style="text-align: right;">8.50</td>
-</tr>
-<tr>
-<td><code>pooled-scan</code> <code>S</code> (scan ideal, workers bind)</td>
-<td style="text-align: right;">184.88</td>
-<td style="text-align: right;">185.35</td>
-<td style="text-align: right;">1.61</td>
-<td style="text-align: right;">184.19</td>
-<td style="text-align: right;"><strong>1.16</strong></td>
-<td style="text-align: right;">180.14 (1,342)</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">0.22</td>
-</tr>
-<tr>
-<td><code>pooled-scan</code> <code>SC</code> (scan + construction ideal)</td>
-<td style="text-align: right;">135.31</td>
-<td style="text-align: right;">133.30</td>
-<td style="text-align: right;">1.46</td>
-<td style="text-align: right;">132.18</td>
-<td style="text-align: right;"><strong>1.12</strong></td>
-<td style="text-align: right;">129.15 (1,256)</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">0.23</td>
-</tr>
-</tbody>
-</table>
-<p>That table immediately corrects a tempting accounting error. It is easy to subtract our all-ideal <code>SFCMRD</code> plumbing floor (5.2 ms) from the 9.1 ms gap and assume only ~3.9 ms is queueing loss. <strong>That subtraction is wrong.</strong> In <code>SFCMRD</code>, all 5.2 ms sit exposed because no real decoding work runs alongside them. As soon as real worker stages run (<code>S</code> and <code>SC</code> above, or <code>SFMRD</code> at 0.88 ms and <code>SECMRD</code> at 0.69 ms), per-block handoffs (<code>issue</code> 0.65 ms, <code>pool+publish</code> 0.07 ms per worker, and mutex acquisitions of 0.3 ms scanner / 0.06 ms worker) overlap behind real compute. The true unoverlapped handoff residual above <span class="arithmatex">\(L\)</span> is only <strong>1.12 to 1.16 ms</strong>.</p>
-<p>To break down the rest of the 9.13 ms gap without guessing, our <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/eight-worker-coupling.md">coupling dissection</a> built a discrete-event simulator implementing the exact admission guard (<code>Shared::full</code>), FIFO job queue (<code>Jobs</code>), <span class="arithmatex">\(k\)</span>-worker pool, and in-order <code>Ready</code> ring from <code>src/parallel.rs</code>. Fed the recorded per-block service times from all four traced rounds (<code>blocks-r00</code> to <code>blocks-r03</code>), the replay tracks real wall time to within <strong>0.94 to 1.36 ms</strong> (mean <strong>+1.15 ms</strong>, matching <code>S</code> and <code>SC</code>'s handoff residual):</p>
-<table>
-<thead>
-<tr>
-<th>Round (<code>k = 8</code>)</th>
-<th style="text-align: right;"><span class="arithmatex">\(S\)</span> (ms)</th>
-<th style="text-align: right;"><span class="arithmatex">\(W/8\)</span> (ms)</th>
-<th style="text-align: right;"><span class="arithmatex">\(L = \max\)</span></th>
-<th style="text-align: right;">Real wall (<code>slot_wait</code>)</th>
-<th style="text-align: right;">Replay wall (<code>slot_wait</code>)</th>
-<th style="text-align: right;">Real − Replay</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>r0</code></td>
-<td style="text-align: right;">183.99</td>
-<td style="text-align: right;">188.31</td>
-<td style="text-align: right;">188.31</td>
-<td style="text-align: right;">198.89 (9.61)</td>
-<td style="text-align: right;">197.53 (8.72)</td>
-<td style="text-align: right;">+1.36 ms</td>
-</tr>
-<tr>
-<td><code>r1</code></td>
-<td style="text-align: right;">183.24</td>
-<td style="text-align: right;">182.58</td>
-<td style="text-align: right;">183.24</td>
-<td style="text-align: right;">192.02 (3.27)</td>
-<td style="text-align: right;">190.93 (2.56)</td>
-<td style="text-align: right;">+1.09 ms</td>
-</tr>
-<tr>
-<td><code>r2</code></td>
-<td style="text-align: right;">184.13</td>
-<td style="text-align: right;">181.43</td>
-<td style="text-align: right;">184.13</td>
-<td style="text-align: right;">192.33 (2.18)</td>
-<td style="text-align: right;">191.11 (1.46)</td>
-<td style="text-align: right;">+1.21 ms</td>
-</tr>
-<tr>
-<td><code>r3</code></td>
-<td style="text-align: right;">188.59</td>
-<td style="text-align: right;">190.24</td>
-<td style="text-align: right;">190.24</td>
-<td style="text-align: right;">199.21 (5.74)</td>
-<td style="text-align: right;">198.27 (5.10)</td>
-<td style="text-align: right;">+0.94 ms</td>
-</tr>
-<tr>
-<td><strong>Mean</strong></td>
-<td style="text-align: right;"><strong>184.99</strong></td>
-<td style="text-align: right;"><strong>185.64</strong></td>
-<td style="text-align: right;"><strong>186.48</strong></td>
-<td style="text-align: right;"><strong>195.61 (5.20)</strong></td>
-<td style="text-align: right;"><strong>194.46 (4.46)</strong></td>
-<td style="text-align: right;"><strong>+1.15 ms</strong></td>
-</tr>
-</tbody>
-</table>
-<p>Because the replay reproduces real wall time and <code>slot_wait</code> closely across all four rounds, toggling one pipeline rule at a time isolates each physical source of delay.</p>
-<h2 id="3-chunk-maintenance-stalls-and-runt-diluted-slots">3. Chunk maintenance stalls and runt-diluted slots<a class="headerlink" href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" title="Permanent link">&para;</a></h2>
-<p>Four mechanisms explain the entire gap above <span class="arithmatex">\(L\)</span>.</p>
-<h3 id="1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus">1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)<a class="headerlink" href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" title="Permanent link">&para;</a></h3>
-<p>Whenever a block's lookahead crosses a 4 MiB input chunk boundary, <code>ChannelSource::view</code> (<code>src/parallel.rs</code>) drains the buffer and copies the incoming chunk on the serial scanner thread (<code>in_maint</code>: 10.1 to 11.2 ms at eight workers). In the per-block traces, that 10.1 ms is not smooth overhead. It arrives as <strong>11 discrete stop-the-world stalls of 0.16 to 1.54 ms</strong>, heavily front-loaded across the four identical 431-block copies as the window buffer grows and faults pages:</p>
-<div class="arithmatex">\[
-\text{in\_maint}(c_0, c_1, c_2, c_3) = (3.81,\; 3.09,\; 1.86,\; 1.40)\;\text{ms}.
-\]</div>
-<p>That slope pulls scanner time from 48.74 ms on copy 0 down to 44.61 ms on copy 3, while worker time changes far less (47.95 to 45.22 ms). On copies 0 and 1, the scanner falls behind and starves the workers. On copies 2 and 3, the scanner surges ahead and hits the admission window. In the exact-tie replay (<span class="arithmatex">\(S = W/8\)</span>, zero startup), removing <code>in_maint</code> drops the mid-stream coupling gap from <strong>6.61 ms to 4.46 ms</strong> — a <strong>2.15 ms coupling bonus</strong> that our seam-window patch captures automatically on top of its 10 to 11 ms direct scan cut.</p>
-<h3 id="2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie">2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)<a class="headerlink" href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" title="Permanent link">&para;</a></h3>
-<p>Wikidata is not clustered into bursts of full blocks and bursts of tiny runts. Its 233 full blocks (~900 KB) and 198 runts (median 8 to 30 bytes) alternate almost everywhere (<code>F.F.F.F…</code>; max runt streak is 2). Yet <code>Shared::full</code> counts every block equally against <code>SLOTS_PER_THREAD × k = 32</code> slots. As a result, <strong>15 to 16 of the 32 slots always hold tiny runts</strong>, leaving only 15 to 17 full blocks of slack.</p>
-<p>Meanwhile, <code>READY_BYTES</code> (12 MiB) <strong>never fires at eight workers</strong>: <code>slot_cap</code> is 0.00 ms across all 48 grid runs, and median peak ready bytes is only 6.01 MiB. Every single <code>slot_wait</code> at eight workers is a 32-slot head-of-line stall caused by one slow executing block (such as block offsets 56, 171, 278, and 389, taking 2.1 to 3.4 ms). While that single worker finishes, the scanner runs 32 places ahead (offsets 88, 203, 310, and 421) and blocks.</p>
-<p>Importantly, <code>slot_wait</code> and worker <code>job_wait</code> are <strong>sequential, not simultaneous</strong>. Intersecting the exact nanosecond intervals in <code>blocks-r00</code> through <code>blocks-r03</code> shows mean worker idle time during <code>slot_wait</code> is only <strong>0.033 to 0.042 ms</strong> in rounds 1 to 3 (matching <code>pooled-scan</code>'s 0.04 ms). Every worker is busy while the scanner waits, and the lost scanner time reappears downstream as worker starvation once the slow block clears.</p>
-<p>Expanding the window to 64 slots — or exempting tiny runts from the 32-slot count — captures 100% of the infinite-window wall saving. Today (with <code>in_maint</code> still present) that saves 2.10 ms (1.08%); at a future 150 ms exact tie <em>after</em> the seam window lands, it saves only <strong>1.21 ms (0.77%)</strong>. Trying to inline runt decoding onto the scanner thread makes wall time <em>worse</em> (+1.12 ms) because it adds worker CPU directly onto the tied serial scanner.</p>
-<h3 id="3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable">3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)<a class="headerlink" href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" title="Permanent link">&para;</a></h3>
-<p>Startup accounts for 2.41 ms median across 48 runs (2.62 ms mean in <code>r0</code>–<code>r3</code>), split into two pieces:</p>
+<p>Together the refusals added about 19 ms over the 25 blocks, roughly 0.8 ms a block. Prose suffered
+most, because nearly all its full blocks are dense: the whole file decoded 1.09 to 1.32 times
+slower than it would have with the general-purpose kernel alone. These timings come from a virtual
+machine with four virtual processors. They are good for ratios rather than absolute speeds, and the
+whole-file range is wide because the machine is noisy. The direction, though, is not in doubt. On
+ordinary prose, the decoder's own specialised kernel was making it slower.</p>
+<p>The remedy follows from what the first pass counts. The rows it keeps are those in maximal runs of
+at most 16 rows, plus the one row that marks where the text begins. That count can be read off the
+run records directly. One merges adjacent records of the same byte, since the format splits long
+runs, and adds up the lengths of the short ones. It is a single pass over a list several times
+shorter than the block, made before the fast kernel allocates or computes anything.</p>
+<p>The two populations separate cleanly. The least of the refused blocks keeps 257,495 rows, against
+a limit of 256,000, and the prose blocks keep between 311,318 and 380,411. Wikidata's admitted dense
+blocks, by contrast, keep between 199,189 and 231,600. A second limit, on a structure the kernel
+calls thick strips, never came close to binding.</p>
+<p>The decoder now makes that count for dense-band blocks before the fast kernel starts, and refuses
+on the spot any block that would exceed the limit. We measured the effect over seven interleaved
+repeats, on corpora rebuilt on a fresh machine, which held 24 dense refusals. The refused blocks'
+inversion time fell to the general-purpose kernel's own:</p>
+<figure class="bf-fig" id="refusals">
+<p class="bf-title">Dense blocks the fast kernel refuses: before and after counting first</p>
+<!-- fig:refusals -->
+<svg viewBox="0 0 720 304" role="img" aria-label="Dot plot of inverse time on dense blocks the fast kernel refuses, relative to the fallback alone. Before the change: prose 1.49, Python source 1.16, Rust source 1.45, JSON 1.49, ELF 1.43, all 24 blocks 1.40. After: 0.95, 0.89, 1.04, 0.87, 1.04, and 0.98 overall."><circle cx="26" cy="18" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"/><text class="bf-tm" x="38.0" y="22.0" text-anchor="start" style="font-size:12px">before: the fast kernel's first pass, then the fallback</text><circle cx="26" cy="38" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"/><text class="bf-tm" x="38.0" y="42.0" text-anchor="start" style="font-size:12px">after: refused from the run records, straight to the fallback</text><line x1="190.0" y1="48.0" x2="190.0" y2="260.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="190.0" y="276.0" text-anchor="middle" style="font-size:11px">0.8×</text><line x1="315.0" y1="48.0" x2="315.0" y2="260.0" style="stroke:var(--bf-vz-axis);stroke-width:1.5"/><text class="bf-tm" x="315.0" y="276.0" text-anchor="middle" style="font-size:11px">1.0×</text><line x1="440.0" y1="48.0" x2="440.0" y2="260.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="440.0" y="276.0" text-anchor="middle" style="font-size:11px">1.2×</text><line x1="565.0" y1="48.0" x2="565.0" y2="260.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="565.0" y="276.0" text-anchor="middle" style="font-size:11px">1.4×</text><line x1="690.0" y1="48.0" x2="690.0" y2="260.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="690.0" y="276.0" text-anchor="middle" style="font-size:11px">1.6×</text><text class="bf-tm" x="319.0" y="44.0" text-anchor="start" style="font-size:11px">same time as the fallback alone</text><text class="bf-tm" x="180.0" y="77.0" text-anchor="end" style="font-size:12px">prose (7)</text><line x1="283.7" y1="73.0" x2="618.8" y2="73.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="618.8" cy="73.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>prose: before 1.49×</title></circle><circle cx="283.7" cy="73.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>prose: after 0.95×</title></circle><text class="bf-tm" x="628.8" y="77.0" text-anchor="start" style="font-size:11px">1.49×</text><text class="bf-tm" x="273.7" y="77.0" text-anchor="end" style="font-size:11px">0.95×</text><text class="bf-tm" x="180.0" y="111.0" text-anchor="end" style="font-size:12px">Python source (3)</text><line x1="245.0" y1="107.0" x2="417.5" y2="107.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="417.5" cy="107.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>Python source: before 1.16×</title></circle><circle cx="245.0" cy="107.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>Python source: after 0.89×</title></circle><text class="bf-tm" x="427.5" y="111.0" text-anchor="start" style="font-size:11px">1.16×</text><text class="bf-tm" x="235.0" y="111.0" text-anchor="end" style="font-size:11px">0.89×</text><text class="bf-tm" x="180.0" y="145.0" text-anchor="end" style="font-size:12px">Rust source (3)</text><line x1="340.0" y1="141.0" x2="593.1" y2="141.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="593.1" cy="141.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>Rust source: before 1.45×</title></circle><circle cx="340.0" cy="141.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>Rust source: after 1.04×</title></circle><text class="bf-tm" x="603.1" y="145.0" text-anchor="start" style="font-size:11px">1.45×</text><text class="bf-tm" x="330.0" y="145.0" text-anchor="end" style="font-size:11px">1.04×</text><text class="bf-tm" x="180.0" y="179.0" text-anchor="end" style="font-size:12px">JSON (3)</text><line x1="235.6" y1="175.0" x2="622.5" y2="175.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="622.5" cy="175.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>JSON: before 1.49×</title></circle><circle cx="235.6" cy="175.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>JSON: after 0.87×</title></circle><text class="bf-tm" x="632.5" y="179.0" text-anchor="start" style="font-size:11px">1.49×</text><text class="bf-tm" x="225.6" y="179.0" text-anchor="end" style="font-size:11px">0.87×</text><text class="bf-tm" x="180.0" y="213.0" text-anchor="end" style="font-size:12px">ELF binaries (8)</text><line x1="337.5" y1="209.0" x2="585.0" y2="209.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="585.0" cy="209.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>ELF binaries: before 1.43×</title></circle><circle cx="337.5" cy="209.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>ELF binaries: after 1.04×</title></circle><text class="bf-tm" x="595.0" y="213.0" text-anchor="start" style="font-size:11px">1.43×</text><text class="bf-tm" x="327.5" y="213.0" text-anchor="end" style="font-size:11px">1.04×</text><line x1="20.0" y1="226.0" x2="690.0" y2="226.0" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-t-strong" x="180.0" y="247.0" text-anchor="end" style="font-size:12px">all 24 blocks</text><line x1="305.0" y1="243.0" x2="567.5" y2="243.0" style="stroke:var(--bf-vz-axis);stroke-width:2"/><circle cx="567.5" cy="243.0" r="5" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2"><title>all 24 blocks: before 1.40×</title></circle><circle cx="305.0" cy="243.0" r="5" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2"><title>all 24 blocks: after 0.98×</title></circle><text class="bf-tm" x="577.5" y="247.0" text-anchor="start" style="font-size:11px">1.40×</text><text class="bf-tm" x="295.0" y="247.0" text-anchor="end" style="font-size:11px">0.98×</text><text class="bf-tm" x="690.0" y="294.0" text-anchor="end" style="font-size:11px">inverse time on the refused blocks, over the fallback's own time on the same blocks</text></svg>
+<figcaption>Measured on a virtual machine, one thread, seven interleaved repeats. Each point is
+the summed inversion time of a corpus's refused blocks as the decoder runs them, over the
+general-purpose kernel's time on the same blocks (block counts in brackets). Values a little below
+1 are within the machine's noise.</figcaption>
+</figure>
+
+<p>Taken block by block, the median ratio fell from 1.536 to 1.027. Where the check passes, it costs
+almost nothing. On Wikidata's five dense blocks, which are still admitted, it adds about 0.27 ms in
+all, some 0.03% of a single-thread decode, and all 233 full blocks still take the fast kernel.</p>
+<p>The project's cloud benchmark then compared the decoder before and after the change, over ten
+paired rounds on a four-core runner. Its text corpus is built from mibz2's own source code and
+documentation. Four-thread decoding of it was 3.7% faster, with a 95% interval of 0.9% to 6.4%. At
+one and two threads the benchmark detected no change on that corpus, and it detected none on
+Wikidata at any thread count.</p>
+<h2 id="3-where-does-the-general-purpose-kernel-spend-its-time">3. Where does the general-purpose kernel spend its time?<a class="headerlink" href="#3-where-does-the-general-purpose-kernel-spend-its-time" title="Permanent link">&para;</a></h2>
+<p>With the wasted pass gone, the general-purpose kernel does nearly all the work on ordinary text,
+yet its costs on such text had never been dissected. A second census, over six corpora of 82 MB in
+all, found that it inverted 78 of their 86 full blocks: 48 from run records and 30 from the column
+route. On text, prose, source code and JSON, undoing the BWT took 52 to 66% of a worker's time.
+Within that, the first step, building the table that the walk follows, took 35 to 46%.</p>
+<p>The table holds, for each row, its byte and the row the walk visits next. Three changes, none of
+which needs extra memory, attacked the cost of building and using it.</p>
+<p><strong>Building in order.</strong> On the column route the kernel built a table that walks forwards. That
+meant reading the block's bytes and scattering each entry into one of 256 places in the table, a
+random write per byte. The <em>LF</em> table, which sends each row to the row one byte earlier in the
+text, can instead be built in a single sequential pass, with a shortcut for eight identical bytes
+in a row. On the 30 column-route blocks this change alone cut the kernel's processor time by 23.4%.</p>
+<p><strong>Reversing with vector instructions.</strong> Walking LF spells each segment of the block backwards, so
+every segment must be reversed as it is copied into place. The existing loop reversed a byte at a
+time, and the compiler did not vectorise it. Reversing 32 bytes at a time with AVX2 shuffles, with
+an eight-byte fallback for other processors, cut that step by 45% on the prose, text and
+source-code blocks.</p>
+<p><strong>Trusting what is already known.</strong> On the run route, the table is filled from the run records.
+The filling loop checked, on every record, that it stayed inside the block and inside its byte's
+share of the table: about 225,000 checks a block on the text corpus. Those facts are already
+established by the code that produced the records. The records therefore now carry a flag, set
+only by that code and cleared by anything that changes them, and a flagged list is filled without
+the checks. With all three changes, the run-route blocks took 13.5% less processor time.</p>
+<aside class="il-gloss">
+<p><strong>The flag</strong> is a memory-safety argument, not a shortcut taken on
+trust. The new unchecked loops and the vector code were reviewed for soundness and run under
+<a href="https://github.com/rust-lang/miri">Miri</a>, Rust's interpreter for detecting undefined behaviour,
+before they were merged. Any list built or altered elsewhere still takes the checked path.</p>
+</aside>
+<p>We timed the kernel's own processor time, so that the host's interruptions did not count, over
+seven interleaved repeats on a virtual machine with two virtual processors. Together the three
+changes cut inversion time on the 50 prose, text and source-code blocks by 15.4% in a build for any
+x86-64 processor, and by 16.1% in one tuned to the machine. On all 78 blocks the cuts were 18.4% and
+18.5%. Every corpus improved by at least 10.5%, the executables most, by about a quarter, and the
+output matched the existing kernel byte for byte on every block.</p>
+<p>A classic idea from the literature shows why construction, not the walk, was the cost to attack.
+<a href="https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/">Kärkkäinen, Kempa and Puglisi</a>
+speed up BWT inversion with a table that advances two bytes per lookup, halving the walk's chain of
+dependent reads. We tried it. The walk became 15 to 16% faster, but building the larger table took
+about four times as long. The inversion as a whole ran more than twice as slow, with 3.6 MiB more
+memory per worker. Where building the table is already a third or more of the cost, a richer
+table is the wrong trade.</p>
+<h2 id="4-how-much-of-that-reached-the-decoder">4. How much of that reached the decoder?<a class="headerlink" href="#4-how-much-of-that-reached-the-decoder" title="Permanent link">&para;</a></h2>
+<p>The probe measured the kernel in isolation. The changes were then built into the decoder, and the
+cloud benchmark compared it with its predecessor over ten paired rounds, on a four-core runner with
+two physical cores. Every corpus gave the same output from both builds, and peak memory showed no
+significant rise. On the text corpus the decoder was 2.7% faster on one thread, with a 95% interval
+of 0.1% to 5.2%, and 4.3% faster on two, with one of 0.6% to 7.8%. At four threads its 2.9% gain
+was within noise. The random-bytes corpus, whose blocks take the column route as random bytes did in our census, was 5.3% faster on
+one thread and 6.2% on four.</p>
+<p>That is less than the probe implied. Since undoing the BWT is about two-thirds of a worker's time
+on the text corpus, the probe projected a gain of 8 to 10% there, and a quick, informal check on a
+development machine suggested 7 to 9% on one thread. The controlled measurement, the one we stand
+by, came out at a third to a half of the projection. We have not yet dissected the difference. The
+probe and the benchmark ran on different processors, and they measure different things: the
+kernel's own processor time in one, the whole decoder's elapsed time in the other.</p>
+<p>Two smaller observations remain open. Wikidata, whose full blocks all take the fast kernel, came out
+1.7% faster on one thread, a gain the benchmark's stage-by-stage timings do not locate. At four
+threads, the benchmark also flagged a 1.8% rise in the extra processor time Wikidata costs as
+threads are added, which only a machine with more cores can judge.</p>
+<h2 id="5-what-this-changes">5. What this changes<a class="headerlink" href="#5-what-this-changes" title="Permanent link">&para;</a></h2>
+<p>The argument forms a short chain. A kernel tuned on one corpus became the decoder's pride, but on
+ordinary files it is eligible for only one full block in six. Where it hesitated over a dense
+block, it paid for a pass it then threw away, and made prose slower than the fallback alone. That
+refusal turned out to be a simple count over a list the decoder already holds, so it is now made
+before any work is wasted. The fallback, which is what ordinary text actually runs, spends a third
+or more of its inversion building its table, and three memory-neutral changes have made that
+markedly cheaper.</p>
+<p>None of these figures yet comes from the ten-core workstation on which mibz2's releases are
+measured. They come from virtual machines and the project's cloud benchmark, and both changes will
+first be measured on the workstation with the next release. The broader lesson concerns benchmarks
+more than kernels. A corpus chosen because it matters can quietly decide which code is ever
+examined, and the next speed-up may be found by decoding something else.</p>
+<hr />
+<p><strong>Sources:</strong></p>
 <ul>
-<li><strong>1.22 ms</strong> spawning <code>k + 2</code> OS threads before the scanner starts block 0 (a one-shot per-stream cost that amortises to zero on larger inputs);</li>
-<li><strong>1.40 ms</strong> of block-0 <code>in_wait</code> (1.26 to 1.40 ms across all three bundles), because the feeder thread (<code>src/read.rs</code>) allocates a fresh 4 MiB buffer and reads all 4 MiB before pushing chunk 0, while the scanner and all eight workers sit idle waiting for a ~25 KiB first block.</li>
+<li>The route census: <a href="https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/docs/journal/2026-11-27-explore/route-census.md">the research note</a>, its <a href="https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/docs/journal/2026-11-27-explore/route-census/run-route-blocks.tsv">per-block timings</a> and <a href="https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/examples/route_census.rs">the census program</a> (<a href="https://github.com/lmmx/mibz2/pull/1023">#1023</a>); 4-vCPU Xeon virtual machine, single thread.</li>
+<li>The early refusal check: <a href="https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/src/open.rs">the change to the fast kernel's admission</a> and <a href="https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/frontier/deltas/2026-11-27-dense-cap-precheck.md">its record</a> (<a href="https://github.com/lmmx/mibz2/pull/1040">#1040</a>), with the <a href="https://github.com/lmmx/mibz2/pull/1040#issuecomment-7207435327">benchmark report</a> (AMD EPYC 9V45 runner, 10 paired rounds).</li>
+<li>The general-purpose kernel's dissection: <a href="https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/docs/journal/2026-11-27-explore/segmented-fallback-dissection.md">the research note</a> and <a href="https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/examples/segmented_dissection_probe.rs">the probe</a> (<a href="https://github.com/lmmx/mibz2/pull/1042">#1042</a>); 2-vCPU Xeon virtual machine, seven interleaved repeats. The two-step table is recorded in <a href="https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/frontier/dead-ends.tsv">the dead ends</a>.</li>
+<li>The change in the decoder: <a href="https://github.com/lmmx/mibz2/pull/1080">#1080</a>, its <a href="https://github.com/lmmx/mibz2/pull/1080#issuecomment-7211122449">benchmark report</a> (Intel Xeon 6975P-C runner, 10 paired rounds), its <a href="https://github.com/lmmx/mibz2/pull/1092">safety review</a> and <a href="https://github.com/lmmx/mibz2/blob/1a459081ccf203b9f98706073595b4fcc6701257/frontier/deltas/2026-11-27-segmented-fallback-build-done.md">closing record</a>.</li>
+<li>The dense band's limit: <a href="../2026-11-21-a-memory-gain-is-a-gain/">Admitting dense blocks to the Open kernel</a>.</li>
+<li>Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, <a href="https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/">Slashing the Time for BWT Inversion</a>, DCC 2012.</li>
 </ul>
-<p>Starting with a smaller first chunk (for example 256 KiB before ramping to 4 MiB) recovers about <strong>1.35 ms</strong> (0.68% today; 0.86% at a 150 ms tie), once per stream.</p>
-<h3 id="4-the-irreducible-queueing-floor-and-cross-talk">4. The irreducible queueing floor and cross-talk<a class="headerlink" href="#4-the-irreducible-queueing-floor-and-cross-talk" title="Permanent link">&para;</a></h3>
-<p>Even with infinite slots, zero startup, and zero <code>in_maint</code>, a balanced 150 ms tie still pays <strong>2.19 ms (1.44%)</strong> above <span class="arithmatex">\(L\)</span>: about 0.7 ms for one-block fill and drain, 0.6 ms from full-vs-runt size bimodality, and 0.9 ms from within-class block-time variance and eight-worker end-of-stream finish spread. Adding thread spawn (1.22 ms) and unoverlapped handoff overhead (~1.1 ms) gives an <strong>irreducible floor near 4.5 ms</strong>.</p>
-<p>Cache cross-talk between the scanner and workers is also smaller than it looks at first glance. Comparing pinned <code>none</code> against scan-alone <code>FCMRD</code> at eight workers (<code>zero-copy-floor</code>) shows scanner active time rising by +9.67 ms: +4.16 ms is <code>in_maint</code> memory contention (already removed by the seam window), +1.50 ms is the 4.95 → 4.90 GHz all-core turbo step, and +4.46 ms in Huffman decode (<code>A3</code>) is a one-worker cross-core <code>free_syms</code> coherence handoff that is already present at <span class="arithmatex">\(k = 1\)</span> and stays completely flat (746 to 752 Gcycles) from 6 to 10 workers. Worker-side cross-talk from the scanner is only +0.67 ms (<code>S</code> vs <code>none</code>).</p>
-<table>
-<thead>
-<tr>
-<th>Component of the 8-worker coupling gap</th>
-<th style="text-align: right;">Today (<code>r0</code>–<code>r3</code>, ~195.6 ms)</th>
-<th style="text-align: right;">Future 150 ms tie (post-seam, ~157.5 ms)</th>
-<th>Status / ceiling</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>in_maint</code> coupling amplification</td>
-<td style="text-align: right;">~2.15 ms</td>
-<td style="text-align: right;">0.00 ms</td>
-<td>Covered by seam-window patch</td>
-</tr>
-<tr>
-<td>32-slot HOL window (runt dilution)</td>
-<td style="text-align: right;">~2.10 ms</td>
-<td style="text-align: right;"><strong>1.21 ms (0.77%)</strong></td>
-<td>Unowned; runt-exempt 32 slots</td>
-</tr>
-<tr>
-<td>Block-0 <code>in_wait</code> (4 MiB first chunk)</td>
-<td style="text-align: right;">1.40 ms</td>
-<td style="text-align: right;"><strong>1.35 ms (0.86%)</strong></td>
-<td>Unowned; one-shot startup</td>
-</tr>
-<tr>
-<td>OS thread spawn (<code>t_first_scan_start</code>)</td>
-<td style="text-align: right;">1.22 ms</td>
-<td style="text-align: right;">1.22 ms (0.77%)</td>
-<td>Irreducible per decode call</td>
-</tr>
-<tr>
-<td>Indivisible-block variance &amp; drain tail</td>
-<td style="text-align: right;">~1.11 ms</td>
-<td style="text-align: right;"><strong>2.19 ms (1.39%)</strong></td>
-<td>Irreducible queueing floor</td>
-</tr>
-<tr>
-<td>Handoff / wakeup residual (<code>Real − Replay</code>)</td>
-<td style="text-align: right;">1.15 ms</td>
-<td style="text-align: right;">~1.1 ms (0.7%)</td>
-<td>Closed plumbing residual</td>
-</tr>
-<tr>
-<td><strong>Total coupling gap</strong></td>
-<td style="text-align: right;"><strong>9.13 ms (4.67%)</strong></td>
-<td style="text-align: right;"><strong>~7.5 ms (4.8%)</strong></td>
-<td><strong>Combined unowned ceiling: ~2.5 ms (1.6%)</strong></td>
-</tr>
-</tbody>
-</table>
-<h2 id="4-what-changes-next">4. What changes next<a class="headerlink" href="#4-what-changes-next" title="Permanent link">&para;</a></h2>
-<p>Together, these two measurements close a dead-end temptation and open a neglected axis of real performance work:</p>
-<ol>
-<li><strong>Do not chase a standalone coupling project at eight workers.</strong> Once the input seam window removes <code>in_maint</code> and its 2.15 ms coupling bonus, the remaining unowned coupling mechanisms cap near 2.5 ms (1.6% at a 150 ms tie). Reaching our 6 GB/s (~140 ms) research milestone still depends on algorithmic cuts to both the scanner and the workers.</li>
-<li><strong>Keep <code>READY_BYTES</code> distinct from <code>SLOTS_PER_THREAD</code> when tuning L3 cache pressure.</strong> Because <code>READY_BYTES</code> never fires at eight workers while 32 slots already suffer runt-diluted head-of-line stalls, shrinking <code>SLOTS_PER_THREAD</code> below 4 would regress eight-worker throughput unless runts are excluded from the slot count. Bounding <code>READY_BYTES</code> alone protects 9-to-10-worker L3 residency without hurting eight workers.</li>
-<li><strong>Fix dense-band refusals and map the Segmented fallback.</strong> A one-pass thin-run pre-check removes the 13 to 48% dense-band regression on prose and source code with zero Wikidata impact, and a dedicated phase dissection of <code>Segmented</code> now targets the 84% of non-Wikidata blocks that our Wikidata-only surface never showed.</li>
-<li><strong>Land the seam window first on the workstation queue.</strong> It removes 10 to 11 ms of serial <code>in_maint</code> copy work plus 2.15 ms of coupling distortion, giving both the worker-side fold test and the combined scanner improvements a clean, stationary baseline.</li>
-</ol>
 
 
 
@@ -4169,7 +3894,7 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reopening Open&#x27;s middle and off-Wikidata">
+          <a href="../2026-11-27-bounded-memory-on-highly-compressible-input/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Half the memory on compressible files">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -4179,20 +3904,20 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
                 Previous
               </span>
               <div class="md-ellipsis">
-                Reopening Open's middle and off-Wikidata
+                Half the memory on compressible files
               </div>
             </div>
           </a>
         
         
           
-          <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-footer__link md-footer__link--next" aria-label="Next: The decoder&#x27;s true floor and a pooled scan">
+          <a href="../2026-11-27-stages-built-to-fit-together/" class="md-footer__link md-footer__link--next" aria-label="Next: Stages built to fit together">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                The decoder's true floor and a pooled scan
+                Stages built to fit together
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4287,21 +4012,21 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/bench.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/couriers.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/blog.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/announce.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/frontier.js?v=52b19684d021"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/observatory.js?v=52b19684d021"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8ebee20700b0"></script>
+        <script src="../../assets/javascripts/katex.js?v=52b19684d021"></script>
       
     
   </body>
