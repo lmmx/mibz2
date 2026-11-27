@@ -1,0 +1,31 @@
+id = "release-0-5-16"
+title = "Release 0.5.16: the work merged since 0.5.15, benched against it on CI and the i9"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1      # a release is P1, always, once recognised (Louis, 27 November 2026)
+status = "open"
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
+needs_louis = ""
+question = """
+Release mibz2 0.5.16 by docs/RELEASING.md, step by step. Two software commits have merged to master since v0.5.15 (git log --first-parent v0.5.15..origin/master -- src python Cargo.toml Cargo.lock pyproject.toml build.rs), each accepted under its own PR's rule:
+- #1175 the Runs route's admission widened from half to three quarters of the alphabet bound, with a 12.5% run-share guard in the widened band: compressible non-Wikidata blocks (markdown, ELF, JSON, prose, source) take the branchless run path; 0/549 Wikidata, text, random, records, runs, onebyte and pattern blocks change route;
+- #1176 Python BZ2Reader.readall() in 1 MiB chunks and a fast read() path.
+RELEASING section 5c does not apply: #1175 changes no block's route on Wikidata, the corpus the worker trims are measured on, and 0.5.15's crossover showed the threshold unmoved. Section 5a's crossover runs anyway (the workers path changed).
+"""
+why = """
+P1 by rule: a release is P1 once recognised. Users of non-Wikidata data get the faster run path, Python users the faster readall.
+"""
+stop_test = """
+Frozen before data: done when (1) master is green (Test, Fingerprint, the site); (2) the paired CI bench of v0.5.15's commit against master has run and its CPU is named; (3) the research features' retention notes are reviewed and listed; (4) Deploy Release (patch) has published the crate and the Python package, both verified on crates.io and PyPI; (5) the release-scaling and crossover runs of 0.5.16 are queued on the i9 under the standing authorisation, and their verdicts recorded in the CHANGELOG section when they return; (6) a delta. The release is described by what (2) and (5) measured, never by a target or a projection.
+"""
+done_when = """
+0.5.16 published, verified, its CHANGELOG section written from the measured benches, the i9 runs recorded, and a delta.
+"""
+premises = [
+  "docs/RELEASING.md",
+  "CHANGELOG.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = []
