@@ -607,6 +607,12 @@ With no releases named, it compares the newest release tag with the one before i
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
 
+### 0.5.15
+
+27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0515---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15>)
+
+**Changes:** one-tap copy of a blog post's announcement ([\#1113](<https://github.com/lmmx/mibz2/pull/1113>)); fix mtf\_fold SC oracle store check and shallow-checkout hardening ([\#1138](<https://github.com/lmmx/mibz2/pull/1138>)); gate workers on ready cap and bound free\_out bytes ([\#1129](<https://github.com/lmmx/mibz2/pull/1129>)); reconcile ordinary leases for terminal merged claims ([\#1047](<https://github.com/lmmx/mibz2/pull/1047>)); make submitted work discoverable, transferable and recoverable ([\#974](<https://github.com/lmmx/mibz2/pull/974>)); harden tooling against the initial stress-test gaps; sequential LF column build, trusted fill\_avx2, and AVX2 reverse assembly ([\#1080](<https://github.com/lmmx/mibz2/pull/1080>)); fused endpoint setup, 64K SoA induction and generation-tagged dictionary behind research feature ([\#1053](<https://github.com/lmmx/mibz2/pull/1053>)); single-copy Reader::read via BufRead::fill\_buf ([\#1033](<https://github.com/lmmx/mibz2/pull/1033>)); precheck dense-band cap from run records before first pass ([\#1040](<https://github.com/lmmx/mibz2/pull/1040>)).
+
 ### 0.5.14
 
 25 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0514---2026-11-25>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14>)
