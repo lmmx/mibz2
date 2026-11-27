@@ -256,6 +256,70 @@ class JccAlignedVerdictTests(unittest.TestCase):
             outcome = (out / "outcome.txt").read_text().strip()
             self.assertTrue(outcome.startswith("VOID: "), outcome)
 
+    def test_shallow_clone_depth_1_works_without_history(self):
+        with tempfile.TemporaryDirectory() as d:
+            shallow = Path(d) / "shallow"
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "-q",
+                    "--depth",
+                    "1",
+                    "--no-local",
+                    ja.ROOT.as_uri(),
+                    str(shallow),
+                ],
+                check=True,
+            )
+            self.assertTrue((shallow / ".git/shallow").exists())
+            observed = ja.verify_source_trees(cwd=shallow)
+            self.assertEqual(observed, ja.PINNED_TREES)
+            # Confirm build() invokes cargo directly in the shallow tree with zero git clone/fetch calls
+            out = Path(d) / "out"
+            tmp = Path(d) / "tmp"
+            out.mkdir()
+            tmp.mkdir()
+            real_run = subprocess.run
+            calls = []
+
+            def fake_run(cmd, cwd=None, check=False, env=None, **kwargs):
+                cmd_list = list(cmd)
+                if cmd_list[0] == "git":
+                    self.assertEqual(cmd_list[:2], ["git", "rev-parse"])
+                    self.assertTrue(cmd_list[2].startswith("HEAD:"))
+                    return real_run(cmd, cwd=cwd, check=check, env=env, **kwargs)
+                calls.append(
+                    (cmd_list, Path(cwd) if cwd else None, env.get("RUSTFLAGS") if env else None)
+                )
+                tdir = Path(env["CARGO_TARGET_DIR"]) / "release/examples"
+                tdir.mkdir(parents=True, exist_ok=True)
+                for i, tok in enumerate(cmd_list):
+                    if tok == "--example":
+                        (tdir / cmd_list[i + 1]).write_bytes(
+                            b"fake-" + (env.get("RUSTFLAGS", "def")).encode()
+                        )
+                return subprocess.CompletedProcess(cmd_list, 0)
+
+            audit_stub = make_valid_audit()
+
+            def fake_inspect(path):
+                name = Path(path).name
+                arm, role = name.split("-", 1)
+                return audit_stub[arm][role]
+
+            with (
+                patch("jcc_aligned.subprocess.run", side_effect=fake_run),
+                patch("jcc_aligned.inspect_binary", side_effect=fake_inspect),
+            ):
+                bins, audit = ja.build(out, tmp, root=shallow)
+            self.assertEqual(len(calls), 2)
+            self.assertTrue(all(c[0][0] == "cargo" and c[1] == shallow for c in calls))
+            self.assertIsNone(calls[0][2])
+            self.assertEqual(calls[1][2], ja.ALIGN_FLAG)
+            self.assertEqual(audit, audit_stub)
+            self.assertIn(("aligned", "ab"), bins)
+
 
 if __name__ == "__main__":
     unittest.main()

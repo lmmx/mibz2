@@ -19,6 +19,11 @@ import wikidata
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "59cac2c52d7168e09a4b4d6edeb658c16ef9baf7"
+PINNED_TREES = {
+    "src": "075be307b0ea26df0ea917899ff755abdddf4c11",
+    "Cargo.toml": "e246267659da02b6e7f10e0f2cf316c99232f141",
+    "Cargo.lock": "677ab990a4ea494ad435dae1d40828500995c435",
+}
 ALIGN_FLAG = "-C llvm-args=-x86-branches-within-32B-boundaries"
 X4_SHA256 = "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e"
 WIKIDATA_COUNTS = (1, 4, 6, 8, 10)
@@ -141,29 +146,37 @@ def validate_codegen_audit(audit):
             )
 
 
-def build(out, tmp):
-    if subprocess.run(["git", "cat-file", "-e", SOURCE + "^{commit}"], cwd=ROOT).returncode:
-        subprocess.run(["git", "fetch", "--no-tags", "origin", SOURCE], cwd=ROOT, check=True)
+def verify_source_trees(cwd=ROOT):
+    """Verify HEAD's crate source and lockfile match the pinned registration trees (shallow-safe)."""
+    observed = {}
+    for path, want in PINNED_TREES.items():
+        got = output("git", "rev-parse", f"HEAD:{path}", cwd=cwd)
+        if got != want:
+            raise InvalidRun(f"HEAD:{path} tree mismatch: {got} != {want}")
+        observed[path] = got
+    return observed
+
+
+def build(out, tmp, root=ROOT):
+    verify_source_trees(cwd=root)
     bins = {}
     audit = {"default": {}, "aligned": {}}
     base_env = {k: v for k, v in os.environ.items() if k != "RUSTFLAGS"}
     for arm, rustflags in (("default", None), ("aligned", ALIGN_FLAG)):
-        source = tmp / arm
-        subprocess.run(["git", "clone", "-q", "--local", "--no-checkout", ROOT, source], check=True)
-        subprocess.run(["git", "checkout", "-q", "--detach", SOURCE], cwd=source, check=True)
+        target_dir = tmp / f"target-{arm}"
         names = ["ab", "station_balance"]
         if arm == "default":
             names.append("windows")
         cmd = ["cargo", "build", "--release", "--locked"]
         for name in names:
             cmd.extend(["--example", name])
-        env = {**base_env, "CARGO_TARGET_DIR": str(source / "target")}
+        env = {**base_env, "CARGO_TARGET_DIR": str(target_dir)}
         if rustflags is not None:
             env["RUSTFLAGS"] = rustflags
-        subprocess.run(cmd, cwd=source, check=True, env=env)
+        subprocess.run(cmd, cwd=root, check=True, env=env)
         for name in names:
             dest = tmp / f"{arm}-{name}"
-            shutil.copy2(source / "target/release/examples" / name, dest)
+            shutil.copy2(target_dir / "release/examples" / name, dest)
             bins[arm, name] = dest
         for role in ("ab", "station_balance"):
             audit[arm][role] = inspect_binary(bins[arm, role])
@@ -174,35 +187,39 @@ def build(out, tmp):
         {str(path.name): sha256_file(path) for path in bins.values()},
     )
     shutil.copyfile(
-        ROOT / "docs/journal/2026-11-27-jcc-aligned-release/registration.md",
+        root / "docs/journal/2026-11-27-jcc-aligned-release/registration.md",
         out / "registration.md",
     )
     return bins, audit
 
 
-def inputs(out, tmp, bins):
-    spec = json.loads((ROOT / "bench/wikidata.json").read_text())
-    wiki = ROOT / "corpora/wikidata.bz2"
+def inputs(out, tmp, bins, root=ROOT):
+    spec = json.loads((root / "bench/wikidata.json").read_text())
+    wiki = root / "corpora/wikidata.bz2"
     if not wiki.exists() or sha256_file(wiki) != spec["corpus_sha256"]:
         win = tmp / "windows"
         win.mkdir()
-        source = tmp / "default"
+        bench_git = tmp / "bench-data-git"
+        bench_git.mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=bench_git, check=True)
         subprocess.run(
             [
                 "git",
                 "fetch",
+                "--depth",
+                "1",
                 "--no-tags",
-                output("git", "remote", "get-url", "origin"),
+                output("git", "remote", "get-url", "origin", cwd=root),
                 "bench-data",
             ],
-            cwd=source,
+            cwd=bench_git,
             check=True,
         )
         for w in spec["windows"]:
             name = w["name"] + ".bin"
             (win / name).write_bytes(
                 subprocess.check_output(
-                    ["git", "show", f"FETCH_HEAD:{spec['windows_dir']}/{name}"], cwd=source
+                    ["git", "show", f"FETCH_HEAD:{spec['windows_dir']}/{name}"], cwd=bench_git
                 )
             )
         wiki = tmp / "wikidata-single.bz2"

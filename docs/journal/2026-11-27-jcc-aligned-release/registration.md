@@ -21,7 +21,7 @@ Because `#1107` found `-C target-cpu=native` slowed the serial scanner `S` by `5
 
 ## 2. Build Parity, Correctness, and Codegen Verification (VOID if any fail)
 
-1. **Identical source and toolchain:** Both arms (`default` and `aligned`) are cloned locally from the exact pinned commit `59cac2c52d7168e09a4b4d6edeb658c16ef9baf7` and built with pinned `rustc 1.99.1`, `cargo build --release --locked`, and identical environment except:
+1. **Identical source and toolchain (shallow-clone safe):** Both arms (`default` and `aligned`) are built directly from the checked-out `HEAD` tree (with no `git clone --local` or historical commit fetches, so `--depth 1` workstation checkouts run cleanly) using separate `CARGO_TARGET_DIR` directories, pinned `rustc 1.99.1`, and `cargo build --release --locked`. Before building, `bench/jcc_aligned.py` verifies `HEAD:src` (`075be307...`), `HEAD:Cargo.toml` (`e2462676...`), and `HEAD:Cargo.lock` (`677ab990...`) match pinned `master` commit `59cac2c52d7168e09a4b4d6edeb658c16ef9baf7`, and uses identical environment except:
    - `default`: `RUSTFLAGS` unset;
    - `aligned`: `RUSTFLAGS="-C llvm-args=-x86-branches-within-32B-boundaries"`.
 2. **Static codegen proof (`codegen_audit.json`):** Both `ab` and `station_balance` binaries must have distinct SHA-256 digests (`aligned != default`), strictly larger `.text` on `aligned`, `> 0` unfused JCC/JMP 32-byte crossings in `mibz2::*` on `default`, and `0` unfused JCC/JMP 32-byte crossings in `mibz2::*` on `aligned`.
