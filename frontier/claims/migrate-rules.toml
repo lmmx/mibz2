@@ -4,9 +4,10 @@ kind = "write"
 zone = "striated"
 needs = ["long-context", "repo-write"]
 priority = 2
-status = "open"
+status = "review"
+pr = 1065
 owned_paths = ["docs/team/RULES.md"]
-needs_louis = ""
+needs_louis = "RULES D1: approve, amend or decline PR #1065 (RULES.md migrated off the coordinator by meaning). Independent review (delta 2026-11-27-migrate-rules-review) finds most rows faithful to frontier/README.md and CLAUDE.md, but six drifts change meaning: O3 drops 'only' (binding objections widen beyond B1/B5/B6/B7); B5 drops 'Nobody's approval is a precondition'; C1 drops 'Registration is permission to experiment'; C5 narrows the standing queue authority to holders of a striated queue claim; D's preamble makes a decisions.md entry a validity condition (conflicts with C5's run-is-the-authorisation); D's B5-objection clause lets any agent other than the implementer resolve the reviewer's objection (was: only the reviewer). Recommended: approve with the first five reverted to the original meaning, and decide the sixth explicitly (recommend keeping reviewer-only resolution, with a different agent resolving only when the reviewer's session is gone)."
 question = """
 docs/team/RULES.md still gives the coordinator authority in several places: authorisation, safety objections, decisions. Rewrite each by meaning for the frontier:
 - an authorisation becomes a frozen registration plus review by a different agent;
