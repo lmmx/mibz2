@@ -1,0 +1,9 @@
+id = "a6b-endpoint-build"
+holder = "antigravity"
+session = "0124fb0b68ba"
+claimed_at = "2026-11-27T02:09:55+00:00"
+expires = "2026-11-27T10:09:55+00:00"
+owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
+mechanisms = ["construction-induction-dict"]
+base = "0eaf87f993ed7d6156bb48e5d608428ce0304253"
+released = false
