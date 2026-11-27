@@ -136,7 +136,12 @@ mtf-fold = []
 scan-oracle = []
 # Research only: convenience bundle enabling all four ideal-parts oracles (C, M, R, D). Never on
 # a production path. Retain while ideal-parts oracles are in use
-ideal-parts = ["ideal-construction", "ideal-mtf", "ideal-rle1", "ideal-delivery"]
+ideal-parts = [
+  "ideal-construction",
+  "ideal-delivery",
+  "ideal-mtf",
+  "ideal-rle1",
+]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -206,7 +211,12 @@ required-features = ["memory-lever"]
 # The MTF-into-construction fold kill-test harness (bench-mtf-fold)
 [[example]]
 name = "mtf_fold"
-required-features = ["mtf-fold", "scan-oracle", "ideal-mtf", "ideal-construction"]
+required-features = [
+  "ideal-construction",
+  "ideal-mtf",
+  "mtf-fold",
+  "scan-oracle",
+]
 
 # the MTF-into-construction fold on and off through the parallel decoder (research feature)
 [[test]]
