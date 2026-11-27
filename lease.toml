@@ -1,6 +1,6 @@
 id = "scanner-coalesced-u8-decode"
 holder = "claude-code"
-session = "660c0e5fd889"
+session = "e245016699a3"
 claimed_at = "2026-11-27T00:20:23+00:00"
 expires = "2026-11-27T13:13:07+00:00"
 owned_paths = ["src/huff.rs", "src/block.rs", "src/bits.rs"]
@@ -8,6 +8,6 @@ mechanisms = ["scan-coalesced-u8"]
 base = "a98ea9f5d707173abf219e62ac03d2be728a09f4"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1034
 pr_head = "d8b47e0ce23623ef7e6740f28f2af3d121cb2dad"
