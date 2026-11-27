@@ -1,6 +1,6 @@
 id = "forward-emission-run"
 holder = "claude-code"
-session = "3f2ce5fc46cf"
+session = "cc919b2c2ec8"
 claimed_at = "2026-11-27T13:36:18+00:00"
 expires = "2026-11-28T06:00:59+00:00"
 owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
@@ -8,6 +8,6 @@ mechanisms = ["forward-lanes-workstation-validation"]
 base = "dd93541881b29d7137066e07236095c70cd7ca1d"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1168
 pr_head = "788348a554d4362bb5e3fa3c95b8f703de3d2fbc"
