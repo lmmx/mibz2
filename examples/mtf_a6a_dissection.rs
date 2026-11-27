@@ -921,24 +921,99 @@ fn summarize(vals: &[f64]) -> Stats {
 }
 
 #[cfg(feature = "mtf-fold")]
+fn t_crit_95(df: usize) -> f64 {
+    // Two-sided 95% Student-t critical values (exact to 4 d.p.; normal 1.960 for large df).
+    match df {
+        0 | 1 => 12.7062,
+        2 => 4.3027,
+        3 => 3.1824,
+        4 => 2.7764,
+        5 => 2.5706,
+        6 => 2.4469,
+        7 => 2.3646,
+        8 => 2.3060,
+        9 => 2.2622,
+        10 => 2.2281,
+        11 => 2.2010,
+        12 => 2.1788,
+        13 => 2.1604,
+        14 => 2.1448,
+        15 => 2.1314,
+        16 => 2.1199,
+        17 => 2.1098,
+        18 => 2.1009,
+        19 => 2.0930,
+        20 => 2.0860,
+        21..=24 => 2.0687,
+        25..=29 => 2.0484,
+        30 => 2.0423,
+        31..=39 => 2.0301,
+        40..=59 => 2.0086,
+        60..=119 => 1.9840,
+        _ => 1.9600,
+    }
+}
+
+#[cfg(feature = "mtf-fold")]
+fn paired_geomean_ci(off: &[f64], on: &[f64]) -> (f64, f64, f64) {
+    let logs: Vec<f64> = off
+        .iter()
+        .zip(on.iter())
+        .filter(|(&a, &b)| a > 0.0 && b > 0.0)
+        .map(|(&a, &b)| (b / a).ln())
+        .collect();
+    if logs.is_empty() {
+        return (1.0, 1.0, 1.0);
+    }
+    let n = logs.len();
+    let mean = logs.iter().sum::<f64>() / n as f64;
+    if n < 2 {
+        let g = mean.exp();
+        return (g, g, g);
+    }
+    let var = logs.iter().map(|&x| (x - mean) * (x - mean)).sum::<f64>() / (n - 1) as f64;
+    let se = (var / n as f64).sqrt();
+    let t = t_crit_95(n - 1);
+    (mean.exp(), (mean - t * se).exp(), (mean + t * se).exp())
+}
+
+#[cfg(feature = "mtf-fold")]
 #[derive(Default, Clone, Copy)]
 struct FoldRunSample {
     wall_ms: f64,
+    #[cfg(feature = "trace")]
+    wkr_cpu_ms: f64,
+    #[cfg(feature = "trace")]
     wkr_run_ms: f64,
+    #[cfg(feature = "trace")]
     wkr_wall_ms: f64,
+    #[cfg(feature = "trace")]
     a5_ms: f64,
+    #[cfg(feature = "trace")]
+    a5_a6a_ms: f64,
+    #[cfg(feature = "trace")]
+    a6bc_a7_ms: f64,
+    #[cfg(feature = "trace")]
     inv_ms: f64,
+    #[cfg(feature = "trace")]
     a5_plus_inv_ms: f64,
+    #[cfg(feature = "trace")]
     a9_ms: f64,
 }
 
 #[cfg(feature = "mtf-fold")]
-fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, repeats: usize) {
+fn run_mtf_fold_e2e(
+    compressed: &[u8],
+    expected_len: usize,
+    expected_crc: u32,
+    repeats: usize,
+    worker_list: &[usize],
+) {
     println!(
-        "\n=== 5. Real mtf-fold (#1010) end-to-end & worker-trace dissection ({repeats} interleaved repeats) ==="
+        "\n=== 5. Real mtf-fold end-to-end & worker-trace dissection ({repeats} interleaved repeats) ==="
     );
     let k = Kernels::detect();
-    for workers in [1usize, 2] {
+    for &workers in worker_list {
         let mut off_s = Vec::with_capacity(repeats);
         let mut on_s = Vec::with_capacity(repeats);
 
@@ -985,18 +1060,24 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
                 let wall_ms = t0.elapsed().as_secs_f64() * 1e3;
                 let counts = mibz2::runs::fold::take_counts();
 
+                #[cfg(feature = "trace")]
                 let mut sample = FoldRunSample {
                     wall_ms,
                     ..FoldRunSample::default()
                 };
+                #[cfg(not(feature = "trace"))]
+                let sample = FoldRunSample { wall_ms };
 
                 #[cfg(feature = "trace")]
                 {
                     mibz2::trace::set_level(0);
                     let traces = mibz2::trace::take();
+                    let mut wkr_cpu_ns = 0u64;
                     let mut wkr_run_ns = 0u64;
                     let mut wkr_wall_ns = 0u64;
                     let mut a5_ns = 0u64;
+                    let mut a5_a6a_ns = 0u64;
+                    let mut a6bc_a7_ns = 0u64;
                     let mut inv_ns = 0u64;
                     let mut a9_ns = 0u64;
                     for tr in &traces {
@@ -1008,30 +1089,53 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
                             continue;
                         }
                         let mut dec_start_ns = 0u64;
+                        let mut dec_start_cpu = 0u64;
                         let mut dec_start_run = 0u64;
                         let mut inv_start_ns = 0u64;
+                        let mut pass1_end_ns = 0u64;
                         let mut inv_end_ns = 0u64;
                         let mut have_inv = false;
+                        let mut have_p1 = false;
                         for m in &tr.marks {
                             match m.kind {
                                 mibz2::trace::Kind::DecodeStart => {
                                     dec_start_ns = m.ns;
+                                    dec_start_cpu = m.cpu_ns;
                                     dec_start_run = m.run_ns;
                                     have_inv = false;
+                                    have_p1 = false;
                                 }
                                 mibz2::trace::Kind::InvertStart => {
                                     inv_start_ns = m.ns;
-                                    a5_ns += m.ns.saturating_sub(dec_start_ns);
+                                    if !have_inv {
+                                        a5_ns += m.ns.saturating_sub(dec_start_ns);
+                                    }
                                     have_inv = true;
+                                    have_p1 = false;
+                                }
+                                mibz2::trace::Kind::OpenPass1End => {
+                                    if have_inv {
+                                        pass1_end_ns = m.ns;
+                                        a5_a6a_ns += m.ns.saturating_sub(dec_start_ns);
+                                        have_p1 = true;
+                                    }
                                 }
                                 mibz2::trace::Kind::InvertEnd => {
                                     inv_end_ns = m.ns;
                                     if have_inv {
                                         inv_ns += m.ns.saturating_sub(inv_start_ns);
+                                        if have_p1 {
+                                            a6bc_a7_ns += m.ns.saturating_sub(pass1_end_ns);
+                                        }
                                     }
                                 }
                                 mibz2::trace::Kind::DecodeEnd => {
                                     wkr_wall_ns += m.ns.saturating_sub(dec_start_ns);
+                                    if m.cpu_ns != mibz2::trace::UNREAD
+                                        && dec_start_cpu != mibz2::trace::UNREAD
+                                    {
+                                        wkr_cpu_ns += m.cpu_ns.saturating_sub(dec_start_cpu);
+                                    }
                                     if m.run_ns != mibz2::trace::UNREAD
                                         && dec_start_run != mibz2::trace::UNREAD
                                     {
@@ -1045,9 +1149,12 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
                             }
                         }
                     }
+                    sample.wkr_cpu_ms = wkr_cpu_ns as f64 * 1e-6;
                     sample.wkr_run_ms = wkr_run_ns as f64 * 1e-6;
                     sample.wkr_wall_ms = wkr_wall_ns as f64 * 1e-6;
                     sample.a5_ms = a5_ns as f64 * 1e-6;
+                    sample.a5_a6a_ms = a5_a6a_ns as f64 * 1e-6;
+                    sample.a6bc_a7_ms = a6bc_a7_ns as f64 * 1e-6;
                     sample.inv_ms = inv_ns as f64 * 1e-6;
                     sample.a5_plus_inv_ms = (a5_ns + inv_ns) as f64 * 1e-6;
                     sample.a9_ms = a9_ns as f64 * 1e-6;
@@ -1082,8 +1189,9 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
             let so = summarize(&vo);
             let sn = summarize(&vn);
             let sr = summarize(&vr);
+            let (gm, lo, hi) = paired_geomean_ci(&vo, &vn);
             println!(
-                "    {:14}: OFF {:7.2} [{:6.2}..{:6.2}] | ON {:7.2} [{:6.2}..{:6.2}] | ON/OFF = {:.4}x [{:.4}..{:.4}] ({:+.2}%)",
+                "    {:14}: OFF {:7.2} [{:6.2}..{:6.2}] | ON {:7.2} [{:6.2}..{:6.2}] | med={:.4}x | gm={:.4}x 95%CI=[{:.4}, {:.4}] ({:+.2}%)",
                 label,
                 so.med,
                 so.min,
@@ -1092,16 +1200,20 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
                 sn.min,
                 sn.max,
                 sr.med,
-                sr.min,
-                sr.max,
-                (sr.med - 1.0) * 100.0
+                gm,
+                lo,
+                hi,
+                (gm - 1.0) * 100.0
             );
         };
         report("wall_ms", |x| x.wall_ms);
         #[cfg(feature = "trace")]
         {
-            report("wkr_cpu_ms", |x| x.wkr_run_ms);
+            report("wkr_cpu_ms", |x| x.wkr_cpu_ms);
+            report("wkr_sched_ms", |x| x.wkr_run_ms);
             report("wkr_wall_ms", |x| x.wkr_wall_ms);
+            report("A5+A6a_ms", |x| x.a5_a6a_ms);
+            report("A6bc+A7_ms", |x| x.a6bc_a7_ms);
             report("A5+A6+A7_ms", |x| x.a5_plus_inv_ms);
             report("A5_ms", |x| x.a5_ms);
             report("A6+A7_ms", |x| x.inv_ms);
@@ -1114,11 +1226,32 @@ fn run_mtf_fold_e2e(compressed: &[u8], expected_len: usize, expected_crc: u32, r
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        eprintln!("Usage: {} <file.bz2> [repeats]", args[0]);
+        eprintln!(
+            "Usage: {} <file.bz2> [repeats] [--e2e-only] [--workers W]",
+            args[0]
+        );
         std::process::exit(2);
     }
     let path = &args[1];
-    let repeats: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(7);
+    let mut repeats: usize = 7;
+    let mut e2e_only = false;
+    let mut worker_override: Option<usize> = None;
+    let mut i = 2;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--e2e-only" => e2e_only = true,
+            "--workers" => {
+                i += 1;
+                worker_override = args.get(i).and_then(|s| s.parse().ok());
+            }
+            s => {
+                if let Ok(n) = s.parse::<usize>() {
+                    repeats = n;
+                }
+            }
+        }
+        i += 1;
+    }
     let compressed = std::fs::read(path).expect("read bz2");
     let k = Kernels::detect();
     println!(
@@ -1133,6 +1266,23 @@ fn main() {
         ref_out.len(),
         ref_out.len() as f64 / 1048576.0
     );
+
+    if e2e_only {
+        #[cfg(feature = "mtf-fold")]
+        {
+            let ws = match worker_override {
+                Some(w) => vec![w],
+                None => vec![1, 2],
+            };
+            run_mtf_fold_e2e(&compressed, ref_out.len(), ref_crc, repeats, &ws);
+        }
+        #[cfg(not(feature = "mtf-fold"))]
+        {
+            let _ = worker_override;
+            println!("(Re-run with `--features mtf-fold,trace` for --e2e-only.)");
+        }
+        return;
+    }
 
     let mut sc = Scanner::new(SliceSource(&compressed));
     let mut blocks: Vec<OpenBlock> = Vec::new();
@@ -1650,10 +1800,19 @@ fn main() {
     }
 
     #[cfg(feature = "mtf-fold")]
-    run_mtf_fold_e2e(&compressed, ref_out.len(), ref_crc, repeats);
+    {
+        let ws = match worker_override {
+            Some(w) => vec![w],
+            None => vec![1, 2],
+        };
+        run_mtf_fold_e2e(&compressed, ref_out.len(), ref_crc, repeats, &ws);
+    }
 
     #[cfg(not(feature = "mtf-fold"))]
-    println!(
-        "\n(Re-run with `--features mtf-fold,trace` to measure real #1010 mtf-fold worker-CPU trace.)"
-    );
+    {
+        let _ = worker_override;
+        println!(
+            "\n(Re-run with `--features mtf-fold,trace` to measure real mtf-fold worker-CPU trace.)"
+        );
+    }
 }
