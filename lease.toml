@@ -1,9 +1,9 @@
-id = "scanner-a2-fast-i9-run"
-holder = "claude-code"
-session = "dc051b6b35e6"
-claimed_at = "2026-11-27T22:39:49+00:00"
-expires = "2026-11-28T06:39:49+00:00"
-owned_paths = [".just/bench.just", "bench/scanner_a2_fast.py", "bench/test_scanner_a2_fast.py", "bench/workstation-queue.txt"]
-mechanisms = ["scanner-a2-build"]
-base = "ac708c52ea442f5cd4dbbc57b92fe62301759d94"
+id = "runs-front-and-fill-build"
+holder = "antigravity"
+session = "96b728a14ef9"
+claimed_at = "2026-11-27T22:40:47+00:00"
+expires = "2026-11-28T06:40:47+00:00"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["runs-front-ymm-steps", "runs-front-u64-vptest-p1", "runs-front-u32-counts"]
+base = "779cf980fd61070fda2c05c268fc27d8cf28155f"
 released = false
