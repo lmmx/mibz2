@@ -6,4 +6,4 @@ expires = "2026-11-27T14:42:29+00:00"
 owned_paths = ["bench/workstation-queue.txt"]
 mechanisms = ["workstation-queue"]
 base = "a6796f58c84cf6b31bf65138cde848e952fcac5b"
-released = false
+released = true
