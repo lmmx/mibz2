@@ -1,0 +1,24 @@
+id = "a6b-endpoint-run"
+title = "Executable i9 validation recipe for the registered A6b endpoint redesign"
+kind = "run"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = [".just/bench.just", "bench/a6b_endpoint.py", "bench/test_a6b_endpoint.py", "examples/a6b_endpoint_run.rs"]
+mechanisms = ["a6b-workstation-validation"]
+needs_louis = ""
+question = """
+Can the two research builds of #1053 be compared on the i9 with the frozen corpus, worker grid, trace definitions and decision rule? Implement the recipe for just submit, starting from #1053's reviewed tree or its verified integration. Reuse the scan oracle, bundle submission and existing statistics. Make one worker exercise admitted Open in both builds, verify hashes against the common reference at every worker count, and distinguish decode-busy time per worker from thread CPU.
+"""
+why = """
+The i9 has had no fresh runnable entry since the evidence at c71c4a56. #1053 supplies the gated implementation and independently reviewed C6 registration but no executable run. Its hardware result informs the worker-side gain at the scanner/worker knee.
+"""
+stop_test = """
+Preserve #1053's registration at docs/journal/2026-11-27-a6b-endpoint-build/registration.md, reviewed at b864878b and faa9df70. Carry through every exactness, Miri, 1W wall, 8W worker-busy, 8/10W wall and non-Wikidata condition. Exercise S ideal at eight workers, freeze the executable method and test result classification before hardware data. No new thresholds or hardware attempts.
+"""
+done_when = """
+Recipe branch, exact candidate/control identities, reproducible preflight, tests and evidence-bundle path are recorded for the queue owner. Signalling or adding a queue entry requires separate ownership of bench/workstation-queue.txt under the standing authorisation. Hardware evidence alone decides adoption.
+"""
+premises = ["frontier/claims/a6b-endpoint-build.toml", "frontier/DECODER.md", "docs/journal/2026-11-24-algorithm-level/ideal-parts/warm-paired-oracle-protocol.md"]
+links = ["https://github.com/lmmx/mibz2/pull/1053", "https://github.com/lmmx/mibz2/pull/1053#pullrequestreview-6084079376"]
