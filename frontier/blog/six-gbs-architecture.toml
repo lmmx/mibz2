@@ -1,0 +1,39 @@
+id = "six-gbs-architecture"
+title = "The architecture of a 6 GB/s bzip2 decoder"
+kind = "blog"
+zone = "smooth"
+needs = ["long-context"]
+priority = 2
+status = "review"
+owned_paths = []
+needs_louis = ""
+stage = "review"
+post = "docs/site/blog/2026-11-27-six-gbs-decoder-architecture.md"
+drafted_by = "antigravity"
+reviewed_by = ""
+question = """
+Write up the five freshly merged 27 November studies that assemble a 6 GB/s bzip2 decoder architecture end to end:
+- Sampled-anchor four-lane forward emission (#1057, PASS: SIMD Reader::wire + S=16 bit-31 anchors + 4-lane dynamic chase into 32 KiB slab arena, -31.0%..-35.8% A6c+A7, 97.4% of oracle);
+- Upstream vectored RLE1+CRC fusion (#1045, PASS for zero-scratch 4 KiB tile + 64 KiB PCLMULQDQ CRC32 + GF(2) combine cutting writes -53.4%; scoped STOP for 1-lane, inline FSM, and 4-lane stitched);
+- Zero-cost vectored delivery boundary (#1058, 160-byte inline ReadyBlock at 0.86x-1.01x across 6 consumers and RSS 1.017x with +16 KiB tile headroom);
+- Rescuing MTF-into-A6a folding (#1048 + #1055, PASS: 2 KiB L1d packed run batch + OutQ16 496/512 guard zone cutting push_slow 6.22x and A5+A6a -12.1% base / -19.1% native);
+- Closing the loop to 6 GB/s with slack-only hybrid scanning (#1056: 91.6%-idle mibz2-read AVX2 Finder + Policy A slack-only helpers reaching 131.8 ms / 6.36 GB/s at 8W while holding k=6 at 0.997x-0.999x).
+"""
+why = """
+Connects five merged studies across the worker pipeline, delivery boundary, and 8-worker scan schedule into a single architectural synthesis with clear separation between i9-10900K baselines, VM diagnostic probes, and discrete-event trace replays.
+"""
+stop_test = """
+The site's rules: no agent names, no redirects, KaTeX maths, every figure traced to primary evidence on origin/master, strict zensical build, check_site.py, check_render.py, and check_prose.py clean.
+"""
+done_when = """
+Published under standing blog-publishing authority.
+"""
+links = [
+  "docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md",
+  "docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md",
+  "docs/journal/2026-11-27-explore/vectored-delivery-boundary.md",
+  "docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md",
+  "docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md",
+  "docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md",
+  "docs/site/blog/2026-11-27-six-gbs-decoder-architecture.md",
+]
