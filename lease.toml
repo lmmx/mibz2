@@ -1,0 +1,9 @@
+id = "forward-4lane-anchor-probe"
+holder = "antigravity"
+session = "c0daa21dc759"
+claimed_at = "2026-11-27T02:08:11+00:00"
+expires = "2026-11-27T10:08:11+00:00"
+owned_paths = []
+mechanisms = ["forward-anchor-wiring"]
+base = "f2845b84bd3e8958745488f34af644d55481d005"
+released = false
