@@ -1,0 +1,32 @@
+id = "dense-cap-precheck"
+title = "Refuse a dense-band block from its run records before Open's first pass"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/open.rs"]
+mechanisms = ["record-count-precheck"]
+needs_louis = ""
+question = """
+Off wikidata every block in Open's dense band (r/n 0.15-0.28) is refused at `Cap::dense` after the first pass has run to the cap: 25 of 25 across five of seven local corpora, costing 1.02-1.48x `Segmented`'s inverse on those blocks (~0.8 ms a block on the VM) and 1.09-1.32x on the whole of a prose file. The refusal is predicted exactly by a one-pass count over the run records (rows in maximal runs of at most LIMIT rows): every refused block exceeds its cap, every opened one is under it (docs/journal/2026-11-27-explore/route-census.md). Does checking that count in `OpenCellsOf::cap` (dense band only) remove the cost without touching wikidata's route or time?
+"""
+why = """
+A regression of production against its own one-core fallback on ordinary text and source code, invisible on the bench's corpus. The fix is a pre-check in the cold admission path, disjoint from the construction and emission work.
+"""
+stop_test = """
+Frozen before data:
+1. Byte-identical and error-identical output on `cargo test --lib`, `fuzz-smoke` and every corpus of the route census; the route of every block on wikidata unchanged (233 Open).
+2. On the route census's run-route blocks in the dense band, production's inverse within 1.05x of `Segmented`'s (median ratio over the refused blocks, 7 interleaved repeats), against the 1.13-1.48x measured; and the wikidata 1-worker wall no slower than 1.005x baseline (95% CI). If the pre-check's own cost on wikidata exceeds that, or the refused blocks stay above 1.05x, STOP and record a scoped dead-end.
+"""
+done_when = """
+A PR on src/open.rs passing (1) and (2), with a delta. No workstation run needed: the gain is off the bench corpus, and (2)'s wikidata guard bounds its cost there.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/route-census.md",
+  "docs/journal/2026-11-21-open-dense-admission.md",
+]
+links = [
+  "examples/route_census.rs",
+  "frontier/deltas/2026-11-27-explore-route-census.md",
+]
