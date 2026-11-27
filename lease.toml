@@ -1,9 +1,9 @@
-id = "dense-cap-precheck"
+id = "segmented-fallback-dissection"
 holder = "antigravity"
-session = "a370bf9562ff"
-claimed_at = "2026-11-27T01:06:06+00:00"
-expires = "2026-11-27T09:06:06+00:00"
-owned_paths = ["src/open.rs"]
-mechanisms = ["record-count-precheck"]
-base = "46f050ad61b6321f552975a293a9498176472aeb"
+session = "f81bebe3eda1"
+claimed_at = "2026-11-27T01:12:03+00:00"
+expires = "2026-11-27T09:12:03+00:00"
+owned_paths = []
+mechanisms = ["segmented-fallback"]
+base = "ccfd7f809bd58e54df885d146d2ffd5689774081"
 released = false
