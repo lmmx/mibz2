@@ -1,0 +1,12 @@
+version = 1
+action = "ready"
+recipe = "bench-a6b-endpoint"
+sha = "bdcfeeeb2154a90dda0f24ea8069cb8710168184"
+branch = "bench/a6b-endpoint-redesign"
+claim = "a6b-endpoint-successor-queue"
+session = "f43bff4635d5"
+pr = 1127
+review = 6084933547
+supersedes = "02e492a7aa9980fa710ae93c1b6e761f2214d18e"
+created = "2026-11-27T08:06:33+00:00"
+note = "Supersedes consumed INCOMPLETE 02e492a7 (b87790e5) with shallow-source repair #1127"
