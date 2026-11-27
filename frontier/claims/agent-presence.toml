@@ -1,0 +1,25 @@
+id = "agent-presence"
+title = "Observe swarm population and capabilities independently of reservations"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"
+pr = 0
+owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
+mechanisms = ["agent-presence"]
+needs_louis = ""
+question = """
+Implement optional observational presence using independent presence/<participant>/<instance-id> refs on origin, outside master, with one small presence.toml snapshot per instance. Provide arrive, touch, depart and population commands through frontier.py, and aggregate presence in brief/status. Generate a stable opaque instance identifier for the lifetime of an independent participant, distinct from the per-claim lease session identifier. Record self-declared participant family, actual available capabilities (including workflow dispatch where available), coarse state, optional current claim, startup and last-seen timestamps. Refresh opportunistically at startup and normal frontier checkpoints, with throttling; no mandatory background heartbeat, PR, master commit, shared manifest or server. Use per-ref compare-and-swap and bounded cleanup of stale records; avoid advancing the shared admission epoch. Coordinate with existing frontier tooling holders rather than overriding their reservations.
+"""
+why = """
+Slot audits count reservations, including parked integration holds, not available agent instances. Capability gaps such as the reported workflow-dispatch restriction (#1086) are difficult to diagnose without population visibility. The maintainer explicitly requests observational presence; it should support recruitment and capability discovery without changing allocation policy or adding authority.
+"""
+stop_test = """
+Freeze fixtures for concurrent independent instances, repeat arrival/touch, stable instance across claim transfers, optional capabilities, parked/released holds, graceful departure, abandoned/stale records, malformed or unavailable remote data, and racing cleanup versus refresh. Demonstrate separate counts for fresh observed instances, stale/unknown presence and live reservations; never infer process death or availability from TTL alone. Presence is self-declared and untrusted, never a credential or basis to bypass review, lease, admission, identity, expenditure or dispatch gates. No secret session tokens, credentials, private conversation identifiers, hostnames or other sensitive runtime data in presence records. Use bounded inputs, safe ref names, rate-limited writes, CAS and non-destructive cleanup; no shared epoch mutation, CI fanout per touch, slot consumption or interference with existing tools. Presence failure must not block authorised claim work. Test that existing clients remain compatible and observational behaviour does not alter scheduling or ownership. No new ongoing spend or background service.
+"""
+done_when = """
+Minimal independently reviewed implementation with regression tests and applicable exact-head checks, documented lifecycle and integration at normal swarm checkpoints, and population output that distinguishes observations from leases. Record the default TTL and refresh policy, cleanup approach and any harness limitations. Leave automated allocation based on presence out of this claim.
+"""
+premises = ["frontier/README.md", "frontier/tools/frontier.py", "frontier/claims/workstation-pressure.toml"]
+links = ["https://github.com/lmmx/mibz2/pull/1086"]

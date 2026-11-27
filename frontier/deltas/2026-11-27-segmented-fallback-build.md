@@ -1,0 +1,14 @@
+claim: segmented-fallback-build
+by: antigravity
+outcome: partial
+evidence: src/bwt.rs, src/runs.rs, src/runs/tests.rs, docs/journal/2026-11-27-explore/segmented-fallback-dissection.md
+
+**What was asked:** Implement the three zero-extra-memory `Segmented` improvements (`build_lf` sequential column build with 8-byte identical-run fast path, `Runs::trusted`/`len` invariant-checked `fill_avx2_trusted`, and runtime-dispatched AVX2 `reverse_copy_avx2` + 8-byte `u64::swap_bytes` scalar fallback in `SegScratch::assemble_reversed_with`) in `src/bwt.rs` and `src/runs.rs` with full B5 safety proofs, Miri/unit/differential tests, and CI paired bench under `PERFORMANCE-POLICY.md` §2.
+**What I found:**
+- Rebased cleanly onto post-`#1041` master (`a1869b5a`), preserving `#1041`'s `load_shared` (`Arc<[u16]>`) and `front_avx2` borrowed-slice glue while clearing `trusted = false; len = 0` on every mutator (`Default`, `load_shared`, `of_column`, `records_mut`, and entry of `front_scalar`/`front_avx2`).
+- Hardened `SegScratch::assemble_reversed_with` and `walk_back_room_with_kernels` to accept `crate::Kernels` (whose private `avx2` field is type-enforced by `Kernels::detect()` / `Kernels::scalar()`) rather than a raw `bool`, closing any B5 caller-forged-flag soundness gap.
+- **Verification passed:** `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo clippy --lib --tests --features mtf-fold -- -D warnings`, `cargo clippy --lib --features ideal-mtf,scan-oracle -- -D warnings`, all `199/199` release lib tests (including `miri_runs_synthetic_blocks` over 21,742 blocks / 1.62B rows and `room_walk_crafted_permutations`), `14/14` `tests/decode.rs`, `4/4` `tests/service_default.rs`, `20/20` `mtf-fold` `runs::tests::`, and **Miri clean** on `bwt::tests::miri_build_lf_and_reverse_copy`, `runs::tests::miri_runs_trusted_fill_parity_and_invalidation`, and `runs::tests::miri_runs_broken_tilings_refused`.
+- Quick local paired `ab` spot-check on `text.bz2`: `t=1` `0.195-0.200s` vs `0.210-0.215s` (~7-9% faster wall/CPU, identical `23 MB` RSS); `t=2` `0.120-0.124s` vs `0.129-0.133s`.
+**What changed:** `src/bwt.rs` (`build_lf`, `reverse_copy_scalar`, `reverse_copy_avx2`, `assemble_reversed_with`, `walk_back_room_with_kernels`, `miri_build_lf_and_reverse_copy`), `src/runs.rs` (`Runs::trusted`/`len`, `fill_avx2_trusted`), `src/runs/tests.rs` (`miri_runs_trusted_fill_parity_and_invalidation`), and `frontier/claims/segmented-fallback-build.toml` (`status = "review"`).
+**What's next:** Await full CI (`rust`, `miri`, `fuzz-smoke`, paired `bench` across all 7 corpora under `PERFORMANCE-POLICY.md` §2) and independent B5 review of the new `unsafe` blocks (`build_lf`, `reverse_copy_scalar`, `reverse_copy_avx2`, `fill_avx2_trusted`).
+**Caveats:** Official `PERFORMANCE-POLICY.md` §2 judgment awaits CI's dedicated uncontended paired `bench` report; independent B5 review is required before merge.

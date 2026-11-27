@@ -4,15 +4,16 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 1
-status = "review"
-pr = 1085
-owned_paths = [".just/bench.just", "bench/a6b_endpoint.py", "bench/test_a6b_endpoint.py", "examples/a6b_endpoint_run.rs"]
+status = "open"
+owned_paths = ["bench/a6b_endpoint.py", "bench/test_a6b_endpoint.py"]
 mechanisms = ["a6b-workstation-validation"]
 needs_louis = ""
 question = """
 Can the two research builds of #1053 be compared on the i9 with the frozen corpus, worker grid, trace definitions and decision rule? Implement the recipe for just submit, starting from #1053's reviewed tree or its verified integration. Reuse the scan oracle, bundle submission and existing statistics. Make one worker exercise admitted Open in both builds, verify hashes against the common reference at every worker count, and distinguish decode-busy time per worker from thread CPU.
 """
 why = """
+The i9 receipt b87790e5 stopped before either build: the shallow runner fetched the pinned SHA into FETCH_HEAD, then a new local clone lost that unadvertised commit. Repair just the pinned-source materialisation and cover a shallow, detached checkout in a local test. Keep the original source, registration, scorer, pin and workload.
+
 The i9 has had no fresh runnable entry since the evidence at c71c4a56. #1053 supplies the gated implementation and independently reviewed C6 registration but no executable run. Its hardware result informs the worker-side gain at the scanner/worker knee.
 """
 stop_test = """

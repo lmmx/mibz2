@@ -41,21 +41,6 @@ impl Reg {
         }
     }
 
-    /// Branch-lean refill inside a pre-validated 264-byte group window (`pos <= 256` holds
-    /// across an entire 50-symbol group of `<= 20`-bit codes plus 20-bit lookahead).
-    #[inline(always)]
-    pub(crate) fn refill_win(&mut self, win: &[u8; 264]) {
-        if let Some(w) = win.get(self.pos..self.pos + 8) {
-            let v = u64::from_be_bytes(w.try_into().unwrap());
-            self.buf |= v >> self.live;
-            let take = (63 - self.live) >> 3;
-            self.pos += take as usize;
-            self.live += take * 8;
-        } else {
-            *self = self.refill_slow(win);
-        }
-    }
-
     /// (by value, so that a caller's state stays in registers around it)
     #[cold]
     #[inline(never)]
@@ -95,13 +80,15 @@ impl Reg {
         self.live -= n;
     }
 
-    /// Consume `e & 63` bits (`1..=10`) directly from a root LUT entry `e` whose bits
-    /// `4..5` are guaranteed zero (`x86_64` `shlq %cl` masks shift count by `63` in hardware).
+    /// Consume `e & 255` bits (`1..=10`) directly from a byte-aligned root LUT entry `e`
+    /// whose bits `4..7` are guaranteed zero (`x86_64` `shlq %cl` / BMI2 `shlx` mask the
+    /// shift count by `63` in hardware, and `(e as u8) as u32` prevents LLVM CSE from
+    /// hoisting `and $0x3f` onto the shift's critical dependency chain).
     #[inline(always)]
-    pub(crate) fn skip_short_shl(&mut self, e: u32) {
-        debug_assert!((e & 63) <= 10 && (e & 63) <= self.live);
+    pub(crate) fn skip_short_shl_u8(&mut self, e: u32) {
+        debug_assert!((e as u8) <= 10 && ((e as u8) as u32) <= self.live);
         self.buf = self.buf.wrapping_shl(e);
-        self.live -= e & 63;
+        self.live -= (e as u8) as u32;
     }
 
     /// Consume `n` bits (at most those peeked)

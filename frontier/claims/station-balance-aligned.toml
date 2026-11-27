@@ -1,0 +1,28 @@
+id = "station-balance-aligned"
+title = "Probe: scanner:worker demand ratio under JCC 32B-aligned codegen (VM)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["station-balance", "build-flags"]
+needs_louis = ""
+question = """
+The tenth synthesis pass derives that JCC 32B alignment cuts worker demand ~14% (#1076, #1077) but scanner demand only 1-3%, so aligned wikidata would be scanner-bound at k = 8. Rerun examples/station_balance.rs (one thread, best of 5, 3 interleaved rounds) on the same VM with default and `-C llvm-args=-x86-branches-within-32B-boundaries` builds, native and baseline, on wikidata and the #1075 text corpora (prose, pysrc, rustsrc, json, mdjournal, logs, elf). Report k* = W/S per build and r_aligned = k*_aligned / k*_default per corpus.
+"""
+why = """
+It is the cheap VM test of the derivation that decides whether worker or scanner levers pay at the eight-worker knee, ahead of the i9 runs (jcc-aligned-release-build, text-knee-i9).
+"""
+stop_test = """
+Frozen before data: on wikidata, if the aligned/default k* ratio is <= 0.92 on both native and baseline with non-overlapping round ranges, CONFIRMED (the alignment shift is station-uneven; DECODER.md's knee bullet keeps the codegen condition). If it is >= 0.97 on either build, REFUTED (alignment moves both stations alike; the codegen leg of the tenth pass is withdrawn). Otherwise INCONCLUSIVE with the ratios reported. Text corpora are reported, not gated.
+"""
+done_when = """
+Journal note with TSVs, delta, and the verdict carried to DECODER.md's knee bullet.
+"""
+premises = [
+  "docs/journal/2026-11-27-synthesis/tenth-pass.md",
+  "docs/journal/2026-11-27-explore/station-balance-off-wikidata.md",
+  "docs/journal/2026-11-27-explore/jcc-alignment-whole-decoder.md",
+]
+links = ["examples/station_balance.rs", "frontier/claims/jcc-aligned-release-build.toml", "frontier/claims/text-knee-i9.toml"]

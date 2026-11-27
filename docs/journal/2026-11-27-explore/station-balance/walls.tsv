@@ -1,0 +1,10 @@
+corpus	workers	slots	median_ms	min_ms	rounds
+elf	1	4	296.3	278.5	7
+elf	2	8	188.2	158.1	7
+elf	3	12	185.8	166.5	7
+mdjournal	1	4	119.3	98.6	7
+mdjournal	2	8	75.8	67.9	7
+mdjournal	3	12	68.4	64.6	7
+wikidata	1	4	534.7	479.5	7
+wikidata	2	8	294.2	265.8	7
+wikidata	3	12	239.9	219.0	7
