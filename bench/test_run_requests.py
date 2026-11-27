@@ -886,5 +886,25 @@ class SecurityHardening(Fixture):
                 self.assertIsNone(self.tag(f"ready/{RECIPE}"))
 
 
+    def test_identifiers_with_a_trailing_newline_are_refused_at_parse(self):
+        """`$` matches before a final newline; every identifier must match whole, not prefix."""
+        fields = dict(
+            version=1,
+            action="ready",
+            recipe=RECIPE,
+            sha=self.sha,
+            branch=BRANCH,
+            claim=CLAIM,
+            session=SESSION,
+            pr=7,
+            review=99,
+            created=NOW.isoformat(),
+        )
+        for key in ("recipe", "sha", "branch", "claim", "session"):
+            with self.subTest(key=key):
+                text = rr.render({**fields, key: fields[key] + "\n"})
+                with self.assertRaisesRegex(rr.Refused, f"bad {key}"):
+                    rr.parse(text)
+
 if __name__ == "__main__":
     unittest.main()

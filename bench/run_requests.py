@@ -412,7 +412,8 @@ def parse(text):
         if ".." in req["branch"] or req["branch"].endswith((".lock", "/")):
             raise Refused("bad branch")
     for k, pattern in checks:
-        if not isinstance(req[k], str) or not pattern.match(req[k]):
+        # fullmatch, not match: `$` also matches before a final newline, so "id\n" would pass
+        if not isinstance(req[k], str) or not pattern.fullmatch(req[k]):
             raise Refused(f"bad {k}")
     if "note" in req and (not isinstance(req["note"], str) or len(req["note"]) > 500):
         raise Refused("bad note")
