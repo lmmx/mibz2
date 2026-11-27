@@ -1,0 +1,14 @@
+claim: none
+by: antigravity
+outcome: done
+evidence: docs/journal/2026-11-27-explore/vectored-delivery-boundary.md, examples/vectored_delivery_probe.rs
+
+**What was asked:** Price and specify the zero-stitch vectored delivery boundary (`Open -> parallel.rs::Ready -> BzReader / Read / Python #1033 / decode_parallel`) for `K=4` lanes and `S=16` sampled-anchor segments, sizing the single recycled `Vec<u8>` slab within `<= 1.05x` shipped RSS (`#1045`, `#1052`).
+**What I found:**
+- **Vectored delivery is zero-cost; stitching costs `+16..+22 ms` / 200 MiB (`+33%..+80%`):** Across 7 interleaved repeats on all 431 real `wikidata.bz2` blocks (`200.0 MiB`, exact hash parity `0x80f2395ca32b5fc4`) on both baseline x86-64 and `-C target-cpu=native`, `vectored_4lane` and `vectored_16seg` match `contiguous_1slice` (`0.86x..1.05x` cold across `fill_buf_hash`, `read_{64k,256k}_{single,scatter}`, and `decode_parallel`), while `stitched_4lane` adds `+16..+22 ms` (`1.33x..2.49x`, matching `#1045`'s `598.9 MiB` `memmove` penalty).
+- **Slab sizing (de-risks `forward-rle1-crc-vectored-build`'s `<= 1.05x` RSS gate):** On `wikidata` (`max post/pre = 1.0008` for `K=4`, `1.0040` for `S=16`) and `text_900k`, shipped per-segment `pre_seg + pre_seg/16 + 64` (`+6.25%`) has **`0/431` overflows** at **`1.0002x` shipped RSS** (`K=4`) / `1.0010x` (`S=16`), and `1.017x` even with `+4 KiB/lane` in-place tile headroom. By contrast, `span/4` (`+25%`) blows the `<= 1.05x` gate at `1.178x` shipped RSS while still overflowing adversarial `runs` (`2.07x`) and `onebyte` (`51.8x`), proving shipped `+6.25%` + overflow fallback is strictly superior.
+- **Python `#1033` crossings:** At `K=4`, single-`fill_buf` crossings change `+1.8%` (8K), `+13.5%` (64K), and **`+0.0%`** (256K, 1,130 calls) — no `src/python.rs` change needed for 4-lane. At `S=16`, crossings jump `+62.9%` (64K) and `3.49x` (256K), so `S > 4` should scatter-fill across segments inside `cur`.
+- **Exact safe-Rust `ReadyBlock`:** 160-byte inline struct (`buf: Vec<u8>`, `ranges: [(u32, u32); 16]`, `count: u8`, `total_len: u32`) with zero extra heap allocations, direct `free_out` recycling via `into_buf()`, exact logical `Ready::size`, and exact touchpoints mapped for `src/parallel.rs`, `src/read.rs`, `src/lib.rs`, `src/python.rs`, and `examples/bzcat.rs`.
+**What changed:** Added `#![forbid(unsafe_code)]` probe `examples/vectored_delivery_probe.rs` and architecture/measurement note `docs/journal/2026-11-27-explore/vectored-delivery-boundary.md` (smooth zone, zero `src/` edits).
+**What's next:** `forward-rle1-crc-vectored-build` (and `forward-emission` if `K=4` ships vectored) can adopt `ReadyBlock` with `+6.25% + tile_headroom` slab sizing (`<= 1.02x` RSS) + overflow fallback directly from this spec.
+**Caveats:** Single-thread 2-vCPU VM timings (C5 diagnostic); 8W/10W LLC/DRAM impact will be settled by i9-10900K paired A/B in `forward-rle1-crc-vectored-build`.
