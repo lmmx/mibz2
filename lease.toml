@@ -6,4 +6,4 @@ expires = "2026-11-27T11:04:16+00:00"
 owned_paths = ["src/block.rs", "src/huff.rs"]
 mechanisms = ["scanner-a2-build"]
 base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
-released = false
+released = true
