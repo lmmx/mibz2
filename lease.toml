@@ -1,0 +1,9 @@
+id = "crc32-avx2-ring-barrett-build"
+holder = "antigravity"
+session = "44e5e2fec262"
+claimed_at = "2026-11-27T15:05:01+00:00"
+expires = "2026-11-27T23:05:01+00:00"
+owned_paths = ["src/crc.rs"]
+mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
+base = "9fc5de132da829f3056de60ad26025000a27f9da"
+released = false
