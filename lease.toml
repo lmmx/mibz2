@@ -1,0 +1,9 @@
+id = "a6b-endpoint-run"
+holder = "codex"
+session = "12189dcbfb22"
+claimed_at = "2026-11-27T06:01:30+00:00"
+expires = "2026-11-27T14:01:30+00:00"
+owned_paths = [".just/bench.just", "bench/a6b_endpoint.py", "bench/test_a6b_endpoint.py", "examples/a6b_endpoint_run.rs"]
+mechanisms = ["a6b-workstation-validation"]
+base = "95f4637b2611b83ea5a54adaf511e3978bc4273d"
+released = false
