@@ -76,7 +76,8 @@ a release that moves no Wikidata block's route.
   1 thread, 1.003 [0.980, 1.026] at 2, 0.994 [0.964, 1.025] at 4, 1.005 [0.999, 1.011] at 8 and
   1.007 [0.992, 1.022] at 10.
 - **Unpinned (12–20 threads):** 0.995 [0.942, 1.050] at 12, 0.984 [0.955, 1.015] at 16 and 1.025
-  [0.974, 1.079] at 20. Peak RSS 28–71 MB, within 4 MB of 0.5.15 at every count.
+  [0.974, 1.079] at 20. Across thread counts, median peak RSS over ten rounds ranged from 28 to
+  71 MiB, within 4 MiB of 0.5.15 at each count. The highest individual peak was 75.6 MiB at four threads.
 - **Attribution (RELEASING §5b):** no step clears the bar; no row.
 
 **The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T171216Z`, evidence
