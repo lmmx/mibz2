@@ -27,7 +27,7 @@ Estimated time: about 5–10 minutes with cached inputs, plus four builds.
 **PASS** only if all hold, otherwise **STOP**:
 
 1. **S' cut ≥ 3.0%** on `wikidata ×4`: the upper 95% bound of the paired head/base ratio ≤ 0.970, *and* the head's slowest sample faster than the base's fastest (disjoint ranges). This is the claim's gate 2 verbatim.
-2. **Guards:** no guard corpus's serial scan more than 2.0% slower (paired ratio point estimate ≤ 1.020). The claim says "no > 2.0% regression"; the point estimate is its literal reading.
+2. **Guards:** no guard corpus's serial scan more than 2.0% slower beyond noise: STOP if its paired ratio is above 1.020 *and* its lower 95% bound above 1. The claim says "no > 2.0% regression"; a point estimate alone would stop on noise, since `runs` and `onebyte` are single blocks scanned in 0.03–0.3 ms (a local smoke run of both arms, before any i9 data, saw ±8% and 10–50% sample-to-sample spread there).
 3. **Memory:** median peak RSS ratio ≤ 1.02 at every real cell (the claim's ≤ 1.02×).
 4. **No whole-decoder loss on Wikidata:** at no real `wikidata ×4` count is the wall ratio above 1.020 with its lower 95% bound above 1. *Why this is added to the claim's gate:* #1117's exact-head CI bench showed the scanner −4.5% beyond noise but an unrelated +7.6% in MTF + RLE2 from a code-layout shift of `src/mtf.rs`; a scanner gain the i9 cannot see through such a loss must not ship. It stops only on a loss beyond noise, so it is not stricter than PERFORMANCE-POLICY.md's merge rule.
 

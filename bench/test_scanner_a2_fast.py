@@ -96,6 +96,14 @@ class Verdict(unittest.TestCase):
             if (r["kind"], r["corpus"], r["build"]) == ("phases", "records", "head"):
                 r["scan_s"] *= 1.019
         self.assertEqual(score(rows)["verdict"], "PASS")
+        # A 3% point loss inside noise (a sub-millisecond corpus) does not stop.
+        rows = samples()
+        for r in rows:
+            if (r["kind"], r["corpus"], r["build"]) == ("phases", "onebyte", "head"):
+                r["scan_s"] *= 1.35 if r["round"] % 2 else 0.80
+        result = score(rows)
+        self.assertGreater(result["cells"]["phases/onebyte/1"]["ratio"], 1.02)
+        self.assertEqual(result["verdict"], "PASS")
         rows = samples()
         for r in rows:
             if r["kind"] == "real" and r["build"] == "head" and r["corpus"] == "runs":

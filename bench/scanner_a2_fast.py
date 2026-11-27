@@ -46,7 +46,7 @@ CELLS = (
     + tuple(("real", name, 8) for name in GUARDS)
 )
 S_BOUND = 0.970  # S' must fall by at least 3.0%: upper 95% bound of head/base.
-GUARD_BOUND = 1.020  # No guard corpus's serial scan more than 2.0% slower (point ratio).
+GUARD_BOUND = 1.020  # No guard serial scan more than 2.0% slower, with its lower bound above 1.
 RSS_BOUND = 1.02  # Median peak RSS ratio, every real cell.
 WALL_BOUND = 1.020  # No real Wikidata wall loss beyond 2.0% with its lower bound above 1.
 
@@ -186,8 +186,8 @@ def score(rows):
         elif name == "wikidata":
             if hi > S_BOUND or max(head) >= min(base):
                 findings.append("serial scan misses the 0.970 upper bound or disjoint ranges")
-        elif ratio > GUARD_BOUND:
-            findings.append(f"{name} serial scan more than 2.0% slower")
+        elif ratio > GUARD_BOUND and lo > 1:
+            findings.append(f"{name} serial scan more than 2.0% slower beyond noise")
         cells["/".join(map(str, key))] = detail
     return {"verdict": "STOP" if findings else "PASS", "findings": findings, "cells": cells}
 
