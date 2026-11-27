@@ -4,7 +4,7 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1
-status = "open"
+status = "done"
 owned_paths = ["bench/workstation-queue.txt"]
 mechanisms = ["workstation-queue"]
 needs_louis = ""
@@ -12,7 +12,7 @@ question = """
 Can the workstation runner return the A6b validation bundle under #1053's frozen C6 registration? #1085 supplies the exact recipe. Verify both the current recipe coordinate and all gates before setting ready and adding the queue entry.
 """
 why = """
-The source and recipe have separate frontier reservations. The queue owner serializes edits with scanner-seam-window-queue. Recover unused i9 capacity under the 9 November standing authorisation without preempting that reservation.
+The source and recipe have separate frontier reservations. The queue owner serializes edits with scanner-seam-window-queue. The frozen stop_test orders the ready tag before the queue row. Use the existing manual signal workflow for this claim. At #1104's reviewed proposal, the reconciler instead requires an existing static row. See frontier/deltas/2026-11-27-a6b-ready-request-inputs.md. Recover unused i9 capacity under the 9 November standing authorisation without preempting that reservation.
 """
 stop_test = """
 The reviewed source is faa9df70f98d72ece27befebb966a9d9683b6dd9 (research feature, #1053), the recipe is bench-a6b-endpoint on bench/a6b-endpoint-redesign (#1085). Check the exact recipe head, independent review, CI and pre-commit; verify the queue lease immediately before consequential actions. Check origin/evidence, the queue history, ready/bench-a6b-endpoint and hold/bench-a6b-endpoint. Stop on a prior attempt, unresolved objection, red checks, moved head without verification, an existing hold tag or another queue lease. Use the normal ready workflow and require the remote ready tag to resolve to the reviewed recipe commit. Then integrate one queue line, recheck the line and tag on origin, and read the returned bundle under the original registration.

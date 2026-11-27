@@ -4,12 +4,13 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1
-status = "open"
+status = "done"
 owned_paths = ["bench/workstation-queue.txt"]
 mechanisms = ["workstation-queue"]
 needs_louis = ""
 question = """
 Can the workstation runner execute the exact reviewed #1031 branch before adoption and return its one registered attempt to the seam-window integration holder?
+Candidate: build/scanner-seam-window at 3ae44390ade27cf105fc301b702e2eca9ab25fe2. Independent C6 PROCEED: https://github.com/lmmx/mibz2/pull/1031#pullrequestreview-6084229302. The next holder needs authenticated workflow_dispatch access to run-signal.yml under the existing standing authorisation. The standard workflow-dispatch POST returned Forbidden from the previous holder’s environment. See frontier/deltas/2026-11-27-scanner-seam-window-dispatch-handoff.md for the exact command, queue arguments and duplicate checks.
 """
 why = """
 The scanner-seam-window integration lease owns the candidate source paths. This claim owns the workstation queue entry and its ready signal under the standing 9 November authorisation. The i9 queue currently has no seam run. The seam registration requires a candidate distinct from master.

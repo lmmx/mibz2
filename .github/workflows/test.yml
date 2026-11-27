@@ -83,6 +83,14 @@ jobs:
           cargo test --features a6b-endpoint-redesign --lib open::
           cargo test --release --features "a6b-endpoint-redesign mtf-fold" --test mtf_fold
           cargo test --release --features a6b-endpoint-redesign --test service_default
+      # the four-lane walk from sampled anchors (research feature `forward-anchor-lanes`, claim
+      # forward-emission; docs/journal/2026-11-27-forward-emission/registration.md): full
+      # library tests, and composed with the endpoint redesign and mtf-fold
+      - name: The sampled-anchor four-lane walk (research feature)
+        run: |
+          cargo test --release --features forward-anchor-lanes --lib
+          cargo test --release --features "forward-anchor-lanes a6b-endpoint-redesign mtf-fold" --lib open::
+          cargo test --release --features "forward-anchor-lanes mtf-fold" --test mtf_fold
       # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
       # arbitrary columns, tampered logs refused, every block of the test corpora recorded
       # and checked; then fixed prose recorded and replayed by the Python reader
@@ -245,6 +253,10 @@ jobs:
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
+      # bench/run_requests.py against a scratch origin and a fake GitHub API: run requests on
+      # refs become ready/hold tags only when eligible; receipts, withdrawal, replay, malformed
+      - name: Run requests reconciled into ready signals
+        run: python3 bench/test_run_requests.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
