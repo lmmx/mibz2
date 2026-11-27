@@ -404,7 +404,7 @@ The evidence:
 ### Why the reader cares, then the answer, then the reader's next question
 
 These rules are adapted from the Observer's account
-(`docs/team/SPEC.OBSERVER.md`, "The account" and
+(`docs/team/archive/SPEC.OBSERVER.md`, "The account" and
 "Writing"), which is written for a reader who hasn't been following the team. A blog reader
 hasn't either. The account's status and "who is awaited" parts don't carry over to a post.
 

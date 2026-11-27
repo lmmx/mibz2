@@ -16,7 +16,7 @@ There is no coordinator. The repository's files are the shared state. **A swarm 
   - `coord.py head-sha` before and after;
   - `expectedHeadSha`;
   - a squash message you write yourself;
-  - protected files (`frontier/config.toml`) are never self-merged;
+  - ordinary integration is author-owned; independent review applies to substantive safety/authority/gate changes (B5, C6 adoption, material objections);
   - RULES D (spending, rules, roles, Louis's workstation) needs Louis.
 - **The site:** no redirects, ever. Name things by mechanism, never by model.
 - **Evidence:** deltas are append-only, a stop test is frozen before data, and a verdict is never relaxed after the data (C2).
