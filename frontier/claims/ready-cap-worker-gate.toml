@@ -3,8 +3,8 @@ title = "Bound run-only (high-expansion) blocks' memory by the ready cap, not th
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
-priority = 3
-status = "idea"
+priority = 2
+status = "open"
 owned_paths = ["src/parallel.rs"]
 mechanisms = ["worker-side-ready-cap"]
 needs_louis = ""
@@ -13,6 +13,7 @@ question = """
 """
 why = """
 A memory-amplification and robustness property of the shipped decoder (a tiny input forces GB of RSS in every BzReader::parallel / Python caller), invisible on the bench corpus, with a time cost on run-heavy streams. The change is local to the cap logic.
+Synthesis eleventh pass (27 Nov): P3 -> P2 and admitted. It is a precondition of two lines: `runt-exempt-window` (whose symbol-bound runt test exempts exactly these 46 MB blocks, doubling the worst case) and any k = 9-10 / default-count adoption (worst case ~ (4k + 2) x 46 MB). No CI corpus holds two expansive blocks, so no existing gate sees it. Shares src/parallel.rs with `scanner-seam-window`; take it when that hold clears. docs/journal/2026-11-27-synthesis/eleventh-pass.md.
 """
 stop_test = """
 Frozen before data:
