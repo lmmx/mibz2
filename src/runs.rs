@@ -1067,5 +1067,11 @@ unsafe fn fill_share_avx2(
     q == row_end && next == *lim
 }
 
+// (research only, `mtf-fold`: the MTF/RLE2 front emitting straight into the open kernel's first
+// pass, src/runs/fold.rs)
+#[cfg(feature = "mtf-fold")]
+#[doc(hidden)]
+pub mod fold;
+
 #[cfg(test)]
 mod tests;

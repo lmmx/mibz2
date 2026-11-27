@@ -2,7 +2,7 @@
 //! `mibz2` package (python/mibz2/)
 
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, BufRead, Read};
 use std::sync::{Arc, Mutex};
 
 use pyo3::create_exception;
@@ -86,6 +86,19 @@ struct Reader {
     finished: Mutex<bool>,
 }
 
+impl Reader {
+    fn map_io_err(&self, e: io::Error) -> PyErr {
+        if let Some(err) = self.raised.lock().unwrap_or_else(|x| x.into_inner()).take() {
+            return err;
+        }
+        match e.into_inner().map(|inner| inner.downcast::<Error>()) {
+            Some(Ok(err)) => decode_err(*err),
+            Some(Err(other)) => PyOSError::new_err(other.to_string()),
+            None => PyOSError::new_err("reading the input failed"),
+        }
+    }
+}
+
 #[pymethods]
 impl Reader {
     /// `source`: a path (str, from os.fspath) or a binary file object. `threads`: 1
@@ -119,34 +132,45 @@ impl Reader {
     /// Up to `size` decoded bytes; empty at the end, once every stream's CRC has been
     /// checked
     fn read<'py>(&self, py: Python<'py>, size: usize) -> PyResult<Bound<'py, PyBytes>> {
-        let mut buf = vec![0u8; size];
         let mut guard = self.inner.lock().unwrap_or_else(|x| x.into_inner());
         let reader = guard
             .as_mut()
             .ok_or_else(|| PyValueError::new_err("I/O operation on closed file"))?;
-        let res = py.detach(|| loop {
-            match reader.read(&mut buf) {
+        if size == 0 {
+            let res = py.detach(|| loop {
+                match reader.read(&mut []) {
+                    Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                    other => break other,
+                }
+            });
+            return match res {
+                Ok(_) => Ok(PyBytes::new(py, &[])),
+                Err(e) => Err(self.map_io_err(e)),
+            };
+        }
+        let avail_len = py.detach(|| loop {
+            match reader.fill_buf() {
                 Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                other => break other,
+                Ok(avail) => break Ok(avail.len()),
+                Err(e) => break Err(e),
             }
         });
-        match res {
-            Ok(n) => {
-                if n == 0 && size > 0 {
-                    *self.finished.lock().unwrap_or_else(|x| x.into_inner()) = true;
-                }
-                Ok(PyBytes::new(py, &buf[..n]))
+        match avail_len {
+            Ok(0) => {
+                *self.finished.lock().unwrap_or_else(|x| x.into_inner()) = true;
+                Ok(PyBytes::new(py, &[]))
             }
-            Err(e) => {
-                if let Some(err) = self.raised.lock().unwrap_or_else(|x| x.into_inner()).take() {
-                    return Err(err);
-                }
-                match e.into_inner().map(|inner| inner.downcast::<Error>()) {
-                    Some(Ok(err)) => Err(decode_err(*err)),
-                    Some(Err(other)) => Err(PyOSError::new_err(other.to_string())),
-                    None => Err(PyOSError::new_err("reading the input failed")),
-                }
+            Ok(_) => {
+                // `fill_buf` above left unread bytes in the decoded block, so this
+                // returns the same slice immediately without blocking or touching the
+                // source, and `PyBytes::new` copies straight from the lent block once.
+                let avail = reader.fill_buf().map_err(|e| self.map_io_err(e))?;
+                let n = size.min(avail.len());
+                let bytes = PyBytes::new(py, &avail[..n]);
+                reader.consume(n);
+                Ok(bytes)
             }
+            Err(e) => Err(self.map_io_err(e)),
         }
     }
 

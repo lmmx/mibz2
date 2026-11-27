@@ -1,0 +1,43 @@
+id = "forward-4lane-anchor-probe"
+title = "Price paid sampled-anchor multi-lane forward wiring (A6c) and 4-lane emission (A7) end-to-end"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["forward-anchor-wiring"]
+needs_louis = ""
+question = """
+Can paid multi-lane forward wiring (`A6c`, with real zero-extra-pass sampled anchor selection, tag-bit boundary resolution, and dynamic multi-lane termination) capture the prebuilt 4-lane forward emission win (`E 0.64-0.74x` cold/warm vs 1-lane forward) end-to-end on `A6c + A7` (`C + E`), without an expensive anchor-discovery constructor or stitching pass erasing the gain?
+"""
+why = """
+Single-lane forward wiring + emit (`prod_forward_emit`, #958) cuts `C+E` to `0.856-0.871x` (`+142-157 ms` at 1W), but #992/#998 showed single-lane forward (MLP=1) regresses vs shipped bidirectional (MLP=2) in cold mode (`+3.4..+16.5%`), whereas prebuilt oracle 4-lane forward (MLP=4) cuts `E` to `0.643-0.697x` cold / `0.731-0.818x` warm vs 1-lane forward (projecting `+215-270 ms` at 1W / `+29-37 ms/w` at 8W) and unlocks vectored RLE1+CRC fusion. Nobody has yet prototyped or priced paid sampled-anchor discovery + `A6c` wiring + dynamic `K = 4` lane emission (`S >= K` anchors fed dynamically to 4 concurrent lanes via an edge tag bit) end-to-end in both vectored and contiguous-stitched modes.
+"""
+stop_test = """
+Frozen before any timing or probe code (C1a / C2):
+1. Smooth-zone probe in `examples/forward_4lane_probe.rs` (zero `src/` edits, `#![forbid(unsafe_code)]`).
+2. 100% byte-exact output verified on ALL 431/431 blocks of `corpora/wikidata.bz2` (comparing stitched AND vectored-concatenated output byte-for-byte against shipped `Open`/`bwt::walk`), plus synthetic edge cases (short blocks, colliding anchors, `S > m`, periodic multi-cycle blocks).
+3. Measure 7 interleaved repeats on BOTH baseline x86-64 AND `-C target-cpu=native` (warm AND L3-cold/rotating-blocks), comparing:
+   - `shipped_bidi` (`A6c + A7`)
+   - `fwd_1lane` (paid 1-lane forward `A6c + A7`, #958 baseline)
+   - `fwd_4lane_oracle` (prebuilt uniform 4-lane oracle upper bound)
+   - `fwd_4lane_sampled_S{4,8,12,16}_vec` (paid sampled-anchor 4-lane forward `A6c + A7`, vectored segments)
+   - `fwd_4lane_sampled_S{8,12,16}_stitch` (paid sampled-anchor 4-lane forward `A6c + A7` + contiguous stitch into `out`)
+4. PASS (update `forward-emission` with concrete design and unblock admission) ONLY IF a paid sampled-anchor multi-lane arm beats BOTH `shipped_bidi` (by >= 12.0% of `A6c + A7`, corresponding to >= ~6% of 1W wall) AND `fwd_1lane` (by >= 8.0% of `A6c + A7` in BOTH warm and cold, non-overlapping `[min..max]` spreads on baseline AND native, for vectored OR stitched — clearly reporting BOTH). Otherwise STOP and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Probe `examples/forward_4lane_probe.rs`, full results note `docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md`, delta `frontier/deltas/2026-11-27-forward-4lane-anchor-probe.md`, `frontier/surface.tsv` rows `C-A6c` and `E-walk` updated, claim marked `done`, and either `forward-emission` updated with concrete design (on PASS) or a scoped row appended to `frontier/dead-ends.tsv` (on STOP), merged cleanly to master.
+"""
+premises = [
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/results.md",
+  "frontier/claims/forward-emission.toml",
+  "src/open.rs",
+  "src/open/outq.rs",
+]
+links = [
+  "frontier/surface.tsv",
+  "frontier/DECODER.md",
+]

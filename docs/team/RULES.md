@@ -103,11 +103,8 @@ The challenger is not made permanently sovereign.
 
 ## O. Ownership (Louis, 2026-11-10; OWNERSHIP.md)
 
-- **O1. Any role may open a PR against anything,** `src/` included. The author owns it to
-  merge: tests, bench, and B5 where it applies. The Coordinator (Lead) still decides merges
-  (A6), and nobody reviews their own PR.
-- **O2. One reviewer, one round, four outcomes:** merge, one targeted correction, defer,
-  abandon (PROTOCOL.md §2a).
+- **O1. Any participant may open and finish a PR within its authorised scope.** The author owns integration: relevant tests, parity, performance gates, exact head, and B5/C6 where they apply. Ordinary self-merge after these gates is not self-certifying an independent review. A protected filename or striated scope is not by itself a requirement for another agent. Existing substantive safety/authority/frozen-evidence protections and RULES D remain binding; no new authority is implied by a passing check. This supersedes the former Coordinator-only merge and blanket peer-signoff rules prospectively.
+- **O2. Independent review is a tool for substantive uncertainty, not a serial approval chain.** Require it for B5, C6 adoption registrations, material objections and substantive changes to safety, authority or gate enforcement, or where the owner expressly requires it. Keep one focused round and reuse review of unchanged code. Ordinary changes can be reviewed at any time without making that review a merge gate. A material unresolved safety objection still holds its own scope.
 - **O3. Binding objections.** A HOLD or STOP binds only under B1, B5, B6 and B7. On
   performance evidence, the Guardian and the Researcher advise once (A2).
 

@@ -22,6 +22,8 @@ permissions:
 jobs:
   check-commit:
     runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
     # This job only runs if the commit message meets the condition
     if: >
       (
@@ -40,9 +42,17 @@ jobs:
     steps:
       - name: Confirm commit message matched
         run: echo "Commit message matched the condition."
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check changed inputs
+        id: scope
+        run: python3 .github/ci_scope.py
 
   linux:
     needs: [check-commit]
+    if: needs.check-commit.outputs.full != 'false'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -75,6 +85,7 @@ jobs:
 
   windows:
     needs: [check-commit]
+    if: needs.check-commit.outputs.full != 'false'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -103,6 +114,7 @@ jobs:
 
   macos:
     needs: [check-commit]
+    if: needs.check-commit.outputs.full != 'false'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -135,6 +147,7 @@ jobs:
 
   sdist:
     needs: [check-commit]
+    if: needs.check-commit.outputs.full != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

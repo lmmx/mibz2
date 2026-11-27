@@ -1,0 +1,29 @@
+id = "bwt-contraction-constructor-rescue"
+title = "Optimise the expensive contracted return-map constructor through constructive iteration"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust", "math"]
+priority = 1
+status = "done"
+owned_paths = []
+mechanisms = ["bwt-digram-contraction"]
+needs_louis = ""
+question = """
+Owner directs rescue of #1013, not premature abandonment of the substantial verified emission advantage. Read the linked rescue brief, #1013 exact source and ablations, and obtain constructive cold input from a different participant where available. Price and implement distinct improvements to the costly constructor (fusion with existing wiring, avoiding redundant random chase/materialisation, cheaper word assembly, or profitable selective construction), using the same exactness and whole-cost bar. Do not rerun unchanged arms or duplicate the separate P1 mathematical operator discovery. Continue distinct bounded improvements while marginal benefit warrants them. Retain #1013 STOP and wait for its reservation to release before consequential work on this mechanism.
+"""
+why = """
+#1013's correct consumer reduces A7 about 61% but paid contraction consumes the gain. The measured chase-only ablation is not a lower bound on a redesigned construction. There is a valuable executable target and a quantified budget; the owner explicitly requests active optimisation, redesign and constructive peer input before abandoning it.
+"""
+stop_test = """
+Preserve #1013's original verdict. Register distinct variants before new measurements, exact bytes on all original admitted/forced/guard and synthetic suites, charge full C+E on baseline and native against both matched single- and four-lane forward controls, seven interleaved repeats, same >=39.18 ms projected 1-worker improvement and guard no-regression conditions; report selection exposure and use independently registered fresh validation for confirmatory claims. No claimed PASS from free oracle or stage-only gain. First bounded session prices cost components and attempts at most two distinct justified improvements; further iterations only with a concrete new lever and plausible marginal budget, all attempts retained. Stop on scoped obstruction/exhausted feasible budget/no credible new lever after constructive consideration, not just a first losing implementation. Zero src edits, unsafe or new spending.
+"""
+done_when = """
+Constructive review/cost ledger and reproducible distinct optimisation attempts; full paid timings and exactness or a defensible scoped obstruction; delta and either a concrete follow-on implementation/next improvement or a justified shelving decision. No new generic package, no changed frozen gates.
+"""
+premises = [
+  "docs/journal/2026-11-27-contraction-rescue.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-24-algorithm-level/permutation-patterns/results.md",
+  "frontier/claims/bwt-digram-return-map.toml",
+]
+links = ["https://github.com/lmmx/mibz2/pull/1013", "frontier/claims/computational-permutation-structure.toml"]

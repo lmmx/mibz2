@@ -1,0 +1,40 @@
+id = "a6b-combined-redesign"
+title = "Whole-A6b combined redesign: fused setup with u16 links, inline15 SoA + aw==bw in-place steps, and generation-tagged dict"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["construction-induction-dict"]
+needs_louis = ""
+question = """
+`C-A6b` (`216.0 ms` at 1 worker = `16.54%` of the `1,306 ms` wall; `30.4 ms/w` at 8 workers; currently unheld in `frontier/surface.tsv`) was previously probed one isolated sub-phase at a time in `rauzy-output` (`results-2`): standalone `inline7_node20` cut `A6b` by `-12.5..-13.3%` (`+2.26..+2.48%` of 1w wall < 3.0% gate), standalone `dict_no_contents_dedup` cut `A6b-dict` by `-15%` (`+0.67..+0.99%` < 3.0% gate), and `A6b-setup` (`41.7 ms`, `19.3%` of `A6b`) was never optimised at all.
+
+Does a combined redesign of all three `A6b` sub-phases in `src/open/endpoint.rs` clear the frozen 3.0% 1-worker wall gate (`>= 39.18 ms` of `1,306 ms`) without reopening any dead end in `frontier/dead-ends.tsv`? Specifically, test incrementally and together:
+1. **A6b-setup (`41.7 ms`):** fuse strip node creation + domain-gap pass (`endpoint.rs:672-730`, eliminating double `Strip::unpack`) and replace bit-packed `u32` read-modify-write `set_prev`/`set_next` (`endpoint.rs:46-54`) with direct `u16` link fields for `Narrow` nodes (`<= 65,535` nodes).
+2. **A6b-steps (`110.4 ms`; `50%` `join()`, `37%` `aw == bw`):** store `len <= 15` words inline in an `inline15` SoA (`words: Vec<u128>` + `u16` direct links) — capturing `76.1%` of non-zero joins inline (vs `60.0%` for `inline7`), avoiding rule allocations, `short_payload` rule loads, and 20-byte `id*5` strides — plus direct in-place replace on `aw == bw` (`36.98%` of steps) instead of `insert(y, x, 0); cut(y, 0)`.
+3. **A6b-dict (`63.9 ms`):** copy `len <= 15` words directly from the `u128` array (skipping `pairs` + `short_payload` indirection), eliminate the per-block `24 KiB` `cache[..6144].fill(0)` via a generation-tagged or compact table, test both with and without `contents` dedup (pricing any `A7` delta), and gate dead `stats` work behind `#[cfg(feature = "census")]`.
+"""
+why = """
+`C-A6b` (`216.0 ms` at 1W, `30.4 ms/w` at 8W) is the largest unheld worker-side construction phase (`claims = -`). Each standalone mechanism fell short of the 3.0% gate (`inline7` `+2.3-2.5%`, `dict` `+0.7-1.0%`, `setup` untouched), but combining all three targets all `216.0 ms` simultaneously: cutting `A6b` by `>= 18.1%` (`>= 39.2 ms` at 1W, `~5.5 ms/w` at 8W) would clear the 3.0% 1W gate and directly shorten worker CPU alongside `mtf-fold-build` and `forward-emission`.
+"""
+stop_test = """
+Frozen before data: smooth-zone probe in `examples/a6b_combined_probe.rs` (zero `src/` edits, zero new `unsafe`). Must be 100% byte-exact against shipped `Open` / `bwt::walk` on ALL 431 blocks of `corpora/wikidata.bz2` (both production-admitted Open blocks and forced-Open across all 431 blocks) for every arm. Measure 7 interleaved repeats on BOTH baseline x86-64 (`cargo build --release --example a6b_combined_probe`) AND native (`RUSTFLAGS="-C target-cpu=native"`), pricing BOTH isolated `A6b` sub-phases (`setup`, `steps`, `dict`) AND full `C + E` (`A6a + A6b + A6c + A7`, under both shipped bidirectional emission and matched forward emission so any dictionary/code-count impact on `A7` is fully charged).
+
+PASS and admit a striated build claim (`a6b-endpoint-build` at `status = "idea"`) ONLY IF the combined `A6b` redesign cuts full `C + E` by `>= 3.0%` of the 1-worker wall (projected `>= 39.18 ms` on the `1,306 ms` reference, using `results-2`'s i9-anchored calibration: `A6a = 200.3 ms`, `A6b = 216.0 ms` [`setup 41.7`, `steps 110.4`, `dict 63.9`], `A6c = 161.4 ms`, `A7 = 490.3 ms` -> `>= 18.14%` net `A6b` saving after charging any `A7` delta), with non-overlapping `[min..max]` spreads vs baseline on full `C + E` on BOTH baseline x86-64 and `-C target-cpu=native`, and `<= 1.0%` `A7` regression. Otherwise STOP and append a scoped row to `frontier/dead-ends.tsv`.
+"""
+done_when = """
+`examples/a6b_combined_probe.rs`, full results note under `docs/journal/2026-11-26-explore/a6b-combined-redesign.md`, <= 40-line delta in `frontier/deltas/`, `frontier/surface.tsv` row `C-A6b` updated, claim marked `done`, and either `frontier/claims/a6b-endpoint-build.toml` at `status = "idea"` (if PASS) or a scoped row in `frontier/dead-ends.tsv` (if STOP).
+"""
+premises = [
+  "src/open/endpoint.rs",
+  "src/open.rs",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+  "frontier/dead-ends.tsv",
+  "frontier/surface.tsv",
+]
+links = [
+  "frontier/claims/rauzy-output.toml",
+  "docs/journal/2026-11-24-algorithm-level/rauzy-census/results-2/README.md",
+]

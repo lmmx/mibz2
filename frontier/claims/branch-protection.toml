@@ -4,9 +4,10 @@ kind = "decision"
 zone = "striated"
 needs = ["repo-write"]
 priority = 3
-status = "open"
+status = "blocked"
+pr = 0
 owned_paths = []
-needs_louis = ""
+needs_louis = "Apply the independently reviewed master ruleset in docs/ops/master-ruleset.json with an admin token (`gh api -X POST repos/lmmx/mibz2/rulesets --input docs/ops/master-ruleset.json`) and verify a direct push to master is refused (docs/ops/branch-protection.md). Recommended: apply as specified; if GitHub rejects the GitHub Actions bypass on a personal repo, convert Deploy Release (.github/workflows/deploy.yml) to a PR before applying."
 question = """
 Today the protected list and the merge gates are kept by convention. GitHub branch protection could make them binding:
 - required checks (no AI attribution, check-commit, the frontier check);

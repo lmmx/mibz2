@@ -917,7 +917,7 @@ def check(pr_event=None):
         hit = [t for t in changed if any(overlaps(t, p) for p in protected)]
         if hit:
             warn.append(
-                f"protected files changed ({', '.join(hit)}): a different agent reviews and merges; RULES D needs Louis"
+                f"protected files changed ({', '.join(hit)}): check actual authority and substantive review requirements; RULES D needs Louis"
             )
     for w in warn:
         print("warning:", w)

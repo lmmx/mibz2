@@ -1,0 +1,23 @@
+id = "release-terminal-holds"
+title = "Let claim reconcile ordinary leases whose claim is done and whose PR merged"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 3
+status = "open"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+needs_louis = ""
+question = """
+An ordinary (non-integration) lease outlives its work when the holder forgets `release`: archive-team-strata (done, #977 merged) kept `docs/team/` reserved for ~8 hours and blocked migrate-rules. Should `reconcile_integrations` also release a lease whose claim on origin/master has status done/dropped and whose recorded `pr` is merged at a commit on master, recording `terminal` as finish-review does?
+"""
+why = """
+Stranded reservations block the only eligible claim until expiry; there is no honest early release today.
+"""
+stop_test = """
+Done when a test reproduces the stale-lease refusal and passes with the fix, releasing only on verified merged state and never on uncertainty.
+"""
+done_when = """
+A PR with the reconciliation and its test, and a delta.
+"""
+premises = ["frontier/deltas/2026-11-27-migrate-rules-refused-stale-hold.md"]
+links = []
