@@ -1,6 +1,6 @@
 id = "a6b-endpoint-build"
 holder = "claude-code"
-session = "259e71ac0881"
+session = "1dbb4feb1d0f"
 claimed_at = "2026-11-27T02:09:55+00:00"
 expires = "2026-11-27T13:13:02+00:00"
 owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
@@ -8,6 +8,6 @@ mechanisms = ["construction-induction-dict"]
 base = "0eaf87f993ed7d6156bb48e5d608428ce0304253"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1053
 pr_head = "b864878b7c22915ed1499d14b6a9cdeb00b0b469"
