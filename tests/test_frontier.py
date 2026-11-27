@@ -575,6 +575,179 @@ class TestFrontierStress(unittest.TestCase):
         self.assertNotEqual(r_chk.returncode, 0)
         self.assertIn("nonexistent-evidence.md", r_chk.stdout)
 
+    def test_blog_admission_needs_news_and_one_post_in_progress(self) -> None:
+        """A blog card past idea states its news and kind; one post is in progress at a time."""
+        a = self.sb.clone("agent-a")
+
+        def card(cid: str, stage: str, extra: str = "") -> str:
+            base = _claim_toml(cid).replace('kind = "probe"', 'kind = "blog"')
+            return base + f'stage = "{stage}"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n' + extra
+
+        blog = a / "frontier" / "blog"
+        blog.mkdir(parents=True, exist_ok=True)
+        (blog / "b-idea.toml").write_text(card("b-idea", "idea"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-draft.toml").write_text(card("b-draft", "draft"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("needs news", r.stdout)
+        self.assertIn("news_kind", r.stdout)
+        news = (
+            'news = "A new induction order rebuilds text with a third fewer steps."\n'
+            'news_kind = "discovery"\n'
+            'evidence = ["frontier/surface.tsv"]\n'
+        )
+        (blog / "b-draft.toml").write_text(card("b-draft", "draft", news))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-other.toml").write_text(
+            card("b-other", "outline", news.replace("discovery", "advance"))
+        )
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("2 posts in progress", r.stdout)
+        (blog / "b-other.toml").write_text(card("b-other", "outline", news + "legacy = true\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (blog / "b-other.toml").write_text(
+            card("b-other", "outline", news.replace("discovery", "negative-result"))
+        )
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("lab-notebook entry", r.stdout)
+
+    def test_blog_advance_cites_ledger_and_master_and_discovery_cites_evidence(self) -> None:
+        """Advance cards require ledgered merged PRs; discovery cards require existing evidence."""
+        a = self.sb.clone("agent-a")
+        blog = a / "frontier" / "blog"
+        blog.mkdir(parents=True, exist_ok=True)
+
+        # Merge PR #501 onto origin/master and record PR #501 (merged) and #502 (unmerged) in ledger.
+        (a / "src").mkdir(exist_ok=True)
+        (a / "src" / "lib.rs").write_text("pub fn v() -> u32 { 1 }\n")
+        _git(a, "add", "src/lib.rs")
+        _git(a, "commit", "-m", "perf: bound decoder memory (#501)")
+        _git(a, "push", "origin", "master")
+        _git(a, "fetch", "-q", "origin")
+
+        (a / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "501\t2026-11-27\tBounds peak memory on zeros.\tdefault\t-50% RSS on zeros, local\tPR #501\n"
+            "502\t2026-11-27\tUnmerged candidate.\texperimental\tnot measured\tPR #502\n"
+        )
+
+        def adv_card(extra: str) -> str:
+            base = _claim_toml("b-adv").replace('kind = "probe"', 'kind = "blog"')
+            return (
+                base
+                + 'stage = "draft"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n'
+                + 'news = "Decoder memory stays flat on compressible streams."\n'
+                + 'news_kind = "advance"\n'
+                + extra
+            )
+
+        # (1a) Advance card with no changes -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card(""))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("changes", r.stdout)
+
+        # (1b) Advance card naming an unledgered PR (#999) -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [999]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no row in frontier/ledger.tsv", r.stdout)
+
+        # (1c) Advance card naming a ledgered but unmerged PR (#502) -> fails check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [502]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no merge commit on origin/master", r.stdout)
+
+        # (2) Advance card naming a ledgered PR merged on origin/master (#501) -> passes check.
+        (blog / "b-adv.toml").write_text(adv_card("changes = [501]\n"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+        # (3) Discovery card with missing evidence path -> fails; existing path -> passes.
+        (blog / "b-adv.toml").unlink()
+        disc_base = (
+            _claim_toml("b-disc").replace('kind = "probe"', 'kind = "blog"')
+            + 'stage = "outline"\npost = ""\ndrafted_by = "agent-a"\nreviewed_by = ""\n'
+            + 'news = "Memory traffic saturates before eight workers."\n'
+            + 'news_kind = "discovery"\n'
+        )
+        (blog / "b-disc.toml").write_text(disc_base + 'evidence = ["docs/does-not-exist.md"]\n')
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("evidence path does not exist", r.stdout)
+
+        (blog / "b-disc.toml").write_text(disc_base + 'evidence = ["frontier/surface.tsv"]\n')
+        r = self.sb.run_frontier(a, "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_frontier_news_lists_unposted_default_and_experimental_changes(self) -> None:
+        """`frontier.py news` lists unposted default/experimental ledger rows since last post."""
+        a = self.sb.clone("agent-a")
+        blog_posts = a / "docs" / "site" / "blog"
+        blog_posts.mkdir(parents=True, exist_ok=True)
+        (blog_posts / "2026-11-26-previous-post.md").write_text("# Previous\n")
+
+        (a / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "600\t2026-11-25\tOlder default change.\tdefault\tnot measured\tPR #600\n"
+            "601\t2026-11-27\tUnposted default change.\tdefault\t-50% RSS on zeros, local\tPR #601\n"
+            "602\t2026-11-27\tAlready covered default change.\tdefault\t-4% wall on text, CI\tPR #602\n"
+            "603\t2026-11-27\tUnposted experimental flag.\texperimental\t-7% CPU on wikidata, VM\tPR #603\n"
+            "604\t2026-11-27\tResearch prototype only.\tprototype\tnot measured\tPR #604\n"
+            "605\t2026-11-27\tThroughput target only.\ttarget\tnot measured\tdocs/model.md\n"
+        )
+
+        blog_cards = a / "frontier" / "blog"
+        blog_cards.mkdir(parents=True, exist_ok=True)
+        covered = (
+            _claim_toml("b-covered").replace('kind = "probe"', 'kind = "blog"')
+            + 'stage = "published"\npost = "docs/site/blog/2026-11-26-previous-post.md"\n'
+            + 'drafted_by = "agent-a"\nreviewed_by = "agent-b"\n'
+            + 'news = "Faster text decoding."\nnews_kind = "advance"\nchanges = [602]\n'
+        )
+        (blog_cards / "b-covered.toml").write_text(covered)
+
+        r = self.sb.run_frontier(a, "news")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("#601", r.stdout)
+        self.assertIn("#603", r.stdout)
+        self.assertNotIn("#600", r.stdout)
+        self.assertNotIn("#602", r.stdout)
+        self.assertNotIn("#604", r.stdout)
+        self.assertNotIn("#605", r.stdout)
+
+    def test_release_due_is_recognised_and_release_claims_are_p1(self) -> None:
+        """Software merged since the last tag with no live release claim is a due release (P1)."""
+        a = self.sb.clone("agent-a")
+        _git(a, "tag", "v0.0.1")
+        _git(a, "push", "origin", "v0.0.1")
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotIn("release due", r.stdout + r.stderr)
+        (a / "src").mkdir(exist_ok=True)
+        (a / "src" / "lib.rs").write_text("pub fn f() {}\n")
+        _git(a, "add", "src/lib.rs")
+        _git(a, "commit", "-m", "perf: a software change")
+        _git(a, "push", "origin", "master")
+        _git(a, "fetch", "-q", "origin")
+        r = self.sb.run_frontier(a, "check")
+        self.assertIn("release due: 1 software commit(s) on master since v0.0.1", r.stdout + r.stderr)
+        rel = a / "frontier" / "claims" / "release-0-0-2.toml"
+        rel.write_text(_claim_toml("release-0-0-2").replace("priority = 1", "priority = 2"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("a release claim is P1", r.stdout)
+        rel.write_text(_claim_toml("release-0-0-2"))
+        r = self.sb.run_frontier(a, "check")
+        self.assertNotIn("release due", r.stdout + r.stderr)
+        self.assertNotIn("a release claim is P1", r.stdout)
+
     # ------------------------------------------------------------------
     # Scenario 5: persuasive wrong argument -> independent cold review
     # ------------------------------------------------------------------
@@ -1533,6 +1706,346 @@ class TestFrontierStress(unittest.TestCase):
                 fresh.holds()["archive-team-strata"][1]["released"],
                 f"must fail closed for payload: {payload}",
             )
+
+
+class TestPresence(unittest.TestCase):
+    """Frozen fixtures for claim agent-presence: observational presence, apart from leases."""
+
+    def setUp(self) -> None:
+        """Create a fresh isolated remote per test."""
+        self._td = tempfile.TemporaryDirectory(prefix="frontier-presence-")
+        self.sb = FrontierSandbox(pathlib.Path(self._td.name))
+
+    def tearDown(self) -> None:
+        """Remove temporary directories after each test."""
+        self._td.cleanup()
+
+    def _refs(self, prefix: str = "refs/heads/presence/") -> dict[str, str]:
+        """{ref: sha} on the bare remote under `prefix`."""
+        out = _git(self.sb.remote, "for-each-ref", "--format=%(objectname) %(refname)", prefix)
+        return {ref: sha for sha, ref in (line.split() for line in out.splitlines())}
+
+    def _record(self, ref: str) -> dict:
+        """The presence record a remote ref holds."""
+        import tomllib
+
+        return tomllib.loads(_git(self.sb.remote, "show", f"{ref}:presence.toml"))
+
+    def _arrive(self, repo: pathlib.Path, family: str = "agent", *extra: str):
+        """Run `arrive` in `repo`, asserting success."""
+        r = self.sb.run_frontier(repo, "arrive", "--as", family, *extra)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        return r
+
+    def _push_raw(self, repo: pathlib.Path, ref: str, body: str) -> str:
+        """Publish an arbitrary presence.toml on `ref` (a malformed or forged record)."""
+        blob = subprocess.run(
+            ["git", "-C", str(repo), "hash-object", "-w", "--stdin"],
+            input=body, capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        tree = subprocess.run(
+            ["git", "-C", str(repo), "mktree"],
+            input=f"100644 blob {blob}\tpresence.toml\n", capture_output=True, text=True,
+            check=True,
+        ).stdout.strip()
+        sha = _git(repo, "commit-tree", tree, "-m", "raw")
+        _git(repo, "push", "-q", "origin", f"{sha}:{ref}")
+        return sha
+
+    def test_concurrent_independent_instances_publish_separate_records(self) -> None:
+        """Instances arriving at once each get their own ref and are counted as fresh."""
+        clones = [self.sb.clone(f"inst-{i}") for i in range(4)]
+        barrier = threading.Barrier(len(clones))
+
+        def go(repo):
+            barrier.wait()
+            return self.sb.run_frontier(repo, "arrive", "--as", "agent", "--can", "shell")
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(clones)) as pool:
+            results = list(pool.map(go, clones))
+        for r in results:
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        refs = self._refs()
+        self.assertEqual(len(refs), 4)
+        self.assertEqual(len({ref.rsplit("/", 1)[1] for ref in refs}), 4)
+        pop = self.sb.run_frontier(clones[0], "population").stdout
+        self.assertIn("4 fresh", pop)
+        self.assertIn("live reservations (hold/*, not instances): 0", pop)
+
+    def test_repeat_arrival_and_touch_keep_one_instance_and_throttle(self) -> None:
+        """Re-arrival reuses the instance; unchanged touches are throttled; changes are pushed."""
+        a = self.sb.clone("a")
+        self._arrive(a, "agent", "--can", "shell")
+        self._arrive(a, "agent", "--can", "shell,rust")
+        refs = self._refs()
+        self.assertEqual(len(refs), 1)
+        (ref, sha), = refs.items()
+        self.assertEqual(self._record(ref)["capabilities"], ["rust", "shell"])
+        r = self.sb.run_frontier(a, "touch")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("throttled", r.stdout)
+        self.assertEqual(self._refs()[ref], sha, "an unchanged touch must not write")
+        r = self.sb.run_frontier(a, "touch", "--state", "active")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        new = self._refs()[ref]
+        self.assertNotEqual(new, sha)
+        self.assertEqual(_git(self.sb.remote, "rev-parse", f"{new}^"), sha, "fast-forward chain")
+        self.assertEqual(self._record(ref)["state"], "active")
+        mod = _load_frontier_module(a)
+        later = mod.now() + mod.PRESENCE_THROTTLE + dt.timedelta(minutes=1)
+        with mock.patch.object(mod, "now", return_value=later):
+            ok, _ = mod.presence_touch()
+        self.assertTrue(ok, "an unchanged record is re-pushed after the throttle interval")
+
+    def test_instance_is_stable_across_claim_transfers_and_distinct_from_session(self) -> None:
+        """Claim, release and a different claim keep one instance; lease sessions are not in it."""
+        a = self.sb.clone("a")
+        self._arrive(a, "agent", "--can", "shell,workflow-dispatch")
+        (ref,) = self._refs()
+        instance = self._record(ref)["instance"]
+        r = self.sb.run_frontier(a, "claim", "c1", "--by", "agent")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        session = _extract_session(r.stdout)
+        rec = self._record(ref)
+        self.assertEqual((rec["state"], rec["claim"], rec["instance"]), ("active", "c1", instance))
+        self.assertNotEqual(session, instance)
+        body = _git(self.sb.remote, "show", f"{ref}:presence.toml")
+        self.assertNotIn(session, body)
+        self.assertEqual(set(rec), {"schema", "participant", "instance", "state", "claim",
+                                    "capabilities", "started", "last_seen"})
+        r = self.sb.run_frontier(a, "release", "c1", "--session", session)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        rec = self._record(ref)
+        self.assertEqual((rec["state"], rec["claim"], rec["instance"]), ("idle", "", instance))
+        r = self.sb.run_frontier(a, "claim", "c2", "--by", "agent")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self._record(ref)["claim"], "c2")
+        self.assertEqual(list(self._refs()), [ref], "one instance, one ref, across claims")
+
+    def test_optional_capabilities_and_input_bounds(self) -> None:
+        """Capabilities may be absent; unsafe family, capability or state values are refused."""
+        a = self.sb.clone("a")
+        self._arrive(a, "agent")
+        (ref,) = self._refs()
+        self.assertEqual(self._record(ref)["capabilities"], [])
+        for bad in (["--as", "../evil"], ["--as", "Agent"], ["--as", "a" * 40],
+                    ["--as", "ok", "--can", "Shell"], ["--as", "ok", "--state", "departed"],
+                    ["--as", "ok", "--can", ",".join(f"c{i}" for i in range(17))]):
+            r = self.sb.run_frontier(a, "arrive", *bad)
+            self.assertNotEqual(r.returncode, 0, bad)
+        self.assertEqual(list(self._refs()), [ref])
+
+    def test_population_separates_instances_from_parked_and_released_holds(self) -> None:
+        """Reservations are counted apart from instances, parked included, released excluded."""
+        a = self.sb.clone("a")
+        b = self.sb.clone("b")
+        self._arrive(a, "agent")
+        r = self.sb.run_frontier(b, "claim", "c1", "--by", "other")  # b never arrives
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        session = _extract_session(r.stdout)
+        mod = _load_frontier_module(b)
+        sha, lease = mod.holds()["c2"] if "c2" in mod.holds() else (None, None)
+        parked = {"id": "c2", "holder": "x", "session": "abcdef012345", "phase": "parked",
+                  "pr": 7, "pr_head": "0" * 40, "claimed_at": mod.now().isoformat(),
+                  "expires": mod.now().isoformat(), "owned_paths": [], "mechanisms": [],
+                  "base": "", "released": False}
+        ok, out = mod.write_lease("c2", parked, sha, sha)
+        self.assertTrue(ok, out)
+        pop = self.sb.run_frontier(a, "population").stdout
+        self.assertIn("1 fresh", pop)
+        self.assertIn("live reservations (hold/*, not instances): 2 (1 parked, 1 work)", pop)
+        self.sb.run_frontier(b, "release", "c1", "--session", session)
+        pop = self.sb.run_frontier(a, "population").stdout
+        self.assertIn("live reservations (hold/*, not instances): 1 (1 parked)", pop)
+        self.assertIn("1 fresh", pop)
+
+    def test_graceful_departure_then_new_instance(self) -> None:
+        """Departure publishes a departed record; the next arrival is a new instance."""
+        a = self.sb.clone("a")
+        self._arrive(a)
+        (ref,) = self._refs()
+        r = self.sb.run_frontier(a, "depart")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self._record(ref)["state"], "departed")
+        self.assertIn("1 departed", self.sb.run_frontier(a, "population").stdout)
+        r = self.sb.run_frontier(a, "touch")
+        self.assertNotEqual(r.returncode, 0, "a departed checkout has nothing to refresh")
+        self._arrive(a)
+        self.assertEqual(len(self._refs()), 2)
+
+    def test_stale_records_are_unknown_not_dead_and_old_ones_are_pruned(self) -> None:
+        """Age past the TTL reads as stale/unknown; only long-stale or departed records prune."""
+        a = self.sb.clone("a")
+        b = self.sb.clone("b")
+        self._arrive(a)
+        (ref_a,) = self._refs()
+        mod = _load_frontier_module(b)
+        t3 = mod.now() + dt.timedelta(hours=3)
+        with mock.patch.object(mod, "now", return_value=t3):
+            lines = "\n".join(mod.presence_population())
+        self.assertIn("0 fresh", lines)
+        self.assertIn("1 stale or unknown", lines)
+        self.assertNotIn("dead", lines)
+        with mock.patch.object(mod, "now", return_value=t3):
+            self.assertEqual(mod.presence_prune(), 0, "3 h stale is not prunable")
+        t8 = mod.now() + dt.timedelta(days=8)
+        with mock.patch.object(mod, "now", return_value=t8):
+            lines = "\n".join(mod.presence_population())
+            self.assertIn("1 expired (unseen 7+ days)", lines)
+            self.assertIn("0 stale or unknown", lines)
+            rec, (ok, _) = mod.presence_arrive("agent", [])
+            self.assertTrue(ok)
+        refs = self._refs()
+        self.assertNotIn(ref_a, refs, "an 8-day-old record is pruned on another's arrival")
+        self.assertEqual(len(refs), 1)
+        # Bounded: at most PRESENCE_PRUNE_MAX deletions per write.
+        for i in range(5):
+            self._arrive(self.sb.clone(f"old-{i}"))
+        t16 = mod.now() + dt.timedelta(days=16)
+        with mock.patch.object(mod, "now", return_value=t16):
+            self.assertEqual(mod.presence_prune(), mod.PRESENCE_PRUNE_MAX)
+
+    def test_malformed_records_are_reported_never_trusted_or_deleted(self) -> None:
+        """Bad TOML, wrong keys, ref/record mismatch and oversized records count as malformed."""
+        a = self.sb.clone("a")
+        good = {"schema": 1, "participant": "agent", "instance": "0123456789abcdef",
+                "state": "active", "claim": "", "capabilities": [],
+                "started": "2026-11-27T00:00:00+00:00", "last_seen": "2026-11-27T00:00:00+00:00"}
+        mod = _load_frontier_module(a)
+        self._push_raw(a, "refs/heads/presence/agent/zzzz", "not = [toml")
+        self._push_raw(a, "refs/heads/presence/agent/0123456789abcdef",
+                       mod.presence_body(good) + 'session = "secret"\n')
+        self._push_raw(a, "refs/heads/presence/other/0123456789abcdef", mod.presence_body(good))
+        self._push_raw(a, "refs/heads/presence/agent/fedcba9876543210",
+                       mod.presence_body({**good, "instance": "fedcba9876543210"})
+                       + "#" * 4096 + "\n")
+        self._push_raw(a, "refs/heads/presence/flat", mod.presence_body(good))
+        self._push_raw(a, "refs/heads/presence/agent/1111111111111111",
+                       "a = " + "[" * 1020 + "]" * 1020 + "\n")  # RecursionError in tomllib
+        self._push_raw(a, "refs/heads/presence/agent/2222222222222222",
+                       mod.presence_body({**good, "instance": "2222222222222222"})
+                       .replace("schema = 1", "schema = true"))
+        self._push_raw(a, "refs/heads/presence/agent/3333333333333333",
+                       mod.presence_body({**good, "instance": "3333333333333333"})
+                       .replace('claim = ""', "claim = false"))
+        # presence.toml as a tree, sorting first: must not desynchronise later records.
+        sub = subprocess.run(["git", "-C", str(a), "mktree"], input="", capture_output=True,
+                             text=True, check=True).stdout.strip()
+        blob = subprocess.run(["git", "-C", str(a), "hash-object", "-w", "--stdin"],
+                              input="x" * 300, capture_output=True, text=True,
+                              check=True).stdout.strip()
+        inner = subprocess.run(["git", "-C", str(a), "mktree"],
+                               input=f"100644 blob {blob}\tz\n040000 tree {sub}\ty\n",
+                               capture_output=True, text=True, check=True).stdout.strip()
+        tree = subprocess.run(["git", "-C", str(a), "mktree"],
+                              input=f"040000 tree {inner}\tpresence.toml\n",
+                              capture_output=True, text=True, check=True).stdout.strip()
+        _git(a, "push", "-q", "origin",
+             f"{_git(a, 'commit-tree', tree, '-m', 'tree')}:refs/heads/presence/aaa/0000000000000000")
+        ok_ref = "refs/heads/presence/zzz/4444444444444444"
+        self._push_raw(a, ok_ref, mod.presence_body(
+            {**good, "participant": "zzz", "instance": "4444444444444444",
+             "last_seen": mod.now().isoformat()}))
+        lines = "\n".join(mod.presence_population())
+        self.assertIn("9 malformed", lines)
+        self.assertIn("1 fresh", lines, "a record after a hostile one is still read correctly")
+        self.assertIn("zzz/44444444", lines)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), mock.patch.object(
+            mod, "read_open_prs", return_value=([], None)
+        ):
+            mod.brief({"shell"})
+        self.assertIn("9 malformed", buf.getvalue())
+        with mock.patch.object(mod, "presence_records", side_effect=RecursionError):
+            self.assertIn("unknown (error", mod.presence_population()[0])
+        t = mod.now() + dt.timedelta(days=30)
+        with mock.patch.object(mod, "now", return_value=t):
+            self.assertEqual(mod.presence_prune(), 1, "only the well-formed record is pruned")
+        self.assertEqual(len(self._refs()), 9)
+
+    def test_unavailable_remote_and_refused_presence_never_block_claim_work(self) -> None:
+        """Presence failure is reported; claims still succeed and population says unknown."""
+        a = self.sb.clone("a")
+        self._arrive(a)
+        hook = self.sb.remote / "hooks" / "pre-receive"
+        hook.write_text(
+            "#!/bin/sh\nwhile read old new ref; do case \"$ref\" in refs/heads/presence/*)"
+            " echo refused >&2; exit 1;; esac; done\nexit 0\n"
+        )
+        hook.chmod(0o755)
+        r = self.sb.run_frontier(a, "claim", "c1", "--by", "agent")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("acquired c1", r.stdout)
+        self.assertIn("presence not refreshed", r.stderr)
+        b = self.sb.clone("b")
+        _git(b, "remote", "set-url", "origin", str(self.sb.tmp / "missing.git"))
+        mod = _load_frontier_module(b)
+        lines = mod.presence_population()
+        self.assertIn("unknown (origin unavailable)", lines[0])
+        with mock.patch.object(mod, "presence_touch", side_effect=RuntimeError("boom")):
+            mod.presence_checkpoint("active", "c1")  # never raises
+
+    def test_cleanup_racing_refresh_cannot_delete_a_refreshed_record(self) -> None:
+        """Cleanup deletes by exact SHA, so a refresh in between survives; a pruned record returns."""
+        a = self.sb.clone("a")
+        b = self.sb.clone("b")
+        self._arrive(a)
+        (ref,) = self._refs()
+        pruner = _load_frontier_module(b)
+        t8 = pruner.now() + dt.timedelta(days=8)
+        with mock.patch.object(pruner, "now", return_value=t8):
+            snapshot = pruner.presence_records()
+        r = self.sb.run_frontier(a, "touch", "--state", "active")  # refresh lands first
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        refreshed = self._refs()[ref]
+        with (
+            mock.patch.object(pruner, "now", return_value=t8),
+            mock.patch.object(pruner, "presence_records", return_value=snapshot),
+        ):
+            self.assertEqual(pruner.presence_prune(), 0)
+        self.assertEqual(self._refs()[ref], refreshed)
+        # Prune wins the other way round: the owner's next refresh recreates its record.
+        with mock.patch.object(pruner, "now", return_value=t8 + dt.timedelta(days=8)):
+            self.assertEqual(pruner.presence_prune(), 1)
+        self.assertNotIn(ref, self._refs())
+        r = self.sb.run_frontier(a, "touch", "--state", "idle")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self._record(ref)["state"], "idle")
+
+    def test_presence_leaves_admission_holds_and_scheduling_unchanged(self) -> None:
+        """No epoch mutation, no hold refs, no slot use, and an unarrived client writes nothing."""
+        a = self.sb.clone("a")
+        b = self.sb.clone("b")
+        r = self.sb.run_frontier(b, "claim", "c3", "--by", "b")  # creates the admission epoch
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self._refs(), {}, "a client that never arrived publishes nothing")
+        before = (self._refs("refs/heads/frontier-admission"), self._refs("refs/heads/hold/"))
+        mod_b = _load_frontier_module(b)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), mock.patch.object(
+            mod_b, "read_open_prs", return_value=([], None)
+        ):
+            mod_b.brief({"shell"})
+        take_before = buf.getvalue().split("## What you can take", 1)[1].split("##", 1)[0]
+        for i in range(6):
+            self._arrive(self.sb.clone(f"p{i}"), "agent", "--state", "active")
+        self._arrive(a)
+        self.sb.run_frontier(a, "touch", "--state", "active", "--claim", "c4")
+        self.sb.run_frontier(a, "depart")
+        after = (self._refs("refs/heads/frontier-admission"), self._refs("refs/heads/hold/"))
+        self.assertEqual(before, after)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), mock.patch.object(
+            mod_b, "read_open_prs", return_value=([], None)
+        ):
+            mod_b.brief({"shell"})
+        out = buf.getvalue()
+        self.assertEqual(out.split("## What you can take", 1)[1].split("##", 1)[0], take_before)
+        self.assertIn("6 fresh", out.split("## Population", 1)[1])
+        self.assertIn("1 departed", out.split("## Population", 1)[1])
+        # A presence claiming c4 does not reserve it: another agent can still claim c4.
+        r = self.sb.run_frontier(b, "claim", "c4", "--by", "b")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 
 if __name__ == "__main__":

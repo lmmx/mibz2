@@ -444,9 +444,11 @@ fn run_one(
             store_missing += miss;
         }
         if arm.ideal_c {
-            let (_, _, _, conf, miss) = ic::store_size();
+            let (_, distinct, _, conf, _) = ic::store_size();
             store_conflicts += conf;
-            store_missing += miss;
+            if distinct == 0 {
+                store_missing += 1;
+            }
         }
         if store_conflicts > 0 || store_missing > 0 {
             eprintln!(

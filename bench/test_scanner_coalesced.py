@@ -1,10 +1,12 @@
 """Frozen scanner CLI score and plan regression checks."""
 
+from pathlib import Path
 import subprocess
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from scanner_coalesced import CELLS, ROUNDS, InvalidRun, measure, plan, score
+from scanner_coalesced import CELLS, ROUNDS, InvalidRun, materialize_sources, measure, plan, score
 
 
 def samples():
@@ -25,6 +27,43 @@ def samples():
             )
         )
     return rows
+
+
+class ScannerSources(unittest.TestCase):
+    def test_pins_absent_from_shallow_runner(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(cwd, *args):
+                return subprocess.check_output(["git", *args], cwd=cwd, text=True).strip()
+
+            origin = root / "origin"
+            git(root, "init", "-q", "-b", "main", origin)
+            git(origin, "config", "user.email", "fixture@example.invalid")
+            git(origin, "config", "user.name", "fixture")
+
+            def commit(text):
+                (origin / "data").write_text(text)
+                git(origin, "add", "data")
+                git(origin, "commit", "-qm", text)
+                return git(origin, "rev-parse", "HEAD")
+
+            base, head = commit("baseline"), commit("squash")
+            commit("recipe")
+            runner = root / "runner"
+            git(root, "clone", "-q", "--depth=1", origin.as_uri(), runner)
+            self.assertEqual(git(runner, "rev-parse", "--is-shallow-repository"), "true")
+            for sha in (head, base):
+                self.assertNotEqual(
+                    subprocess.run(["git", "cat-file", "-e", sha], cwd=runner).returncode, 0
+                )
+            materialize_sources(root / "good", runner, head, base)
+            for arm, pin, content in (("head", head, "squash"), ("base", base, "baseline")):
+                tree = root / "good" / arm
+                self.assertEqual(git(tree, "rev-parse", "HEAD"), pin)
+                self.assertEqual((tree / "data").read_text(), content)
+            with self.assertRaisesRegex(InvalidRun, "first parent"):
+                materialize_sources(root / "wrong-base", runner, head, head)
 
 
 class ScannerVerdict(unittest.TestCase):

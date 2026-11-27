@@ -72,14 +72,30 @@ def machine(out):
     return scanner, mask
 
 
-def build(out, tmp):
-    if output("git", "rev-parse", HEAD + "^") != BASE:
+def materialize_sources(tmp, checkout, head, base):
+    # The workstation checks out the recipe shallowly. Fetch its two historical
+    # inputs into a private repository, without changing the runner's checkout.
+    origin = output("git", "remote", "get-url", "origin", cwd=checkout)
+    source = tmp / "head"
+    subprocess.run(["git", "init", "-q", source], check=True)
+    subprocess.run(
+        ["git", "fetch", "-q", "--depth=2", "--no-tags", origin, head], cwd=source, check=True
+    )
+    if output("git", "rev-parse", "FETCH_HEAD", cwd=source) != head:
+        raise InvalidRun("the fetched squash differs from the registered head")
+    if output("git", "rev-parse", "FETCH_HEAD^", cwd=source) != base:
         raise InvalidRun("the control is not the scanner squash's first parent")
+    subprocess.run(["git", "checkout", "-q", "--detach", head], cwd=source, check=True)
+    subprocess.run(
+        ["git", "worktree", "add", "-q", "--detach", tmp / "base", base], cwd=source, check=True
+    )
+
+
+def build(out, tmp):
+    materialize_sources(tmp, ROOT, HEAD, BASE)
     bins = {}
-    for arm, sha in (("base", BASE), ("head", HEAD)):
+    for arm in ("base", "head"):
         source = tmp / arm
-        subprocess.run(["git", "clone", "-q", "--local", "--no-checkout", ROOT, source], check=True)
-        subprocess.run(["git", "checkout", "-q", "--detach", sha], cwd=source, check=True)
         if output("git", "rev-parse", "HEAD:examples/phases.rs", cwd=source) != PHASES_BLOB:
             raise InvalidRun("the registered phases producer has changed")
         helper = source / "examples/scanner_coalesced_run.rs"
@@ -140,11 +156,9 @@ def build(out, tmp):
     (out / "bmi2.asm").write_text(assembly + "\n")
     if "shlx" not in assembly or "shrx" not in assembly or "vzeroupper" in assembly:
         raise InvalidRun("registered BMI2 code generation not observed")
-    (out / "registration.md").write_text(
-        output(
-            "git", "show", HEAD + ":docs/journal/2026-11-26-scanner-coalesced-u8/registration.md"
-        )
-        + "\n"
+    shutil.copyfile(
+        tmp / "head/docs/journal/2026-11-26-scanner-coalesced-u8/registration.md",
+        out / "registration.md",
     )
     return bins
 

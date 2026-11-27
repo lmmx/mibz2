@@ -1,0 +1,24 @@
+id = "a6b-endpoint-successor-queue"
+title = "Queue the source-checkout repair for the first measured A6b i9 attempt"
+kind = "run"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "done"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+needs_louis = ""
+question = """
+Can bench-a6b-endpoint return its first measured C6 bundle? The i9 consumed recipe 02e492a7aa9980fa710ae93c1b6e761f2214d18e before source checkout succeeded. Its archive b87790e5f6aec4871f36e56d110151e3064834b1 is INCOMPLETE. Successor #1127 repairs checkout and keeps the registered source, scorer and experiment.
+"""
+why = """
+The existing static queue row names bench/a6b-endpoint-redesign. The 9 November standing authorisation and the integrated #1104 request protocol permit one signal for an independently reviewed, green successor. Preserve the original receipt and release the shared queue lease once its row and successor ready tag are verified.
+"""
+stop_test = """
+Verify an exclusive live queue lease, exactly one matching master row, evidence and queue history, ready and hold tags, request refs and receipts. Stop for a prior successor attempt, another live request or queue lease, an active hold, changed branch, red or incomplete checks, or unresolved review. Bind the #1127 review 6084933547 and head bdcfeeeb2154a90dda0f24ea8069cb8710168184 to bench/a6b-endpoint-redesign and frozen #1053 source faa9df70f98d72ece27befebb966a9d9683b6dd9. Use the default-branch request publisher with the existing row and supersedes 02e492a7aa9980fa710ae93c1b6e761f2214d18e. Verify ready/bench-a6b-endpoint and its receipt on the remote. Never request the consumed original SHA.
+"""
+done_when = """
+The existing queue row and reviewed successor ready tag are verified, the resulting coordinates are recorded, and the queue path is released. The evidence reader verifies the immutable hardware result against the original C6 registration.
+"""
+premises = ["frontier/claims/a6b-endpoint-run.toml", "frontier/claims/a6b-endpoint-build.toml", "bench/workstation-queue.txt", "bench/run-queue.sh"]
+links = ["https://github.com/lmmx/mibz2/pull/1053", "https://github.com/lmmx/mibz2/pull/1085", "https://github.com/lmmx/mibz2/pull/1127"]

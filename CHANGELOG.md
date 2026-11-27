@@ -7,6 +7,409 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.16](https://github.com/lmmx/mibz2/compare/v0.5.15...v0.5.16) - 2026-11-27
+
+### <!-- 3 -->Performance
+
+- *(runs)* widen takes_runs admission to 75% with 12.5% widened-band guard ([#1175](https://github.com/lmmx/mibz2/pull/1175))
+- *(python)* add 1 MiB chunked BZ2Reader.readall() and fast read() path ([#1176](https://github.com/lmmx/mibz2/pull/1176))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* record 0.5.15 i9 crossover verdict and add #1176 ledger row ([#1180](https://github.com/lmmx/mibz2/pull/1180))
+- *(changelog)* 0.5.15 measured notes, feature review, moonshot lockfile, and partial delta ([#1171](https://github.com/lmmx/mibz2/pull/1171))
+- *(explore)* measure bzip2 Huffman self-synchronisation and the selector-count obstruction (STOP) ([#1166](https://github.com/lmmx/mibz2/pull/1166))
+
+### <!-- 6 -->Testing
+
+- *(in-place)* allow Runs-route exact block capacity in trace growth check ([#1185](https://github.com/lmmx/mibz2/pull/1185))
+
+### <!-- 9 -->Other
+
+- record workstation-pressure integration blocked by agent-presence path hold ([#1187](https://github.com/lmmx/mibz2/pull/1187))
+- open release-0-5-16 at P1 ([#1186](https://github.com/lmmx/mibz2/pull/1186))
+- frozen i9 recipe for the text-panel knee probe (text-knee-i9) ([#1139](https://github.com/lmmx/mibz2/pull/1139))
+- dissect src/rle.rs 2-load m1 filter & zero-vzeroupper raw-AVX2 unrle (PASS) ([#1178](https://github.com/lmmx/mibz2/pull/1178))
+- *(parallel)* dissect v0.5.15 5T/7T/9T crossover cliffs and stale LAZY_FROM_THREADS ([#1182](https://github.com/lmmx/mibz2/pull/1182))
+- admit segmented-fused-postwalk (idea -> open) ([#1181](https://github.com/lmmx/mibz2/pull/1181))
+- open crc32-avx2-ring-barrett-build ([#1177](https://github.com/lmmx/mibz2/pull/1177))
+- Record 0.5.15 i9 release-scaling run and close release-0-5-15 ([#1174](https://github.com/lmmx/mibz2/pull/1174))
+- admit post-1080-takes-runs (idea -> open) ([#1173](https://github.com/lmmx/mibz2/pull/1173))
+- record physical i9-10900K STOP verdict for jcc-aligned-release-build ([#1172](https://github.com/lmmx/mibz2/pull/1172))
+
+- **Faster decoding of compressible non-Wikidata blocks (#1175).** The Runs route now admits blocks
+  whose alphabet bound is up to three quarters of the block's maximum (from one half), provided at
+  least 12.5% of their symbols are runs in the widened band. Markdown, ELF, JSON, prose and source
+  blocks with 17–49% run symbols take the branchless run path: MTF plus inverse BWT CPU fell
+  −13% to −32% on markdown, −15% to −25% on ELF and −9% to −10% on JSON across baseline, native and
+  32-byte-aligned builds (local probe, 658/658 blocks exact). No block of Wikidata, `text`,
+  `random`, `records`, `runs`, `onebyte` or `pattern` changes route.
+- **Faster `BZ2Reader.readall()` from Python (#1176):** read in 1 MiB chunks and joined, with a
+  fast path for `read()`.
+
+**The paired run on CI** compared v0.5.15 at `aaaee363` with master at `66511da9` (Benchmark run
+[46035127124](https://github.com/lmmx/mibz2/actions/runs/46035127124), **AMD EPYC 9V74 80-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in frontier data and version numbers from `66511da9` to the `v0.5.16` tag commit `4e261140`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **no change detected** on the four
+  measures at this run's precision. No corpus is faster or slower at any thread count; Wikidata
+  wall is −0.2% / −0.5% / +0.4% at 1/2/4 threads, every interval spanning no change; the
+  one-thread stage total is 5.83 → 5.91 c/B (+0.2% [−1.6%, +2.1%]).
+- **Why:** none of CI's seven corpora has blocks in the widened band, so #1175's gain is not
+  exercised there. That it routes no CI corpus differently is what the run confirms.
+
+**Features reviewed (RELEASING §3.3):** none was removed; the `[features]` table is unchanged since
+0.5.15 (the same 20 research features). The follow-ons listed under 0.5.15 stand:
+`a6b-endpoint-redesign` is ready for a removal PR; `owned-writer` has no retention note; and
+`memory-lever`, `phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and
+`grammar-replay` remain to be checked against their removal conditions.
+
+**Worker counts (RELEASING §5c):** not recalibrated. #1175 changes no block's route on Wikidata,
+the corpus the trims are measured on, and 0.5.15's crossover left the team threshold unmoved.
+
+**Release scaling (RELEASING §5):** 0.5.16 against 0.5.15 on the i9-10900K
+(`release-scaling/run-20261127T170116Z`, evidence `4710ef99`, sha256 `13998ef2…ab8a`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.16/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical): **unchanged at every thread count**, as expected for
+a release that moves no Wikidata block's route.
+- **Pinned (1–10 threads, one CPU per core):** 0.5.15/0.5.16 wall is 1.012 [0.989, 1.035] at
+  1 thread, 1.003 [0.980, 1.026] at 2, 0.994 [0.964, 1.025] at 4, 1.005 [0.999, 1.011] at 8 and
+  1.007 [0.992, 1.022] at 10.
+- **Unpinned (12–20 threads):** 0.995 [0.942, 1.050] at 12, 0.984 [0.955, 1.015] at 16 and 1.025
+  [0.974, 1.079] at 20. Peak RSS 28–71 MB, within 4 MB of 0.5.15 at every count.
+- **Attribution (RELEASING §5b):** no step clears the bar; no row.
+
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261127T171216Z`, evidence
+`51183982` (sha256 `be8305bd…cd8f`, commit `4e261140`, 10 rounds on Wikidata, 400/400 same bytes).
+No forced arm is faster than the shipped decoder at any count where it changes the plan:
+`mibz2-workers-w` is 0.984 [0.959, 1.009] at 4 threads (CPU 1.066), 1.316 at 6, 1.057 at 8 and
+1.052 at 10; `mibz2-team2` and `mibz2-team3` are 1.21–2.35 wall at 4–10 threads. Sanity (the same
+plan as shipped): 1.002 [0.991, 1.014] at 5, 0.977 [0.951, 1.004] at 7 and 1.017 [0.992, 1.042]
+at 9 threads, each spanning 1. SMT counts (12, 16, 20), reported only: workers-w 1.025–1.144.
+
+## [0.5.15](https://github.com/lmmx/mibz2/compare/v0.5.14...v0.5.15) - 2026-11-27
+
+### <!-- 1 -->Features
+
+- *(site)* one-tap copy of a blog post's announcement ([#1113](https://github.com/lmmx/mibz2/pull/1113))
+
+### <!-- 2 -->Bug Fixes
+
+- *(bench)* fix mtf_fold SC oracle store check and shallow-checkout hardening ([#1138](https://github.com/lmmx/mibz2/pull/1138))
+- *(parallel)* gate workers on ready cap and bound free_out bytes ([#1129](https://github.com/lmmx/mibz2/pull/1129))
+- *(frontier)* reconcile ordinary leases for terminal merged claims ([#1047](https://github.com/lmmx/mibz2/pull/1047))
+- *(frontier)* make submitted work discoverable, transferable and recoverable ([#974](https://github.com/lmmx/mibz2/pull/974))
+- *(frontier)* harden tooling against the initial stress-test gaps
+
+### <!-- 3 -->Performance
+
+- *(bwt,runs)* sequential LF column build, trusted fill_avx2, and AVX2 reverse assembly ([#1080](https://github.com/lmmx/mibz2/pull/1080))
+- *(open)* fused endpoint setup, 64K SoA induction and generation-tagged dictionary behind research feature ([#1053](https://github.com/lmmx/mibz2/pull/1053))
+- *(python)* single-copy Reader::read via BufRead::fill_buf ([#1033](https://github.com/lmmx/mibz2/pull/1033))
+- *(open)* precheck dense-band cap from run records before first pass ([#1040](https://github.com/lmmx/mibz2/pull/1040))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* enforce claims-match-state reader gate against ledger ([#1159](https://github.com/lmmx/mibz2/pull/1159))
+- *(blog)* publish hardware verdicts and measurement traps post ([#1140](https://github.com/lmmx/mibz2/pull/1140))
+- *(journal)* freeze pre-data hybrid-registration.md for slack-only hybrid scanning ([#1142](https://github.com/lmmx/mibz2/pull/1142))
+- *(blog)* publish L2 cliff, 15-register wall and flipped eight-worker knee post ([#1099](https://github.com/lmmx/mibz2/pull/1099))
+- *(blog)* publish 6 GB/s bzip2 decoder architecture post ([#1061](https://github.com/lmmx/mibz2/pull/1061))
+- *(synthesis)* eighth pass unifying 4-lane vectored pipeline, 6 GB/s contour, JCC control, and PR DAG ([#1064](https://github.com/lmmx/mibz2/pull/1064))
+- *(explore)* quantify slack-only hybrid scanning on the path to 6 GB/s ([#1056](https://github.com/lmmx/mibz2/pull/1056))
+- *(blog)* publish A6b safe 64K redesign and Segmented fallback post ([#1054](https://github.com/lmmx/mibz2/pull/1054))
+- *(synthesis)* seventh pass on worker rescues, 4-lane vectored convergence, joint L3 footprint, and queue order ([#1052](https://github.com/lmmx/mibz2/pull/1052))
+- *(explore)* dissect M, OutQ16 tail-guards, and mtf-fold ([#1010](https://github.com/lmmx/mibz2/pull/1010)) register spills ([#1048](https://github.com/lmmx/mibz2/pull/1048))
+- *(blog)* publish off-Wikidata route census and eight-worker coupling dissection ([#1039](https://github.com/lmmx/mibz2/pull/1039))
+- *(synthesis)* sixth pass reconciling scanner stack, 8W coupling, and non-wikidata axis ([#1037](https://github.com/lmmx/mibz2/pull/1037))
+- *(explore)* dissect 8-worker coupling gap from primary traces ([#1035](https://github.com/lmmx/mibz2/pull/1035))
+- *(explore)* route census off wikidata; dense band refuses every block ([#1023](https://github.com/lmmx/mibz2/pull/1023))
+- *(ops)* exact master ruleset for the approved branch protection ([#1018](https://github.com/lmmx/mibz2/pull/1018))
+- *(journal)* price labelled powers and gather doubling of the return map; both stop ([#1016](https://github.com/lmmx/mibz2/pull/1016))
+- *(blog)* review the floor-correction notes, fix the cold-store clause, close the card ([#1007](https://github.com/lmmx/mibz2/pull/1007))
+- *(ideal-parts)* freeze warm paired-oracle K1 protocol ([#1001](https://github.com/lmmx/mibz2/pull/1001))
+- *(team)* archive coordinator-era role specs, MODE and inbox protocol ([#977](https://github.com/lmmx/mibz2/pull/977))
+- *(blog)* lead with 4.31 GB/s and the path to faster algorithms ([#984](https://github.com/lmmx/mibz2/pull/984))
+- *(blog)* add measured zero-copy floor beside published plumbing forecasts ([#975](https://github.com/lmmx/mibz2/pull/975))
+- *(blog)* clarify optional vocabulary and the three-hold canary ([#971](https://github.com/lmmx/mibz2/pull/971))
+- *(blog)* publish the decoder's true floor and the limits of a pooled scan ([#972](https://github.com/lmmx/mibz2/pull/972))
+- *(blog)* record first-day frontier feedback and learned cooperation ([#967](https://github.com/lmmx/mibz2/pull/967))
+- *(frontier)* autonomous publication and conversational participation ([#964](https://github.com/lmmx/mibz2/pull/964))
+- *(delivery)* characterise delivery copy-out options and L3 working-set cliff ([#966](https://github.com/lmmx/mibz2/pull/966))
+- *(blog)* publish dropping the coordinator
+- *(frontier)* integrate coordinator-era PR triage audit
+- *(frontier)* draft floor-and-pooled-scan blog post with inline SVG figures ([#953](https://github.com/lmmx/mibz2/pull/953))
+- *(frontier)* draft the-frontier blog post with inline SVG figures ([#950](https://github.com/lmmx/mibz2/pull/950))
+- *(frontier)* outline floor-and-pooled-scan blog post ([#949](https://github.com/lmmx/mibz2/pull/949))
+- *(frontier)* outline the-frontier blog post ([#947](https://github.com/lmmx/mibz2/pull/947))
+- *(changelog)* 0.5.14, its two i9 worker-plan changes, the paired run and the feature review ([#887](https://github.com/lmmx/mibz2/pull/887))
+
+### <!-- 7 -->Build System and CI
+
+- diff the PR merge commit against its first parent, not the event's stale base ([#1036](https://github.com/lmmx/mibz2/pull/1036))
+- classify frontier/limits.toml as lightweight and clear stale pointers ([#1020](https://github.com/lmmx/mibz2/pull/1020))
+- run only relevant heavy checks; integration is author-owned outside substantive risks ([#995](https://github.com/lmmx/mibz2/pull/995))
+
+### <!-- 9 -->Other
+
+- queue bench-jcc-aligned-release at reviewed head 256566b7ceaa ([#1167](https://github.com/lmmx/mibz2/pull/1167))
+- delta for integrating #1163 and holding #1124 ([#1169](https://github.com/lmmx/mibz2/pull/1169))
+- dissect CRC-32/BZIP2 Port-5 floor and admit crc32-avx2-ring-barrett-build ([#1163](https://github.com/lmmx/mibz2/pull/1163))
+- frozen C6 registration and i9 recipe for 32-byte branch alignment ([#1119](https://github.com/lmmx/mibz2/pull/1119))
+- delta for the independent C6 review of #1119 ([#1165](https://github.com/lmmx/mibz2/pull/1165))
+- resolve the #1034 CI acceptance flag ([#1164](https://github.com/lmmx/mibz2/pull/1164))
+- dissect non-Open src/mtf.rs (mtf_checkpoints_avx2 & mtf_avx2) (STOP) ([#1162](https://github.com/lmmx/mibz2/pull/1162))
+- Forensic L3/RSS dissection and compact-footprint rescue probe of A6b (STOP) ([#1161](https://github.com/lmmx/mibz2/pull/1161))
+- enforce ledger-backed blog cards and add frontier.py news ([#1160](https://github.com/lmmx/mibz2/pull/1160))
+- dissect post-#1080 Segmented BWT and admit segmented-fused-postwalk ([#1155](https://github.com/lmmx/mibz2/pull/1155))
+- add shipped-changes ledger and checker tool ([#1156](https://github.com/lmmx/mibz2/pull/1156))
+- fourteenth synthesis pass — i9 verdicts, L3-footprint law, and P1 release bottleneck ([#1158](https://github.com/lmmx/mibz2/pull/1158))
+- post-#1080 runs::takes_runs route-boundary dissection across 14 corpora ([#1154](https://github.com/lmmx/mibz2/pull/1154))
+- *(scan)* post-#1034 A3 dissection — K=3 single-u32 u8-chunk + pipelined 4-step refill PASS ([#1153](https://github.com/lmmx/mibz2/pull/1153))
+- *(open)* dissect A6c wiring and validate safe Cell wire_xor & overlapping-SIMD wire ([#1152](https://github.com/lmmx/mibz2/pull/1152))
+- Releases are P1 once recognised; a batch of accepted default-path changes is releasable ([#1149](https://github.com/lmmx/mibz2/pull/1149))
+- three claims to source the blog's news from a ledger of what shipped ([#1148](https://github.com/lmmx/mibz2/pull/1148))
+- the 27 November swarm posts rewritten for outside readers; originals to the notebook ([#1150](https://github.com/lmmx/mibz2/pull/1150))
+- Blog and lab notebook: posts are news for the world; shorthand goes in the notebook ([#1146](https://github.com/lmmx/mibz2/pull/1146))
+- record physical i9 verdicts for scanner-coalesced and a6b-endpoint ([#1151](https://github.com/lmmx/mibz2/pull/1151))
+- post-#1080 OpenCells vs Segmented route crossover across 9 corpora ([#1145](https://github.com/lmmx/mibz2/pull/1145))
+- *(python)* dissect Python binding delivery overhead and validate PyBytesWriter streaming ([#1147](https://github.com/lmmx/mibz2/pull/1147))
+- admit scanner-adaptive-seam-window ([#1143](https://github.com/lmmx/mibz2/pull/1143))
+- *(scan)* dissect #1118 7.49 ms residual in_maint and validate adaptive seam window ([#1141](https://github.com/lmmx/mibz2/pull/1141))
+- *(bench)* controlled A/A and 24-run CI dissection of pattern 4T arm bias ([#1137](https://github.com/lmmx/mibz2/pull/1137))
+- record recovery of the P1 workstation queue ([#1136](https://github.com/lmmx/mibz2/pull/1136))
+- admit P2 text-knee-i9 probe ([#1135](https://github.com/lmmx/mibz2/pull/1135))
+- record ready/bench-scanner-coalesced dispatch at 96e574a7 ([#1134](https://github.com/lmmx/mibz2/pull/1134))
+- thirteenth synthesis pass (i9 seam-window verdict, shallow-runner invariant, #1034 pattern synthesis) ([#1133](https://github.com/lmmx/mibz2/pull/1133))
+- record activated A6b successor ready tag and close queue claim ([#1131](https://github.com/lmmx/mibz2/pull/1131))
+- resume the corrected scanner comparison on the existing queue row ([#1130](https://github.com/lmmx/mibz2/pull/1130))
+- fetch the registered A6b source into the private build checkout ([#1127](https://github.com/lmmx/mibz2/pull/1127))
+- fetch the exact scanner comparison from a shallow i9 checkout ([#1126](https://github.com/lmmx/mibz2/pull/1126))
+- admit the repaired A6b queue successor ([#1128](https://github.com/lmmx/mibz2/pull/1128))
+- *(scan)* refute per-block fixed cost on pattern and dissect #1034 4T CI spike ([#1111](https://github.com/lmmx/mibz2/pull/1111))
+- admit P2 mtf-fold-l1-batch-redesign ([#1125](https://github.com/lmmx/mibz2/pull/1125))
+- record incomplete A6b evidence and reopen source preparation ([#1122](https://github.com/lmmx/mibz2/pull/1122))
+- admit the coalesced scanner shallow-source correction ([#1123](https://github.com/lmmx/mibz2/pull/1123))
+- Walk the open kernel's cycle in four lanes from 16 sampled anchors (research feature) ([#1110](https://github.com/lmmx/mibz2/pull/1110))
+- admit P2 ready-cap-worker-gate ([#1121](https://github.com/lmmx/mibz2/pull/1121))
+- *(queue)* enqueue bench-a6b-endpoint for #1053/#1085 ([#1116](https://github.com/lmmx/mibz2/pull/1116))
+- record NOT ADOPTED for the i9 seam window ([#1118](https://github.com/lmmx/mibz2/pull/1118))
+- run requests on refs, reconciled into the ready signals ([#1104](https://github.com/lmmx/mibz2/pull/1104))
+- CI's paired bench has a head-arm bias on pattern at 4 threads ([#1108](https://github.com/lmmx/mibz2/pull/1108))
+- admit P1 jcc-aligned-release-build claim ([#1115](https://github.com/lmmx/mibz2/pull/1115))
+- record the A6b ready-signal ordering constraint ([#1114](https://github.com/lmmx/mibz2/pull/1114))
+- hand off the reviewed coalesced scanner i9 queue ([#1112](https://github.com/lmmx/mibz2/pull/1112))
+- *(synthesise)* twelfth pass, aligned codegen puts the scanner on the k = 8 knee ([#1109](https://github.com/lmmx/mibz2/pull/1109))
+- *(queue)* enqueue bench-scanner-seam-window for #1031 ([#1106](https://github.com/lmmx/mibz2/pull/1106))
+- register the frozen coalesced scanner i9 keep/revert run ([#1105](https://github.com/lmmx/mibz2/pull/1105))
+- register P1 claim blog-announcement-copy ([#1102](https://github.com/lmmx/mibz2/pull/1102))
+- station-balance-aligned CONFIRMED on VM, JCC 32B shift is station-uneven on wikidata ([#1107](https://github.com/lmmx/mibz2/pull/1107))
+- *(synthesise)* eleventh pass, admission counts places, not bytes ([#1103](https://github.com/lmmx/mibz2/pull/1103))
+- hand off the green seam-window run for dispatch ([#1101](https://github.com/lmmx/mibz2/pull/1101))
+- admit observational agent presence ([#1100](https://github.com/lmmx/mibz2/pull/1100))
+- admit the coalesced scanner workstation recipe ([#1098](https://github.com/lmmx/mibz2/pull/1098))
+- admit P1 repository-native ready signal redesign ([#1091](https://github.com/lmmx/mibz2/pull/1091))
+- close segmented-fallback-build after PR #1080 merge ([#1097](https://github.com/lmmx/mibz2/pull/1097))
+- close the integrated A6b workstation recipe ([#1096](https://github.com/lmmx/mibz2/pull/1096))
+- run-only blocks' memory follows the window, not the ready cap ([#1094](https://github.com/lmmx/mibz2/pull/1094))
+- independent review of the A6b endpoint recipe ([#1095](https://github.com/lmmx/mibz2/pull/1095))
+- implement the registered A6b endpoint workstation run ([#1085](https://github.com/lmmx/mibz2/pull/1085))
+- delta for the independent B5 review of #1080 ([#1092](https://github.com/lmmx/mibz2/pull/1092))
+- *(synthesise)* tenth pass, the knee is conditional on corpus and codegen ([#1090](https://github.com/lmmx/mibz2/pull/1090))
+- a6b-endpoint-build reviewed and merged ([#1053](https://github.com/lmmx/mibz2/pull/1053)); mark done ([#1088](https://github.com/lmmx/mibz2/pull/1088))
+- admit the reviewed A6b queue handoff ([#1089](https://github.com/lmmx/mibz2/pull/1089))
+- record the ready-signal capability blocker and handoff ([#1086](https://github.com/lmmx/mibz2/pull/1086))
+- record the reviewed seam-window workstation candidate ([#1087](https://github.com/lmmx/mibz2/pull/1087))
+- post-#1046 A6b second-pass dissection & safe-Rust redesign probe (STOP) ([#1079](https://github.com/lmmx/mibz2/pull/1079))
+- station balance off wikidata; the knee is corpus-dependent ([#1075](https://github.com/lmmx/mibz2/pull/1075))
+- mark scanner-coalesced-u8-decode done after #1034 ([#1083](https://github.com/lmmx/mibz2/pull/1083))
+- record the scanner’s exact-head CI acceptance objection ([#1084](https://github.com/lmmx/mibz2/pull/1084))
+- whole-decoder and per-station Intel JCC 32B alignment audit ([#1077](https://github.com/lmmx/mibz2/pull/1077))
+- admit the seam-window workstation queue handoff ([#1082](https://github.com/lmmx/mibz2/pull/1082))
+- coalesced same-selector runs, byte-aligned u8 LUT, zero-skip syms reuse, block-level BMI2 dispatch ([#1034](https://github.com/lmmx/mibz2/pull/1034))
+- admit the A6b workstation recipe dependency ([#1081](https://github.com/lmmx/mibz2/pull/1081))
+- admit P1 stigmergic workstation replenishment ([#1078](https://github.com/lmmx/mibz2/pull/1078))
+- W4_v3 MLP & memory-layout probe on Open A7 (STOP) ([#1076](https://github.com/lmmx/mibz2/pull/1076))
+- P1 for workstation-validation dependencies ([#1070](https://github.com/lmmx/mibz2/pull/1070))
+- *(synthesise)* ninth pass, knee flips to worker-bound; reprioritise vectored build and A2 scanner ([#1074](https://github.com/lmmx/mibz2/pull/1074))
+- encoder dependence of the decoder baseline (runt slot dilution) ([#1073](https://github.com/lmmx/mibz2/pull/1073))
+- mark release-terminal-holds done ([#1072](https://github.com/lmmx/mibz2/pull/1072))
+- *(mtf-fold-run)* review delta; block pending redesign's local gate ([#1071](https://github.com/lmmx/mibz2/pull/1071))
+- *(mtf-fold)* port zero-copy scan oracle and freeze bench-mtf-fold kill-test recipe ([#1041](https://github.com/lmmx/mibz2/pull/1041))
+- *(scan)* dissect and redesign serial scanner A2a..d (PASS) ([#1069](https://github.com/lmmx/mibz2/pull/1069))
+- direct-literal 4-lane forward emit probe (STOP) ([#1068](https://github.com/lmmx/mibz2/pull/1068))
+- composed worker stack v2 (hoisted OutQ16 + 32K cold vs 64K slab) ([#1067](https://github.com/lmmx/mibz2/pull/1067))
+- *(coop)* dissect cooperative decoder triggers, phase breakdown, and levers ([#1063](https://github.com/lmmx/mibz2/pull/1063))
+- composed 4-mechanism Open worker stack probe ([#1062](https://github.com/lmmx/mibz2/pull/1062))
+- *(frontier)* record OutQ32 scoped STOP and bump forward-emission to P2 ([#1066](https://github.com/lmmx/mibz2/pull/1066))
+- *(mtf)* dissect Column-route MTF/RLE2 front on off-Wikidata corpora (STOP) ([#1060](https://github.com/lmmx/mibz2/pull/1060))
+- *(mtf-fold)* L1d batch + hoisted single-branch OutQ16 PASS, OutQ32 STOP, JCC control ([#1059](https://github.com/lmmx/mibz2/pull/1059))
+- *(explore)* price 4-lane and 16-seg vectored delivery boundary ([#1058](https://github.com/lmmx/mibz2/pull/1058))
+- *(forward-4lane-anchor-probe)* price paid sampled-anchor 4-lane forward wiring and emission (PASS) ([#1057](https://github.com/lmmx/mibz2/pull/1057))
+- *(mtf-l1-batch-rescue)* validate L1d-batched packed MTF fold + OutQ16 guard zone (PASS) ([#1055](https://github.com/lmmx/mibz2/pull/1055))
+- *(forward-rle1-crc-fusion)* 4-lane vectored zero-scratch tile fusion PASS; 1-lane, FSM, stitched STOP ([#1045](https://github.com/lmmx/mibz2/pull/1045))
+- admit a6b-endpoint-build claim ([#1051](https://github.com/lmmx/mibz2/pull/1051))
+- open frozen probe claim forward-4lane-anchor-probe ([#1050](https://github.com/lmmx/mibz2/pull/1050))
+- *(a6b-combined-redesign)* fused setup, safe 64K u16-link inline15 SoA, gen-tagged dict (PASS) ([#1046](https://github.com/lmmx/mibz2/pull/1046))
+- admit segmented-fallback-build and forward-emission ([#1049](https://github.com/lmmx/mibz2/pull/1049))
+- *(segmented-fallback-dissection)* dissect Segmented phases and levers on off-wikidata corpora (PASS) ([#1042](https://github.com/lmmx/mibz2/pull/1042))
+- *(frontier)* mark off-wikidata-and-coupling blog card done ([#1044](https://github.com/lmmx/mibz2/pull/1044))
+- admit release-terminal-holds ([#1043](https://github.com/lmmx/mibz2/pull/1043))
+- *(bwt-contraction-constructor-rescue)* cold dissection, 2 constructor redesigns, scoped STOP ([#1038](https://github.com/lmmx/mibz2/pull/1038))
+- open probe claim segmented-fallback-dissection ([#1032](https://github.com/lmmx/mibz2/pull/1032))
+- admit dense-cap-precheck claim ([#1030](https://github.com/lmmx/mibz2/pull/1030))
+- surface rows C-A6a and M record the built mtf-fold prototype ([#1029](https://github.com/lmmx/mibz2/pull/1029))
+- fold MTF/RLE2 front into open kernel first pass behind research feature ([#1010](https://github.com/lmmx/mibz2/pull/1010))
+- record migrate-rules blocked by a finished claim's stale lease ([#1027](https://github.com/lmmx/mibz2/pull/1027))
+- admit scanner-seam-window ([#1028](https://github.com/lmmx/mibz2/pull/1028))
+- synthesise the deltas since #1002 (the 8-worker tie, the stranded scanner plumbing, the singleton run) ([#1021](https://github.com/lmmx/mibz2/pull/1021))
+- record #1018 review delta and surface branch-protection in needs_louis ([#1026](https://github.com/lmmx/mibz2/pull/1026))
+- foreground the established hybrid decoder model in every frontier brief ([#1024](https://github.com/lmmx/mibz2/pull/1024))
+- open a6b-combined-redesign smooth-zone probe claim ([#1025](https://github.com/lmmx/mibz2/pull/1025))
+- delta for the swarm's integration of #995 ([#1017](https://github.com/lmmx/mibz2/pull/1017))
+- P1 swarm means maximal useful parallel fan-out, not take one ([#1019](https://github.com/lmmx/mibz2/pull/1019))
+- *(huff-bmi2-dispatch)* isolate BMI2 shlx/shrx dispatch for K=2 Huffman decode (PASS) ([#1012](https://github.com/lmmx/mibz2/pull/1012))
+- open P1 bwt-contraction-constructor-rescue probe ([#1015](https://github.com/lmmx/mibz2/pull/1015))
+- align agent entrypoints with autonomous execution and research persistence ([#979](https://github.com/lmmx/mibz2/pull/979))
+- *(bwt-digram-return-map)* F-bucket and digram-interval return-map constructor STOP ([#1013](https://github.com/lmmx/mibz2/pull/1013))
+- admit scanner-coalesced-u8-decode and python-read-single-copy ([#1014](https://github.com/lmmx/mibz2/pull/1014))
+- dissect serial scanner (selector coalescing, u8 LUT, syms zero-fill, BMI2) ([#1011](https://github.com/lmmx/mibz2/pull/1011))
+- Checkpoint probe: claim scope, cursor coalescing and safe-point latency ([#1009](https://github.com/lmmx/mibz2/pull/1009))
+- raise operational reservation ceiling from 10 to 20 ([#1008](https://github.com/lmmx/mibz2/pull/1008))
+- pull shared frontier state at active-work checkpoints ([#993](https://github.com/lmmx/mibz2/pull/993))
+- project work availability from blocker state, not session reawakening ([#978](https://github.com/lmmx/mibz2/pull/978))
+- record the standalone permutation compression design as an idea claim ([#990](https://github.com/lmmx/mibz2/pull/990))
+- admit the inverse computational permutation problem as a P1 explore claim ([#1003](https://github.com/lmmx/mibz2/pull/1003))
+- *(worker-l3-footprint)* per-stage live-set census and 8-10W L3 attribution ([#1006](https://github.com/lmmx/mibz2/pull/1006))
+- raise capacity to ten via frontier/limits.toml ([#1005](https://github.com/lmmx/mibz2/pull/1005))
+- admit huff-bmi2-dispatch and forward-rle1-crc-fusion ([#1004](https://github.com/lmmx/mibz2/pull/1004))
+- synthesise the deltas since #983 (hardware-floor law, post-K=3 scan path, forward-emission keystone) ([#1002](https://github.com/lmmx/mibz2/pull/1002))
+- *(permutation-patterns)* exact structural census, consumer pricing, and scoped family STOP ([#998](https://github.com/lmmx/mibz2/pull/998))
+- admit bwt-digram-return-map and worker-l3-footprint ([#999](https://github.com/lmmx/mibz2/pull/999))
+- delta for integrating #977 and #996; archive-team-strata done ([#997](https://github.com/lmmx/mibz2/pull/997))
+- remove embedded personal commit identity ([#996](https://github.com/lmmx/mibz2/pull/996))
+- raise max_live_holds from 3 to 6
+- record independent resolution of tooling flags
+- ideal permutation structures product-value diagnostic ([#992](https://github.com/lmmx/mibz2/pull/992))
+- establish a permutation-patterns application programme
+- probe single-pass RLE1 expansion and CRC32 (STOP) ([#988](https://github.com/lmmx/mibz2/pull/988))
+- separate ideal permutation structures from their construction cost ([#985](https://github.com/lmmx/mibz2/pull/985))
+- probe 3- and 4-symbol 10-bit Huffman root tables (STOP) ([#986](https://github.com/lmmx/mibz2/pull/986))
+- synthesise the deltas since #965 (oracle-arm L3 cliff, pooled-scan work law) ([#983](https://github.com/lmmx/mibz2/pull/983))
+- review #974 and #978; close open-prs-triage, repoint harden-frontier-tooling to #974 ([#980](https://github.com/lmmx/mibz2/pull/980))
+- explore delta on the MTF-fold chain and pipeline fill/drain ([#982](https://github.com/lmmx/mibz2/pull/982))
+- admit multi-symbol-huffman-table, single-pass-rle1-crc, and warm-paired-oracle-k1 ([#981](https://github.com/lmmx/mibz2/pull/981))
+- replay event-driven stigmergy without waking agents ([#976](https://github.com/lmmx/mibz2/pull/976))
+- expose the pending P1 tooling repair in the review queue ([#973](https://github.com/lmmx/mibz2/pull/973))
+- distinguish smooth discovery from verification regimes ([#970](https://github.com/lmmx/mibz2/pull/970))
+- outline the measured floor beside the plumbing forecast ([#969](https://github.com/lmmx/mibz2/pull/969))
+- synthesise the deltas since #954 (worker levers, scan, L3 knobs) ([#965](https://github.com/lmmx/mibz2/pull/965))
+- the scan's lookups a symbol, and the corpus's runt blocks ([#962](https://github.com/lmmx/mibz2/pull/962))
+- cold review of the draft, card to stage review ([#961](https://github.com/lmmx/mibz2/pull/961))
+- card to published after #959 ([#963](https://github.com/lmmx/mibz2/pull/963))
+- MTF-into-construction fold census (A5 + A6a) and mtf-fold-build registration ([#960](https://github.com/lmmx/mibz2/pull/960))
+- record owner decisions on protection and experiment
+- census of LIMIT sweep, word representation/dedup, and induction-step cost ([#958](https://github.com/lmmx/mibz2/pull/958))
+- synthesise 26 Nov deltas (#945-#953), update R/D surface rows ([#954](https://github.com/lmmx/mibz2/pull/954))
+- cold-store oracle artifacts and RLE1/CRC LLC cliff ([#952](https://github.com/lmmx/mibz2/pull/952))
+- characterise emission spelling (E_consume) on real blocks ([#951](https://github.com/lmmx/mibz2/pull/951))
+- stress-test protocol across eight scenarios and flag gaps ([#948](https://github.com/lmmx/mibz2/pull/948))
+- atomic holds, invariants, flags, dead ends and a canary cap ([#946](https://github.com/lmmx/mibz2/pull/946))
+- the team works through files, not a coordinator ([#945](https://github.com/lmmx/mibz2/pull/945))
+- round 1 on Open's own exchange; STOP at the frozen gate ([#933](https://github.com/lmmx/mibz2/pull/933))
+- Complementary bottlenecks restructured, with a companion on the algorithms ([#927](https://github.com/lmmx/mibz2/pull/927))
+- fail on AI attribution in commits and PR metadata ([#929](https://github.com/lmmx/mibz2/pull/929))
+- Complementary bottlenecks, reading the ideal-parts matrix ([#920](https://github.com/lmmx/mibz2/pull/920))
+- companion posts, chained to their main post in the listing and on the page ([#904](https://github.com/lmmx/mibz2/pull/904))
+- *(queueing network)* the whole story of applying the theory ([#901](https://github.com/lmmx/mibz2/pull/901))
+- *(ideal-parts)* oracles for construction, MTF/RLE2, RLE1/CRC/output and delivery ([#895](https://github.com/lmmx/mibz2/pull/895))
+- CHANGELOG 0.5.14: the release scaling and the team threshold ([#893](https://github.com/lmmx/mibz2/pull/893))
+
+- **Bounded decoder memory on highly compressible streams (#1129).** Workers now check the 12 MiB
+  ready-output byte cap before starting a block, and the pool of spare output buffers is capped in
+  bytes rather than buffer count. On 2 GiB of zeros, peak RSS fell from 1,118 to 545 MiB (−51.2%)
+  at 4 workers and 32 slots (1,528 to 955 MiB at 8 workers, local), with −2.0% wall on Wikidata at
+  4 threads on CI.
+- **Faster fallback inverse BWT construction and precheck on non-Wikidata blocks (#1080, #1040).**
+  Blocks declined by the open kernel now use a sequential LF column build, unchecked fast fills on
+  verified run records, and AVX2 byte reversal (#1080), and dense blocks are checked against the
+  open kernel's row and strip caps from their run records before entering its first pass (#1040).
+- **Single-copy Python reads (#1033).** `Reader::read` copies directly from `BzReader::fill_buf`
+  into Python `bytes`, removing an intermediate buffer allocation and copy (−7.0% at 1 MiB reads
+  and −3.1% at 64 KiB reads at 1 thread on Wikidata ×4, VM).
+- **Coalesced Huffman scanner (#1034).** Same-selector runs are coalesced with a byte-aligned
+  lookup table, skipped symbol zeroing, and block-level BMI2 dispatch. Its registered i9-10900K run
+  (`scanner-coalesced/run-20261127T082548Z`, evidence 9de7b6e0) returned **STOP** under its
+  10-thread bound (0.970): −1.9% wall at 8 workers (0.981 [0.963, 0.999]) and −4.0% at 10 (0.960
+  [0.946, 0.974]), with 0 guard regressions at 1–6 workers or on `text`. Kept in this release by
+  owner override (27 November 2026; the STOP verdict stands).
+- **Research features (off by default):** `#895` (`ideal-*`), `#1010` (`mtf-fold`), `#1041`
+  (`scan-oracle`), `#1053` (`a6b-endpoint-redesign`), and `#1110` (`forward-anchor-lanes`) leave
+  the default build unchanged.
+
+**The paired run on CI** compared v0.5.14 at `7475dafd` with master at `dd935418` (Benchmark run
+[46008894855](https://github.com/lmmx/mibz2/actions/runs/46008894855), **AMD EPYC 9V74 80-Core
+Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0). Master moved only
+in docs, queue bookkeeping, and version numbers from `dd935418` to the `v0.5.15` tag commit
+`aaaee363`.
+- **Outputs:** the same bytes on all 420 runs; assessment: **Better (CPU cost), and no measure worse**.
+- **Wikidata (11.9 MB → 210 MB):**
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|---|--:|
+  | 1 | **−2.2%** [−4.1%, −0.3%] | **−2.2%** [−4.1%, −0.3%] | 28 → 28 MB (−0.6%) |
+  | 2 | **−1.3%** [−2.4%, −0.2%] | **−0.9%** [−1.6%, −0.3%] | 56 → 54 MB (−2.9%) |
+  | 4 | −0.9% [−2.5%, +0.8%] | **−1.4%** [−2.6%, −0.1%] | 82 → 84 MB (+2.6%) |
+
+- **Stages (1 thread, Wikidata):** total **5.92 → 5.85 c/B (−1.1% [−2.1%, −0.0%])**, led by
+  scanner **0.62 → 0.59 c/B (−5.4% [−5.8%, −5.1%])** and MTF + RLE2 **1.07 → 1.03 c/B (−4.2%
+  [−4.8%, −3.6%])**.
+- **The other corpora:** faster on `text` (−3.6% wall / −3.7% CPU at 1T; −2.8% CPU at 2T; −3.6%
+  CPU at 4T), `pattern` (−6.4% / −7.6% / −7.3% wall at 1/2/4T), `random` (−3.9% / −4.2% / −4.2%
+  wall; −3.8% / −5.0% / −5.5% CPU), `records` (−4.0% wall at 1T and 4T; −3.9% / −6.2% CPU), and
+  `runs` (−1.4% CPU at 4T). `onebyte` was unchanged. No corpus was slower at any thread count.
+- **Cost & caveats:** peak RSS on `records` at 4 threads rose +2.5% (53 → 55 MB); all other peak
+  RSS deltas were flat or lower. CI runs on 2 physical cores (4 CPUs), so many-core scaling above
+  4 threads is measured by the i9 release-scaling run below.
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **Reviewed (20 entries):** `trace`, `memory-lever`, `wait-stats`, `walk-stats`, `dose`,
+  `phase-counters`, `induction-trace`, `grammar-replay`, `owned-writer`, `moonshot`, `census`,
+  `ideal-construction`, `ideal-mtf`, `ideal-rle1`, `ideal-delivery`, `ideal-parts`, `mtf-fold`,
+  `a6b-endpoint-redesign`, `forward-anchor-lanes`, and `scan-oracle`.
+- **Ready for separate follow-on removal PRs:** `a6b-endpoint-redesign` (its i9 paired A/B run,
+  evidence `a6e427b1`, returned STOP/KILL and compact rescue closed in #1161). Still open from
+  0.5.13/0.5.14: `owned-writer` still has no retention note, and `memory-lever`, `phase-counters`,
+  `wait-stats`, `walk-stats`, `induction-trace`, and `grammar-replay` remain to be checked against
+  their removal conditions.
+
+**Release scaling (RELEASING §5):** 0.5.15 against 0.5.14 on the i9-10900K
+(`release-scaling/run-20261127T140323Z`, evidence `bce3914d`, sha256 `f7ef4216…6fb0`;
+`bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.15/`, 10 rounds,
+Wikidata 210 MB, all outputs byte-identical):
+- **Pinned (1–10 threads, one CPU per core):** 0.5.14/0.5.15 wall is **1.057** [1.011, 1.104] at
+  1 thread (CPU 1.057 [1.012, 1.104]), **1.034** [1.012, 1.055] at 2 threads (CPU 1.028
+  [1.013, 1.043]), and flat at 4, 8 and 10 threads (1.000 [0.975, 1.027], 1.002 [0.994, 1.010],
+  and 0.996 [0.987, 1.005]; 8-thread CPU 1.009 [1.007, 1.012]).
+- **Unpinned (12–20 threads):** 0.5.14/0.5.15 wall is **1.095** [1.030, 1.164] at 12 threads
+  (CPU 1.054 [1.009, 1.101]), 1.012 [0.954, 1.073] at 16 threads, and 1.063 [0.990, 1.142] at 20
+  threads. Peak RSS stayed within 42–68 MB (0–2 MB of 0.5.14 across all thread counts).
+- **Attribution (RELEASING §5b):** recorded as row `0.5.14 → 0.5.15` in
+  `docs/journal/release-attribution.md`.
+
+**The team threshold (RELEASING §5a):** `crossover/run-20261127T141422Z`, evidence `45ae3ff3`
+(sha256 `cf23c148…4073`, commit `aaaee363`, 10 rounds on Wikidata, 400/400 same bytes).
+- **Unmoved.** No forced arm beats the shipped decoder at any count where it changes the plan:
+  - one block a thread (`mibz2-workers-w`): 4T 1.010 [0.973, 1.049] (CPU 1.077), 6T 1.282 [1.237, 1.329],
+    8T 1.042 [1.022, 1.062], 10T 1.056 [1.031, 1.081]; above physical cores (SMT, reported only):
+    12T 0.996 [0.943, 1.051] (CPU 1.308), 16T 1.080 [1.039, 1.123], 20T 1.122 [1.086, 1.160];
+  - teams of 2 (`mibz2-team2`): 1.206–4.533 wall (1.102–9.708 CPU);
+  - teams of 3 (`mibz2-team3`): 1.393–2.948 wall (1.124–4.888 CPU).
+- **Sanity:** where `mibz2-workers-w` runs the identical shipped plan (5, 7, 9 threads), 7T
+  (0.984 [0.964, 1.005], CPU 0.988) and 9T (0.995 [0.968, 1.023], CPU 0.995) span 1; 5T wall
+  is 0.964 [0.937, 0.993] (near-miss noise on identical 5-worker plan; CPU 0.991 [0.982, 1.001]
+  spans 1).
+
 ## [0.5.14](https://github.com/lmmx/mibz2/compare/v0.5.13...v0.5.14) - 2026-11-25
 
 ### <!-- 3 -->Performance

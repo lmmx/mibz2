@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 1
-status = "open"
+status = "done"
 owned_paths = ["pyproject.toml", ".github/workflows/CI.yml", ".just/bench.just", "bench/jcc_aligned.py", "bench/test_jcc_aligned.py"]
 mechanisms = ["build-flags"]
 needs_louis = ""
@@ -15,6 +15,7 @@ why = """
 A -6..-12% worker-side gain for zero code would be the cheapest worker lever in the frontier, and at the 8-worker knee the workers now bind (synthesis ninth pass). The VM numbers are diagnostics (C5); the effect is microarchitecture-specific, so only i9 evidence counts, and AMD must not regress.
 Synthesis tenth pass (docs/journal/2026-11-27-synthesis/tenth-pass.md): this measurement also decides which station binds at k = 8 on wikidata. Alignment cuts workers ~14% but the scanner only 1-3% (#1076, #1077), so if the i9 pays the penalty the aligned decoder is scanner-bound at k = 8 (derived), and the k = 8 wall gain would then be only the scanner's 1-3% even with a 14% worker gain. Report the S/W station split (examples/station_balance.rs on the i9) and k = 4..6 so a k = 8 near-miss is not misread. DECODER.md and #1077 disagree on whether the i9-10900K carries the mitigation; only this run settles it.
 Synthesis twelfth pass (docs/journal/2026-11-27-synthesis/twelfth-pass.md): P2 -> P1. #1107 CONFIRMED the station-uneven shift (r_aligned 0.871/0.911 on wikidata), and with #1075 an aligned build is scanner-bound at k = 8 on every measured corpus (derived). This run is the only one that measures which station binds, so it sets the k = 8 attribution of the seam-window, coalesced and A6b i9 verdicts and of at least six claims. #1107 aligned S -3.5..-4.2% clears the 1.5% k = 8 bar even scanner-bound (derived). Compare baseline+alignment vs baseline only (native slowed S 5-8% in #1107).
+Queued (27 November 2026, #1119 merged dd935418 after C6 PROCEED #1165): `refs/tags/ready/bench-jcc-aligned-release` and `origin/bench/jcc-aligned-release` are pinned at pre-merge commit `256566b7ceaa45913b0615199e6ef69d02c00603` where `HEAD:src` (`075be307`) and `HEAD:Cargo.toml` (`e2462676`) match `PINNED_TREES` (`59cac2c5`). Do not re-tag this recipe from post-#1129 `master` without re-pinning `SOURCE`/`PINNED_TREES` first.
 """
 stop_test = """
 Frozen before data (adoption registration, C6 review): on i9-10900K, aligned over default must be faster with a non-overlapping 95% CI at k = 1 by >= 3.0% and at k = 8 by >= 1.5%, with no > 1.0% regression at k = 10 or on any guard corpus, <= 1.02x peak RSS, identical output bytes; and on the CI AMD runner no > 1.0% regression at any thread count. Otherwise STOP with a scoped dead-end row.

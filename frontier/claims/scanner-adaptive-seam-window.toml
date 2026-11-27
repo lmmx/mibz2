@@ -1,0 +1,40 @@
+id = "scanner-adaptive-seam-window"
+title = "Adaptive per-block scanner lookahead and one-shot seam window to eliminate the 7.49 ms residual in_maint"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = ["src/stream.rs", "src/parallel.rs", "src/trace.rs"]
+mechanisms = ["scanner-adaptive-lookahead", "scanner-oneshot-seam"]
+needs_louis = ""
+question = """
+`docs/journal/2026-11-27-explore/in-maint-residual-dissection.md` (`examples/in_maint_dissection.rs`, `#![forbid(unsafe_code)]`, reproducing exact i9 `c0b2341c` span counts `base=12` and `#1031=879` on `wikidata-x4`) proved why `#1031` (`scanner-seam-window`, `NOT ADOPTED` in `#1118`) only cut `in_maint` by `-29.93%` (`10.689 -> 7.490 ms`) instead of `>= 80%`:
+- `src/stream.rs` passes a sticky `LOOKAHEAD = 2 MiB` (`50%` of `CHUNK = 4 MiB`) on every block. Halfway through every `4 MiB` chunk (`51.0%` of Wikidata blocks), `#1031` enters the seam `2 MiB` early, copying the `2.0 MiB` second half of chunk `i` (`seam_init`: `21.70 MiB`, `48.5%` of residual `in_maint`) and incrementally copying the `2.0 MiB` first half of chunk `i+1` across `867` `WindowResume` spans (`extend`: `21.04 MiB`, `48.7%`) — **`97.2%` (`~7.28 ms` i9-scaled) of `#1031`'s `7.490 ms` residual `in_maint`**.
+
+Implement the distinct two-part safe-Rust rescue (`seam_adaptive`, preserving `#1031`'s frozen `NOT ADOPTED` verdict under C2):
+1. **Non-sticky per-block adaptive lookahead in `src/stream.rs`:** track a 16-block sliding-window peak of compressed block bytes and ask `want = (max16 + max16 / 4 + 4 KiB).clamp(64 KiB, 1 MiB)` (first block `128 KiB`), retaining the exact `br.overran()` doubling fallback up to `MAX_ITEM = 64 MiB`.
+2. **One-shot seam fill in `src/parallel.rs` (`ChannelSource`):** when `from + want` crosses `next_base` with bytes still held before `next_base`, copy `tail + next[0..min(need + 128 KiB - next_base, next.len())]` once into a reused `seam` buffer (eliminating incremental per-block `WindowResume` copies), swap directly to `next` once `released >= next_base`, check cancellation via `AtomicBool` (avoiding `Shared` mutex locks per span), and retain up to `INPUT_QUEUE + 2` spare input chunks in `free_in`.
+"""
+why = """
+In the probe across all three compiler builds (`baseline`, `base_jcc32b`, `nat_jcc32b`), `seam_adaptive` cuts `wikidata-x4` bytes moved by `-95.7%` (`53.02 -> 2.29 MiB`, spans `879 -> 34`, `0` overrun retries, peak window capacity `16.00 -> 4.38 MiB` `-72.6%`), cuts `in_maint` by `-96.1%..-97.7%` (derived i9 projection `10.689 -> ~0.42 ms`, recovering `~10.3 ms` of pure serial scanner wall — `3.2x` `#1031`'s measured `3.20 ms`), cuts end-to-end `S` by `-3.46%..-4.57%` (matching the zero-copy `SliceSource` floor), and wins or ties with `0` retries on all 5 multi-chunk guard corpora (`text_16m` `-1.7..-3.5%`, `random_18m` `-6.5..-7.4%` disjoint, `records_18m` `-4.5..-8.6%`, `runs_8m` `0..-5.6%`, `onebyte` exact). Orthogonal to `#1034` and `scanner-a2-fast-build` (`#1117`), and directly unlocks `k = 8` wall on aligned Wikidata and off-Wikidata text as well as `k = 9-10` on default Wikidata.
+"""
+stop_test = """
+Frozen before data:
+1. Correctness & safety: 100% safe Rust (`#![forbid(unsafe_code)]` in modified paths), byte- and error-identical across `cargo test` (including mid-seam truncation, trailing data, corrupted CRC, single-chunk, and sudden small->900 KiB block transitions), `fuzz-smoke`, and `wikidata x4`.
+2. CI & guard corpora: zero regression outside `PERFORMANCE-POLICY.md` §2 across all 7 CI corpora (`wikidata`, `text`, `random`, `records`, `runs`, `pattern`, `onebyte`), and `<= 1.00x` peak window capacity vs shipped `base`.
+3. Workstation i9-10900K registration (frozen before any hardware run, shallow-safe per thirteenth-pass invariant, paired A/B against `master` on `wikidata x4`, unpinned, 16 paired rounds): must cut traced `in_maint` at 8 workers by `>= 85%` (`10.689 -> <= 1.6 ms`) AND pass wall adoption at both judged 8-worker default counts (`10` and `12` threads both `FASTER`, 95% CI upper bound `< 1.000`, no `SLOWER` at `6`/`8`/`9` threads, median peak RSS `<= 1.05x` at every count). Otherwise STOP and record a scoped dead-end in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR on `src/stream.rs`, `src/parallel.rs`, and `src/trace.rs`, passing all unit/parity/fuzz-smoke checks, frozen shallow-safe i9 workstation registration, real i9-10900K evidence bundle passing the frozen stop test, delta, and `surface.tsv` row `S` update.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/in-maint-residual-dissection.md",
+  "examples/in_maint_dissection.rs",
+  "docs/journal/2026-11-27-synthesis/thirteenth-pass.md",
+  "frontier/DECODER.md",
+]
+links = [
+  "frontier/claims/scanner-seam-window.toml",
+  "frontier/deltas/2026-11-27-in-maint-residual-dissection.md",
+]

@@ -285,7 +285,19 @@ def run_child(
             "block": block,
             "trace": 1 if trace else 0,
         }
-    rec = json.loads(lines[-1])
+    try:
+        rec = json.loads(lines[-1])
+    except json.JSONDecodeError as exc:
+        return {
+            "kind": "failed",
+            "stderr": f"malformed JSON stdout: {exc}",
+            "section": cell["section"],
+            "cell": cell_idx,
+            "arm": cell["arm"],
+            "k": cell["k"],
+            "block": block,
+            "trace": 1 if trace else 0,
+        }
     rec["section"] = cell["section"]
     rec["cell"] = cell_idx
     rec["block"] = block
@@ -293,7 +305,8 @@ def run_child(
 
 
 def cmd_run(args) -> int:
-    plan = json.load(open(args.plan, encoding="utf-8"))
+    with open(args.plan, encoding="utf-8") as f:
+        plan = json.load(f)
     blocks = args.blocks if args.blocks is not None else plan["blocks"]
     trace_blocks = args.trace_blocks if args.trace_blocks is not None else plan["trace_blocks"]
     text_blocks = args.text_blocks if args.text_blocks is not None else plan["text_blocks"]
@@ -736,12 +749,18 @@ def analyse(
 
 
 def cmd_report(args) -> int:
-    plan = json.load(open(args.plan, encoding="utf-8"))
-    recs = [json.loads(ln) for ln in open(args.runs, encoding="utf-8") if ln.strip()]
+    with open(args.plan, encoding="utf-8") as f:
+        plan = json.load(f)
+    with open(args.runs, encoding="utf-8") as f:
+        recs = [json.loads(ln) for ln in f if ln.strip()]
     text_recs = []
     if args.text_runs and os.path.exists(args.text_runs):
-        text_recs = [json.loads(ln) for ln in open(args.text_runs, encoding="utf-8") if ln.strip()]
-    lscpu_text = open(args.lscpu, encoding="utf-8").read() if os.path.exists(args.lscpu) else ""
+        with open(args.text_runs, encoding="utf-8") as f:
+            text_recs = [json.loads(ln) for ln in f if ln.strip()]
+    lscpu_text = ""
+    if os.path.exists(args.lscpu):
+        with open(args.lscpu, encoding="utf-8") as f:
+            lscpu_text = f.read()
     blocks = args.blocks if args.blocks is not None else plan["blocks"]
     trace_blocks = args.trace_blocks if args.trace_blocks is not None else plan["trace_blocks"]
     verdict, summary = analyse(

@@ -1,10 +1,13 @@
 # Releasing mibz2
 
-The release runbook. The coordinator follows it step by step for every release. It is
-referenced from `CLAUDE.md`, so every session reads it before releasing.
+The release runbook. Whoever holds the release claim follows it step by step for every release.
+It is referenced from `CLAUDE.md`, so every session reads it before releasing.
 
-The maintainer's standing instruction is that the coordinator releases mibz2 itself, without
-asking first, whenever merged work is worth releasing. Nobody needs to prompt it.
+The maintainer's standing instruction is that the team releases mibz2 itself, without asking
+first, whenever merged work is worth releasing. Nobody needs to prompt it. **A release is P1,
+always, once recognised** (Louis, 27 November 2026): `frontier.py` reports "release due" whenever
+software has merged since the last tag with no live release claim, and the first agent to see it
+opens `release-<version>` at priority 1.
 
 ## 1. Is there something worth releasing?
 
@@ -22,6 +25,14 @@ Worth releasing:
   speed gain.
 - **A change that is definitely committed to:** a fix users need, or an API or packaging
   change.
+
+- **A batch of default-path changes,** each accepted under its own PR's rule (the CI bench, or a
+  measurement admitted under PERFORMANCE-POLICY.md §2), even with no workstation run of any of
+  them (Louis, 27 November 2026). A release doesn't wait for each change to be validated on the
+  i9 one at a time. The release's own paired bench of the last tag against master (§3) and its
+  release-scaling run on the i9 (§5) are the combined measurement. They decide how the release is
+  described (a speed release, a memory release, fixes), never whether it ships; a primary loss
+  they reveal is handled as any regression is, in its own PR.
 
 Docs, journal, bench-harness or blog changes alone are not.
 
