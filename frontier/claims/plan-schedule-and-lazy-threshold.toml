@@ -1,0 +1,50 @@
+id = "plan-schedule-and-lazy-threshold"
+title = "Lower LAZY_FROM_THREADS to 4, fill pinned odd-count cliffs (5T/7T/9T), and fix window() cap scaling in src/parallel.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["plan-schedule", "lazy-threshold", "window-scaling"]
+needs_louis = ""
+question = """
+`explore/plan-schedule-and-lazy-threshold` (`docs/journal/2026-11-27-explore/plan-schedule-and-lazy-threshold.md`) dissected the `v0.5.15` physical i9-10900K `crossover` sawtooth cliff (`origin/evidence` `45ae3ff3`: `6T` `0.081 s` / `40 MB` -> `7T` `0.103 s` [+27.2% wall, +43.4% CPU] / `130 MB` [3.25x RSS]; `5T` `0.114 s` / `97 MB`) and passed its frozen stop test:
+
+1. **Lower global `LAZY_FROM_THREADS` from `8` to `4` in `src/parallel.rs`:** `LAZY_FROM_THREADS = 8` was calibrated for pre-`v0.5.7` `LazyCells` and never updated after `OpenCells` replaced it. Physical i9-10900K `kernel-count` (`run-20261125T022939Z`) proved `OpenCells` beats `EagerCells` from `k = 4` onward (`-7.8%` at `4W`, `-16.6%` at `5W`, `-26.3%` at `6W`, `-36.1%` at `7W`, with `0.39-0.49x` peak RSS), while `k = 1, 2, 3` stay on `EagerCells` (`Seq(Cells)` stays inline at `t = 1`). Lowering `LAZY_FROM_THREADS` to `4` fixes all non-i9 machines, cgroup-quoted containers, and non-exact affinity masks at `4T-7T`, and eliminates the redundant `(UNPINNED_LAZY_FROM..LAZY_FROM_THREADS)` branch in `unpinned_cell`.
+2. **Fill `trim_cell`'s missing odd pinned thread counts on the measured i9-10900K (`5T`, `7T`, `9T`):**
+   - `5T` pinned -> `(4, true)` (`s = 16`, freeing 1 core for the scanner; projects `~0.090 s` vs `0.114 s` [-21% wall] and `~38-40 MB` vs `97.5 MB` [-60% RSS]),
+   - `7T` pinned -> `(6, true)` (`s = 24`, freeing 1 core for the scanner; projects `~0.068-0.070 s` vs `0.103 s` [-32..-34% wall], `-30%` CPU, and `~42 MB` vs `129.7 MB` [-68% RSS]),
+   - `9T` pinned -> `(7, true)` (`s = 28`, matching `10T`'s 7 OpenCells workers and cutting `60.1 ms` `runq_s` + `51.5 -> 44 MB` RSS),
+   while keeping `4T -> (3, false)`, `6T -> (5, true)`, `8T -> (6, true)`, `>=10T -> (7, true)` (and optionally testing `4T` pinned `4 OpenCells` vs `3 Eager` on i9).
+3. **Fix `window()` slot scaling when `plan_with` caps `Plan::Workers(n)` below `threads` (`n < threads`):** scale `(slots.saturating_mul(n) / threads.max(1)).max(n)` whenever `n < threads` (not only when `trimmed == true`), fixing the 80-slot blowup on 8-10 core non-i9 machines at `t = 12..20`.
+
+Implement these changes in `src/parallel.rs`, update the unit tests asserting `LAZY_FROM_THREADS == 8` and `trim_cell`/`window` invariants, and validate on CI + physical i9-10900K.
+"""
+why = """
+Directly eliminates a real `+27.2%` wall / `+43.4%` CPU / `3.25x` RSS regression at `7T` and `+21%` wall / `2.4x` RSS penalty at `5T` on the physical i9-10900K crossover curve (`45ae3ff3`), while giving every non-i9 machine and container `-8%..-36%` faster decoding and `-50%..-61%` lower peak RSS at `4T-7T` in ~20 lines of pure scheduling logic (zero `unsafe`). Synergizes cleanly with `post-1080-open-admission` (which removes the remaining `~3-4%` `text` OpenCells admission tax).
+"""
+stop_test = """
+Frozen before data:
+1. 100% byte-, CRC-, and error-identical across `cargo test`, `cargo clippy --all-targets -- -D warnings`, and all 7 corpora (`wikidata`, `text`, `records`, `random`, `runs`, `pattern`, `onebyte`) at `t = 1..=10` (zero new `unsafe`).
+2. Physical i9-10900K pinned `crossover` (`wikidata`, `t = 4..=10`) + unpinned (`t = 4..=20`) paired run (pre-registered):
+   - `5T` pinned wall `<= 0.85x` and peak RSS `<= 0.55x` vs shipped `v0.5.15`;
+   - `7T` pinned wall `<= 0.75x` (monotonically faster than `6T`!) and peak RSS `<= 0.45x` vs shipped `v0.5.15`;
+   - `9T` pinned wall `<= 1.02x` and peak RSS `<= 0.92x`;
+   - `4T, 6T, 8T, 10T, 12T, 16T, 20T` neutral-or-faster (`<= 1.015x` wall, `<= 1.02x` RSS);
+   - Off-wikidata guards (`text`, `records`, `random`) at `4T–8T`: zero `> 3.0%` disjoint wall regression (noting `text` benefits further once `post-1080-open-admission` lands) and peak RSS `<= 1.05x`.
+3. Non-i9 / CI paired `ab` bench passes `PERFORMANCE-POLICY.md` section 2 across all 7 CI corpora at `1T/2T/4T` (expecting `-7%..-15%` CPU and `-55%` RSS on `wikidata` at `4T` with zero disjoint regressions).
+Otherwise STOP and record a scoped dead-end row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Merged striated PR in `src/parallel.rs` passing CI (1, 3) and pre-registered physical i9-10900K verification (2), with a delta recorded in `frontier/deltas/`.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/plan-schedule-and-lazy-threshold.md",
+  "frontier/deltas/2026-11-27-explore-plan-schedule-and-lazy-threshold.md",
+]
+links = [
+  "docs/journal/2026-11-27-explore/plan-schedule-and-lazy-threshold.md",
+  "frontier/deltas/2026-11-27-explore-plan-schedule-and-lazy-threshold.md",
+  "frontier/claims/post-1080-open-admission.toml",
+]
