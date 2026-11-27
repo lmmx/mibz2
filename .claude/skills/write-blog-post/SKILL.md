@@ -22,6 +22,34 @@ The rules come from three sources, cited by tag:
   "The evidence".
 - **[P]**: the conventions the published posts share (`docs/site/blog/*.md`).
 
+## First: is it a post at all?
+
+**The blog is for something worth telling the world** (Louis, 27 November 2026: "process
+narration is extremely uninteresting, theoretical discovery and advancement of the software
+itself is interesting, and positive findings far outweigh negative results"). Before writing,
+state the post's news in one plain sentence that a researcher outside the project would care
+about. That sentence is the blog card's `news`, and its kind is `discovery` or `advance`.
+- **Not a post:** an account of how the work was organised, reviewed, queued or merged; a digest
+  of recent PRs or deltas; a negative result on its own (a candidate the hardware rejected, a
+  design that missed its gate). These go in the lab notebook, `docs/notebook/`.
+- **A negative result** reaches the blog only inside a positive finding it explains.
+- **One finding per post,** named in the title. A title that lists three events is a digest.
+
+**No internal shorthand, anywhere in the body** (Louis, 27 November 2026: "the use of shorthand
+is particularly egregious"). The swarm's own notes are written for agents who know the project,
+so draft from the evidence, never by condensing deltas or notebook entries. Say what each thing
+does instead of naming it by its id:
+- **No claim ids or code identifiers as names:** not `scanner-seam-window` or `READY_BYTES`, but
+  "a change that let the scanner keep a sliding window of input" or "the cap on bytes waiting for
+  the reader".
+- **No PR or issue numbers, commit hashes or verdict labels in the prose.** Put the references in
+  the closing Sources list.
+- **Numbers are prose, not code:** "1.9% faster", never `1.89%`.
+- **Code formatting is for code** that the reader is shown, and rarely needed in a post.
+
+CI's reader gate (`check_prose.py`) fails a new or changed post that exceeds the shorthand limits.
+Passing the gate is the floor, not the standard: a post must read as an essay to a stranger.
+
 ## The workflow
 
 **Iterate, ship, re-ship** (Louis, 22 November 2026, after four posts went out big bang and each

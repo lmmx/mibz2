@@ -9,6 +9,7 @@ pr = 1099
 owned_paths = []
 needs_louis = ""
 stage = "review"
+legacy = true                    # before the admission test of 27 November 2026
 post = "docs/site/blog/2026-11-27-l2-cliff-register-wall-and-scanner-a2.md"
 drafted_by = "antigravity"
 reviewed_by = ""

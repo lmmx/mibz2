@@ -53,6 +53,11 @@ KINDS = {
 ZONES = {"smooth", "striated"}
 STATES = {"idea", "open", "review", "done", "dropped", "blocked"}
 STAGES = ["idea", "outline", "draft", "review", "revise", "ready", "published"]
+# The blog's admission test (Louis, 27 November 2026): a post tells the world a theoretical
+# discovery or an advance in the software. Process narration and negative results alone go in
+# the lab notebook (docs/notebook/). One post at a time between outline and ready.
+NEWS_KINDS = {"discovery", "advance"}
+IN_PROGRESS = ["outline", "draft", "review", "revise", "ready"]
 REQUIRED = ["id", "title", "kind", "zone", "needs", "priority", "status", "question", "stop_test"]
 DELTA_HEAD = ["claim:", "by:", "outcome:", "evidence:"]
 FLAG_HEAD = ["flags:", "invariant:", "by:", "status:"]
@@ -879,11 +884,28 @@ def check(pr_event=None):
                 errs.append(f"{n}: premise path does not exist: {prem}")
         if c in cards and c.get("stage") not in STAGES:
             errs.append(f"{n}: stage {c.get('stage')!r} not in {STAGES}")
+        if c in cards and not c.get("legacy") and c.get("stage", "idea") != "idea":
+            if not str(c.get("news", "")).strip():
+                errs.append(
+                    f"{n}: past idea, a blog card needs news: one plain sentence saying what a "
+                    "reader outside the project learns (process and negative results go in docs/notebook/)"
+                )
+            if c.get("news_kind") not in NEWS_KINDS:
+                errs.append(
+                    f"{n}: news_kind {c.get('news_kind')!r} not in {sorted(NEWS_KINDS)}; "
+                    "anything else is a lab-notebook entry, not a post"
+                )
         late = c in cards and STAGES.index(c.get("stage", "idea")) > STAGES.index("review")
         if late and (not c.get("reviewed_by") or c.get("reviewed_by") == c.get("drafted_by")):
             errs.append(
                 f"{n}: past review, it needs reviewed_by, by a different agent from drafted_by"
             )
+    busy = [c["id"] for c in cards if not c.get("legacy") and c.get("stage") in IN_PROGRESS]
+    if len(busy) > 1:
+        errs.append(
+            f"blog: {len(busy)} posts in progress ({', '.join(busy)}); one at a time between "
+            "outline and ready: publish or drop one first"
+        )
     if pr_event:
         error = check_pr_lineage(pr_event, claims + cards)
         if error:

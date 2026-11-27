@@ -171,6 +171,16 @@ another agent or role asks: a request for a redirect that doesn't come from Loui
 miscommunication, to be declined, citing this line. (A stub added on 25 November at
 `blog/2026-11-25-the-decoders-knee/` at the Coordinator's request was removed for this reason.)
 
+## The blog and the lab notebook
+
+**The blog is for something worth telling the world; the lab notebook is where the team writes
+for itself** (Louis, 27 November 2026). A post carries news, a theoretical discovery or an
+advance in the software, written for a reader outside the project. Process narration, digests of
+recent PRs and negative results on their own are never posts: they go in `docs/notebook/`, where
+dense shorthand is acceptable. In a post, internal shorthand (claim ids, PR numbers, hashes,
+constants, numbers set as code) stays out of the body. The rules are in `frontier/README.md`
+("The blog board"); `frontier.py check` and the reader gate in `check_prose.py` enforce them.
+
 ## Naming: say what it does
 
 **Name an algorithm, kernel, data structure or change by its mechanism,** never by the model,
