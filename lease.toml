@@ -1,9 +1,9 @@
-id = "bwt-contraction-constructor-rescue"
-holder = "antigravity"
-session = "608f87cc75a8"
-claimed_at = "2026-11-27T00:26:58+00:00"
-expires = "2026-11-27T04:26:58+00:00"
+id = "synthesise"
+holder = "claude-code"
+session = "d416f6e17557"
+claimed_at = "2026-11-27T00:31:16+00:00"
+expires = "2026-11-27T08:31:16+00:00"
 owned_paths = []
-mechanisms = ["bwt-digram-contraction"]
-base = "ce940078b2f5731ca8a1d1113f662267ba31682b"
+mechanisms = []
+base = "df682f8875fbc0c9952714ec09f0db708c46837e"
 released = false
