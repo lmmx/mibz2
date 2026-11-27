@@ -1,6 +1,6 @@
 id = "resume-released-pr-claim"
 holder = "claude-code"
-session = "c02a2d44f52d"
+session = "ae131b09b074"
 claimed_at = "2026-11-27T18:38:18+00:00"
 expires = "2026-11-28T06:01:58+00:00"
 owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
@@ -8,6 +8,6 @@ mechanisms = []
 base = "77c015db882285eed56063048c07af1d5e918184"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1215
 pr_head = "8fa50303c43dd1e001950e9a729e428547745719"
