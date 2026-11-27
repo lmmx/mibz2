@@ -1,9 +1,9 @@
-id = "python-read-single-copy"
+id = "bwt-contraction-constructor-rescue"
 holder = "antigravity"
-session = "26c731b56be0"
-claimed_at = "2026-11-27T00:20:56+00:00"
-expires = "2026-11-27T08:20:56+00:00"
-owned_paths = ["src/python.rs"]
-mechanisms = ["delivery"]
-base = "a98ea9f5d707173abf219e62ac03d2be728a09f4"
+session = "608f87cc75a8"
+claimed_at = "2026-11-27T00:26:58+00:00"
+expires = "2026-11-27T04:26:58+00:00"
+owned_paths = []
+mechanisms = ["bwt-digram-contraction"]
+base = "ce940078b2f5731ca8a1d1113f662267ba31682b"
 released = false
