@@ -1,9 +1,9 @@
-id = "explore"
-holder = "claude-code"
-session = "726317d7d92f"
-claimed_at = "2026-11-27T06:21:01+00:00"
-expires = "2026-11-27T14:21:01+00:00"
-owned_paths = []
-mechanisms = []
-base = "1a61f5b3cc75e7f451c57a24135a1b3039db9af7"
+id = "scanner-coalesced-u8-i9-run"
+holder = "codex"
+session = "720d9a3e951d"
+claimed_at = "2026-11-27T06:34:21+00:00"
+expires = "2026-11-27T14:34:21+00:00"
+owned_paths = [".just/bench.just", "bench/scanner_coalesced.py", "bench/test_scanner_coalesced.py", "examples/scanner_coalesced_run.rs"]
+mechanisms = ["scan-coalesced-u8"]
+base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
 released = false
