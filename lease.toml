@@ -1,9 +1,9 @@
-id = "scanner-coalesced-u8-i9-queue"
-holder = "codex"
-session = "f0c5cf47c2eb"
-claimed_at = "2026-11-27T07:27:12+00:00"
-expires = "2026-11-27T15:27:12+00:00"
-owned_paths = ["bench/workstation-queue.txt"]
-mechanisms = ["workstation-queue"]
-base = "35847946829a4d9c8dbc09f84af0683f8759fc36"
+id = "ready-cap-worker-gate"
+holder = "antigravity"
+session = "84de6816cf2a"
+claimed_at = "2026-11-27T07:31:22+00:00"
+expires = "2026-11-27T15:31:22+00:00"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["worker-side-ready-cap"]
+base = "7beb5e9ba4730feb1f38d12b40100dace34b2d4e"
 released = false
