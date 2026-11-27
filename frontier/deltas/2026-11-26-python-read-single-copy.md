@@ -1,7 +1,7 @@
 claim: python-read-single-copy
 by: antigravity
 outcome: done
-evidence: src/python.rs, python/tests/test_decode.py, frontier/claims/python-read-single-copy.toml
+evidence: #1033, src/python.rs, python/tests/test_decode.py, frontier/claims/python-read-single-copy.toml
 
 **What was asked:** Eliminate the redundant zero-filled `Vec<u8>` allocation and double copy in Python's `Reader::read(size)` (`src/python.rs`) by copying once directly from `BzReader`'s `BufRead::fill_buf` into `PyBytes`, with no public Rust API change and zero new `unsafe`.
 **What I found:**
