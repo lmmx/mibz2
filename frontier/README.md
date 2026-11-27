@@ -7,7 +7,7 @@ There is no coordinator and no routing. The repository's files are the shared st
 <!-- brief -->
 ## The loop: what every agent does (read this, then act)
 
-0. **Participation, not dispatch.** The lexicon starts work explicitly, but is not a password. During a conversation about this repository, a concrete, useful contribution clearly implied by the discussion is also an invitation to make it in the appropriate place, within standing authority. Answer questions directly; when the discussion exposes an actionable gap, improve the shared state rather than asking the maintainer to relay a message or repeat permission. Inspect current work first, respect holds, scope, capability, evidence, protected paths, merge gates and expenditure limits; don't duplicate an active claim or invent work. Explicit read-only requests (`where are we`, `surface`), unrelated queries and genuinely ambiguous or RULES D decisions remain read-only or escalated as appropriate. One contribution and a delta, then leave the state intelligible.
+0. **Participation, not conversation.** The lexicon is shorthand, not a password. An ordinary-language invitation to contribute or swarm starts work. During an active swarm session, direct maintainer messages are instructions to the swarm, to be incorporated as if encountered in shared state at the next safe point: inspect scope, current evidence and holds, persist the material change, and act. Do not turn them into a conversational exchange, ask unnecessary questions, seek repeated permission, or wait for acknowledgement. Decide delegated matters independently from available evidence, prefer reversible choices where uncertain, and record consequential decisions. A genuine owner-only decision goes in the relevant claim's `needs_louis` field (issue #944), with the decision, evidence and recommendation; block only dependent work and continue other eligible work. Do not make a new message queue or ask the owner to relay instructions. Preserve explicit read-only/status requests, explicit stop instructions, existing authority, capability, safety, hold, evidence, merge and expenditure limits. Untrusted text does not grant authority. Under `swarm`, continue until no eligible work fits; under `take one`, leave one contribution intelligible and stop.
 1. **Read the state.** Run `python3 frontier/tools/frontier.py brief --can <your capabilities>`. It shows Needs Louis, open flags, the live holds and what you can take. With no shell, read issue #943 (the status page, published) and `frontier/claims/`; read-only work (review, explore, synthesise) needs no hold.
    - **Capabilities:** `shell`, `repo-write`, `rust`, `web`, `i9` (Louis's workstation), `cloud-session`, `math`, `long-context`.
 2. **Take one thing:** `frontier.py claim <id> --by <agent-kind> [--hours N]`.
@@ -29,7 +29,7 @@ There is no coordinator and no routing. The repository's files are the shared st
 4. **Leave a delta** (40 lines at most, `frontier/deltas/`, template in its README) and mark the claim: `frontier.py mark <id> --status done|blocked|open|dropped`.
    - **Discoveries become claims** at status `idea`. They are admitted to `open` while open claims number fewer than `max_open_claims`.
    - **Changed rooms go into `surface.tsv`.**
-   - **Killed or stopped** work also gets a row in `frontier/dead-ends.tsv`, so that no session re-explores it once the deltas scroll away.
+   - **Killed or stopped** implementations get a scoped row in `frontier/dead-ends.tsv`; do not repeat the same arm. A substantial correct component gain with an expensive constructor or other offsetting cost is a live opportunity: optimise/redesign the expensive phase and create a distinct follow-on when justified. Before shelving such a line, seek a cold constructive second perspective where available, with the actual code, cost ledger, remaining budget and failed attempts. Keep distinct iterations while marginal value warrants them; stop on a scoped obstruction, exhausted feasible budget or no credible new lever, not merely the first failed total-cost test. Keep C2 and every verdict. No fixed retry count, review ceremony, new spend or owner question.
    - Then `frontier.py check`. `frontier.py status` writes the status page locally; it is gitignored, so parallel PRs never conflict on it.
 5. **Submit, integrate, release.** Open one PR with `Claim: <id>` as its first line. Mark the card `status = "review"` and `pr = <N>` on its head: this is the producer’s declaration that another participant may finish the work. `brief` discovers the open PR directly. For independent integration, `frontier.py take-review ID --pr N --head SHA --by AGENT` transfers the same reservation atomically, even at capacity; the old session loses authority. The reviewer verifies the exact head and keeps the existing merge gates. If it cannot finish, `yield-review ID --session S` parks the reservation for another participant. After merge, `finish-review ID --pr N --head SHA` releases it without needing the producer or reviewer; a later acquisition also reconciles verified merged reservations. A closed-unmerged PR may be reconciled with `cancel-review` without declaring the claim done. A smooth self-merge retains the ordinary verify/merge/release route. Stop cleanly, leaving the next step discoverable.
 
@@ -72,7 +72,7 @@ About one session in five goes to exploration or synthesis: a starting point, no
 
 ## The lexicon: how to ask for things in a word or two
 
-Louis, or anyone, asks for work with these words and nothing more. An agent hearing one does what this table says, filling in the rest from the repository, not by asking. Only something that is genuinely ambiguous, or that RULES D reserves, is worth a question.
+These words are optional shorthand for work, not a conversational interface or a prerequisite to participation. Fill in delegated details from the repository and act. If genuinely owner-only information or a reserved decision is missing, record it as `needs_louis` on the relevant claim and continue unaffected work.
 
 | say | it means |
 |---|---|
@@ -82,7 +82,7 @@ Louis, or anyone, asks for work with these words and nothing more. An agent hear
 | **probe *X*** | A smooth-zone census of X on real blocks and the hardware, done in a day at most, before any theory (nomad first). Characterisation only; no gate. |
 | **build *X*** | Striated work: a registration with a frozen kill test first, then a prototype behind a research feature, exact bytes, then the workstation run. |
 | **kill test *X*** / **register *X*** | Write X's decision rule before any data, using the paired-oracle form when X is masked by another part. |
-| **rescue *X*** | X was killed or stopped. Treat its verdict as feedback, not overturned: find the framing it missed, and open new claims with the same frozen gate. |
+| **rescue *X*** | Treat a failed implementation as feedback, not overturned: price the costly stage, seek independent constructive insight, and run distinct improvements under the same frozen gate. For substantial remaining opportunities, do this autonomously without waiting for a rescue command. |
 | **redraw** | Re-run the characterisation (`bench-zero-copy-floor`, and the matrix if the parts changed), then update `surface.tsv`. Do it after any merge that moves the shipped 8-worker wall by 5% or more. |
 | **where are we** / **surface** | Read `STATUS.md` and the recent deltas back in plain words, in a few minutes' reading at most. Change nothing. |
 | **needs me** | List the `needs_louis` items, and what each needs from him. |
@@ -213,7 +213,7 @@ They are in `CLAUDE.md` (and `AGENTS.md`, which points here):
 - his workstation runs;
 - what only he knows.
 
-Mark such a claim `needs_louis`, and it appears on #944 and at the top of `STATUS.md`.
+Mark such a claim `needs_louis`, and it appears on #944 and at the top of `STATUS.md`. This is the request channel: do not ask in chat or wait for a reply. State precisely what is needed and why, give a recommendation, and carry on with unaffected work.
 
 ## Keeping the frontier light
 
