@@ -335,6 +335,13 @@
     "section": " · Research blog",
     "title": "The decoder's true floor and the limits of a pooled scan"
   },
+  "assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png": {
+    "description": "Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.",
+    "foot": "lmmx.github.io/mibz2 · 27 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
