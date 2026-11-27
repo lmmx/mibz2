@@ -20,6 +20,7 @@ extra_javascript = [
   "assets/javascripts/bench.js?v=dev",
   "assets/javascripts/couriers.js?v=dev",
   "assets/javascripts/blog.js?v=dev",
+  "assets/javascripts/announce.js?v=dev",
   "assets/javascripts/frontier.js?v=dev",
   "assets/javascripts/observatory.js?v=dev",
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
