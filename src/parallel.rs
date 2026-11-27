@@ -16,15 +16,17 @@
 //! worker keeps ~7 MB of buffers; the input held is the chunks queued (`INPUT_QUEUE`) and
 //! the scanner's window (its lookahead, 2 MB, from the block being read on). Buffers are
 //! reused from block to block, not allocated each time. The plain workers' decoder also
-//! caps the decoded bytes waiting for the reader (`READY_BYTES`): past them, the scanner runs
-//! only as many blocks ahead of the reader as there are workers, and 2 more.
+//! caps the decoded bytes waiting for the reader (`READY_BYTES`): past them, both the
+//! scanner and the workers stay within `Cap::floor` blocks (`threads + 2`) ahead of the
+//! reader, and the recycled output pool (`free_out`) is bounded in bytes so high-expansion
+//! run-only blocks cannot inflate peak memory up to `slots` buffers.
 //!
 //! **The plain workers' handoff** (`worker`): a block's job comes off a queue (`Jobs`) that
 //! wakes one waiting worker; the block is inverted straight into a buffer of its own, which
 //! becomes its decoded bytes, its RLE1 undone in place (`decode_owned`), its symbols' buffer
 //! handed back as soon as its rows are known; the decoded blocks wait in a ring of the
-//! window's slots (`Ready`), and the reader and the scanner each wait on a condition of
-//! their own, woken only by what they wait for.
+//! window's slots (`Ready`), and the reader, the scanner and cap-gated workers each wait on
+//! a condition of their own, woken only by what they wait for.
 //!
 //! **Errors come in order:** a block's error is the reader's once every block before it
 //! is read, so the bytes read before an error are exactly the stream's up to that block.
@@ -35,7 +37,7 @@ use super::stream::{Event, Scanner, Source};
 use super::{Error, ErrorKind, Kernels, Scratch};
 use std::collections::{BTreeMap, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
@@ -289,15 +291,27 @@ struct State {
     /// buffers to reuse: decoded blocks' and symbols', and the input's chunks the scanner is
     /// done with (`StreamDecoder::spare`)
     free_out: Vec<Vec<u8>>,
+    /// total capacity in bytes across `free_out`
+    free_out_bytes: usize,
     free_syms: Vec<Vec<u16>>,
     free_in: Vec<Vec<u8>>,
     /// the reader waits for a block (on `Shared::cv`), the scanner for room (on
-    /// `Shared::scan_cv`): each is woken only while it waits, and only by what it waits for
+    /// `Shared::scan_cv`), and cap-gated workers on `Shared::worker_cv`: each is woken only
+    /// while it waits, and only by what it waits for
     reader_waiting: bool,
     scanner_waiting: bool,
+    workers_waiting: usize,
     /// (testing) the scanner's waits with room in the window: the cap's
     #[cfg(test)]
     capped_waits: u64,
+    /// (testing) worker waits behind the ready cap, and high-water marks of ready and pooled
+    /// output bytes
+    #[cfg(test)]
+    worker_capped_waits: u64,
+    #[cfg(test)]
+    ready_bytes_hwm: usize,
+    #[cfg(test)]
+    free_out_bytes_hwm: usize,
     /// the decode's terminal failure, if it failed as a whole (the service core's outer
     /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
     /// reader's error in place of `Cancelled`
@@ -313,12 +327,20 @@ impl State {
             end: None,
             cancelled: false,
             free_out: Vec::new(),
+            free_out_bytes: 0,
             free_syms: Vec::new(),
             free_in: Vec::new(),
             reader_waiting: false,
             scanner_waiting: false,
+            workers_waiting: 0,
             #[cfg(test)]
             capped_waits: 0,
+            #[cfg(test)]
+            worker_capped_waits: 0,
+            #[cfg(test)]
+            ready_bytes_hwm: 0,
+            #[cfg(test)]
+            free_out_bytes_hwm: 0,
             terminal: None,
         }
     }
@@ -338,8 +360,12 @@ struct Shared {
     cv: Condvar,
     /// the scanner's: room in the window (and under the cap), or the decode cancelled
     scan_cv: Condvar,
+    /// workers' ready-cap gate: `taken` advanced, `ready.bytes` fell below `cap`, or cancelled
+    worker_cv: Condvar,
     /// `State::cancelled`, readable without the lock (a worker skipping its job)
     stopped: AtomicBool,
+    /// mirror of `State::ready.bytes` updated under `state`, for lock-free worker fast-path
+    ready_bytes: AtomicUsize,
     slots: u64,
     /// the ready blocks' cap, if the decoder has one (the plain workers')
     cap: Option<Cap>,
@@ -358,7 +384,9 @@ impl Shared {
             state: Mutex::new(State::new(slots)),
             cv: Condvar::new(),
             scan_cv: Condvar::new(),
+            worker_cv: Condvar::new(),
             stopped: AtomicBool::new(false),
+            ready_bytes: AtomicUsize::new(0),
             slots,
             cap,
             overlapped: AtomicU64::new(0),
@@ -374,10 +402,14 @@ impl Shared {
         self.state.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// The decode cancelled (under the lock held as `st`): the ready blocks dropped
+    /// The decode cancelled (under the lock held as `st`): the ready blocks and pooled output
+    /// buffers dropped
     fn cancel_locked(&self, st: &mut State) {
         st.cancelled = true;
         st.ready.clear();
+        st.free_out.clear();
+        st.free_out_bytes = 0;
+        self.ready_bytes.store(0, Ordering::Release);
         self.stopped.store(true, Ordering::Release);
     }
 
@@ -385,6 +417,7 @@ impl Shared {
     fn wake_all(&self) {
         self.cv.notify_all();
         self.scan_cv.notify_all();
+        self.worker_cv.notify_all();
     }
 
     /// `place`'s block in `ready`, unless the decode is cancelled, under the lock held as
@@ -394,7 +427,67 @@ impl Shared {
             return false;
         }
         st.ready.insert(place, res);
+        self.ready_bytes.store(st.ready.bytes, Ordering::Release);
+        #[cfg(test)]
+        {
+            st.ready_bytes_hwm = st.ready_bytes_hwm.max(st.ready.bytes);
+        }
         st.reader_waiting && place == st.taken
+    }
+
+    /// Recycle a decoded output buffer into `free_out` under `st`, bounded by both `slots`
+    /// and (when capped) a byte budget so high-expansion run-only buffers (~46 MiB) cannot
+    /// accumulate up to `slots` copies while normal ~1 MiB blocks and `threads` active
+    /// buffers still recycle without munmap/mmap page-fault thrashing.
+    fn push_free_out(&self, st: &mut State, spent: Vec<u8>) {
+        let cap = spent.capacity();
+        if cap < POOLED_FROM || st.free_out.len() >= self.slots as usize {
+            return;
+        }
+        if let Some(c) = self.cap {
+            let byte_cap = c
+                .bytes
+                .saturating_add((c.floor as usize).saturating_mul(2 << 20));
+            let recycle_floor = c.floor.saturating_sub(2).max(1) as usize;
+            if st.free_out_bytes.saturating_add(cap) > byte_cap
+                && st.free_out.len() >= recycle_floor
+            {
+                return;
+            }
+        }
+        st.free_out_bytes += cap;
+        st.free_out.push(spent);
+        #[cfg(test)]
+        {
+            st.free_out_bytes_hwm = st.free_out_bytes_hwm.max(st.free_out_bytes);
+        }
+    }
+
+    /// Pop a recycled output buffer from `free_out` under `st`, keeping `free_out_bytes` exact.
+    fn pop_free_out(st: &mut State) -> Option<Vec<u8>> {
+        let v = st.free_out.pop()?;
+        st.free_out_bytes -= v.capacity();
+        Some(v)
+    }
+
+    /// Wait before decoding `place` while unread decoded bytes are at or above `cap.bytes`
+    /// and `place` lies past the guaranteed-progress floor `taken + cap.floor`. Because
+    /// `Jobs` is strict FIFO in `place`, `taken` was popped before any `place >= taken + floor`
+    /// and never blocks here, so forward progress is guaranteed. Returns `false` if cancelled.
+    #[cold]
+    #[inline(never)]
+    fn wait_worker_cap(&self, place: u64, cap: Cap) -> bool {
+        let mut st = self.lock();
+        while !st.cancelled && st.ready.bytes >= cap.bytes && place >= st.taken + cap.floor {
+            #[cfg(test)]
+            {
+                st.worker_capped_waits += 1;
+            }
+            st.workers_waiting += 1;
+            st = self.worker_cv.wait(st).unwrap_or_else(|e| e.into_inner());
+            st.workers_waiting -= 1;
+        }
+        !st.cancelled
     }
 
     /// Whether the scanner must wait before it issues another block: the window full, or
@@ -958,9 +1051,7 @@ impl StreamDecoder {
     fn recycle(&self, spent: Vec<u8>) {
         if spent.capacity() >= POOLED_FROM {
             let mut st = self.shared.lock();
-            if st.free_out.len() < self.shared.slots as usize {
-                st.free_out.push(spent);
-            }
+            self.shared.push_free_out(&mut st, spent);
         }
     }
 
@@ -969,9 +1060,7 @@ impl StreamDecoder {
     fn advance(&self, r: &mut Reader, extra: Vec<u8>) {
         let mut st = self.shared.lock();
         for spent in [std::mem::take(&mut r.cur), extra] {
-            if spent.capacity() >= POOLED_FROM && st.free_out.len() < self.shared.slots as usize {
-                st.free_out.push(spent);
-            }
+            self.shared.push_free_out(&mut st, spent);
         }
         r.at = 0;
         mark!(ReadWait);
@@ -983,14 +1072,22 @@ impl StreamDecoder {
             let taken = st.taken;
             if let Some(res) = st.ready.remove(&taken) {
                 st.taken += 1;
+                self.shared
+                    .ready_bytes
+                    .store(st.ready.bytes, Ordering::Release);
                 st.reader_waiting = false;
-                let wake = st.scanner_waiting;
+                let wake_scanner = st.scanner_waiting;
+                let wake_workers = st.workers_waiting > 0;
                 // (marked under the lock, as before: the scanner can issue into the freed slot
                 // only after it, so the timeline's window never shows `slots` + 1)
                 mark!(Taken, taken);
                 drop(st);
-                if wake {
+                if wake_scanner {
                     self.shared.scan_cv.notify_one();
+                }
+                if wake_workers {
+                    // (each waiting worker checks its own `place < taken + floor`, so wake all)
+                    self.shared.worker_cv.notify_all();
                 }
                 match res {
                     Ok(v) => r.cur = v,
@@ -1268,6 +1365,13 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
         if shared.stopped.load(Ordering::Acquire) {
             continue; // (drain the queue, so the scanner never waits on it)
         }
+        if let Some(cap) = shared.cap {
+            if shared.ready_bytes.load(Ordering::Acquire) >= cap.bytes
+                && !shared.wait_worker_cap(place, cap)
+            {
+                continue; // (cancelled while waiting behind the ready cap)
+            }
+        }
         mark!(DecodeStart, place);
         // (research only, `phase-counters`: the worker's whole-decode scope, the block's
         // decode_block)
@@ -1290,8 +1394,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
                     st.free_syms.push(syms);
                 }
                 if n >= POOLED_FROM {
-                    st.free_out
-                        .pop()
+                    Shared::pop_free_out(&mut st)
                         .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
                 } else {
                     Vec::new()
@@ -1665,7 +1768,7 @@ fn take_out(shared: &Shared) -> Option<Vec<u8>> {
     if st.cancelled {
         return None;
     }
-    let mut out = st.free_out.pop().unwrap_or_default();
+    let mut out = Shared::pop_free_out(&mut st).unwrap_or_default();
     out.clear();
     Some(out)
 }
