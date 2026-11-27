@@ -14,15 +14,34 @@
     frontier.py cancel-review ID --pr N --head SHA   release a verified closed-unmerged reservation
     frontier.py holds                               list the holds on origin
     frontier.py mark ID --status open|idea|done|dropped|blocked   edit a claim's state (goes in your PR)
+    frontier.py arrive --as FAMILY [--can a,b] [--state S]   opt in to observational presence
+    frontier.py touch [--state S] [--claim ID] [--can a,b] [--force]   refresh it (throttled)
+    frontier.py depart                              publish a final departed record
+    frontier.py population                          observed instances, apart from reservations
 
 A hold is the branch `hold/<id>` on origin: a chain of commits each carrying `lease.toml`. Taking,
 renewing, taking over an expired hold and releasing are all pushes guarded by
 `--force-with-lease`, so the remote compares and swaps atomically: of two agents claiming at
 once, exactly one succeeds. Nothing deletes a branch (some agents' proxies refuse deletions);
-a released hold is a commit saying so. Standard library only (Python 3.11+); nothing here needs
+a released hold is a commit saying so.
+
+Presence is optional and observational. `arrive` gives this checkout (per Git worktree) a random
+opaque instance id for the participant's lifetime, distinct from any lease session, and publishes
+one small `presence.toml` on `presence/<family>/<instance>`: self-declared family, capabilities
+(for example `workflow-dispatch` where the harness can dispatch workflows), coarse state
+(active, idle, integrating, departed), the current claim, and start and last-seen times. Nothing
+else: no lease session, hostname, credential or conversation id. Once arrived, `brief`, `claim`,
+`renew`, `release` and the review commands refresh it at most every 15 minutes unless something
+changed; no background heartbeat. A record seen within 2 hours is "fresh"; older is "stale or
+unknown", never dead or available. Arrival and departure prune at most three records departed for
+2 hours or unseen for 7 days, each by compare-and-swap on its exact SHA, so a refresh wins a race.
+Presence is untrusted: it never grants, reserves, admits or authorises anything, touches neither
+hold/* nor the admission epoch, and a failure never fails the command it rides on.
+FRONTIER_PRESENCE=off disables the checkpoint refresh. Standard library only (Python 3.11+); nothing here needs
 GitHub Actions.
 """
 
+import contextlib
 import datetime as dt
 import json
 import os
@@ -818,6 +837,8 @@ def render():
     out += ["", "## Open flags", ""] + (
         [f"- `{p.name}`: {h.get('flags')} ({h.get('invariant')})" for p, h in flags] or ["- none"]
     )
+    out += ["", "## Population (observed presence, not reservations)", ""]
+    out += presence_population(holds(strict=False))
     out += ["", "## Awaiting review or merge", ""] + review_lines
     for state, title in (
         ("open", "Open claims, by priority"),
@@ -1222,7 +1243,8 @@ def brief(can):
     m = re.search(r"<!-- brief -->(.*?)<!-- /brief -->", (ROOT / "README.md").read_text(), re.S)
     print(m.group(1).strip())
     claims, cards = load("claims"), load("blog")
-    held = {k: v for k, (_, v) in holds(strict=False).items() if live(v)}
+    all_holds = holds(strict=False)
+    held = {k: v for k, (_, v) in all_holds.items() if live(v)}
     flags = open_flags(fetch=True, strict=False)
     louis = [
         c
@@ -1253,6 +1275,10 @@ def brief(can):
             "\n".join(f"- {k}: {v.get('holder')} until {v.get('expires')}" for k, v in held.items())
             or "- nothing"
         )
+    )
+    print(
+        "\n## Population (observed presence, not reservations; `frontier.py arrive` to appear)\n"
+        + "\n".join(presence_population(all_holds))
     )
     prs, pr_error = read_open_prs()
     review_lines, pending = review_projection(claims + cards, prs, pr_error)
@@ -1364,13 +1390,508 @@ def mine(cid, session, all_holds=None):
     return sha, lease
 
 
+# ---------------------------------------------------------------------------------------------
+# Presence: optional, observational, self-declared. Never a credential, a lease or a slot.
+#
+# Each independent participant instance may publish one small `presence.toml` on its own ref,
+# refs/heads/presence/<participant>/<instance>, outside master. The instance id is random and
+# opaque, kept in the checkout's (per-worktree) Git directory for the participant's lifetime,
+# and distinct from any per-claim lease session. Writes are throttled, compare-and-swapped per
+# ref, never touch the admission epoch or hold/*, and never fail the command they ride on.
+# Counts of observed instances are reported separately from live reservations; age past the
+# TTL means "stale/unknown", never "dead" or "available".
+# ---------------------------------------------------------------------------------------------
+
+PRESENCE_PREFIX = "refs/heads/presence"
+PRESENCE_FILE = "frontier-presence.toml"
+PRESENCE_TTL = dt.timedelta(hours=2)  # seen within this: "fresh"; older: "stale/unknown"
+PRESENCE_THROTTLE = dt.timedelta(minutes=15)  # an unchanged record is re-pushed at most this often
+PRESENCE_PRUNE_AFTER = dt.timedelta(days=7)  # records this old (or departed past the TTL) may be pruned
+PRESENCE_PRUNE_MAX = 3  # at most this many CAS deletions per write
+PRESENCE_MAX_RECORDS = 256  # records read; the rest are counted as truncated
+PRESENCE_MAX_BYTES = 2048
+PRESENCE_MAX_CAPS = 16
+PRESENCE_SKEW = dt.timedelta(minutes=10)
+PRESENCE_STATES = ("active", "idle", "integrating", "departed")
+PRESENCE_TIMEOUT = 30
+_TOKEN = re.compile(r"[a-z0-9][a-z0-9-]{0,31}")
+_INSTANCE = re.compile(r"[0-9a-f]{16}")
+_CLAIM_ID = re.compile(r"[a-z0-9][a-z0-9._-]{0,79}")
+_PRESENCE_KEYS = {
+    "schema", "participant", "instance", "state", "claim", "capabilities", "started", "last_seen"
+}
+
+
+def _pgit(*args, inp=None, env=None, binary=False):
+    """Run git for presence: bounded in time, never raising, never prompting."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(REPO), *args],
+            input=inp,
+            capture_output=True,
+            text=not binary,
+            timeout=PRESENCE_TIMEOUT,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", **(env or {})},
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return 1, f"git {args[0]} failed: {exc}"
+    if binary:
+        return r.returncode, r.stdout
+    return r.returncode, r.stdout.strip() + ("\n" + r.stderr.strip() if r.returncode else "")
+
+
+def _presence_token(value, what):
+    """A safe ref/record token, or ValueError."""
+    if not isinstance(value, str) or not _TOKEN.fullmatch(value):
+        raise ValueError(f"{what} must match {_TOKEN.pattern}: {value!r}")
+    return value
+
+
+def _presence_caps(caps):
+    """Sorted unique capability tokens, bounded."""
+    out = sorted({_presence_token(c, "capability") for c in caps})
+    if len(out) > PRESENCE_MAX_CAPS:
+        raise ValueError(f"at most {PRESENCE_MAX_CAPS} capabilities")
+    return out
+
+
+def _presence_time(value):
+    """An aware ISO timestamp, or ValueError."""
+    t = dt.datetime.fromisoformat(value) if isinstance(value, str) and len(value) <= 40 else None
+    if t is None or t.tzinfo is None:
+        raise ValueError(f"bad timestamp {value!r}")
+    return t
+
+
+def presence_validate(rec, participant=None, instance=None):
+    """Return the record if it is a well-formed presence snapshot (optionally for this ref)."""
+    if not isinstance(rec, dict) or set(rec) != _PRESENCE_KEYS or type(rec["schema"]) is not int \
+            or rec["schema"] != 1:
+        raise ValueError("unexpected keys or schema")
+    _presence_token(rec["participant"], "participant")
+    if not isinstance(rec["instance"], str) or not _INSTANCE.fullmatch(rec["instance"]):
+        raise ValueError("bad instance")
+    if rec["state"] not in PRESENCE_STATES:
+        raise ValueError("bad state")
+    if not isinstance(rec["claim"], str) or (rec["claim"] and not _CLAIM_ID.fullmatch(rec["claim"])):
+        raise ValueError("bad claim")
+    if not isinstance(rec["capabilities"], list) or rec["capabilities"] != _presence_caps(
+        rec["capabilities"]
+    ):
+        raise ValueError("bad capabilities")
+    if _presence_time(rec["last_seen"]) < _presence_time(rec["started"]):
+        raise ValueError("last_seen precedes started")
+    if participant is not None and (rec["participant"], rec["instance"]) != (participant, instance):
+        raise ValueError("record does not match its ref")
+    return rec
+
+
+def presence_body(rec):
+    """Serialise a validated record as TOML."""
+    presence_validate(rec)
+    lines = []
+    for k in ("schema", "participant", "instance", "state", "claim", "capabilities", "started",
+              "last_seen"):
+        v = rec[k]
+        if isinstance(v, int):
+            lines.append(f"{k} = {v}")
+        elif isinstance(v, list):
+            lines.append(f"{k} = [" + ", ".join(f'"{x}"' for x in v) + "]")
+        else:
+            lines.append(f'{k} = "{v}"')
+    return "\n".join(lines) + "\n"
+
+
+def _presence_local_path():
+    """The per-worktree file holding this checkout's instance; None if unavailable."""
+    rc, out = _pgit("rev-parse", "--git-path", PRESENCE_FILE)
+    if rc or not out:
+        return None
+    p = pathlib.Path(out)
+    return p if p.is_absolute() else REPO / p
+
+
+def presence_local():
+    """Return the checkout's local presence state, or None (no arrival, or departed)."""
+    p = _presence_local_path()
+    if not p or not p.exists():
+        return None
+    try:
+        d = tomllib.loads(p.read_text(encoding="utf-8"))
+        presence_validate(d["record"])
+    except (OSError, ValueError, KeyError, TypeError, tomllib.TOMLDecodeError):
+        return None
+    return None if d["record"]["state"] == "departed" else d
+
+
+def _presence_save_local(record, pushed_at, sha):
+    """Persist the instance, the last pushed record and the ref's last known SHA."""
+    p = _presence_local_path()
+    if not p:
+        return
+    text = f'pushed_at = "{pushed_at}"\nsha = "{sha}"\n\n[record]\n' + presence_body(record)
+    tmp = p.with_name(p.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(p)
+
+
+def presence_ref(record):
+    """The record's own ref."""
+    return f"{PRESENCE_PREFIX}/{record['participant']}/{record['instance']}"
+
+
+def _presence_remote_sha(ref):
+    """(ok, sha or '') for one presence ref on origin."""
+    rc, out = _pgit("ls-remote", "origin", ref)
+    if rc:
+        return False, ""
+    for line in out.splitlines():
+        fields = line.split()
+        if len(fields) == 2 and fields[1] == ref and re.fullmatch(r"[0-9a-f]{40}", fields[0]):
+            return True, fields[0]
+    return True, ""
+
+
+def _presence_push(record, expected):
+    """Write `record` to its ref with CAS on `expected` (a SHA, or '' for absent)."""
+    identity = lease_identity()
+    if identity is None:
+        return False, "repository-local Git identity is not configured"
+    rc, blob = _pgit("hash-object", "-w", "--stdin", inp=presence_body(record))
+    if rc:
+        return False, blob
+    rc, tree = _pgit("mktree", inp=f"100644 blob {blob}\tpresence.toml\n")
+    if rc:
+        return False, tree
+    # Fast-forward chain, so no proxy has to accept a non-fast-forward update.
+    args = ["commit-tree", tree, "-m", f"presence {record['participant']} {record['instance']}"]
+    args += ["-p", expected] if expected else []
+    rc, sha = _pgit(*args, env=identity)
+    if rc:
+        return False, sha
+    if expected:
+        _pgit("fetch", "-q", "--no-tags", "--no-write-fetch-head", "origin", expected)
+    ref = presence_ref(record)
+    rc, out = _pgit(
+        "push", "--porcelain", "--no-verify", f"--force-with-lease={ref}:{expected}", "origin",
+        f"{sha}:{ref}",
+    )
+    return rc == 0, sha if rc == 0 else out
+
+
+def presence_write(record, local=None, *, force=False):
+    """Publish `record` unless throttled; return (pushed, message). Never raises."""
+    try:
+        record = presence_validate(dict(record))
+        t = now()
+        if local and not force:
+            prev = dict(local["record"])
+            same = {k: v for k, v in prev.items() if k != "last_seen"} == {
+                k: v for k, v in record.items() if k != "last_seen"
+            }
+            pushed = _presence_time(local.get("pushed_at", "1970-01-01T00:00:00+00:00"))
+            if same and t - pushed < PRESENCE_THROTTLE:
+                return False, "throttled"
+        expected = (local or {}).get("sha", "")
+        if local and local["record"]["instance"] != record["instance"]:
+            expected = ""
+        ok, out = _presence_push(record, expected)
+        if not ok:
+            # Our record was refreshed elsewhere or pruned: re-read once and retry.
+            seen, expected = _presence_remote_sha(presence_ref(record))
+            if not seen:
+                return False, "origin unavailable"
+            ok, out = _presence_push(record, expected)
+            if not ok:
+                return False, "not written (CAS lost twice)"
+        _presence_save_local(record, t.isoformat(), out)
+        return True, out
+    except Exception as exc:  # noqa: BLE001 - presence must never break the command it rides on
+        return False, f"presence error: {exc}"
+
+
+def presence_records(fetch=True):
+    """Read every presence record on origin.
+
+    Returns {"error": str|None, "records": [(ref, sha, record|None, reason)], "truncated": n}.
+    """
+    out = {"error": None, "records": [], "truncated": 0}
+    if fetch:
+        rc, msg = _pgit(
+            "fetch", "-q", "--prune", "--no-tags", "origin",
+            f"+{PRESENCE_PREFIX}/*:refs/remotes/origin/presence/*",
+        )
+        if rc:
+            out["error"] = "origin unavailable"
+            return out
+    rc, listing = _pgit(
+        "for-each-ref", "--format=%(objectname) %(refname)", "refs/remotes/origin/presence"
+    )
+    if rc:
+        out["error"] = "cannot list presence refs"
+        return out
+    entries = []
+    for line in listing.splitlines():
+        sha, ref = line.split(" ", 1)
+        entries.append((sha, ref))
+    out["truncated"] = max(0, len(entries) - PRESENCE_MAX_RECORDS)
+    entries = entries[:PRESENCE_MAX_RECORDS]
+    if not entries:
+        return out
+    # Size and type first, so an oversized or non-blob record is never read into memory.
+    rc, checks = _pgit(
+        "cat-file", "--batch-check",
+        inp="".join(f"{sha}:presence.toml\n" for sha, _ in entries),
+    )
+    lines = checks.splitlines() if rc == 0 else []
+    blobs = [None] * len(entries)
+    small = []
+    for i in range(len(entries)):
+        fields = lines[i].split() if i < len(lines) else []
+        if len(fields) == 3 and fields[1] == "blob" and fields[2].isdigit():
+            if int(fields[2]) <= PRESENCE_MAX_BYTES:
+                small.append((i, fields[0]))
+            else:
+                blobs[i] = "oversized"
+    if small:
+        rc, raw = _pgit(
+            "cat-file", "--batch", inp="".join(f"{oid}\n" for _, oid in small).encode(),
+            binary=True,
+        )
+        pos = 0
+        for k, (i, _oid) in enumerate(small):
+            try:
+                if rc:
+                    raise ValueError("cat-file failed")
+                nl = raw.index(b"\n", pos)
+                header = raw[pos:nl].split()
+                pos = nl + 1
+                if len(header) != 3:
+                    raise ValueError("bad cat-file header")
+                size = int(header[2])
+                if header[1] != b"blob" or size > PRESENCE_MAX_BYTES or pos + size > len(raw):
+                    raise ValueError("unexpected object")
+                blobs[i] = raw[pos : pos + size]
+                pos += size + 1
+            except ValueError:
+                # Out of step: everything from here on is unreadable, not misattributed.
+                for j, _oid in small[k:]:
+                    blobs[j] = None
+                break
+    for (sha, ref), blob in zip(entries, blobs):
+        tail = ref[len("refs/remotes/origin/presence/") :].split("/")
+        rec, reason = None, ""
+        try:
+            if len(tail) != 2:
+                raise ValueError("unexpected ref shape")
+            if blob is None:
+                raise ValueError("no readable presence.toml blob")
+            if blob == "oversized":
+                raise ValueError("record too large")
+            rec = presence_validate(tomllib.loads(blob.decode("utf-8")), tail[0], tail[1])
+        except Exception as exc:  # noqa: BLE001 - untrusted input: RecursionError, TypeError...
+            rec, reason = None, (str(exc) or type(exc).__name__)[:80]
+        out["records"].append((f"{PRESENCE_PREFIX}/{'/'.join(tail)}", sha, rec, reason))
+    return out
+
+
+def presence_classify(rec, t=None):
+    """Classify a record as fresh, stale, departed, expired or future by its self-declared times.
+
+    "expired" (unseen past the prune horizon) keeps records that a proxy refused to delete from
+    inflating the stale count for ever.
+    """
+    t = t or now()
+    seen = _presence_time(rec["last_seen"])
+    if t - seen > PRESENCE_PRUNE_AFTER:
+        return "expired"
+    if rec["state"] == "departed":
+        return "departed"
+    if seen - t > PRESENCE_SKEW:
+        return "future"
+    return "fresh" if t - seen <= PRESENCE_TTL else "stale"
+
+
+def presence_prune(limit=PRESENCE_PRUNE_MAX):
+    """Delete at most `limit` long-stale or departed records, each guarded by its exact SHA.
+
+    A record refreshed meanwhile survives (the CAS fails). A proxy that refuses deletions just
+    leaves the record, which readers still classify by age. Returns the number deleted.
+    """
+    found = presence_records()
+    if found["error"]:
+        return 0
+    t, done = now(), 0
+    for ref, sha, rec, _ in found["records"]:
+        if done >= limit:
+            break
+        if rec is None:
+            continue  # malformed records are reported, not deleted: someone should look
+        age = t - _presence_time(rec["last_seen"])
+        if age > PRESENCE_PRUNE_AFTER or (rec["state"] == "departed" and age > PRESENCE_TTL):
+            rc, _ = _pgit("push", "--porcelain", "--no-verify",
+                          f"--force-with-lease={ref}:{sha}", "origin", f":{ref}")
+            done += rc == 0
+    return done
+
+
+def presence_population(all_holds=None, fetch=True):
+    """Lines describing observed instances, kept apart from live reservations; never raises."""
+    try:
+        return _presence_population(all_holds, fetch)
+    except Exception as exc:  # noqa: BLE001 - presence must never break brief or status
+        return [f"- observed instances: unknown (error: {type(exc).__name__})"]
+
+
+def _presence_population(all_holds, fetch):
+    """Build presence_population's lines."""
+    found = presence_records(fetch=fetch)
+    lines = []
+    if found["error"]:
+        lines.append(f"- observed instances: unknown ({found['error']})")
+    else:
+        t = now()
+        groups = {
+            "fresh": [], "stale": [], "departed": [], "expired": [], "future": [], "malformed": []
+        }
+        for ref, _, rec, reason in found["records"]:
+            if rec is None:
+                groups["malformed"].append((ref, reason))
+            else:
+                groups[presence_classify(rec, t)].append(rec)
+        ttl_h = PRESENCE_TTL.total_seconds() / 3600
+        lines.append(
+            f"- observed instances (self-declared, untrusted): {len(groups['fresh'])} fresh "
+            f"(seen within {ttl_h:g} h), {len(groups['stale']) + len(groups['future'])} stale or "
+            f"unknown, {len(groups['departed'])} departed, {len(groups['malformed'])} malformed"
+            + (f", {len(groups['expired'])} expired (unseen 7+ days)" if groups["expired"] else "")
+            + (f", {found['truncated']} not read" if found["truncated"] else "")
+        )
+        for rec in sorted(groups["fresh"], key=lambda r: (r["participant"], r["instance"])):
+            claim_txt = f" on {rec['claim']}" if rec["claim"] else ""
+            lines.append(
+                f"  - {rec['participant']}/{rec['instance'][:8]}: {rec['state']}{claim_txt}; "
+                f"can {','.join(rec['capabilities']) or 'unstated'}; seen {rec['last_seen']}"
+            )
+        caps = {}
+        for rec in groups["fresh"]:
+            for c in rec["capabilities"]:
+                caps[c] = caps.get(c, 0) + 1
+        if caps:
+            lines.append(
+                "  - fresh capabilities: "
+                + ", ".join(f"{c} {n}" for c, n in sorted(caps.items()))
+            )
+        for ref, reason in groups["malformed"][:5]:
+            lines.append(f"  - malformed {ref}: {reason}")
+    if all_holds is not None:
+        lv = [v for _, v in all_holds.values() if live(v)]
+        phases = {}
+        for v in lv:
+            p = v.get("phase") or "work"
+            phases[p] = phases.get(p, 0) + 1
+        lines.append(
+            f"- live reservations (hold/*, not instances): {len(lv)}"
+            + (" (" + ", ".join(f"{n} {p}" for p, n in sorted(phases.items())) + ")" if lv else "")
+        )
+    return lines
+
+
+def presence_arrive(participant, caps, state="idle"):
+    """Start (or resume) this checkout's instance and publish it now."""
+    _presence_token(participant, "participant")
+    caps = _presence_caps(caps)
+    if state not in PRESENCE_STATES or state == "departed":
+        raise ValueError(f"state must be one of {', '.join(PRESENCE_STATES[:-1])}")
+    local = presence_local()
+    t = now().isoformat()
+    if local and local["record"]["participant"] == participant:
+        rec = {**local["record"], "capabilities": caps, "state": state, "last_seen": t}
+    else:
+        local = None
+        rec = {
+            "schema": 1, "participant": participant, "instance": secrets.token_hex(8),
+            "state": state, "claim": "", "capabilities": caps, "started": t, "last_seen": t,
+        }
+    result = presence_write(rec, local, force=True)
+    if result[0]:
+        with contextlib.suppress(Exception):
+            presence_prune()
+    return rec, result
+
+
+def presence_touch(state=None, claim_id=None, caps=None, *, force=False):
+    """Refresh this checkout's record if it has arrived; (pushed, message)."""
+    local = presence_local()
+    if not local:
+        return False, "no presence (run `frontier.py arrive --as FAMILY --can ...` to opt in)"
+    rec = dict(local["record"])
+    if state is not None:
+        if state not in PRESENCE_STATES or state == "departed":
+            return False, f"bad state {state!r}"
+        rec["state"] = state
+    if claim_id is not None:
+        if claim_id and not _CLAIM_ID.fullmatch(claim_id):
+            return False, f"bad claim {claim_id!r}"
+        rec["claim"] = claim_id
+    if caps is not None:
+        try:
+            rec["capabilities"] = _presence_caps(caps)
+        except ValueError as exc:
+            return False, str(exc)
+    rec["last_seen"] = now().isoformat()
+    return presence_write(rec, local, force=force)
+
+
+def presence_depart():
+    """Publish a final departed record and forget the local instance."""
+    local = presence_local()
+    if not local:
+        return False, "no presence to depart"
+    rec = {**local["record"], "state": "departed", "claim": "", "last_seen": now().isoformat()}
+    ok, msg = presence_write(rec, local, force=True)
+    if ok:
+        with contextlib.suppress(Exception):
+            presence_prune()
+    else:  # forget locally anyway: the remote record ages into "stale/unknown"
+        p = _presence_local_path()
+        if p:
+            with contextlib.suppress(OSError):
+                p.unlink()
+    return ok, msg
+
+
+def presence_checkpoint(state=None, claim_id=None, caps=None, *, ended=None):
+    """Opportunistic, throttled refresh at a normal frontier checkpoint, for arrived checkouts.
+
+    `ended` names a claim whose work just ended: the record goes idle only if it was on it.
+    Failures print one line to stderr and never change the command's outcome.
+    """
+    if os.environ.get("FRONTIER_PRESENCE") == "off":
+        return
+    try:
+        local = presence_local()
+        if local:
+            if ended is not None:
+                if local["record"]["claim"] != ended:
+                    return
+                state, claim_id = "idle", ""
+            ok, msg = presence_touch(state, claim_id, caps)
+            if not ok and msg not in ("throttled",):
+                print(f"(presence not refreshed: {msg})", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001
+        print(f"(presence not refreshed: {exc})", file=sys.stderr)
+
+
 def main(argv):
     """Dispatch a subcommand."""
     cmd = argv[1] if len(argv) > 1 else "brief"
     opt = lambda name, default=None: argv[argv.index(name) + 1] if name in argv else default  # noqa: E731
     hours = float(opt("--hours", "8"))
+    can = [c for c in (opt("--can") or "").split(",") if c]
     if cmd == "brief":
-        brief(set(filter(None, (opt("--can") or "").split(","))))
+        presence_checkpoint(caps=can or None)
+        brief(set(can))
     elif cmd == "status":
         (ROOT / "STATUS.md").write_text(render())
         print("wrote frontier/STATUS.md")
@@ -1386,12 +1907,37 @@ def main(argv):
             )
     elif cmd == "claim":
         claim(argv[2], opt("--by", "unknown"), hours)
+        presence_checkpoint("active", argv[2])
     elif cmd == "take-review":
         take_review(argv[2], int(opt("--pr", "0")), opt("--head"), opt("--by", "unknown"), hours)
+        presence_checkpoint("integrating", argv[2])
     elif cmd == "yield-review":
         yield_review(argv[2], opt("--session"))
+        presence_checkpoint(ended=argv[2])
     elif cmd in ("finish-review", "cancel-review"):
         finish_review(argv[2], int(opt("--pr", "0")), opt("--head"), cancelled=cmd == "cancel-review")
+        presence_checkpoint(ended=argv[2])
+    elif cmd == "arrive":
+        try:
+            rec, (ok, msg) = presence_arrive(opt("--as", "unknown"), can, opt("--state", "idle"))
+        except ValueError as exc:
+            sys.exit(f"not arrived: {exc}")
+        if not ok:
+            print(f"presence not published ({msg}); claim work is unaffected", file=sys.stderr)
+            return 1
+        print(f"present as {rec['participant']}/{rec['instance']} ({rec['state']}); "
+              "refreshed at checkpoints, `depart` when leaving")
+    elif cmd == "touch":
+        ok, msg = presence_touch(opt("--state"), opt("--claim"), can or None,
+                                 force="--force" in argv)
+        print("presence refreshed" if ok else f"presence not refreshed: {msg}")
+        return 0 if ok or msg == "throttled" else 1
+    elif cmd == "depart":
+        ok, msg = presence_depart()
+        print("departed" if ok else f"departure not published: {msg} (local instance forgotten)")
+        return 0 if ok else 1
+    elif cmd == "population":
+        print("\n".join(presence_population(holds(strict=False))))
     elif cmd == "verify":
         cid = argv[2]
         all_holds = holds()
@@ -1420,6 +1966,7 @@ def main(argv):
             print(f"not renewed:\n{out}", file=sys.stderr)
             return 1
         print(f"renewed until {updated['expires']}")
+        presence_checkpoint()
     elif cmd == "release":
         sha, lease = holds().get(argv[2], (None, None))
         if not lease or lease.get("session") != opt("--session"):
@@ -1432,6 +1979,7 @@ def main(argv):
             print(f"not released (someone took over):\n{out}", file=sys.stderr)
             return 1
         print(f"released {argv[2]}")
+        presence_checkpoint(ended=argv[2])
     elif cmd == "mark":
         p = next(
             (
