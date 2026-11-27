@@ -1,0 +1,32 @@
+Tested mibz2 base  f396ccc7b3d4290468b12e4ccdfcfcfe7708f3b2
+Host               Intel Xeon Platinum 8573C VM, 5 vCPUs, 4-CPU quota, no exposed SMT siblings
+Compiler           rustc 1.90.0, release profile
+Corpus             12 streams, 431 blocks, 209700196 output bytes
+Compressed SHA256  82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+Output SHA256      3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf
+
+Independent Python verifier
+example b'yzzbb##aa###' 7 (1, 2, 2, 0, 0) 0 1 [b'ab#', b'y#', b'z#']
+7999 arbitrary column/primary/marker checks
+9075 reference token BWT comparisons
+
+Historical frozen block
+column SHA256         db8764224ac4980112ddefbe85b8593f5236643fed71bf8f0b739567d4f2ac67
+primary               264045
+marker                34
+inverse SHA256        f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6
+final output SHA256   d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210
+mixed nodes, run slices and rows: 1058 12361 363378
+Frozen inverse and forward bucket reconstruction verified
+
+Clean worktree with the archived native patch applied
+arbitrary column/primary/marker cases 100840, marker on selected cycle 78618, fused 42382 including 568 unfinished
+40 modified streams identical to mibz2, 40 errors
+Both fused runs reported 367 admitted blocks and 209700196 output bytes.
+Both decoded files passed cmp against each other and the bzip2 -dc reference.
+
+Existing repository suite with the prototype built
+RUSTUP_TOOLCHAIN=1.90.0 taskset -c 0-3 cargo test --release --offline --lib --tests
+208 passed, 0 failed, 2 ignored across 20 test binaries.
+With all five visible CPUs in the affinity mask, the existing parallel policy test
+failed its comparison of the physical topology with the four-CPU quota.

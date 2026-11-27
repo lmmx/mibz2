@@ -1,0 +1,1758 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index acd745e..c8ef636 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -88,6 +88,8 @@ pub use cells::{replay_reps, replay_stats, ReplayStats};
+ // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
+ mod coop;
+ pub mod crc;
++pub mod cylinder;
++pub mod phrase_bwt;
+ // (research only: the Cells memory-dose experiment's scratch, with the `dose` feature)
+ #[cfg(feature = "dose")]
+ #[doc(hidden)]
+diff --git a/src/cylinder.rs b/src/cylinder.rs
+new file mode 100644
+index 0000000..9b4ec1d
+--- /dev/null
++++ b/src/cylinder.rs
+@@ -0,0 +1,468 @@
++//! Research kernel for a single synchronizing byte. The default marker is a double quote.
++use crate::bwt::{InverseBwt, Segmented};
++use crate::{runs::Runs, Kernels};
++
++#[derive(Clone, Copy, Default)]
++struct Run {
++    start: u32,
++    image: u32,
++    byte: u8,
++}
++
++#[derive(Clone, Copy)]
++struct Span {
++    origin: u32,
++    len: u32,
++}
++
++struct Child {
++    start: u32,
++    width: u32,
++    spans: Vec<Span>,
++    byte: u8,
++}
++
++impl Child {
++    fn push(&mut self, origin: u32, len: u32) {
++        if let Some(last) = self.spans.last_mut() {
++            if last.origin + last.len == origin {
++                last.len += len;
++                self.width += len;
++                return;
++            }
++        }
++        self.spans.push(Span { origin, len });
++        self.width += len;
++    }
++}
++
++#[derive(Debug, Clone, Default)]
++pub struct Stats {
++    pub n: u32,
++    pub runs: u32,
++    pub anchors: u32,
++    pub nodes: u32,
++    pub branch_nodes: u32,
++    pub l_intersections: u32,
++    pub routed_spans: u32,
++    pub terminal_spans: u32,
++    pub phrases: u32,
++    pub dictionary_bytes: u32,
++    pub covered: u64,
++    pub root_steps: u32,
++}
++
++// A phrase occupies a contiguous interval in the destination delimiter bucket.
++// The seek table carries one next anchor and one phrase number per occurrence.
++#[derive(Clone, Copy, Default)]
++struct Entry {
++    next: u32,
++    phrase: u32,
++}
++
++#[derive(Default)]
++pub struct Phrase {
++    runs: Vec<Run>,
++    pages: Vec<u32>,
++    table: Vec<Entry>,
++    words: Vec<u8>,
++    offsets: Vec<u32>,
++    path: Vec<u8>,
++    spare_spans: Vec<Vec<Span>>,
++    pub stats: Stats,
++    // Sparse mode collects runs of the phrase BWT for another factorization.
++    sparse: bool,
++    spans_out: Vec<(u32, u32, u32)>,
++    first_dest: Vec<u32>,
++    primary: u32,
++    phase: usize,
++    fallback: Segmented,
++}
++
++const PAGE_SHIFT: u32 = 6;
++
++impl Phrase {
++    // Page samples locate a maximal run without an n-row lookup table.
++    fn run_at(&self, row: u32) -> usize {
++        let mut i = self.pages[(row >> PAGE_SHIFT) as usize] as usize;
++        while self.runs[i + 1].start <= row {
++            i += 1;
++        }
++        i
++    }
++
++    fn release(&mut self, mut spans: Vec<Span>) {
++        spans.clear();
++        self.spare_spans.push(spans);
++    }
++
++    fn begin_word(&mut self, marker: u8) -> u32 {
++        let id = self.offsets.len() as u32;
++        self.offsets.push(self.words.len() as u32);
++        if self.sparse {
++            self.words.extend(self.path.iter().rev().copied());
++            self.words.push(marker);
++            self.first_dest.push(u32::MAX);
++        } else {
++            self.words.push(marker);
++            self.words.extend(self.path.iter().rev().copied());
++        }
++        id
++    }
++
++    fn terminal(&mut self, previous: u32, origin: u32, len: u32, id: u32) {
++        self.stats.terminal_spans += 1;
++        if self.sparse {
++            self.spans_out.push((origin, len, id));
++            self.first_dest[id as usize] = self.first_dest[id as usize].min(previous);
++            return;
++        }
++        let part = &mut self.table[previous as usize..(previous + len) as usize];
++        for (j, slot) in part.iter_mut().enumerate() {
++            *slot = Entry {
++                next: origin + j as u32,
++                phrase: id,
++            };
++        }
++    }
++
++    // The intervals at different nodes are disjoint. Unary chains use a loop.
++    // For branches the largest child is processed on this same stack frame.
++    fn visit(&mut self, mut lo: u32, mut width: u32, mut spans: Vec<Span>, marker: u8, base: u32) {
++        let old_path = self.path.len();
++        loop {
++            self.stats.nodes += 1;
++            self.stats.covered += width as u64;
++            let first = self.run_at(lo);
++            let entry = self.runs[first];
++            let image = entry.image + (lo - entry.start);
++            if lo + width <= self.runs[first + 1].start {
++                self.stats.l_intersections += 1;
++                if entry.byte == marker {
++                    let id = self.begin_word(marker);
++                    let mut dst = image - base;
++                    for sp in &spans {
++                        self.terminal(dst, sp.origin, sp.len, id);
++                        dst += sp.len;
++                    }
++                    self.release(spans);
++                    break;
++                }
++                self.path.push(entry.byte);
++                lo = image;
++                continue;
++            }
++
++            self.stats.branch_nodes += 1;
++            let mut children: Vec<Child> = Vec::new();
++            let mut where_is = [u16::MAX; 256];
++            let mut id = None;
++            let end = lo + width;
++            let mut row = lo;
++            let mut si = 0;
++            let mut used = 0;
++            let mut ri = first;
++            while row < end {
++                self.stats.l_intersections += 1;
++                let run = self.runs[ri];
++                let until = self.runs[ri + 1].start.min(end);
++                let mut dst = run.image + (row - run.start);
++                let index = if run.byte == marker {
++                    if id.is_none() {
++                        id = Some(self.begin_word(marker));
++                    }
++                    None
++                } else {
++                    let tag = &mut where_is[run.byte as usize];
++                    if *tag == u16::MAX {
++                        *tag = children.len() as u16;
++                        children.push(Child {
++                            start: dst,
++                            width: 0,
++                            byte: run.byte,
++                            spans: self.spare_spans.pop().unwrap_or_default(),
++                        });
++                    }
++                    Some(*tag as usize)
++                };
++                while row < until {
++                    let sp = spans[si];
++                    let len = (sp.len - used).min(until - row);
++                    let origin = sp.origin + used;
++                    self.stats.routed_spans += 1;
++                    if let Some(i) = index {
++                        children[i].push(origin, len);
++                    } else {
++                        self.terminal(dst - base, origin, len, id.unwrap());
++                    }
++                    row += len;
++                    dst += len;
++                    used += len;
++                    if used == sp.len {
++                        si += 1;
++                        used = 0;
++                    }
++                }
++                ri += 1;
++            }
++            self.release(spans);
++            let largest = children
++                .iter()
++                .enumerate()
++                .max_by_key(|(_, c)| c.width)
++                .unwrap()
++                .0;
++            let heavy = children.swap_remove(largest);
++            for child in children {
++                self.path.push(child.byte);
++                self.visit(child.start, child.width, child.spans, marker, base);
++                self.path.pop();
++            }
++            self.path.push(heavy.byte);
++            lo = heavy.start;
++            width = heavy.width;
++            spans = heavy.spans;
++        }
++        self.path.truncate(old_path);
++    }
++
++    fn run_input<I: IntoIterator<Item = (u8, u32)>>(
++        &mut self,
++        rle: I,
++        n: u32,
++        p: u32,
++        marker: u8,
++        out: &mut Vec<u8>,
++    ) -> bool {
++        if n == 0 || p >= n {
++            return false;
++        }
++        let mut counts = [0u32; 256];
++        let mut row = 0;
++        self.runs.clear();
++        let mut last = None;
++        for (byte, len) in rle {
++            if Some(byte) != last {
++                self.runs.push(Run {
++                    start: row,
++                    image: counts[byte as usize],
++                    byte,
++                });
++                last = Some(byte);
++            }
++            row += len;
++            counts[byte as usize] += len;
++        }
++        if row != n {
++            return false;
++        }
++        let m = counts[marker as usize];
++        self.stats = Stats {
++            n,
++            runs: self.runs.len() as u32,
++            anchors: m,
++            ..Stats::default()
++        };
++        if m == 0 {
++            return false;
++        }
++        let mut c = 0;
++        for v in &mut counts {
++            let old = *v;
++            *v = c;
++            c += old;
++        }
++        for run in &mut self.runs {
++            run.image += counts[run.byte as usize];
++        }
++        self.runs.push(Run {
++            start: n,
++            image: n,
++            byte: 0,
++        });
++        self.pages.clear();
++        let mut i = 0;
++        for start in (0..n).step_by(1 << PAGE_SHIFT) {
++            while self.runs[i + 1].start <= start {
++                i += 1;
++            }
++            self.pages.push(i as u32);
++        }
++        let base = counts[marker as usize];
++        let mut anchor = p;
++        let mut skip = 0;
++        if self.sparse {
++            let edge = |x: u32| -> u32 {
++                if x == n {
++                    return base + m;
++                }
++                let mut i = self.run_at(x);
++                while i + 1 < self.runs.len() {
++                    let r = self.runs[i];
++                    if r.byte == marker {
++                        return r.image + (x.max(r.start) - r.start);
++                    }
++                    i += 1;
++                }
++                base + m
++            };
++            let (mut lo, mut hi) = (base, base + m);
++            for _ in 1..4 {
++                if lo == hi {
++                    break;
++                }
++                lo = edge(lo);
++                hi = edge(hi);
++            }
++            if lo < hi {
++                return false;
++            }
++            loop {
++                let r = self.runs[self.run_at(anchor)];
++                anchor = r.image + (anchor - r.start);
++                if r.byte == marker {
++                    break;
++                }
++                skip += 1;
++                if anchor == p {
++                    return false;
++                }
++            }
++            self.primary = anchor - base;
++            self.phase = skip;
++            self.first_dest.clear();
++            self.spans_out.clear();
++        } else {
++            while !(base..base + m).contains(&anchor) {
++                let run = self.runs[self.run_at(anchor)];
++                anchor = run.image + (anchor - run.start);
++                skip += 1;
++                if anchor == p {
++                    return false;
++                }
++            }
++            self.table.resize(m as usize, Entry::default());
++        }
++        self.offsets.clear();
++        self.words.clear();
++        self.path.clear();
++        let mut seed = self.spare_spans.pop().unwrap_or_default();
++        seed.push(Span { origin: 0, len: m });
++        self.visit(base, m, seed, marker, base);
++        self.stats.phrases = self.offsets.len() as u32;
++        self.stats.dictionary_bytes = self.words.len() as u32;
++        self.offsets.push(self.words.len() as u32);
++        if self.sparse {
++            return true;
++        }
++        out.clear();
++        out.reserve(n as usize);
++        let mut pos = (anchor - base) as usize;
++        while out.len() < n as usize {
++            let next = self.table[pos];
++            let id = next.phrase as usize;
++            let start = self.offsets[id] as usize + skip;
++            let end = self.offsets[id + 1] as usize;
++            let take = (end - start).min(n as usize - out.len());
++            out.extend_from_slice(&self.words[start..start + take]);
++            pos = next.next as usize;
++            skip = 0;
++            self.stats.root_steps += 1;
++        }
++        true
++    }
++
++    pub(crate) fn sparse_factor(
++        &mut self,
++        r: &Runs,
++        n: usize,
++        p: u32,
++    ) -> Option<crate::phrase_bwt::Parse<u8>> {
++        let it = r
++            .records()
++            .iter()
++            .map(|&v| ((v >> 8) as u8, (v & 255) as u32));
++        self.sparse_from(it, n, p, b'"')
++    }
++
++    pub(crate) fn sparse_from(
++        &mut self,
++        it: impl Iterator<Item = (u8, u32)>,
++        n: usize,
++        p: u32,
++        marker: u8,
++    ) -> Option<crate::phrase_bwt::Parse<u8>> {
++        self.sparse = true;
++        let done = self.run_input(it, n as u32, p, marker, &mut Vec::new());
++        self.sparse = false;
++        if !done {
++            return None;
++        }
++        let mut order: Vec<_> = (0..self.first_dest.len()).collect();
++        order.sort_unstable_by_key(|&i| self.first_dest[i]);
++        let mut remap = vec![0; order.len()];
++        let mut offsets = Vec::with_capacity(order.len() + 1);
++        let mut words = Vec::with_capacity(self.words.len());
++        for (rank, i) in order.into_iter().enumerate() {
++            offsets.push(words.len() as u32);
++            words.extend_from_slice(
++                &self.words[self.offsets[i] as usize..self.offsets[i + 1] as usize],
++            );
++            remap[i] = rank as u32;
++        }
++        offsets.push(words.len() as u32);
++        self.spans_out.sort_unstable_by_key(|x| x.0);
++        let next = crate::phrase_bwt::Index::new(
++            self.spans_out
++                .iter()
++                .map(|&(_, w, id)| (remap[id as usize], w)),
++            remap.len(),
++        );
++        Some(crate::phrase_bwt::Parse {
++            next,
++            primary: self.primary,
++            phase: self.phase,
++            words,
++            offsets,
++            stat: crate::phrase_bwt::Census {
++                n: n as u32,
++                ..Default::default()
++            },
++        })
++    }
++
++    pub fn column(&mut self, l: &[u8], p: u32, marker: u8, out: &mut Vec<u8>) -> bool {
++        let mut pos = 0;
++        let it = std::iter::from_fn(|| {
++            if pos == l.len() {
++                return None;
++            }
++            let start = pos;
++            let byte = l[pos];
++            pos += 1;
++            while pos < l.len() && l[pos] == byte {
++                pos += 1;
++            }
++            Some((byte, (pos - start) as u32))
++        });
++        self.run_input(it, l.len() as u32, p, marker, out)
++    }
++}
++
++impl InverseBwt for Phrase {
++    fn invert(&mut self, l: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
++        if !self.column(l, p, b'"', out) {
++            self.fallback.invert(l, counts, p, out);
++        }
++    }
++    fn reads_runs(&self) -> bool {
++        true
++    }
++    fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
++        let it = r
++            .records()
++            .iter()
++            .map(|&v| ((v >> 8) as u8, (v & 255) as u32));
++        self.run_input(it, n as u32, p, b'"', out) || self.fallback.invert_runs(r, n, p, out, k)
++    }
++}
+diff --git a/src/phrase_bwt.rs b/src/phrase_bwt.rs
+new file mode 100644
+index 0000000..4ccd924
+--- /dev/null
++++ b/src/phrase_bwt.rs
+@@ -0,0 +1,658 @@
++//! Research only. Factor a cyclic BWT by a single marker and return another ordinary BWT.
++use crate::bwt::{InverseBwt, Segmented};
++use crate::{runs::Runs, Kernels};
++
++type Id = u32;
++#[derive(Clone, Copy, Default)]
++struct Run {
++    start: u32,
++    delta: u32,
++    sym: Id,
++}
++pub(crate) struct Index {
++    r: Vec<Run>,
++    pages: Vec<u32>,
++    c: Vec<u32>,
++    n: u32,
++}
++impl Index {
++    pub(crate) fn new(it: impl Iterator<Item = (Id, u32)>, sigma: usize) -> Self {
++        let mut counts = vec![0u32; sigma + 1];
++        let mut r = Vec::new();
++        let mut n = 0;
++        let mut last = None;
++        for (sym, len) in it {
++            if last != Some(sym) {
++                r.push(Run {
++                    start: n,
++                    delta: counts[sym as usize].wrapping_sub(n),
++                    sym,
++                });
++                last = Some(sym);
++            }
++            counts[sym as usize] += len;
++            n += len;
++        }
++        let mut total = 0;
++        for x in &mut counts {
++            let old = *x;
++            *x = total;
++            total += old;
++        }
++        for b in &mut r {
++            b.delta = b.delta.wrapping_add(counts[b.sym as usize]);
++        }
++        r.push(Run {
++            start: n,
++            ..Run::default()
++        });
++        let mut pages = Vec::with_capacity(n.div_ceil(32) as usize);
++        let mut i = 0;
++        for head in (0..n).step_by(32) {
++            while r[i + 1].start <= head {
++                i += 1;
++            }
++            pages.push(i as u32);
++        }
++        Index {
++            r,
++            pages,
++            c: counts,
++            n,
++        }
++    }
++    fn at(&self, x: u32) -> (Run, u32) {
++        let mut i = self.pages[(x >> 5) as usize] as usize;
++        while self.r[i + 1].start <= x {
++            i += 1;
++        }
++        (self.r[i], self.r[i + 1].start - x)
++    }
++    // Endpoints for backward extension by one given symbol. The first matching
++    // run at or after the endpoint gives C + rank, including in a gap.
++    fn rank_edge(&self, x: u32, sym: Id) -> u32 {
++        let end = self.c[sym as usize + 1];
++        if x == self.n {
++            return end;
++        }
++        let mut i = self.pages[(x >> 5) as usize] as usize;
++        while self.r[i + 1].start <= x {
++            i += 1;
++        }
++        while i + 1 < self.r.len() {
++            let r = self.r[i];
++            if r.sym == sym {
++                return x.max(r.start).wrapping_add(r.delta);
++            }
++            i += 1;
++        }
++        end
++    }
++    fn four_free(&self, sym: Id) -> bool {
++        let mut a = self.c[sym as usize];
++        let mut b = self.c[sym as usize + 1];
++        for _ in 1..4 {
++            if a == b {
++                return true;
++            }
++            a = self.rank_edge(a, sym);
++            b = self.rank_edge(b, sym);
++        }
++        a == b
++    }
++    fn marker(&self) -> Option<Id> {
++        self.c
++            .windows(2)
++            .enumerate()
++            .map(|(i, c)| (c[1] - c[0], i))
++            .filter(|&(w, _)| w != 0 && w <= self.n / 2)
++            .max()
++            .map(|(_, i)| i as Id)
++    }
++    // Only the selected cycle. Reverse LF's emitted symbols to obtain forward order.
++    fn cycle(&self, p: u32) -> Vec<Id> {
++        let mut table = vec![(0u32, 0u32); self.n as usize];
++        for w in self.r.windows(2) {
++            let r = w[0];
++            for (j, entry) in table[r.start as usize..w[1].start as usize]
++                .iter_mut()
++                .enumerate()
++            {
++                *entry = ((r.start + j as u32).wrapping_add(r.delta), r.sym);
++            }
++        }
++        let mut result = Vec::new();
++        let mut row = p;
++        loop {
++            let (lf, sym) = table[row as usize];
++            result.push(sym);
++            row = lf;
++            if row == p {
++                break;
++            }
++        }
++        result.reverse();
++        result
++    }
++}
++
++#[derive(Clone, Copy)]
++struct Piece {
++    dest: u32,
++    width: u32,
++    word: u32,
++}
++#[derive(Clone, Default, Debug)]
++pub struct Census {
++    pub n: u32,
++    pub r: u32,
++    pub m: u32,
++    pub q: u32,
++    pub h: u32,
++    pub types: u32,
++    pub dict: u32,
++    pub max_height: u32,
++    pub covered: u32,
++    pub primary_steps: u32,
++}
++pub(crate) struct Parse<T> {
++    pub(crate) next: Index,
++    pub(crate) primary: u32,
++    pub(crate) phase: usize,
++    pub(crate) words: Vec<T>,
++    pub(crate) offsets: Vec<u32>,
++    pub(crate) stat: Census,
++}
++impl<T: Copy> Parse<T> {
++    fn expand(&self, ids: &[Id], output: &mut Vec<T>) {
++        let word = |id: Id| {
++            &self.words[self.offsets[id as usize] as usize..self.offsets[id as usize + 1] as usize]
++        };
++        let first = word(ids[0]);
++        output.extend_from_slice(&first[self.phase..]);
++        for &id in &ids[1..] {
++            output.extend_from_slice(word(id));
++        }
++        output.extend_from_slice(&first[..self.phase]);
++    }
++}
++
++fn factor<T: Copy + Eq>(
++    index: &Index,
++    p: u32,
++    marker: Id,
++    store: impl Fn(Id) -> T,
++) -> Option<Parse<T>> {
++    let base = index.c[marker as usize];
++    let m = index.c[marker as usize + 1] - base;
++    if m == 0 {
++        return None;
++    }
++    let mut row = p;
++    let mut phase = 0;
++    let primary = loop {
++        let (r, _) = index.at(row);
++        row = row.wrapping_add(r.delta);
++        if r.sym == marker {
++            break row - base;
++        }
++        phase += 1;
++        if row == p {
++            return None;
++        }
++    };
++
++    // Each source run of the phrase BWT is found from its leftmost row.
++    let mut pieces = Vec::new();
++    let mut spelled = Vec::new();
++    let mut source = 0;
++    let mut max_height = 0;
++    let mut covered = 0;
++    while source < m {
++        let mut row = base + source;
++        let mut width = m - source;
++        let word = spelled.len();
++        loop {
++            let (r, room) = index.at(row);
++            width = width.min(room);
++            row = row.wrapping_add(r.delta);
++            if r.sym == marker {
++                break;
++            }
++            spelled.push(store(r.sym));
++        }
++        spelled[word..].reverse();
++        spelled.push(store(marker));
++        let height = (spelled.len() - word) as u32;
++        max_height = max_height.max(height);
++        covered += width * height;
++        pieces.push(Piece {
++            dest: row - base,
++            width,
++            word: word as u32,
++        });
++        source += width;
++    }
++
++    // Destination order already groups equal phrases in lexical order.
++    let q = pieces.len();
++    let mut order: Vec<_> = (0..q as u32).collect();
++    order.sort_unstable_by_key(|&i| pieces[i as usize].dest);
++    let mut ids = vec![0u32; q];
++    let mut words = Vec::new();
++    let mut offsets = Vec::new();
++    for &raw in &order {
++        let i = raw as usize;
++        let a = pieces[i].word as usize;
++        let b = pieces.get(i + 1).map_or(spelled.len(), |v| v.word as usize);
++        let w = &spelled[a..b];
++        if offsets.last().map(|&j| &words[j as usize..]) != Some(w) {
++            offsets.push(words.len() as u32);
++            words.extend_from_slice(w);
++        }
++        ids[i] = offsets.len() as u32 - 1;
++    }
++    let types = offsets.len();
++    offsets.push(words.len() as u32);
++    let next = Index::new(
++        pieces.iter().zip(ids).map(|(piece, id)| (id, piece.width)),
++        types,
++    );
++    let stat = Census {
++        n: index.n,
++        r: index.r.len() as u32 - 1,
++        m,
++        q: q as u32,
++        h: spelled.len() as u32,
++        types: types as u32,
++        dict: words.len() as u32,
++        max_height,
++        covered,
++        primary_steps: phase,
++    };
++    debug_assert_eq!(q, next.r.len() - 1);
++    Some(Parse {
++        next,
++        primary,
++        phase: phase as usize,
++        words,
++        offsets,
++        stat,
++    })
++}
++
++#[derive(Default)]
++pub struct Recursive<const LEVELS: usize> {
++    fallback: Segmented,
++    pub census: Vec<Census>,
++    pub leaf_visits: usize,
++}
++impl<const D: usize> Recursive<D> {
++    fn invert_index(&mut self, index: Index, p: u32, marker: Id, out: &mut Vec<u8>) -> bool {
++        self.census.clear();
++        self.leaf_visits = 0;
++        let Some(first) = factor(&index, p, marker, |x| x as u8) else {
++            return false;
++        };
++        let n = index.n as usize;
++        drop(index);
++        self.census.push(first.stat.clone());
++        let symbols = self.tokens(&first);
++        out.clear();
++        out.reserve(n);
++        first.expand(&symbols, out);
++        while out.len() < n {
++            out.extend_from_within(..out.len().min(n - out.len()));
++        }
++        debug_assert_eq!(out.len(), n);
++        true
++    }
++    fn tokens(&mut self, first: &Parse<u8>) -> Vec<Id> {
++        let mut deeper: Vec<Parse<Id>> = Vec::new();
++        for _ in 1..D {
++            let (idx, primary) = deeper
++                .last()
++                .map_or((&first.next, first.primary), |x| (&x.next, x.primary));
++            let Some(c) = idx.marker() else {
++                break;
++            };
++            let Some(part) = factor(idx, primary, c, |x| x) else {
++                break;
++            };
++            self.census.push(part.stat.clone());
++            deeper.push(part);
++        }
++        let (idx, primary) = deeper
++            .last()
++            .map_or((&first.next, first.primary), |x| (&x.next, x.primary));
++        let mut symbols = idx.cycle(primary);
++        self.leaf_visits = symbols.len();
++        while let Some(part) = deeper.pop() {
++            let mut next = Vec::new();
++            next.reserve(part.stat.n as usize);
++            part.expand(&symbols, &mut next);
++            symbols = next;
++        }
++        symbols
++    }
++    fn fused_index(
++        &mut self,
++        index: Index,
++        p: u32,
++        marker: Id,
++        k: Kernels,
++        out: &mut Vec<u8>,
++    ) -> Option<Result<(), crate::ErrorKind>> {
++        if !index.four_free(marker) {
++            return None;
++        }
++        let n = index.n as usize;
++        let first = factor(&index, p, marker, |x| x as u8)?;
++        drop(index);
++        self.census.clear();
++        self.census.push(first.stat.clone());
++        let ids = self.tokens(&first);
++        let start = out.len();
++        let result = (|| {
++            // At a cut following the marker, both sides decode as independent RLE1 strings.
++            // Keep only the decoded dictionary payload and the endpoints for the raw slices.
++            let mut decoded = Vec::with_capacity(first.words.len());
++            let mut bounds = Vec::with_capacity(first.offsets.len());
++            for w in first.offsets.windows(2) {
++                bounds.push(decoded.len());
++                crate::rle::unrle(&first.words[w[0] as usize..w[1] as usize], &mut decoded, k)?;
++            }
++            bounds.push(decoded.len());
++            out.reserve(n);
++            let mut left = n;
++            let mut at = 0;
++            let mut skip = first.phase;
++            while left > 0 {
++                let id = ids[at] as usize;
++                let raw = &first.words[first.offsets[id] as usize..first.offsets[id + 1] as usize];
++                let take = (raw.len() - skip).min(left);
++                if skip == 0 && take == raw.len() {
++                    out.extend_from_slice(&decoded[bounds[id]..bounds[id + 1]]);
++                } else {
++                    crate::rle::unrle(&raw[skip..skip + take], out, k)?;
++                }
++                left -= take;
++                skip = 0;
++                at += 1;
++                if at == ids.len() {
++                    at = 0;
++                }
++            }
++            Ok(())
++        })();
++        if result.is_err() {
++            out.truncate(start);
++        }
++        Some(result)
++    }
++    pub fn fused_column(
++        &mut self,
++        l: &[u8],
++        p: u32,
++        marker: u8,
++        k: Kernels,
++        out: &mut Vec<u8>,
++    ) -> Option<Result<(), crate::ErrorKind>> {
++        if l.is_empty() || p as usize >= l.len() {
++            return None;
++        }
++        let index = Index::new(l.iter().map(|&b| (b as Id, 1)), 256);
++        self.fused_index(index, p, marker as Id, k, out)
++    }
++    pub fn column(&mut self, l: &[u8], p: u32, marker: u8, out: &mut Vec<u8>) -> bool {
++        if l.is_empty() || p as usize >= l.len() {
++            return false;
++        }
++        let index = Index::new(l.iter().map(|&b| (b as Id, 1)), 256);
++        self.invert_index(index, p, marker as Id, out)
++    }
++}
++impl<const D: usize> InverseBwt for Recursive<D> {
++    fn invert(&mut self, l: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
++        if !self.column(l, p, b'"', out) {
++            self.fallback.invert(l, counts, p, out);
++        }
++    }
++    fn reads_runs(&self) -> bool {
++        true
++    }
++    fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
++        let index = Index::new(
++            r.records()
++                .iter()
++                .map(|&v| ((v >> 8) as Id, (v & 255) as u32)),
++            256,
++        );
++        self.invert_index(index, p, b'"' as Id, out) || self.fallback.invert_runs(r, n, p, out, k)
++    }
++}
++
++/// Research end-to-end entry point. The standard scanner enforces the stream checks.
++/// Return also the number of blocks that used the phrase-level RLE finish.
++pub fn fused_decode<const D: usize>(
++    data: &[u8],
++    k: Kernels,
++) -> Result<(Vec<u8>, usize), crate::Error> {
++    decode_using::<D>(data, k, FirstPass::Representatives)
++}
++
++/// Group equal suffixes in the first pass, then emit from two decoded dictionaries.
++pub fn grouped_decode(data: &[u8], k: Kernels) -> Result<(Vec<u8>, usize), crate::Error> {
++    decode_using::<2>(data, k, FirstPass::Grouped)
++}
++
++#[derive(Clone, Copy)]
++enum FirstPass {
++    Representatives,
++    Grouped,
++}
++
++fn decode_using<const D: usize>(
++    data: &[u8],
++    k: Kernels,
++    mode: FirstPass,
++) -> Result<(Vec<u8>, usize), crate::Error> {
++    use crate::{
++        block::Symbols,
++        bwt::Cells,
++        stream::{Event, Scanner, SliceSource},
++        ErrorKind, Scratch,
++    };
++    let mut sc = Scanner::new(SliceSource(data));
++    let mut fallback = Scratch::<Cells>::default();
++    let mut runs = Runs::default();
++    let mut q = Recursive::<D>::default();
++    let mut grouped = crate::cylinder::Phrase::default();
++    let mut out = Vec::new();
++    let mut syms = Vec::new();
++    let mut accepted = 0;
++    while let Event::Block {
++        index,
++        bit,
++        symbols,
++        ..
++    } = sc.next(syms)?
++    {
++        let mut block = |b: &Symbols| -> Result<(), ErrorKind> {
++            if crate::runs::takes_runs(b) {
++                let n = crate::runs::front(b, &mut runs, k)?;
++                if b.orig_ptr as usize >= n {
++                    return Err(ErrorKind::BadOrigPtr);
++                }
++                let start = out.len();
++                let result = if matches!(mode, FirstPass::Grouped) {
++                    grouped
++                        .sparse_factor(&runs, n, b.orig_ptr)
++                        .map(|first| copy_two_levels(&first, n, k, &mut out))
++                } else {
++                    let ix = Index::new(
++                        runs.records()
++                            .iter()
++                            .map(|&v| ((v >> 8) as Id, (v & 255) as u32)),
++                        256,
++                    );
++                    q.fused_index(ix, b.orig_ptr, b'"' as Id, k, &mut out)
++                };
++                if let Some(result) = result {
++                    result?;
++                    let computed = crate::crc::crc32(&out[start..], k);
++                    if computed != b.crc {
++                        out.truncate(start);
++                        return Err(ErrorKind::BlockCrc {
++                            stored: b.crc,
++                            computed,
++                        });
++                    }
++                    accepted += 1;
++                    return Ok(());
++                }
++            }
++            crate::decode_block(b, k, &mut fallback, &mut out)?;
++            Ok(())
++        };
++        block(&symbols).map_err(|kind| crate::Error {
++            kind,
++            block: Some(index),
++            bit: Some(bit),
++        })?;
++        syms = symbols.syms;
++    }
++    Ok((out, accepted))
++}
++
++struct ByteBook {
++    data: Vec<u8>,
++    ends: Vec<usize>,
++}
++impl ByteBook {
++    fn get(&self, id: Id) -> &[u8] {
++        &self.data[self.ends[id as usize]..self.ends[id as usize + 1]]
++    }
++}
++fn word<T>(part: &Parse<T>, id: Id) -> &[T] {
++    &part.words[part.offsets[id as usize] as usize..part.offsets[id as usize + 1] as usize]
++}
++struct Output<'a> {
++    first: &'a Parse<u8>,
++    lower: &'a ByteBook,
++    dst: &'a mut Vec<u8>,
++    k: Kernels,
++    skip: usize,
++    left: usize,
++}
++impl Output<'_> {
++    fn lower_slice(&mut self, ids: &[Id]) -> Result<(), crate::ErrorKind> {
++        for &id in ids {
++            if self.left == 0 {
++                break;
++            }
++            let raw = word(self.first, id);
++            let take = self.left.min(raw.len() - self.skip);
++            if self.skip == 0 && take == raw.len() {
++                self.dst.extend_from_slice(self.lower.get(id));
++            } else {
++                crate::rle::unrle(&raw[self.skip..self.skip + take], self.dst, self.k)?;
++            }
++            self.left -= take;
++            self.skip = 0;
++        }
++        Ok(())
++    }
++}
++fn copy_two_levels(
++    first: &Parse<u8>,
++    n: usize,
++    k: Kernels,
++    out: &mut Vec<u8>,
++) -> Result<(), crate::ErrorKind> {
++    let mut lower = ByteBook {
++        data: Vec::with_capacity(first.words.len()),
++        ends: Vec::with_capacity(first.offsets.len()),
++    };
++    for w in first.offsets.windows(2) {
++        lower.ends.push(lower.data.len());
++        crate::rle::unrle(
++            &first.words[w[0] as usize..w[1] as usize],
++            &mut lower.data,
++            k,
++        )?;
++    }
++    lower.ends.push(lower.data.len());
++    let mut emit = Output {
++        first,
++        lower: &lower,
++        dst: out,
++        k,
++        skip: first.phase,
++        left: n,
++    };
++    emit.dst.reserve(n);
++    let second = first
++        .next
++        .marker()
++        .and_then(|c| factor(&first.next, first.primary, c, |x| x));
++    let Some(second) = second else {
++        let ids = first.next.cycle(first.primary);
++        while emit.left > 0 {
++            emit.lower_slice(&ids)?;
++        }
++        return Ok(());
++    };
++    let mut upper = ByteBook {
++        data: Vec::new(),
++        ends: Vec::with_capacity(second.offsets.len()),
++    };
++    let mut lengths = Vec::with_capacity(second.offsets.len() - 1);
++    for w in second.offsets.windows(2) {
++        upper.ends.push(upper.data.len());
++        let mut total = 0;
++        for &id in &second.words[w[0] as usize..w[1] as usize] {
++            upper.data.extend_from_slice(lower.get(id));
++            total += word(first, id).len();
++        }
++        lengths.push(total);
++    }
++    upper.ends.push(upper.data.len());
++    let ids = second.next.cycle(second.primary);
++    let split = word(&second, ids[0]);
++    while emit.left > 0 {
++        emit.lower_slice(&split[second.phase..])?;
++        for &id in &ids[1..] {
++            if emit.left == 0 {
++                break;
++            }
++            let len = lengths[id as usize];
++            if emit.skip == 0 && len <= emit.left {
++                emit.dst.extend_from_slice(upper.get(id));
++                emit.left -= len;
++            } else {
++                emit.lower_slice(word(&second, id))?;
++            }
++        }
++        emit.lower_slice(&split[..second.phase])?;
++    }
++    Ok(())
++}
++
++/// Exhaustive-test entry, allowing any marker and arbitrary last column.
++pub fn grouped_column(
++    q: &mut crate::cylinder::Phrase,
++    l: &[u8],
++    p: u32,
++    marker: u8,
++    k: Kernels,
++    out: &mut Vec<u8>,
++) -> Option<Result<(), crate::ErrorKind>> {
++    let first = q.sparse_from(l.iter().map(|&b| (b, 1)), l.len(), p, marker)?;
++    let start = out.len();
++    let result = copy_two_levels(&first, l.len(), k, out);
++    if result.is_err() {
++        out.truncate(start);
++    }
++    Some(result)
++}
+diff --git a/examples/phrase_probe.rs b/examples/phrase_probe.rs
+new file mode 100644
+index 0000000..a744c04
+--- /dev/null
++++ b/examples/phrase_probe.rs
+@@ -0,0 +1,233 @@
++use mibz2::phrase_bwt::Recursive;
++use mibz2::{
++    bwt::{Cells, InverseBwt, LazyCells, Plain},
++    cylinder::Phrase,
++    stream::{Event, Scanner, SliceSource},
++    Kernels,
++};
++use std::{env, fs, hint::black_box, time::Instant};
++
++fn exhaustive() {
++    let mut q = Phrase::default();
++    let mut rec = Recursive::<4>::default();
++    let mut c = Vec::new();
++    let mut plain = Plain::default();
++    let (mut a, mut b) = (Vec::new(), Vec::new());
++    let mut tested: u64 = 0;
++    let mut hits: u64 = 0;
++    let mut gq = Phrase::default();
++    let mut gout = Vec::new();
++    let mut fused_cases = 0;
++    let mut fused_errors = 0;
++    let mut expect = Vec::new();
++    let mut got = Vec::new();
++    for (alphabet, limit) in [(2u32, 10), (3, 7)] {
++        for n in 1..=limit {
++            for mut bits in 0..alphabet.pow(n) {
++                let mut l = Vec::new();
++                let mut counts = [0u32; 256];
++                for _ in 0..n {
++                    let c = (bits % alphabet) as u8;
++                    bits /= alphabet;
++                    l.push(c);
++                    counts[c as usize] += 1;
++                }
++                for p in 0..n {
++                    plain.invert(&l, &counts, p, &mut a);
++                    for marker in 0..alphabet as u8 {
++                        let used = q.column(&l, p, marker, &mut b);
++                        assert_eq!(used, a.contains(&marker), "availability {l:?} p={p}");
++                        let use_rec = rec.column(&l, p, marker, &mut c);
++                        assert_eq!(used, use_rec);
++                        if used {
++                            assert_eq!(a, c, "recursive {l:?} p={p} c={marker}");
++                        }
++                        if used {
++                            assert_eq!(a, b, "{l:?} p={p} c={marker}");
++                            hits += 1;
++                        }
++                        expect.clear();
++                        got.clear();
++                        let k = Kernels::scalar();
++                        let reference = mibz2::rle::unrle(&a, &mut expect, k);
++                        let finish = rec.fused_column(&l, p, marker, k, &mut got);
++                        gout.clear();
++                        let grouped =
++                            mibz2::phrase_bwt::grouped_column(&mut gq, &l, p, marker, k, &mut gout);
++                        assert_eq!(finish, grouped);
++                        assert_eq!(got, gout);
++                        if let Some(finish) = finish {
++                            assert_eq!(finish, reference, "rle {l:?} p={p} c={marker}");
++                            if finish.is_ok() {
++                                assert_eq!(expect, got);
++                            } else {
++                                fused_errors += 1;
++                                assert!(got.is_empty());
++                            }
++                            fused_cases += 1;
++                        }
++                        tested += 1;
++                    }
++                }
++            }
++        }
++    }
++    println!("arbitrary column/primary/marker cases {tested}, marker on selected cycle {hits}, fused {fused_cases} including {fused_errors} unfinished");
++}
++
++fn main() {
++    let args: Vec<_> = env::args().collect();
++    if args[1] == "check" {
++        exhaustive();
++        return;
++    }
++    let data = fs::read(&args[2]).unwrap();
++    let k = Kernels::detect();
++    if args[1] == "corrupt" {
++        let mut cases = Vec::new();
++        let mut block = data.clone();
++        block[10] ^= 1;
++        cases.push(block);
++        let last = mibz2::scan(&data).last().unwrap().unwrap();
++        let bit = (last.end_bit + 48) as usize;
++        let mut stream = data.clone();
++        stream[bit / 8] ^= 1 << (7 - bit % 8);
++        cases.push(stream);
++        for cut in [0, 1, 4, data.len() / 2, data.len() - 1] {
++            cases.push(data[..cut].to_vec());
++        }
++        let mut trailing = data.clone();
++        trailing.push(201);
++        cases.push(trailing);
++        for i in 1..=32 {
++            let mut x = data.clone();
++            let len = x.len();
++            x[15 + i * (len - 32) / 33] ^= 1 << (i % 8);
++            cases.push(x);
++        }
++        let mut errors = 0;
++        for bad in &cases {
++            let expected = mibz2::decode(bad);
++            let got = mibz2::phrase_bwt::fused_decode::<2>(bad, k).map(|x| x.0);
++            let grouped = mibz2::phrase_bwt::grouped_decode(bad, k).map(|x| x.0);
++            assert_eq!(expected, got);
++            assert_eq!(expected, grouped);
++            errors += expected.is_err() as usize;
++        }
++        println!(
++            "{} modified streams identical to mibz2, {errors} errors",
++            cases.len()
++        );
++        return;
++    }
++    if args[1] == "stats" || args[1] == "recurse-stats" {
++        let mut sc = Scanner::new(SliceSource(&data));
++        let mut syms = Vec::new();
++        let mut q = Phrase::default();
++        let mut plain = Plain::default();
++        let (mut l, mut out, mut oracle) = (Vec::new(), Vec::new(), Vec::new());
++        let mut counts = [0; 256];
++        let mut rec = Recursive::<4>::default();
++        if args[1] == "recurse-stats" {
++            println!(
++                "block,level,n,r,m,q,h,types,dict,max_height,covered,primary_steps,leaf_visits"
++            );
++        } else {
++            println!("block,n,runs,anchors,nodes,branch_nodes,l_intersections,routed_spans,terminal_spans,phrases,dictionary_bytes,covered,root_steps");
++        }
++        while let Event::Block { index, symbols, .. } = sc.next(syms).unwrap() {
++            mibz2::mtf::mtf(&symbols, &mut l, &mut counts, k).unwrap();
++            plain.invert(&l, &counts, symbols.orig_ptr, &mut oracle);
++            if args[1] == "recurse-stats" {
++                if rec.column(&l, symbols.orig_ptr, b'"', &mut out) {
++                    assert_eq!(out, oracle, "recursive block {index}");
++                    for (level, s) in rec.census.iter().enumerate() {
++                        println!(
++                            "{index},{level},{},{},{},{},{},{},{},{},{},{},{}",
++                            s.n,
++                            s.r,
++                            s.m,
++                            s.q,
++                            s.h,
++                            s.types,
++                            s.dict,
++                            s.max_height,
++                            s.covered,
++                            s.primary_steps,
++                            rec.leaf_visits
++                        );
++                    }
++                } else {
++                    assert!(!oracle.contains(&b'"'));
++                }
++            } else if q.column(&l, symbols.orig_ptr, b'"', &mut out) {
++                assert_eq!(out, oracle, "block {index}");
++                let s = &q.stats;
++                println!(
++                    "{index},{},{},{},{},{},{},{},{},{},{},{},{}",
++                    s.n,
++                    s.runs,
++                    s.anchors,
++                    s.nodes,
++                    s.branch_nodes,
++                    s.l_intersections,
++                    s.routed_spans,
++                    s.terminal_spans,
++                    s.phrases,
++                    s.dictionary_bytes,
++                    s.covered,
++                    s.root_steps
++                );
++            } else {
++                assert!(!oracle.contains(&b'"'));
++            }
++            syms = symbols.syms;
++        }
++        return;
++    }
++    let run = |arm: &str| {
++        let start = Instant::now();
++        let out = match arm {
++            "cells" => mibz2::decode_with::<Cells>(&data, k),
++            "lazy" => mibz2::decode_with::<LazyCells>(&data, k),
++            "phrase" => mibz2::decode_with::<Phrase>(&data, k),
++            "r1" => mibz2::decode_with::<Recursive<1>>(&data, k),
++            "r2" => mibz2::decode_with::<Recursive<2>>(&data, k),
++            "grouped" => mibz2::phrase_bwt::grouped_decode(&data, k).map(|(v, _)| v),
++            "fused2" => mibz2::phrase_bwt::fused_decode::<2>(&data, k).map(|(v, _)| v),
++            "fused4" => mibz2::phrase_bwt::fused_decode::<4>(&data, k).map(|(v, _)| v),
++            "r4" => mibz2::decode_with::<Recursive<4>>(&data, k),
++            _ => panic!("arm"),
++        }
++        .unwrap();
++        let elapsed = start.elapsed().as_secs_f64();
++        println!("{arm},{elapsed:.6},{}", black_box(out.len()));
++        out
++    };
++    if args[1] == "bench" {
++        let reference = run("cells");
++        for round in 0..args[3].parse::<usize>().unwrap() {
++            let arms: Vec<_> = args
++                .get(4)
++                .map_or("cells,phrase,lazy,r1,r2,r4", String::as_str)
++                .split(',')
++                .collect();
++            for i in 0..arms.len() {
++                let arm = arms[(i + round) % arms.len()];
++                assert_eq!(run(arm), reference);
++            }
++        }
++    } else if args[1] == "grouped-save" {
++        let (out, admitted) = mibz2::phrase_bwt::grouped_decode(&data, k).unwrap();
++        eprintln!("grouped {admitted} blocks, {} output bytes", out.len());
++        fs::write(&args[3], out).unwrap();
++    } else if args[1] == "fused-save" {
++        let (out, admitted) = mibz2::phrase_bwt::fused_decode::<2>(&data, k).unwrap();
++        eprintln!("fused {admitted} blocks, {} output bytes", out.len());
++        fs::write(&args[3], out).unwrap();
++    } else if args[1] == "save" {
++        fs::write(&args[3], run("phrase")).unwrap();
++    } else {
++        run(&args[1]);
++    }
++}
+diff --git a/examples/phrase_memory.rs b/examples/phrase_memory.rs
+new file mode 100644
+index 0000000..939eca7
+--- /dev/null
++++ b/examples/phrase_memory.rs
+@@ -0,0 +1,107 @@
++#[allow(dead_code)]
++#[path = "../tests/common/mod.rs"]
++mod common;
++// Single-thread heap ledger for a complete one-block stream. Run separately from timing.
++use mibz2::{
++    bwt::{Cells, LazyCells},
++    phrase_bwt::fused_decode,
++    Kernels,
++};
++use std::alloc::{GlobalAlloc, Layout, System};
++use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
++static LIVE: AtomicUsize = AtomicUsize::new(0);
++static PEAK: AtomicUsize = AtomicUsize::new(0);
++struct Ledger;
++fn add(bytes: usize) {
++    let now = LIVE.fetch_add(bytes, Relaxed) + bytes;
++    PEAK.fetch_max(now, Relaxed);
++}
++unsafe impl GlobalAlloc for Ledger {
++    unsafe fn alloc(&self, l: Layout) -> *mut u8 {
++        let ptr = unsafe { System.alloc(l) };
++        if !ptr.is_null() {
++            add(l.size());
++        }
++        ptr
++    }
++    unsafe fn alloc_zeroed(&self, l: Layout) -> *mut u8 {
++        let ptr = unsafe { System.alloc_zeroed(l) };
++        if !ptr.is_null() {
++            add(l.size());
++        }
++        ptr
++    }
++    unsafe fn dealloc(&self, ptr: *mut u8, l: Layout) {
++        unsafe { System.dealloc(ptr, l) };
++        LIVE.fetch_sub(l.size(), Relaxed);
++    }
++    unsafe fn realloc(&self, ptr: *mut u8, old: Layout, new: usize) -> *mut u8 {
++        let result = unsafe { System.realloc(ptr, old, new) };
++        if !result.is_null() {
++            if new > old.size() {
++                add(new - old.size());
++            } else {
++                LIVE.fetch_sub(old.size() - new, Relaxed);
++            }
++        }
++        result
++    }
++}
++#[global_allocator]
++static ALLOC: Ledger = Ledger;
++fn main() {
++    let path = std::env::args().nth(1).expect("single-block .bz2");
++    let data = std::fs::read(path).unwrap();
++    if std::env::args().nth(2).as_deref() == Some("blocks") {
++        println!(
++            "block,decoder,additional_peak_requested_bytes,returned_length,returned_capacity,fused"
++        );
++        let mut seq = 0;
++        for item in mibz2::scan(&data) {
++            let b = item.unwrap();
++            let mut w = common::BitWriter::default();
++            for c in [b'B', b'Z', b'h', b'0' + b.level as u8] {
++                w.put(c as u64, 8);
++            }
++            let mut bits = mibz2::bits::Bits::at(&data, b.start_bit);
++            let mut left = b.end_bit - b.start_bit;
++            while left > 0 {
++                let n = left.min(32) as u32;
++                w.put(bits.bits(n) as u64, n);
++                left -= n as u64;
++            }
++            w.put(0x177245385090, 48);
++            w.put(b.crc as u64, 32);
++            measure(&w.finish(), seq);
++            seq += 1;
++        }
++    } else {
++        println!(
++            "block,decoder,additional_peak_requested_bytes,returned_length,returned_capacity,fused"
++        );
++        measure(&data, 0);
++    }
++}
++fn measure(data: &[u8], index: usize) {
++    let k = Kernels::detect();
++    let oracle = mibz2::decode_with::<Cells>(&data, k).unwrap();
++
++    for method in ["cells", "lazy", "fused2", "grouped"] {
++        let start = LIVE.load(Relaxed);
++        PEAK.store(start, Relaxed);
++        let (out, accepted) = match method {
++            "cells" => (mibz2::decode_with::<Cells>(data, k).unwrap(), 0),
++            "lazy" => (mibz2::decode_with::<LazyCells>(data, k).unwrap(), 0),
++            "fused2" => fused_decode::<2>(data, k).unwrap(),
++            "grouped" => mibz2::phrase_bwt::grouped_decode(data, k).unwrap(),
++            _ => unreachable!(),
++        };
++        let peak = PEAK.load(Relaxed) - start;
++        assert_eq!(oracle, out);
++        println!(
++            "{index},{method},{peak},{},{},{accepted}",
++            out.len(),
++            out.capacity()
++        );
++    }
++}
+diff --git a/examples/phrase_workers.rs b/examples/phrase_workers.rs
+new file mode 100644
+index 0000000..72781bf
+--- /dev/null
++++ b/examples/phrase_workers.rs
+@@ -0,0 +1,74 @@
++//! Decode disjoint original streams under a common scheduler for all arms.
++use mibz2::{
++    bwt::{Cells, LazyCells},
++    Kernels,
++};
++use std::{
++    env, fs,
++    sync::atomic::{AtomicUsize, Ordering::Relaxed},
++    thread,
++    time::Instant,
++};
++fn main() {
++    let args: Vec<_> = env::args().collect();
++    let dir = &args[1];
++    let rounds = args[2].parse::<usize>().unwrap();
++    let mut files: Vec<_> = fs::read_dir(dir)
++        .unwrap()
++        .map(|v| v.unwrap().path())
++        .collect();
++    files.sort();
++    let inputs: Vec<_> = files.iter().map(|p| fs::read(p).unwrap()).collect();
++    let k = Kernels::detect();
++    let refs: Vec<_> = inputs
++        .iter()
++        .map(|s| mibz2::decode_with::<Cells>(s, k).unwrap())
++        .collect();
++    println!("round,workers,decoder,elapsed_s,output_bytes");
++    for round in 0..rounds {
++        for w in [1, 2, 4] {
++            for j in 0..3 {
++                let arm = ["cells", "lazy", "grouped"][(round + j) % 3];
++                let job = AtomicUsize::new(0);
++                let start = Instant::now();
++                let all = thread::scope(|group| {
++                    let handles: Vec<_> = (0..w)
++                        .map(|_| {
++                            group.spawn(|| {
++                                let mut outputs = Vec::new();
++                                loop {
++                                    let i = job.fetch_add(1, Relaxed);
++                                    if i >= inputs.len() {
++                                        break;
++                                    }
++                                    let data = &inputs[i];
++                                    let out = match arm {
++                                        "cells" => mibz2::decode_with::<Cells>(data, k).unwrap(),
++                                        "lazy" => mibz2::decode_with::<LazyCells>(data, k).unwrap(),
++                                        "grouped" => {
++                                            mibz2::phrase_bwt::grouped_decode(data, k).unwrap().0
++                                        }
++                                        _ => unreachable!(),
++                                    };
++                                    outputs.push((i, out));
++                                }
++                                outputs
++                            })
++                        })
++                        .collect();
++                    handles
++                        .into_iter()
++                        .flat_map(|h| h.join().unwrap())
++                        .collect::<Vec<_>>()
++                });
++                let elapsed = start.elapsed().as_secs_f64();
++                let mut size = 0;
++                for (i, out) in all {
++                    assert_eq!(out, refs[i]);
++                    size += out.len();
++                }
++                println!("{round},{w},{arm},{elapsed:.6},{size}");
++            }
++        }
++    }
++}
+diff --git a/examples/phrase_lexicon.rs b/examples/phrase_lexicon.rs
+new file mode 100644
+index 0000000..57c68d7
+--- /dev/null
++++ b/examples/phrase_lexicon.rs
+@@ -0,0 +1,33 @@
++//! Independent descriptive census input. These oracle bytes are never given to a decoder.
++use mibz2::{
++    bwt::{InverseBwt, Plain},
++    stream::{Event, Scanner, SliceSource},
++    Kernels,
++};
++use std::{
++    env, fs,
++    io::{BufWriter, Write},
++};
++fn main() {
++    let a: Vec<_> = env::args().collect();
++    let data = fs::read(&a[1]).unwrap();
++    let mut dst = BufWriter::new(fs::File::create(&a[2]).unwrap());
++    let mut sc = Scanner::new(SliceSource(&data));
++    let k = Kernels::detect();
++    let mut syms = Vec::new();
++    let mut l = Vec::new();
++    let mut counts = [0; 256];
++    let mut plain = Plain::default();
++    let mut text = Vec::new();
++    while let Event::Block { symbols, index, .. } = sc.next(syms).unwrap() {
++        mibz2::mtf::mtf(&symbols, &mut l, &mut counts, k).unwrap();
++        if l.len() >= 65536 {
++            plain.invert(&l, &counts, symbols.orig_ptr, &mut text);
++            dst.write_all(&(index as u32).to_le_bytes()).unwrap();
++            dst.write_all(&(text.len() as u32).to_le_bytes()).unwrap();
++            dst.write_all(&text).unwrap();
++        }
++        syms = symbols.syms;
++    }
++    dst.flush().unwrap();
++}
+diff --git a/examples/phrase_finish.rs b/examples/phrase_finish.rs
+new file mode 100644
+index 0000000..494cdd7
+--- /dev/null
++++ b/examples/phrase_finish.rs
+@@ -0,0 +1,130 @@
++//! Paired writer-only comparison from the same correct linear parse. The caller supplies
++//! pre-RLE bytes only to prepare this shared input. Dictionary RLE and CRC are both timed.
++use mibz2::{crc::crc32, rle::unrle, Kernels};
++use std::{
++    collections::HashMap,
++    env,
++    fs::File,
++    hint::black_box,
++    io::{BufReader, Read},
++    time::Instant,
++};
++
++struct Book {
++    data: Vec<u8>,
++    ranges: Vec<(usize, usize)>,
++    ids: Vec<usize>,
++}
++fn get(buf: &[u8], (a, b): (usize, usize)) -> &[u8] {
++    &buf[a..b]
++}
++fn parse(raw: &[u8]) -> Book {
++    let mut data = Vec::new();
++    let mut ranges = Vec::new();
++    let mut ids = Vec::new();
++    let mut map = HashMap::new();
++    for token in raw.split_inclusive(|&x| x == b'"') {
++        let id = *map.entry(token).or_insert_with(|| {
++            let start = data.len();
++            data.extend_from_slice(token);
++            ranges.push((start, data.len()));
++            ranges.len() - 1
++        });
++        ids.push(id);
++    }
++    Book { data, ranges, ids }
++}
++fn main() {
++    let args: Vec<_> = env::args().collect();
++    let mut f = BufReader::new(File::open(&args[1]).unwrap());
++    let every = args[2].parse::<usize>().unwrap();
++    let rounds = args[3].parse::<usize>().unwrap();
++    let mut seq = 0;
++    let k = Kernels::detect();
++    let mut raw = Vec::new();
++    let mut sub = Vec::new();
++    let mut out = Vec::new();
++    let mut ranges = Vec::new();
++    let mut want = Vec::new();
++    println!("block,round,method,ns,rows,phrases,dict_bytes");
++    loop {
++        let mut header = [0u8; 8];
++        match f.read_exact(&mut header) {
++            Ok(()) => (),
++            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
++            Err(e) => panic!("{e}"),
++        }
++        let index = u32::from_le_bytes(header[..4].try_into().unwrap());
++        let n = u32::from_le_bytes(header[4..].try_into().unwrap()) as usize;
++        raw.resize(n, 0);
++        f.read_exact(&mut raw).unwrap();
++        seq += 1;
++        if (seq - 1) % every != 0 {
++            continue;
++        }
++        assert!(!raw.windows(4).any(|w| w == b"\"\"\"\""));
++        let book = parse(&raw);
++        let raw_views: Vec<_> = book.ranges.iter().map(|&r| get(&book.data, r)).collect();
++        want.clear();
++        unrle(&raw, &mut want, k).unwrap();
++        let check = crc32(&want, k);
++        sub.reserve(n);
++        out.reserve(want.len());
++        for round in 0..=rounds {
++            for j in 0..3 {
++                let method = ["materialized", "fused", "sparse"][(round + j) % 3];
++                out.clear();
++                sub.clear();
++                ranges.clear();
++                let t = Instant::now();
++                if method == "fused" {
++                    for &pair in &book.ranges {
++                        let start = sub.len();
++                        unrle(get(&book.data, pair), &mut sub, k).unwrap();
++                        ranges.push((start, sub.len()));
++                    }
++                    let views: Vec<_> = ranges.iter().map(|&r| get(&sub, r)).collect();
++                    for &i in &book.ids {
++                        out.extend_from_slice(views[i]);
++                    }
++                } else if method == "sparse" {
++                    let mut changed = Vec::new();
++                    for (id, &word) in raw_views.iter().enumerate() {
++                        if word
++                            .windows(4)
++                            .any(|x| x[0] == x[1] && x[0] == x[2] && x[0] == x[3])
++                        {
++                            let start = sub.len();
++                            unrle(word, &mut sub, k).unwrap();
++                            changed.push((id, (start, sub.len())));
++                        }
++                    }
++                    let mut views = raw_views.clone();
++                    for (id, r) in changed {
++                        views[id] = get(&sub, r);
++                    }
++                    for &id in &book.ids {
++                        out.extend_from_slice(views[id]);
++                    }
++                } else {
++                    for &i in &book.ids {
++                        sub.extend_from_slice(raw_views[i]);
++                    }
++                    unrle(&sub, &mut out, k).unwrap();
++                }
++                let crc = black_box(crc32(&out, k));
++                let nanos = t.elapsed().as_nanos();
++                assert_eq!(crc, check);
++                assert_eq!(out, want);
++                if round > 0 {
++                    println!(
++                        "{index},{round},{},{nanos},{n},{},{}",
++                        method,
++                        book.ids.len(),
++                        book.data.len()
++                    );
++                }
++            }
++        }
++    }
++}
