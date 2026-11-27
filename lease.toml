@@ -1,9 +1,9 @@
-id = "blog-announcement-copy"
-holder = "claude-code"
-session = "684209591fe6"
-claimed_at = "2026-11-27T06:55:58+00:00"
-expires = "2026-11-27T10:55:58+00:00"
-owned_paths = []
-mechanisms = ["blog-announcement-copy"]
-base = "7cc6319afe236744a323060c6de196909122c716"
+id = "a6b-endpoint-queue"
+holder = "antigravity"
+session = "aa889f8544b5"
+claimed_at = "2026-11-27T07:01:17+00:00"
+expires = "2026-11-27T15:01:17+00:00"
+owned_paths = ["bench/workstation-queue.txt"]
+mechanisms = ["workstation-queue"]
+base = "26cc7cc6c6bea128896aff5c9a2de8711a8ff9da"
 released = false
