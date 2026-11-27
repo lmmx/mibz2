@@ -1,0 +1,9 @@
+id = "blog-announcement-copy"
+holder = "claude-code"
+session = "684209591fe6"
+claimed_at = "2026-11-27T06:55:58+00:00"
+expires = "2026-11-27T10:55:58+00:00"
+owned_paths = []
+mechanisms = ["blog-announcement-copy"]
+base = "7cc6319afe236744a323060c6de196909122c716"
+released = false
