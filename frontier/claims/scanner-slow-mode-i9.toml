@@ -1,0 +1,24 @@
+id = "scanner-slow-mode-i9"
+title = "Probe: why i9 text walls are bimodal (~195 vs ~265 ms) with the scan thread 35-60% slower in the slow mode"
+kind = "probe"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = []
+mechanisms = ["station-balance", "placement"]
+needs_louis = ""
+question = """
+In text-knee-i9's i9 bundle (origin/evidence 5e3f28cc), unpinned walls on the text panel split into two modes (~190-200 ms and ~260-300 ms) at every k, independent of round order. In the slow mode mibz2-scan's CPU time is 35-60% higher with zero run-queue wait. Is it the scanner sharing a physical core with a busy worker (SMT sibling), or clock state (powersave governor, 800 MHz idle)? Discriminate by recording the scan thread's CPU (sched_getcpu samples) and per-core frequency per run, and by an arm with the scanner pinned alone on a physical core.
+"""
+why = """
+Text is scanner-bound at k >= 5 on the i9 (text-knee-i9 CONFIRMED), so the scanner's placement sets the text wall by up to ~1.5x. That is larger than any open scanner code lever. If it is SMT co-residency, a placement fix (scanner alone on its core) may be the cheapest text-wall win available.
+"""
+stop_test = """
+To be frozen before data by whoever admits this claim.
+"""
+done_when = """
+A delta naming the mechanism, with the evidence that discriminates the two hypotheses.
+"""
+premises = ["docs/notebook/2026-11-27-text-knee-i9.md"]
+links = ["frontier/claims/text-knee-i9.toml"]
