@@ -10,6 +10,8 @@ owned_paths = []
 needs_louis = ""
 question = """
 The pooled scan was killed as built because pooling loads the scan's ~175 ms of CPU onto workers that bind below the knee (pooled-scan/results). Design a hybrid: the serial scanner stays, and workers scan ahead only when they would otherwise wait. Write the design and its kill test as a registration. No code until the worker-side claims land, since its value depends on worker slack.
+Note (synthesis third-pass §2, derived from c71c4a56): the built pooled scan conserves work, P(k) = S(k) + scan/k to within 1.5% at k = 6-9 (PC = SC + scan/k likewise). So the hybrid's ceiling is the work bound (k S + scan)/(k + 1): 184.1 ms at 8 today (4.6% under none), about 155-163 ms if the fold and forward emission bring S(8) to 152-161 ms. Register when an S-paired worker run puts S(8) at or under about 165 ms, where the ceiling is about 10% under none (none(8) taken as max(scan, S) + 8 ms, the coupling measured at 8).
+Note (synthesis fourth-pass §2): after #986 stopped B=10 K=3/K=4 multi-symbol tables, `pooled-scan-hybrid` (plus the newly opened `huff-bmi2-dispatch` ISA probe) are the only remaining scan levers. Even under #982's conservative mtf-fold floor (3-6 ms/w), #992/#998's prebuilt 4-lane forward emission alone projects S(8) ~ 148-156 ms (crossing the 158-165 ms trigger independently), and fold + 4-lane forward puts S(8) ~ 135-153 ms with a hybrid ceiling of 140-156 ms (138-155 ms with BMI2), reaching #984's 6 GB/s (~140 ms) milestone.
 """
 why = """
 The scan is still 179 ms of the 195 ms wall at 8 workers when the workers are free.
@@ -20,4 +22,10 @@ Design only: a registration frozen before any data.
 done_when = """
 pooled-scan/hybrid-registration.md and a delta.
 """
+premises = [
+  "docs/journal/2026-11-26-synthesis/third-pass.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+  "docs/journal/2026-11-26-explore/multi-symbol-huffman-table.md",
+  "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md",
+]
 links = ["docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md"]

@@ -255,9 +255,10 @@ What the table shows:
 
 ## Working with the agent team
 
-The decoder is worked on by an agent team (`docs/team/`). Louis sends it requests from ChatGPT
-by a comment on PR #145; a ChatGPT conversation pointed at this repository finds how in
-[`CHATGPT.md`](CHATGPT.md).
+The decoder is worked on through [`frontier/`](frontier/README.md), with standing policies in
+[`docs/team/`](docs/team/README.md) and hard invariants in [`CLAUDE.md`](CLAUDE.md). Agents
+without a shell (including ChatGPT conversations pointed at this repository) follow
+[`CHATGPT.md`](CHATGPT.md) and read the published status page on issue #943.
 
 ## Licence
 

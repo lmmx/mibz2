@@ -1,0 +1,36 @@
+id = "forward-rle1-crc-fusion"
+title = "Upstream RLE1 expansion and tiled CRC32 fusion into forward BWT emission"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "open"
+owned_paths = []
+mechanisms = ["rle1-crc", "emission-walk"]
+needs_louis = ""
+question = """
+`single-pass-rle1-crc` (#988) proved standalone post-BWT RLE1+CRC32 cannot break its 72.3% `crc32 + scan` compute floor (best single-pass in-place: -3.5% warm / -6.1% cold native; -20.8% writes = <= 0.6-1.7% 8-10W worker CPU), and concluded that eliminating `find_runs` (40.0% of L3-warm A9), `shift-up` (5.3%), and `726 MiB` of in-place compaction writes (22.1%) requires fusing RLE1 expansion and tiled PCLMULQDQ CRC32 upstream into `forward-emission`.
+Prototype and price upstream RLE1+CRC fusion in `examples/` (sequenced behind `forward-emission`), explicitly comparing:
+1. Single-lane forward emit + inline RLE1 expansion + 16-64 KiB tiled CRC32 (including dictionary-word run pre-flagging so run-free multi-byte words only check 3-byte word-boundary carries);
+2. 4-lane forward emit + per-lane RLE1/CRC with GF(2) `crc32_combine` vs the lane-boundary length-uncertainty / stitching cost (since `89.4%` of wikidata runs shrink by 1 B and runs can straddle lane anchors);
+3. Interaction with contracted return maps (`bwt-digram-return-map`), where L2-resident `edges` (`93.6 KiB/blk`) makes 1-lane emission within 7-8% of 4-lane (`#992`), potentially favouring 1-lane fused RLE1+CRC over 4-lane unfused.
+"""
+why = """
+Eliminating post-BWT `find_runs`, `shift-up`, and `726 MiB` compaction leaves `crc32_only_floor` (-57.0% of A9 = ~38-42 ms at 1W / ~2.9-3.2% of 1,306 ms, and ~7.3 ms/w at 8W while removing 726-916 MiB of worker L3 write traffic on wikidata x4).
+"""
+stop_test = """
+Frozen before data: smooth-zone prototype in `examples/` (zero `src/` edits, zero `unsafe`), 100% byte- and CRC32-identical to shipped `bwt::walk + rle::unrle + crc32` on all 431 blocks of `corpora/wikidata.bz2` and all six `ab gen` corpora (`text`, `random`, `onebyte`, `pattern`, `runs`, `records`). Measure full `E + A9` on held-out admitted wikidata blocks (7 interleaved repeats, warm and cold, baseline x86-64 and `-C target-cpu=native`) against matched unfused forward emit (1-lane and 4-lane) + shipped `unrle_in_place`. Pass only if fused `E + A9` beats the faster unfused forward control by >= 3.0% of the 1,306 ms 1W reference wall (>= 39.18 ms projected, non-overlapping spreads) OR cuts combined `E + A9` by >= 25 ms at 1W while cutting worker write traffic by >= 50% without regressing guard corpora (`runs`, `text`, `onebyte`). Otherwise STOP and record a scoped dead-end.
+"""
+done_when = """
+A reproducible prototype in `examples/`, exactness report, full `E + A9` comparison table (1-lane vs 4-lane, warm & cold, baseline & native), results note, delta, `surface.tsv` row R updated, and either a striated build claim at `idea` or a `dead-ends.tsv` row.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/rle1-crc-census.md",
+  "docs/journal/2026-11-24-algorithm-level/ideal-permutation-structures/results.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+]
+links = [
+  "frontier/claims/single-pass-rle1-crc.toml",
+  "frontier/claims/forward-emission.toml",
+  "frontier/claims/bwt-digram-return-map.toml",
+]

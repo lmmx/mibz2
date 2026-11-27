@@ -1,12 +1,16 @@
 """The frontier: claims, holds, blog cards, deltas, flags and the surface.
 
     frontier.py brief [--can shell,rust,...]        what to read, what is held, what you can take
-    frontier.py status                              rewrite frontier/STATUS.md from the files alone
+    frontier.py status                              rewrite frontier/STATUS.md from files and open PRs
     frontier.py check                               validate the frontier's files
     frontier.py claim ID --by AGENT [--hours N]     acquire a hold, atomically, on origin
     frontier.py verify ID --session S               exit 0 iff S holds ID live and no open flag names it
     frontier.py renew ID --session S [--hours N]    extend your hold
     frontier.py release ID --session S              end your hold (after your PR has merged)
+    frontier.py take-review ID --pr N --head SHA --by AGENT   transfer submitted reservation
+    frontier.py yield-review ID --session S          park an unfinished integration
+    frontier.py finish-review ID --pr N --head SHA   recover/release verified merged reservation
+    frontier.py cancel-review ID --pr N --head SHA   release a verified closed-unmerged reservation
     frontier.py holds                               list the holds on origin
     frontier.py mark ID --status open|idea|done|dropped|blocked   edit a claim's state (goes in your PR)
 
@@ -19,12 +23,18 @@ GitHub Actions.
 """
 
 import datetime as dt
+import json
+import os
 import pathlib
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import tomllib
+import urllib.error
+import urllib.parse
+import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
@@ -48,18 +58,45 @@ DELTA_HEAD = ["claim:", "by:", "outcome:", "evidence:"]
 FLAG_HEAD = ["flags:", "invariant:", "by:", "status:"]
 DEAD_COLS = ["claim", "verdict", "what it showed", "evidence"]
 SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "evidence", "claims"]
-ME = {"GIT_AUTHOR_NAME": "Louis Maddox", "GIT_AUTHOR_EMAIL": "louismmx@gmail.com"}
-ME |= {"GIT_COMMITTER_NAME": ME["GIT_AUTHOR_NAME"], "GIT_COMMITTER_EMAIL": ME["GIT_AUTHOR_EMAIL"]}
 
 
 def config(ref=None):
-    """frontier/config.toml, optionally from a git ref such as origin/master."""
+    """Read settings and the reservation ceiling from one immutable snapshot."""
     if ref:
-        rc, body = git("show", f"{ref}:frontier/config.toml")
-        if rc == 0:
+        rc, sha = git("rev-parse", "--verify", f"{ref}^{{commit}}")
+        if rc or not re.fullmatch(r"[0-9a-f]{40}", sha):
+            raise ValueError(f"cannot resolve authoritative configuration at {ref}")
+
+        def read(name):
+            rc, body = git("show", f"{sha}:frontier/{name}")
+            if rc:
+                raise ValueError(f"missing authoritative frontier/{name}")
             return tomllib.loads(body)
-    with open(ROOT / "config.toml", "rb") as f:
-        return tomllib.load(f)
+    else:
+        def read(name):
+            return tomllib.loads((ROOT / name).read_text(encoding="utf-8"))
+
+    cfg = read("config.toml")
+    if "limits_file" in cfg:
+        if cfg["limits_file"] != "limits.toml" or cfg.get("max_live_holds") != 0:
+            raise ValueError("invalid operational-limits migration marker")
+        limits = read("limits.toml")
+        if set(limits) != {"max_live_holds"}:
+            raise ValueError("limits.toml must contain only max_live_holds")
+        cfg["max_live_holds"] = limits["max_live_holds"]
+    # Legacy config is supported for pre-migration commits and hermetic fixtures.
+    cap = cfg.get("max_live_holds")
+    if type(cap) is not int or cap < 1:
+        raise ValueError("max_live_holds must be a positive integer")
+    return cfg
+
+
+def reservation_limit():
+    """Fail closed if authoritative operational settings cannot be read."""
+    try:
+        return config("origin/master")["max_live_holds"]
+    except (OSError, ValueError) as exc:
+        sys.exit(f"cannot read reservation limit: {exc}")
 
 
 def git(*args, inp=None, env=None):
@@ -157,7 +194,9 @@ def holds(fetch=True, strict=True):
 def live(lease):
     """Whether a lease is in force: not released and not expired."""
     exp = dt.datetime.fromisoformat(lease.get("expires", "1970-01-01T00:00:00+00:00"))
-    return not lease.get("released") and exp > now()
+    return not lease.get("released") and (
+        lease.get("phase") in ("integration", "parked") or exp > now()
+    )
 
 
 def conflicts(cid, owned_paths, mechanisms, all_holds):
@@ -175,25 +214,76 @@ def conflicts(cid, owned_paths, mechanisms, all_holds):
     return found
 
 
-def write_lease(cid, lease, parent, expected):
+ADMISSION_REF = "refs/heads/frontier-admission"
+
+
+def admission_snapshot():
+    """Read the admission epoch before holds; failure is not absence."""
+    rc, out = git("ls-remote", "origin", ADMISSION_REF)
+    if rc:
+        sys.exit(f"cannot read admission epoch: {out}")
+    if not out:
+        return ""
+    fields = out.split()
+    if len(fields) != 2 or fields[1] != ADMISSION_REF:
+        sys.exit("invalid remote admission epoch")
+    epoch = fields[0]
+    if not re.fullmatch(r"[0-9a-f]{40}", epoch):
+        sys.exit("invalid remote admission SHA")
+    rc, out = git("fetch", "-q", "--no-tags", "--no-write-fetch-head", "origin", epoch)
+    if rc:
+        sys.exit(f"cannot fetch admission epoch: {out}")
+    return epoch
+
+
+def lease_identity():
+    """Use the checkout's explicitly configured Git identity only for commit creation."""
+    rc_name, name = git("config", "--local", "--get", "user.name")
+    rc_email, email = git("config", "--local", "--get", "user.email")
+    if rc_name or rc_email or not name or not email:
+        return None
+    return {
+        "GIT_AUTHOR_NAME": name,
+        "GIT_AUTHOR_EMAIL": email,
+        "GIT_COMMITTER_NAME": name,
+        "GIT_COMMITTER_EMAIL": email,
+    }
+
+
+def write_lease(cid, lease, parent, expected, admission=None):
     """Commit `lease` onto hold/<cid> (child of `parent`) and push it, guarded by `expected`."""
+    identity = lease_identity()
+    if identity is None:
+        return False, "repository-local Git identity is not configured; no lease was written"
     body = "".join(
         f"{k} = {str(v).lower() if isinstance(v, bool) else repr(v).replace(chr(39), chr(34))}\n"
         for k, v in lease.items()
     )
-    _, blob = git("hash-object", "-w", "--stdin", inp=body)
-    _, tree = git("mktree", inp=f"100644 blob {blob}\tlease.toml\n")
+    rc, blob = git("hash-object", "-w", "--stdin", inp=body)
+    if rc:
+        return False, blob
+    rc, tree = git("mktree", inp=f"100644 blob {blob}\tlease.toml\n")
+    if rc:
+        return False, tree
     args = ["commit-tree", tree, "-m", f"hold {cid}: {lease['holder']} {lease['session']}"]
     args += ["-p", parent] if parent else []
-    _, sha = git(*args, env=ME)
+    rc, sha = git(*args, env=identity)
+    if rc:
+        return False, sha
     ref = f"refs/heads/hold/{cid}"
-    rc, out = git(
-        "push",
-        "--porcelain",
-        f"--force-with-lease={ref}:{expected or ''}",
-        "origin",
-        f"{sha}:{ref}",
-    )
+    args = ["push", "--porcelain", f"--force-with-lease={ref}:{expected or ''}"]
+    updates = [f"{sha}:{ref}"]
+    if admission is not None:
+        # Both refs advance or neither does. Distinct IDs share this epoch.
+        epoch_args = ["commit-tree", tree, "-m", f"admission {secrets.token_hex(16)}"]
+        if admission:
+            epoch_args += ["-p", admission]
+        rc, epoch = git(*epoch_args, env=identity)
+        if rc:
+            return False, epoch
+        args += ["--atomic", f"--force-with-lease={ADMISSION_REF}:{admission}"]
+        updates.append(f"{epoch}:{ADMISSION_REF}")
+    rc, out = git(*args, "origin", *updates)
     return rc == 0, out
 
 
@@ -264,14 +354,368 @@ def table(rows):
     return out + ["| " + " | ".join(r) + " |" for r in rows[1:]]
 
 
+def claim_header(body):
+    """Read the existing Claim header, not instructions elsewhere in a PR body."""
+    lines = (body or "").splitlines()
+    m = re.fullmatch(r"Claim: ([a-z0-9][a-z0-9_-]*)", lines[0].strip()) if lines else None
+    return m.group(1) if m else None
+
+
+def github_repository():
+    """Identify a GitHub origin, including local GitHub git proxies; never query a test remote."""
+    rc, remote = git("remote", "get-url", "origin")
+    if rc:
+        return None
+    if remote.startswith("git@github.com:"):
+        name = remote.split(":", 1)[1]
+    else:
+        url = urllib.parse.urlsplit(remote)
+        if url.hostname == "github.com":
+            name = url.path.lstrip("/")
+        elif url.hostname in ("localhost", "127.0.0.1", "::1", "local_proxy"):
+            if not url.path.startswith("/git/"):
+                return None
+            name = url.path.removeprefix("/git/")
+        else:
+            return None
+    name = name.rstrip("/").removesuffix(".git")
+    return name if re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", name) else None
+
+
+def read_open_prs():
+    """Return (open PRs to master, error), using live GitHub data rather than claim status."""
+    repo = github_repository()
+    if not repo:
+        return None, "origin is not a recognised GitHub remote"
+    endpoint = f"repos/{repo}/pulls?state=open&base=master&per_page=100"
+    # gh can use the session's existing authentication; the standard-library fallback
+    # also works for public repositories without gh. Never print credentials or response bodies.
+    if shutil.which("gh"):
+        try:
+            proc = subprocess.run(
+                ["gh", "api", "--hostname", "github.com", "--paginate", "--slurp", endpoint],
+                cwd=REPO,
+                capture_output=True,
+                text=True,
+                timeout=12,
+            )
+            if proc.returncode == 0:
+                pages = json.loads(proc.stdout)
+                if isinstance(pages, list) and all(isinstance(p, list) for p in pages):
+                    return [pr for page in pages for pr in page], None
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            pass
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "frontier-review"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    found = []
+    try:
+        for page in range(1, 1001):
+            req = urllib.request.Request(
+                f"https://api.github.com/{endpoint}&page={page}", headers=headers
+            )
+            with urllib.request.urlopen(req, timeout=8) as response:
+                rows = json.load(response)
+            if not isinstance(rows, list):
+                break
+            found.extend(rows)
+            if len(rows) < 100:
+                return found, None
+    except (OSError, ValueError, urllib.error.URLError):
+        pass
+    return None, "GitHub open-PR query failed or was incomplete"
+
+
+def read_pr(number):
+    """Read a single PR, including merge state; never trust stale local review metadata."""
+    repo = github_repository()
+    if not repo or not isinstance(number, int) or number < 1:
+        sys.exit("cannot identify pull request")
+    endpoint = f"repos/{repo}/pulls/{number}"
+    if shutil.which("gh"):
+        try:
+            proc = subprocess.run(
+                ["gh", "api", "--hostname", "github.com", endpoint],
+                cwd=REPO, capture_output=True, text=True, timeout=12,
+            )
+            if proc.returncode == 0:
+                pr = json.loads(proc.stdout)
+                if isinstance(pr, dict):
+                    return pr
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            pass
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "frontier-review"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        req = urllib.request.Request(f"https://api.github.com/{endpoint}", headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as response:
+            pr = json.load(response)
+        if isinstance(pr, dict):
+            return pr
+    except (OSError, ValueError):
+        pass
+    sys.exit(f"cannot read current PR #{number}; refusing integration transition")
+
+
+def check_review_pr(cid, number, head, *, merged=False):
+    """Validate exact PR lineage and state before an integration transition."""
+    if not re.fullmatch(r"[0-9a-f]{40}", head or ""):
+        sys.exit("integration requires the exact 40-character PR head")
+    pr = read_pr(number)
+    try:
+        valid = (
+            pr["number"] == number
+            and pr["head"]["sha"] == head
+            and pr["base"]["ref"] == "master"
+            and claim_header(pr["body"]) == cid
+            and (
+                (pr["state"] == "closed" and pr["merged"] is True)
+                if merged else (pr["state"] == "open" and pr["draft"] is False)
+            )
+        )
+    except (KeyError, TypeError, ValueError):
+        valid = False
+    if not valid:
+        sys.exit(f"PR #{number} is not the expected {'merged' if merged else 'open'} claim/head")
+    return pr
+
+
+def review_card(cid, number, head):
+    """Fetch the immutable PR head and require the producer's existing review declaration."""
+    rc, out = git("fetch", "-q", "--no-tags", "origin", f"refs/pull/{number}/head")
+    if rc or git("rev-parse", "FETCH_HEAD")[1] != head:
+        sys.exit(f"cannot fetch exact PR #{number} head: {out}")
+    for dirname in ("claims", "blog"):
+        rc, body = git("show", f"{head}:frontier/{dirname}/{cid}.toml")
+        if rc == 0:
+            c = tomllib.loads(body)
+            if c.get("id") == cid and c.get("status") == "review" and c.get("pr") == number:
+                return c
+    sys.exit(f"PR #{number} has not declared this claim ready for handoff")
+
+
+def take_review(cid, number, head, by, hours):
+    """Transfer a submitted claim's existing reservation, without acquiring another work slot."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", cid):
+        sys.exit("invalid claim id")
+    if not by or by == "unknown" or hours <= 0:
+        sys.exit("integration requires a named participant and positive lease duration")
+    check_review_pr(cid, number, head)
+    c = review_card(cid, number, head)
+    _fetch_master(strict=True)
+    trunk = {}
+    for dirname in ("claims", "blog"):
+        rc, body = git("show", f"origin/master:frontier/{dirname}/{cid}.toml")
+        if rc == 0:
+            trunk = tomllib.loads(body)
+            break
+    if not trunk or trunk.get("status") not in ("open", "review") or trunk.get("needs_louis"):
+        sys.exit(f"{cid} is not an admitted, unreserved integration candidate")
+    if c.get("needs_louis"):
+        sys.exit(f"{cid} requires an owner decision")
+    admission = admission_snapshot()
+    all_holds = holds()
+    sha, lease = all_holds.get(cid, (None, None))
+    if not lease or lease.get("released"):
+        sys.exit(f"{cid} has no existing reservation to transfer")
+    if not live(lease) and sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
+        sys.exit("expired reservation cannot be revived at capacity")
+    if lease.get("phase") == "integration" and dt.datetime.fromisoformat(lease["expires"]) > now():
+        sys.exit(f"{cid} already has an integration holder; wait for yield or expiry")
+    if lease.get("phase") in ("integration", "parked") and lease.get("pr") != number:
+        sys.exit(f"{cid} is reserved for a different PR")
+    producer = lease.get("producer", lease.get("holder"))
+    if not producer or by == producer:
+        sys.exit("integration handoff requires a participant different from the producer")
+    if not lease.get("base") or git("merge-base", "--is-ancestor", lease["base"], head)[0]:
+        sys.exit("PR head does not descend from the reserved work base")
+    hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
+    if hit:
+        sys.exit(f"{cid} overlaps another live reservation: {hit[0]}")
+    check_review_pr(cid, number, head)
+    updated = {
+        **lease, "holder": by, "producer": producer, "session": secrets.token_hex(6),
+        "phase": "integration", "pr": number, "pr_head": head,
+        "expires": (now() + dt.timedelta(hours=hours)).isoformat(), "released": False,
+    }
+    ok, out = write_lease(cid, updated, sha, sha, admission)
+    if not ok:
+        sys.exit(f"integration not acquired: {out}")
+    print(f"acquired integration {cid} for PR #{number}; your session is {updated['session']}")
+    print("Existing reservation transferred; verify exact head and all normal merge gates.")
+
+
+def yield_review(cid, session):
+    """Return an integration reservation to the environment without releasing its paths."""
+    sha, lease = mine(cid, session)
+    if lease.get("phase") != "integration":
+        sys.exit("only an integration holder may yield its review")
+    updated = {**lease, "phase": "parked", "session": secrets.token_hex(6)}
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"integration not yielded: {out}")
+    print(f"{cid}: integration yielded; any independent participant can take it")
+
+
+def finish_review(cid, number, head, *, cancelled=False):
+    """Release exactly a verified terminal PR reservation, even after session loss."""
+    sha, lease = holds().get(cid, (None, None))
+    if (
+        not lease or lease.get("phase") not in ("integration", "parked")
+        or lease.get("pr") != number or lease.get("pr_head") != head
+    ):
+        sys.exit("no matching integration reservation")
+    if cancelled:
+        pr = read_pr(number)
+        try:
+            valid = (
+                pr["number"] == number and pr["head"]["sha"] == head
+                and pr["base"]["ref"] == "master" and claim_header(pr["body"]) == cid
+                and pr["state"] == "closed" and pr["merged"] is False
+            )
+        except (KeyError, TypeError):
+            valid = False
+        if not valid:
+            sys.exit("PR is not the exact closed-unmerged reservation")
+        terminal = "closed-unmerged"
+    else:
+        pr = check_review_pr(cid, number, head, merged=True)
+        merge = pr.get("merge_commit_sha")
+        if not re.fullmatch(r"[0-9a-f]{40}", merge or ""):
+            sys.exit("missing exact merge commit")
+        _fetch_master(strict=True)
+        if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
+            sys.exit("merge commit is not on origin/master")
+        terminal = merge
+    if lease.get("released"):
+        if lease.get("terminal") != terminal:
+            sys.exit("release record disagrees with terminal PR")
+        print(f"{cid}: already released for PR #{number}")
+        return
+    updated = {**lease, "released": True, "terminal": terminal}
+    ok, out = write_lease(cid, updated, sha, sha)
+    if not ok:
+        sys.exit(f"integration not released: {out}")
+    print(f"{cid}: terminal PR #{number}; reservation released")
+
+
+def reconcile_integrations(all_holds):
+    """Recover terminal reservations before admitting new work; never release on uncertainty."""
+    for cid, (_, lease) in sorted(all_holds.items()):
+        if lease.get("released") or lease.get("phase") not in ("integration", "parked"):
+            continue
+        try:
+            pr = read_pr(lease["pr"])
+            if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
+                finish_review(cid, lease["pr"], lease["pr_head"], cancelled=not pr["merged"])
+        except (SystemExit, KeyError, TypeError, ValueError):
+            print(f"{cid}: integration reconciliation unavailable; reservation retained", file=sys.stderr)
+    return holds()
+
+
+def review_projection(items, prs, error):
+    """Project review candidates from open PRs; this is visibility, never merge authority."""
+    by_id = {c["id"]: c for c in items}
+    linked, unclaimed, unlinked = {}, [], []
+    # A partial or malformed response must not be reported as an empty queue.
+    if prs is not None:
+        try:
+            for pr in prs:
+                if (
+                    not isinstance(pr["number"], int)
+                    or pr["number"] < 1
+                    or not re.fullmatch(r"[0-9a-f]{40}", pr["head"]["sha"])
+                    or pr["state"] != "open"
+                    or pr["base"]["ref"] != "master"
+                    or not isinstance(pr["draft"], bool)
+                    or (pr["body"] is not None and not isinstance(pr["body"], str))
+                ):
+                    raise ValueError("malformed PR metadata")
+                cid = claim_header(pr["body"])
+                if cid == "none":
+                    unclaimed.append(pr["number"])
+                elif cid is None:
+                    unlinked.append(pr["number"])
+                else:
+                    linked.setdefault(cid, {})[pr["number"]] = pr
+        except (KeyError, TypeError, ValueError):
+            prs, error = None, "GitHub returned incomplete or malformed PR metadata"
+            linked, unclaimed, unlinked = {}, [], []
+    lines = []
+    if prs is None:
+        lines.append(f"- UNAVAILABLE: {error}; stored review pointers below are unverified.")
+    else:
+        for cid, group in sorted(
+            linked.items(), key=lambda x: (by_id.get(x[0], {}).get("priority", 999), x[0])
+        ):
+            for number, pr in sorted(group.items()):
+                state = "draft, not ready" if pr["draft"] else "open; integration gates apply"
+                notes = []
+                if cid not in by_id:
+                    notes.append("claim not in this checkout")
+                if len(group) > 1:
+                    notes.append("multiple open PRs for claim")
+                suffix = "; " + "; ".join(notes) if notes else ""
+                lines.append(f"- {cid}: PR #{number} at {pr['head']['sha'][:12]} ({state}{suffix})")
+        if unclaimed:
+            refs = ", ".join(f"#{n}" for n in sorted(set(unclaimed)))
+            lines.append(f"- Unclaimed contributions (Claim: none): {refs}")
+        if unlinked:
+            refs = ", ".join(f"#{n}" for n in sorted(set(unlinked)))
+            lines.append(f"- Unclassified open PRs (no valid Claim header; may be legacy): {refs}")
+    for cid, c in sorted(by_id.items()):
+        if c.get("status") != "review":
+            continue
+        number = c.get("pr", "?")
+        if prs is None:
+            lines.append(f"- {cid}: stored PR #{number} (unverified)")
+        elif number not in linked.get(cid, {}):
+            lines.append(f"- {cid}: stored PR #{number} is not a linked open PR (stale pointer)")
+    return lines or ["- none"], set(linked)
+
+
+def check_pr_lineage(event_path, items):
+    """Check the existing Claim header convention for PRs that change frontier data."""
+    try:
+        pr = json.loads(pathlib.Path(event_path).read_text())["pull_request"]
+        base = pr["base"]["sha"]
+        if not re.fullmatch(r"[0-9a-f]{40}", base):
+            raise ValueError("invalid base SHA")
+        rc, changed = git("diff", "--name-only", base, "HEAD", "--", "frontier/")
+        if rc:
+            return "cannot inspect PR's frontier diff for claim lineage"
+        if not changed:
+            return None
+        cid = claim_header(pr.get("body"))
+        if cid is None:
+            return "frontier PR needs its existing Claim: <id> or Claim: none first line"
+        if cid != "none" and cid not in {c["id"] for c in items}:
+            return f"PR Claim: {cid} has no claim or blog card in the checked tree"
+        for c in items:
+            if (
+                c.get("status") == "review"
+                and c.get("pr") == pr["number"]
+                and c["id"] != cid
+            ):
+                return f"PR Claim: {cid} does not match its review pointer for {c['id']}"
+    except (OSError, KeyError, TypeError, ValueError):
+        return "cannot read PR event for claim lineage"
+    return None
+
+
 def render():
-    """The whole of STATUS.md, from the files alone (live holds are in `brief` and `holds`)."""
+    """STATUS.md from files and live PRs (live holds are in `brief` and `holds`)."""
     claims, cards = load("claims"), load("blog")
     every = claims + cards
+    prs, pr_error = read_open_prs()
+    review_lines, pending = review_projection(every, prs, pr_error)
     _, head = git("rev-parse", "--short", "HEAD")
     out = ["# Frontier status", ""]
     out += [
-        f"*Generated by `python3 frontier/tools/frontier.py status` at commit {head}. A local, uncommitted page; live holds aren't here: run `frontier.py holds` or `brief`.*",
+        f"*Generated by `python3 frontier/tools/frontier.py status` at commit {head}. A local, uncommitted page; the review queue uses live PRs. For live holds run `frontier.py holds` or `brief`.*",
         "",
     ]
     louis = [
@@ -284,14 +728,19 @@ def render():
     out += ["", "## Open flags", ""] + (
         [f"- `{p.name}`: {h.get('flags')} ({h.get('invariant')})" for p, h in flags] or ["- none"]
     )
+    out += ["", "## Awaiting review or merge", ""] + review_lines
     for state, title in (
-        ("review", "Awaiting review or merge"),
         ("open", "Open claims, by priority"),
         ("blocked", "Blocked"),
         ("idea", "Ideas, not yet admitted"),
     ):
         sel = sorted(
-            [c for c in claims if c.get("status") == state], key=lambda c: (c["priority"], c["id"])
+            [
+                c
+                for c in claims
+                if c.get("status") == state and (state != "open" or c["id"] not in pending)
+            ],
+            key=lambda c: (c["priority"], c["id"]),
         )
         out += ["", f"## {title}", ""] + ([row(c) for c in sel] or ["- none"])
     cols = [[c["id"] for c in cards if c.get("stage") == s] for s in STAGES]
@@ -335,7 +784,7 @@ def _merge_base():
     return base, None
 
 
-def check():
+def check(pr_event=None):
     """Validate the frontier's files (five checks); return 1 on any error."""
     errs, warn = [], []
     claims, cards = load("claims"), load("blog")
@@ -357,6 +806,10 @@ def check():
             errs.append(
                 f"{n}: past review, it needs reviewed_by, by a different agent from drafted_by"
             )
+    if pr_event:
+        error = check_pr_lineage(pr_event, claims + cards)
+        if error:
+            errs.append(error)
     # 2. deltas and flags: fixed headers, 40-line cap, and independent flag resolution
     for d, head in (("deltas", DELTA_HEAD), ("flags", FLAG_HEAD)):
         for p, lines, h in heads(d, head):
@@ -443,8 +896,12 @@ def check():
         if len(r) != len(DEAD_COLS)
     ]
     # 5. the admission budget and protected files (warnings, using origin/master config)
-    base_cfg = config("origin/master") if base else config()
-    local_cfg = config()
+    try:
+        base_cfg = config("origin/master") if base else config()
+        local_cfg = config()
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid frontier configuration: {exc}")
+        return 1
     n_open = sum(c.get("status") == "open" for c in claims)
     if n_open > base_cfg.get("max_open_claims", 12):
         warn.append(f"{n_open} open claims, over max_open_claims: leave new ones at status idea")
@@ -497,11 +954,11 @@ def brief(can):
             or "- nothing"
         )
     )
-    review = [c for c in claims + cards if c.get("status") == "review"]
-    print(
-        "\n## Awaiting review or merge (finish before starting)\n"
-        + ("\n".join(f"- {c['id']}: PR #{c.get('pr', '?')}" for c in review) or "- nothing")
-    )
+    prs, pr_error = read_open_prs()
+    review_lines, pending = review_projection(claims + cards, prs, pr_error)
+    print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(review_lines))
+    print("Independent integration: take-review ID --pr N --head SHA --by AGENT; "
+          "yield-review or finish-review. No additional work slot required.")
     git("fetch", "-q", "origin", "evidence")
     rc, ev = git("log", "-5", "--format=%h %cs %s", "origin/evidence")
     print(
@@ -513,12 +970,15 @@ def brief(can):
         for c in claims + cards
         if c.get("status") == "open"
         and c["id"] not in held
+        and c["id"] not in pending
         and not c.get("needs_louis")
         and (not can or set(c["needs"]) <= can)
         and not any(_flag_matches(h, c["id"], c) for _, h in flags)
     ]
     take.sort(key=lambda c: (c["priority"], c["id"]))
     print("\n## What you can take (highest priority first)")
+    if review_lines[0].startswith("- UNAVAILABLE:"):
+        print("- Review discovery unavailable: these local suggestions are not a verified queue.")
     for c in take:
         print(row(c) + (f", stage {c['stage']}" if "stage" in c else ""))
     other = [c for c in take if c["kind"] in ("explore", "synthesise")]
@@ -545,12 +1005,20 @@ def claim(cid, by, hours):
         sys.exit(f"{cid} needs Louis: {c['needs_louis']}")
     if open_flags(cid, claim_data=c, fetch=False, strict=True):
         sys.exit(f"{cid} has an open flag; resolve it first")
+    if github_repository():
+        prs, error = read_open_prs()
+        lines, pending = review_projection([c], prs, error)
+        if lines[0].startswith("- UNAVAILABLE:"):
+            sys.exit("cannot verify pending work before acquisition")
+        if cid in pending:
+            sys.exit(f"{cid} already has a pending PR; finish it before starting again")
+    admission = admission_snapshot()
     all_holds = holds()
-    if sum(live(v) for _, v in all_holds.values()) >= config("origin/master").get(
-        "max_live_holds", 6
-    ):
+    if any(v.get("phase") in ("integration", "parked") and not v.get("released") for _, v in all_holds.values()):
+        all_holds = reconcile_integrations(all_holds)
+    if sum(live(v) for _, v in all_holds.values()) >= reservation_limit():
         sys.exit(
-            "the live-hold budget is full (config.toml max_live_holds); take nothing, or help finish something held"
+            "the live-hold budget is full (max_live_holds); take nothing, or help finish something held"
         )
     sha, lease = all_holds.get(cid, (None, None))
     if lease and live(lease):
@@ -572,7 +1040,7 @@ def claim(cid, by, hours):
         "base": git("rev-parse", "origin/master")[1],
         "released": False,
     }
-    ok, out = write_lease(cid, new, sha, sha)
+    ok, out = write_lease(cid, new, sha, sha, admission)
     if not ok:
         sys.exit(f"not acquired (someone else moved hold/{cid} first, or the push failed):\n{out}")
     print(f"acquired {cid} until {new['expires']}; your session is {new['session']}")
@@ -587,7 +1055,9 @@ def mine(cid, session, all_holds=None):
     sha, lease = src.get(cid, (None, None))
     if not lease or lease.get("session") != session:
         sys.exit(f"{cid} is not held by session {session}")
-    if not live(lease):
+    if not live(lease) or lease.get("phase") == "parked" or (
+        dt.datetime.fromisoformat(lease["expires"]) <= now()
+    ):
         sys.exit(
             f"{cid}'s hold by {session} has lapsed: re-claim it before any consequential action"
         )
@@ -605,7 +1075,7 @@ def main(argv):
         (ROOT / "STATUS.md").write_text(render())
         print("wrote frontier/STATUS.md")
     elif cmd == "check":
-        return check()
+        return check(opt("--pr-event"))
     elif cmd == "holds":
         for k, (sha, v) in sorted(holds().items()):
             state = "live" if live(v) else ("released" if v.get("released") else "expired")
@@ -614,10 +1084,18 @@ def main(argv):
             )
     elif cmd == "claim":
         claim(argv[2], opt("--by", "unknown"), hours)
+    elif cmd == "take-review":
+        take_review(argv[2], int(opt("--pr", "0")), opt("--head"), opt("--by", "unknown"), hours)
+    elif cmd == "yield-review":
+        yield_review(argv[2], opt("--session"))
+    elif cmd in ("finish-review", "cancel-review"):
+        finish_review(argv[2], int(opt("--pr", "0")), opt("--head"), cancelled=cmd == "cancel-review")
     elif cmd == "verify":
         cid = argv[2]
         all_holds = holds()
         _, lease = mine(cid, opt("--session"), all_holds)
+        if lease.get("phase") == "integration":
+            check_review_pr(cid, lease["pr"], lease["pr_head"])
         hit = conflicts(cid, lease.get("owned_paths", []), lease.get("mechanisms", []), all_holds)
         if hit:
             k, holder, shared = hit[0]
@@ -632,9 +1110,10 @@ def main(argv):
             sys.exit(f"{cid} has an open flag")
         print(f"{cid}: held live by this session; no open flag")
     elif cmd == "renew":
+        admission = admission_snapshot()
         sha, lease = mine(argv[2], opt("--session"))
         updated = {**lease, "expires": (now() + dt.timedelta(hours=hours)).isoformat()}
-        ok, out = write_lease(argv[2], updated, sha, sha)
+        ok, out = write_lease(argv[2], updated, sha, sha, admission)
         if not ok:
             print(f"not renewed:\n{out}", file=sys.stderr)
             return 1
@@ -643,6 +1122,8 @@ def main(argv):
         sha, lease = holds().get(argv[2], (None, None))
         if not lease or lease.get("session") != opt("--session"):
             sys.exit(f"{argv[2]} is not held by session {opt('--session')}")
+        if lease.get("phase") in ("integration", "parked"):
+            sys.exit("use finish-review after merge, or yield-review before leaving")
         updated = {**lease, "released": True}
         ok, out = write_lease(argv[2], updated, sha, sha)
         if not ok:

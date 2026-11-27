@@ -4,7 +4,7 @@ kind = "write"
 zone = "smooth"
 needs = ["long-context"]
 priority = 4
-status = "idea"
+status = "done"
 mechanisms = ["bench-methodology"]
 owned_paths = []
 needs_louis = ""
@@ -13,6 +13,7 @@ Primary evidence in #952 (`c71c4a56`, `cc8ba137`) and the 26 November synthesis 
 1. `C`-paired tests (needed for `pooled-scan-hybrid`): zero-copy `C` adds `+20..+33 ms/worker` of cold-store `A7` bloat absorbed 0 ms by scanner-bound `C` (`job_wait` 50.6-91.8 ms/w) and 100% by worker-bound `PC`/`SC`, systematically compressing measured capture.
 2. `S`-paired tests (required by `mtf-fold-build` and `forward-emission`): `C` is real/warm so cold-store `A7` asymmetry vanishes, but at `k = 9..10` fast workers push `ready_bytes` to `16.3 MiB` and hit the coupled `R + D` L3 eviction cliff (`copy_out` 77.9 ms, `A9` 215.6 ms), attenuating capture of worker-side speedups.
 Write a reusable, frozen registration protocol defining: (a) how `C`-paired scanner tests avoid cold-store asymmetry (real fast-worker baseline once `C`/`E` wins land, or warm/bias-adjusted pre-registered estimator), (b) judged worker counts (`k = 8` primary vs `k = 9..10` diagnostic) and mandatory `A9`/`copy_out`/`ready_bytes` reporting for `S`-paired worker tests, and (c) strict C2 non-relaxation of prior verdicts (`pooled-scan` KILL stands).
+Note (synthesis third-pass §1): the k = 10 figures in (2) (copy_out 77.9, A9 215.6 ms) are the SC arm's, which carries the cold C store. The S arm (real C) at k = 10 shows copy_out 47.8 and A9 127.7 ms, near none's 43.1 and 131.3, and keeps scaling (184.9, 174.5, 169.6 ms at 8, 9, 10). S-paired tests are less exposed than (2) says; the protocol should cite S, not SC. Third-pass §2 also gives the pooled scan's capture in closed form, 1 - (scan/k)/(C - SC).
 """
 why = """
 Prevents every upcoming striated build (`pooled-scan-hybrid`, `mtf-fold-build`, `forward-emission`) from repeating a 15-minute workstation run with a systematically biased `K1` estimator.
@@ -24,6 +25,7 @@ done_when = """
 `docs/journal/2026-11-24-algorithm-level/ideal-parts/warm-paired-oracle-protocol.md` written and linked from a delta.
 """
 premises = [
+  "docs/journal/2026-11-26-synthesis/third-pass.md",
   "docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md",
   "docs/journal/2026-11-26-explore/cold-store-and-rle1-llc.md",
   "docs/journal/2026-11-26-synthesis/README.md",
