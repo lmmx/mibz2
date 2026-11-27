@@ -519,6 +519,85 @@ pub fn decode_block<I: bwt::InverseBwt>(
     column(s, n, b.orig_ptr, b.crc, b.max_len, k, out)
 }
 
+/// Research only (`mtf-fold`): `decode_owned`'s run route for a kernel that folds
+/// (`InverseBwt::folds`): the block inverted straight from its symbols, its first pass fed by
+/// the MTF/RLE2 front with no run records (`runs::fold`), then its RLE1 undone in place and its
+/// CRC checked as `decode_owned` does. None, with nothing handed over and `take` not called,
+/// where the fold doesn't finish the block: `decode_owned` then takes the shipped path, as
+/// shipped.
+///
+/// **The buffers:** the fold works in the worker's scratch buffer (`ll`), since the block's
+/// output buffer is taken only once its rows are known. Once the first pass has admitted the
+/// block, `take(n, syms)` is called as the shipped path calls it (the symbols handed back, the
+/// output buffer taken for `n` rows); when the walk is done the two buffers swap, so the
+/// block's bytes leave in the scratch buffer and the one taken becomes the worker's scratch.
+/// No byte is copied.
+#[cfg(feature = "mtf-fold")]
+fn decode_folded<I: bwt::InverseBwt, T: FnOnce(usize, Vec<u16>) -> Vec<u8>>(
+    b: &mut block::Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    take: &mut Option<T>,
+) -> Option<Result<Vec<u8>, ErrorKind>> {
+    use runs::fold::{self, Outcome};
+    let crc = b.crc;
+    let mut buf = std::mem::take(&mut s.ll);
+    let mut taken: Option<Vec<u8>> = None;
+    #[cfg(feature = "trace")]
+    trace::mark_sized(
+        trace::Kind::InvertStart,
+        trace::NONE,
+        b.max_len as u64,
+        trace::UNREAD,
+    );
+    let outcome = s
+        .inverse
+        .fold_runs(b, &mut s.runs, &mut buf, k, &mut |n, syms| {
+            if let Some(take) = take.take() {
+                taken = Some(take(n, syms));
+            }
+        });
+    fold::count(outcome);
+    let (Outcome::Done(n), Some(mut out)) = (outcome, taken) else {
+        debug_assert!(
+            !matches!(outcome, Outcome::Done(_)),
+            "folded with no buffer taken"
+        );
+        s.ll = buf;
+        #[cfg(feature = "trace")]
+        trace::mark(trace::Kind::InvertEnd, trace::NONE);
+        return None;
+    };
+    std::mem::swap(&mut out, &mut buf);
+    s.ll = buf;
+    #[cfg(feature = "trace")]
+    trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    #[cfg(any(test, feature = "trace"))]
+    let ll_before = s.ll.as_ptr();
+    let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+    #[cfg(any(test, feature = "trace"))]
+    {
+        let route = if s.inverse.took_cells() {
+            trace::OutputRoute::Cells
+        } else {
+            trace::OutputRoute::Runs
+        };
+        let staged = s.ll.as_ptr() != ll_before;
+        s.record_owned(route, n, b.max_len, k, Some(&out), staged);
+    }
+    #[cfg(not(any(test, feature = "trace")))]
+    let _ = n;
+    Some(computed.and_then(|computed| {
+        if computed != crc {
+            return Err(ErrorKind::BlockCrc {
+                stored: crc,
+                computed,
+            });
+        }
+        Ok(out)
+    }))
+}
+
 /// `decode_block` into a buffer of the block's own, for the parallel workers: the block's
 /// bytes are the whole of the buffer returned, the bytes and the errors exactly
 /// `decode_block`'s. `take(n, syms)` gives that buffer once the block's `n` rows are known,
@@ -544,6 +623,16 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
 ) -> Result<Vec<u8>, ErrorKind> {
+    #[cfg(feature = "mtf-fold")]
+    let take = {
+        let mut take = Some(take);
+        if s.inverse.folds() && runs::fold::wants(b) && runs::takes_runs(b) {
+            if let Some(res) = decode_folded(b, k, s, &mut take) {
+                return res;
+            }
+        }
+        take.expect("not taken: the fold handed nothing over")
+    };
     let (crc, orig_ptr) = (b.crc, b.orig_ptr);
     #[cfg(feature = "ideal-mtf")]
     let replayed_mtf = if ideal::mtf::mode() == ideal::Mode::Replay {
