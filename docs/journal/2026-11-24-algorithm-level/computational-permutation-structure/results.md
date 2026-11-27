@@ -108,11 +108,14 @@ are BWT-non-adjacent, so no interval operator on `p` or `T` finds them. Sources 
 - The lexicographic parse (Navarro–Ochoa–Prezza, IEEE TIT 2021) has `O(r)` phrases but bidirectional
   sources, so decoding it is again a dependency chase.
 
-None supplies the primitive. The live candidate is the active `bwt-digram-return-map` construction, which
-works in F-bucket and band space. Its useful test, implied here, is whether A6b's trace already enumerates
-`(band, image band)` pairs, so that the digram counts come at `O(B)` extra cost. **No new claim:** that
-test is inside `bwt-digram-return-map`'s scope, and this result is shared there through the surface row
-and delta.
+None supplies the primitive. The BWT/F-bucket/digram constructors of `bwt-digram-return-map`, merged
+while this PR was open, also STOP ([its results](../bwt-digram-return-map/results.md)). Their contraction
+costs 108–113 ms against a 69–72 ms consumer gain. They found that 76.5% of thin runs are `w = 1`
+singletons, and that bands before A6c do not know target ranks. Both findings agree with this note's
+1.8-row pieces and its per-row-pass floor, and independently. The question left open is narrower:
+*does A6b's band trace, which already visits every band, see `(band, image band)` pairs whose rows are
+contiguous enough to carry a shared word?* The singleton share suggests not on this corpus, which makes
+the obstruction a corpus-level fact about wikidata at `LIMIT = 16`. It is not a theorem. **No new claim.**
 
 ## Smallest falsifying experiment
 

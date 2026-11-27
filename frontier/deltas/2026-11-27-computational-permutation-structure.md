@@ -18,7 +18,7 @@ evidence: registration deb5401 (before data); examples/permutation_operator_prob
 
 **What changed:** the probe example, the registration, results and raw outputs; two `dead-ends.tsv` rows; the surface row `E-walk`; the claim marked done. No new claim.
 
-**What's next:** the sharper question belongs to `bwt-digram-return-map`, the live constructor: does A6b's band trace already enumerate `(band, image band)` pairs, so that the digram counts come at O(B) extra cost? The obstruction is falsified by `P_1(T)/m <= 0.25` on another corpus or limit, or by a gather round costing <= 0.15 of a 4-lane visit. `census` and `bench` measure both in under a minute.
+**What's next:** `bwt-digram-return-map` also STOPped while this was open (contraction 108-113 ms; 76.5% of thin runs are w=1), consistent with the obstruction. The one narrower question left: does A6b's band trace see `(band, image band)` pairs contiguous enough to share a word at O(B) cost? No new claim. The obstruction is falsified by `P_1(T)/m <= 0.25` on another corpus or limit, or by a gather round costing <= 0.15 of a 4-lane visit. `census` and `bench` measure both in under a minute.
 
 **Caveats:**
 - Measured on a 2 MiB-L2 VM, not #992's machine or the i9, and warm only; the i9 numbers are ratio projections.
