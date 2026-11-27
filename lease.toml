@@ -1,0 +1,9 @@
+id = "forward-emission"
+holder = "claude-code"
+session = "5504d64edbf8"
+claimed_at = "2026-11-27T06:14:46+00:00"
+expires = "2026-11-27T12:14:46+00:00"
+owned_paths = ["src/open.rs", "src/open/outq.rs"]
+mechanisms = ["construction-wiring", "emission-walk"]
+base = "f90e924613e0597d42c3d2fa283fede597e457f1"
+released = false
