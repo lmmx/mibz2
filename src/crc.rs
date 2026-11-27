@@ -684,6 +684,31 @@ mod tests {
         assert_eq!(update_bytewise(0, &z) as u64, xpow_mod(128 + 32));
     }
 
+    /// Exercised directly by CI's `cargo miri test --lib -- miri_` workflow: checks GF(2)
+    /// Barrett/fold constants, `Kernels::detect()` under Miri (scalar fallback), `update_with`,
+    /// and streaming splits across every dispatch threshold.
+    #[test]
+    fn miri_crc_dispatch_and_constants() {
+        let k = Kernels::detect();
+        assert_eq!(crc32(b"123456789", k), 0xFC89_1918);
+        let mut x = 0x517c_c1b7_2722_0a95u64;
+        let data: Vec<u8> = (0..1409)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x as u8
+            })
+            .collect();
+        for n in [0usize, 1, 15, 16, 64, 127, 128, 1279, 1280, 1409] {
+            let want = !update_bytewise(!0, &data[..n]);
+            assert_eq!(crc32(&data[..n], k), want, "n={n}");
+        }
+        let s = update_with(update_with(!0, &data[..128], k), &data[128..], k);
+        assert_eq!(!s, !update_bytewise(!0, &data));
+        barrett_and_xpow_const_identities();
+    }
+
     #[test]
     fn kernels_agree() {
         let mut x = 0x9e37_79b9_7f4a_7c15u64;
