@@ -1,6 +1,6 @@
 id = "scanner-seam-window"
 holder = "claude-code"
-session = "75b8ad36d913"
+session = "3a2466c5f8cf"
 claimed_at = "2026-11-27T00:57:42+00:00"
 expires = "2026-11-27T13:13:18+00:00"
 owned_paths = ["src/parallel.rs", "src/trace.rs"]
@@ -8,6 +8,6 @@ mechanisms = ["scanner-input-seam"]
 base = "996b976ed524e7fb37e4267b91f4d7536c4f00da"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1031
 pr_head = "93eab09300561816222fb28ce06f741857a76be1"
