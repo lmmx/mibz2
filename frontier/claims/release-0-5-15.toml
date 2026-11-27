@@ -1,0 +1,35 @@
+id = "release-0-5-15"
+title = "Release 0.5.15: the work merged since 0.5.14, benched against it on CI and the i9"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1      # a release is P1, always, once recognised (Louis, 27 November 2026)
+status = "open"   # opened over max_open_claims at Louis's direction
+owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
+mechanisms = ["release"]
+needs_louis = ""
+question = """
+Release mibz2 0.5.15 by docs/RELEASING.md, step by step. Ten software commits have merged to master since v0.5.14 (git log --first-parent v0.5.14..origin/master -- src python Cargo.toml Cargo.lock pyproject.toml build.rs). The default-path changes among them, each accepted under its own PR's rule:
+- #1129 bounded decoder memory: on highly compressible input, peak memory follows the workers, not the window (1,118 -> 545 MiB at four workers and 32 slots, local); a fix users need;
+- #1080 faster fallback construction for blocks the interval-exchange kernel declines (ordinary, non-Wikidata data);
+- #1040 the dense-band precheck: unsuitable blocks skip the kernel's wasted first pass;
+- #1033 single-copy reads from Python;
+- #1034 coalesced scanner decode: faster Huffman scan. Its registered i9 run (evidence 9de7b6e0, run-20261127T082548Z) returned STOP: 1.9% faster at 8 workers (0.981 [0.963, 0.999]) and 4.0% faster at 10 (0.960 [0.946, 0.974]) against a registered bound of 0.970, no change at 1-6 workers or on text. Its registration says revert on STOP. Louis decided on 27 November to keep it: "I hereby override the registration so I want to keep it, plus it already merged" (an owner override, recorded in frontier/deltas/2026-11-27-scanner-coalesced-kept-by-owner.md; the STOP verdict itself stands, C2). #1034 ships in this release.
+The rest (#1010, #1053, #1110, #895, #1041) are research features or harness, off by default.
+Under RELEASING.md section 1 as amended 27 November, these make the release worth shipping without per-change i9 runs: the release's own paired CI bench of v0.5.14's commit against master (section 3) and its release-scaling run on the i9 (section 5) are the combined measurement, and decide how the release is described. Louis expects a speed release: let the bench say.
+"""
+why = """
+P1 by rule: a release is P1 once recognised. Users get the memory bound, the faster non-Wikidata path and the Python read now, and the i9 release-scaling run measures master's combined speed against 0.5.14 for the first time since the swarm began.
+"""
+stop_test = """
+Frozen before data: done when (1) master is green (Test, Fingerprint, the site); (2) the paired CI bench of v0.5.14's commit against master has run and its CPU is named; (3) the research features' retention notes are reviewed and listed; (4) Deploy Release (patch) has published the crate and the Python package, both verified on crates.io and PyPI; (5) the release-scaling run of 0.5.15 against 0.5.14 is queued on the i9 under the standing authorisation, and its verdict recorded in the CHANGELOG section when it returns, moved or not; (6) a delta. The release is described by what (2) and (5) measured, never by a target or a projection.
+"""
+done_when = """
+0.5.15 published, verified, its CHANGELOG section written from the measured benches, the i9 release-scaling run recorded, and a delta.
+"""
+premises = [
+  "docs/RELEASING.md",
+  "CHANGELOG.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = []
