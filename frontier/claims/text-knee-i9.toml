@@ -1,0 +1,27 @@
+id = "text-knee-i9"
+title = "Probe: the 8-worker knee on a pinned text panel, not only wikidata (i9)"
+kind = "probe"
+zone = "striated"
+needs = ["shell", "rust", "i9"]
+priority = 3
+status = "idea"
+owned_paths = ["bench/text-knee.sh", ".just/text-knee.just"]
+mechanisms = ["station-balance"]
+needs_louis = ""
+question = """
+On a 4-vCPU VM, one thread, the worker:scanner demand ratio k* = W/S off wikidata is 0.58-0.85x wikidata's (median 0.64 over prose, pysrc, rustsrc, json, mdjournal, logs, elf; docs/journal/2026-11-27-explore/station-balance-off-wikidata.md). Scaled from the shipped i9 knee of ~8, typical text would balance at k* ~ 4.6-6.8, scanner-bound at 8 workers. Is that so on the i9 with eight contending workers? Build a reproducible text panel from a pinned commit of this repository (docs/**/*.md, **/*.json, src/**/*.rs, each `bzip2 -9`, SHA-256 checked), and time the shipped decoder at k = 4..10 alongside corpora/wikidata.bz2, with station_balance's single-thread S and W on the same machine.
+"""
+why = """
+Every knee figure in frontier/DECODER.md and the ninth synthesis pass's "workers bind at k = 8" is wikidata, the worker-heavy extreme (17.7x compression). If text is scanner-bound at 8 workers, scanner levers and the slack-only hybrid are under-priced for most users' inputs and worker levers over-priced at k = 8.
+"""
+stop_test = """
+Frozen before data: on the i9, for the panel's median corpus, the measured knee (the smallest k whose median wall is within 2% of the best wall over k = 4..10, 9 interleaved rounds) is <= 7 while wikidata's is >= 8: CONFIRMED, and DECODER.md gains a text row. If the panel's knee is >= 8, the VM ratio does not transfer: REFUTED, recorded as a dead-end row for "VM station ratio as an i9 knee predictor". Otherwise INCONCLUSIVE, with the measured k* (W/S) on the i9 reported.
+"""
+done_when = """
+A frozen recipe (one tarball back, just submit), queued once reviewed and green under the standing workstation authority, its bundle read, and a delta with the verdict.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/station-balance-off-wikidata.md",
+  "docs/journal/2026-11-27-explore/route-census.md",
+]
+links = ["examples/station_balance.rs", "frontier/claims/pooled-scan-hybrid.toml", "frontier/claims/scanner-a2-fast-build.toml"]
