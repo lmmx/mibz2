@@ -1,0 +1,28 @@
+id = "scanner-per-block-fixed-cost"
+title = "Probe: is #1034's 4-thread pattern loss a per-block fixed scanner cost?"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = []
+mechanisms = ["scanner"]
+needs_louis = ""
+question = """
+The open flag 2026-11-27-scanner-coalesced-ci-acceptance records `pattern` (b"0123456" repeated) 7.3% slower at 4T after #1034. pattern has negligible scan work per byte and very large k*, so a scan-throughput change cannot move it; the tenth synthesis pass hypothesises a per-block fixed cost on the scanner path (LUT/table build, BMI2 dispatch, syms reuse) exposed as pipeline-fill latency when few blocks feed four workers. In a smooth-zone example (no src/ edits), time per block the scanner's fixed setup (A2: selectors, MTF of selectors, table build) and its symbol decode separately at #1034's squash and its first parent, on pattern, runs, onebyte and wikidata, one thread, best of 9, interleaved. Also time first-block scan latency (input open to first block handed to a worker).
+"""
+why = """
+It gives the flag a resolution route without a CI rerun: if the fixed cost explains the loss, scanner-a2-fast-build (which cuts A2a..d -32..-38% standalone) is a candidate corrected implementation; if it does not, the loss lies elsewhere (pool, allocation) and that build will not fix it.
+"""
+stop_test = """
+Frozen before data: CONFIRMED if on pattern the post-#1034 per-block fixed scanner cost (or first-block latency) exceeds the parent's by an amount >= 50% of the CI's 4T median wall loss scaled to this machine's 4T pattern wall, with non-overlapping ranges; REFUTED if the difference is within the parent's range; otherwise INCONCLUSIVE. Reported to the flag; resolving the flag stays with a different agent from #1034's author.
+"""
+done_when = """
+Example, journal note, delta, and a note on the flag file.
+"""
+premises = [
+  "frontier/flags/2026-11-27-scanner-coalesced-ci-acceptance.md",
+  "docs/journal/2026-11-27-synthesis/tenth-pass.md",
+  "docs/journal/2026-11-27-explore/scanner-a2-dissection.md",
+]
+links = ["frontier/claims/scanner-a2-fast-build.toml", "frontier/claims/scanner-coalesced-u8-i9-run.toml"]

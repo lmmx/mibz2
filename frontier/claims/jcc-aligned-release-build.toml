@@ -3,7 +3,7 @@ title = "Ship release artefacts (wheels, bzcat) built with 32-byte branch alignm
 kind = "build"
 zone = "striated"
 needs = ["shell", "rust", "i9"]
-priority = 3
+priority = 2
 status = "idea"
 owned_paths = ["pyproject.toml", ".github/workflows/CI.yml"]
 mechanisms = ["build-flags"]
@@ -13,6 +13,7 @@ Three independent VM probes found that 32-byte branch alignment (`-C llvm-args=-
 """
 why = """
 A -6..-12% worker-side gain for zero code would be the cheapest worker lever in the frontier, and at the 8-worker knee the workers now bind (synthesis ninth pass). The VM numbers are diagnostics (C5); the effect is microarchitecture-specific, so only i9 evidence counts, and AMD must not regress.
+Synthesis tenth pass (docs/journal/2026-11-27-synthesis/tenth-pass.md): this measurement also decides which station binds at k = 8 on wikidata. Alignment cuts workers ~14% but the scanner only 1-3% (#1076, #1077), so if the i9 pays the penalty the aligned decoder is scanner-bound at k = 8 (derived), and the k = 8 wall gain would then be only the scanner's 1-3% even with a 14% worker gain. Report the S/W station split (examples/station_balance.rs on the i9) and k = 4..6 so a k = 8 near-miss is not misread. DECODER.md and #1077 disagree on whether the i9-10900K carries the mitigation; only this run settles it.
 """
 stop_test = """
 Frozen before data (adoption registration, C6 review): on i9-10900K, aligned over default must be faster with a non-overlapping 95% CI at k = 1 by >= 3.0% and at k = 8 by >= 1.5%, with no > 1.0% regression at k = 10 or on any guard corpus, <= 1.02x peak RSS, identical output bytes; and on the CI AMD runner no > 1.0% regression at any thread count. Otherwise STOP with a scoped dead-end row.
