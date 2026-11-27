@@ -1,11 +1,4 @@
 version = 1
-action = "ready"
+action = "withdraw"
 recipe = "bench-scanner-coalesced"
-sha = "5aeb37a42a90336f1023d8d9ecc4d6e2844ff7ea"
-branch = "bench/scanner-coalesced"
-claim = "scanner-coalesced-u8-i9-queue"
-session = "f0c5cf47c2eb"
-pr = 1105
-review = 6084494699
-created = "2026-11-27T07:29:19+00:00"
-note = "One registered keep/revert attempt for #1034 under standing workstation authorisation."
+created = "2026-11-27T07:32:41+00:00"
