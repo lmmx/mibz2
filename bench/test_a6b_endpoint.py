@@ -1,11 +1,15 @@
 """Synthetic checks for the frozen A6b experiment."""
 
+from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 
 from a6b_endpoint import (
     ByteMismatch,
     REPEATS,
     WALL_CELLS,
+    checkout_candidate,
     paired,
     summarise,
     validate_pair,
@@ -51,6 +55,55 @@ def observations():
 
 
 class EndpointRecipe(unittest.TestCase):
+    def test_source_checkout_from_detached_shallow_recipe(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            folder = Path(scratch)
+            upstream = folder / "upstream"
+            recipe = folder / "runner"
+            source = folder / "build"
+
+            def git(repo, *args):
+                return subprocess.check_output(["git", "-C", repo, *args], text=True).strip()
+
+            subprocess.run(["git", "init", "-q", "-b", "recipe", upstream], check=True)
+            git(upstream, "config", "user.name", "Test")
+            git(upstream, "config", "user.email", "test@example.invalid")
+            git(upstream, "commit", "-q", "--allow-empty", "-m", "base")
+            git(upstream, "switch", "-qc", "candidate")
+            (upstream / "decoder").write_text("registered source")
+            git(upstream, "add", "decoder")
+            git(upstream, "commit", "-qm", "candidate")
+            pinned = git(upstream, "rev-parse", "HEAD")
+            git(upstream, "switch", "-q", "recipe")
+            git(upstream, "commit", "-q", "--allow-empty", "-m", "recipe")
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "-q",
+                    "--depth=1",
+                    "--single-branch",
+                    "-b",
+                    "recipe",
+                    upstream.as_uri(),
+                    recipe,
+                ],
+                check=True,
+            )
+            recipe_head = git(recipe, "rev-parse", "HEAD")
+            git(recipe, "checkout", "--quiet", "--detach", recipe_head)
+            self.assertEqual(git(recipe, "rev-parse", "--is-shallow-repository"), "true")
+            self.assertNotEqual(
+                subprocess.run(
+                    ["git", "-C", recipe, "cat-file", "-e", pinned], capture_output=True
+                ).returncode,
+                0,
+            )
+            checkout_candidate(recipe, source, pinned)
+            self.assertEqual(git(source, "rev-parse", "HEAD"), pinned)
+            self.assertEqual((source / "decoder").read_text(), "registered source")
+            self.assertEqual(git(recipe, "rev-parse", "HEAD"), recipe_head)
+
     def test_frozen_thresholds(self):
         rows = observations()
         self.assertTrue(summarise(rows)["hardware_pass"])

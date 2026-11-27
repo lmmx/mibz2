@@ -37,6 +37,20 @@ def digest(path, opener=open):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def checkout_candidate(recipe, source, sha):
+    """Fetch the registered source into the private build checkout, even on a shallow runner."""
+    remote = output("git", "remote", "get-url", "origin", cwd=recipe)
+    subprocess.run(["git", "init", "--quiet", source], check=True)
+    subprocess.run(
+        ["git", "fetch", "--quiet", "--no-tags", "--depth=1", remote, sha],
+        cwd=source,
+        check=True,
+    )
+    if output("git", "rev-parse", "FETCH_HEAD^{commit}", cwd=source) != sha:
+        raise ValueError("fetched source differs from the registered A6b commit")
+    subprocess.run(["git", "checkout", "--quiet", "--detach", sha], cwd=source, check=True)
+
+
 def prepare(out, tmp):
     if "i9-10900K" not in output("lscpu"):
         raise ValueError("registered machine is the i9-10900K")
@@ -57,12 +71,7 @@ def prepare(out, tmp):
         f"control {CANDIDATE} default features\n"
     )
     source = tmp / "src"
-    if subprocess.run(["git", "cat-file", "-e", CANDIDATE + "^{commit}"], cwd=ROOT).returncode:
-        subprocess.run(["git", "fetch", "--no-tags", "origin", CANDIDATE], cwd=ROOT, check=True)
-    subprocess.run(
-        ["git", "clone", "--quiet", "--local", "--no-checkout", ROOT, source], check=True
-    )
-    subprocess.run(["git", "checkout", "--quiet", "--detach", CANDIDATE], cwd=source, check=True)
+    checkout_candidate(ROOT, source, CANDIDATE)
     shutil.copyfile(ROOT / "examples/a6b_endpoint_run.rs", source / "examples/a6b_endpoint_run.rs")
     (out / "registration.md").write_bytes(
         (source / "docs/journal/2026-11-27-a6b-endpoint-build/registration.md").read_bytes()
