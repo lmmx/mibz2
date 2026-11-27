@@ -601,27 +601,11 @@ unsafe fn avx2_ring8_update(state: u32, data: &[u8]) -> u32 {
         _mm_xor_si128(_mm_xor_si128(h, l), y)
     };
 
-    // Steady-state loop with strictly in-bounds L1 software prefetch 512..640 B ahead:
-    // for `b < blocks - 11`, `(b + 7) * 128 + 576 <= (blocks - 5) * 128 + 576 = blocks * 128 - 64 < len`.
-    let pf_end = blocks.saturating_sub(11).max(1);
-    for b in 1..pf_end {
-        let q = p.add((b + 7) * 128);
-        // SAFETY: `q.add(512)` and `q.add(576)` are strictly in-bounds of `data`; prefetch never faults.
-        _mm_prefetch::<_MM_HINT_T0>(q.add(512) as *const i8);
-        _mm_prefetch::<_MM_HINT_T0>(q.add(576) as *const i8);
-        store_block(q, rptr.add(((b + 7) & 7) * 128));
-        let src = rptr.add((b & 7) * 128);
-        x0 = fold_mem(x0, src);
-        x1 = fold_mem(x1, src.add(16));
-        x2 = fold_mem(x2, src.add(32));
-        x3 = fold_mem(x3, src.add(48));
-        x4 = fold_mem(x4, src.add(64));
-        x5 = fold_mem(x5, src.add(80));
-        x6 = fold_mem(x6, src.add(96));
-        x7 = fold_mem(x7, src.add(112));
-    }
-    // Remaining steady-state blocks (at most 4 iterations) without prefetch past end.
-    for b in pf_end..(blocks - 7) {
+    // Steady-state loop (C2_avx2_ring8_8x, no software prefetcht0): hardware stride prefetching
+    // handles sequential 128 B reads without consuming extra load-port uops on Zen 5 / Comet Lake.
+    // For `1 <= b < blocks - 7`, `(b + 7) * 128 + 128 <= blocks * 128 <= len`, and slot
+    // `(b + 7) & 7` was consumed at `b - 1` (7 blocks ahead of its next read).
+    for b in 1..(blocks - 7) {
         let q = p.add((b + 7) * 128);
         store_block(q, rptr.add(((b + 7) & 7) * 128));
         let src = rptr.add((b & 7) * 128);
