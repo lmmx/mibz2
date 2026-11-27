@@ -1,0 +1,40 @@
+id = "scanner-coalesced-u8-decode"
+title = "Coalesced same-selector runs, byte-aligned u8 LUT, zero-skip syms reuse, and BMI2 scan"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/huff.rs", "src/block.rs", "src/bits.rs"]
+mechanisms = ["scan-coalesced-u8"]
+needs_louis = ""
+question = """
+Can the three pure safe-Rust serial-scanner levers measured in `docs/journal/2026-11-26-explore/scanner-full-dissection.md`—orthogonally stacking with `huff-bmi2-dispatch` (#1004)—cut serial scan `S` (170-179 ms on i9-10900K, the 8-worker bottleneck once `mtf-fold-build` and `forward-emission` land) while keeping the shipped 24 KiB (`B = 10`, `K = 2`) L1d footprint and 100% exactness (symbols, bit positions, and libbzip2 error parity):
+1. Uncapped consecutive same-selector run coalescing (`499,534` groups -> `188,898` runs on wikidata, -62.2% group tails and `k == 49` branches);
+2. Byte-aligned 8-bit `SYM1`/`SYM2` LUT (`total_bits` in bits `0..7` with `live -= (e as u8) as u32` breaking LLVM's `and $0x3f` CSE off the shift chain, `SYM256` in `cnt == 0` slow path, `[u16; 18]` batch slices eliminating per-step bounds checks);
+3. Eliminating `syms.resize(max_out, 0)` zero-fill after runt truncations (235/431 blocks = 40.23 MiB wasted memset in 8-worker LIFO pool);
+4. Optionally combined with `huff-bmi2-dispatch` (`shlx`/`shrx`/`movbe`) if that probe passes?
+"""
+why = """
+`mtf-fold-build` + `forward-emission` hand the 8-worker wall directly to `S` (178 ms vs 152-161 ms workers). On the VM (7 interleaved repeats, schedstat on-CPU + wall), levers 1-3 alone cut `S` -10.8% in 100% safe Rust (zero overlap) both on baseline x86-64 AND on top of `-C target-cpu=native` BMI2 (-14.0% on a 16-buffer rotating pool; -14.8% to -17.9% total when stacked with BMI2, projected ~26-32 ms off i9's 178 ms serial scan), fully disjoint from `src/open.rs`.
+"""
+stop_test = """
+Frozen before data:
+1. Correctness & safety: 100% byte-identical and error-identical across `cargo test --lib` (including `table_decodes_as_libbzip2` and `symbols_read_as_in_memory`), synthetic `alpha = 258` (`sym = 256`, `EOB`, truncation, overrun), and `fuzz-smoke`. Levers 1-3 remain `#![forbid(unsafe_code)]`; if stacked with `huff-bmi2-dispatch`, keep `unsafe` strictly inside an arch-gated `#[target_feature(enable = "bmi2")]` stub with documented safety invariant and parity tests against the safe fallback.
+2. Workstation i9-10900K registration (frozen before any workstation run): must cut serial scan `S` (`A2 + A3` on wikidata x4, 1W scan or paired `C`-ideal 8W/10W) by >= 8.0% of `S` (and >= 3.0% of the 10W wall or paired post-worker-improvement 8W wall, 95% CI / non-overlapping spreads) with zero regression on `runs`, `text`, or 1W-10W `wikidata` and peak RSS <= 1.05x baseline. Otherwise STOP and record a scoped dead-end.
+"""
+done_when = """
+A frozen workstation registration, prototype PR on `src/huff.rs` / `src/block.rs` / `src/bits.rs` passing all correctness/safety checks, i9-10900K evidence bundle under the frozen stop test, delta, and `surface.tsv` row `S` update.
+"""
+premises = [
+  "docs/journal/2026-11-26-explore/scanner-full-dissection.md",
+  "docs/journal/2026-11-26-explore/scan-lookups-and-runts.md",
+  "docs/journal/2026-11-26-explore/multi-symbol-huffman-table.md",
+  "docs/journal/2026-11-26-synthesis/second-pass.md",
+  "docs/journal/2026-11-26-synthesis/fourth-pass.md",
+]
+links = [
+  "examples/scanner_dissection_probe.rs",
+  "frontier/claims/huff-bmi2-dispatch.toml",
+  "frontier/deltas/2026-11-26-explore-scanner-dissection.md",
+]
