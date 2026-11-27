@@ -1630,822 +1630,338 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# When the hardware says no: an i9 rejection, a 1.27 GB input, and a Round-0 bias
+# Half the memory on bzip2's most compressible files
 
-A physical i9 run rejects a scanner change while controlled probes isolate a 1.27 GB window blowup and a cold-start CI bias.
+Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.
 
-27 November 2026 · 10 min read · [Research synthesis](<#4-corpus-knees-forward-lanes-and-shallow-runners>)
+27 November 2026 · 9 min read · [Research synthesis](<#5-what-it-means-for-a-caller>)
 
-**Real hardware and adversarial workloads just overruled three clean models.** Our previous synthesis mapped out the worker stack and serial parser on cloud VMs in [The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee](<https://lmmx.github.io/mibz2/blog/2026-11-27-l2-cliff-register-wall-and-scanner-a2/index.md>). Since then, the first paired workstation verdict landed on the physical 10-core Intel i9-10900K. Controlled probes also exposed a run-only window blowup and solved a phantom `+7.3%` CI regression across 240 paired rounds. Along the way, we confirmed station-uneven branch alignment and hardened shallow workstation checkouts.
+mibz2 decodes a bzip2 file the way [lbzip2](<https://github.com/kjn/lbzip2>) does, many blocks at a time. One thread, the scanner, reads each compressed block's [Huffman codes](<https://lmmx.github.io/mibz2/blog/2026-11-05-huffman-bit-buffer/index.md>) in order. A pool of workers rebuilds the blocks' text in parallel, and a reader hands the finished blocks to the caller in sequence ([the decoder, drawn as stations](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/#4-the-decoder-drawn-as-stations>)). Between the scanner and the reader sits an admission window, a fixed number of blocks allowed in flight at once. Beside it sits a cap of 12 MiB on decoded output that the caller has not yet read. Together they are meant to keep the decoder's memory small whatever file it is given.
 
-One evidence boundary belongs up front. Only the `scanner-seam-window` verdict (`#1118`, `origin/evidence` `c0b2341c`) comes from the physical 10-core Intel i9-10900K workstation. The `pattern` four-thread dissection (`#1108`, `#1111`, `#1137`) analyzes 24 paired CI runs on 4-vCPU Xeon and EPYC runners. The run-only memory probe (`#1094`) and per-block scanner timing (`#1111`) ran on cloud VMs. So did the controlled A/A checks (`#1137`) and aligned station-balance ratios (`#1107`). Every VM diagnostic remains clearly separated from physical workstation verdicts.
+For ordinary files they do. A block of JSON or text decodes to about a megabyte, so a window of thirty-two blocks holds a few tens of megabytes. But the size of a compressed block says very little about the size of what it decodes to. Two gigabytes of zeros compress to a file of 1,522 bytes. Decoding that file with the library's default settings for eight threads once took 1.27 GB of memory. The cap on unread output was there all along; it was simply checked at a moment when it could not see the danger.
 
-[Section 1](<#1-when-the-hardware-says-no-the-first-i9-verdict-1118-1133>) reports the physical i9 rejection of `scanner-seam-window` and how it reopens serial scanner headroom at eight workers. [Section 2](<#2-a-1522-byte-input-that-ate-127-gb-of-ram-1094-1103>) traces how run-only bzip2 blocks bypass the scanner's byte cap and caught a latent doubling trap before any code shipped. [Section 3](<#3-the-240-pair-detective-story-behind-a-phantom-73-ci-regression-1108-1111-1137>) resolves the `#1034` four-thread `pattern` CI spike into a bimodal backlog regime and a Round-0 cold-start bias. [Section 4](<#4-corpus-knees-forward-lanes-and-shallow-runners>) covers aligned station balance (`#1107`), merged four-lane forward emission (`#1110`), and the shallow-runner invariant (`#1122`–`#1127`).
+That has now been fixed. Workers consult the cap themselves before they start a block, and the pool of spare output buffers is bounded in bytes rather than in buffers. Take the same file, four workers and a thirty-two-block window: peak memory fell from 1,118 MiB to 545 MiB, a cut of 51%. The decode also finished about 15% sooner. More to the point, memory on such a file no longer grows with the window at all. It is the same 545 MiB with eight, sixteen or thirty-two blocks in flight.
 
 **Takeaways**
 
-- **The physical i9 rejected `scanner-seam-window` (`#1118`, `NOT ADOPTED`).** On `wikidata ×4` over 16 paired rounds, `10T` ran `1.89%` faster (`0.9811`), while `12T` missed the frozen gate (`0.9898 [0.9726, 1.0073]`). Scanner maintenance fell only `29.9%` (`10.69 → 7.49 ms`) instead of the modeled `80%`. PR `#1031` therefore closed unmerged, keeping serial `S'` `~10–13 ms` higher at `k = 8`.
-- **A `1,522`-byte bzip2 stream expanded to `1.27 GB` of RAM (`#1094`, `#1103`).** `Shared::full` checks `READY_BYTES` only when the scanner issues a job. Run-only blocks (`~46.6 MB` each) fill the whole `slots` window before workers finish. Peak RSS reached `943 MiB` at `t = 4 / 32 slots` (`+24%–28%` slower from page faults) and `1,273 MiB` at the 8-thread default. Synthesis also caught a matching premise trap in `runt-exempt-window` before implementation.
-- **A phantom `+7.3%` CI spike broke into two measurable harness mechanisms (`#1108`, `#1111`, `#1137`).** On `pattern`, `#1034` actually cut `A2` setup by `88.9%` (`9.0×` faster) and total `S` by `77.1%` (`4.36×` faster). Across 24 non-scanner CI runs, the spike comes from a symmetric bimodal `ready`-backlog RSS burst (`R² = 0.706`, slope `0.881`). It also reflects a `p = 0.0114` Round-0 head-first cold-start penalty (`×1.0605`), while warm `r1..r9` strict-null pairs sit at `1.0012` (`33/99` vs `33/99`, `p = 1.0000`).
-- **Codegen shifts, feature-gated lanes, and shallow runners tightened the pipeline.** JCC 32-byte alignment pulls `wikidata` `k*` down `0.871×` baseline and `0.911×` native on VM silicon (`#1107`, `CONFIRMED`). Four-lane forward emission merged behind `--features forward-anchor-lanes` (`#1110`). Finally, an `INCOMPLETE` shallow-clone run turned `--depth 1` source fetches into a permanent recipe invariant (`#1122`–`#1127`).
+- **A tiny file can decode to a vast one.** bzip2's first stage writes a run of up to 259 equal bytes as five. One block of a single repeated byte therefore decodes to about 46.6 MB, from a few dozen compressed bytes.
+- **The old cap watched the wrong moment.** It was checked only when the scanner admitted a block. Blocks of runs are scanned in microseconds, so the whole window was admitted before any output existed. The workers then decoded every admitted block in full.
+- **Now a worker waits instead.** While the unread output is over the cap, no worker starts a block more than the worker count plus two places ahead of the reader. A bounded pool stops spare 46 MB buffers from piling up behind it.
+- **Memory now follows the workers, not the window.** Four workers need a flat 545 MiB for any window from eight to thirty-two blocks. They had needed 589 to 1,118 MiB. Eight workers need 955 MiB, down from 1,528, and ordinary files decode no slower.
+- **It is in the default decoder.** The change is on master, in every decoder the library builds by default, and will ship in the next release.
 
-## 1\. When the hardware says no: the first i9 verdict (`#1118`, `#1133`)
+## 1\. How can 1,522 bytes become two gigabytes?
 
-Good stop tests earn their keep when they reject code that already passed unit tests, Miri, and review. On paper, `scanner-seam-window` (`#1031`) looked solid. Pre-`#1034` traces showed scanner window maintenance (`in_maint`) taking over `11 ms`. Replacing contiguous compaction with a chunked seam window promised an `80%` cut in maintenance overhead.
+bzip2 compresses in stages, and two of them encode runs. The first is applied to the raw input before anything else. It replaces any run of four to 259 identical bytes by four copies of the byte, followed by a count. A block at the strongest setting holds at most 900,000 bytes *after* this stage. If all of them encode maximal runs, the block holds 180,000 runs of 259 bytes, and it decodes to
 
-The physical i9-10900K tested candidate `3ae44390` against post-`#1034` base `95f4637b` across `16` paired rounds on `wikidata ×4`. All 16 untimed checks matched libbz2 byte for byte across `838,800,784 B`. [The recorded verdict](<https://github.com/lmmx/mibz2/blob/4b53096b9ab181eaf099faaaa63aa905b95a53f6/frontier/deltas/2026-11-27-scanner-seam-window-i9-verdict.md>) (`#1118`, archive `origin/evidence` `c0b2341c`) and [the thirteenth synthesis pass](<https://github.com/lmmx/mibz2/blob/f00aaaf8b3e0a8fa6801f54926984469fb08e73b/docs/journal/2026-11-27-synthesis/thirteenth-pass.md>) (`#1133`) give the complete five-count table:
+\\\[ \\frac{900{,}000}{5} \\times 259 = 46{,}620{,}000 \\text{ bytes} \\approx 46.6 \\text{ MB}. \\\]
 
-| Threads | Role | Workers | Wall base → head (median) | Wall head/base `[95% CI]` | Verdict | CPU head/base `[95% CI]` | Peak RSS ratio |
-| ---: | --- | ---: | ---: | ---: | --- | ---: | ---: |
-| `6` | supporting | `6` | `0.244 → 0.244 s` | `0.9969 [0.9923, 1.0015]` | INCONCLUSIVE | `0.9907 [0.9835, 0.9980]` | `0.9689` |
-| `8` | supporting | `8` | `0.197 → 0.195 s` | `1.0000 [0.9843, 1.0159]` | INCONCLUSIVE | `1.0000 [0.9893, 1.0107]` | `0.9885` |
-| `9` | supporting | `9` | `0.196 → 0.190 s` | `0.9663 [0.9472, 0.9859]` | FASTER | `0.9815 [0.9606, 1.0029]` | `0.9695` |
-| **`10`** | **judged** | **`8`** | **`0.197 → 0.195 s`** | **`0.9811 [0.9670, 0.9954]`** | **FASTER** | **`0.9891 [0.9798, 0.9986]`** | **`0.9846`** |
-| **`12`** | **judged** | **`8`** | **`0.197 → 0.195 s`** | **`0.9898 [0.9726, 1.0073]`** | **INCONCLUSIVE** | **`0.9953 [0.9857, 1.0049]`** | **`0.9929`** |
+The remaining stages then make that block almost free to store. The [Burrows–Wheeler transform](<https://lmmx.github.io/mibz2/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>) of so regular a text is itself a handful of long runs, and move-to-front turns them into zeros. The second run-length stage writes a run of zeros by the binary digits of its length, so the number of symbols grows only with the logarithm of the run. The whole block's coded symbols fit in a few dozen bytes. Two gigabytes of zeros make about 46 such blocks, held in a file of 1,522 bytes: an expansion of well over a million to one.
 
-The pre-registered rule required a 95% upper bound below `1.000` at both judged counts (`10` and `12` threads, both running eight workers). Ten threads cleared the bar (`−1.89%`), while twelve threads straddled parity (`1.0073`). Peak RSS improved at all five counts (`0.969–0.993`), yet the wall effect was too narrow to justify permanent complexity in the scanner's input loop. Under the frozen rule, the verdict was **`NOT ADOPTED`**, and PR `#1031` closed without merging.
+**Two run-length stages.** bzip2 encodes runs twice. The first stage, on the raw input, exists to protect the block sort from long runs; the second, after move-to-front, compresses the zeros that move-to-front produces. The first stage is what fixes a block's decoded size: at most 900,000 bytes go in, and up to about 52 times as many can come out.
 
-### Why `in_maint` fell only `29.9%` and how it moves the eight-worker knee
+None of this is an attack peculiar to mibz2. Any input dominated by long runs behaves this way: a sparse disk image, a zero-filled log, or a deliberately constructed [decompression bomb](<https://en.wikipedia.org/wiki/Zip_bomb>). A decoder that holds several blocks at once has to be ready for each of them to be 46 MB rather than one.
 
-The bundle's own timeline trace (`in-maint.txt`, eight workers, 32 slots) pinpointed why the wall gain shrank. Median scanner window maintenance fell from `10.689 ms` to `7.490 ms`. That `3.20 ms` (`−29.93%`) cut fell far short of the `80%` (`−11.2 ms`) drop projected from pre-`#1034` traces. Once `#1034` already tightened symbol scanning on the baseline, the remaining seam overhead was much smaller than earlier subtractions assumed.
+## 2\. Why did the queue fill with giant blocks?
 
-That single rejection immediately reshaped our system budget in `#1133`. Earlier synthesis passes subtracted `#1031`'s projected `−13.35 ms` (`11.2 ms` maintenance plus `~2.15 ms` coupling) from post-`#1034` serial `S'`. Removing that unlanded subtraction puts post-`#1034` `S'` back `~10–13 ms` higher (derived). That leaves `S'` near `141–148 ms` on default codegen and `135–143 ms` aligned before `scanner-a2-fast-build`. Direct scanner headroom reopens at `k = 8`. Safe `A2` header parsing and slack-only hybrid scanning now regain direct eight-worker value instead of paying off only at `k = 9–10`.
+The window counts blocks, not bytes. Library callers get four blocks in flight per thread, so thirty-two at eight threads. The byte cap was meant to cover the rest. Once 12 MiB of decoded output was waiting for the reader, the scanner would admit blocks only up to the worker count, plus two, ahead of the reader.
 
-## 2\. A 1,522-byte input that ate 1.27 GB of RAM (`#1094`, `#1103`)
+The flaw was in *when* that rule was applied. The scanner checked the cap only at the moment it admitted a block, and only the scanner checked it. On a file of runs the scanner finishes each block in microseconds, long before any worker has finished decoding the first one. When it admitted the second block, and the tenth, and the thirty-second, no output existed yet, so the cap's test passed every time. The window filled entirely with admitted blocks, and the workers then decoded every one of them, each into a buffer of its own of about 46 MB. A pool kept up to one returned buffer per slot for reuse, so that memory stayed held until the decoder was dropped.
 
-While `#1118` tested throughput on Wikidata's `~1 MB` blocks, [an adversarial memory probe](<https://github.com/lmmx/mibz2/blob/0b1c0813c1c43a4c0c538103e317dbde3ac5fec8/docs/journal/2026-11-27-explore/expansive-block-memory.md>) (`#1094`) asked what happens off the map. Every bzip2 block carries at most `900,000` RLE1-encoded bytes. Because five RLE1 bytes can expand to `259` output bytes, a single run-only block decodes to `~46.6 MB` from just a few dozen Huffman symbols.
+A probe on a cloud machine with four virtual CPUs measured the consequence. With four workers, peak memory rose with the window, from 457 MiB with four slots to 943 MiB with thirty-two. At the default window for eight threads it reached 1,273 MiB. At sixteen threads it reached 1,818 MiB, limited only because the file had run out of blocks. Ordinary text, at comparable settings, used between 99 and 148 MiB. The extra memory also cost time, because the kernel zeroes every new page as it is first touched. With four workers, the sixteen- and thirty-two-block windows ran 24% to 28% slower than the eight-block one.
 
-In `#1094`, `2,147.5 MB` of zeros compressed with `bzip2 -9` into **`1,522` bytes** (`~46` blocks of `~46.6 MB`). Decoding that `1,522`-byte file with `bzcat` on a 4-vCPU Xeon VM produced a dramatic contrast against normal text (`211.2 MB` repo source, `~1 MB` blocks):
+No earlier test had seen this. The most compressible sample in the benchmark set decodes to 20 MB, less than a single block of runs.
 
-| Corpus | Threads | Slots | Wall (`ms`) | Throughput (`GB/s`) | Peak RSS (`MiB`) | Minor faults |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `text` | `4` | `8` | `553–561` | `0.38` | `99–103` | `26.7k` |
-| `text` | `8` | `32` | `590` | `0.36` | `148` | `42.5k` |
-| `zeros` (`1,522 B`) | `1` | `1..16` | `778–863` | `2.5–2.8` | `149–150` | `38.0k` |
-| `zeros` (`1,522 B`) | `4` | `4` | `426` | `5.04` | `457` | `116.7k` |
-| `zeros` (`1,522 B`) | `4` | `8` | `402–413` | `5.2–5.3` | `591` | `151.0k` |
-| `zeros` (`1,522 B`) | `4` | `16` | `513` | `4.18` | `591` | `151.0k` |
-| `zeros` (`1,522 B`) | `4` | `32` | `497` | `4.32` | **`943`** | `241.1k` |
-| `zeros` (`1,522 B`) | `8` | `32` | `597` | `3.60` | **`1,273`** | `325.6k` |
-| `zeros` (`1,522 B`) | `16` | `64` | `685` | `3.14` | **`1,818`** | `532.4k` |
+Which blocks in the window may be decoded, on a file of runs
 
-At the library's default 8-thread window (`32` slots via `SLOTS_PER_THREAD = 4`), that `1,522`-byte stream claimed **`1,273 MiB` (`1.27 GB`)** of RAM. That is an `~840,000×` input amplification. At `16` threads (`64` slots), memory hit `1,818 MiB`, bounded only because the stream held 46 blocks. Worse, the extra memory actively hurt speed. At `t = 4`, raising slots from `8` to `16` or `32` slowed wall time by **`24%–28%`** (`402 → 513 / 497 ms`). The kernel had to zero `~370 MB` of extra first-touch pages (`151.0k → 241.1k` minor faults).
+Schematic, four workers and a window of thirty-two blocks. Before the fix, nothing stopped any admitted block from being decoded, and each decoded block of runs is about 46 MB. After it, while the unread output is over its 12 MiB cap, only the blocks within six places of the reader may be decoded; the rest wait, holding only their scanned symbols.
 
-### Why `READY_BYTES` missed it — and the premise trap caught before code
+## 3\. How does the fix bound the memory?
 
-The bug sits cleanly in `src/parallel.rs`. `Shared::full` enforces the `12 MiB` `READY_BYTES` cap only when the *scanner* issues a new block, and only above a floor of `threads + 2` in flight. Run-only blocks take microseconds to scan, so the scanner floods the entire `slots` window with jobs before a single worker finishes block zero. Workers never check `READY_BYTES`; each expands its block into a `~46 MB` output vector, and `free_out` caches up to `slots` such buffers until the decoder drops.
+It has two parts, both in the code that coordinates the scanner, the workers and the reader.
 
-Nobody had caught this on CI because `onebyte.bz2` at `SCALE = 4` is `20 MB` — less than one `~46 MB` block. Even better, [the eleventh synthesis pass](<https://github.com/lmmx/mibz2/blob/583e9b83293997aa9bcf24945c15fe9f7938ffb8/docs/journal/2026-11-27-synthesis/eleventh-pass.md>) (`#1103`) spotted a dangerous interaction with an active proposal before one line of code was written. The `runt-exempt-window` idea exempted tiny lbzip2 blocks from `slots` by checking the header's symbol bound (`n_sel × 50 < POOLED_FROM`). RLE2 encodes a `~46 MB` zero run in logarithmically few symbols (`~33` bytes compressed, `n_sel ≈ 1`). That header test therefore classifies every run-only block as a "runt" and would have issued `2 × slots` of them, roughly doubling the `1.27 GB` blowup. Synthesis stopped that trap cold and re-ordered the fix. Workers must gate on true decoded bytes first (`ready-cap-worker-gate`, admitted in `#1121`). Only after rows or decoded bytes are known can an exemption safely classify runts.
+**The workers check the cap.** Before a worker starts decoding a block, it reads the total of decoded bytes still waiting for the reader. That total is kept in an atomic counter beside the shared state. On an ordinary file the total never reaches 12 MiB, so the check is a single memory read and takes no lock. Only at or over the cap does the worker look further. If its block lies more than the worker count plus two places ahead of the block the reader needs next, it sleeps. The reader wakes the sleeping workers each time it takes a block, and each re-checks its own position. Cancelling the decode wakes them too, so none is left waiting on a decode that has ended.
 
-When hardware and adversarial inputs overrule paper models (\#1118, \#1094)
+Waiting threads invite deadlock, and this design avoids it by construction. Blocks are handed to workers strictly in order. The block the reader needs next, and the few after it, were therefore handed out before any block far enough ahead to be held back, and they are never made to wait. They finish, the reader takes them, and its progress releases the workers behind.
 
-Top: physical i9-10900K verdict on `scanner-seam-window` (`#1118`, 16 paired rounds on `wikidata ×4`). Bottom: peak RSS on a `1,522 B` run-only stream (`#1094`, 4-vCPU VM), where scanner-only `READY_BYTES` (dashed green line at `12 MiB`) lets memory scale with `slots × 46 MB`.
+**The spare-buffer pool is bounded in bytes.** The pool used to keep up to one buffer per slot. It now also stops accepting buffers once their total capacity passes the cap plus 2 MiB for each block that may be in flight: 24 MiB at four workers. Even past that, it keeps up to one buffer per worker. That exception matters. Without it, every block of runs would free its 46 MB buffer and allocate a fresh one, paying the kernel's page faults again each time.
 
-## 3\. The 240-pair detective story behind a phantom `+7.3%` CI regression (`#1108`, `#1111`, `#1137`)
+Taken together, the two parts change what the memory on a file of runs is proportional to. Before, it was the window; now it is about two decoded blocks for each worker, whatever the window's size. The change adds no unsafe code. One new test drives a stream of high-expansion blocks through a decoder whose cap is forced to bind, and checks the peak. Another cancels a decode while workers wait behind the cap, and checks that they wake and exit.
 
-[`#1034`](<https://github.com/lmmx/mibz2/commit/5ed20c1d51afc56c088ae244ba0bf40f37cb93b1>) merged coalesced same-selector runs, byte-aligned `u8` Huffman tables, and BMI2 bit extraction. Its exact-head CI run (`45947633032`, 10 paired rounds) turned up a puzzling red flag. Wikidata and text sped up, yet `pattern` at four threads flagged **slower** by **`+7.3%` (`+2.6%` to `+12.3%`)**. Even stranger, its peak RSS jumped **`+7.9%`** while total CPU *fell* **`−2.2%`**.
+## 4\. What did it measure?
 
-More wall time for less CPU is the classic signature of scheduling latency, not extra compute. Moreover, `pattern.bz2` (`SCALE = 4`, `b"0123456"` repeated to `19.6 MB`) compresses to just `1,116` bytes across `22` blocks. It holds only `2,661` Huffman symbols total and spends **`0.1%`** of single-thread decode time in the scanner. Three independent probes took that paradox apart piece by piece.
+The change was measured on its author's development machine, against the master branch it was built on. Each setting decoded the 1,522-byte file of zeros three times, interleaved with the old build, in one session.
 
-### Step 1: The scanner did not slow `pattern` — it made it `4.36×` faster (`#1111`)
+| Workers | Window (blocks) | Peak memory before → after | Change | Elapsed time before → after |
+| ---: | ---: | ---: | ---: | ---: |
+| 4 | 8 | 589 → 545 MiB | 7% less | 1.27 → 1.27 s |
+| 4 | 16 | 811 → 545 MiB | 33% less | 1.44 → 1.35 s |
+| 4 | 32 | 1,118 → 545 MiB | 51% less | 1.38 → 1.18 s |
+| 8 | 32 | 1,528 → 955 MiB | 37% less | 2.03 → 1.60 s |
 
-[The per-block fixed-cost probe](<https://github.com/lmmx/mibz2/blob/3047905859494ea9e532b29ce10906623c182551/docs/journal/2026-11-27-explore/scanner-pattern-regression.md>) (`#1111`, `REFUTED`) timed `#1034` against its direct parent in `#![forbid(unsafe_code)]`. Both arms passed exact symbol parity across all `455` blocks (`25,044,344` symbols) of `pattern`, `runs`, `onebyte`, and `wikidata`. On `pattern`, every block has `n_sel = 3`, so `#1034`'s `PAIR_GATE_SEL = 64` skips 2-symbol pair-table construction on all `22/22` blocks:
+Peak memory decoding 2 GiB of zeros from a 1,522-byte file
 
-- **Per-block `A2` setup:** dropped from `3.93` to `0.44 µs/block` (**`−88.9%`**, `9.0×` faster). Ranges were disjoint across 9 interleaved repeats on baseline and native builds.
-- **Total serial scan `S`:** fell from `96.0` to `22.0 µs` across all 22 blocks. That is a **`−77.1%`** (`4.36×`) disjoint speedup.
-- **Cold first-block latency:** fell from `30.4` to `17.1 µs` (`−43.9%`).
+Before and after the fix, on the same machine in one session, three interleaved repeats of each setting. With four workers, memory no longer depends on the window. The machine differs from the cloud probe of §2, so the two sets of "before" figures are not directly comparable.
 
-A scanner spending `0.022 ms` total cannot cause a `+1.5 ms` four-thread regression.
+With four workers and thirty-two slots, the decode took half as many page faults as before, about 140,000 instead of 286,000. It also used 23% less processor time. Fewer fresh pages for the kernel to zero is the likely source of most of the 15% saving in elapsed time. At eight workers the elapsed time fell by 21%.
 
-### Step 2: Neither binary identity nor arm labels explain it (`#1108`, `#1137`)
+Ordinary input had to decode no slower, a condition fixed before any measurement. Text and a sample of the Wikidata dump were decoded at one and four workers, seven times each, and every 95% interval included no change. The continuous-integration runner, a Xeon with four CPUs, then ran ten paired rounds over the benchmark corpora. At four threads it found the Wikidata sample 2.0% faster, with a 95% interval from 0.3% to 3.7%. The rest were within noise but for one small cell, random data at four threads, which came out 5.2% slower. That file's whole output is 8 MB, under the 12 MiB cap, so neither new check can act on it.
 
-Before `#1111` even finished, [a null-pool survey](<https://github.com/lmmx/mibz2/blob/d3bbe33f4676b28a2392c6d8999737af23c9a73d/docs/journal/2026-11-27-explore/ci-pattern-4t-null-bias.md>) (`#1108`) checked `18` recent CI runs that never touched the scanner. Across all `21` corpus-by-thread cells, `pattern` at four threads was the lone outlier. Its head/base wall ratio hit `×1.0186` (run-cluster 95% CI `1.0027–1.0338`) with median RSS `×1.0169`. It flagged "slower" in `3/18` runs — including Python-only PR `#1033` (`45933661519`, zero Rust changes), which fired **`+6.0% [+0.2%, +12.2%]`** wall and `+5.9%` RSS.
+## 5\. What it means for a caller
 
-That pointed straight at the benchmark harness: could building `base/ab` inside `.base-src` or spawning `current_exe()` for head versus `mibz2@base/ab` for base bias the head arm? [The controlled A/A probe](<https://github.com/lmmx/mibz2/blob/3decbce86db308a7b455766a02eace11f01dfab1/docs/journal/2026-11-27-explore/ci-pattern-4t-arm-bias.md>) (`#1137`, `NOT REPRODUCED`) audited both binaries and ran a four-arm factorial test at commit `d3bbe33f`:
+A caller of the parallel decoder, from Rust or from Python, chooses how many threads to use. That choice also sets how many blocks may be in flight. Until now, it also set the worst-case memory on a highly compressible file. A 1,522-byte input could claim more than a gigabyte at an everyday setting, and more again with more threads. A file of that kind no longer costs memory in proportion to the queue. It costs about two blocks per worker. A wider window can be chosen for throughput without enlarging the worst case, and the decode no longer slows itself by faulting in memory nobody needs.
 
-- **ELF layout:** `bin/ab` and `.base-src`'s `base/ab` place all `1,606 / 1,606` `.text` symbols at identical addresses with identical opcodes (`diff_addr = 0`). The 10-byte source-path difference shifts only `.debug_str` and cold `.rodata` panic-string pointers.
-- **Controlled 4-arm A/A (`100` `pattern` 4T pairs, 2-vCPU VM):** plain A/A (same binary) gave `0.9709 [0.9297, 1.0140]` in Arm B and `0.9784 [0.9115, 1.0503]` in Arm C. Two-build A/A gave `0.9910 [0.9531, 1.0303]` in Arm A and `0.9678 [0.9007, 1.0400]` in Arm D. All four 95% intervals cleanly contained `1`, with zero 10-round flags.
-- **Out-of-sample CI check:** six subsequent strict-null CI runs (`60` pairs on real 4-vCPU runners, zero decoder edits) gave **`wall = 0.9970 [0.9865, 1.0075]`**. Peak RSS sat at `1.0028`, and **`0/6`** runs flagged.
+The bound is not the 12 MiB of the cap itself. A block that is being decoded must have somewhere to go. Each block within the worker count plus two of the reader may still hold a full decoded block of runs, and each worker may keep a spare buffer; 545 MiB at four workers is that floor. A decoder that wanted to go lower would have to decode a block of runs in pieces, which is a different design.
 
-### Step 3: The twin culprits across 24 CI runs (240 pairs)
+The fix is on the master branch and will ship in the next release. It applies to every decoder the library builds by default: the pool of workers that each take a whole block, and the teams that share one. It changes nothing about their output. The test suite, a fuzzing run and checksums of the decoded files all show the same bytes, and the same errors, as before.
 
-We downloaded all 24 non-scanner CI artifacts (`#1108`'s 18 plus the 6 out-of-sample strict-null runs across five Xeon and EPYC 4-vCPU CPUs). That combined dataset exposed both physical mechanisms in full:
+---
 
-1. **A symmetric bimodal 6-on-4 `ready`-backlog RSS burst (`R² = 0.706` on strict-null).** At `t = 4`, `ab` runs seven threads (`main`, `mibz2-scan`, four workers, `sampler`) on 4 vCPUs / 2 physical cores. Whenever preemption delays `main` or the head-of-line worker, the remaining workers race ahead and allocate fresh unrecycled `956 KiB` output vectors. Peak RSS then jumps from a low mode (`36–38 MB`) into a high mode (`>= 39 MB`, up to `45 MB`). Across `110` strict-null pairs, the effect is completely symmetric. `both_low` (`n = 50`) sits at `wall = 1.0001 [0.9869, 1.0135]`, while `h_hi_b_lo` (`n = 27`) runs `1.1075` (`cpu 0.9693`) and `h_lo_b_hi` (`n = 22`) runs `0.9019` (`cpu 1.0280`). OLS regression of `log(wall)` on `log(rss)` explains `70.6%` of paired variance (`slope = 0.881`), leaving an RSS-adjusted `head/base` intercept of **`0.9964 [0.9872, 1.0057]`** (`1.0001 [0.9920, 1.0082]` across all 240 pairs).
-2. **A genuine Round-0 (`r0`) cold-start asymmetry (`p = 0.0114`).** `ab run` has no warm-up round and always runs arm 0 (`head`) first in `r0`. In `r0`, `pattern` 4T is the suite's first invocation above `~34 MB` of anonymous memory. It also hits cold OS page allocation right after `t = 1` and `t = 2` leave two vCPUs idle. Across all 24 CI runs, `r0` alone shows **`wall = 1.0605 [1.0027, 1.1216]`** and `rss = 1.0542`. Head hits `>= 39 MB` in **`12/24`** runs vs **`3/24`** for base (Fisher exact `p = 0.0114`; strict-null `5/11` vs `0/11`, `p = 0.0351`). Once warm in **`r1..r9`**, all 11 strict-null runs (`99` pairs) collapse to **`wall = 1.0012 [0.9831, 1.0196]`** and **`33/99` vs `33/99`** high-RSS (`p = 1.0000`).
+**Sources:**
 
-| CI `pattern` 4T slice | Pairs (`n`) | Wall head/base GM `[95% CI]` | RSS GM | High RSS (`>= 39 MB`) H / B | Fisher `p` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| All 24 runs · **`r0` only** | `24` | **`1.0605 [1.0027, 1.1216]`** | `1.0542` | **`12 / 3`** | **`0.0114`** |
-| All 24 runs · `r1..r9` | `216` | `1.0081 [0.9938, 1.0221]` (boot) | `1.0112` | `77 / 62` | `0.1492` |
-| All 11 strict-null · **`r0` only** | `11` | `1.0381 [0.9869, 1.0921]` | `1.0594` | **`5 / 0`** | **`0.0351`** |
-| All 11 strict-null · **`r1..r9`** | `99` | **`1.0012 [0.9831, 1.0196]`** | `1.0042` | **`33 / 33`** | **`1.0000`** |
-| OOS 6 strict-null · all rounds | `60` | **`0.9970 [0.9865, 1.0075]`** | `1.0028` | `18 / 17` | `0.840` |
-
-That places `#1034`'s exact-head run (`45947633032`) cleanly in context. In that run, head hit `>= 39 MB` on `5/10` rounds versus `0/10` for base (`wall ×1.0734`, `rss ×1.0794`, `cpu −2.2%`). Across all three `#1034` CI runs (`45921211004`, `45947633032`, `45949114795`), its pooled high-RSS rate is `11/30` (`36.7%`) versus `30/80` (`37.5%`) on null controls. Adjusting `45947633032` by the strict-null wall–RSS slope (`0.881`) gives **`1.0035 [0.9725, 1.0355]`**. No bench or policy change follows from the probe alone, and the acceptance flag remains open for independent policy disposition.
-
-Anatomy of the CI pattern 4T spike: bimodal RSS symmetry and Round-0 cold start (\#1111, \#1137)
-
-Source: `docs/journal/2026-11-27-explore/ci-pattern-4t-arm-bias.md` (`#1137`) across 24 non-scanner CI runs (`240` paired rounds on five Xeon/EPYC 4-vCPU runner models) plus `#1034` run `45947633032`. Panel A shows symmetric wall flips across the `39 MB` peak-RSS threshold; Panel B isolates the head-first Round-0 cold start versus exact symmetry in Rounds 1–9.
-
-## 4\. Corpus knees, forward lanes, and shallow runners
-
-Three more merged results tightened how the decoder is built, measured, and dispatched to the i9 workstation.
-
-### JCC 32-byte alignment tips `k*` unevenly (`#1107`, `#1109`)
-
-[The aligned station-balance probe](<https://github.com/lmmx/mibz2/blob/e4bef3e614b5ffa3b79feb4cd0d49e47dc03df60/docs/journal/2026-11-27-explore/station-balance-aligned.md>) (`#1107`, `CONFIRMED`) tested Intel JCC 32-byte branch alignment (`+2.9%` `.text`) on commit `f3055a45`. It ran `-C llvm-args=-x86-branches-within-32B-boundaries` across all eight corpora from [`#1075`](<https://github.com/lmmx/mibz2/blob/534bc652f5dfadcd5a6b07253e7e91c6200d8d34/docs/journal/2026-11-27-explore/station-balance-off-wikidata.md>), and [`#1109`](<https://github.com/lmmx/mibz2/blob/578e5951ec380e94dd4339ad24987513882ffb45/docs/journal/2026-11-27-synthesis/twelfth-pass.md>) folded the result into the knee map.
-
-On `wikidata`, alignment sped up `OpenCells` workers `3.4–3.9×` more than the scanner. Baseline workers dropped **`−16.41%`** vs scanner `−4.17%`, pulling `k* = W/S` from `10.15` to `8.84` (**`r_aligned = 0.8709`**, disjoint). Native workers dropped **`−12.01%`** vs scanner `−3.50%`, pulling `k*` from `9.20` to `8.38` (**`r_aligned = 0.9109`**, disjoint). Across all seven off-Wikidata corpora (`prose` through `elf`), the steal-free min-pass ratio moved downward on **`16 / 16`** cells. Shifts stayed milder on Segmented-heavy text (`0.922–0.939` baseline across `json`, `mdjournal`, `logs`, and `elf`). Scaling from the shipped i9 knee (`k* ≈ 8.0`) puts aligned `wikidata` at **`k* ≈ 6.97–7.29`** (derived). Direct hardware testing on Comet Lake-S stepping 5 comes next.
-
-Station-uneven JCC 32-byte alignment shift across corpora (\#1107 — VM baseline)
-
-Diagnostic VM baseline medians (`#1107`, 3 interleaved rounds pinned to CPU 0). Gray upper bars show default codegen; colored lower bars show `-x86-branches-within-32B-boundaries`. Because `OpenCells` carries more 32-byte branch crossings than `Segmented`, alignment drops `wikidata` `k*` hardest (`0.871×` baseline, `0.911×` native).
-
-### Four-lane forward emission lands, and shallow clones become a harness invariant
-
-Two operational milestones rounded out the cycle:
-
-- **Four-lane forward emission merged (`#1110`, [`7a7a207a`](<https://github.com/lmmx/mibz2/commit/7a7a207adfc2fee830b1b46f7fa6707d61271f0a>)).** The Open kernel's `S = 16` sampled-anchor four-lane walk landed behind `--features forward-anchor-lanes` with zero `unsafe`. All three worker pillars (safe `A6b`, L1-batched MTF, and four-lane forward emission) now sit on concrete workstation validation tracks.
-- **Shallow-runner invariant (`#1122`, `#1126`, `#1127`).** The first A6b workstation run ended [`INCOMPLETE`](<https://github.com/lmmx/mibz2/blob/7ad3e0fa328ea3f9686c95316633931cc8c81be8/frontier/deltas/2026-11-27-a6b-endpoint-i9-incomplete.md>) before compiling because the runner uses a `--depth 1` shallow checkout. Fetching a commit into `FETCH_HEAD` and running `git clone --local` dropped the fetched object. Both active recipes ([`#1126`](<https://github.com/lmmx/mibz2/commit/c3db2e396ad61b6fbcdef58d8a5f9285234b22be>) for `bench/scanner_coalesced.py`, [`#1127`](<https://github.com/lmmx/mibz2/commit/9e5db348d75a56c6600eb3ea7fce861ce5c9d51f>) for `bench/a6b_endpoint.py`) now fetch exact commits directly into a private temporary repo. Each script also ships a detached `--depth 1 --no-local` unit test, making shallow safety a standing invariant for every future i9 recipe.
-
-### What stays with us
-
-| Study | Environment | Verdict | Operational lesson carried forward |
-| --- | --- | --- | --- |
-| `#1118` `scanner-seam-window` | **Physical i9-10900K** | **`NOT ADOPTED`** | Keep pre-registered two-count gates; `in_maint` fell `29.9%`, restoring `~10–13 ms` of `k = 8` scanner room |
-| `#1094`, `#1103` run-only window | 4-vCPU VM + synthesis | **ADMITTED FIX** | Gate parallel workers on true decoded bytes, never header symbol counts (`1,522 B → 1.27 GB`) |
-| `#1108`, `#1111`, `#1137` `pattern` 4T | 24 CI runs + VM A/A | **`REFUTED` / `NOT REPRODUCED`** | Separate scheduling RSS bursts (`R² = 0.706`) and Round-0 cold starts (`p = 0.0114`) from compute regressions |
-| `#1107` aligned station balance | 2-vCPU VM | **`CONFIRMED`** | Track codegen-induced `k*` shifts (`0.871×`/`0.911×` on `wikidata`) before attributing knee moves |
-| `#1122`, `#1126`, `#1127` shallow runner | i9 runner + unit tests | **INVARIANT** | Test every workstation benchmark script against a detached `--depth 1 --no-local` checkout before dispatch |
-
-Each of those five outcomes narrowed the gap between what a clean model predicts and what silicon actually executes. Pre-registered hardware stops keep marginal complexity out of `src/`, and byte-bounded worker admission protects against `840,000×` adversarial inputs. Round-0 and RSS telemetry keep noisy CI cells legible, while shallow-clone unit tests prevent wasted workstation cycles. With the repaired i9 queue now running, the next wave of physical hardware verdicts can speak cleanly.
+- The fix: [pull request \#1129](<https://github.com/lmmx/mibz2/pull/1129>), merged as [1429f54f](<https://github.com/lmmx/mibz2/commit/1429f54f74fa718d06d9ecda83f3a876fc9716a9>); its measurements in [the delta record](<https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/frontier/deltas/2026-11-27-ready-cap-worker-gate.md>); the question and its stop test, frozen before data, in [the claim](<https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/frontier/claims/ready-cap-worker-gate.toml>), admitted in [pull request \#1121](<https://github.com/lmmx/mibz2/pull/1121>); the code in [src/parallel.rs](<https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/src/parallel.rs>) and its tests in [src/parallel/plateau\_tests.rs](<https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/src/parallel/plateau_tests.rs>).
+- The continuous-integration benchmark: the paired run [45963424147](<https://github.com/lmmx/mibz2/actions/runs/45963424147>), head a1d9b317 against base 30479058, Intel Xeon 6973P-C, four CPUs, reported on the pull request.
+- The problem: [the memory probe](<https://github.com/lmmx/mibz2/blob/0b1c0813c1c43a4c0c538103e317dbde3ac5fec8/docs/journal/2026-11-27-explore/expansive-block-memory.md>) ([pull request \#1094](<https://github.com/lmmx/mibz2/pull/1094>); a four-vCPU Xeon cloud machine), and the [synthesis that raised its priority](<https://github.com/lmmx/mibz2/blob/583e9b83293997aa9bcf24945c15fe9f7938ffb8/docs/journal/2026-11-27-synthesis/eleventh-pass.md>) ([pull request \#1103](<https://github.com/lmmx/mibz2/pull/1103>)).
+- The pipeline and its admission rule: [The decoder as a queueing network](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>).
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# The 256 KiB L2 cliff, the 15-register wall, and the flipped eight-worker knee
+# Faster decoding for ordinary text, not just Wikidata
 
-Composing the worker stack hits two sharp hardware walls while safe header decoding cuts serial parsing by a third and flips the eight-worker knee.
+Our fastest kernel passes over five in six blocks of ordinary text, so mibz2 now foresees its refusals and gives the general-purpose path a speed-up of its own.
 
-27 November 2026 · 11 min read · [Research synthesis](<#5-disciplined-stops-and-the-workstation-validation-queue>)
+27 November 2026 · 12 min read · [Research synthesis](<#5-what-this-changes>)
 
-**Composing the full Open worker stack turned clean stage projections into concrete microarchitectural ceilings.** Our previous post, [The architecture of a 6 GB/s bzip2 decoder](<https://lmmx.github.io/mibz2/blog/2026-11-27-six-gbs-decoder-architecture/index.md>), assembled five isolated designs across the worker pipeline and the eight-worker schedule. Since then, eight new studies composed the worker end to end and probed its cache and register ceilings. They also redesigned serial header parsing in safe Rust and audited branch alignment across the whole decoder.
+mibz2 is a bzip2 decoder, written in Rust, that decodes a file's blocks in parallel. Each bzip2 block holds up to 900,000 bytes, stored in the order produced by the Burrows–Wheeler transform (BWT), and most of the work of decoding a block is undoing that transform. The classical way back is a walk through the sorted rows of the block, one row at a time, each step a lookup that depends on the one before; [The mathematical structure of inverse-BWT navigation](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>) works it through. This month mibz2 found a faster route. Adjacent rows that hold the same byte, a *run*, move together, so a kernel can follow one row of each run and let the rest come for free ([A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>)). The kernel built on that idea, published as [Open](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>), keeps only the rows that sit in short runs and jumps between them, writing whole words at a time. Below we call it the fast kernel.
 
-One evidence boundary belongs up front. The 10-core Intel i9-10900K baselines are direct workstation measurements. On 839 MB of `wikidata ×4`, shipped mibz2 runs `1,306 ms` single-worker, `192.9–194.6 ms` eight-worker, and `179 ms` in the serial scanner `S`. The eight new probes ran on a 2-vCPU cloud VM. That host exposes Skylake/Cascade Lake Xeon silicon masked to Haswell CPUID `0x3F`, with 32 KiB L1d, 256 KiB L2, and 45 MiB L3. Every VM timing uses steal-free thread CPU across 7 interleaved repeats pinned to CPU 0. Every arm passed byte-exact parity against libbzip2, and every modeled i9 figure awaits direct workstation verification.
+The fast kernel was designed and tuned on one corpus, an 11.9 MB extract of a [Wikidata](<https://www.wikidata.org/>) dump that decompresses to 210 MB of JSON. There it takes all 233 full-size blocks, and in our single-thread timings it inverts them in under half the time of the older kernel it replaced. That older kernel, the general-purpose kernel, builds a table with one entry per byte of the block and walks it in 512 segments, 32 at a time ([32 lanes, 8.6 chains](<https://lmmx.github.io/mibz2/blog/2026-10-31-room-walk-overlap/index.md>)). It can decode any block, and the decoder falls back on it whenever the fast kernel declines one.
 
-[Section 1](<#1-composing-the-worker-and-hitting-the-256-kib-l2-cliff-1062-1067>) composes the four worker mechanisms and diagnoses the 256 KiB L2 slab cliff and cold-path register spills. [Section 2](<#2-proving-four-coupled-lanes-are-the-x86-64-optimum-1068-1076>) explains why literal splitting, wider lanes, and decoupled batch-chase all hit hard hardware walls. [Section 3](<#3-safe-rust-header-parsing-flips-the-eight-worker-knee-1069-1074>) details three safe-Rust header mechanisms that cut serial `A2a..d` by a third and flip the eight-worker bottleneck. [Section 4](<#4-the-invisible-15-ghost-32-byte-branch-alignment-1077>) audits Intel's JCC-erratum 32-byte branch alignment across every station and separates VM silicon from target CPUs. [Section 5](<#5-disciplined-stops-and-the-workstation-validation-queue>) records two off-critical-path stops (`#1060`, `#1063`) and lists the clean workstation validation queue.
+This post asks what happens on everything else: prose, source code, JSON, executables. The answer is that the fast kernel mostly does not apply. Across seven ordinary corpora it took only 17 of 107 full blocks, about 16%, and the general-purpose kernel did the rest. Worse, on the dense blocks typical of prose and source code, the fast kernel ran its first pass up to a limit before giving up, so those blocks paid for both kernels. We found that every such refusal can be predicted, in one cheap pass, from a list the decoder already holds. We then turned to the kernel that ordinary text actually uses, and made it faster. Both changes are now in mibz2's default decoder on its main branch.
 
 **Takeaways**
 
-- **Worker composition is exact, and 256 KiB L2 caps lane slabs at 32 KiB.** Combining all four Open mechanisms (`#1062`, `#1067`) matches the sum of isolated wins within `0.07%` and halves unfused memory (`6,893 → 3,488.5 KiB/worker`). Enlarging lane slabs to `64 KiB` fills 100% of private L2 (`4 × 64 = 256 KiB`) and regresses `A7 + A9` by `+12.1` to `+22.2 ms`. Keeping `32 KiB` slabs and outlining cold paths cuts L3-cold worker CPU by `21.6%` to `24.6%`.
-- **Four coupled lanes with unified `inline16` are the x86-64 optimum.** Splitting 1-byte literals (`#1068`, STOP) regressed all 24 isolated `A7` cells (`+4.1%` to `+39.0%`) by trading a `93.57%`-taken branch for a `44.59%` coin flip. Pushing to `K = 6, 8, 10` (`#1076`, STOP) hit the 15-GPR register-file wall (`+10.8%` to `+45.4%` slower in `A6c + A7 + A9`). Decoupling batch-chase broke out-of-order overlap (`+56.0 ms` even at `K = 4`).
-- **Safe-Rust header parsing cuts `A2a..d` by a third and flips the eight-worker knee.** Three `#![forbid(unsafe_code)]` header kernels (`#1069`, PASS) cut standalone `A2a..d` by `31.6%` to `37.7%`. Full post-`#1034` serial `S'` drops `4.44%` to `7.38%`, or `−6.4` to `−10.7 ms` modeled on i9. Modeled `S'` falls to `134–139 ms` (`#1074`). That puts `k = 8` back on the worker side (`140.0–145.5 ms` L3-cold) and shifts slack-only hybrid scanning's main gain to `k = 9–10`.
-- **32-byte branch alignment removes a 15% VM ghost.** Passing `-x86-branches-within-32B-boundaries` (`#1077`) removes `1,746` unfused crossings at `+3.4%` `.text`. It speeds up `12/12` off-Wikidata cells and cuts `OpenCells` by `13.7%` to `15.6%` on VM Xeon silicon. Comet Lake-S stepping 5 fixes the erratum in silicon, and AMD Zen pays padding overhead. Alignment is therefore a mandatory VM benchmark control rather than an untested release flag.
-- **Two off-path stops preserve focus.** Column-route MTF (`#1060`, STOP) hits a `37%–50%` RLE2 branch-misprediction floor across 20 AVX2 arms. `Cooperative` (`#1063`, STOP) stays unreachable on `<= 10` cores and Amdahl-capped at `−5.2%` to `−6.2%` on two threads.
+- **The fast kernel is a Wikidata specialist.** It takes all of Wikidata's full blocks, but only 16% of those in seven other corpora; the other 84% go to the general-purpose kernel.
+- **On dense blocks, it wasted work before declining.** All 25 dense blocks it met outside Wikidata were refused only after its first pass had reached its limit. On a single thread, that added up to 48% to their inversion time and made a whole prose file 1.09 to 1.32 times slower to decode than with the general-purpose kernel alone.
+- **One pass over the block's runs foresees every refusal.** Checking the limit before the fast kernel starts brings those blocks down to the general-purpose kernel's own time. On the project's cloud benchmark, four-thread decoding of a text corpus became 3.7% faster, and Wikidata was unchanged.
+- **The general-purpose kernel's hidden cost is building its table.** Three changes that need no extra memory cut its inversion time by 15 to 16% on prose and source code in a controlled probe. In the shipped decoder, the cloud benchmark measured text decoding 2.7% faster on one thread and 4.3% faster on two.
 
-## 1\. Composing the worker and hitting the 256 KiB L2 cliff (`#1062`, `#1067`)
+## 1\. Which blocks can the fast kernel take?
 
-Isolated stage benchmarks can mislead if two optimizations fight for registers or cache capacity. [The composed worker stack probe](<https://github.com/lmmx/mibz2/blob/0549fdf1dfb7f1d2af1fd520721c2ebbe448ddc6/docs/journal/2026-11-27-explore/composed-worker-stack-probe.md>) (`#1062`) stacked all four Open worker wins inside one binary. It combined L1d-batched MTF with `OutQ16` guard zones (`#1055`), safe 64K SoA `A6b` (`#1046`), sampled-anchor 4-lane emission (`#1057`), and zero-scratch tiled RLE1+CRC fusion (`#1045`).
+The fast kernel reads a block as runs rather than as bytes. While the decoder undoes bzip2's move-to-front stage, it can note at almost no cost where each run of repeated bytes begins and how long it is. [Reading the BWT's runs off bzip2's move-to-front codes](<https://lmmx.github.io/mibz2/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>) shows why the codes already contain that list, which we call the block's *run records*. A block of long runs has few records for its length. The ratio of records to rows, written \\(r/n\\), therefore measures how dense a block is with short runs.
 
-We tested all 233 Open-admitted Wikidata blocks (`209,691,304 B`) with byte-exact CRC32 parity and zero overflow chunks. On warm baseline x86-64, composition was nearly perfectly additive. Shipped `W0` dropped from `737.06 ms` to `548.46 ms` (`−25.59%`). The actual saving (`+188.60 ms`) matched the sum of the four isolated savings (`+189.11 ms`) to within `−0.52 ms`, or `−0.07%` of `W0`.
+**Run records** are pairs of a byte and a length. The six bytes `nnbaaa` make three of them: (`n`, 2), (`b`, 1) and (`a`, 3). A Wikidata block of 900,000 bytes, whose \\(r/n\\) sits near 0.068, has about 61,000.
 
-Fusing RLE1+CRC into the 4-lane emitter also rescued the working set. Unfused vectored emission (`W3b`) ballooned to `6,893.2 KiB/worker` (`53.9 MiB` across eight workers) because it buffered raw emitted slabs alongside expanded output. Fusing compaction in place (`W4`, `32 KiB` slabs) cut working set in half to `3,488.5 KiB/worker` (`27.3 MiB` across eight workers). That sits `913.9 KiB` below stitched `W3`.
+The fast kernel's advantage comes from long runs, which it can skip, so it accepts only blocks of low density. Between 1/64 and 0.15 it takes a block outright. Between 0.15 and 0.28, the *dense band*, it must also check how many rows it would have to handle one by one: those lying in runs of at most 16. It takes the block only if that count stays within \\(\\min(256{,}000,\\ 0.3n)\\), a limit set when [dense blocks were first admitted](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>) so as to take Wikidata's five. Blocks outside both ranges go to the general-purpose kernel. So do blocks of nearly random bytes, for which the decoder never forms run records at all, since they would cost more than they save; we call that the *column route*.
 
-| Composed Open worker arm (233 Wikidata blocks) | Working set / worker | 8W total | Key mechanism change |
-| --- | ---: | ---: | --- |
-| `W0_shipped` | `2,896.6 KiB` | `22.6 MiB` | Shipped `OpenCells` (`front.runs` + `wire_xor` + 2-lane) |
-| `W1_plus_l1_mtf` (`+#1055`) | `2,140.2 KiB` | `16.7 MiB` | Drops 1 MiB `front.runs` (`−756.4 KiB`, `−26.1%`) |
-| `W3_plus_fwd4_stitch` | `4,402.4 KiB` | `34.4 MiB` | 4-lane forward + contiguous stitch buffer |
-| `W3b_plus_fwd4_vec_unfused` | `6,893.2 KiB` | `53.9 MiB` | Unfused vectored raw slabs + separate RLE1 output |
-| `W4_v2_q1008_32k` (`#1067`, `32 KiB` slabs) | `3,486.5 KiB` | `27.2 MiB` | Full fused stack + `OutQ16<1008, 1024>` (`−2.0 KiB` vs `W4_v1`) |
-| `W4_64k_slab` (`#1067`, `64 KiB` slabs) | `3,813.6 KiB` | `29.8 MiB` | `4 × 64 KiB = 256 KiB` active slabs (evicts private L2) |
+To see how often each case occurs, we built seven corpora from files any Linux machine holds: prose from documentation, Python's standard library, Rust source from the cargo registry, JSON, ELF executables, a DNA-like stream of four letters, and random bytes. We compressed each with `bzip2 -9` and logged the route of every full block, meaning every block of at least 100,000 bytes. Where each corpus's full blocks went:
 
-### Why 64 KiB slabs fall off the 256 KiB L2 cliff
+Where the full blocks go: Wikidata against seven ordinary corpora
 
-[The second composition round](<https://github.com/lmmx/mibz2/blob/c149eb696d6f474da619fff3b5ef7dbbaefec2ff/docs/journal/2026-11-27-explore/composed-worker-v2-probe.md>) (`#1067`) tested a tempting refinement. Doubling lane slabs from `32 KiB` to `64 KiB` would cut `compact_and_crc_slab` calls in half and emit fewer vectored slices.
+Measured: the route each full block took, from the route census (the number after each name is its count of full blocks). "Refused after a wasted first pass" are the dense-band blocks; "run route, sent to fallback" are blocks outside the fast kernel's range of densities; the column route never forms run records.
 
-Instead of speeding up `A7 + A9`, `64 KiB` slabs regressed it in every build and cache state. Native warm slowed by `+12.05 ms` (`232.93 → 244.98 ms`), and native L3-cold slowed by `+21.30 ms` (`261.28 → 282.58 ms`). Baseline L3-cold regressed `+20.03 ms` (`274.55 → 294.58 ms`), and JCC-aligned L3-cold regressed `+22.23 ms` (`244.74 → 266.97 ms`). Total worker CPU slowed by `+12` to `+25 ms` while adding `+325.1 KiB/worker`.
+On Wikidata the fast kernel takes everything, but elsewhere it takes 17 of 107 blocks. The column route takes 55, nearly all from the executables, the DNA-like data and the random bytes. The run route sends another 35 to the general-purpose kernel, and 25 of those are dense-band blocks from prose, source code, JSON and executables. Where the fast kernel does run, it is as good off Wikidata as on it. It inverts JSON blocks in 0.38 of the general-purpose kernel's time and Rust source in 0.76, against 0.48 on Wikidata itself. The kernel is not weak on ordinary text; it is simply rarely eligible.
 
-The arithmetic explains the cliff immediately. Both our Haswell-masked Xeon VM and our target Comet Lake i9-10900K have a **256 KiB private L2 cache per core**:
+## 2\. What does a refusal cost, and can it be foreseen?
 
-\\\[4\\text{ active lanes} \\times 64\\text{ KiB/slab} = 256\\text{ KiB} = 100\\%\\text{ of private L2}\\\]
+All 25 dense-band blocks outside Wikidata were refused, and every one was refused late. The fast kernel learns how many rows it must keep by running its first pass, and stops only when the count crosses the limit. By then the pass has done most of its work, and the general-purpose kernel starts again from nothing. We timed each refused block twice on one thread, once through the decoder as shipped and once through the general-purpose kernel directly:
 
-While four lanes chase `edges` (`456 KiB` average per block) and write into four active slabs at once, `4 × 64 KiB` fills the entire private L2 cache. Earlier cache lines of each slab evict to L3 before the lane fills it. The in-place RLE1+CRC compaction pass then pays L3 read-modify-writes. Halving the slab to `32 KiB` keeps the four active slabs at `128 KiB`, or `50%` of private L2. The other half stays free for `edges` and `inline16`, so compaction reads hot L2 lines.
-
-### What `objdump -d` caught in the hoisted `A5 + A6a` loop
-
-Round 1 of `#1067` turned up a puzzling `+23.3 ms` regression on native. Folding `OVF_BIT` into `OutQ16::fill` and hoisting `EPOCH` across the L1d batch slowed `A5 + A6a` from `145.93` to `169.22 ms`. Disassembling the hot loop exposed two completely different culprits:
-
-1. **A 32-byte branch-boundary crossing.** At `0x41e7a`, `cmp $0x7f, %r14; jbe` crossed `0x41e80`. Turning on 32-byte branch alignment dropped `A5 + A6a` by `−39.7 ms` (`169.22 → 129.52 ms`) without changing one line of Rust.
-2. **Inlined cold-path register spills.** LLVM had inlined `flush_batch_fallback` and `Vec::reserve_exact` (`grow_edges`) into the hot batch-flush loop, spilling `batch.as_ptr()` to `0x28(%rsp)`.
-
-Marking `compact_and_crc_slab`, `flush_batch_fallback`, and `grow_edges` as `#[cold] #[inline(never)]` eliminated both the stack spill and 5× macro code bloat. Against `W4_v1`, `W4_v2` cut total worker CPU across every profile. Native warm dropped `−17.25 ms` (`553.73 → 536.48 ms`), and native L3-cold dropped `−14.99 ms` (`609.75 → 594.77 ms`). JCC-aligned L3-cold dropped `−15.43 ms` (`566.87 → 551.44 ms`), and baseline L3-cold dropped `−35.15 ms` (`634.01 → 598.86 ms` with `OutQ16<1008, 1024>`). Keeping `SLAB = 32 KiB` with `#[cold]` compaction (`W4_b_32k_cold`) hit `503.65 ms` native warm (`−27.44%`, modeled `W'/8 = 133.89 ms`) and `566.09 ms` native L3-cold (`−24.59%`, modeled `W'/8 = 140.0 ms`). Across matched L3-cold builds, the composed worker saves `21.6%` to `24.6%`. That models `W'/8 = 140.0–145.5 ms` on the i9, or `148.9 ms` (`−19.8%`) against JCC-aligned `W0`.
-
-## 2\. Proving four coupled lanes are the x86-64 optimum (`#1068`, `#1076`)
-
-Even after `#1067`, `A7 + A9` still accounted for `46%` of composed worker time. Two clean questions remained. Could we skip the 16-byte dictionary lookup on 1-byte literals? Could we push lane count past `K = 4` toward all 10 Intel line-fill buffers? Both hypotheses got full probes, and both hit hard hardware ceilings.
-
-### Why splitting 1-byte literals regressed 24 of 24 cells (`#1068`, STOP)
-
-A census of `26,567,581` `A7` steps across Wikidata shows why direct-literal splitting looked attractive on paper. Single literal bytes (`code < 256`) make up `81.58%` of steps, with an average streak of `8.81`. Another `11.99%` emit a 2–16 byte inline word, and only `6.43%` hit the `LONG` slow path.
-
-Yet [the direct-literal 4-lane probe](<https://github.com/lmmx/mibz2/blob/efb3dd9df2a9e31e1a39c30c9221f12db6e856f4/docs/journal/2026-11-27-explore/direct-literal-4lane-emit.md>) (`#1068`) found **all 24 isolated `A7` cells disjointly slower**. Across four candidate arms, three builds, and both warm and L3-cold caches, regressions ran `+4.12%` to `+38.98%`:
-
-- `lit_branch_per_lane`: `+6.5%` to `+12.4%` slower.
-- `lit_all4_fastpath`: `+12.6%` to `+23.5%` slower.
-- `lit_streak_inner`: `+27.0%` to `+39.0%` slower.
-- `lit_plus_compact_dict`: `+4.1%` to `+16.6%` slower.
-
-The microarchitecture gives a two-part answer. First, the unified `inline16 + lens` dictionary averages only **`17.58 KiB` per block**, which sits 100% inside the 32 KiB L1d cache. Copying 16 bytes unconditionally from L1d runs almost for free inside the out-of-order shadow of four concurrent `edges[j]` cache misses. Second, the unified fast path takes one branch that succeeds **`93.57%`** of the time (`81.58% + 11.99%`). Splitting on `code < 256` checks whether all four lanes hold literals at once. That happens **`44.59%`** of the time — a near-maximal coin flip (`H = 0.992 bits`, average streak `2.66`). Every misprediction flushes the reorder buffer and stalls the in-flight `edges[j]` loads that hide memory latency.
-
-### Why `K = 6, 8, 10` hit the 15-GPR register wall (`#1076`, STOP)
-
-With unified `inline16` settled, [the MLP and layout probe](<https://github.com/lmmx/mibz2/blob/8e04854487ef92a54c0e30791fc8168fbf74ea90/docs/journal/2026-11-27-explore/w4-v3-mlp-layout-probe.md>) (`#1076`) tested 12 variants against `W4_v2_ctrl` (`K = 4, S = 16, SLAB = 32 KiB`). Each arm ran across all three builds and both cache states. The matrix covered wider coupled lanes (`K = 6, 8, 10` with `S = 48..64` and `K × SLAB <= 128 KiB`), decoupled batch-chase (`B = 8, 16`), 1-step software pipelining, hoisted `&mut arena`, and fused `Inline15Len`.
-
-Not one of the 12 arms cleared the stop test. On JCC-aligned L3-cold runs, `W4_v2_ctrl` ran in **`551.46 ms`** (`A6c + A7 + A9 = 260.95 ms`), beating every wider or transformed variant:
-
-- **Coupled `K = 6, 8, 10` hit the 15-GPR register wall.** Effective lane parallelism climbs from `3.15` at `K = 4` to `5.07`, `6.60`, and `7.68`. Yet coupled emission needs `4K = 24..40` live scalars (`j`, `ed`, `a`, `e`) on an architecture with 15 allocatable general-purpose registers. Disassembling `emit_klane_coupled::<8>` showed LLVM spilling all eight loaded edge words `ed0..ed7` (`0x30(%rsp)..0x180(%rsp)`) and reloading `a`/`e` every step. Because `edges` (`456 KiB`) mostly hits L3 (\~35 cycles) rather than DRAM, stack spills and `4×` more slab compactions swamped the extra LFB overlap. `A6c + A7 + A9` regressed **`+10.8%` to `+45.4%`**, slowing total L3-cold CPU by `+4.8%` to `+14.4%`.
-- **Decoupled batch-chase (`B = 8`) destroys OoO overlap.** Separating edge chasing from dictionary expansion regressed `A7 + A9` by **`+56.0 ms` (`+22.7%`)** even at matched `K = 4, SLAB = 32 KiB`. At `K = 8`, total L3-cold CPU slowed `+8.2%` to `+14.7%`. Filling the reorder buffer with pure chases followed by pure expands prevents L1d copies from hiding behind L3 misses. Passing `&mut a` into the slow path adds a 5-cycle L1d store-forwarding stall on every step.
-- **Secondary transforms also missed.** Hoisting `&mut arena` regressed `+4.1%` to `+20.7%` because a `6.43%` per-lane `LONG` rate exits the fast path on `23.3%` of `K = 4` rounds and `41.2%` of `K = 8` rounds. One-step software pipelining doubled live edge registers (`+3.8%` to `+15.3%`), and `S = 16 → 32` at `K = 4` stayed statistically flat (`+0.01%` to `+2.71%`).
-
-Two hardware ceilings in the composed Open worker: the 256 KiB L2 cliff and the 15-GPR register wall
-
-Diagnostic VM L3-cold medians of steal-free thread CPU across 7 interleaved repeats on all 233 Open-admitted Wikidata blocks (`#1067` and `#1076`). Both ceilings are architectural: `4 × 32 KiB = 128 KiB` fits inside half of private L2, and `K = 4` is the widest coupled lane count that keeps live lane state inside x86-64's 15 allocatable GPRs.
-
-## 3\. Safe-Rust header parsing flips the eight-worker knee (`#1069`, `#1074`)
-
-Once `#1067` and `#1076` anchored the composed worker floor around `140.0–145.5 ms` L3-cold (`134.7 ms` warm), attention turned back to the serial scanner. [`#1034`](<https://github.com/lmmx/mibz2/commit/5ed20c1d51afc56c088ae244ba0bf40f37cb93b1>) had just merged coalesced same-selector runs, byte-aligned `u8` Huffman tables, and zero-skip `syms` reuse. That left header parsing (`A2a..d`: block header, selector MTF, code-length deltas, and `Huff::build_into`) at roughly `14%` of post-`#1034` serial `S'`.
-
-[The cold `A2` dissection](<https://github.com/lmmx/mibz2/blob/a34dda23177430691c20510cddaf1cd4dd5fa460/docs/journal/2026-11-27-explore/scanner-a2-dissection.md>) (`#1069`) audited all 431 Wikidata blocks and five off-Wikidata guard corpora using `#![forbid(unsafe_code)]`. Three structural wastes stood out, and three safe-Rust mechanisms eliminated them together:
-
-1. **`A2b_direct_runs` (`lzcnt` selector runs).** On Wikidata, `62.4%` of `501,448` selectors are `0`-bit repeats of the active MTF front. Shipped `A2b` still decoded them one byte at a time into `sel_buf`, and `#1034` then re-scanned all `501,448` bytes in `A3`. Packing the 6-table MTF list into one `u64` and counting leading `0`-bits with `leading_zeros()` emits `(group, run_len)` directly. That cuts standalone `A2b` by **`−33.1%` to `−38.5%` disjoint** AND removes the `A3` re-scan.
-2. **`A2c_lut_multi` (4 KiB 8-bit multi-symbol delta LUT).** On Wikidata, `94.2%` of `133,280` code-length deltas use 1-bit (`68.5%`) or 3-bit (`25.7%`) codes. A compile-time `const` 256-entry table (`4 KiB`, L1d-resident) decodes up to 8 consecutive deltas per lookup with one range check. It averages **`3.46` lengths per lookup** on Wikidata, `5.25` on `records`, and `4.77` on `random`. Lookups drop from `133,280` to `38,573`, cutting standalone `A2c` by **`−63.1%` to `−66.7%` disjoint** (`−47.2%` to `−80.0%` on guard corpora).
-3. **`A2d_direct` (single-write fused `K = 2` LUT + tail-only fill).** Shipped `Huff::build_into` zeroed `lut[0..1024]` and `d_arr[0..1024]`, then wrote `K = 1` entries before overwriting the same `1,015` entries with `K = 2` pairs. Yet the mean tail is only `9.1` entries (`1.0` on `records`). Emitting paired `(s1, s2)` entries directly in one pass via `split_at_mut` removes `d_arr` and double-writes entirely. All `1,002` synthetic edge-case tables and `2,009` real tables matched bit-for-bit, cutting standalone `A2d` by **`−24.0%` to `−36.7%` disjoint**.
-
-| Build (`wikidata.bz2`, 7 interleaved repeats) | Standalone `A2a..d` (`ms`) | `A2a..d` Δ | Full post-`#1034` `S'` (`ms`) | Full `S'` Δ |
+| corpus | refused blocks | as shipped, ms | general-purpose alone, ms | ratio |
 | --- | ---: | ---: | ---: | ---: |
-| **Baseline x86-64** | `8.946 → 6.057` | **−32.3% (DISJOINT)** | `79.83 → 75.27 / 74.72` | **−5.71% / −6.40% (DISJOINT)** |
-| **Native (`target-cpu=native`)** | `8.917 → 5.560` | **−37.7% (DISJOINT)** | `76.44 → 70.80` | **−7.38% (DISJOINT)** |
-| **Native + JCC-32B** | `7.434 → 5.082` | **−31.6% (DISJOINT)** | `72.57 → 69.35 / 68.96` | **−4.44% / −4.98% (DISJOINT)** |
+| prose | 7 | 21.0 | 17.1 | 1.23 |
+| Rust source | 8 | 28.0 | 20.6 | 1.36 |
+| JSON | 4 | 17.6 | 11.8 | 1.48 |
+| ELF executables | 4 | 16.4 | 14.5 | 1.13 |
+| Python source | 2 | 7.0 | 6.9 | 1.02 |
 
-*(Two `S'` figures show block-gated `g64` and per-table `t16` `K = 2` gating. Off-Wikidata guard corpora improved or stayed flat across all three builds: `text −2.5%..−4.0%`, `records −0.2%..−2.0%`, `random −0.4%..−0.6%`.)*
+Together the refusals added about 19 ms over the 25 blocks, roughly 0.8 ms a block. Prose suffered most, because nearly all its full blocks are dense: the whole file decoded 1.09 to 1.32 times slower than it would have with the general-purpose kernel alone. These timings come from a virtual machine with four virtual processors. They are good for ratios rather than absolute speeds, and the whole-file range is wide because the machine is noisy. The direction, though, is not in doubt. On ordinary prose, the decoder's own specialised kernel was making it slower.
 
-### Why this flips the eight-worker knee (`#1074`)
+The remedy follows from what the first pass counts. The rows it keeps are those in maximal runs of at most 16 rows, plus the one row that marks where the text begins. That count can be read off the run records directly. One merges adjacent records of the same byte, since the format splits long runs, and adds up the lengths of the short ones. It is a single pass over a list several times shorter than the block, made before the fast kernel allocates or computes anything.
 
-After `#1031` and `#1034`, modeled i9-10900K serial scan time sits around `145 ms`, down from `179 ms` shipped. Applying `#1069`'s `−4.44%` to `−7.38%` reduction saves another `6.4` to `10.7 ms`. That pulls modeled `S'` down to **`134–139 ms`**.
+The two populations separate cleanly. The least of the refused blocks keeps 257,495 rows, against a limit of 256,000, and the prose blocks keep between 311,318 and 380,411. Wikidata's admitted dense blocks, by contrast, keep between 199,189 and 231,600. A second limit, on a structure the kernel calls thick strips, never came close to binding.
 
-That single shift changes the eight-worker queueing balance analyzed in [`#1074`](<https://github.com/lmmx/mibz2/commit/b7e2187f3d70edada02c56cfe8c11563d37eea70>). Before `#1069`, a `145 ms` scanner sat above the composed worker stack (`W'/8 = 134.7 ms` warm, `140.0–145.5 ms` L3-cold), leaving workers idle in `job_wait`. After `#1069`, **`S' ≈ 134–139 ms` drops below L3-cold `W'/8 = 140.0–145.5 ms`**. The `k = 8` knee flips from scanner-bound to tied or worker-bound by `0–11 ms`.
+The decoder now makes that count for dense-band blocks before the fast kernel starts, and refuses on the spot any block that would exceed the limit. We measured the effect over seven interleaved repeats, on corpora rebuilt on a fresh machine, which held 24 dense refusals. The refused blocks' inversion time fell to the general-purpose kernel's own:
 
-Because slack-only hybrid scanning (`#1056`) beats pure serial scanning only when
+Dense blocks the fast kernel refuses: before and after counting first
 
-\\\[\\frac{8 \\cdot (W'/8) + S'}{9} + 4.85\\text{ ms} \< S' \\iff S' - W'/8 \> 5.46\\text{ ms},\\\]
+Measured on a virtual machine, one thread, seven interleaved repeats. Each point is the summed inversion time of a corpus's refused blocks as the decoder runs them, over the general-purpose kernel's time on the same blocks (block counts in brackets). Values a little below 1 are within the machine's noise.
 
-its main payoff moves one core to the right. At **`k = 9–10`**, `W'/9` drops to `124–129 ms`. That restores a `5–15 ms` scanner gap where idle workers can help clear the 6 GB/s wall.
+Taken block by block, the median ratio fell from 1.536 to 1.027. Where the check passes, it costs almost nothing. On Wikidata's five dense blocks, which are still admitted, it adds about 0.27 ms in all, some 0.03% of a single-thread decode, and all 233 full blocks still take the fast kernel.
 
-Safe-Rust A2a..d speedups (\#1069) and the flipped eight-worker knee (\#1074)
+The project's cloud benchmark then compared the decoder before and after the change, over ten paired rounds on a four-core runner. Its text corpus is built from mibz2's own source code and documentation. Four-thread decoding of it was 3.7% faster, with a 95% interval of 0.9% to 6.4%. At one and two threads the benchmark detected no change on that corpus, and it detected none on Wikidata at any thread count.
 
-Top: diagnostic VM reductions on `wikidata.bz2` from `#1069` (all 7-repeat spreads disjoint). Bottom: modeled i9-10900K balance from `#1074`; cutting `S'` to `134–139 ms` makes 8 workers worker-bound and moves slack-only hybrid scanning's primary gain to `k = 9–10`.
+## 3\. Where does the general-purpose kernel spend its time?
 
-## 4\. The invisible 15% ghost: 32-byte branch alignment (`#1077`)
+With the wasted pass gone, the general-purpose kernel does nearly all the work on ordinary text, yet its costs on such text had never been dissected. A second census, over six corpora of 82 MB in all, found that it inverted 78 of their 86 full blocks: 48 from run records and 30 from the column route. On text, prose, source code and JSON, undoing the BWT took 52 to 66% of a worker's time. Within that, the first step, building the table that the walk follows, took 35 to 46%.
 
-Four consecutive probes had surfaced `6%` to `20%` timing swings from tiny, unrelated code changes. [The whole-decoder JCC alignment audit](<https://github.com/lmmx/mibz2/blob/c1239ce0dfb9b7cbea70a55617900de11ca901d9/docs/journal/2026-11-27-explore/jcc-alignment-whole-decoder.md>) (`#1077`) isolated that noise cleanly. It measured `-C llvm-args=-x86-branches-within-32B-boundaries` across the shipped library, every pipeline station, and seven corpora.
+The table holds, for each row, its byte and the row the walk visits next. Three changes, none of which needs extra memory, attacked the cost of building and using it.
 
-### Static `objdump` census and VM speedup
+**Building in order.** On the column route the kernel built a table that walks forwards. That meant reading the block's bytes and scattering each entry into one of 256 places in the table, a random write per byte. The *LF* table, which sends each row to the row one byte earlier in the text, can instead be built in a single sequential pass, with a shortcut for eight identical bytes in a row. On the 30 column-route blocks this change alone cut the kernel's processor time by 23.4%.
 
-First, the shorthand flag proved byte-for-byte identical to `-x86-align-branch-boundary=32 -x86-align-branch=fused+jcc+jmp` (`663,261 B` `.text`). It removed **100% of unfused and hardware-fusable 32-byte branch crossings**. Unfused violations dropped from `1,712` to `0` on baseline and `1,746` to `0` on native (`open` `418 → 7` non-fusable, `runs` `49 → 0`, `huff/block/bits` `115 → 1`). The size cost was just **`+3.43%` to `+3.46%` `.text`**, or `+0.52%` to `+0.53%` total binary size.
+**Reversing with vector instructions.** Walking LF spells each segment of the block backwards, so every segment must be reversed as it is copied into place. The existing loop reversed a byte at a time, and the compiler did not vectorise it. Reversing 32 bytes at a time with AVX2 shuffles, with an eight-byte fallback for other processors, cut that step by 45% on the prose, text and source-code blocks.
 
-Second, on the VM, the speedup split cleanly by production kernel:
+**Trusting what is already known.** On the run route, the table is filled from the run records. The filling loop checked, on every record, that it stayed inside the block and inside its byte's share of the table: about 225,000 checks a block on the text corpus. Those facts are already established by the code that produced the records. The records therefore now carry a flag, set only by that code and cleared by anything that changes them, and a flagged list is filled without the checks. With all three changes, the run-route blocks took 13.5% less processor time.
 
-- **Off-Wikidata corpora (`6 corpora × 2 builds`):** **`12 / 12` cells faster** with zero regressions. Gains ran `−0.61%` to `−9.11%` across `text`, `prose`, `source`, `elf`, `records`, and `random`.
-- **Eager `Cells` (1T `BzReader::new`):** modest `−2.85%` to `−3.01%` (overlapping spreads).
-- **Production `OpenCells` (`4W–10W` worker):** baseline ran **`−15.64%` (`−118.3 ms`) disjoint faster** (`756.5 → 638.2 ms`), and native ran **`−13.70%` (`−99.2 ms`) disjoint faster** (`723.7 → 624.5 ms`). `CE_open` (`A6 + A7`) drove `75%` to `82%` of that gain (`−86.3` / `−81.8 ms`), while `unrle_in_place` added `−20.0%` to `−27.8%` (`−9.8` to `−16.5 ms`).
+**The flag** is a memory-safety argument, not a shortcut taken on trust. The new unchecked loops and the vector code were reviewed for soundness and run under [Miri](<https://github.com/rust-lang/miri>), Rust's interpreter for detecting undefined behaviour, before they were merged. Any list built or altered elsewhere still takes the checked path.
 
-### Why VM Xeon silicon is not the i9-10900K
+We timed the kernel's own processor time, so that the host's interruptions did not count, over seven interleaved repeats on a virtual machine with two virtual processors. Together the three changes cut inversion time on the 50 prose, text and source-code blocks by 15.4% in a build for any x86-64 processor, and by 16.1% in one tuned to the machine. On all 78 blocks the cuts were 18.4% and 18.5%. Every corpus improved by at least 10.5%, the executables most, by about a quarter, and the output matched the existing kernel byte for byte on every block.
 
-Treating a `15%` VM win as an automatic release flag would violate our evidence standard. Inspecting `/proc/cpuinfo` flags (`umip`, `mmio_stale_data`, `bhi`, `md_clear` under Haswell `0x3F` masking) shows the cloud VM runs **Skylake/Cascade Lake-era Xeon silicon**. On those chips, Intel's JCC microcode mitigation hard-evicts the entire 32-byte uop-cache line (DSB). Any macro-fused or unfused jump crossing or ending on a 32-byte boundary triggers that eviction.
+A classic idea from the literature shows why construction, not the walk, was the cost to attack. [Kärkkäinen, Kempa and Puglisi](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>) speed up BWT inversion with a table that advances two bytes per lookup, halving the walk's chain of dependent reads. We tried it. The walk became 15 to 16% faster, but building the larger table took about four times as long. The inversion as a whole ran more than twice as slow, with 3.6 MiB more memory per worker. Where building the table is already a third or more of the cost, a richer table is the wrong trade.
 
-Target desktop and cross-vendor silicon behaves differently:
+## 4\. How much of that reached the decoder?
 
-- **Intel i9-10900K (Comet Lake-S, stepping 5):** carries the silicon-level JCC fix (model `0xA5`). Only \~`1%–4%` residual DSB fetch-window splits remain possible.
-- **Skylake/Cascade Lake cloud fleets:** remain widely deployed on x86-64 servers and benefit substantially (`−13%` to `−16%` on `OpenCells`).
-- **AMD Zen CPUs:** unaffected by Intel's erratum and pay \~`0.5%–2%` decode overhead from `+3.4%` NOP padding.
-- **ARM64 / Apple Silicon:** LLVM flag is strictly x86-64-only.
+The probe measured the kernel in isolation. The changes were then built into the decoder, and the cloud benchmark compared it with its predecessor over ten paired rounds, on a four-core runner with two physical cores. Every corpus gave the same output from both builds, and peak memory showed no significant rise. On the text corpus the decoder was 2.7% faster on one thread, with a 95% interval of 0.1% to 5.2%, and 4.3% faster on two, with one of 0.6% to 7.8%. At four threads its 2.9% gain was within noise. The random-bytes corpus, whose blocks take the column route as random bytes did in our census, was 5.3% faster on one thread and 6.2% on four.
 
-The engineering rule is therefore two-pronged. First, JCC-32B alignment is now a **mandatory benchmark-hygiene control** on VM probes so `6%–20%` code-layout ghosts never masquerade as algorithmic wins or regressions. Second, no release or wheel build flag will ship until a single paired `ab` run on the i9-10900K measures the real target-silicon tradeoff.
+That is less than the probe implied. Since undoing the BWT is about two-thirds of a worker's time on the text corpus, the probe projected a gain of 8 to 10% there, and a quick, informal check on a development machine suggested 7 to 9% on one thread. The controlled measurement, the one we stand by, came out at a third to a half of the projection. We have not yet dissected the difference. The probe and the benchmark ran on different processors, and they measure different things: the kernel's own processor time in one, the whole decoder's elapsed time in the other.
 
-Intel JCC-32B alignment (\#1077): VM per-station speedup and silicon-portability matrix
+Two smaller observations remain open. Wikidata, whose full blocks all take the fast kernel, came out 1.7% faster on one thread, a gain the benchmark's stage-by-stage timings do not locate. At four threads, the benchmark also flagged a 1.8% rise in the extra processor time Wikidata costs as threads are added, which only a machine with more cores can judge.
 
-Source: `docs/journal/2026-11-27-explore/jcc-alignment-whole-decoder.md` (`#1077`). Bars plot the larger of baseline or native VM reductions (baseline for all stations except `S`). JCC-32B alignment is adopted immediately as a VM benchmark control; any release flag waits on paired i9-10900K testing.
+## 5\. What this changes
 
-## 5\. Disciplined stops and the workstation validation queue
+The argument forms a short chain. A kernel tuned on one corpus became the decoder's pride, but on ordinary files it is eligible for only one full block in six. Where it hesitated over a dense block, it paid for a pass it then threw away, and made prose slower than the fallback alone. That refusal turned out to be a simple count over a list the decoder already holds, so it is now made before any work is wasted. The fallback, which is what ordinary text actually runs, spends a third or more of its inversion building its table, and three memory-neutral changes have made that markedly cheaper.
 
-Knowing where *not* to write production code saves as much engineering time as finding a breakthrough. Two off-critical-path directions ran full probes and closed cleanly under their frozen stop tests:
+None of these figures yet comes from the ten-core workstation on which mibz2's releases are measured. They come from virtual machines and the project's cloud benchmark, and both changes will first be measured on the workstation with the next release. The broader lesson concerns benchmarks more than kernels. A corpus chosen because it matters can quietly decide which code is ever examined, and the next speed-up may be found by decoding something else.
 
-- **Column-route MTF front (`#1060`, STOP).** [Four rounds across 20 exact AVX2 arms](<https://github.com/lmmx/mibz2/blob/da48997293faf726d1d9a803d49674291edc7f00/docs/journal/2026-11-27-explore/mtf-column-front-dissection.md>) diagnosed the off-Wikidata column MTF path. Skeleton ablations proved that `49.5%` of `prose` and `37.4%` of `elf` are irreducible RLE2 branch mispredictions. Branchless RLE2 regressed `+5.7%` to `+57.1%`. An 8-YMM in-register MTF list regressed `+5.7%` to `+46.7%` from 12-cycle `vpblendvb` mux chains and Port-5 saturation. The best tail cleanups (`R_t32_flat_unal7` at `−8.45%`/`−9.36%` and `S_adapt_Q_P2` at `−6.32%`/`−10.36%`) missed the frozen `>= 15%` gate (`elf −2.8%..−3.9%`, `prose` flat). Clearing that wall would require AVX-512 `vpermb` or fusing `A3` into MTF.
-- **Cooperative multi-thread block decoder (`#1063`, STOP).** [The cooperative dissection](<https://github.com/lmmx/mibz2/blob/371cede0a3af320df077c5d79c7e8500e4b45943/docs/journal/2026-11-27-explore/cooperative-decoder-dissection.md>) showed `Plan::for_threads` never triggers `Cooperative` on `<= 10` cores (unreachable on our i9-10900K). On a single Wikidata block, `OpenCells` (`3.07 ms`) beats `Cooperative<2>` (`8.22 ms`, `0.37×`). Even after cutting parallel `build + walk` by `13%` to `33%`, serial stages still hold `61%` to `81%` of two-thread wall time. Amdahl's Law therefore caps full-block wall gains at `−5.2%` to `−6.2%`, well below the `10%` gate.
+---
 
-### Where the whole programme stands
+**Sources:**
 
-Every piece of the next workstation cycle is now cleanly scoped, verified on the VM, and separated from dead ends:
-
-| Study | Scope | Verdict | Key VM / model finding | Next workstation check (i9-10900K) |
-| --- | --- | --- | --- | --- |
-| `#1062`, `#1067` | Composed Open worker `W4_v2` | **PASS** | `−21.6%..−24.6%` L3-cold (`32 KiB` slabs, `#[cold]` paths) | Measure real `W'/8` at 1W, 8W, 9W, 10W |
-| `#1068` | Direct-literal 4-lane split | **STOP** | `24/24` `A7` cells `+4.1%..+39.0%` slower | None (closed) |
-| `#1076` | `K = 6, 8, 10` &amp; decoupled `B = 8` | **STOP** | `+10.8%..+45.4%` in `A6c+7+9` (15-GPR wall) | None (`K = 4, S = 16, 32 KiB` locked) |
-| `#1069`, `#1074` | Safe-Rust `A2a..d` header parse | **PASS** | `−31.6%..−37.7%` `A2a..d`, `−4.44%..−7.38%` `S'` | Verify `S' ≈ 134–139 ms` &amp; `k = 8 / 9` knee |
-| `#1077` | JCC-32B branch alignment | **HYGIENE** | `−13.7%..−15.6%` `OpenCells` on VM Xeon | 1 paired `ab` check on Comet Lake stepping 5 |
-| `#1060`, `#1063` | Column MTF &amp; Cooperative | **STOP** | RLE2 branch floor; Amdahl-capped `< 6.2%` | None (closed) |
-
-The picture is sharper than at any point in the programme. We now know the exact hardware walls inside the Open worker: `256 KiB` private L2 and `15` x86-64 GPRs. We have a safe-Rust scanner upgrade that pushes `S'` below `140 ms` and flips the eight-worker knee. We have also removed a `15%` VM code-layout ghost from our measurements. The next step is no longer guesswork on paper: it is building the winning safe kernels and putting them directly on the 10-core i9-10900K.
+- The route census: [the research note](<https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/docs/journal/2026-11-27-explore/route-census.md>), its [per-block timings](<https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/docs/journal/2026-11-27-explore/route-census/run-route-blocks.tsv>) and [the census program](<https://github.com/lmmx/mibz2/blob/b8fd08af523b3d501d5f797faaa1aa96348f70c7/examples/route_census.rs>) ([\#1023](<https://github.com/lmmx/mibz2/pull/1023>)); 4-vCPU Xeon virtual machine, single thread.
+- The early refusal check: [the change to the fast kernel's admission](<https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/src/open.rs>) and [its record](<https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/frontier/deltas/2026-11-27-dense-cap-precheck.md>) ([\#1040](<https://github.com/lmmx/mibz2/pull/1040>)), with the [benchmark report](<https://github.com/lmmx/mibz2/pull/1040#issuecomment-7207435327>) (AMD EPYC 9V45 runner, 10 paired rounds).
+- The general-purpose kernel's dissection: [the research note](<https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/docs/journal/2026-11-27-explore/segmented-fallback-dissection.md>) and [the probe](<https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/examples/segmented_dissection_probe.rs>) ([\#1042](<https://github.com/lmmx/mibz2/pull/1042>)); 2-vCPU Xeon virtual machine, seven interleaved repeats. The two-step table is recorded in [the dead ends](<https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/frontier/dead-ends.tsv>).
+- The change in the decoder: [\#1080](<https://github.com/lmmx/mibz2/pull/1080>), its [benchmark report](<https://github.com/lmmx/mibz2/pull/1080#issuecomment-7211122449>) (Intel Xeon 6975P-C runner, 10 paired rounds), its [safety review](<https://github.com/lmmx/mibz2/pull/1092>) and [closing record](<https://github.com/lmmx/mibz2/blob/1a459081ccf203b9f98706073595b4fcc6701257/frontier/deltas/2026-11-27-segmented-fallback-build-done.md>).
+- The dense band's limit: [Admitting dense blocks to the Open kernel](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>).
+- Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, [Slashing the Time for BWT Inversion](<https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/>), DCC 2012.
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# The architecture of a 6 GB/s bzip2 decoder
+# Stages built to fit together: a new shape for the decoder's workers
 
-Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.
+Rebuilt so that each stage hands the next exactly what it needs, the prototype stages of mibz2's workers save time that adds up almost exactly.
 
-27 November 2026 · 10 min read · [Research synthesis](<#6-how-the-five-pieces-fit-and-what-builds-next>)
+27 November 2026 · 14 min read · [Research in progress](<#7-where-the-pieces-stand>)
 
-**Five freshly merged studies turn mibz2's ideal-parts matrix into one coherent 6 GB/s architecture.** On our 10-core Intel i9-10900K, shipped mibz2 decodes 839 MB of Wikidata (`wikidata ×4`) in 192.9 to 194.6 ms at eight workers. That is 4.31 GB/s. Reaching 6 GB/s means finishing the same workload in 140 ms. No single stage can carry that drop alone. Five designs fit end to end across the worker pipeline and the eight-worker schedule. Together they pair sampled-anchor four-lane forward emission and vectored RLE1+CRC fusion with a zero-copy boundary, L1-batched MTF folding and slack-only hybrid scanning.
+mibz2 is a parallel [bzip2](<https://sourceware.org/bzip2/>) decoder written in Rust. A bzip2 file is a sequence of independent blocks of up to 900,000 bytes, and mibz2 decodes them in three kinds of thread. One thread, the scanner, reads the compressed bits in order and decodes each block's Huffman codes, because a block's start can only be found by finishing the one before it. A pool of workers then turns each block's symbols back into text, one block per worker, in parallel. A reader hands the finished blocks to the caller in order. The project's reference machine is a ten-core Intel i9-10900K. There the shipped decoder turns 838.8 MB of a Wikidata dump back into text in 194.6 ms with eight workers, about 4.31 GB/s, and in 1,306 ms with one.
 
-This post builds on [Reopening Open's middle and the off-Wikidata decoder](<https://lmmx.github.io/mibz2/blog/2026-11-27-reopening-a6b-and-segmented/index.md>) and [The decoder's true floor and the limits of a pooled scan](<https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/index.md>). One evidence boundary belongs up front. The i9-10900K baselines (`1,306 ms` single-worker and `192.9–194.6 ms` eight-worker) are direct workstation measurements. The four stage studies (`#1057`, `#1045`, `#1058`, `#1055` and `#1048`) are steal-free probes on a 2-vCPU Haswell Xeon VM. Every arm passed byte-exact parity on every tested block. The eight-worker trajectory (`#1056`) replays `src/parallel.rs` deterministically against primary i9-10900K traces. Every projection below awaits production builds and direct 10-core i9-10900K confirmation.
-
-[Section 1](<#1-sampled-anchor-four-lane-forward-emission-1057>) shows how 16 scalar anchor tags unlock 4-lane forward emission without breaking SIMD wiring. [Section 2](<#2-upstream-vectored-rle1crc-fusion-1045>) explains why zero-scratch tiled fusion beats both 1-lane emission and contiguous stitching. [Section 3](<#3-the-zero-cost-vectored-delivery-boundary-1058>) prices a 160-byte vectored `ReadyBlock` across six real consumer paths and memory budgets. [Section 4](<#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055>) diagnoses why direct MTF folding spilled registers and how L1 batching rescues it. [Section 5](<#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056>) maps how slack-only helper scanning clears the 140 ms wall without regressing below the knee. [Section 6](<#6-how-the-five-pieces-fit-and-what-builds-next>) summarizes the combined architecture and its workstation gates.
+Each worker runs a chain of stages, and for most of the project each stage was improved on its own. That has a cost which is easy to miss. A stage inherits the form of its input from the stage before it and must hand its output in the form the next one expects, so a stage can be locked into a slow design by a neighbour. The fastest way to walk the text, for instance, writes it in pieces, and that only pays if everything downstream can take pieces. This post reports a redesign of the workers' stages as a set, each shaped around the others, and what it measured.
 
 **Takeaways**
 
-- **Four-lane forward emission is paid in full (`#1057`, PASS).** Tagging 16 uniform BWT-row anchors in bit 31 keeps unmodified SIMD wiring and cuts `A6c + A7` thread CPU by 31.0 to 35.8% with zero `unsafe`. Native L3-cold runs reach 97.4% of a prebuilt oracle and project +208 to +235 ms saved on one i9 worker.
-- **Fusion only pays off if delivery stays vectored (`#1045`, PASS / scoped STOP).** Zero-scratch in-place tile compaction with 64 KiB PCLMULQDQ CRC32 cuts `E + A9` writes by 53.4%. It projects +31.8 to +49.9 ms saved on one i9 worker, whereas contiguous stitching moves 74.9% of the output and erases the win.
-- **Vectored delivery costs nothing at the boundary (`#1058`).** An inline 160-byte `ReadyBlock` keeps all six consumer paths at 0.86× to 1.01× of contiguous delivery while holding RSS at 1.017× with zero Wikidata overflows.
-- **L1 batching and guard zones rescue MTF folding (`#1048`, `#1055`, PASS).** Direct per-run folding spilled `runs::front_avx2`'s 15 live registers and regressed up to +4.3%. A 2 KiB L1d batch plus a 496/512 `OutQ16` guard zone cuts `push_slow` 6.22×. Together they drop `A5 + A6a` by 12.1% baseline and 19.1% native.
-- **Slack-only hybrid scanning crosses 6 GB/s (`#1056`).** Offloading candidate finding to the 91.6%-idle reader thread and scanning only from worker `job_wait` slack pushes eight-worker wall time to 131.8 ms (6.36 GB/s) at `W'/8 = 125 ms`. Below the knee, `k = 6` stays at 0.997× to 0.999×.
+- **The text is now walked forward in four lanes at once,** from sixteen starting points chosen in advance. Construction's wiring and the walk together take 31–36% less time, close to a version given its starting points for free.
+- **The output stays in pieces until the caller reads it.** That lets the run expansion and the checksum run inside each piece while it is still in cache, writing 53% fewer bytes, and handing pieces to the caller costs nothing measurable.
+- **The middle of construction was rebuilt around fixed-size tables,** which lets the compiler remove every bounds check in safe Rust; with two layout changes it takes 27–29% less time.
+- **Composed, the pieces add up.** All four worker changes together cut a worker's time by 25.6% on warm caches, matching the sum of their separate savings to within a tenth of a percent, and by 21–25% on cold caches.
+- **Two hardware limits set the shape.** A 256 KiB private L2 cache is why each lane writes into 32 KiB slabs, and x86-64's small register file is why there are four lanes, not eight.
+- **These are prototype measurements on a cloud test machine.** Two pieces are in the code behind experimental build options and two are in review. The one timed on the i9 so far, the fixed-size middle, was 1.8% faster with one worker and unchanged at eight and ten, short of its bar. The 6 GB/s that the project aims for at eight workers is a target, not a result.
 
-End-to-end 6 GB/s decoder architecture assembled from five merged studies
+[Section 1](<#1-where-a-workers-time-goes>) shows where a worker's time goes. [Section 2](<#2-walking-the-cycle-in-four-lanes>) explains the four-lane walk and the order statistics that set its sixteen starting points, and [section 3](<#3-keeping-the-output-in-pieces>) why its output is never stitched back together. [Section 4](<#4-a-fixed-size-middle-for-construction>) covers the middle of construction and [section 5](<#5-feeding-construction-without-a-megabyte-buffer>) the stage before it. [Section 6](<#6-composing-the-worker>) composes the worker and shows the two hardware limits, and [section 7](<#7-where-the-pieces-stand>) says where each piece stands and what eight workers need.
 
-Each stage removes a separate currency: random-scatter stalls and register spills in `A5+A6a`, bounds checks in `A6b`, XOR wiring and 1-lane dependency chains in `A6c+A7`, full-block re-reads in `A9`, and serial-scan idle slack across 8 workers.
+The decoder's stages, and what replaces each
 
-## 1\. Sampled-anchor four-lane forward emission (`#1057`)
+The middle column is measured on the i9-10900K with one worker on the Wikidata sample, the shipped decoder. The right-hand column is measured on the cloud test machine, in prototypes, against the shipped stage on the same machine; ranges span compiler settings and cache states. The worker stages run in parallel, one block per worker.
 
-The single largest worker prize in mibz2 sits inside `A6c + A7` (`651.7 ms` on one i9 worker, or half of total single-worker time). Earlier work showed why shipped bidirectional emission is expensive. To walk two lanes per edge without knowing endpoints in advance, `wire_xor` stores XOR-linked adjacency in `A6c`. That scalar XOR wiring breaks SIMD throughput. Forward 1-lane emission removes XOR wiring yet pays a long pointer-chasing dependency chain across `A7`.
+## 1\. Where a worker's time goes
 
-The [sampled-anchor 4-lane probe](<https://github.com/lmmx/mibz2/blob/7f5a1c6afac636c24a7db14987cca1681e9d9e8b/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md>) (`#1057`) resolves that tension cleanly with `#![forbid(unsafe_code)]`. Every arm matched byte for byte across all 11,961 checks on Wikidata and synthetic edge cases.
+bzip2 compresses a block in several layers, and decoding undoes them in reverse order: the scanner removes the Huffman coding, and the worker the rest. The scanner's Huffman decoding yields symbols in a move-to-front code with runs of zeros abbreviated; the worker's first stage undoes both, recovering the last column of the block's sorted rotations, the [Burrows–Wheeler transform](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>). The next two stages invert that transform, which is where most of the time goes. bzip2 also shortened every run of four or more equal bytes before sorting, so the last worker stage expands those runs again and checks the block's CRC-32 checksum.
 
-### Keeping SIMD wiring untouched
+On Wikidata, mibz2 inverts the transform with [Open](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>), a kernel that keeps only about one row in eight of the sorted table, the rows in short runs, and works out where the walk goes from each kept row to the next and which bytes it spells on the way. Construction does that in three parts. A first pass groups the runs into strips. A middle stage shrinks the map between kept rows by [interval-exchange induction](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>), recording the words it skips as rules in a dictionary. A last part wires each kept row to the next. Emission then walks that cycle of kept rows, writing a word at each step.
 
-First, `A6c` keeps the unmodified SIMD `outq::Reader::wire` loop. On the VM, SIMD `Reader::wire` takes roughly **30 ms warm** and **40 ms L3-cold** across the 233 Open-admitted Wikidata blocks. Shipped `wire_xor` takes 91 ms warm and 108 ms cold. That is **2.7× to 3.0× slower**.
+**Interval-exchange induction** is a classical move from the study of dynamical systems, herein turned to decoding. Where one run of rows lands on the end of another, the rows it lands on tell the decoder nothing new, so they can be deleted, and the run that landed there jumps straight to where they would have gone, recording a two-letter word for its two moves. Repeated, it shrinks the block's map while the dictionary of words grows; [the post that introduced it](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) works it by hand on a three-byte block.
 
-Second, the probe checks bit 31 of `edges[u]`. Every Wikidata Open block packs a destination index (`max_bits = 18`) and a dictionary index (`max_dict = 1,712`). Because \\(18 + 11 = 29 \\le 31\\), bit 31 is free on all 233 blocks.
+At one worker on the i9, a worker is busy for 1,280 ms, and the walk alone takes 490 ms of it. The three parts of construction take 200, 216 and 161 ms in order. Undoing move-to-front takes 132 ms, the run expansion and checksum 76 ms, and the scanner spends 173 ms on the same input. Those proportions say where a redesign must start: the walk, and the wiring it depends on.
 
-Third, after `Reader::wire` finishes, the probe marks \\(S\\) uniform BWT-row anchor indices:
+Every new measurement below comes from one cloud test machine, a two-core virtual machine on an Intel Xeon. Like the i9, it has 32 KiB of L1 data cache and 256 KiB of L2 per core; its shared L3 holds 45 MiB. Each figure is the median of seven interleaved repeats of the CPU time the timed thread itself used, so that time stolen by other tenants does not count. Runs with warm caches reuse one worker's buffers; cold runs rotate through more buffers than the L3 holds and flush it in between. The corpus is the 233 blocks of a 210 MB Wikidata sample that the shipped decoder sends to Open, and every variant produced byte-identical output on all of them.
 
-\\\[a\_k = \\left(\\text{mark} + \\left\\lfloor \\frac{k \\cdot m}{S} \\right\\rfloor\\right) \\bmod m, \\qquad k = 0, \\dots, S - 1\\\]
+## 2\. Walking the cycle in four lanes
 
-Tagging \\(S = 16\\) anchor entries takes just 16 scalar writes per block. That adds roughly **30 nanoseconds per block**, or 7 microseconds across all 233 blocks.
+The shipped decoder stores each link in the cycle as the XOR of its two neighbours, which lets emission start at one marked row and walk in both directions at once. That gives two chains of memory reads in flight, but each step must know where it came from, and the XOR links can only be built one scattered update at a time. The redesign keeps only each row's successor. Those links are built by a simple vectorised loop that is 2.7–3.0 times faster than the XOR wiring, and they allow the cycle to be walked [forward from any point](<https://lmmx.github.io/mibz2/blog/2026-11-26-from-bottlenecks-to-better-algorithms/#8-forward-wiring-and-multi-lane-emission>).
 
-### Why \\(S = 16\\) beats \\(S = 4\\) by order statistics
+The walk is a chain of dependent reads: the next row's address is only known once the current row has arrived. A single chain therefore spends most of its time waiting on memory. Four chains walked in one loop keep four reads in flight, so the processor overlaps their waits. For that the cycle must be cut into pieces in advance, which needs starting points. Rather than store them separately, the redesign hides them in the links. Every Wikidata block needs at most 29 bits for a link and its word, so bit 31 is free. Setting it on sixteen evenly spaced rows costs sixteen stores, about 30 ns a block. The loop loads all four lanes' next links and tests their top bits with one branch, which fires about sixteen times a block, once in seven thousand steps. When a lane reaches a marked row it closes its piece and takes the next unstarted one.
 
-Choosing \\(S\\) uniform BWT-row indices partitions the single cycle of length \\(m\\) into \\(S\\) random segments whose lengths behave like independent exponential spacings. With only \\(S = 4\\) segments, four parallel lanes must wait for the longest of four exponential pieces. Its expected length follows the fourth harmonic number \\(H\_4 = 1 + \\tfrac{1}{2} + \\tfrac{1}{3} + \\tfrac{1}{4} = 2.083\\times\\) the mean segment length. Measured across Wikidata at \\(S = 4\\), the longest segment is indeed **\\(2.081\\times\\)** the mean, leaving three lanes idle for over half the tail.
+The number of starting points comes from order statistics. The pieces between evenly spaced rows of the sorted table are not even pieces of the text, because the text visits those rows in an order that is, for this purpose, close to random. The pieces then behave like the gaps between \\(S\\) points thrown at random on a circle of length \\(m\\), and the expected longest of \\(S\\) such gaps is
 
-Oversampling to \\(S = 16\\) fixes load balance dynamically. Four lanes pull from the queue of 16 segments as each segment ends. Whenever any lane hits an anchor edge, a single sign-bit check catches all four lanes at once:
+\\\[ \\mathbb{E}\[L\_{\\max}\] = \\frac{m}{S}\\,H\_S, \\qquad H\_S = 1 + \\tfrac12 + \\dots + \\tfrac1S. \\\]
 
-```rust
-if ((ed0 | ed1 | ed2 | ed3) as i32) < 0 { /* retire hit lane, pull next anchor */ }
-```
+With four points and four lanes, the walk is not done until the longest piece is, and that piece averages \\(H\_4 = 2.08\\) times an even quarter. Measured over the 233 blocks, it is 2.081 times. With sixteen points, a lane that finishes a short piece takes another, and the longest piece falls to 0.82 of a quarter. On average 3.15 of the four lanes are busy, against 1.90 with four points. Beyond sixteen the gain is small, while each extra point adds a piece to hand on.
 
-That branch fires only \~16 times per block (**0.014%** of iterations). At \\(S = 16\\), the longest single segment shrinks to **\\(0.818 \\times (m / 4)\\)** and effective lane parallelism rises to **`eff_K = 3.153`** across the whole block (including the `3 → 2 → 1` drain). Each segment writes into a **32 KiB slab-continuation arena** (`max_arena = 992 KiB`, averaging `41.6` ordered slices per block regardless of \\(S\\)).
+Random gaps, predicted and measured
 
-| `A6c + A7` arm (233 Wikidata Open blocks) | Base warm (ms) | Base L3-cold (ms) | Native warm (ms) | Native L3-cold (ms) | Modeled i9 1W Δ (warm / cold) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `shipped_bidi` (baseline) | 335.89 | 486.28 | 328.07 | 472.47 | 0.0 / 0.0 ms |
-| `fwd_4lane_oracle` (prebuilt ceiling) | 222.84 | 323.46 | 212.50 | 295.66 | — |
-| `fwd_4lane_sampled_S16_vec` (**PASS**) | **231.80 (−31.0%)** | **323.61 (−33.5%)** | **221.83 (−32.4%)** | **303.41 (−35.8%)** | **\+208.4 / +221.3..+235.4 ms** |
-| `fwd_4lane_sampled_S16_stitch` | 249.60 (−25.7%) | 351.43 (−27.7%) | 239.44 (−27.0%) | 323.49 (−31.5%) | \+174.9 / +208.3 ms |
+Measured over the 233 Wikidata blocks: the longest piece of the cycle as a multiple of an even quarter (points), against the order-statistics prediction $4H\_S/S$ (line), and the average number of the four lanes busy. That the points sit on the line is consistent with the rows' order along the text being as good as random for this purpose.
 
-*(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% disjoint spreads against `shipped_bidi`. Modeled i9 columns scale VM ratios to the 651.7 ms `A6c + A7` i9-10900K baseline.)*
+Each lane writes its bytes into a 32 KiB slab inside the block's own output buffer, and a lane that takes a new piece continues in the same slab, so the pieces need no extra memory. On the test machine, wiring and walk together took 31–32% less time than the shipped pair with warm caches and 33–36% less with cold caches. A version handed its sixteen starting points for free, without the marking or the extra branch, shows what the marking costs. With cold caches the real design reached 97.4% of its speed on one build and matched it on the other. With warm caches it was 7–9% slower than that ideal.
 
-The cold-cache result is striking. Under L3-cold pressure, `fwd_4lane_sampled_S16_vec` reaches **1.000×** of the prebuilt oracle on baseline (`323.61` vs `323.46 ms`). On native it reaches **1.026×**, or 97.4% of the oracle (`303.41` vs `295.66 ms`). That projects **\+208 to +235 ms** saved on one i9 worker. That is 16.0% to 18.0% of single-worker time, or **\+29 to +33 ms/worker** at eight workers.
+## 3\. Keeping the output in pieces
 
-## 2\. Upstream vectored RLE1+CRC fusion (`#1045`)
+The four lanes leave a block's text as about 42 pieces, in the right order but at scattered places in the buffer. The obvious next step is to copy them together into one contiguous block, which is what the rest of the decoder expects. The redesign leaves them where they are, for the sake of the stage that comes next.
 
-Once emission runs forward in four lanes, `A9` (RLE1 expansion plus CRC32) sits right behind it. On one i9 worker, `A9` takes 66.6 to 74.4 ms. Earlier standalone post-emit work (`#988`) stopped because a separate pass over the output buffer hit a 72.3% L1d-hot compute floor. Moving RLE1+CRC upstream into the 4-lane emitter seemed promising. Yet [the fusion probe](<https://github.com/lmmx/mibz2/blob/e61ec1276a59ed3d164fe165de869d147555a95f/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md>) (`#1045`) showed that **three of four candidate designs fail**. Only one clears the gate. Every arm passed all 13,360 exactness checks across Wikidata and edge-case corpora.
+The last worker stage expands bzip2's first-stage runs: four equal bytes followed by a count of further copies. On Wikidata, 89.4% of those counts are zero, so expansion mostly shrinks a piece, and 86.4% of the lanes' pieces change length. Stitching them first therefore moves 74.9% of the block's bytes, and expanding them after the copy reads everything again. The redesign instead expands each lane's output in place, 4 KiB at a time as the lane writes it, which is safe because a shrinking expansion never overtakes the bytes it reads. The rare growth spills a short tail to a small side buffer. The CRC-32 is computed over each 64 KiB of finished output with the processor's carry-less multiply while it is still in L2, and the four lanes' checksums are combined at the end of the block.
 
-### Why three designs stopped
+**Combining checksums** is possible because a CRC is the remainder of a polynomial division over GF(2), the field of two elements, in which addition is XOR. The CRC of two pieces joined is the first piece's CRC multiplied by a power of \\(x\\) set by the second's length, plus the second's CRC, all modulo the CRC's polynomial. Four lanes' checksums thereby become the block's in microseconds.
 
-1. **1-lane fused (`fused_1lane` — STOP).** Fusing RLE1+CRC into a single forward lane surrenders 4-lane memory-level parallelism. It regresses by **−92 to −186 ms** projected on one i9 worker.
-2. **Inline per-step FSM (`fused_4l_fsm` — STOP).** Running the RLE1 state machine byte-by-byte inside the 4-lane pointer-chase loop bloats `WordMeta` and spills live lane state. It regresses by **−126 to −205 ms** projected on one i9 worker.
-3. **4-lane contiguous stitched (`fused_4l_tile4096_stitch` — STOP).** Even when each lane fuses RLE1+CRC cleanly in 4 KiB tiles, compacting the four output segments back into one flat `Vec<u8>` destroys the win. On Wikidata, **86.4%** of lanes change length after RLE1 expansion. Re-packing lanes 1 to 3 moves 74.53 of 99.56 MiB (**74.9%** of all output). Across `wikidata ×4`, that copies **598.9 MiB** of extra bytes. Write savings drop from −53.4% to −18.6% (`1,718.2 → 1,398.8 MiB`), leaving timing flat at −23 to +11 ms projected.
+Over the Wikidata workload this writes 53.4% fewer bytes than separate passes. With warm caches it took 11.4% less time than walking in four lanes and then expanding separately, and 7.3% less with cold caches, where it matched the time of a pass that only computes the checksum. Stitching first undid the gain: the same fused design, followed by a contiguous copy, wrote only 18.6% fewer bytes, was slower than the separate passes with warm caches and barely faster with cold ones.
 
-### Why `fused_4l_tile4096_vec` passes
+The pieces must then travel to the caller, and the reader expected one contiguous buffer per block. A redesigned hand-over passes a 160-byte record holding the buffer and up to sixteen ranges, with no extra allocation. Timed across six real ways of reading the output, from a zero-copy buffered reader to scatter-filling 256 KiB reads, delivery in pieces stayed within measurement noise of a single contiguous slice, while stitching first cost a third to four-fifths more. Reserving room for the in-place expansion, 4 KiB a lane, raises the decoder's peak memory by 1.7%, with no block on Wikidata outgrowing its buffer.
 
-The winning arm (`fused_4l_tile4096_vec`) keeps the 4-lane pointer-chase loop clean and delivers vectored slices without stitching:
+## 4\. A fixed-size middle for construction
 
-- **Zero-scratch single-pass in-place tile compaction.** Each lane emits raw BWT bytes straight into its own output slice until it fills a 4 KiB tile. Then it expands RLE1 in place. Because **89.4%** of Wikidata 4-byte runs have `extra == 0` (four equal bytes followed by a zero repeat count), expansion shrinks the stream so `dst <= src`. Only when a rare long repeat causes net growth does the tile spill its short suffix to a tiny scratch buffer. Across all 431 Wikidata blocks, **zero** RLE1 runs straddled a lane boundary.
-- **L2-hot 64 KiB PCLMULQDQ CRC32 + GF(2) combine.** Every 64 KiB of finalized lane output feeds hardware-accelerated CRC32 while still hot in L2 cache. At block end, four `crc32_combine` calls over \\(\\text{GF}(2)\\) fold the four lane CRCs into the exact bzip2 block CRC in microseconds.
+The middle of construction, the induction and its dictionary, is the second-largest piece of a worker's time, and earlier changes to it, each tried alone, had been projected at no more than 2.5% of a decode. The redesign changed all three of its parts at once.
 
-| `E + A9` arm (native VM, 233 Wikidata blocks) | Warm (ms) | L3-cold (ms) | Logical writes (`wikidata ×4`) | Modeled i9 1W Δ (warm / cold) |
-| --- | ---: | ---: | ---: | ---: |
-| `base_4lane_sep` (unfused baseline) | 112.35 | 150.98 | 1,718.2 MiB | 0.0 / 0.0 ms |
-| `floor_4lane_plus_crc` (zero-RLE1 floor) | 101.20 | 139.89 | — | — |
-| `fused_4l_tile4096_vec` (**PASS**) | **99.54 (0.886×)** | **139.89 (0.927×)** | **799.9 MiB (−53.4%)** | **\+49.9 / +31.8 ms** |
-| `fused_4l_tile4096_stitch` (STOP) | 116.40 (1.036×) | 148.55 (0.984×) | 1,398.8 MiB (−18.6%) | −23.0 / +11.0 ms |
+The induction keeps a node for each surviving run, with links to its neighbours, a width and a word, and every step edits a few neighbouring nodes. A Wikidata block has about 9,700 nodes on average, far below 65,536. The redesign therefore stores each field in its own array of exactly 65,536 entries and indexes it with a 16-bit integer. The compiler can then prove every index in range and drops every bounds check, in safe Rust with no unsafe code. That alone saved about 8 ms over the same design with growable vectors, and a block with more nodes keeps the old path. Separate arrays, rather than one record per node, keep the links a step edits densely packed in cache. They beat 24- and 32-byte records by 4–7 ms. Short words of up to fifteen bytes live inline in a 16-byte integer, which cut the rules the step allocates by 54.6%, and steps between runs of equal width now update in place. A single forward pass replaced the setup's scattered reads, and the dictionary's per-block caches are reused across blocks with a generation tag instead of being cleared, which removes 24 KiB of zeroing a block.
 
-*(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats. On warm runs `fused_4l_tile4096_vec` beats even the zero-RLE1 separate-CRC floor because 64 KiB tiled CRC stays L2-hot. On cold runs it matches the floor to 0.00 ms.)*
+Each part fell. Setup went from 26.5 to 15.4 ms and the dictionary from 40.7 to 34.8 ms. The steps went from 64.2 to 43.8 ms, or from 24.1 to 16.4 ns a step. The middle stage took 27.4–28.8% less time in all four combinations of compiler setting and emission design. All of construction and emission together took 5.4–7.6% less. One tempting shortcut failed instructively. Dropping the deduplication of dictionary entries saved another 5.5 ms but made the dictionary 73.3% larger. The walk reads the dictionary at every step, so it slowed by 1.5–2.1% and gave the time back. The fixed arrays reserve 1.75 MiB of address space a worker, of which a block touches about 273 KiB on average.
 
-## 3\. The zero-cost vectored delivery boundary (`#1058`)
+On the i9 the redesign has since been timed against the shipped decoder, fifteen paired rounds on the Wikidata sample. With one worker it was 1.8% faster (a ratio of 0.982, interval 0.978–0.987), against a registered bar of 3%. At eight and ten workers it made no measurable difference, and it used 4–5% more memory. So it stays behind its build option. The stage is about a sixth of a worker's time on the i9 (216 of 1,280 ms), so a 28% cut could move a one-worker decode by about 5% at most. The i9 gave 1.8%, and why the rest didn't arrive is not yet known. At eight workers the scanner, not the workers, sets the pace: the [complementary bottlenecks](<https://lmmx.github.io/mibz2/blog/2026-11-26-complementary-bottlenecks/index.md>) again.
 
-Both `#1057` and `#1045` point to the same architectural need: stop forcing workers to stitch emitted slices into one flat `Vec<u8>`. Before touching `src/parallel.rs`, we priced the vectored delivery boundary in [a dedicated probe](<https://github.com/lmmx/mibz2/blob/28c4c8c43e633a04dd3b7aa14b639a2d5fa8201f/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md>) (`#1058`). It uses `#![forbid(unsafe_code)]` and tests 200 MiB of real Wikidata blocks plus synthetic guards (`runs`, `onebyte`, `max16`).
+## 5\. Feeding construction without a megabyte buffer
 
-### A 160-byte inline `ReadyBlock`
+The first worker stage undoes move-to-front and hands construction's first pass a list of runs, up to a megabyte of it. Streaming each run straight into the first pass looks like an obvious saving, yet a direct attempt made the two stages 1.6–4.3% slower. The machine code showed why. The move-to-front loop already uses all fifteen general-purpose registers that x86-64 offers a program, and inlining the first pass into it pushed the loop's hottest values out to the stack, to be reloaded on every symbol.
 
-Instead of heap-allocating a `Vec<Vec<u8>>` per block, a worker hands the reader an inline 160-byte struct:
+The redesign keeps the two loops apart but close. The first stage packs up to 512 runs into a 2 KiB buffer that stays in the L1 cache, a byte and a count in each 32-bit entry. The first pass then drains it in a separate tight loop. A second change removed most of a slow path that the first pass took 417,041 times on the workload. In 84.3% of those calls the only reason was that a 16-wide vector write might cross the end of a 512-entry chunk. Reserving the last sixteen entries of each chunk as a guard zone lets the write go ahead unchecked and cut those calls 6.2-fold. Together the two stages took 12.1% less time on the baseline build and 19.1% less with code compiled for the native processor, and the megabyte buffer is gone.
 
-```rust
-pub struct ReadyBlock {
-    buf: Vec<u8>,
-    ranges: [(u32, u32); 16],
-    count: u8,
-    total_len: u32,
-}
-```
+## 6\. Composing the worker
 
-It allocates **zero** extra heap buffers. When the consumer finishes draining the last range, `into_buf()` recycles `buf` directly into `free_out` with zero changes to pool accounting, while `Ready::size` tracks logical `total_len`.
+Changes measured one at a time can fight once combined, over registers or over cache. A prototype worker therefore ran all four changes together, from the scanner's symbols to verified, checksummed bytes, adding one at a time, with each change also run alone for comparison.
 
-### Zero consumer tax and bounded RSS
+One worker's time as the redesigned stages are added
 
-We timed six real consumer paths across contiguous, stitched, 4-lane vectored and 16-segment vectored delivery. Those paths cover zero-copy `fill_buf_hash`, `read_64k` and `read_256k` (both single-slice and scatter-fill) and `decode_parallel`:
+Measured on the cloud test machine, baseline build, caches warm: one worker's CPU time over the 233 Wikidata blocks, split by stage. The dashed mark is the shipped time less the sum of the four changes' separate savings. Stage medians need not sum exactly to the total's median.
 
-| Consumer path (native L3-cold, 200 MiB Wikidata) | `contiguous_1slice` | `vectored_4lane` | `vectored_16seg` | `stitched_4lane` |
-| --- | ---: | ---: | ---: | ---: |
-| `fill_buf_hash` (zero-copy `BufRead`) | 1.00× | **0.92×–1.00×** | **0.94×–1.00×** | \+33%..+80% |
-| `read_64k` / `read_256k` (scatter-fill) | 1.00× | **0.86×–1.01×** | **0.88×–1.01×** | \+33%..+80% |
-| `decode_parallel` (parallel sink) | 1.00× | **0.95×–1.00×** | **0.96×–1.01×** | \+33%..+80% |
+With warm caches on the baseline build, the composed worker took 548.5 ms against the shipped 737.1 ms, or 25.6% less. The separate savings predicted 548.0 ms. On the native build the composed worker did better than the sum, by 3.8% of the shipped time; with cold caches on the baseline build it fell short of the sum by 2.0%. The fused expansion also halved the memory the pieces would otherwise need. Without it a worker kept 6.7 MiB of scratch for raw slabs and expanded output; with it, 3.4 MiB, against 2.8 MiB for the shipped worker.
 
-*(Stitched 4-lane adds +16 to +22 ms per 200 MiB, or roughly +64 to +88 ms across `wikidata ×4`. Vectored 4-lane and 16-segment stay at parity with contiguous delivery.)*
+Two hardware limits then set the design's dimensions. The first is the L2 cache. Doubling the lanes' slabs from 32 to 64 KiB, to compact and checksum half as often, made the walk and expansion slower in every build and cache state, by up to 22 ms. Four lanes of 64 KiB slabs fill all 256 KiB of a core's private L2, on the test machine and on the i9 alike, so each slab's start is evicted while the lanes still chase links through the rest of the table, and the in-place expansion then reads from L3. At 32 KiB the active slabs take half of L2 and the links have the rest. Marking the expansion routine as cold, so the compiler stops inlining it five times into the lane loop, saved another 5–16 ms. The final composed worker took 21.6–24.6% less time than the shipped one with cold caches, and 27.4% less with warm caches on the native build.
 
-Python's single-copy `read(size)` path (`#1033`) also stays clean. At `K = 4`, single-`fill_buf` call counts rise **\+0.0%** at `read(256K)` (`1,130` calls) and **\+13.5%** at `read(64K)`. At `S = 16`, scatter-fill inside `Read::read` keeps calls completely flat at `3,200` (`64K`) and `800` (`256K`).
+The second limit is the register file. A core of either machine can keep ten misses from its L1 cache outstanding at once, so six, eight or ten lanes looked possible. More lanes were indeed busy, up to 7.7 on average with ten, yet every wider design was slower. With cold caches, total worker time rose by 8.0% at six lanes, 10.8% at eight and 14.4% at ten. At eight lanes the compiler had to spill all eight loaded links to the stack and reload the lanes' write positions on every step. The table mostly sits in L3 rather than main memory, so the extra overlap could not repay those stack round trips. Splitting the lanes' chasing from their writing, to free registers, was slower still, because it stopped the processor overlapping the dictionary copies with the misses. Four lanes was the fastest width tried, and the eight-lane machine code shows why: at eight, the lanes' working state no longer fits in the registers.
 
-Slab sizing turned up an equally important guard against naive headroom. A flat `+25%` (`span / 4`) per lane inflates Wikidata RSS to **1.178×** (`1,100 KiB` per block), breaching our `<= 1.05×` budget. Worse, it still overflows pathological `runs` (`2.07×`) and `onebyte` (`51.8×`). Keeping shipped `+6.25% + 64 B` gives zero Wikidata overflows at **1.0002×** (`K = 4`) and **1.0010×** (`S = 16`). Adding `4,096 B` per lane for in-place tile headroom (`+16 KiB` per 900 KB block) holds peak RSS at **1.017×** with zero overflows, cleanly inside the `<= 1.05×` gate.
+## 7\. Where the pieces stand
 
-## 4\. Rescuing MTF folding with L1 batching and guard zones (`#1048`, `#1055`)
+Each dimension of the design now has a reason. There are four lanes because of the registers, 32 KiB slabs because of L2 and sixteen starting points because of the order statistics. The output stays in pieces because expansion changes their lengths, and the induction has a fixed size because its nodes stay far below 65,536. None of it is yet the default decoder.
 
-Earlier in the programme, `mtf-fold` (`#1010`) tried to remove the 1 MiB `runs` buffer between `A5` (`runs::front_avx2`) and `A6a` (`Open::from_runs`). It streamed each run straight into an inline `FoldSink`. In theory, folding should remove memory traffic. In practice, [our cold dissection](<https://github.com/lmmx/mibz2/blob/5c57286dffa7c44a2efb88ec1e80c73499f60766/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md>) (`#1048`) caught that direct folding **regressed** `A5 + A6a`. Baseline ran **\+1.61%** slower across all seven repeats, and native ran **\+4.33%** slower.
+| Piece | State on 27 November |
+| --- | --- |
+| Fixed-size middle of construction | In the code, behind an experimental build option; on the i9, 1.8% faster with one worker and unchanged at eight and ten, short of its bar, so not adopted |
+| Four-lane walk from sixteen marked rows | In the code, behind an experimental build option, in the form that stitches its pieces; workstation test to come |
+| Batched move-to-front with a guard zone | Implemented, in review |
+| Faster block-header parsing in the scanner | Implemented, in review |
+| Fused expansion and checksum; delivery in pieces | Prototypes on the test machine |
+| The composed worker | A prototype on the test machine |
 
-### Why direct folding regressed
+The scanner received one change of its own. Parsing each block's header, its table choices and Huffman code lengths, took about a tenth of the scanner's time. Most table choices repeat the previous table, so one leading-zero count now reads a whole run of them. Most code lengths differ from the last by a delta coded in one or three bits, so a 4 KiB table decodes about 3.5 of them a lookup. Header parsing took a third less time, 31.6–37.7% across builds, and the whole scanner 4.4–7.4% less.
 
-Disassembling `runs::front_avx2` exposed three compounding costs hidden inside the hot loop:
+Eight workers are where the project's aim lies. Decoding the 838.8 MB in about 140 ms would be 6 GB/s, against 194.6 ms today. There the [scanner and workers limit the decode together](<https://lmmx.github.io/mibz2/blog/2026-11-25-the-decoder-as-a-queueing-network/index.md>), so shrinking only the workers moves the limit to the scanner. One design under study lets idle workers scan ahead from the slack between their own blocks, while the reader thread, idle 91.6% of the time, finds the block boundaries. A model of the decoder replayed against the i9's own timings puts eight-worker time at about the scanner's and eight workers' busy time shared nine ways, plus 4.85 ms. It reached 140 ms only with a scanner change the i9 since declined to adopt and worker times below what the composed worker reaches with cold caches. With today's figures our arithmetic on the same model gives about 147–152 ms, a route to the target rather than its arrival.
 
-1. **Register exhaustion (15 live x86-64 GPRs).** Standalone `runs::front_avx2` is a tight 22-instruction loop that already occupies all 15 general-purpose registers. On baseline, inlining `FoldSink + Pass::take + OutQ16` spilled the `sink` pointer (reloaded 10 times per literal) plus seven GPRs. On native, it spilled the hot MTF-front registers `f0` and `f1` on every literal.
-2. **Zero-hit dead check.** Direct folding ran a `c == self.c` merge check on every emitted run that triggered **0 times in 15,141,602 runs**.
-3. **Tail-overrun `push_slow` storm and `vzeroupper`.** `OutQ16` called `push_slow` **417,041 times** across 233 Wikidata blocks. **84.3%** of those calls (`351,722`) were pure end-of-chunk `f + 16 > 512` tail-overrun guards, not genuine thick-strip overflows. On baseline x86-64, every cold call across the AVX2 boundary also paid `vzeroupper`.
+The next measurements are on the i9: each piece as it reaches the code, then the composed worker, then eight workers together. The general lesson is a modest one. When stages are redesigned as a set, a change that looks unprofitable alone, such as walking in pieces, can be the one that makes its neighbours' gains possible.
 
-### The two-part rescue (`#1055`)
+---
 
-[The L1-batch rescue probe](<https://github.com/lmmx/mibz2/blob/3a2b770282ce2e56c52f7e74380b599eaac8face/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md>) (`#1055`) fixed both halves together:
+**Sources:**
 
-- **L1d-resident `[u32; 512]` packed run batch (2 KiB).** `front_avx2` stays completely decoupled, emitting packed maximal runs `(c << 24) | total` into a 2 KiB L1d stack buffer with `second_cold` kept out of line. That produces a 24-instruction hot loop with **zero `f0`/`f1`/GPR spills and zero `vzeroupper`**. When the 512-run batch fills, `flush_batch_direct` consumes it from L1d with `m`, `in_out` and `f.runs` hoisted in registers.
-- **Power-of-2 `OutQ16` guard zone (`496 / 512`).** Reserving 16 guard slots at the end of each 1,024-byte chunk (`CHUNK = 496`, `STRIDE = 512`) lets the 16-wide SIMD write land unconditionally until `f >= 496`. That cuts `push_slow` calls **6.22×** (`417,041 → 67,001`), driving `tail_guard` and `ovf_chunks` to **zero** with zero `A6c` readback regression.
-
-| `A5 + A6a` arm (233 Wikidata Open blocks) | Base CPU (ms) | Base ratio | Native CPU (ms) | Native ratio | Modeled i9 1W Δ (base / nat) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `shipped_two_pass` (1 MiB `runs` vec) | 188.79 | 1.0000× | 187.58 | 1.0000× | 0.0 / 0.0 ms |
-| `direct_fold_1010` (`#1010` regression) | 191.83 | 1.0161× | 195.70 | 1.0433× | −5.4 / −14.4 ms |
-| `l1_batch_512_only` (no guard zone) | 176.95 | 0.9373× | 162.80 | 0.8679× | \+20.9 / +44.0 ms |
-| `l1_batch_512_guard496` (**PASS**) | **166.88** | **0.8793×** | **151.41** | **0.8087×** | **\+40.2 / +63.6 ms** |
-
-*(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% bit-exact output and disjoint spreads on both builds. Both halves are required. L1d batching alone reaches only +1.60% 1W on baseline, below the 2.5% gate. Adding `guard496` clears +3.08% baseline and +4.87% native, or +5.7 to +9.1 ms/worker at 8W.)*
-
-## 5\. Closing the loop to 6 GB/s with slack-only hybrid scanning (`#1056`)
-
-Stacking the four worker wins (`#1046`, `#1057`, `#1045` and `#1055`) pulls per-worker compute \\(W'/8\\) below the post-`#1031`/`#1034` serial scan floor (\\(S' \\approx 145\\text{–}150\\text{ ms}\\) on the i9-10900K). At that point, the serial scanner caps throughput around 150.9 ms (5.56 GB/s). Workers sit idle in `job_wait` for **10.9 to 20.4 ms/worker**.
-
-Our earlier pooled-scan prototype (`#942`) tried to break that ceiling by having workers scan unconditionally. It failed because helper scanning stole cycles below the knee (`1.105×–1.149×` slower at `k = 6..7`). It also paid 5.27 ms of `pool_copy` overhead plus 4.82 ms of candidate finding.
-
-[The slack-only hybrid scan study](<https://github.com/lmmx/mibz2/blob/72286cff15a6048c801def3549df86875806c5fb/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md>) (`#1056`) replayed `src/parallel.rs` deterministically against primary i9-10900K traces (`character-stage1` `r0..r3` and `pooled-scan` `c71c4a56`). It found that **63.1% to 70.2%** of post-worker `job_wait` idle time arrives in continuous bursts at least one full-block scan wide.
-
-### The realized 8-worker wall-time law
-
-Workers drain `job_queue` at priority 1. Only when `job_queue` is empty do they pull speculative scan candidates at priority 2. That lets the serial scanner and eight workers share scanning at 9-way capacity:
-
-\\\[\\text{wall}\_{8\\text{W}} \\approx \\frac{8 \\cdot (W'/8) + S'}{9} + 4.85\\text{ ms}\\\]
-
-The `4.85 ms` coupling residual breaks into `2.62 ms` startup, `1.15 ms` validated handoff residual and `0.83–1.18 ms` scheduling and drain tail. Using a smaller initial chunk 0 drops `in_wait` to `0.05 ms` and trims the residual to **\+3.50 ms**.
-
-Breaking **6 GB/s** (\\(\\le 140.0\\text{ ms}\\)) at \\(S' = 145\\text{ ms}\\) requires \\(W'/8 \\le 133.9\\text{ ms}\\), or \\(\\le 135.4\\text{ ms}\\) with small chunk 0. With L1-batched MTF (`W'/8 = 125 ms`), eight-worker wall time reaches **131.82 ms (6.36 GB/s)**. That clears the 6 GB/s target with **\+8.18 ms** to spare.
-
-Coupled eight-worker wall time on wikidata ×4 (839 MB): trace-replay trajectory across the 6 GB/s line
-
-Source: `docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md` (\#1056). Shipped baseline is directly measured on the 10-core i9-10900K; post-worker and hybrid bars are discrete-event replays of `src/parallel.rs` driven by primary i9 traces at `S' = 145 ms` and `W'/8 = 135 ms` (no fold) or `125 ms` (with L1-batched MTF).
-
-### Zero-plumbing design and below-the-knee safety
-
-Four concrete design choices eliminate every overhead that killed `#942`:
-
-1. **Offload AVX2 `Finder` to the 91.6%-idle reader thread (`0.00 ms` tax).** Primary `per_k.tsv` traces show `mibz2-read` is active for just **12.34 ms** and sleeps in `feed_wait` for **134.10 ms** at `k = 8`. Wrapping each read chunk in `Arc<Chunk { base, bytes, cands: OnceLock<Vec<Cand>> }>` lets `mibz2-read` push chunk 0 immediately and populate K4's 4.82 ms AVX2 `Finder` (`9.84 GB/s`) while waiting on backpressure.
-2. **Eliminate `pool_copy` by skipping seam blocks (`5.27 → 0.00 ms`).** Fewer than 0.7% of blocks (11 of 1,724) straddle a 4 MiB chunk boundary. Helpers simply skip seam-straddling candidates and leave them to the serial scanner's existing seam window (`#1031`).
-3. **Priority-1 decode draining plus `full_only` filtering.** Helpers touch scan candidates only when `job_queue` is empty. At `k = 6`, that runs just **3 to 4 helper blocks** (`0.5–0.7 ms`). Wall time across `k = 6..7` stays at **0.997× to 0.999×**, versus `#942`'s `1.105×–1.149×`. Filtering `gap >= 512 B` (`full_only`) cuts helper handoffs by **−35% to −41%**.
-4. **Policy A jump-ahead scanner and worker-local scratch.** Instead of stalling on speculative validation (`#770`'s `+1.2–2.3 ms` `serial_wait`), the scanner verifies completed helper bit-chains asynchronously and jumps straight past validated blocks. Each worker keeps a thread-local `ScanScratch` and `Vec<u16>` (`~200 KiB`, L2-hot), avoiding cross-core `free_syms` coherence ping-pong (`#1034`).
-
-## 6\. How the five pieces fit and what builds next
-
-Viewed together, the five studies expose a clean architectural stack where each win amplifies the next:
-
-| Stage / boundary | Primary study | Mechanism | VM / replay finding | i9-10900K gate |
-| --- | --- | --- | --- | --- |
-| `A5 + A6a` | `#1048`, `#1055` | 2 KiB L1d run batch + `OutQ16` 496/512 guard | −12.1% base / −19.1% native (`A5 + A6a`) | ≥ 2.5% 1W, 0 `A6c` regression |
-| `A6b` | `#1046` | Fused setup + safe 64K SoA + gen-tagged dict | −27.4%..−28.8% `A6b`, −5.4%..−7.6% `C+E` | RSS &amp; 8–10W L3 scaling |
-| `A6c + A7` | `#1057` | SIMD `Reader::wire` + `S=16` bit-31 + 4 lanes | −31.0%..−35.8% `A6c+A7` (97.4% of oracle) | \+208..+235 ms 1W, 0 `unsafe` |
-| `E + A9` | `#1045` | Zero-scratch 4K tiles + 64K CRC + GF(2) | −53.4% writes, +31.8..+49.9 ms 1W proj. | Vectored only (no stitch) |
-| Delivery | `#1058` | 160 B inline `ReadyBlock`, `+16 KiB` tile slab | 0.86×–1.01× consumers, RSS 1.017× | ≤ 1.05× RSS, 0 overflows |
-| 8W scan | `#1056` | `mibz2-read` Finder + slack-only Policy A | 131.8 ms (6.36 GB/s) @ 8W, 0.998× @ 6W | ≥ 6 GB/s @ 8W, ≤ 1.005× @ 6W |
-
-The dependency order for production builds is equally crisp. First, ship the independent worker kernels (`a6b-endpoint-build`, opt-in `forward-emission` and `mtf-l1-batch-build`) alongside the vectored `ReadyBlock` boundary (`#1058`). That lets upstream RLE1+CRC fusion (`#1045`) land without paying stitching's 74.9% copy tax. Second, verify on the 10-core i9-10900K that the worker stack pulls \\(W'/8\\) below the post-`#1031`/`#1034` serial scan floor. Then enable `pooled-scan-hybrid` (`#1056`) to turn newly exposed `job_wait` slack into 6 GB/s throughput with zero below-the-knee regressions.
-
-[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
-
-# Reopening Open's middle and the off-Wikidata decoder
-
-A safe fixed-size redesign cuts Open's middle stage by 28% and a fallback stack speeds off-Wikidata blocks by 16%, while contraction hits a floor.
-
-27 November 2026 · 8 min read · [Research result](<#4-what-ships-next>)
-
-**Four merged results show how research persistence works in both directions.** Off Wikidata, we shipped a safe cap precheck that removes wasted work on refused dense blocks. We also dissected the Segmented fallback into a zero-memory stack that cuts prose and source decoding by 15.4 to 16.1%. Back inside Wikidata's Open kernel, redesigning all three sub-phases of its middle stage together reopens a phase that earlier isolated tweaks could not push past 3%. In parallel, a rescue of contracted return-map constructors trimmed real waste yet stopped cleanly once a bare pointer-chasing floor exceeded the budget.
-
-This post builds on [Off Wikidata and inside the eight-worker tie](<https://lmmx.github.io/mibz2/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/index.md>) and [Complementary bottlenecks](<https://lmmx.github.io/mibz2/blog/2026-11-26-complementary-bottlenecks/index.md>). One evidence boundary matters up front. The dense-band cap precheck (`#1040`) is already merged into production and measured on pinned CI hardware. The Segmented dissection (`#1042`), the `A6b` redesign (`#1046`) and the contraction rescue (`#1038`) are diagnostic VM probes with exactness verified on every tested block. Both passing probes now move to production build pull requests and 10-core Intel i9-10900K workstation confirmation.
-
-[Section 1](<#1-off-wikidata-dense-cap-precheck-and-segmenteds-16-comeback>) covers the shipped dense-band precheck, Segmented's three-lever comeback and why a two-step `LF²` table failed. [Section 2](<#2-reopening-opens-middle-stage-with-a-safe-64k-redesign>) explains how combining all three `A6b` sub-phases cuts `A6b` by 27.4 to 28.8% with zero `unsafe`. [Section 3](<#3-honest-contrast-when-rescue-hits-a-structural-floor>) contrasts that win with `#1038`'s scoped stop on contracted return-map constructors. [Section 4](<#4-what-ships-next>) sets out the admitted follow-on builds and workstation checks.
-
-**Takeaways**
-
-- **Dense-band refusals off Wikidata are gone (`#1040`, shipped).** Checking the dense-band cap from run records cuts median refused-block inverse time from 1.536× to 1.027× with zero `unsafe`. On pinned CI hardware, four-thread `text` runs 3.7% faster and Wikidata stays unchanged.
-- **Segmented fallback drops 15.4 to 16.1% on prose and source (`#1042`, PASS).** Sequential `LF` construction, AVX2 reverse assembly and invariant-checked run fills speed all 78 off-Wikidata `Segmented` blocks by 18.4 to 18.5% at zero extra memory. A 2-step `LF²` table blows up construction 3.9 to 4.2×.
-- **Reopening `C-A6b` needed all three sub-phases together (`#1046`, PASS).** Fused setup, safe fixed-size `Box<[T; 65536]>` `u16`-link `inline15` SoA steps and generation-tagged caches cut `A6b` by 27.4 to 28.8%. Full `C+E` drops 5.4 to 7.6% with zero `unsafe` and zero `A7` regression.
-- **Layout and deduplication both matter in `A6b`.** Structure-of-arrays beats 24-byte and 32-byte array-of-structures layouts by 4 to 7 ms. Dropping `contents` deduplication inflates dictionary entries by 73.3% and regresses downstream emission.
-- **Persistence includes knowing when a floor binds (`#1038`, scoped STOP).** Cleaning up contracted return-map construction cut contraction by 9.0 to 13.9% and fixed `runs.bz2`. Even so, bare 4-lane pointer chasing alone takes 30.6 ms and already exceeds the \~24 to 25 ms VM budget.
-
-## 1\. Off Wikidata: dense-cap precheck and Segmented's 16% comeback
-
-Our [previous post](<https://lmmx.github.io/mibz2/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/index.md>) showed a stark corpus split. On Wikidata, every full block enters our [Open Returns](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>) kernel. Off Wikidata, most full blocks fall back to the `Segmented` inverse-BWT decoder. Worse, every off-Wikidata block in Open's dense band (\\(r/n \\in \[0.15, 0.28\]\\)) paid for a failed first pass of Open before falling back.
-
-### Eliminating dense-band refusal penalties (`#1040`)
-
-The first fix is already shipped in [`src/open.rs`](<https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/src/open.rs>) and recorded in the [`dense-cap-precheck` delta](<https://github.com/lmmx/mibz2/blob/2915d7e79f7d53f0bfc9155c3005d47d4fdc895a/frontier/deltas/2026-11-27-dense-cap-precheck.md>). A safe single-pass helper called `within_cap` counts retained thin-run rows and thick strips straight from the run records. It runs only in the dense admission band (`cap.m != u32::MAX`) and adds zero `unsafe` code.
-
-We measured 24 dense-band refused blocks across five local corpora (`prose`, `pysrc`, `rustsrc`, `json` and `elf`) over seven interleaved repeats. The median per-block ratio against direct `Segmented` fell from **1.536× to 1.027×**. The summed inverse-time ratio fell from **1.404× to 0.984×**, leaving every corpus at 1.040× or below:
-
-| Corpus (refused dense blocks) | Blocks | Before (`prod / Segmented`) | After (`prod / Segmented`) |
-| --- | ---: | ---: | ---: |
-| `prose` | 7 | 1.486× | **0.950×** |
-| `pysrc` | 3 | 1.164× | **0.888×** |
-| `rustsrc` | 3 | 1.445× | **1.040×** |
-| `json` | 3 | 1.492× | **0.873×** |
-| `elf` | 8 | 1.432× | **1.036×** |
-| **Median of block ratios** | **24** | **1.536×** | **1.027×** |
-| **Summed inverse ratio** | **24** | **1.404×** | **0.984×** |
-
-*(Diagnostic VM repeats using `ROUTE_SHADOW=1` on the same 24 dense-band refused blocks.)*
-
-Wikidata pays almost nothing for this check. Guarding Wikidata's five dense blocks adds about 0.27 ms in total, or 0.03% of single-worker wall time. All 233 full Wikidata blocks still enter Open. On CI's pinned AMD EPYC runner across ten paired rounds, one-thread `wikidata` wall time shifted **−0.2%** (`−1.0%` to `+0.6%`, rising from 666 to 672 MB/s). On the same runner, four-thread `text` ran **−3.7% faster**.
-
-### Dissecting the Segmented fallback (`#1042`)
-
-Removing wasted refusals still leaves `Segmented` running on most off-Wikidata blocks. The [Segmented fallback dissection](<https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/docs/journal/2026-11-27-explore/segmented-fallback-dissection.md>) tested six `bzip2 -9` corpora totalling 82.18 MB raw. Across those files, **78 of 86 full blocks (90.7%)** ran `Segmented`, split into 48 `RunsFallback` blocks and 30 `Column` blocks. That covered all 25 blocks of `ab gen text` and 50 of 51 blocks across prose and source code.
-
-Profiling those 78 blocks exposed where the time goes. Inverse BWT takes 52.5 to 65.8% of worker time on text, prose, source and JSON, and 42.3% on ELF binaries. Within inverse BWT, building the navigation table (`build`) alone takes **35 to 46%** of the stage.
-
-Three zero-memory mechanisms stack into one winning arm called `C_trustfill+rev`. It matched `bwt::walk` byte for byte on all 78 blocks and touches zero Wikidata blocks:
-
-1. **Sequential `LF` column construction (`A_col_lf`).** Replacing the 256-stream random-scatter \\(\\Psi\\) build with a sequential `LF` pass plus an 8-byte equal-run fast path (`w == w.rotate_left(8)`) removes scattered writes. On the 30 `Column` blocks, this cuts steal-free thread CPU by **−23.4% baseline** and **−24.8% native**.
-2. **AVX2 32-byte reverse assembly (`B_col_lf+avx2rev`).** Walking `LF` emits each segment backwards. Reversing chunks with AVX2 `pshufb` and `vperm2i128` (with an 8-byte scalar `swap_bytes` fallback) cuts baseline assembly from **13.68 ms to 7.54 ms (−45%)**.
-3. **Invariant-checked `runs::fill_avx2` (`C_trustfill+rev`).** When run records come from `runs::front`, the buffer bounds and alphabet limits are already established in \\(O(1)\\). Skipping redundant per-run tiling checks and `lim[256]` guards cuts the 48 `RunsFallback` blocks by **−13.5% baseline** and **−14.0% native**.
-
-Off-Wikidata Segmented fallback: steal-free CPU reduction with C\_trustfill+rev (7 interleaved VM repeats)
-
-Source: `docs/journal/2026-11-27-explore/segmented-fallback-dissection.md` (\#1042, 7 interleaved repeats on a 2-vCPU Xeon VM). Primary comprises `text`, `prose`, `pysrc` and `rustsrc` (50 Segmented blocks).
-
-On the primary `prose/text + source` suite of 50 blocks, `C_trustfill+rev` cuts steal-free thread CPU by **−15.44% baseline** (`195.57 → 165.37 ms`) and **−16.05% native** (`189.88 → 159.40 ms`). Both builds show non-overlapping spreads. Across all 78 blocks in the six corpora, the saving reaches **−18.43% baseline** and **−18.54% native** with zero extra memory.
-
-The same probe also ruled out a classic literature idea: Kärkkäinen–Kempa–Puglisi 2-step `LF²` stored in `Vec<u64>`. That `D_lf2_u64` arm costs an extra 3.6 MiB per worker. Walking two bytes per pointer chase did cut walk time by **−15.0 to −15.7%** (`120.85 → 101.89 ms` baseline, `115.14 → 97.87 ms` native). Yet `build_lf2` blew up **3.9 to 4.2×** (`75.1 → 289.4 ms` baseline, `73.4 → 308.4 ms` native). Total inverse time ran **\+104.5 to +121.4% slower**, and the negative result now lives in [`frontier/dead-ends.tsv`](<https://github.com/lmmx/mibz2/blob/9f89ba509f8f0348d1b4358b95a48b7199112940/frontier/dead-ends.tsv>).
-
-## 2\. Reopening Open's middle stage with a safe 64K redesign
-
-Back on Wikidata, the [ideal-parts matrix](<https://lmmx.github.io/mibz2/blog/2026-11-26-complementary-bottlenecks/index.md>) priced Open's middle stage — endpoint induction (`C-A6b`, in `src/open/endpoint.rs`). On our 10-core i9-10900K, `C-A6b` takes **216.0 ms** on one worker (16.54% of the 1,306 ms wall) and **30.4 ms/worker** at eight workers. Earlier isolated Round 2 tweaks fell short of our 3% whole-decoder gate. In isolation, `inline7_node20` projected +2.48% and `no_contents_dedup` projected +0.99%.
-
-The [whole-`A6b` redesign probe](<https://github.com/lmmx/mibz2/blob/05c13b98253215fd66ae2024ff79b7e6adbfe947/docs/journal/2026-11-26-explore/a6b-combined-redesign.md>) (`#1046`) redesigned all three sub-phases of `A6b` together: `setup`, `steps` and `dict`. It priced the full `C + E` pipeline (`A6a + A6b + A6c + A7`) under both shipped bidirectional emission and matched forward emission.
-
-The winning design, `comb_nobc_soa_gen`, uses **zero `unsafe`**. It passed byte-exact verification against `bwt::walk` on all **431 of 431** Wikidata blocks:
-
-1. **`A6b-setup` (`26.5 → 15.4 ms`, −41.7%).** A single forward pass over `strips_raw` fuses strip-order building with strip and domain-gap creation. Scattering a packed `u64` into `image_order64` turns image-gap construction into a sequential scan with zero random gathers. Sentinel-0 list appends remove branches and direct `u16` links replace bit-packed read-modify-write updates.
-2. **`A6b-steps` (`64.2 → 43.8 ms`, −31.1 to −31.8%).** Step time falls from 24.1 to 16.4 ns/step by storing the structure-of-arrays tables in reusable `Box<[T; 65536]>` arenas indexed by `usize::from(u16)`. Because every `u16` is statically below 65,536, LLVM removes **100% of bounds checks** in safe Rust and saves roughly 8 ms over dynamic `Vec`. An `inline15` `u128` handle keeps short joins in registers and cuts rule allocations by **−54.6%** (`1,647,746 → 747,845`), while equal-width steps (`aw == bw`, 36.98% of steps) update in place.
-3. **`A6b-dict` (`40.7 → 34.8 ms`, −13.5 to −14.5%).** Short dictionary entries build straight from `u128` handles without `pairs` lookups. Persistent generation-tagged L1d-hot caches (`contents[4096]` at 16 KiB and `pairs[1024]` at 8 KiB) eliminate 24 KiB of per-block zero-fill. Dead `stats` counters are gated behind the `census` feature.
-
-A6b sub-phase ablation ladder on 233 admitted Wikidata blocks (baseline x86-64, shipped bidirectional emission)
-
-Source: `docs/journal/2026-11-26-explore/a6b-combined-redesign.md` (\#1046). Moving from dynamic `Vec` (`combined_soa_gen`) to safe `Box<[T; 65536]>` (`comb_nobc_soa_gen`) removes roughly 8 ms of bounds checks in `steps` with zero `unsafe`.
-
-We timed all four build × emission cells across seven interleaved repeats on a pinned 2-vCPU Xeon VM. In every cell, `comb_nobc_soa_gen` cuts `A6b` by **−27.4 to −28.8%** (`0.712×–0.726×`) and full `C + E` by **−5.4 to −7.6%** (`0.925×–0.946×`). Spreads are disjoint on both wall clock and thread CPU in all four cells:
-
-| Build × emission cell | `A6b` baseline → redesign (ms) | `A6b` ratio | `C + E` baseline → redesign (ms) | `A7` Δ | i9-anchored 1W Δ (`%1W`) | Modeled 8W Δ |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Baseline × shipped bidi | 131.66 → **95.08** | 0.722× | 566.31 → **533.05** | \+0.32% | **\+48.7 ms (+3.73%)** | \+8.2 ms/w |
-| Baseline × forward 1-lane | 130.41 → **94.71** | 0.726× | 508.05 → **473.78** | \+0.01% | **\+55.5 ms (+4.25%)** | \+8.3 ms/w |
-| Native × shipped bidi | 131.58 → **94.89** | 0.721× | 593.72 → **561.47** | \+0.15% | **\+51.7 ms (+3.96%)** | \+8.4 ms/w |
-| Native × forward 1-lane | 131.00 → **93.26** | 0.712× | 522.68 → **483.24** | −0.44% | **\+67.7 ms (+5.18%)** | \+9.1 ms/w |
-
-*(Diagnostic VM probe timings on 233 admitted Wikidata blocks. The i9-10900K columns are projections anchored to the 1,068.0 ms `C + E` baseline, not direct i9 runs yet.)*
-
-Two structural ablations explain why `comb_nobc_soa_gen` beat its sibling designs:
-
-- **SoA beats AoS by 4 to 7 ms.** Keeping `links` (8 B/node, \~78 KiB live) and `widths` (4 B/node, \~39 KiB live) separate from 16-byte `u128` words keeps neighbour edits compact in L2. Both 32-byte `AoS32` and 24-byte `AoS24-inline7` pull wider cache lines on every link update.
-- **Generation-tagged deduplication beats dropping dedup.** Dropping `contents` dedup (`comb_nobc_soa_nod`) shaves another 5.5 ms in `A6b-dict` (`34.8 → 29.3 ms`). Yet it inflates dictionary entries by **\+73.3%** (`246,680 → 427,381`) and regresses `A7` emission by **\+1.47 to +2.10%**, breaching our 1.0% guard. Generation-tagged caches preserve dictionary compactness (`246,683` vs `246,680` entries, `64,314` long entries and `9,888.3 KiB` of spelling) while keeping `A7` neutral (`−0.44%` to `+0.32%`).
-
-One real caveat remains for the production build. Three `Box<[T; 65536]>` arenas reserve **1.75 MiB of virtual memory per worker**. On Wikidata, each block touches only `0..nodes` (about 273 KiB average and 420 KiB max) and drops those arenas before `A6c` and `A7`. Verifying RSS and 8- to 10-worker L3 cache scaling on the i9-10900K is an explicit gate for the follow-on build.
-
-## 3\. Honest contrast: when rescue hits a structural floor
-
-Reopening a stage only stays trustworthy if failed rescues are priced just as strictly. Alongside `#1046`, we ran a constructor rescue ([`bwt-contraction-constructor-rescue`](<https://github.com/lmmx/mibz2/blob/3bb552a1612e058b362471aa866930af48154989/docs/journal/2026-11-24-algorithm-level/bwt-contraction-rescue/results.md>), `#1038`) on `#1013`'s contracted return-map idea. That approach removes low-cost `F`-buckets from Open's edge graph to shorten emission `A7`. Every arm used `#![forbid(unsafe_code)]` and passed **8,406 of 8,406** byte-identical exactness checks across both builds.
-
-Cold dissection on the training split (blocks `0..117`) found real contingent waste in `#1013`. Of its `37.6 MiB` of spelling writes, **72.4%** (`27.3 MiB`) were redundant re-copies of already-stored `LONG` prefix words. In addition, the **15.2%** of chains longer than 8 hops carried roughly **69%** of all eliminated hops.
-
-Fixing that waste helped substantially. The cleaner 1-lane redesign (`r1_clean1_2part`) cut contraction time by **−9.0% baseline** (`108.69 → 98.86 ms`) and **−13.9% native** (`111.44 → 95.94 ms`). An \\(O(1)\\) pre-construction guard (`m >= 32,768`, `elim_frac >= 0.55`) also removed `#1013`'s `runs.bz2` regression (`1.586× → 1.015×` baseline, `1.375× → 1.018×` native).
-
-Yet on held-out Wikidata across 116 blocks and seven interleaved repeats, neither pre-registered redesign approached forward emission:
-
-| Held-out arm (116 Wikidata blocks) | `contr` (ms, base / nat) | `A7` (ms, base / nat) | `C + E` (ms, base / nat) | vs 1-lane fwd (base / nat) | vs 4-lane oracle (base / nat) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `ctrl_fwd_1lane` | 0.0 / 0.0 | 108.5 / 121.4 | 242.3 / 278.0 | 1.000× / 1.000× | 1.138× / 1.163× |
-| `ctrl_fwd_4lane_ora` | 0.0 / 0.0 | 79.1 / 83.9 | 212.4 / 237.5 | 0.878× / 0.860× | 1.000× / 1.000× |
-| `ref1013_fb75_L16` | 108.7 / 111.4 | 38.3 / 42.8 | 283.8 / 311.9 | 1.171× / 1.127× | 1.336× / 1.310× |
-| `r1_clean1_2part` | **98.9 / 95.9** | 41.6 / 44.6 | 275.2 / 299.2 | **1.142× / 1.079×** | **1.299× / 1.261×** |
-| `r2_mlp4_buf_bump` | 104.6 / 111.2 | 44.0 / 47.7 | 285.3 / 315.5 | 1.177× / 1.140× | 1.346× / 1.317× |
-
-On 24 forced blocks of `text.bz2`, `r1_clean1_2part` still regressed **1.327× baseline** and **1.257× native** against 1-lane forward. Worse, the 4-lane MLP arm (`r2_mlp4_buf_bump`) ran slower than 1-lane `r1` on both builds. Variable chain lengths from 1 to 219 hops end a lane on **67.7%** of 4-lane iterations, causing branch mispredictions that flush out-of-order memory-level parallelism.
-
-Why post-A6c contraction hits a structural floor (baseline x86-64 VM ms; dashed line = max budget vs 4-lane oracle)
-
-Source: `docs/journal/2026-11-24-algorithm-level/bwt-contraction-rescue/results.md` (\#1038). Even with zero byte extraction, dictionary hashing or spelling writes, bare 4-lane pointer chasing (30.6 ms) already exceeds the entire \~24 to 25 ms VM budget needed to clear the +39.18 ms i9 gate over 4-lane forward emission.
-
-The stop verdict is therefore structural rather than a missed micro-optimisation. Fusing elimination into `A6c` breaks `Reader::wire`'s SIMD loop, adding `+3.7` to `+16.1 ms` to save `3.4 ms` of tagging. Running elimination after `A6c` hits a **30.6 ms** bare 4-lane chase floor (`prep_tag` 3.4 ms plus `pure_chase4` 27.2 ms) with zero byte work, dictionary hashing or spelling writes. That bare floor already exceeds the \~24 to 25 ms VM budget.
-
-Put `#1046` and `#1038` side by side and the boundary is sharp. `A6b` reopened because removable bookkeeping, bounds checks and allocations dominated three coupled sub-phases. Post-`A6c` contraction stopped because its irreducible chase floor exceeded what emission could give back.
-
-## 4\. What ships next
-
-These four merged results leave a clean, prioritized engineering queue. Every VM probe stays clearly separated from shipped production code and i9-10900K adoption gates:
-
-1. **Already shipped (`#1040`).** The `within_cap` dense-band precheck is live in `src/open.rs`. It stays neutral on Wikidata and speeds four-thread CI `text` by **−3.7%**.
-2. **Admitted build — [`segmented-fallback-build`](<https://github.com/lmmx/mibz2/blob/87401be2505b69d1bd153995bc8e0b984dd09aa9/frontier/claims/segmented-fallback-build.toml>) (`#1049`).** Port `C_trustfill+rev` into `src/bwt/` and `src/runs.rs` at zero extra memory. Confirm the gains across pinned CI corpora and the i9 workstation.
-3. **Admitted build — [`a6b-endpoint-build`](<https://github.com/lmmx/mibz2/blob/0eaf87f993ed7d6156bb48e5d608428ce0304253/frontier/claims/a6b-endpoint-build.toml>) (`#1051`).** Port `comb_nobc_soa_gen` into `src/open/endpoint.rs` with zero `unsafe`. Verify RSS and 8- to 10-worker L3 cache scaling on the i9-10900K, where `A6b` sits on the worker half of the eight-worker tie.
-4. **Admitted probe — [`forward-4lane-anchor-probe`](<https://github.com/lmmx/mibz2/blob/f2845b84bd3e8958745488f34af644d55481d005/frontier/claims/forward-4lane-anchor-probe.toml>) (`#1050`).** `#1038`'s own control table exposed a **\+110.7 to +129.0 ms** i9 gap between 1-lane forward emission and 4-lane oracle forward emission. This probe tests whether cheap in-`A6b`/`A6c` anchors can capture that 4-lane emission win without contraction's pointer-chase tax.
-
-[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
-
-# Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls
-
-Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.
-
-27 November 2026 · 8 min read · [Research result](<#4-what-changes-next>)
-
-**Two measurements from primary traces sharpen where mibz2 should spend its next engineering effort.** First, moving off our Wikidata benchmark exposes a blind spot. Across seven other corpora, 84% of full blocks bypass the Open inverse-BWT kernel completely, and every block in Open's dense admission band is refused *after* paying for a failed first pass. Second, replaying per-block timestamps at eight workers on Wikidata explains the 8 to 9 millisecond gap between shipped wall time and the bottleneck lower bound. Most of that gap is either already targeted by our seam-window patch or part of an irreducible queueing floor, leaving no hidden 3% lever in pipeline coordination.
-
-Both findings follow directly from [The decoder's true floor and the limits of a pooled scan](<https://lmmx.github.io/mibz2/blog/2026-11-26-true-floor-and-pooled-scan/index.md>). That post established that on our 10-core Intel i9-10900K machine, decoding four copies of Wikidata (838.8 MB uncompressed) at eight workers puts the serial Huffman scanner (`S`) and the eight workers (`W/8`) in a near-exact tie near 185 ms, while shipped wall time sits at 192.9 to 194.6 ms. Two natural questions remained open: how much of our Wikidata-tuned worker surface actually runs on ordinary files, and whether the 8 to 9 ms coupling gap at the eight-worker tie hides an unowned speedup.
-
-This post answers both from primary evidence. [Section 1](<#1-what-happens-when-the-decoder-leaves-wikidata>) reports the off-Wikidata route census and the exact cost of dense-band refusals. [Section 2](<#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table>) corrects a common accounting mistake about our 5.2 ms plumbing floor and validates a discrete-event replay of the parallel decoder. [Section 3](<#3-chunk-maintenance-stalls-and-runt-diluted-slots>) isolates the two mechanisms driving mid-stream stalls and prices the remaining floor at a future 150 ms tie. [Section 4](<#4-what-changes-next>) sets out the concrete changes these measurements justify.
-
-**Takeaways**
-
-- **Off Wikidata, Open runs on only 16% of full blocks.** Across seven local corpora (107 full blocks), 90 blocks run the Segmented fallback instead of Open, and all 25 blocks in Open's dense band (\\(r/n \\in \[0.15, 0.28\]\\)) are refused after running Open's first pass to its cap.
-- **Dense-band refusals cost 13 to 48% extra inverse time on refused blocks.** On ordinary prose, that wasted pass makes production 1.09 to 1.32 times slower than Segmented alone. A single pass over the run records predicts every refusal before Open begins.
-- **Do not subtract 5.2 ms of empty-pipeline plumbing from the eight-worker tie gap.** When real work runs, per-block handoffs overlap behind active stages. Unoverlapped handoff overhead is only 1.12 to 1.16 ms.
-- **Chunk maintenance amplifies the eight-worker tie by about 2.15 ms.** Eleven discrete 0.53 to 1.54 ms copy-and-drain stalls in `ChannelSource::view` skew the scanner across the four corpus copies. Removing them via a reused seam buffer recovers that coupling loss on top of its 10 to 11 ms direct scan reduction.
-- **No standalone 3% lever hides in the remaining coupling gap.** Post-seam at a balanced 150 ms tie, about 4.5 ms is an irreducible queueing, startup and handoff floor. The remaining unowned levers (runt-exempt slots and a smaller initial read chunk) cap near 2.5 ms combined, or 1.6% of wall time.
-
-## 1\. What happens when the decoder leaves Wikidata
-
-Almost every worker-side speedup we have measured so far targets the [Open Returns](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>) inverse-BWT kernel (`OpenCells`). On our Wikidata benchmark (`corpora/wikidata.bz2`, 431 blocks), all 233 full blocks enter Open because their run-to-row ratio \\(r/n\\) sits near 0.068. To test how often Open actually runs on other data, we ran a [route census](<https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/route-census.md>) across Wikidata and seven container-built `bzip2 -9` corpora spanning prose, source code, JSON, binaries, DNA and random bytes.
-
-Each full block (\\(n \\ge 100{,}000\\)) takes one of three routes:
-
-1. **Column route (`Segmented`):** move-to-front keeps the flat BWT column because runs are too short to compress into run records.
-2. **Open route (`OpenCells`):** run records pass admission and stay within Open's retained-row and thick-strip caps.
-3. **Run-route fallback (`Segmented`):** run records enter the run path, fail Open's gates or its dense-band cap, and fall back to Segmented inversion.
-
-| Corpus | Full blocks | Column (`Segmented`) | `Open` | Run-route fallback (`Segmented`) | \\(r/n\\) p10 / p50 / p90 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `wikidata` | 233 | 0 | 233 | 0 | 0.063 / 0.068 / 0.115 |
-| `prose` | 8 | 0 | 1 | 7 | 0.162 / 0.170 / 0.175 |
-| `pysrc` | 11 | 1 | 1 | 9 | 0.226 / 0.294 / 0.314 |
-| `rustsrc` | 16 | 0 | 8 | 8 | 0.053 / 0.158 / 0.229 |
-| `json` | 16 | 5 | 7 | 4 | 0.053 / 0.070 / 0.217 |
-| `elf` | 33 | 27 | 0 | 6 | 0.232 / 0.261 / 0.413 |
-| `dna` | 14 | 13 | 0 | 1 | 0.724 |
-| `random` | 9 | 9 | 0 | 0 | — |
-
-The split is stark. Off Wikidata, Open admits only **17 of 107 full blocks (16%)**. The column route takes 55 blocks and the run-route fallback takes 35, putting **84% of non-Wikidata full blocks** onto the Segmented kernel. Where Open does admit a block off Wikidata, it wins cleanly: 0.38 times Segmented on `json` (\\(r/n \< 0.15\\)) and 0.76 times on `rustsrc`, matching its 0.48 ratio on Wikidata.
-
-The real surprise sits in the dense band (\\(r/n \\in \[0.15, 0.28\]\\)). In [Admitting dense blocks to Open](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>), we added a bounded cap (`Cap::dense`: at most \\(\\min(256{,}000, 0.3n)\\) retained rows and 16,384 thick strips) fitted to Wikidata's five dense blocks. All five Wikidata blocks pass that cap and finish in 0.78 times Segmented's time. Off Wikidata, however, **all 25 blocks in the dense band fail the cap** — after Open has already executed its first pass up to the limit.
-
-| Corpus and dense-band outcome | Blocks | Production inverse (ms) | `Segmented` inverse (ms) | Ratio |
-| --- | ---: | ---: | ---: | ---: |
-| `prose` (refused) | 7 | 21.0 | 17.1 | 1.23 |
-| `rustsrc` (refused) | 8 | 28.0 | 20.6 | 1.36 |
-| `json` (refused) | 4 | 17.6 | 11.8 | 1.48 |
-| `elf` (refused) | 4 | 16.4 | 14.5 | 1.13 |
-| `pysrc` (refused) | 2 | 7.0 | 6.9 | 1.02 |
-| `wikidata` (admitted) | 5 | 11.4 | 14.6 | 0.78 |
-
-*(Single-thread timings on a 4-vCPU Xeon VM, production vs Segmented on the same blocks; shares and ratios are diagnostic, not workstation adoption evidence.)*
-
-Those 25 refused blocks waste about 19 ms (\~0.8 ms per block), or 13 to 48% on top of the fallback's own inverse time. On the whole `prose` file, production finishes 1.09 to 1.32 times slower than running Segmented directly. Yet the refusal is completely predictable before Open allocates or scans anything. Retained rows are simply the rows belonging to maximal runs of at most 16 bytes, plus the marked row. Summing thin runs across the run records in one cheap pass separates the two populations cleanly: every refused block exceeds 256,000 retained rows (the smallest is 257,495 on `elf`, and `prose` spans 311,318 to 380,411), while every admitted Wikidata block lies between 199,189 and 231,600. Thick strips never bind (at most 8,081 against 16,384).
-
-This reveals a sharp corpus asymmetry. Serial Huffman scanner improvements benefit every corpus equally because every route reads the same compressed bitstream. Open-kernel worker speedups cover 100% of Wikidata's full blocks but only 16% off Wikidata. Fixing the dense-band pre-check and dissecting the unowned Segmented fallback are therefore essential for ordinary text and source code.
-
-## 2\. Why the eight-worker tie leaves 8 to 9 ms on the table
-
-Turning back to eight workers on Wikidata (`wikidata ×4`, 1,724 blocks, 838.8 MB output on our i9-10900K), the operational lower bound is
-
-\\\[ L = \\max\\!\\left(S,\\;\\frac{W}{k}\\right), \\\]
-
-where \\(S\\) is total serial scanner busy time and \\(W/k\\) is mean worker busy time across \\(k = 8\\) workers. Across three primary i9-10900K evidence bundles — [character stage 1](<https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>) (48 grid runs plus 4 complete nanosecond per-block traces), the [zero-copy floor](<https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md>) (`cc8ba137`), and the [pooled-scan run](<https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md>) (`c71c4a56`) — shipped wall time exceeds \\(L\\) by **7.6 to 9.1 ms** (4.0 to 4.7% of wall):
-
-| Primary i9-10900K bundle (`k = 8`, medians, ms) | Untimed wall | Traced wall | `scan_busy` | `wkr_busy/8` | `wall − max` | `slot_wait` (waits) | `in_wait` | `job_wait/8` |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `character-stage1` grid `none` (\\(n = 48\\)) | — | 192.27 | 184.45 | 182.67 | **7.57** | 3.25 (13) | 1.39 | 8.41 |
-| `character-stage1` traced `r0`–`r3` mean | — | 195.61 | 184.99 | 185.64 | **9.13** | 5.20 (19) | 1.43 | 9.57 |
-| `zero-copy-floor` `none` (pinned CPU 6) | 194.57 | 194.36 | 184.35 | 186.35 | **8.01** | 6.10 (24) | 1.26 | 6.94 |
-| `pooled-scan` `none` (unpinned) | 192.93 | 193.72 | 184.79 | 184.86 | **8.86** | 4.11 (14) | 1.34 | 8.50 |
-| `pooled-scan` `S` (scan ideal, workers bind) | 184.88 | 185.35 | 1.61 | 184.19 | **1.16** | 180.14 (1,342) | 0.00 | 0.22 |
-| `pooled-scan` `SC` (scan + construction ideal) | 135.31 | 133.30 | 1.46 | 132.18 | **1.12** | 129.15 (1,256) | 0.00 | 0.23 |
-
-That table immediately corrects a tempting accounting error. It is easy to subtract our all-ideal `SFCMRD` plumbing floor (5.2 ms) from the 9.1 ms gap and assume only \~3.9 ms is queueing loss. **That subtraction is wrong.** In `SFCMRD`, all 5.2 ms sit exposed because no real decoding work runs alongside them. As soon as real worker stages run (`S` and `SC` above, or `SFMRD` at 0.88 ms and `SECMRD` at 0.69 ms), per-block handoffs (`issue` 0.65 ms, `pool+publish` 0.07 ms per worker, and mutex acquisitions of 0.3 ms scanner / 0.06 ms worker) overlap behind real compute. The true unoverlapped handoff residual above \\(L\\) is only **1.12 to 1.16 ms**.
-
-To break down the rest of the 9.13 ms gap without guessing, our [coupling dissection](<https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/eight-worker-coupling.md>) built a discrete-event simulator implementing the exact admission guard (`Shared::full`), FIFO job queue (`Jobs`), \\(k\\)-worker pool, and in-order `Ready` ring from `src/parallel.rs`. Fed the recorded per-block service times from all four traced rounds (`blocks-r00` to `blocks-r03`), the replay tracks real wall time to within **0.94 to 1.36 ms** (mean **\+1.15 ms**, matching `S` and `SC`'s handoff residual):
-
-| Round (`k = 8`) | \\(S\\) (ms) | \\(W/8\\) (ms) | \\(L = \\max\\) | Real wall (`slot_wait`) | Replay wall (`slot_wait`) | Real − Replay |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `r0` | 183.99 | 188.31 | 188.31 | 198.89 (9.61) | 197.53 (8.72) | \+1.36 ms |
-| `r1` | 183.24 | 182.58 | 183.24 | 192.02 (3.27) | 190.93 (2.56) | \+1.09 ms |
-| `r2` | 184.13 | 181.43 | 184.13 | 192.33 (2.18) | 191.11 (1.46) | \+1.21 ms |
-| `r3` | 188.59 | 190.24 | 190.24 | 199.21 (5.74) | 198.27 (5.10) | \+0.94 ms |
-| **Mean** | **184.99** | **185.64** | **186.48** | **195.61 (5.20)** | **194.46 (4.46)** | **\+1.15 ms** |
-
-Because the replay reproduces real wall time and `slot_wait` closely across all four rounds, toggling one pipeline rule at a time isolates each physical source of delay.
-
-## 3\. Chunk maintenance stalls and runt-diluted slots
-
-Four mechanisms explain the entire gap above \\(L\\).
-
-### 1\. Stop-the-world chunk maintenance creates a mid-decode phase inversion (\~2.15 ms coupling bonus)
-
-Whenever a block's lookahead crosses a 4 MiB input chunk boundary, `ChannelSource::view` (`src/parallel.rs`) drains the buffer and copies the incoming chunk on the serial scanner thread (`in_maint`: 10.1 to 11.2 ms at eight workers). In the per-block traces, that 10.1 ms is not smooth overhead. It arrives as **11 discrete stop-the-world stalls of 0.16 to 1.54 ms**, heavily front-loaded across the four identical 431-block copies as the window buffer grows and faults pages:
-
-\\\[ \\text{in\\\_maint}(c\_0, c\_1, c\_2, c\_3) = (3.81,\\; 3.09,\\; 1.86,\\; 1.40)\\;\\text{ms}. \\\]
-
-That slope pulls scanner time from 48.74 ms on copy 0 down to 44.61 ms on copy 3, while worker time changes far less (47.95 to 45.22 ms). On copies 0 and 1, the scanner falls behind and starves the workers. On copies 2 and 3, the scanner surges ahead and hits the admission window. In the exact-tie replay (\\(S = W/8\\), zero startup), removing `in_maint` drops the mid-stream coupling gap from **6.61 ms to 4.46 ms** — a **2.15 ms coupling bonus** that our seam-window patch captures automatically on top of its 10 to 11 ms direct scan cut.
-
-### 2\. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)
-
-Wikidata is not clustered into bursts of full blocks and bursts of tiny runts. Its 233 full blocks (\~900 KB) and 198 runts (median 8 to 30 bytes) alternate almost everywhere (`F.F.F.F…`; max runt streak is 2). Yet `Shared::full` counts every block equally against `SLOTS_PER_THREAD × k = 32` slots. As a result, **15 to 16 of the 32 slots always hold tiny runts**, leaving only 15 to 17 full blocks of slack.
-
-Meanwhile, `READY_BYTES` (12 MiB) **never fires at eight workers**: `slot_cap` is 0.00 ms across all 48 grid runs, and median peak ready bytes is only 6.01 MiB. Every single `slot_wait` at eight workers is a 32-slot head-of-line stall caused by one slow executing block (such as block offsets 56, 171, 278, and 389, taking 2.1 to 3.4 ms). While that single worker finishes, the scanner runs 32 places ahead (offsets 88, 203, 310, and 421) and blocks.
-
-Importantly, `slot_wait` and worker `job_wait` are **sequential, not simultaneous**. Intersecting the exact nanosecond intervals in `blocks-r00` through `blocks-r03` shows mean worker idle time during `slot_wait` is only **0.033 to 0.042 ms** in rounds 1 to 3 (matching `pooled-scan`'s 0.04 ms). Every worker is busy while the scanner waits, and the lost scanner time reappears downstream as worker starvation once the slow block clears.
-
-Expanding the window to 64 slots — or exempting tiny runts from the 32-slot count — captures 100% of the infinite-window wall saving. Today (with `in_maint` still present) that saves 2.10 ms (1.08%); at a future 150 ms exact tie *after* the seam window lands, it saves only **1.21 ms (0.77%)**. Trying to inline runt decoding onto the scanner thread makes wall time *worse* (+1.12 ms) because it adds worker CPU directly onto the tied serial scanner.
-
-### 3\. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)
-
-Startup accounts for 2.41 ms median across 48 runs (2.62 ms mean in `r0`–`r3`), split into two pieces:
-
-- **1.22 ms** spawning `k + 2` OS threads before the scanner starts block 0 (a one-shot per-stream cost that amortises to zero on larger inputs);
-- **1.40 ms** of block-0 `in_wait` (1.26 to 1.40 ms across all three bundles), because the feeder thread (`src/read.rs`) allocates a fresh 4 MiB buffer and reads all 4 MiB before pushing chunk 0, while the scanner and all eight workers sit idle waiting for a \~25 KiB first block.
-
-Starting with a smaller first chunk (for example 256 KiB before ramping to 4 MiB) recovers about **1.35 ms** (0.68% today; 0.86% at a 150 ms tie), once per stream.
-
-### 4\. The irreducible queueing floor and cross-talk
-
-Even with infinite slots, zero startup, and zero `in_maint`, a balanced 150 ms tie still pays **2.19 ms (1.44%)** above \\(L\\): about 0.7 ms for one-block fill and drain, 0.6 ms from full-vs-runt size bimodality, and 0.9 ms from within-class block-time variance and eight-worker end-of-stream finish spread. Adding thread spawn (1.22 ms) and unoverlapped handoff overhead (\~1.1 ms) gives an **irreducible floor near 4.5 ms**.
-
-Cache cross-talk between the scanner and workers is also smaller than it looks at first glance. Comparing pinned `none` against scan-alone `FCMRD` at eight workers (`zero-copy-floor`) shows scanner active time rising by +9.67 ms: +4.16 ms is `in_maint` memory contention (already removed by the seam window), +1.50 ms is the 4.95 → 4.90 GHz all-core turbo step, and +4.46 ms in Huffman decode (`A3`) is a one-worker cross-core `free_syms` coherence handoff that is already present at \\(k = 1\\) and stays completely flat (746 to 752 Gcycles) from 6 to 10 workers. Worker-side cross-talk from the scanner is only +0.67 ms (`S` vs `none`).
-
-| Component of the 8-worker coupling gap | Today (`r0`–`r3`, \~195.6 ms) | Future 150 ms tie (post-seam, \~157.5 ms) | Status / ceiling |
-| --- | ---: | ---: | --- |
-| `in_maint` coupling amplification | \~2.15 ms | 0.00 ms | Covered by seam-window patch |
-| 32-slot HOL window (runt dilution) | \~2.10 ms | **1.21 ms (0.77%)** | Unowned; runt-exempt 32 slots |
-| Block-0 `in_wait` (4 MiB first chunk) | 1.40 ms | **1.35 ms (0.86%)** | Unowned; one-shot startup |
-| OS thread spawn (`t_first_scan_start`) | 1.22 ms | 1.22 ms (0.77%) | Irreducible per decode call |
-| Indivisible-block variance &amp; drain tail | \~1.11 ms | **2.19 ms (1.39%)** | Irreducible queueing floor |
-| Handoff / wakeup residual (`Real − Replay`) | 1.15 ms | \~1.1 ms (0.7%) | Closed plumbing residual |
-| **Total coupling gap** | **9.13 ms (4.67%)** | **\~7.5 ms (4.8%)** | **Combined unowned ceiling: \~2.5 ms (1.6%)** |
-
-## 4\. What changes next
-
-Together, these two measurements close a dead-end temptation and open a neglected axis of real performance work:
-
-1. **Do not chase a standalone coupling project at eight workers.** Once the input seam window removes `in_maint` and its 2.15 ms coupling bonus, the remaining unowned coupling mechanisms cap near 2.5 ms (1.6% at a 150 ms tie). Reaching our 6 GB/s (\~140 ms) research milestone still depends on algorithmic cuts to both the scanner and the workers.
-2. **Keep `READY_BYTES` distinct from `SLOTS_PER_THREAD` when tuning L3 cache pressure.** Because `READY_BYTES` never fires at eight workers while 32 slots already suffer runt-diluted head-of-line stalls, shrinking `SLOTS_PER_THREAD` below 4 would regress eight-worker throughput unless runts are excluded from the slot count. Bounding `READY_BYTES` alone protects 9-to-10-worker L3 residency without hurting eight workers.
-3. **Fix dense-band refusals and map the Segmented fallback.** A one-pass thin-run pre-check removes the 13 to 48% dense-band regression on prose and source code with zero Wikidata impact, and a dedicated phase dissection of `Segmented` now targets the 84% of non-Wikidata blocks that our Wikidata-only surface never showed.
-4. **Land the seam window first on the workstation queue.** It removes 10 to 11 ms of serial `in_maint` copy work plus 2.15 ms of coupling distortion, giving both the worker-side fold test and the combined scanner improvements a clean, stationary baseline.
+- The i9-10900K baseline: [the zero-copy floor run](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md>) (838.8 MB in 194.6 ms at eight workers) and [the decoder baseline](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/DECODER.md>); one-worker stage times from [the stage-1 report](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt>).
+- The four-lane walk: [the sampled-starting-point probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md>) (\#1050, \#1057); the build behind an experimental option, [\#1110](<https://github.com/lmmx/mibz2/pull/1110>), with [its registration](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-forward-emission/registration.md>).
+- Fused expansion and checksum: [the fusion probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md>) (\#1045). Delivery in pieces: [the delivery probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md>) (\#1058).
+- The middle of construction: [the combined redesign probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-26-explore/a6b-combined-redesign.md>) (\#1046); the build behind an experimental option, [\#1053](<https://github.com/lmmx/mibz2/pull/1053>), with [its registration](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-a6b-endpoint-build/registration.md>); the first workstation attempt, [recorded as incomplete](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/deltas/2026-11-27-a6b-workstation-incomplete.md>).
+- Batched move-to-front: [the register-spill dissection](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md>) (\#1048) and [the batching probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md>) (\#1055); the implementation in review, [\#1132](<https://github.com/lmmx/mibz2/pull/1132>).
+- The composed worker: [the first composition](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/composed-worker-stack-probe.md>) (\#1062), [the slab-size and outlining round](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/composed-worker-v2-probe.md>) (\#1067) and [the lane-count and layout probe](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/w4-v3-mlp-layout-probe.md>) (\#1076).
+- The scanner's headers: [the header dissection](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/scanner-a2-dissection.md>) (\#1069); the implementation in review, [\#1117](<https://github.com/lmmx/mibz2/pull/1117>).
+- Eight workers: [the slack-only scanning study](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md>) (\#1056) and [its registration](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/docs/journal/2026-11-24-algorithm-level/pooled-scan/hybrid-registration.md>) (\#1142); the scanner change not adopted, [the i9 verdict](<https://github.com/lmmx/mibz2/blob/6e8cc8e0f9c54dcca55b89cbf9f70802b1f30ab1/frontier/deltas/2026-11-27-scanner-seam-window-i9-verdict.md>) (\#1118).
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
