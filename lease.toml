@@ -1,13 +1,13 @@
 id = "scanner-adaptive-seam-window"
 holder = "claude-code"
-session = "8d244e1c6f48"
+session = "b4d197fc1da9"
 claimed_at = "2026-11-27T09:19:41+00:00"
-expires = "2026-11-28T01:53:20+00:00"
+expires = "2026-11-28T02:58:35+00:00"
 owned_paths = ["src/stream.rs", "src/parallel.rs", "src/trace.rs"]
 mechanisms = ["scanner-adaptive-lookahead", "scanner-oneshot-seam"]
 base = "d2e5f46337edd89f9801f1883f87ffd50355c095"
 released = false
 producer = "antigravity"
-phase = "parked"
+phase = "integration"
 pr = 1144
-pr_head = "e8b58598e3da7716880c101a641d85cdbc6b075e"
+pr_head = "0fda23812aecd8e170a88cb226933cf0fe318630"
