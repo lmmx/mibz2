@@ -1,9 +1,9 @@
-id = "crc32-avx2-ring-rescue"
-holder = "claude-code"
-session = "68b546a7967f"
-claimed_at = "2026-11-28T03:20:45+00:00"
-expires = "2026-11-28T15:20:45+00:00"
-owned_paths = ["src/crc.rs"]
-mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
-base = "0179ca9ddd74d49c83d3fe064c2f076a9d2f504a"
+id = "segmented-fused-postwalk-rescue"
+holder = "antigravity"
+session = "23144619b91b"
+claimed_at = "2026-11-28T03:51:15+00:00"
+expires = "2026-11-28T11:51:15+00:00"
+owned_paths = ["src/bwt.rs", "src/rle.rs", "src/lib.rs"]
+mechanisms = ["segmented-fused-postwalk"]
+base = "be5826b5908b6afbddb5a2c05e42e54a93a9bc53"
 released = false
