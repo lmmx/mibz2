@@ -12,7 +12,7 @@ Live, on origin and GitHub, 28 Nov:
 - (d) A read-only probe of v0.5.18's pins read: `ready/bench-release-preflight` at 7be50513, ready with no authoritative set time. Its evidence: no bundle yet. `recalibrate-0518` at b4d25f64: `returned-unread`, evidence commit 11:11:05Z. `v0.5.18`: not set.
 - (e) The integration's PR-body footer turned `no-ai-attribution` red at 775de062. The watcher reported `failed`, not ready.
 - (f) Live bug, fixed: after a re-run, GitHub still lists the earlier failed attempt at the same head, and the probe stayed `failed`. Only the latest run per check name counts now (`summarise_checks`, with a test).
-- (g) Live pickup on a green head: recorded in the next commit.
+- (g) Live pickup at 1b041915: authoritative ready (last check completed) 12:22:32Z; observed after 54 s, bounded by the 60 s poll cap; acquired 2 s later. Ready-to-acquire is 56 s, inside the 1-2 min aim, with the session already on the chain. This commit's own head is checked by hand.
 **What changed:** the new module and tests, the runbook, rows in README's files table, a step-5 pointer, and a `frontier.yml` step that runs the new tests. `frontier.py` and `test_frontier.py` are untouched (#1341's hold).
 **What's next:**
 - An independent review of #1356; the claim requires one.
