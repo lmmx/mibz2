@@ -9,3 +9,6 @@ key = "continuation-runbook--await-own-ci"
 next = "read CI; mark claim review with pr=1356"
 priority = 1
 state = "waiting"
+waiter_holder = "claude-code"
+waiter_session = "w1"
+waiter_until = 1795866884
