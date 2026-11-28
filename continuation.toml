@@ -1,0 +1,11 @@
+action = "brief-after-1341"
+by = "claude-code"
+claim = "continuation-runbook"
+critical = false
+declared_at = 1795865948
+dep = "merged:1341@09abcd990d3cc46862f0629fcdd63bfd5e445b66"
+independent = false
+key = "continuation-runbook--brief-after-1341"
+next = "embed continuation view in frontier.py brief/status (minimal follow-up)"
+priority = 2
+state = "waiting"
