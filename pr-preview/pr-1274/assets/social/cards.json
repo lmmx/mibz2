@@ -363,6 +363,13 @@
     "section": " · Research blog",
     "title": "Why compression ratio moves the scaling ceiling"
   },
+  "assets/social/blog-2026-11-28-four-lanes-forward.png": {
+    "description": "Walking the inverse BWT cycle forward across four safe Rust lanes lets workers outrun the serial scanner, alongside three default speedups.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Walking the Burrows–Wheeler cycle forward across four lanes"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
