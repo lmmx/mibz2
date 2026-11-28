@@ -653,6 +653,14 @@ def view(store, *, clock=None, claims=None, holds=None, can=None, probe=None, in
         cls, detail = state, rec.get("last_detail", "")
         c = claims.get(rec.get("claim"), {})
         h = holds.get(rec.get("claim"))
+        o = None
+        if state == "waiting" and probe is not None:
+            try:
+                o = probe(parse_dep(rec["dep"]))
+            except Exception as exc:  # a probe failure is unknown, never absence
+                o = Observation("unknown", detail=str(exc))
+            detail = o.detail
+        pin = f"pin {o.state}: {o.detail}" if o is not None else ""
         if state in TERMINAL:
             cls = state
         elif c.get("needs_louis"):
@@ -668,23 +676,17 @@ def view(store, *, clock=None, claims=None, holds=None, can=None, probe=None, in
             cls, detail = "held", f"claim held by {h.get('holder')}"
         elif state == "acquired":
             cls, detail = "ready", f"acquisition by {rec.get('acquired_by')} lapsed"
-        elif state == "waiting":
-            if probe is not None:
-                try:
-                    o = probe(parse_dep(rec["dep"]))
-                except Exception as exc:  # a probe failure is unknown, never absence
-                    o = Observation("unknown", detail=str(exc))
-                cls = {
-                    "ready": "ready",
-                    "unknown": "unknown",
-                    "failed": "failed",
-                    "superseded": "superseded",
-                }.get(o.state, "waiting")
-                detail = o.detail
-            if waiter_live(rec, t):
-                detail = (
-                    detail + "; " if detail else ""
-                ) + f"watched by {rec.get('waiter_holder')}"
+        elif o is not None:
+            cls = {
+                "ready": "ready",
+                "unknown": "unknown",
+                "failed": "failed",
+                "superseded": "superseded",
+            }.get(o.state, "waiting")
+        if pin and cls in ("owner-blocked", "capability-blocked", "held"):
+            detail = f"{detail}; {pin}"
+        if state == "waiting" and waiter_live(rec, t):
+            detail = (detail + "; " if detail else "") + f"watched by {rec.get('waiter_holder')}"
         if cls == "done" and not include_done:
             continue
         prio = min(int(rec.get("priority", 3)), int(c.get("priority", 9)))

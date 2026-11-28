@@ -793,5 +793,22 @@ class TestAuthorityBounds(unittest.TestCase):
         self.assertIn("merge under gates", r.detail)
 
 
+class TestViewAfterFreeze(unittest.TestCase):
+    """Added after the freeze: a held row still reports its pin's probed state."""
+
+    def test_held_row_reports_pin(self):
+        store = cont.MemoryStore()
+        c = FakeClock()
+        cont.declare(store, "h", "a", f"pr:1@{SHA_A}", by="x", clock=c)
+        rows = cont.view(
+            store,
+            clock=c,
+            holds={"h": {"holder": "peer", "live": True}},
+            probe=lambda dep: obs("waiting", detail="checks pending"),
+        )
+        self.assertEqual(rows[0]["class"], "held")
+        self.assertIn("pin waiting: checks pending", rows[0]["detail"])
+
+
 if __name__ == "__main__":
     unittest.main()
