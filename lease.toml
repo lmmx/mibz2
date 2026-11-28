@@ -1,9 +1,9 @@
-id = "release-0-5-18"
+id = "ship-completion-pressure"
 holder = "antigravity"
-session = "c11775a02c88"
-claimed_at = "2026-11-28T09:34:53+00:00"
-expires = "2026-11-28T15:34:53+00:00"
-owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
-mechanisms = ["release"]
-base = "964813abfb783421c5d12f8b22345ae4b037b230"
+session = "789fe6a23372"
+claimed_at = "2026-11-28T09:57:20+00:00"
+expires = "2026-11-28T13:57:20+00:00"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+mechanisms = ["release-completion-pressure"]
+base = "61763de3f396bd1e7bd7d1c6309c1376431be245"
 released = false
