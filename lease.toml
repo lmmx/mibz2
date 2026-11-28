@@ -1,9 +1,9 @@
-id = "synthesise"
-holder = "antigravity"
-session = "16b4f21bbd84"
-claimed_at = "2026-11-28T04:50:14+00:00"
-expires = "2026-11-28T12:50:14+00:00"
-owned_paths = []
-mechanisms = []
-base = "3d98e71a7ec259773b2c556cabd927c835b73098"
+id = "runs-front-i9-rescue"
+holder = "claude-code"
+session = "0daf3ed2dd8c"
+claimed_at = "2026-11-28T01:28:41+00:00"
+expires = "2026-11-28T10:53:17+00:00"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["runs-front-u64-vptest-p1", "runs-front-u32-counts", "runs-front-hoisted-steps"]
+base = "629222aab45f65743ae2d98443f76b1d1c7a1265"
 released = false
