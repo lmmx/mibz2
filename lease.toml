@@ -1,9 +1,9 @@
-id = "correspondence-kinds"
+id = "synthesise"
 holder = "antigravity"
-session = "1447c84fc6de"
-claimed_at = "2026-11-28T16:37:34+00:00"
-expires = "2026-11-29T00:37:34+00:00"
+session = "a93aa4930a3b"
+claimed_at = "2026-11-28T16:46:23+00:00"
+expires = "2026-11-29T00:46:23+00:00"
 owned_paths = []
-mechanisms = ["frontier-correspondence-kinds"]
-base = "9d1858c1655131c0978f12c83445182dfac95c48"
+mechanisms = []
+base = "f0a340b0617ea7b1459f06ed1ce9df2623188364"
 released = false
