@@ -9,3 +9,6 @@ key = "continuation-runbook--await-ci-775de06-r2"
 next = "record pickup latency; leave for independent review"
 priority = 1
 state = "waiting"
+waiter_holder = "claude-code"
+waiter_session = "w5"
+waiter_until = 1795868244
