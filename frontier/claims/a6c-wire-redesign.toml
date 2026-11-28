@@ -1,0 +1,41 @@
+id = "a6c-wire-redesign"
+title = "Zero-bounds-check Cell wire_xor and overlapping-SIMD register-cursor wire in src/open/outq.rs"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/open/outq.rs", "src/open.rs"]
+mechanisms = ["a6c-wire", "outq-reader"]
+needs_louis = ""
+question = """
+`a6c-wire-dissection` (`docs/journal/2026-11-27-explore/a6c-wire-dissection.md`) passed its frozen stop test across all 3 builds (baseline x86-64, native, JCC-32B-aligned native) and both cache regimes (warm & L3-cold) with 13,008/13,008 bit-identical checks, zero guard regressions, and `1.00x` worker scratch memory (0 B extra allocation on `OutQ16<512,512>`):
+1. **Shipped bidirectional `Reader::wire_xor` (100% safe Rust, `#![forbid(unsafe_code)]`):** wrapping `&mut edges[..padded_len(m)]` with `std::cell::Cell::from_mut(...).as_slice_of_cells()` allows `dst_cells: &[Cell<u32>]` and `ep: &[Cell<u32>; 65536]` to coexist in safe Rust — eliminating BOTH per-element bounds checks (`edges[u]` and `edges[v]`), hoisting `mark_byte` (captured in Pass 1) and `mark_epoch` to eliminate `if v == mark` on 99.6% of rows, keeping the `OutQ16` chunk cursor in registers, and unrolling 4x in a single `OutQ16` pass (`B1b_cell_zerobc_4x`: `-26.91%` base warm, `-23.55%` base cold, `-20.19%` JCC-32B warm, `-17.53%` JCC-32B cold, all `DISJ_FASTER`, 95% CI upper `<= 0.8357`; with `Q1008`, `B6_cell_q1008_safe` reaches `-27.38%/-23.83%` base and `-24.38%/-20.15%` JCC-32B, plus `-12.18%..-13.51%` joint `A6a+A6c`).
+2. **Post-`#1110` forward `Reader::wire` (100% safe Rust, optional runtime-dispatched AVX2):** keeping the chunk cursor in registers and replacing LLVM's `>= 32` / `% 32` / `% 8` / scalar-tail cascade (which fails on `78.95%` of Wikidata bands where `span < 32`) with a branch-minimized fixed-width `8/4/2/1` overlapping tail (`F2_reg_overlap_safe`: `-21.53%/-17.59%` base, `-19.99%/-12.72%` JCC-32B; on `Q1008`, `F5_reg_q1008_safe` reaches `-28.10%/-22.22%` base and `-23.74%/-15.59%` JCC-32B; optional runtime-dispatched AVX2 `16/8/4/2/1` `F3b`/`F6` pushes baseline x86-64 wheels to `-25.0%..-33.2%`).
+
+Implement `B1b`/`B6` (`Cell`-based zero-bounds-check `wire_xor` + `mark_byte` hoisting) and `F2`/`F5` (register-cursor overlapping-tail `wire`, with optional B5-audited AVX2 dispatch for baseline wheels if justified) in `src/open/outq.rs` and `src/open.rs` once `mtf-fold-l1-batch-redesign` (`#1132`) finishes its edits to `src/open/outq.rs`.
+"""
+why = """
+Directly cuts the largest remaining undissected Open construction cost with ZERO extra worker RSS (avoiding the `+524 KiB/worker` L3-cliff regression observed in `#1151`): projects `~33-44 ms` 1W / `~4.5-5.5 ms/w` 8W on shipped `bidi` (`A6c = 161.4 ms` 1W) and `~9-20 ms` 1W / `~1.3-2.8 ms/w` 8W on post-`#1110` `forward-anchor-lanes` (`A6c ~ 55-65 ms` 1W) in ~120 LOC of 100% safe Rust. Parked at P3 `idea` so it does not contend with `mtf-fold-l1-batch-redesign`'s active hold on `src/open/outq.rs` and stacks cleanly onto `#1132`'s `Q496`/`Q1008` chunking.
+"""
+stop_test = """
+Frozen before data:
+1. 100% byte-, CRC-, and error-identical across `cargo test`, `fuzz-smoke`, Miri on `src/open/outq.rs` + `src/open.rs`, `examples/a6c_wire_dissection.rs` stress cases (overflow chunks `ovf > 0`, `m == 65535/65536/70000`, `mark` at `0/65535/65536/m-1`, self-loop `u == v`), and `wikidata x4` (zero new `unsafe` for the safe `Cell` + overlapping-tail path; any optional runtime-dispatched AVX2 `wire` arm must pass B5 audit + Miri on scalar fallback).
+2. `<= 1.01x` peak worker RSS at 1W and 8W (0 extra fixed slab allocations; `padded_len(m)` strictly within existing `edges` capacity or `<= +65535` u32s).
+3. Isolated `A6c` steal-free CPU cut `>= 15.0%` on shipped `wire_xor` (and `>= 12.0%` on forward `wire` on baseline x86-64), AND exact-head CI paired `ab` bench passes `PERFORMANCE-POLICY.md` section 2 across all 7 CI corpora (`wikidata`, `text`, `onebyte`, `pattern`, `random`, `records`, `runs`) at 1T/2T/4T (expecting a clean win on `wikidata` and guard corpora with zero regressions).
+Otherwise STOP and record a dead-end row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Merged striated PR in `src/open/outq.rs` and `src/open.rs` passing (1)-(3) on exact-head CI (both default `bidi` and `--features forward-anchor-lanes`), with a delta and `frontier/surface.tsv` row `C-A6c` updated.
+"""
+premises = [
+  "docs/journal/2026-11-27-explore/a6c-wire-dissection.md",
+  "examples/a6c_wire_dissection.rs",
+  "frontier/claims/mtf-fold-l1-batch-redesign.toml",
+  "frontier/claims/forward-emission.toml",
+]
+links = [
+  "frontier/deltas/2026-11-27-a6c-wire-dissection.md",
+  "frontier/claims/mtf-fold-l1-batch-redesign.toml",
+  "frontier/claims/forward-emission.toml",
+]

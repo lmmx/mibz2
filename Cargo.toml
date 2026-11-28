@@ -26,7 +26,7 @@ name = "mibz2"
 readme = "README.md"
 repository = "https://github.com/lmmx/mibz2"
 rust-version = "1.80"
-version = "0.5.14"
+version = "0.5.17"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -135,6 +135,12 @@ mtf-fold = []
 # replace (Wide fallback preserved), and generation-tagged L1d caches (contents[4096], pairs[1024]).
 # Zero new unsafe; default build unchanged. Retain until i9 paired A/B evaluation is read
 a6b-endpoint-redesign = []
+# Research only: the open kernel's emission walk over forward links from 16 bit-31-tagged sampled
+# anchors, four lanes at a time, into 32 KiB slabs stitched back into `out` (src/open/lanes.rs,
+# the wiring choice in src/open.rs; claim `forward-emission`, frozen kill-test registration
+# docs/journal/2026-11-27-forward-emission/registration.md). Zero new unsafe; default build
+# unchanged. Retain until its workstation kill test is read
+forward-anchor-lanes = []
 # Research only: zero-copy lock-free scan oracle (S, src/scan_oracle.rs, hooks in
 # src/parallel.rs, src/runs.rs, src/runs/fold.rs, src/mtf.rs): records each block's symbols
 # outside the clock and replays lightweight headers while workers borrow `&[u16]` directly from

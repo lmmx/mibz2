@@ -41,27 +41,28 @@ const WINDOWS: usize = 64;
 const RUN_SHARE: usize = 32;
 
 /// Whether the decoder takes the run records' path for `b` (else the column's): the block is
-/// below 2^24 rows, its symbols number at most half its bound, and at least one in RUN_SHARE
-/// of them, in a sample, is a run symbol.
+/// below 2^24 rows, its symbols number at most three-quarters of its bound (`4 * len <= 3 * max_len`),
+/// and at least one in RUN_SHARE of them, in a sample, is a run symbol.
 ///
 /// **The bound,** not the length, as the length is known only after the front; for a full
-/// block they are about equal. The cut is set by instruction counts
-/// (docs/journal/2026-11-10-run-front-production.md §4): Wikidata's blocks (0.05-0.22 symbols
-/// a row) and text's (0.47) decode in 10-16% fewer instructions by records; high-entropy
-/// blocks (a symbol a row: a record a row, each dearer to fill than the column's row) in
-/// 18-19% more, so they keep the column.
+/// block they are about equal. The cut was widened from `0.50` to `0.75` after #1080
+/// (`build_lf` and `fill_avx2_trusted`, docs/journal/2026-11-27-explore/runs-takes-runs-post-1080.md):
+/// compressible blocks in `0.50 < syms/max_len <= 0.75` (markdown, ELF, JSON) still have
+/// 23-35% run symbols and decode faster through `runs::front` + `Segmented::invert_runs` than
+/// through `mtf::mtf`'s RLE2 branches, while high-entropy blocks (`random`, `records`) still
+/// short-circuit in O(1) past `0.75` or fail `RUN_SHARE` below it.
 ///
 /// **The run symbols.** A short block of high entropy (a small incompressible file, a
 /// stream's last block) also has few symbols against its bound, and by the bound alone it
-/// took the records' path at that 18-19%. Such a block has almost no run symbols: under 1%
-/// of `random`'s and `records`' symbols, against 37% of text's and 25% or more of all but
-/// one of Wikidata's full blocks (that one: 10%). So a block of fewer than one run symbol
-/// in RUN_SHARE keeps the column. The share is read from up to WINDOWS windows of WINDOW
+/// would take the records' path. Such a block has almost no run symbols: under 1% of
+/// `random`'s and `records`' symbols, against 37% of text's and 25% or more of all but one
+/// of Wikidata's full blocks (that one: 10%). So a block of fewer than one run symbol in
+/// RUN_SHARE keeps the column. The share is read from up to WINDOWS windows of WINDOW
 /// symbols, evenly spaced (a block of at most WINDOW x WINDOWS symbols is counted whole): a
 /// proportion, which a sample of 4,096 gives within a point or two. (The rows themselves are
 /// not sampled: a few long runs hold most of a block's rows, and a sample misses them.)
 ///
-/// Every block this admits, `2 * syms <= max_len` admits too.
+/// Every block this admits, `4 * syms <= 3 * max_len` admits too.
 pub fn takes_runs(b: &Symbols) -> bool {
     #[cfg(feature = "scan-oracle")]
     {
@@ -73,13 +74,24 @@ pub fn takes_runs(b: &Symbols) -> bool {
     }
 }
 
+/// Minimum run-symbol share (`1/8 = 12.5%`) required in the widened `0.50 < len/max_len <= 0.75`
+/// band so short small-alphabet random blocks (such as uniform 26-letter noise, ~3.8% runs)
+/// stay on the column path while compressible blocks (`mdjournal`, `elf`, `json`, `prose`,
+/// `pysrc`: 17–49% run symbols) take the branchless `Runs` front.
+const WIDENED_RUN_SHARE: usize = 8;
+
 fn takes_runs_slice(max_len: usize, syms: &[u16]) -> bool {
     let len = syms.len();
-    if max_len >= (1 << 24) || 2 * len > max_len {
+    if max_len >= (1 << 24) || 4 * len > 3 * max_len {
         return false;
     }
+    let share = if 2 * len <= max_len {
+        RUN_SHARE
+    } else {
+        WIDENED_RUN_SHARE
+    };
     if len <= WINDOW * WINDOWS {
-        let need = len.div_ceil(RUN_SHARE);
+        let need = len.div_ceil(share);
         let mut runs = 0usize;
         let full = len / WINDOW;
         for i in 0..full {
@@ -96,22 +108,22 @@ fn takes_runs_slice(max_len: usize, syms: &[u16]) -> bool {
             .iter()
             .map(|&s| usize::from(s <= 1))
             .sum::<usize>();
-        RUN_SHARE * runs >= len
+        share * runs >= len
     } else {
-        const NEED: usize = (WINDOW * WINDOWS) / RUN_SHARE;
+        let need = (WINDOW * WINDOWS) / share;
         let step = len / WINDOWS;
         let mut runs = 0usize;
         for i in 0..WINDOWS {
             let w = &syms[i * step..i * step + WINDOW];
             runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
-            if runs >= NEED {
+            if runs >= need {
                 return true;
             }
-            if runs + (WINDOWS - 1 - i) * WINDOW < NEED {
+            if runs + (WINDOWS - 1 - i) * WINDOW < need {
                 return false;
             }
         }
-        runs >= NEED
+        runs >= need
     }
 }
 

@@ -172,3 +172,95 @@ def test_reader_corrupt_persists_on_zero_read(threads):
     with pytest.raises(mibz2.DecodeError):
         r.read(0)
     r.close()
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_bz2reader_readall_and_read_modes(threads):
+    # readall(), read(-1), and read(None) all return full data and set verified=True
+    for call in (
+        lambda r: r.readall(),
+        lambda r: r.read(-1),
+        lambda r: r.read(None),
+        lambda r: r.read(),
+    ):
+        with mibz2.BZ2Reader(io.BytesIO(COMPRESSED), threads=threads) as r:
+            assert not r.verified
+            assert call(r) == DATA
+            assert r.verified
+            assert r.readall() == b""
+            assert r.read(-1) == b""
+            assert r.read(0) == b""
+            assert r.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_bz2reader_partial_read_then_readall(threads):
+    # Direct BZ2Reader partial read followed by readall()
+    with mibz2.BZ2Reader(io.BytesIO(COMPRESSED), threads=threads) as r:
+        assert r.read(0) == b""
+        assert not r.verified
+        head = r.read(100)
+        assert head == DATA[:100]
+        assert not r.verified
+        rest = r.readall()
+        assert head + rest == DATA
+        assert r.verified
+
+    # Buffered mibz2.open() partial read followed by read()
+    with mibz2.open(io.BytesIO(COMPRESSED), threads=threads) as f:
+        head = f.read(100)
+        assert head == DATA[:100]
+        rest = f.read()
+        assert head + rest == DATA
+        assert f.raw.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_bz2reader_readall_empty_single_block_and_multistream(threads):
+    # Empty bzip2 stream
+    with mibz2.BZ2Reader(io.BytesIO(bz2.compress(b"")), threads=threads) as r:
+        assert not r.verified
+        assert r.readall() == b""
+        assert r.verified
+
+    # Single small block (exercises len(chunks) == 1 zero-join fast path)
+    small = b"hello world" * 100
+    with mibz2.BZ2Reader(io.BytesIO(bz2.compress(small)), threads=threads) as r:
+        assert r.readall() == small
+        assert r.verified
+
+    # Multi-stream concatenation
+    two = COMPRESSED + bz2.compress(b"second-stream-tail")
+    with mibz2.BZ2Reader(io.BytesIO(two), threads=threads) as r:
+        assert r.readall() == DATA + b"second-stream-tail"
+        assert r.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_bz2reader_readall_closed_and_corrupt(threads):
+    r = mibz2.BZ2Reader(io.BytesIO(COMPRESSED), threads=threads)
+    r.close()
+    with pytest.raises(ValueError, match="closed"):
+        r.readall()
+    with pytest.raises(ValueError, match="closed"):
+        r.read(-1)
+    with pytest.raises(ValueError, match="closed"):
+        r.read(None)
+    with pytest.raises(ValueError, match="closed"):
+        r.read(0)
+    with pytest.raises(ValueError, match="closed"):
+        r.read(16)
+
+    # Corrupt block CRC propagates DecodeError and leaves verified=False
+    bad = bytearray(COMPRESSED)
+    bad[len(bad) * 3 // 4] ^= 0x10
+    with mibz2.BZ2Reader(io.BytesIO(bytes(bad)), threads=threads) as r:
+        with pytest.raises(mibz2.DecodeError):
+            r.readall()
+        assert not r.verified
+
+    # Truncated stream propagates DecodeError and leaves verified=False
+    with mibz2.BZ2Reader(io.BytesIO(COMPRESSED[:-10]), threads=threads) as r:
+        with pytest.raises(mibz2.DecodeError):
+            r.readall()
+        assert not r.verified

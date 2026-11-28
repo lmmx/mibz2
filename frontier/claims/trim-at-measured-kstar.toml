@@ -1,0 +1,25 @@
+id = "trim-at-measured-kstar"
+title = "Test 8 workers at 10 pinned threads against the shipped 7, using the measured i9 k* = 9.46"
+kind = "probe"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["plan-schedule"]
+needs_louis = ""
+question = """
+`TRIMMED_WORKERS = 7` (>=10T pinned on the i9) predates #1034, the OpenCells calibration and #1119's measured station balance (S = 35.24 ms, W = 333.48 ms a Wikidata copy, k* = 9.46). With 7 workers, worker demand is W/7 = 47.6 ms against S = 35.2 ms; 8 workers would give 41.7 ms, still above S, leaving 2 of 10 cores for the scanner, main and reader. No run measures 8 workers on 10 pinned CPUs: the crossover's forced arm is w = t. Does 8 beat 7 at 10T pinned on the i9 once contention is paid?
+"""
+why = """
+Derived room is about 12% of 10T worker demand at zero code cost (one constant), if per-worker cost holds under the extra contention. Fifteenth synthesis pass, section 1.
+Nineteenth synthesis pass, section 4: the forward lanes (forward-emission-adopt) cut W about 17% and move k* to about 7.2-7.9, so once they are default this room shrinks to 0-15 ms (0-8%); re-premise on the post-adoption worker before admitting. The stop test is unchanged.
+"""
+stop_test = """
+Frozen before data. On the i9, pinned 10T, wikidata x4 plus text, records and random as guards, 12 paired rounds with order balanced and position-stratified (see i9-clock-modes): 8 workers over 7 must have a 95% CI upper bound <= 0.97 on Wikidata wall, no guard worse than 1.01, and peak RSS <= 1.05x. Otherwise STOP with a dead-end row.
+"""
+done_when = """
+Sequenced after plan-schedule-and-lazy-threshold (same file). A merged one-constant PR on PASS, or a dead-end row on STOP, with a delta.
+"""
+premises = ["docs/notebook/2026-11-27-synthesis-fifteenth-pass.md", "docs/notebook/2026-11-27-synthesis-nineteenth-pass.md", "frontier/deltas/2026-11-27-jcc-aligned-release-i9-verdict.md"]
+links = ["frontier/claims/plan-schedule-and-lazy-threshold.toml", "frontier/claims/i9-clock-modes.toml"]

@@ -1,0 +1,27 @@
+id = "open-cap-prescan-cost"
+title = "Remove the dense-cap pre-scan #1222 added to Wikidata's 0.10 <= r/n < 0.15 open-kernel blocks, routes unchanged"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 1  # seventeenth synthesis pass: shipped 0.5.17 is slower than 0.5.16 at the 8- and 10-thread knee on the i9
+status = "done"
+owned_paths = ["src/open.rs", "src/open/dense.rs", "src/open/b5.rs"]
+mechanisms = ["open-admission-cost"]
+needs_louis = ""
+question = """
+The 0.5.17 release-scaling run (origin/evidence 5182d546, sha256 3b3af8b1...c8309b, i9-10900K, wikidata, 10 paired rounds) has 0.5.16/0.5.17 wall 0.974 [0.967, 0.982] at 8 threads and 0.985 [0.976, 0.995] at 10, with CPU 0.977/0.982 beyond noise (+8..+9 ms median CPU). #1222 is the only default-path change between the tags. Before it, every `lazy_counts_admit` block got `Cap::NONE` and skipped `within_cap`. After it, lazy-admitted blocks with 0.10 <= r/n < 0.15 (34 of Wikidata's 233) get `Cap::dense(n)` and pay a full scalar pre-scan of their records, which admits them all anyway. Is that pre-scan the loss, and can it be removed with every block's route unchanged (e.g. the cap checked inside the first pass, abandoned on overflow)? 2 threads shows the same +9.6 ms CPU, so code layout is the competing explanation: the diagnostic separates them before any build.
+"""
+why = """
+A primary-corpus loss at the knee thread count in shipped software: every default user at >= 8 threads pays it, and CI's bench (1, 2, 4 threads, Cells) cannot see the open kernel (docs/notebook/2026-11-27-synthesis-seventeenth-pass.md section 2). RELEASING section 1: a primary loss the release scaling reveals is handled as any regression, in its own PR.
+"""
+stop_test = """
+Frozen before data (C1a):
+0. Diagnostic (VM, C5, not decisional, recorded first): the count of Wikidata blocks with 0.10 <= r/n < 0.15 and the time `within_cap` takes over them (min of 7, pinned); and v0.5.17 (01acd74d) against v0.5.17 with `Cap::NONE` restored for lazy-admitted blocks, `ab` `mibz2-workers-lazy` 1 thread and `mibz2` 8 threads, 15 interleaved paired rounds. If that restore shows no CPU gain (95% CI of CPU ratio includes 1 at both), STOP the pre-scan hypothesis with a dead-end row and record layout as the remaining explanation.
+1. Exactness: identical bytes on all 7 bench corpora; a deterministic census test that every block on all 7 corpora takes the same route (open kernel or Segmented) as at v0.5.17; cargo test, the open gate-edge Miri tests, fuzz-smoke. No new unsafe.
+2. Acceptance (PERFORMANCE-POLICY: open-kernel code CI's bench cannot reach): a paired native run in the PR, head against v0.5.17, 15 interleaved rounds, wikidata: CPU ratio 95% CI upper bound < 1.000 on `mibz2-workers-lazy` at 1 thread and on `mibz2` at 8 threads, no wall loss beyond noise at either, and CI's paired bench showing no primary loss. Otherwise STOP. The 0.5.18 release-scaling run is the i9 readback; no separate workstation run.
+"""
+done_when = """
+Diagnostic recorded; then either a merged route-preserving PR passing gates 1-2 with its ledger row, or a STOP with a scoped dead-end row naming the explanation left standing. Delta either way.
+"""
+premises = ["docs/notebook/2026-11-27-synthesis-seventeenth-pass.md", "frontier/deltas/2026-11-27-post-1080-open-admission.md", "docs/RELEASING.md", "docs/team/PERFORMANCE-POLICY.md"]
+links = ["https://github.com/lmmx/mibz2/pull/1222"]

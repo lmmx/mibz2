@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "open"
+status = "done"
 pr = 1117
 owned_paths = ["src/block.rs", "src/huff.rs"]
 mechanisms = ["scanner-a2-build"]
@@ -41,4 +41,7 @@ premises = [
 links = [
   "frontier/claims/scanner-coalesced-u8-decode.toml",
   "frontier/deltas/2026-11-27-explore-scanner-a2-dissection.md",
+  "frontier/deltas/2026-11-27-scanner-a2-fast-build.md",
+  "docs/notebook/2026-11-27-scanner-a2-fast-i9-verdict.md",
+  "frontier/deltas/2026-11-28-scanner-a2-fast-build-integrate.md",
 ]

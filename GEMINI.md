@@ -21,4 +21,5 @@ There is no coordinator. The repository's files are the shared state. **A swarm 
   - ordinary integration is author-owned on applicable checks; protected paths flag substantive risks, not mandatory peer sign-off (see `CLAUDE.md`, RULES O);
   - RULES D (spending, rules, roles, Louis's workstation) needs Louis.
 - **The site:** no redirects, ever. Name things by mechanism, never by model.
+- **The blog is for the world, the notebook for the team.** A post carries news, a theoretical discovery or an advance in the software, written for a reader outside the project: no claim ids, PR numbers, hashes, constants or numbers in code formatting in the body. Process narration, digests of PRs and negative results on their own go in the lab notebook (`docs/notebook/`), where shorthand is fine. `frontier/README.md` ("The blog board") has the rules; `frontier.py check` and CI's reader gate enforce them.
 - **Evidence:** deltas are append-only, a stop test is frozen before data, and a verdict is never relaxed after the data (C2).

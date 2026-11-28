@@ -280,6 +280,113 @@ class TestMtfFoldAnalysis(unittest.TestCase):
         self.assertEqual(verdict, "VOID")
         self.assertTrue(any("pin failed" in v for v in summary["void_reasons"]))
 
+    def test_run_child_malformed_json_returns_failed_record(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad_bin = os.path.join(td, "bad.sh")
+            with open(bad_bin, "w", encoding="utf-8") as f:
+                f.write("#!/bin/sh\necho 'not json {'\n")
+            os.chmod(bad_bin, 0o755)
+            cell = {"section": "wikidata", "arm": "SC", "k": 1, "prespin_ms": 0, "pinned": False}
+            rec = mf.run_child(bad_bin, "dummy.bz2", cell, 0, 0, False, 10)
+            self.assertEqual(rec["kind"], "failed")
+            self.assertIn("malformed JSON", rec["stderr"])
+
+    def test_cmd_report_and_shallow_checkout_pipeline(self):
+        import contextlib
+        from pathlib import Path
+        import subprocess
+
+        repo_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            upstream = root / "upstream"
+            runner = root / "runner"
+
+            def git(repo: Path, *args: str) -> str:
+                return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+
+            subprocess.run(["git", "init", "-q", "-b", "master", str(upstream)], check=True)
+            git(upstream, "config", "user.name", "Test")
+            git(upstream, "config", "user.email", "test@example.invalid")
+            (upstream / "bench").mkdir()
+            (upstream / "bench" / "bundle.sh").write_text(
+                (repo_root / "bench" / "bundle.sh").read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            os.chmod(upstream / "bench" / "bundle.sh", 0o755)
+            git(upstream, "add", ".")
+            git(upstream, "commit", "-qm", "master")
+
+            git(upstream, "checkout", "-q", "--orphan", "bench-data")
+            git(upstream, "rm", "-rfq", ".")
+            (upstream / "windows" / "demo").mkdir(parents=True)
+            (upstream / "windows" / "demo" / "w00.bin").write_bytes(b"window-bytes")
+            git(upstream, "add", ".")
+            git(upstream, "commit", "-qm", "bench-data")
+            git(upstream, "checkout", "-q", "master")
+
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "-q",
+                    "--depth=1",
+                    "--single-branch",
+                    "--no-local",
+                    "-b",
+                    "master",
+                    upstream.as_uri(),
+                    str(runner),
+                ],
+                check=True,
+            )
+            head = git(runner, "rev-parse", "HEAD")
+            git(runner, "checkout", "--quiet", "--detach", head)
+            self.assertEqual(git(runner, "rev-parse", "--is-shallow-repository"), "true")
+
+            # Verify bench-mtf-fold's bench-data fetch works inside a detached depth=1 single-branch clone
+            git(runner, "fetch", "-q", "origin", "bench-data:refs/remotes/origin/bench-data")
+            arc = subprocess.check_output(
+                ["git", "-C", str(runner), "archive", "origin/bench-data", "windows/demo"]
+            )
+            subprocess.run(["tar", "-x"], cwd=runner, input=arc, check=True)
+            self.assertEqual(
+                (runner / "windows" / "demo" / "w00.bin").read_bytes(), b"window-bytes"
+            )
+
+            # Verify cmd_report runs cleanly with no ResourceWarnings and bundles via bench/bundle.sh
+            out_dir = runner / "target" / "mtf-fold" / "run-test"
+            out_dir.mkdir(parents=True)
+            plan = make_plan()
+            recs = make_records(plan)
+            plan_p = out_dir / "plan.json"
+            runs_p = out_dir / "runs.jsonl"
+            lscpu_p = out_dir / "lscpu.txt"
+            plan_p.write_text(json.dumps(plan) + "\n", encoding="utf-8")
+            runs_p.write_text("\n".join(json.dumps(r) for r in recs) + "\n", encoding="utf-8")
+            lscpu_p.write_text(LSCPU_I9, encoding="utf-8")
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = mf.main(
+                    [
+                        "report",
+                        str(plan_p),
+                        str(runs_p),
+                        "--lscpu",
+                        str(lscpu_p),
+                        "--out",
+                        str(out_dir),
+                    ]
+                )
+            self.assertEqual(rc, 0, buf.getvalue())
+            self.assertTrue((out_dir / "summary.json").exists())
+            subprocess.run(
+                ["bash", "bench/bundle.sh", str(out_dir)],
+                cwd=runner,
+                check=True,
+                capture_output=True,
+            )
+            self.assertTrue(out_dir.with_suffix(".tar.gz").exists())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

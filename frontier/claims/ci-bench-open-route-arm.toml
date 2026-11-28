@@ -1,0 +1,24 @@
+id = "ci-bench-open-route-arm"
+title = "A diagnostic paired forced-open-route cell (mibz2-workers-lazy, 1 thread) in CI's bench"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"
+owned_paths = [".github/workflows/bench.yml"]
+mechanisms = ["ci-bench-coverage"]
+needs_louis = ""
+question = """
+CI's paired bench runs `mibz2` against `mibz2@base/ab` at 1, 2 and 4 threads, where the default plan is Cells, so no PR touching the open kernel (#1080, #1110, #1132, #1217, #1222) gets a paired CI measurement of the code it changes. #1222 merged on a self-reported native run that compared the wrong baseline, and the 0.5.17 i9 release scaling then showed a ~2% CPU loss at 8-10 threads. Can the bench add `mibz2-workers-lazy` (open route forced at one worker, examples/ab.rs) for head and base at 1 thread on wikidata and text, reported beside the primary cells as a diagnostic outside the acceptance rule, for at most a few minutes of runner time?
+"""
+why = """
+Every open-kernel PR currently relies on an unreproducible native run (seventeenth synthesis pass, section 2). A fixed-runner paired number would have caught #1222's pre-scan cost on its PR. Bench design is delegated (RULES C6); folding the cell into the acceptance rule would be a separate policy change.
+"""
+stop_test = """
+To freeze on admission: the cell runs on head and base, its ratios appear in the report and job summary, existing cells and the acceptance rule are byte-for-byte unchanged, and the added wall time is recorded on the PR. Otherwise drop.
+"""
+done_when = """
+Workflow PR merged with a delta naming its first measured PR, or dropped with the reason.
+"""
+premises = ["docs/notebook/2026-11-27-synthesis-seventeenth-pass.md", ".github/workflows/bench.yml", "examples/ab.rs"]
+links = ["frontier/deltas/2026-11-27-ci-bench-open-route-arm-registration.md"]

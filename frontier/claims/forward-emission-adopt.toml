@@ -1,0 +1,44 @@
+id = "forward-emission-adopt"
+title = "C6 physical i9 adoption run and default promotion for the disjoint-slab four-lane forward walk (#1110 + #1217)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = ["Cargo.toml", "src/open.rs", "src/open/lanes.rs", "bench/forward_adopt.py", "bench/test_forward_adopt.py", ".just/forward-adopt.just"]
+mechanisms = ["forward-anchor-lanes-default"]
+needs_louis = ""
+question = """
+Physical i9-10900K kill-test evidence (`origin/evidence e98948b6`, `forward-lanes/run-20261127T223754Z.tar.gz`, SHA-256 `db53fe2c...`) proved that the `#![forbid(unsafe_code)]` disjoint-slab four-lane forward walk (`--features forward-anchor-lanes`, `#1110` + `#1217`) cuts `wikidata/1` by `-17.2%` (`1.353 -> 1.113 s`, `0.828 [0.816, 0.834]`, `-230.6 ms`), `wikidata/8` (real scanner) by `-5.66%` (`0.196 -> 0.184 s`, `4.55 GB/s`, `0.943 [0.938, 0.948]`, `wkr_busy -10.64%`), and `wikidata/8/S` (ideal scanner) by `-12.1%` (`0.191 -> 0.168 s`, `4.99 GB/s`, `0.879 [0.857, 0.895]`), while `text/1` was `-0.36%` faster (`0.996 [0.989, 1.017]`, `1.000x` RSS, landing in C2 `RESCUE` solely on 15-round bootstrap upper-CI noise `1.0166` vs `1.010`).
+
+Can `--features forward-anchor-lanes` pass a full-guard C6 physical i9 adoption registration covering `wikidata x4` (`1, 6, 8, 10, 12T`) and all 6 guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` at `1, 8T`) and be promoted to the default `OpenCells` walk in `v0.5.18`?
+"""
+why = """
+Per #1224 (result-to-release), an i9-verified `-17.2%` 1W / `-5.66%` 8W real (`4.55 GB/s`) / `-12.1%` 8W ideal-S (`4.99 GB/s`) speedup with `#![forbid(unsafe_code)]` is the single largest ready-to-ship software advance in the repository and also unblocks downstream `L6a` zero-stitch vectored RLE1+CRC32 (`forward-rle1-crc-vectored-build`) and low-thread `t = 1..3` `OpenCells` unification (retiring the legacy `Cells` route).
+"""
+stop_test = """
+Pre-data C6 physical i9 adoption rule (requires one independent review before queueing per CLAUDE.md C6; C2 never relaxed):
+Run `base` (master default build) vs `cand` (default build with `forward-anchor-lanes` enabled as the default `OpenCells` walk, zero `unsafe` in `src/open/lanes.rs`) on Louis's i9-10900K with `n >= 16` interleaved paired rounds at the default `2 s` settle (controlling slow-mode inflation on short guard corpora), output SHA-256 verified on every repeat:
+- **Corpora & threads:** `wikidata x4` at `k = 1, 6, 8, 10, 12` (unpinned above 1; `k = 1` open route) plus all 6 guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte`) at `k = 1, 8`.
+- **ADOPT iff ALL hold:**
+  1. 100% byte- and error-exact parity across every timed repeat and `cargo test` / Miri (`0` UB);
+  2. `wikidata/1` paired 95% CI upper bound `<= 0.900`;
+  3. `wikidata/8` paired 95% CI upper bound `<= 0.965`;
+  4. `wikidata/10` paired 95% CI upper bound `<= 0.985`;
+  5. Zero guard corpus (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` at `k = 1, 8`) has a disjoint regression (`95% CI lower bound > 1.020` or paired median `> 1.020`);
+  6. Peak RSS ratio `<= 1.080x` at `k = 6, 8, 10, 12` (`<= 1.020x` at `k = 1`) on `wikidata x4` and `<= 1.050x` across all guard corpora.
+- **Otherwise DO NOT ADOPT** (record scoped disposition in `frontier/dead-ends.tsv` if a guard or RSS cliff is exposed; optional follow-ons `L6a` zero-stitch RLE1+CRC32 and low-thread `OpenCells` unification remain distinct claims).
+"""
+done_when = """
+A C6 adoption registration is reviewed, `bench-forward-adopt` is queued and run on the i9, the archived `origin/evidence` bundle is verified, and either `forward-anchor-lanes` is promoted to the default `OpenCells` walk (opening the release claim) or a scoped non-adoption verdict is recorded.
+"""
+premises = [
+  "frontier/claims/forward-emission-run.toml",
+  "frontier/deltas/2026-11-27-forward-emission-run-verdict.md",
+  "docs/notebook/2026-11-27-forward-emission-i9-verdict.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "frontier/claims/lanes-disjoint-slabs-build.toml",
+  "frontier/claims/forward-rle1-crc-vectored-build.toml",
+]

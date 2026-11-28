@@ -1,0 +1,29 @@
+id = "forward-emission-run"
+title = "Executable i9 kill-test recipe for the registered sampled-anchor four-lane walk"
+kind = "run"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1  # sixteenth synthesis pass: the verdict gates Cells-route retirement at t=1..7; re-pinned to #1217 (registration-disjoint-slabs.md)
+status = "done"
+pr = 1168
+owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
+mechanisms = ["forward-lanes-workstation-validation"]
+needs_louis = ""
+question = """
+Implement the frozen kill test of docs/journal/2026-11-27-forward-emission/registration.md as a `just submit` recipe: `base` (the prototype PR's merge base, default features) against `cand` (`--features forward-anchor-lanes`), wikidata x4 at k = 1 (open route forced, `mibz2-workers-lazy`, §5), k = 8 shipped scan and k = 8 `S ideal` (`scan-oracle` in both builds), plus `text` at k = 1, with 15 interleaved paired repeats, the output hashed on every repeat. Reuse the two-build harness that `a6b-endpoint-run` (#1085) builds rather than writing another one.
+"""
+why = """
+The prototype (`forward-emission`) is merged behind an opt-in feature: byte-exact on all 233 admitted wikidata blocks and Miri clean. A non-decisional VM diagnostic measured about -7.5% 1W CPU. Only i9 evidence under the frozen rule decides KILL, RESCUE or progression to an adoption registration. The worker-side cut is what pays at the k = 8 knee (DECODER.md, ninth pass).
+"""
+stop_test = """
+Registration §2–§3 as frozen, with §5's clarification. No new thresholds. Freeze the recipe and its result classification before any hardware data.
+"""
+done_when = """
+The recipe is reviewed and green, and the queue entry and ready signal are set under the standing authorisation, having first checked the queue history and the `evidence` branch. Then the bundle is read, the verdict recorded against §3 in a delta, and `C-A6c`/`E-walk` updated in surface.tsv.
+"""
+premises = ["frontier/claims/forward-emission.toml", "docs/journal/2026-11-27-forward-emission/registration.md", "docs/journal/2026-11-27-forward-emission/registration-disjoint-slabs.md", "frontier/DECODER.md"]
+links = [
+  "frontier/deltas/2026-11-27-forward-emission-run-verdict.md",
+  "docs/notebook/2026-11-27-forward-emission-i9-verdict.md",
+  "frontier/claims/forward-emission-adopt.toml",
+]

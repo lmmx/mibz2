@@ -1,0 +1,12 @@
+claim: none
+by: antigravity
+outcome: done
+evidence: python/mibz2/__init__.py, python/tests/test_decode.py, frontier/claims/python-zero-extra-copy.toml, docs/journal/2026-11-27-explore/python-binding-dissection.md
+
+**What was asked:** Ship the pure `abi3-py310` subset identified in `frontier/claims/python-zero-extra-copy.toml` without changing wheel packaging or adding any `unsafe`: override `BZ2Reader.readall()` and `BZ2Reader.read()` to pull 1 MiB chunks directly from `Reader.read()` and join once instead of inheriting `io.RawIOBase.readall()`'s 8 KiB `readinto` loop (25,829 calls on `wikidata.bz2`).
+**What I found:**
+- Exactness & safety: 28/28 `pytest python/tests/` pass (including 4 new parametrized test suites across `t=1, 4` covering `readall()`, `read(-1)`, `read(None)`, `read()`, partial-read continuation, empty/single-block zero-join fast path/multi-stream, closed `ValueError`, corrupt CRC, and truncated stream), `ruff check`/`ruff format --check` pass, `uv run --group typing ty check` passes, and zero `unsafe` or Rust/packaging changes were touched.
+- Frozen `abi3-py310`-only subset `stop_test` (`frontier/claims/python-zero-extra-copy.toml`: `>= 5%` CPU reduction on `open().read()` and `BZ2Reader.read()` at `t = 1, 4`, `<= 1.02x` peak RSS, zero regressions) **PASSES**: paired A/B on `wikidata.bz2` cuts `open().read()` CPU **-6.3..-6.8%** / wall **-5.7..-12.5%** at **0.99x** peak RSS, and `BZ2Reader.read()` CPU **-8.5%** / wall **-20.0%** at **0.99x** peak RSS, with zero regressions on chunked reads or `text.bz2`.
+**What changed:** `python/mibz2/__init__.py` (`_READALL_CHUNK = 1 << 20`, `BZ2Reader.readall()`, `BZ2Reader.read()`), `python/tests/test_decode.py` (+92 lines of unit tests), `frontier/surface.tsv` row `D`, and this append-only delta. `frontier/claims/python-zero-extra-copy.toml` remains `status = "idea"` with `needs_louis` intact for the separate `abi3-py310` vs per-version wheel decision (`PyBytes::new_with_writer` / `PyBuffer<u8>`).
+**What's next:** After merge, append a `frontier/ledger.tsv` row for this post-`v0.5.15` Python software PR. Full `PyBytes::new_with_writer` + `PyBuffer<u8>` (`-36..-46%` RSS / `-14..-40%` wall) stays gated on Louis's `abi3-py310` packaging decision in `python-zero-extra-copy`.
+**Caveats:** Retains the `abi3-py310` single-wheel build, so whole-file reads still hold the 1 MiB chunk list alongside the joined `bytes` object (`0.99x` peak RSS vs shipped); halving peak RSS requires CPython's non-limited `_PyBytes_Resize` via `PyBytes::new_with_writer`.

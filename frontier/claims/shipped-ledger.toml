@@ -1,0 +1,36 @@
+id = "shipped-ledger"
+title = "A ledger of what reached the software: every merged change, its user-facing effect and its state"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "done"
+owned_paths = ["frontier/ledger.tsv", "frontier/tools/ledger.py"]
+mechanisms = ["shipped-ledger"]
+needs_louis = ""
+question = """
+Louis, 27 November 2026: the blog judged what was news from the swarm's own write-ups, so a real advance (bounded decoder memory, #1129: peak memory on highly compressible input 1,118 -> 545 MiB in a local four-worker run) was buried inside a post framed as a rejection, and a research target (6 GB/s) was published as if achieved. An independent reading that started from the merge log got both right. Build that merge log as shared state.
+
+Create frontier/ledger.tsv: one row per merged PR to master that changes the software (src/, python/, Cargo.*, pyproject.toml, features), with columns
+  pr | merged (date) | effect (one plain sentence a user would understand; no claim ids, ledger names or shorthand) | state | measured (figure, input, machine: i9 | VM | CI | local; or "not measured") | evidence (path or PR)
+where state is one of: default (on in the shipped decoder), experimental (merged behind a feature flag or off by default), awaiting-review (implemented, PR open), prototype (example or probe only), target (a goal or model, nothing built).
+Backfill from the last release tag (v0.5.14) to master, then keep it current: a small tool (frontier/tools/ledger.py) that lists merged PRs since the newest row (git log origin/master, first-parent, "(#N)" in the subject) so a maintainer of the ledger only writes the effect and state. CHANGELOG.md is generated from commit messages by the release process, so the ledger sits beside it rather than inside it; the release notes may draw on it.
+"""
+why = """
+Shared P1: it is the input the blog (blog-cards-cite-ledger, claims-match-state) and release communication both need, and the missing piece behind the 27 November blog failure. Without it every writer re-derives what shipped from narratives.
+"""
+stop_test = """
+Frozen before data: PASS iff frontier/ledger.tsv exists with the columns above; it has a row for every PR merged to master since v0.5.14 that touches src/, python/, Cargo.*, pyproject.toml or a feature flag (checked by frontier/tools/ledger.py --missing, which exits 0 only when none is missing); every state is one of the five; every effect sentence has no inline code and no #N reference; and the rows for #1129, #1080, #1040, #1033, #1034, #1053, #1110 exist with states checked against master's code (default vs feature-gated). Otherwise not done.
+"""
+done_when = """
+PR merged adding frontier/ledger.tsv (backfilled), frontier/tools/ledger.py with --missing, a "The ledger" paragraph in frontier/README.md ("The blog board" links it), and a delta.
+"""
+premises = [
+  "CHANGELOG.md",
+  "frontier/README.md",
+  "frontier/tools/frontier.py",
+]
+links = [
+  "frontier/claims/blog-cards-cite-ledger.toml",
+  "frontier/claims/claims-match-state.toml",
+]

@@ -1,0 +1,35 @@
+id = "i9-clock-modes"
+title = "Probe: separate the i9's two clock modes (pinning, settle gap, pair position) and make ab comparisons mode-robust"
+kind = "probe"
+zone = "striated"
+needs = ["shell"]
+priority = 1  # sixteenth synthesis pass: the unpinned all-threads mode is ~69% of text-knee runs, ~1.5x, on wikidata too
+status = "open"
+owned_paths = ["bench/clock_modes.py", "bench/test_clock_modes.py", ".just/clock-modes.just"]
+mechanisms = ["measurement", "clock-modes"]
+needs_louis = ""
+question = """
+The fifteenth synthesis pass (docs/notebook/2026-11-27-synthesis-fifteenth-pass.md, section 2) regrouped raw i9 rows and found two modes that scale every thread's CPU by the same factor:
+(a) about 5-10% at 1T, pinned: 11/12 first-of-pair runs slow in #1119 (after the 10T pair); release-scaling 1T bimodal (0.5.14 slow 8/10, 0.5.15 3/10).
+(b) about 1.45x at 6-10T, unpinned only: #1119 6T second-of-pair slow 12/12. Pinned bundles from the same day (#1034, release-scaling 4-10T) are unimodal.
+The same signature was left unresolved on 2026-10-28 (gap before run) and 2026-11-09 (spin audit).
+Which of pinning, the settle gap (`--settle`), the prespin (`--prespin-ms`) and pair position causes each mode, and is mode (b) a harness artefact or something the default decoder meets in production?
+"""
+why = """
+The modes set the width of every i9 confidence interval: about ±3% at 1T and ±15-25% at 6-10T, against gates of 1.5-3%. They also inflated the 0.5.15 release-scaling headlines (1T 1.057 and 12T 1.095 recorded; within-mode 0.998-1.021). If mode (b) is real for unpinned users, it is about 30% of wall at 6-10T on this machine, the largest lever on the board.
+"""
+stop_test = """
+Frozen before data. One i9 run, wikidata x4, the default decoder at one commit, 12 rounds, a 2x2x2 design: pinned vs unpinned, settle 0 vs 0.2 s, and pair position. Each child records per-thread cycles and instructions (or APERF/MPERF) and sampled CPU placement.
+PASS (mechanism found) if one factor (or one two-way interaction) explains at least 80% of slow-mode runs, where a run is slow if its cycles-per-byte stays within 3% of the fast mode's but its wall is at least 1.3x (6T) or 1.04x (1T), so frequency is separated from executed work.
+Also PASS (mode is real work) if slow runs have at least 1.2x the cycles of fast ones: the cause is contention or placement, not clock.
+Otherwise STOP with the table recorded. In every case: document a mode-robust estimator (stratify by position, or report within-mode ratios classified by cycles), and restate the 0.5.15 1T and 12T rows in CHANGELOG.md and docs/journal/release-attribution.md with within-mode figures beside the pooled ones. That restatement is done by an agent other than the 0.5.15 release's author.
+"""
+done_when = """
+The i9 bundle read against the stop test; the estimator in the ab analysis path or documented in docs/RELEASING.md section 5; the 0.5.15 records restated; a delta.
+"""
+premises = [
+  "docs/notebook/2026-11-27-synthesis-fifteenth-pass.md",
+  "docs/journal/2026-10-28-workstation-scaling.md",
+  "docs/journal/2026-11-09-spin-audit.md",
+]
+links = ["origin/evidence 77236472", "origin/evidence bce3914d", "origin/evidence 9de7b6e0", "examples/ab.rs"]

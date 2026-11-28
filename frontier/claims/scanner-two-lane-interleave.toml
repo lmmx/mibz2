@@ -1,0 +1,42 @@
+id = "scanner-two-lane-interleave"
+title = "Two-lane scanner: interleave two blocks' Huffman decodes in the one scanner thread"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/block.rs", "src/huff.rs", "src/stream.rs"]
+mechanisms = ["scanner-two-lane-interleave"]
+needs_louis = ""
+question = """
+The A3 symbol decode is one serial lookup chain per block (shift -> L1d load -> shift). A two-lane scanner decodes block i and block i+1 in the same thread, one 5-step batch from each in turn, so the core overlaps two independent chains. It adds no thread and no CPU-seconds. Lane B's start comes from a block-magic finder and is checked when lane A reaches EOB (A's end bit must equal B's start; otherwise B is discarded).
+
+VM probe (explore, 27 Nov; `docs/notebook/2026-11-27-explore-two-lane-scan.md`, code `docs/journal/2026-11-27-explore/two-lane-scan/ilp_probe.rs.txt`; Emerald Rapids-class VM, 48 KiB L1d, no JCC erratum, unpinned; NOT i9 evidence): a rolling two-lane schedule (a lane takes the next block at its EOB) runs at A3 paired-median **0.844** of production `decode_runs` on all 431 wikidata blocks (33/33 repeats faster), and **0.888** on a 17-block text corpus (30/33). It is symbol-exact on every block. Lane state must be register-resident: a spilled `Reg` gave only 0.923.
+
+Build question: does a production two-lane `Scanner` path keep most of that ratio, and does it cut serial scan on the i9-10900K (32 KiB L1d, JCC erratum) once the finder, seam handling, ordering, admission and libbzip2-parity error reporting are paid?
+"""
+why = """
+A3 is about 81% of serial S. Scaled from the VM (derived): about -18 ms of the i9's post-#1034 143.5 ms wikidata x4 S, and roughly -9% wall on scanner-bound text at k >= 5, where nothing masks a scanner cut. It needs no extra CPU, so it composes with slack-hybrid helpers and avoids pooled scan's failure mode (CPU moved to workers that bind at the knee). It stacks with the K=3 A3 redesign (less latency left to hide), the A2 fast build and the adaptive seam window.
+"""
+stop_test = """
+Frozen before build data:
+1. Smallest discriminating step first (VM, smooth): port the probe's lockstep loop into a `Scanner`-shaped two-lane path that takes lane B's start from a finder over the in-memory input. Price the finder inline, then on a helper thread. Measure paid A2+A3 against production on wikidata.bz2 and the five guard corpora (text, runs, random, records, onebyte): 15+ interleaved repeats, default and JCC-32B builds. Continue only if wikidata paid scan is <= 0.92x, text <= 0.94x, and no guard > 1.02x in either build. Otherwise optimise the expensive phase once (per the rescue rule) and remeasure; if still short, STOP with a scoped dead-ends row.
+2. Correctness: symbol- and bit-exact on all corpora; libbzip2-parity errors (truncated, bad Huffman code, bad selector) reported for the right block, with lane B's speculative work discarded; finder false positives verified away (synthetic stream with BLOCK_MAGIC planted inside compressed bits); no new `unsafe` outside the existing BMI2 dispatch boundary; Miri on the scalar path; fuzz-smoke.
+3. i9 registration (frozen, reviewed, green, before any workstation run): paired A/B against master on wikidata x4 and the text panel. Pass needs serial scan `phases/wikidata/1` CI upper <= 0.95, text panel k = 8 wall CI upper <= 0.97, peak RSS <= 1.02x, no guard regression > 2%.
+"""
+done_when = """
+Striated PR (behind scanner-a2-fast-build / scanner-a3-k3-pipe-u8 if they hold src/block.rs or src/huff.rs), passing step 1 and step 2; frozen i9 registration and evidence bundle read back under step 3; delta; surface row S updated; dead-ends row on STOP.
+"""
+premises = [
+  "docs/notebook/2026-11-27-explore-two-lane-scan.md",
+  "docs/journal/2026-11-27-explore/two-lane-scan/ilp_probe.rs.txt",
+  "docs/journal/2026-11-27-explore/scanner-a3-post1034-dissection.md",
+  "docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md",
+]
+links = [
+  "frontier/claims/scanner-a3-k3-pipe-u8.toml",
+  "frontier/claims/scanner-a2-fast-build.toml",
+  "frontier/claims/pooled-scan-hybrid.toml",
+  "frontier/claims/scanner-adaptive-seam-window.toml",
+  "frontier/deltas/2026-11-27-explore-two-lane-scan.md",
+]

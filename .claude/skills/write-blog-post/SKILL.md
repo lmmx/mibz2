@@ -22,6 +22,41 @@ The rules come from three sources, cited by tag:
   "The evidence".
 - **[P]**: the conventions the published posts share (`docs/site/blog/*.md`).
 
+## First: is it a post at all?
+
+**Start from what actually shipped, not from narratives.** Before pitching a software advance, run
+`python3 frontier/tools/frontier.py news` (read-only) to list `default` and `experimental` rows in
+`frontier/ledger.tsv` merged since the newest published post and not yet named by any card.
+An `advance` card past `idea` must list `changes = [<PR numbers>]` (verified by `frontier.py check`
+against `frontier/ledger.tsv` and `origin/master`); a `discovery` card must list existing paths in
+`evidence = [...]`.
+
+**The blog is for something worth telling the world** (Louis, 27 November 2026: "process
+narration is extremely uninteresting, theoretical discovery and advancement of the software
+itself is interesting, and positive findings far outweigh negative results"). Before writing,
+state the post's news in one plain sentence that a researcher outside the project would care
+about. That sentence is the blog card's `news`, and its kind is `discovery` or `advance`.
+- **Not a post:** an account of how the work was organised, reviewed, queued or merged; a digest
+  of recent PRs or deltas; a negative result on its own (a candidate the hardware rejected, a
+  design that missed its gate). These go in the lab notebook, `docs/notebook/`.
+- **A negative result** reaches the blog only inside a positive finding it explains.
+- **One finding per post,** named in the title. A title that lists three events is a digest.
+
+**No internal shorthand, anywhere in the body** (Louis, 27 November 2026: "the use of shorthand
+is particularly egregious"). The swarm's own notes are written for agents who know the project,
+so draft from the evidence, never by condensing deltas or notebook entries. Say what each thing
+does instead of naming it by its id:
+- **No claim ids or code identifiers as names:** not `scanner-seam-window` or `READY_BYTES`, but
+  "a change that let the scanner keep a sliding window of input" or "the cap on bytes waiting for
+  the reader".
+- **No PR or issue numbers, commit hashes or verdict labels in the prose.** Put the references in
+  the closing Sources list.
+- **Numbers are prose, not code:** "1.9% faster", never `1.89%`.
+- **Code formatting is for code** that the reader is shown, and rarely needed in a post.
+
+CI's reader gate (`check_prose.py`) fails a new or changed post that exceeds the shorthand limits.
+Passing the gate is the floor, not the standard: a post must read as an essay to a stranger.
+
 ## The workflow
 
 **Iterate, ship, re-ship** (Louis, 22 November 2026, after four posts went out big bang and each
@@ -1018,6 +1053,17 @@ own terms and links each topic to its place in the companion.
 Each of these rules is traced to the posts, to the maintainer's edits, or to the
 calibration protocol.
 
+- **Headlines claim only `default`-state effects; name every other state in place** (Louis,
+  27 November 2026). A post's title and dek may claim a speed, memory or size effect only
+  for changes in state `default` in `frontier/ledger.tsv`, with the figure measured on a
+  named machine. Any change in another state (`experimental`, `awaiting-review`, `prototype`
+  or `target`) must be named in the sentence that reports it ("behind an experimental
+  feature", "awaiting review", "a prototype", "the target"). CI's `check_prose.py` fails a
+  new or edited title or dek carrying a throughput, percentage, time or memory figure unless
+  the post's blog card (`frontier/blog/*.toml`) lists `changes` whose ledger rows are all
+  `default`, and fails when the body's first mention of a ledgered non-default change omits
+  its state word (matched by a `/pull/<N>` link, `#<N>` citation or the card's optional
+  `[change_labels]` phrase, or across the body when unlinked).
 - **Report every run, the unfavourable ones too.** A result rests on all the runs of the
   question, not on the best one. Report each run with its machine, since CI's CPU model
   varies by run [P: agent-team post, "neither PR run was faster there beyond noise"; E:

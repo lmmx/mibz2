@@ -1,0 +1,38 @@
+id = "a6b-compact-footprint-rescue"
+title = "Compact n_nodes-sized A6b rescue obeying the <= 1.01x 8W RSS L3-footprint law"
+kind = "explore"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "dropped"
+owned_paths = []
+mechanisms = ["construction-induction-dict", "compact-l3-footprint"]
+needs_louis = ""
+question = """
+Physical i9-10900K evidence `a6e427b1` (#1151) killed `#1053` (`a6b-endpoint-build`, fixed 64K `Box<[NodeLinks/u32/u128; 65536]>` slabs, `1.75 MiB` virtual) under its frozen stop test: `#1053` cut `wikidata/1` by `-1.76%` (`+24.7 ms`, `0.9824 [0.9776, 0.9872]`), yet regressed `wikidata/8/S` worker-busy to `1.0106 [0.9931, 1.0283]` (`wall = 1.0124`) because its fixed 64K slabs added `+524-546 KiB/worker` resident RSS (`+4.19 MiB` / `1.0374x` at 8W, `+5.46 MiB` / `1.0488x` at 10W), pushing Comet Lake's 20 MiB L3 past its cliff.
+
+Can a 100% safe-Rust redesign of `A6b` (`src/open/endpoint.rs`) retain `#1053`'s real algorithmic gains (fused `A6b-setup`, `u16` links, `inline15` words, generation-tagged `16 KiB` `contents_4k`) plus `#1079`'s `V2_u128` refinements (zero-call empty join, no `pairs` cache, `gen8+fp8`, `tag < 8` 64-bit dict) while sizing every per-worker slab dynamically or compactly to actual `n_nodes` (or bounded power-of-two capacity with zero 64K static slabs, e.g. reusing `Open`'s existing scratch or sizing to `n_nodes <= ~12-16k` per block) so that 8-worker resident RSS stays `<= 1.01x` baseline and L3-cold performance wins cleanly at 1W and 8W?
+"""
+why = """
+Preserves `#1053`'s frozen `STOP/KILL` verdict (C2) while testing whether eliminating the exact `+524 KiB/worker` fixed-slab L3 blowup recovers `C-A6b`'s `~30.4 ms/w` 8W room cleanly before shelving `A6b` (research persistence). Smooth-zone probe only — zero `src/` edits until a compact layout passes its L3-cold and footprint gates.
+"""
+stop_test = """
+Frozen before data:
+1. Smooth-zone standalone probe (`examples/a6b_compact_rescue.rs`, `#![forbid(unsafe_code)]`, zero `src/` edits), 100% byte- and structure-exact across all 233 Wikidata Open blocks plus stress cases (spirals, `n_nodes > 65536` Wide fallback, generation wrap).
+2. Per-worker peak resident scratch growth strictly `<= +64 KiB/worker` vs shipped `master` (`<= 1.01x` 8W RSS, measured via isolated RSS / scratch-byte accounting across all 233 Wikidata Open blocks — zero fixed 64K SoA slabs).
+3. Steal-free L3-cold paired CPU (7 interleaved repeats on pinned CPU across baseline x86-64, native, and JCC-32B aligned) cuts isolated `A6b` by `>= 25.0%` AND full `C + E` by `>= 4.5%` (disjoint `[min, max]` ranges) vs shipped `master` with `<= +0.5%` `A7` delta and zero guard regressions (`text`, `runs`, `records`, `random`).
+Otherwise STOP, record a scoped dead-end row in `frontier/dead-ends.tsv`, and shelve `A6b` as structurally L3-bound.
+"""
+done_when = """
+Probe (`examples/a6b_compact_rescue.rs`), report (`docs/journal/2026-11-27-explore/a6b-compact-footprint-rescue.md`), verdict delta, and either a follow-on striated build claim (`idea`) or a scoped dead-end row.
+"""
+premises = [
+  "frontier/deltas/2026-11-27-a6b-endpoint-i9-verdict.md",
+  "docs/journal/2026-11-27-synthesis/fourteenth-pass.md",
+  "docs/journal/2026-11-26-explore/a6b-combined-redesign.md",
+  "docs/journal/2026-11-27-explore/a6b-v2-dissection.md",
+]
+links = [
+  "frontier/claims/a6b-endpoint-build.toml",
+  "frontier/claims/a6b-v2-fold.toml",
+]

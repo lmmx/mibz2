@@ -1,0 +1,12 @@
+claim: scanner-a2-fast-build
+by: antigravity
+outcome: done
+evidence: PR #1117; origin/evidence 9dacc085 (scanner-a2-fast/run-20261127T233936Z.tar.gz, sha256 c42ecb37705312cdc7715b9eff3b8872dc3bbe2dd955936b4d4420c61aed212b); docs/notebook/2026-11-27-scanner-a2-fast-i9-verdict.md; frontier/deltas/2026-11-27-scanner-a2-fast-i9-verdict.md; frontier/deltas/2026-11-28-scanner-a2-fast-i9-run-review.md
+
+**What was asked:** Independently review and integrate `claude-code`'s PR #1117 (`scanner-a2-fast-build`: direct run-length selector MTF, 8-bit multi-symbol code-length `DELTA_LUT`, and single-write root Huffman LUT fill in `src/block.rs` and `src/huff.rs`) after its physical i9-10900K adoption gate passed.
+**Independent review & integration check:**
+- **Safety & diff audit:** Confirmed zero new `unsafe` across `src/block.rs`, `src/huff.rs` (`#![forbid(unsafe_code)]`), and `tests/lazy_admission.rs`; the sole touched `unsafe` call updates the existing `decode_runs_bmi2` parameter from `sel_buf: &[u8]` to `runs: &[(u8, u16)]` under `#![deny(unsafe_op_in_unsafe_fn)]`. Code diff has zero conflicts with `origin/master` (`ca6366bf`) and matches the i9-measured head (`689e55f7`) on `src/block.rs` and `src/huff.rs`.
+- **Frozen adoption evidence (`docs/journal/2026-11-27-scanner-a2-fast/registration.md` §4, `origin/evidence 9dacc085`, independently re-verified in #1252):** **PASS** on all four gates — `phases/wikidata/1` serial scan `S'` `-4.52%` (`0.9548 [0.9514, 0.9582]`, disjoint `142.8 -> 136.3 ms`, `-6.5 ms`), 5/5 guard serial scans clean (`0.9560..1.0044`), peak RSS `<= 1.0068x` across all 9 real cells, `wikidata` real decode neutral at `k=1/8/9/10` (`0.9930..1.0058`), 28/28 `libbz2` SHA-256 parity checks, `22 shlx` / `8 shrx` / `0 vzeroupper`. Per registration §4, this physical i9 `PASS` stands in for `PERFORMANCE-POLICY.md` §2 rule 1.
+- **Verification on merged head:** `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test --release`, `frontier.py check`, `ledger.py --check`, and exact-head CI green.
+**What changed:** Merged `origin/master` into PR #1117, set `frontier/claims/scanner-a2-fast-build.toml` to `status = "done"`, updated `frontier/surface.tsv` row `S`, appended PR #1117's `default` row to `frontier/ledger.tsv`, and added this integration delta.
+**Caveats:** Two ungated diagnostic 8W cells leaned slower beyond noise on i9 (`real/records/8` `1.0076`, `real/onebyte/8` `1.0288` on a ~12 ms single-block stream) and are watched in `release-0-5-18`'s pre-release i9 gate.
