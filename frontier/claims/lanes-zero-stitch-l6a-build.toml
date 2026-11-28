@@ -1,0 +1,49 @@
+id = "lanes-zero-stitch-l6a-build"
+title = "Zero-stitch fused chunked RLE1 + tiled CRC-32 on bounded-slab forward anchor lanes (L6a-on-1312)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = ["src/open/lanes.rs", "src/open.rs", "src/rle.rs", "src/bwt.rs", "src/lib.rs"]
+mechanisms = ["forward-lanes-zero-stitch-rle1-crc"]
+needs_louis = ""
+question = """
+PR `#1312` (`0762c7ea`) bounded the four-lane forward walk's per-worker `Arena` to `<= 80 KiB` (`4 × 4 KiB` active lane slabs + `<= 64 KiB` segment tails, `#![forbid(unsafe_code)]`) by flushing full `4 KiB` chunks directly into `out`, permuting chunks in place via cycle-following moves, inserting tails in a backward `copy_within` pass, and then running `find_runs_avx2` + `unrle_in_place` + `crc32` as a second full-block pass.
+
+Prototype `050acb79` (`docs/notebook/2026-11-28-l6a-zero-stitch-and-k8-prefetch.md`) fused chunked RLE1 + 64 KiB tiled PCLMULQDQ CRC-32 directly onto `#1312`'s unordered `4 KiB` chunks and tails — keeping `#![forbid(unsafe_code)]` in `src/open/lanes.rs`, `<= 80 KiB/worker` `Arena`, `4/4` Miri clean (`0 UB`), `95/95` tests, and `140/140` `AB_SHA256=1` exact parity across all 7 corpora. However, whole-decoder `ab` evaluation (`n = 10`, `wikidata.bz2`) uncovered two crucial facts:
+1. Pairing `L6a` with `K = 8` lanes + 1-step `edges[next]` prefetch (`96 KiB/worker`) regressed **16/16** Wikidata cells (`+0.55%` to `+6.28%` CPU across both `base` and `JCC-32B`, `1W`/`8W`, warm/cold) due to 32 KiB L1d eviction, doubled stack stores (`63` vs `33`), and warm `A6c -> A7` `edges` residency — closing `K = 8 + prefetch` on top of `L6a`.
+2. `050acb79` (`K = 4`) beat `#1312` on `base` (`-3.22%` 1W warm, `-3.39%` 1W cold, `-4.34%` 8W cold, all disjoint, `-12.34%..-16.62%` vs default `A0`, `0.991x..1.026x` RSS vs `#1312`, 12/12 guard cells clean), **but flattened on `JCC-32B`** (`+0.26%` 1W warm, `+1.71%` 1W cold, `-0.30%` 8W warm, `-0.06%` 8W cold vs `#1312`) because `A1_base` had a `Walk::run<4>` 32B alignment shift (`0x12d030` vs `0x132d20`) and `unrle_crc_chunks_in_place_avx2` compiled to `10.5 KiB` while still performing free-list eviction copies for out-of-order `4 KiB` chunks in `decode_owned`.
+
+Sequenced behind `#1324` (`forward-emission-bounded-slab-rescue`), can we tighten `L6a-on-1312`'s in-place eviction path and `unrle_crc_chunks_in_place_avx2` codegen (or pair with disjoint delivery where free) so zero-stitch fused RLE1+CRC delivers a genuine, JCC-32B-verified whole-decoder win over `#1312` on VM AND a real multi-core L3-bandwidth win on physical i9-10900K at `8W`/`10W` within `#1312`'s `<= 80 KiB/worker` RSS envelope?
+"""
+why = """
+Once `#1324` (`forward-emission-bounded-slab-rescue`) promotes the bounded-slab 4-lane walk to default, eliminating the separate full-block `4 KiB` chunk permutation, backward tail `copy_within`, `find_runs_avx2` pre-scan, and `unrle_in_place` pass is the cleanest remaining pass-removing fusion on the worker hot path (directly aligned with the 27th synthesis pass's observation that CRC/RLE1 gains are reachable only inside pass-removing fusion, not standalone CRC swaps). Keeping `050acb79` verified and freezing a JCC-32B-clean gate prevents mistaking Cascade Lake layout shifts for algorithmic speedups while preserving the `<= 80 KiB/worker` RSS discipline.
+"""
+stop_test = """
+Frozen before code (C2 never relaxed; sequenced after `forward-emission-bounded-slab-rescue` `#1324`):
+1. **Exactness, safety & scratch:** `#![forbid(unsafe_code)]` preserved in `src/open/lanes.rs`; zero new `unsafe` outside runtime-dispatched AVX2/PCLMULQDQ kernels in `src/rle.rs`/`src/crc.rs`; per-worker `Arena` statically bounded `<= 80 KiB`; `cargo fmt --check`, 3-way `clippy -D warnings`, all unit/integration tests, `4/4` Miri tests (`0 UB`), `0 vzeroupper / 0 ymm` in `Walk::run`, and `7/7` corpora exact `AB_SHA256=1` parity vs C `libbzip2`.
+2. **VM JCC-32B hygiene gate (before any physical i9 spend):** On paired interleaved `ab` (`n >= 10` rounds on `wikidata.bz2`, `1W` `mibz2-workers-lazy` and `8W` `mibz2`, warm & L3-cold) against `#1312` (`forward-anchor-lanes`):
+   - **Must beat `#1312` under BOTH `base` AND `JCC-32B`** (`-x86-align-branch-boundary=32 -x86-align-branch=fused+jcc+jmp`): paired CPU 95% CI upper bound `<= 0.985` (`>= 1.5%` whole-decoder CPU reduction over `#1312`) in at least one of `{1W, 8W}` L3-cold on `JCC-32B` AND no `JCC-32B` cell slower than `1.005x`;
+   - Peak RSS `<= 1.020x` vs `#1312` (`<= 1.030x` vs default);
+   - Zero guard regressions (`text`, `runs`, `onebyte`, `records`, `pattern`, `random`: no `t_ci95_lo > 1.020`).
+3. **Physical i9-10900K C6 adoption gate (independently reviewed registration, `n >= 16` paired rounds, `--settle 2 --prespin-ms 100 --machine-state` against promoted `#1312`):**
+   - Cuts `wikidata/1` OR `wikidata/8` / `wikidata/10` paired wall by `>= 2.0%` (95% CI upper bound `<= 0.980`, or worker CPU `<= 0.960` if `8W`/`10W` is scanner-bound after `#1324`);
+   - Peak RSS `<= 1.020x` at `wikidata/1` and `<= 1.030x` at `wikidata/{6, 8, 10, 12}`;
+   - Zero guard corpus (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` at `k = 1, 8`) with `t_ci95_lo > 1.020` or `paired_median > 1.020`.
+Otherwise STOP and record a scoped row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Sequenced after `forward-emission-bounded-slab-rescue` (`#1324`). Either (a) tightened `L6a-on-1312` passes Clauses 1-3 and lands on `master` with a delta and `surface.tsv` update, or (b) fails Clause 2 (`JCC-32B` VM gate) or Clause 3 (i9 gate) and closes with a scoped row in `frontier/dead-ends.tsv`.
+"""
+premises = [
+  "docs/notebook/2026-11-28-l6a-zero-stitch-and-k8-prefetch.md",
+  "frontier/deltas/2026-11-28-forward-emission-bounded-slab-rescue.md",
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+  "frontier/claims/forward-rle1-crc-vectored-build.toml",
+  "frontier/claims/forward-lanes-mlp-and-prefetch.toml",
+]
