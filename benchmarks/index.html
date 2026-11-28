@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=27c76f8a6126">
     
-      <link rel="stylesheet" href="../assets/stylesheets/illuminated.css?v=9280643e6dea">
+      <link rel="stylesheet" href="../assets/stylesheets/illuminated.css?v=27c76f8a6126">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3693,6 +3693,15 @@ land, are not recorded or shown here; experiments are written up in the
   mibz2's at that count, and shown as 1-thread runs, never as a decode on more threads.</li>
 <li><strong>On a pull request</strong>, the base's own harness binary is an arm (<code>mibz2@base/ab</code>), so
   both builds run in the same process shape on the same runner.</li>
+<li><strong>Open-route diagnostic:</strong> after the default grid and stage table, each run executes a
+  1-thread diagnostic on <code>wikidata</code> and <code>text</code> with <code>mibz2-workers-lazy</code>, which forces the
+  open kernel route on a single worker for 10 rounds (<code>--spread</code>, <code>--settle 0.25</code>). On a
+  pull request it runs paired against the base build (<code>mibz2-workers-lazy@base/ab</code>, when the
+  base harness defines that arm); on master pushes and manual dispatches without a base it
+  runs the head build alone. Its table is shown in the pull request comment and workflow
+  summary (and saved as <code>open-route.jsonl</code> in the run artifact) strictly as a diagnostic
+  outside the performance policy's acceptance rules, and is not recorded into the master
+  history.</li>
 <li><strong>Paired ratios:</strong> each round's ratio of one arm's time to the reference arm's (the
   base; or mibz2, against the alternatives), their geometric mean, and its 95% t-interval
   over the rounds. A change is called faster or slower only where the interval excludes
@@ -3875,21 +3884,21 @@ runner's CPU; its interval carries the rounds' spread and the sample ratio's.</p
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/bench.js?v=27c76f8a6126"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/couriers.js?v=27c76f8a6126"></script>
       
-        <script src="../assets/javascripts/blog.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/blog.js?v=27c76f8a6126"></script>
       
-        <script src="../assets/javascripts/announce.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/announce.js?v=27c76f8a6126"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/frontier.js?v=27c76f8a6126"></script>
       
-        <script src="../assets/javascripts/observatory.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/observatory.js?v=27c76f8a6126"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=9280643e6dea"></script>
+        <script src="../assets/javascripts/katex.js?v=27c76f8a6126"></script>
       
     
   </body>
