@@ -1,0 +1,36 @@
+id = "scanner-contention-bounded-recheck"
+title = "Does the bounded lanes Arena (#1312) remove the forward lanes' 8-worker scanner L3-stall excess?"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "i9"]
+priority = 3
+status = "idea"
+owned_paths = []
+needs_louis = ""
+question = """
+scanner-contention-residual (origin/evidence a7ac01d8) found the forward lanes' scanner rising 1.0647x from 4 to 8 workers at constant clock against base's 1.0230x, 76.4% of the lanes rise in L3-miss stalls, with +6.53 MiB peak RSS at 8W from #1217's unbounded slab pool. #1312 bounds that pool to 80 KiB/worker (VM: 8W excess +0.30 MiB base flags, +1.29 MiB jcc). The twenty-fifth synthesis pass derives about 4.9M scanner cycles (0.63%) per MiB of 8-worker working set from those two arms and predicts the bounded lanes ratio falls to about 1.025-1.03.
+Rerun the frozen bench-scanner-contention recipe unchanged except that its lanes arm is built at a commit containing #1312: does the lanes 8W/4W scanner-cycle excess over base collapse?
+"""
+why = """
+It is the cheapest physical test of whether worker working set alone explains the 8-worker scanner contention, which decides how RSS-neutral or RSS-negative worker levers (a6b-zero-rss-endpoint-build, forward-rle1-crc-vectored-build) should be priced at the knee, where forward lanes make the scanner bind. The recipe, scorer and registration exist; only the pinned commit changes. Worth folding into forward-emission-bounded-slab-rescue's C6 run's queue slot if that is simpler.
+"""
+stop_test = """
+Frozen before data (C1a). Same recipe, settle, rounds, corpus (wikidata-x4) and scorer as scanner-contention-residual's registration, lanes arm at a commit containing #1312, base arm at the same commit without the feature. Let E = (lanes 8W/4W scanner cycles) - (base 8W/4W scanner cycles), with the ratio CIs from the scorer.
+- EXPLAINED: E <= 0.010 and lanes' L3-miss-stall increment from 4W to 8W is within 1.5x of base's. Working set was the cause; the bound removed it.
+- PARTIAL: 0.010 < E < 0.030. Some excess is not RSS (record the PMU split).
+- NOT EXPLAINED: E >= 0.030 (the unbounded build's E was 0.0417). Contention has a cause other than the slab pool.
+Parity must be exact on every arm, else VOID.
+"""
+done_when = """
+A notebook entry with the verdict and PMU split, a delta, and surface row S updated.
+"""
+premises = [
+  "docs/notebook/2026-11-28-scanner-contention-residual-verdict.md",
+  "docs/notebook/2026-11-28-synthesis-twenty-fifth-pass.md",
+  "frontier/deltas/2026-11-28-forward-emission-bounded-slab-rescue.md",
+]
+links = [
+  "frontier/claims/scanner-contention-residual.toml",
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+  "docs/journal/2026-11-28-scanner-contention-residual/registration.md",
+]
