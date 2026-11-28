@@ -4,7 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 2
-status = "open"
+status = "done"
+pr = 1245
 owned_paths = [".github/workflows/bench.yml"]
 mechanisms = ["ci-bench-coverage"]
 needs_louis = ""
@@ -21,4 +22,7 @@ done_when = """
 Workflow PR merged with a delta naming its first measured PR, or dropped with the reason.
 """
 premises = ["docs/notebook/2026-11-27-synthesis-seventeenth-pass.md", ".github/workflows/bench.yml", "examples/ab.rs"]
-links = ["frontier/deltas/2026-11-27-ci-bench-open-route-arm-registration.md"]
+links = [
+  "frontier/deltas/2026-11-27-ci-bench-open-route-arm-registration.md",
+  "frontier/deltas/2026-11-27-ci-bench-open-route-arm.md",
+]

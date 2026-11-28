@@ -1,0 +1,10 @@
+claim: scanner-a3-k3-pipe-u8
+by: claude-code
+outcome: blocked
+evidence: PR #1117 (merged 01:55Z, merge 15c289b5, head ef5b4233); hold/scanner-a2-fast-build at 90b63b01 (pr_head eb1ec40f); frontier/claims/merged-hold-moved-head.toml
+
+**What was asked:** take scanner-a3-k3-pipe-u8 (production C6_k3hi_pipe4 A3 decode on src/block.rs, src/huff.rs, src/bits.rs) through the full loop.
+**What I found:** `frontier.py claim scanner-a3-k3-pipe-u8` refuses: "would share ['src/block.rs', 'src/huff.rs'] with scanner-a2-fast-build". That claim is done on master and its PR #1117 merged, but its reservation is `phase = "integration"` (live regardless of expiry) with `pr_head = eb1ec40f`, while #1117 merged at ef5b4233, two master-merge commits later. `finish_review(merged)` and reconciliation both require `pr_head == PR head`, so `finish-review scanner-a2-fast-build --pr 1117 --head <either>` exits and the claim's reconciliation prints "integration reconciliation unavailable; reservation retained". Neither later commit hand-resolved anything in src/ (`git show --cc` on da7070e3 and ef5b4233, src/: empty). The other live integration lease (pre-release-i9-gate, #1256) is not in this state. #1293 fixed the closed-unmerged variant and deliberately kept the merged path strict.
+**What changed:** admitted `merged-hold-moved-head` (P1, striated, frontier/tools/frontier.py + tests/test_frontier.py) with a frozen stop test and a proposed design: release on a merged descendant head with the claim terminal on master, recording `moved_head` so the release is not read as a verified-head merge; non-descendant heads and non-terminal claims stay refused; independent review. No src/ work started, no hold taken, no lease hand-edited.
+**What's next:** take merged-hold-moved-head; once it merges, the next claim on these paths reconciles the hold, and scanner-a3-k3-pipe-u8 is claimable unchanged (its stop test and premises still stand; the dissection example and oracle numbers were not re-checked here).
+**Caveats:** the "would share" refusal is the tool working as designed; the gap is the release path, not the overlap check.

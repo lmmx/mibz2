@@ -58,6 +58,8 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Shrinking worker scratch speeds the scanner" = "blog/2026-11-28-shrinking-worker-scratch-speeds-the-scanner.md" },
+    { "Clock hysteresis and memory noise" = "blog/2026-11-28-clock-modes-and-memory-noise.md" },
     { "Walking the BWT cycle forward across four lanes" = "blog/2026-11-28-four-lanes-forward.md" },
     { "Why compression ratio moves the scaling ceiling" = "blog/2026-11-27-why-the-scaling-ceiling-moves.md" },
     { "Half the memory on compressible files" = "blog/2026-11-27-bounded-memory-on-highly-compressible-input.md" },
@@ -300,6 +302,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-28-shrinking-worker-scratch-speeds-the-scanner.md" = "Shrinking each worker's slab scratch removes almost every extra cache stall on the serial scanner, making the whole eight-worker decode faster." },
+  { "blog/2026-11-28-clock-modes-and-memory-noise.md" = "A brief pause between runs can trap a desktop processor below full boost, while parallel queue jitter dominates peak memory across six server chips." },
   { "blog/2026-11-28-four-lanes-forward.md" = "Walking the inverse BWT cycle forward across four safe Rust lanes lets workers outrun the serial scanner, alongside three default speedups." },
   { "blog/2026-11-27-why-the-scaling-ceiling-moves.md" = "On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text." },
   { "blog/2026-11-27-bounded-memory-on-highly-compressible-input.md" = "Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well." },
