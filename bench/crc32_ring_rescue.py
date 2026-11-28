@@ -129,22 +129,21 @@ def build(out, tmp, root=ROOT):
         for k, v in os.environ.items()
         if k not in ("RUSTFLAGS", "CARGO_BUILD_RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS")
     }
-    try:
-        for arm in ("base", "head"):
-            names = ["ab", "station_balance"] + (["windows"] if arm == "base" else [])
-            cmd = ["cargo", "build", "--release", "--locked"]
-            for name in names:
-                cmd.extend(["--example", name])
-            target = tmp / f"target-{arm}"
-            subprocess.run(
-                cmd, cwd=trees[arm], check=True, env={**env, "CARGO_TARGET_DIR": str(target)}
-            )
-            for name in names:
-                dest = tmp / f"{arm}-{name}"
-                shutil.copy2(target / "release/examples" / name, dest)
-                bins[arm, name] = dest
-    finally:
-        subprocess.run(["git", "worktree", "remove", "--force", trees["base"]], cwd=root)
+    # The base worktree must outlive the build: `ab gen` reads its text corpus from the
+    # compiled-in CARGO_MANIFEST_DIR, so it is removed only at the end of `run`.
+    for arm in ("base", "head"):
+        names = ["ab", "station_balance"] + (["windows"] if arm == "base" else [])
+        cmd = ["cargo", "build", "--release", "--locked"]
+        for name in names:
+            cmd.extend(["--example", name])
+        target = tmp / f"target-{arm}"
+        subprocess.run(
+            cmd, cwd=trees[arm], check=True, env={**env, "CARGO_TARGET_DIR": str(target)}
+        )
+        for name in names:
+            dest = tmp / f"{arm}-{name}"
+            shutil.copy2(target / "release/examples" / name, dest)
+            bins[arm, name] = dest
     audit = {arm: ring_symbols(bins[arm, "ab"]) for arm in ("base", "head")}
     if audit["base"] or not audit["head"]:
         raise InvalidRun("the ring kernel is not present in exactly the candidate build")
@@ -440,17 +439,25 @@ def run(out):
     )
     with tempfile.TemporaryDirectory(dir=out.parent) as tmpdir:
         tmp = Path(tmpdir)
-        bins = build(out, tmp)
-        if json.loads(output(bins["base", "ab"], "env")).get("cpu_quota", "absent") is not None:
-            raise InvalidRun("workstation CPU quota must be unlimited")
-        files, refs = inputs(out, tmp, bins)
-        verify_parity(out, bins, files, refs)
-        rows = run_ab_timed(out, bins, files, pin_cpu)
-        stations = run_station_balance(out, bins, files, refs, pin_cpu)
-        result = score(rows, refs, head_exe=bins["head", "ab"])
-        result["station_balance"] = summarize_stations(stations)
-        save(out / "summary.json", result)
-        (out / "outcome.txt").write_text(result["verdict"] + "\n")
+        try:
+            measure_all(out, tmp, pin_cpu)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", tmp / "base-src"], cwd=ROOT)
+            subprocess.run(["git", "worktree", "prune"], cwd=ROOT)
+
+
+def measure_all(out, tmp, pin_cpu):
+    bins = build(out, tmp)
+    if json.loads(output(bins["base", "ab"], "env")).get("cpu_quota", "absent") is not None:
+        raise InvalidRun("workstation CPU quota must be unlimited")
+    files, refs = inputs(out, tmp, bins)
+    verify_parity(out, bins, files, refs)
+    rows = run_ab_timed(out, bins, files, pin_cpu)
+    stations = run_station_balance(out, bins, files, refs, pin_cpu)
+    result = score(rows, refs, head_exe=bins["head", "ab"])
+    result["station_balance"] = summarize_stations(stations)
+    save(out / "summary.json", result)
+    (out / "outcome.txt").write_text(result["verdict"] + "\n")
 
 
 if __name__ == "__main__":
