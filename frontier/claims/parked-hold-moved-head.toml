@@ -22,5 +22,6 @@ Merged after independent review; #1179 closed unmerged as superseded by the resc
 premises = [
   "frontier/deltas/2026-11-27-crc32-avx2-ring-barrett-build-2.md",
   "frontier/claims/crc32-avx2-ring-rescue.toml",
+  "frontier/tools/frontier.py",
 ]
 links = ["frontier/claims/resume-released-pr-claim.toml"]
