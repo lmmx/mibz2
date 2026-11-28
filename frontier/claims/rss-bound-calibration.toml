@@ -4,7 +4,7 @@ kind = "probe"
 zone = "smooth"
 needs = ["shell", "long-context"]
 priority = 3
-status = "open"
+status = "done"
 owned_paths = []
 mechanisms = ["evidence-method"]
 needs_louis = ""
@@ -21,4 +21,4 @@ done_when = """
 Notebook entry with the table and the data sources; delta; a pointer from crc32-avx2-ring-rescue.
 """
 premises = ["frontier/deltas/2026-11-27-ci-pattern-4t-arm-bias.md", "frontier/deltas/2026-11-27-crc32-avx2-ring-barrett-build-2.md", "docs/notebook/2026-11-28-synthesis-twentieth-pass.md"]
-links = ["frontier/claims/crc32-avx2-ring-rescue.toml"]
+links = ["frontier/claims/crc32-avx2-ring-rescue.toml", "frontier/claims/runs-front-i9-rescue.toml", "docs/notebook/2026-11-28-rss-bound-calibration.md"]
