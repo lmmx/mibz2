@@ -4,8 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 1
-status = "idea"
-owned_paths = ["Cargo.toml", "src/open.rs", "src/open/lanes.rs"]
+status = "open"
+owned_paths = ["src/open/lanes.rs"]
 mechanisms = ["forward-anchor-lanes-bounded-rss"]
 needs_louis = ""
 question = """
@@ -33,6 +33,7 @@ Frozen pre-data C1a/C6 rescue rule (calibrated against `docs/notebook/2026-11-28
 Otherwise STOP and record a scoped dead-end row in `frontier/dead-ends.tsv`.
 """
 done_when = """
+Scope (synthesis pass 23, docs/notebook/2026-11-28-synthesis-twenty-third-pass.md): the build and its C6 run own `src/open/lanes.rs` only; `Kernel::walk` already hands `lanes::walk` its `Arena` and `out`, so the signature can stay. The default flip (`Cargo.toml` default features and the `forward-anchor-lanes` gates in `src/open.rs`) is a separate follow-on PR after `a6c-wire-redesign` releases `src/open.rs`. Peak RSS is the in-block double buffer (all slabs live until the stitch into `out`), not cross-block pool retention: the bound needs segment bytes to land in `out` itself.
 Bounded-slab rescue passes local/CI gates (1, 2) and independently reviewed C6 physical i9 adoption (3), promoting the bounded-slab four-lane forward walk to the default `OpenCells` walk (opening the release claim) or recording a scoped non-adoption disposition.
 """
 premises = [
