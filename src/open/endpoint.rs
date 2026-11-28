@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 //! Eliminate the open complement with an auxiliary interval exchange.
 //! Its prefix contains terminal coordinates only. All narrow-run wiring is absent.
 //!
@@ -614,6 +615,26 @@ impl Kernel {
         wide
     }
 
+    /// Whether the elimination of `ns` strips uses the zero-extra-RSS edges-overlaid AoS fast path.
+    pub(super) fn use_overlay_aos(&self, ns: usize) -> bool {
+        #[cfg(feature = "a6b-endpoint-redesign")]
+        {
+            let _ = ns;
+            false
+        }
+        #[cfg(not(feature = "a6b-endpoint-redesign"))]
+        {
+            if self.wide(ns) || ns < 64 {
+                return false;
+            }
+            #[cfg(test)]
+            if self.endpoint.tight || self.endpoint.clobber != Clobber::None {
+                return false;
+            }
+            true
+        }
+    }
+
     /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
     /// retained rows: packed strips and image order (`4 * ns` words), then the arena for the
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
@@ -622,6 +643,9 @@ impl Kernel {
         #[cfg(feature = "a6b-endpoint-redesign")]
         if !self.wide(ns) {
             return (3 * ns).max(m);
+        }
+        if self.use_overlay_aos(ns) {
+            return (5 * ns).max(4096).max(m);
         }
         let stride = if self.wide(ns) {
             Wide::STRIDE
@@ -847,6 +871,1011 @@ impl Kernel {
         }
         assert_eq!(id, 0);
         cursors
+    }
+}
+
+#[cfg(not(feature = "a6b-endpoint-redesign"))]
+mod overlay_aos {
+    use super::super::{begin_inline, long_slot, long_word, Band, Counts, Kernel, INLINE, LONG};
+    use super::{spelling_hash, CERTIFIED_WIDTH, RULE, SPIRAL_RULES};
+
+    const U64_PAYLOAD_MASK: u64 = (1u64 << 56) - 1;
+    const U64_ID_MASK: u64 = (1u64 << 24) - 1;
+    const U64_LONG_TAG: u64 = 0xFFu64 << 56;
+    const CONTENT_SLOTS: usize = 4096;
+
+    #[inline(always)]
+    fn literal_u64(byte: u8) -> u64 {
+        (1u64 << 56) | u64::from(byte)
+    }
+
+    #[inline(always)]
+    fn short_u64_hash(low: u64, len: u8) -> u64 {
+        let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+            ^ u64::from(len).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        h ^ (h >> 30)
+    }
+
+    #[inline(always)]
+    fn short_u128_hash(entry_u128: u128, len: u8) -> u64 {
+        let low = entry_u128 as u64;
+        let high = (entry_u128 >> 64) as u64;
+        let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+            ^ high.rotate_left(29).wrapping_mul(0x94D0_49BB_1331_11EB)
+            ^ u64::from(len).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        h ^ (h >> 30)
+    }
+
+    #[inline(always)]
+    fn reserve_exact_len(v: &mut Vec<u32>, need: usize) {
+        if v.len() < need {
+            let add = need - v.len();
+            v.reserve_exact(add);
+            v.resize(need, 0);
+        }
+    }
+
+    struct EdgesRules<'a> {
+        buf: &'a mut [u32],
+        top: usize,
+    }
+
+    impl<'a> EdgesRules<'a> {
+        #[inline(always)]
+        fn room(&self) -> usize {
+            self.buf.len() - self.top
+        }
+
+        #[inline(always)]
+        fn push(&mut self, fields: [u32; RULE]) -> u32 {
+            let id = 257 + (self.top >> 2) as u32;
+            let dst = &mut self.buf[self.top..self.top + RULE];
+            dst.copy_from_slice(&fields);
+            self.top += RULE;
+            id
+        }
+
+        #[inline(always)]
+        fn get_inline(&self, id: u32) -> u128 {
+            let r = (id - 257) as usize * RULE;
+            let s = &self.buf[r..r + RULE];
+            u128::from(s[0])
+                | (u128::from(s[1]) << 32)
+                | (u128::from(s[2]) << 64)
+                | (u128::from(s[3] & 0x00ff_ffff) << 96)
+        }
+
+        fn append_fast(&mut self, word: u32, spill: &mut Vec<u32>, dest: &mut Vec<u8>) {
+            let mut stk = [0u32; 64];
+            let mut sp = 0usize;
+            let mut cur = word;
+            let mut used_spill = false;
+            loop {
+                if cur <= 256 {
+                    dest.push((cur - 1) as u8);
+                } else {
+                    let r = (cur - 257) as usize * RULE;
+                    let tag = self.buf[r + 3];
+                    if tag >> 28 == 0 {
+                        let bytes = (u128::from(self.buf[r])
+                            | (u128::from(self.buf[r + 1]) << 32)
+                            | (u128::from(self.buf[r + 2]) << 64)
+                            | (u128::from(tag & 0x00ff_ffff) << 96))
+                            .to_le_bytes();
+                        dest.extend_from_slice(&bytes[..(tag >> 24) as usize]);
+                    } else if tag == u32::MAX {
+                        let r0 = self.buf[r];
+                        let r1 = self.buf[r + 1];
+                        self.buf[r + 3] = 0x8000_0000 | dest.len() as u32;
+                        if sp < 64 {
+                            stk[sp] = r1;
+                            sp += 1;
+                        } else {
+                            if !used_spill {
+                                spill.clear();
+                                used_spill = true;
+                            }
+                            spill.push(r1);
+                        }
+                        cur = r0;
+                        continue;
+                    } else {
+                        let start = (tag & 0x7fff_ffff) as usize;
+                        let len = self.buf[r + 2] as usize;
+                        dest.extend_from_within(start..start + len);
+                    }
+                }
+                if used_spill {
+                    if let Some(next) = spill.pop() {
+                        cur = next;
+                        continue;
+                    }
+                }
+                if sp > 0 {
+                    sp -= 1;
+                    cur = stk[sp];
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn join_u64(rules: &mut EdgesRules<'_>, left: u64, right: u64) -> u64 {
+        let ll = (left >> 56) as u32;
+        let rl = (right >> 56) as u32;
+        if (ll + rl < 8) | (ll.min(rl) == 0) {
+            return (left + (u64::from(rl) << 56)) | (right << (8 * (ll & 7)));
+        }
+        join_u64_long(rules, left, right, ll, rl)
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn join_u64_long(rules: &mut EdgesRules<'_>, left: u64, right: u64, ll: u32, rl: u32) -> u64 {
+        if ll < 16 && rl < 16 && ll + rl < 16 {
+            let sum = ll + rl;
+            let lp = if ll < 8 {
+                u128::from(left & U64_PAYLOAD_MASK)
+            } else {
+                rules.get_inline((left & U64_ID_MASK) as u32)
+            };
+            let rp = if rl < 8 {
+                u128::from(right & U64_PAYLOAD_MASK)
+            } else {
+                rules.get_inline((right & U64_ID_MASK) as u32)
+            };
+            let p = lp | (rp << (8 * ll)) | (u128::from(sum) << 120);
+            let id = rules.push([
+                p as u32,
+                (p >> 32) as u32,
+                (p >> 64) as u32,
+                (p >> 96) as u32,
+            ]);
+            return (u64::from(sum) << 56) | u64::from(id);
+        }
+        let (lid, l_len) = if ll == 0xFF {
+            (
+                (left & U64_ID_MASK) as u32,
+                ((left >> 24) & 0xFFFF_FFFF) as u32,
+            )
+        } else if ll == 1 {
+            (u32::from(left as u8) + 1, 1)
+        } else if ll < 8 {
+            let p = left & U64_PAYLOAD_MASK;
+            let id = rules.push([p as u32, (p >> 32) as u32, 0, ll << 24]);
+            (id, ll)
+        } else {
+            ((left & U64_ID_MASK) as u32, ll)
+        };
+        let (rid, r_len) = if left == right {
+            (lid, l_len)
+        } else if rl == 0xFF {
+            (
+                (right & U64_ID_MASK) as u32,
+                ((right >> 24) & 0xFFFF_FFFF) as u32,
+            )
+        } else if rl == 1 {
+            (u32::from(right as u8) + 1, 1)
+        } else if rl < 8 {
+            let p = right & U64_PAYLOAD_MASK;
+            let id = rules.push([p as u32, (p >> 32) as u32, 0, rl << 24]);
+            (id, rl)
+        } else {
+            ((right & U64_ID_MASK) as u32, rl)
+        };
+        let total_len = l_len + r_len;
+        let id = rules.push([lid, rid, total_len, u32::MAX]);
+        U64_LONG_TAG | (u64::from(total_len) << 24) | u64::from(id)
+    }
+
+    fn power_u64(rules: &mut EdgesRules<'_>, word: u64, q: u32) -> u64 {
+        let (mut acc, mut base, mut e) = (0u64, word, q);
+        loop {
+            if e & 1 == 1 {
+                acc = join_u64(rules, acc, base);
+            }
+            e >>= 1;
+            if e == 0 {
+                break acc;
+            }
+            base = join_u64(rules, base, base);
+        }
+    }
+
+    fn fold_left_u64(rules: &mut EdgesRules<'_>, x: u64, mut q: u32, mut y: u64) -> u64 {
+        if x == 0 {
+            return y;
+        }
+        let xl = (x >> 56) as u32;
+        if xl < 8 {
+            while q > 0 {
+                let yl = (y >> 56) as u32;
+                if yl >= 8 || xl + yl >= 8 {
+                    break;
+                }
+                y = if y == 0 {
+                    x
+                } else {
+                    (x + (u64::from(yl) << 56)) | (y << (8 * xl))
+                };
+                q -= 1;
+            }
+        }
+        if q == 0 {
+            return y;
+        }
+        let head = power_u64(rules, x, q);
+        join_u64(rules, head, y)
+    }
+
+    fn fold_right_u64(rules: &mut EdgesRules<'_>, mut x: u64, y: u64, mut q: u32) -> u64 {
+        if y == 0 {
+            return x;
+        }
+        let yl = (y >> 56) as u32;
+        if yl < 8 {
+            while q > 0 {
+                let xl = (x >> 56) as u32;
+                if xl >= 8 || xl + yl >= 8 {
+                    break;
+                }
+                x = if x == 0 {
+                    y
+                } else {
+                    (x + (u64::from(yl) << 56)) | (y << (8 * xl))
+                };
+                q -= 1;
+            }
+        }
+        if q == 0 {
+            return x;
+        }
+        let tail = power_u64(rules, y, q);
+        join_u64(rules, x, tail)
+    }
+
+    // 32-byte AoS node layout inside `&mut [u32; CAP8]`:
+    //   [prev0, next0, prev1, next1, word_lo, word_hi, width, pad]
+    // Placing `word` at +0x10 aligns the 64-bit word to 8 bytes and keeps all fields
+    // of a node inside a single half cache line.
+    #[inline(always)]
+    fn base<const CAP8: usize>(id: u32) -> usize {
+        ((id as usize) << 3) & (CAP8 - 1)
+    }
+    #[inline(always)]
+    fn set_prev0<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, to: u32) {
+        a[base::<CAP8>(id)] = to;
+    }
+    #[inline(always)]
+    fn set_next0<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, to: u32) {
+        a[base::<CAP8>(id) | 1] = to;
+    }
+    #[inline(always)]
+    fn set_prev1<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, to: u32) {
+        a[base::<CAP8>(id) | 2] = to;
+    }
+    #[inline(always)]
+    fn set_next1<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, to: u32) {
+        a[base::<CAP8>(id) | 3] = to;
+    }
+    #[inline(always)]
+    fn set_word<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, val: u64) {
+        let b = base::<CAP8>(id);
+        a[b | 4] = val as u32;
+        a[b | 5] = (val >> 32) as u32;
+    }
+    #[inline(always)]
+    fn set_width<const CAP8: usize>(a: &mut [u32; CAP8], id: u32, w: u32) {
+        a[base::<CAP8>(id) | 6] = w;
+    }
+
+    /// Pass 0: unpack `strips_raw` (`0..3*ns`) into `img_u32` (`3*ns..5*ns`) sorted by image
+    /// coordinate and compute the exact node count (`1 + ns + from_gaps + to_gaps`) so we pick
+    /// the tightest power-of-two `CAP`.
+    #[inline(never)]
+    fn prepare_header_exact_nodes(
+        edges: &mut [u32],
+        ns: usize,
+        n: u32,
+        first: &[u32; 256],
+        write: &mut [u32; 256],
+    ) -> usize {
+        let (strips_raw, rest) = edges.split_at_mut(3 * ns);
+        let img_u32 = &mut rest[..2 * ns];
+        let mut from_gaps = 0usize;
+        let mut x = 0u32;
+        for i in 0..ns {
+            let b = 3 * i;
+            let from = strips_raw[b];
+            let to_rel = strips_raw[b + 1];
+            let meta = strips_raw[b + 2];
+            let a = usize::from((meta & 0xFF) as u8);
+            let width = meta >> 8;
+            let to = to_rel + first[a];
+            if x < from {
+                from_gaps += 1;
+            }
+            x = from + width;
+            let pos = write[a] as usize;
+            write[a] = (pos + 1) as u32;
+            let packed =
+                u64::from(to) | (u64::from(width) << 20) | (u64::from((i + 1) as u32) << 40);
+            img_u32[2 * pos] = packed as u32;
+            img_u32[2 * pos + 1] = (packed >> 32) as u32;
+        }
+        if x < n {
+            from_gaps += 1;
+        }
+        let base_nodes = 1 + ns + from_gaps;
+        let max_nodes = base_nodes + ns + 1;
+        let lo_cap = base_nodes.next_power_of_two().max(2048);
+        if max_nodes <= lo_cap {
+            return max_nodes;
+        }
+        let mut to_gaps = 0usize;
+        let mut y = 0u32;
+        for pos in 0..ns {
+            let packed = u64::from(img_u32[2 * pos]) | (u64::from(img_u32[2 * pos + 1]) << 32);
+            let to = (packed & 0xF_FFFF) as u32;
+            let width = ((packed >> 20) & 0xF_FFFF) as u32;
+            if y < to {
+                to_gaps += 1;
+            }
+            y = to + width;
+        }
+        if y < n {
+            to_gaps += 1;
+        }
+        base_nodes + to_gaps
+    }
+
+    #[inline(never)]
+    fn setup_aos<const CAP8: usize>(
+        strips_raw: &[u32],
+        img_u32: &[u32],
+        a: &mut [u32; CAP8],
+        ns: usize,
+        n: u32,
+    ) -> (u32, usize) {
+        a[..8].fill(0);
+        let mut nodes = (1 + ns) as u32;
+        let mut widest = 0u32;
+        let mut ord0_tail = 0u32;
+        let (mut term1_head, mut term1_tail) = (0u32, 0u32);
+        let mut x = 0u32;
+        for i in 0..ns {
+            let from = strips_raw[3 * i];
+            let meta = strips_raw[3 * i + 2];
+            let byte = (meta & 0xFF) as u8;
+            let w = meta >> 8;
+            let sid = (i + 1) as u32;
+            set_word::<CAP8>(a, sid, literal_u64(byte));
+            set_width::<CAP8>(a, sid, w);
+            widest = widest.max(w);
+            if x < from {
+                let gap = from - x;
+                widest = widest.max(gap);
+                let gid = nodes;
+                nodes += 1;
+                set_word::<CAP8>(a, gid, 0);
+                set_width::<CAP8>(a, gid, gap);
+                set_next0::<CAP8>(a, ord0_tail, gid);
+                set_prev0::<CAP8>(a, gid, ord0_tail);
+                ord0_tail = gid;
+                if term1_tail == 0 {
+                    term1_head = gid;
+                } else {
+                    set_next1::<CAP8>(a, term1_tail, gid);
+                }
+                set_prev1::<CAP8>(a, gid, term1_tail);
+                term1_tail = gid;
+            }
+            set_next0::<CAP8>(a, ord0_tail, sid);
+            set_prev0::<CAP8>(a, sid, ord0_tail);
+            ord0_tail = sid;
+            x = from + w;
+        }
+        if x < n {
+            let gap = n - x;
+            widest = widest.max(gap);
+            let gid = nodes;
+            nodes += 1;
+            set_word::<CAP8>(a, gid, 0);
+            set_width::<CAP8>(a, gid, gap);
+            set_next0::<CAP8>(a, ord0_tail, gid);
+            set_prev0::<CAP8>(a, gid, ord0_tail);
+            ord0_tail = gid;
+            if term1_tail == 0 {
+                term1_head = gid;
+            } else {
+                set_next1::<CAP8>(a, term1_tail, gid);
+            }
+            set_prev1::<CAP8>(a, gid, term1_tail);
+            term1_tail = gid;
+        }
+        let ord0_head = if ord0_tail == 0 { 0 } else { a[1] };
+        let mut ord1_tail = 0u32;
+        let (mut term0_head, mut term0_tail) = (0u32, 0u32);
+        x = 0;
+        for pos in 0..ns {
+            let packed = u64::from(img_u32[2 * pos]) | (u64::from(img_u32[2 * pos + 1]) << 32);
+            let to = (packed & 0xF_FFFF) as u32;
+            let w = ((packed >> 20) & 0xF_FFFF) as u32;
+            let sid = (packed >> 40) as u32;
+            if x < to {
+                let gap = to - x;
+                widest = widest.max(gap);
+                let gid = nodes;
+                nodes += 1;
+                set_word::<CAP8>(a, gid, 0);
+                set_width::<CAP8>(a, gid, gap);
+                set_next1::<CAP8>(a, ord1_tail, gid);
+                set_prev1::<CAP8>(a, gid, ord1_tail);
+                ord1_tail = gid;
+                if term0_tail == 0 {
+                    term0_head = gid;
+                } else {
+                    set_next0::<CAP8>(a, term0_tail, gid);
+                }
+                set_prev0::<CAP8>(a, gid, term0_tail);
+                term0_tail = gid;
+            }
+            set_next1::<CAP8>(a, ord1_tail, sid);
+            set_prev1::<CAP8>(a, sid, ord1_tail);
+            ord1_tail = sid;
+            x = to + w;
+        }
+        if x < n {
+            let gap = n - x;
+            widest = widest.max(gap);
+            let gid = nodes;
+            nodes += 1;
+            set_word::<CAP8>(a, gid, 0);
+            set_width::<CAP8>(a, gid, gap);
+            set_next1::<CAP8>(a, ord1_tail, gid);
+            set_prev1::<CAP8>(a, gid, ord1_tail);
+            ord1_tail = gid;
+            if term0_tail == 0 {
+                term0_head = gid;
+            } else {
+                set_next0::<CAP8>(a, term0_tail, gid);
+            }
+            set_prev0::<CAP8>(a, gid, term0_tail);
+            term0_tail = gid;
+        }
+        let ord1_head = if ord1_tail == 0 { 0 } else { a[3] };
+        let mut prev = 0u32;
+        for (h, t) in [(term0_head, term0_tail), (ord0_head, ord0_tail)] {
+            if t == 0 {
+                continue;
+            }
+            set_next0::<CAP8>(a, prev, h);
+            set_prev0::<CAP8>(a, h, prev);
+            prev = t;
+        }
+        set_next0::<CAP8>(a, prev, 0);
+        a[0] = prev;
+
+        prev = 0u32;
+        for (h, t) in [(term1_head, term1_tail), (ord1_head, ord1_tail)] {
+            if t == 0 {
+                continue;
+            }
+            set_next1::<CAP8>(a, prev, h);
+            set_prev1::<CAP8>(a, h, prev);
+            prev = t;
+        }
+        set_next1::<CAP8>(a, prev, 0);
+        a[2] = prev;
+        (widest, nodes as usize)
+    }
+
+    #[inline(never)]
+    fn elim_aos<const CAP8: usize, const SPIRALS: bool>(
+        a: &mut [u32; CAP8],
+        rules: &mut EdgesRules<'_>,
+        left_ref: &mut u32,
+        #[cfg(any(test, feature = "census", feature = "induction-trace"))] steps_ref: &mut usize,
+    ) {
+        let mut left = *left_ref;
+        #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+        let mut steps = *steps_ref;
+        let mut x = a[0];
+        let mut y = a[2];
+        while left != 0 {
+            let bx = base::<CAP8>(x);
+            let by = base::<CAP8>(y);
+            let aw = a[bx | 6];
+            let bw = a[by | 6];
+            if SPIRALS && x != y {
+                if aw > bw && a[by | 2] == x && (aw - 1) / bw >= 2 {
+                    if rules.room() < (SPIRAL_RULES + 4) * RULE {
+                        break;
+                    }
+                    let q = (aw - 1) / bw;
+                    assert!(q * bw < aw && q * bw <= left);
+                    let wx = u64::from(a[bx | 4]) | (u64::from(a[bx | 5]) << 32);
+                    let wy = u64::from(a[by | 4]) | (u64::from(a[by | 5]) << 32);
+                    let nw = fold_left_u64(rules, wx, q, wy);
+                    a[by | 4] = nw as u32;
+                    a[by | 5] = (nw >> 32) as u32;
+                    a[bx | 6] = aw - q * bw;
+                    left -= q * bw;
+                    #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                    {
+                        steps += q as usize;
+                    }
+                    continue;
+                }
+                if aw < bw && a[bx] == y && (bw - 1) / aw >= 2 {
+                    if rules.room() < (SPIRAL_RULES + 4) * RULE {
+                        break;
+                    }
+                    let q = (bw - 1) / aw;
+                    assert!(q * aw < bw && q * aw <= left);
+                    let wx = u64::from(a[bx | 4]) | (u64::from(a[bx | 5]) << 32);
+                    let wy = u64::from(a[by | 4]) | (u64::from(a[by | 5]) << 32);
+                    let nw = fold_right_u64(rules, wx, wy, q);
+                    a[bx | 4] = nw as u32;
+                    a[bx | 5] = (nw >> 32) as u32;
+                    a[by | 6] = bw - q * aw;
+                    left -= q * aw;
+                    #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                    {
+                        steps += q as usize;
+                    }
+                    continue;
+                }
+            }
+            if x == y {
+                assert!(aw > 0 && aw <= left);
+                left -= aw;
+                #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                {
+                    steps += 1;
+                }
+                let xp = a[bx];
+                set_next0::<CAP8>(a, xp, 0);
+                x = xp;
+                let yp = a[by | 2];
+                set_next1::<CAP8>(a, yp, 0);
+                y = yp;
+                continue;
+            }
+            let wx = u64::from(a[bx | 4]) | (u64::from(a[bx | 5]) << 32);
+            let wy = u64::from(a[by | 4]) | (u64::from(a[by | 5]) << 32);
+            let ll = (wx >> 56) as u32;
+            let rl = (wy >> 56) as u32;
+            let wd = if (ll + rl < 8) | (ll.min(rl) == 0) {
+                (wx + (u64::from(rl) << 56)) | (wy << (8 * (ll & 7)))
+            } else {
+                if rules.room() < 3 * RULE {
+                    break;
+                }
+                join_u64_long(rules, wx, wy, ll, rl)
+            };
+            #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+            {
+                steps += 1;
+            }
+            if aw > bw {
+                assert!(bw > 0 && bw <= left);
+                left -= bw;
+                let yp = a[by | 2];
+                a[by | 4] = wd as u32;
+                a[by | 5] = (wd >> 32) as u32;
+                a[bx | 6] = aw - bw;
+                if yp != x {
+                    set_next1::<CAP8>(a, yp, 0);
+                    let xn = a[bx | 3];
+                    a[by | 2] = x;
+                    a[by | 3] = xn;
+                    a[bx | 3] = y;
+                    set_prev1::<CAP8>(a, xn, y);
+                    y = yp;
+                }
+            } else if aw < bw {
+                assert!(aw > 0 && aw <= left);
+                left -= aw;
+                let xp = a[bx];
+                a[bx | 4] = wd as u32;
+                a[bx | 5] = (wd >> 32) as u32;
+                a[by | 6] = bw - aw;
+                if xp != y {
+                    set_next0::<CAP8>(a, xp, 0);
+                    let yn = a[by | 1];
+                    a[bx] = y;
+                    a[bx | 1] = yn;
+                    a[by | 1] = x;
+                    set_prev0::<CAP8>(a, yn, x);
+                    x = xp;
+                }
+            } else {
+                assert!(aw > 0 && aw <= left);
+                left -= aw;
+                let xp = a[bx];
+                let yp0 = a[by];
+                let yp1 = a[by | 2];
+                a[bx | 4] = wd as u32;
+                a[bx | 5] = (wd >> 32) as u32;
+                set_next1::<CAP8>(a, yp1, 0);
+                if xp == y {
+                    set_next0::<CAP8>(a, yp0, x);
+                    a[bx] = yp0;
+                } else {
+                    set_next0::<CAP8>(a, xp, 0);
+                    let yn0 = a[by | 1];
+                    a[bx] = yp0;
+                    a[bx | 1] = yn0;
+                    set_next0::<CAP8>(a, yp0, x);
+                    set_prev0::<CAP8>(a, yn0, x);
+                    x = xp;
+                }
+                y = yp1;
+            }
+        }
+        a[0] = x;
+        a[2] = y;
+        *left_ref = left;
+        #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+        {
+            *steps_ref = steps;
+        }
+    }
+
+    #[inline(never)]
+    fn assign_bottom_aos<const CAP8: usize>(a: &mut [u32; CAP8], rows: u32) {
+        let mut first = a[3];
+        let mut last = a[2];
+        let (mut lo, mut hi) = (0u32, rows);
+        while first != last {
+            let bf = base::<CAP8>(first);
+            let bl = base::<CAP8>(last);
+            let nf = a[bf | 3];
+            let pl = a[bl | 2];
+            let wf = a[bf | 6];
+            hi -= a[bl | 6];
+            a[bf | 2] = lo;
+            a[bl | 2] = hi;
+            lo += wf;
+            if nf == last {
+                assert_eq!(lo, hi);
+                return;
+            }
+            first = nf;
+            last = pl;
+        }
+        if first != 0 {
+            let bf = base::<CAP8>(first);
+            a[bf | 2] = lo;
+            lo += a[bf | 6];
+        }
+        assert_eq!(lo, hi);
+    }
+
+    #[inline(never)]
+    #[allow(clippy::too_many_arguments)]
+    fn dict_aos<const CAP8: usize>(
+        a: &[u32; CAP8],
+        rules: &mut EdgesRules<'_>,
+        contents: &mut [u32; CONTENT_SLOTS],
+        bands: &mut Vec<Band>,
+        inline16: &mut Vec<[u8; INLINE]>,
+        lens: &mut Vec<u8>,
+        spelling: &mut Vec<u8>,
+        stack: &mut Vec<u32>,
+        thin: &[u32; 256],
+        n: u32,
+        #[cfg(any(test, feature = "census", feature = "induction-trace"))] stats: &mut Counts,
+    ) -> [usize; 256] {
+        contents.fill(0);
+        begin_inline(if n >= 65_536 { 1536 } else { 0 }, inline16, lens);
+        let mut cursors = [0usize; 256];
+        let mut id = a[1];
+        let mut b = base::<CAP8>(id);
+        let mut nw = a[b | 6];
+        let mut nwd = u64::from(a[b | 4]) | (u64::from(a[b | 5]) << 32);
+        let mut nbot = a[b | 2];
+        let mut nnext = a[b | 1];
+        let mut in_node = 0u32;
+        let mut k = 0u32;
+        for ch in 0..256 {
+            cursors[ch] = bands.len();
+            let end = k + thin[ch];
+            while k < end {
+                let width = (end - k).min(nw - in_node);
+                assert!(width > 0);
+                let dst = nbot + in_node;
+                #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                if nwd != 0 {
+                    let tag = (nwd >> 56) as u32;
+                    let height = if tag == 0xFF {
+                        ((nwd >> 24) & 0xFFFF_FFFF) as usize
+                    } else {
+                        tag as usize
+                    };
+                    stats.words += 1;
+                    stats.copies += width as usize;
+                    stats.traced += height;
+                    stats.thick_area += width as usize * height;
+                    stats.unit_work += usize::from(width == 1) * height;
+                    stats.longest = stats.longest.max(height);
+                }
+                let code = if nwd == 0 {
+                    ch as u32
+                } else {
+                    let tag = (nwd >> 56) as u32;
+                    if tag < 8 {
+                        let low = (nwd & U64_PAYLOAD_MASK) | (u64::from(ch as u8) << (8 * tag));
+                        let len = (tag + 1) as u8;
+                        let h = short_u64_hash(low, len);
+                        let cidx = (h as usize) & (CONTENT_SLOTS - 1);
+                        let fp16 = (((h >> 12) as u32) & 0xFFFF_0000) | 0x8000_0000;
+                        let slot = contents[cidx];
+                        let mut hit = 0u32;
+                        if (slot & 0xFFFF_0000) == fp16 {
+                            let old = (slot & 0xFFFF) as usize;
+                            if lens[old] == len
+                                && u64::from_le_bytes(inline16[old][..8].try_into().unwrap()) == low
+                            {
+                                hit = old as u32;
+                            }
+                        }
+                        if hit != 0 {
+                            hit
+                        } else {
+                            let code = lens.len() as u32;
+                            inline16.push(u128::from(low).to_le_bytes());
+                            lens.push(len);
+                            if code < 65_536 {
+                                contents[cidx] = fp16 | code;
+                            }
+                            code
+                        }
+                    } else if tag < 16 {
+                        let payload = rules.get_inline((nwd & U64_ID_MASK) as u32);
+                        let entry = payload | (u128::from(ch as u8) << (8 * tag));
+                        let len = (tag + 1) as u8;
+                        let h = short_u128_hash(entry, len);
+                        let cidx = (h as usize) & (CONTENT_SLOTS - 1);
+                        let fp16 = (((h >> 12) as u32) & 0xFFFF_0000) | 0x8000_0000;
+                        let slot = contents[cidx];
+                        let mut hit = 0u32;
+                        if (slot & 0xFFFF_0000) == fp16 {
+                            let old = (slot & 0xFFFF) as usize;
+                            if lens[old] == len && u128::from_le_bytes(inline16[old]) == entry {
+                                hit = old as u32;
+                            }
+                        }
+                        if hit != 0 {
+                            hit
+                        } else {
+                            let code = lens.len() as u32;
+                            inline16.push(entry.to_le_bytes());
+                            lens.push(len);
+                            if code < 65_536 {
+                                contents[cidx] = fp16 | code;
+                            }
+                            code
+                        }
+                    } else {
+                        let start = spelling.len();
+                        let rid = (nwd & U64_ID_MASK) as u32;
+                        let memoized = rules.buf[(rid - 257) as usize * RULE + 3] != u32::MAX;
+                        rules.append_fast(rid, stack, spelling);
+                        spelling.push(ch as u8);
+                        let send = spelling.len();
+                        let bytes = &spelling[start..send];
+                        let h = spelling_hash(&[0; INLINE], LONG, bytes);
+                        let cidx = (h as usize) & (CONTENT_SLOTS - 1);
+                        let fp16 = (((h >> 12) as u32) & 0xFFFF_0000) | 0x8000_0000;
+                        let slot = contents[cidx];
+                        let mut hit = 0u32;
+                        if (slot & 0xFFFF_0000) == fp16 {
+                            let old = (slot & 0xFFFF) as usize;
+                            if lens[old] == LONG && long_word(&inline16[old], spelling) == bytes {
+                                if memoized {
+                                    spelling.truncate(start);
+                                } else {
+                                    spelling.pop();
+                                }
+                                hit = old as u32;
+                            }
+                        }
+                        if hit != 0 {
+                            hit
+                        } else {
+                            let code = lens.len() as u32;
+                            inline16.push(long_slot(start as u32, send as u32));
+                            lens.push(LONG);
+                            if code < 65_536 {
+                                contents[cidx] = fp16 | code;
+                            }
+                            code
+                        }
+                    }
+                };
+                bands.push(Band::new(k + width, dst, code));
+                in_node += width;
+                k += width;
+                if in_node == nw {
+                    id = nnext;
+                    in_node = 0;
+                    if id != 0 {
+                        b = base::<CAP8>(id);
+                        nw = a[b | 6];
+                        nwd = u64::from(a[b | 4]) | (u64::from(a[b | 5]) << 32);
+                        nbot = a[b | 2];
+                        nnext = a[b | 1];
+                    }
+                }
+            }
+        }
+        assert_eq!(id, 0);
+        cursors
+    }
+
+    impl Kernel {
+        #[allow(clippy::too_many_arguments)]
+        fn run_overlay_aos_cap<const CAP8: usize>(
+            &mut self,
+            ns: usize,
+            n: u32,
+            m: u32,
+            thin: &[u32; 256],
+            stats: &mut Counts,
+        ) -> [usize; 256] {
+            let Kernel {
+                endpoint,
+                bands,
+                spelling,
+                edges,
+                inline16,
+                lens,
+                ..
+            } = self;
+            let hdr_words = (5 * ns).max(CONTENT_SLOTS);
+            let rules_base = hdr_words + CAP8;
+            let init_rules = RULE * (ns / 2 + 256);
+            let need = (rules_base + init_rules).max(m as usize);
+            reserve_exact_len(edges, need);
+
+            let (widest, nodes_used) = {
+                let (hdr, rest) = edges.split_at_mut(hdr_words);
+                let (strips_raw, img_rest) = hdr.split_at(3 * ns);
+                let img_u32 = &img_rest[..2 * ns];
+                let a: &mut [u32; CAP8] = (&mut rest[..CAP8]).try_into().unwrap();
+                setup_aos::<CAP8>(strips_raw, img_u32, a, ns, n)
+            };
+            stats.open_nodes = nodes_used - 1;
+            #[cfg(test)]
+            let spirals = endpoint.spirals.unwrap_or(widest > CERTIFIED_WIDTH);
+            #[cfg(not(test))]
+            let spirals = widest > CERTIFIED_WIDTH;
+            stats.spirals = spirals;
+
+            let room_need = if spirals {
+                (SPIRAL_RULES + 4) * RULE
+            } else {
+                3 * RULE
+            };
+            let mut left = n;
+            #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+            let mut steps = 0usize;
+            let mut rules_top = 0usize;
+            while left != 0 {
+                let (_, rest) = edges.split_at_mut(hdr_words);
+                let (a_s, rules_buf) = rest.split_at_mut(CAP8);
+                let a: &mut [u32; CAP8] = a_s.try_into().unwrap();
+                let mut rules = EdgesRules {
+                    buf: rules_buf,
+                    top: rules_top,
+                };
+                if spirals {
+                    elim_aos::<CAP8, true>(
+                        a,
+                        &mut rules,
+                        &mut left,
+                        #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                        &mut steps,
+                    );
+                } else {
+                    elim_aos::<CAP8, false>(
+                        a,
+                        &mut rules,
+                        &mut left,
+                        #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                        &mut steps,
+                    );
+                }
+                rules_top = rules.top;
+                if left != 0 {
+                    let grow_to = (rules_base + rules_top + room_need).max(edges.len() + 4096);
+                    reserve_exact_len(edges, grow_to);
+                }
+            }
+            #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+            {
+                stats.steps = steps;
+            }
+            stats.rules = rules_top / RULE;
+
+            {
+                let (_, rest) = edges.split_at_mut(hdr_words);
+                let a: &mut [u32; CAP8] = (&mut rest[..CAP8]).try_into().unwrap();
+                assign_bottom_aos::<CAP8>(a, m);
+            }
+
+            let (hdr, rest) = edges.split_at_mut(hdr_words);
+            let contents: &mut [u32; CONTENT_SLOTS] =
+                (&mut hdr[..CONTENT_SLOTS]).try_into().unwrap();
+            let (a_s, rules_buf) = rest.split_at_mut(CAP8);
+            let a: &[u32; CAP8] = (&*a_s).try_into().unwrap();
+            let mut rules = EdgesRules {
+                buf: &mut rules_buf[..rules_top],
+                top: rules_top,
+            };
+            dict_aos::<CAP8>(
+                a,
+                &mut rules,
+                contents,
+                bands,
+                inline16,
+                lens,
+                spelling,
+                &mut endpoint.stack,
+                thin,
+                n,
+                #[cfg(any(test, feature = "census", feature = "induction-trace"))]
+                stats,
+            )
+        }
+
+        #[allow(clippy::too_many_arguments)]
+        pub(in super::super) fn induced_overlay_aos(
+            &mut self,
+            ns: usize,
+            n: u32,
+            m: u32,
+            first: &[u32; 256],
+            write: &mut [u32; 256],
+            thin: &[u32; 256],
+            stats: &mut Counts,
+        ) -> [usize; 256] {
+            let hdr_min = (5 * ns).max(CONTENT_SLOTS);
+            reserve_exact_len(&mut self.edges, hdr_min);
+            let mut write_copy = *write;
+            let n_nodes =
+                prepare_header_exact_nodes(&mut self.edges, ns, n, first, &mut write_copy);
+            if n_nodes <= 2048 {
+                self.run_overlay_aos_cap::<16384>(ns, n, m, thin, stats)
+            } else if n_nodes <= 4096 {
+                self.run_overlay_aos_cap::<32768>(ns, n, m, thin, stats)
+            } else if n_nodes <= 8192 {
+                self.run_overlay_aos_cap::<65536>(ns, n, m, thin, stats)
+            } else if n_nodes <= 16384 {
+                self.run_overlay_aos_cap::<131072>(ns, n, m, thin, stats)
+            } else if n_nodes <= 32768 {
+                self.run_overlay_aos_cap::<262144>(ns, n, m, thin, stats)
+            } else {
+                // Rare 32769..=65535-node narrow block: populate image_order and fall back to
+                // compact Narrow so `edges` never allocates a 2 MiB CAP=65536 AoS table.
+                let need = (4 * ns + (4 + RULE) * Self::nodes_most(ns)).max(m as usize);
+                reserve_exact_len(&mut self.edges, need);
+                let (strips_raw, rest) = self.edges.split_at_mut(3 * ns);
+                let image_order = &mut rest[..ns];
+                for i in 0..ns {
+                    let sw = &mut strips_raw[3 * i..3 * i + 3];
+                    let a = usize::from((sw[2] & 0xFF) as u8);
+                    sw[1] += first[a];
+                    image_order[write[a] as usize] = i as u32;
+                    write[a] += 1;
+                }
+                self.induced(ns, n, thin, stats)
+            }
+        }
     }
 }
 
@@ -2014,6 +3043,102 @@ mod tests {
                 k.endpoint.spirals = spirals;
                 k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
                 assert_eq!(out, want);
+            }
+        }
+    }
+
+    #[cfg(not(feature = "a6b-endpoint-redesign"))]
+    #[test]
+    fn overlay_aos_matches_wide_and_spirals() {
+        use super::super::b5::{plain, runs_column, Lcg};
+        use super::super::LIMIT;
+        use crate::runs::Runs;
+
+        let mut g = Lcg(0x6136_6232);
+        let mut cases: Vec<(Vec<u8>, u32)> = vec![
+            (runs_column(&mut g, 8_000, 12, 18), 401),
+            (runs_column(&mut g, 40_000, 35, 14), 12_345),
+        ];
+        // Dense comb with >= 64 strips and deep (> 15 byte) words forcing long rules & dict dedup
+        let comb: Vec<u8> = (0..12_000)
+            .map(|i| {
+                if i % 40 < 20 {
+                    (i / 40 % 4) as u8
+                } else {
+                    4 + (i % 3) as u8
+                }
+            })
+            .collect();
+        cases.push((comb, 333));
+
+        let mut overlay = Kernel::default();
+        let mut wide = Kernel::default();
+        wide.endpoint.force_wide = true;
+        let (mut out_o, mut out_w) = (Vec::new(), Vec::new());
+
+        for (l, p) in &cases {
+            let r = Runs::of_column(l);
+            let want = plain(l, *p);
+            for spirals in [Some(false), Some(true), None] {
+                overlay.endpoint.spirals = spirals;
+                wide.endpoint.spirals = spirals;
+                let so = overlay.run::<true, true>(r.records(), l.len(), *p, LIMIT, &mut out_o);
+                let sw = wide.run::<true, true>(r.records(), l.len(), *p, LIMIT, &mut out_w);
+                assert!(so.thick >= 64, "test case must exercise overlay_aos path");
+                assert_eq!(
+                    out_o,
+                    want,
+                    "overlay mismatch len={} spirals={spirals:?}",
+                    l.len()
+                );
+                assert_eq!(
+                    out_w,
+                    want,
+                    "wide mismatch len={} spirals={spirals:?}",
+                    l.len()
+                );
+                assert_eq!(so.steps, sw.steps);
+                assert_eq!(so.open_nodes, sw.open_nodes);
+                assert_eq!(so.words, sw.words);
+                assert_eq!(so.traced, sw.traced);
+                assert_eq!(so.longest, sw.longest);
+                assert!(so.rules <= sw.rules);
+                assert_eq!(overlay.endpoint.scratch(), 0);
+            }
+        }
+    }
+
+    #[cfg(not(feature = "a6b-endpoint-redesign"))]
+    #[test]
+    fn miri_a6b_overlay_aos() {
+        use super::super::b5::{plain, runs_column, Lcg};
+        use super::super::LIMIT;
+        use crate::runs::Runs;
+
+        let mut g = Lcg(0x6d69_7232);
+        let mut k = Kernel::default();
+        let mut out = Vec::new();
+        // >= 64 thick strips to exercise overlay_aos setup, elim (both SPIRALS=false/true),
+        // assign_bottom, dict (inline-7, inline-15, long rules), and 0 B Endpoint heap.
+        let comb: Vec<u8> = (0..1_600)
+            .map(|i| {
+                if i % 22 < 18 {
+                    (i / 22 % 4) as u8
+                } else {
+                    4 + (i % 3) as u8
+                }
+            })
+            .collect();
+        let mixed = runs_column(&mut g, 2_400, 8, 18);
+        for (l, p) in [(comb, 77u32), (mixed, 19u32)] {
+            let r = Runs::of_column(&l);
+            let want = plain(&l, p);
+            for spirals in [Some(false), Some(true)] {
+                k.endpoint.spirals = spirals;
+                let s = k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
+                assert!(s.thick >= 64, "miri case must exercise overlay_aos");
+                assert_eq!(out, want);
+                assert_eq!(k.endpoint.scratch(), 0);
             }
         }
     }

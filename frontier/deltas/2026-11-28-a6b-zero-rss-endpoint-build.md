@@ -1,0 +1,13 @@
+claim: a6b-zero-rss-endpoint-build
+by: antigravity
+outcome: review
+evidence: src/open/endpoint.rs (#![forbid(unsafe_code)], mod overlay_aos); src/open.rs; docs/notebook/2026-11-28-a6b-zero-rss-dissection.md; docs/journal/2026-11-28-a6b-zero-rss-endpoint/registration.md; bench/a6b_zero_rss_i9.py; bench/test_a6b_zero_rss_i9.py; .just/a6b-zero-rss.just; Justfile; local verification (fmt, clippy across default + forward-anchor-lanes + census + induction-trace + a6b-endpoint-redesign, open/decode/pipelined/in_place/service_default/lazy_workers tests, Miri miri_a6b_overlay_aos 0 UB, ruff, pytest, live --smoke + score VOID + bench/bundle.sh)
+
+**Implementation & frozen C6 verification ready for independent review (DO NOT merge before independent C6 review and physical i9-10900K bundle readback):**
+1. **Zero-extra-RSS `A6b` redesign (`src/open/endpoint.rs`, `src/open.rs`):**
+   - Added `#![forbid(unsafe_code)]` to `src/open/endpoint.rs` and implemented `mod overlay_aos` (`Z3v2_aligned`) for `Narrow` Open blocks (`ns >= 64`, `n_nodes <= 32,768`; blocks with `> 32,768` nodes fall back to `Narrow` so `edges` never allocates a `2 MiB` table).
+   - Unified 32-byte AoS nodes (`[prev0, next0, prev1, next1, word_lo, word_hi, width, pad]` with 8-byte-aligned `word` at `+0x10`), inline-7 `u64` words, rules, and `16 KiB` `contents[4096]` cache all overlaid inside `Kernel.edges` with `reserve_exact`-only growth (`Endpoint::scratch() == 0 B`), tight exact-`n_nodes` power-of-two `CAP` (`2K..32K`), register-resident `(x, y)` tails, `q == 1` adjacent link-write no-op, cold-only `rules.room()` check, and `[u32; 64]` stack DFS.
+   - Compiled `elim_aos::<131072, false>` to 215 instructions with `0` `panic_bounds_check` calls and `0` hot-path spills (vs 3,221 instructions and `97` bounds checks in shipped `Narrow`).
+2. **Frozen C6 physical i9-10900K verification recipe (`bench-a6b-zero-rss`):**
+   - Control `BASE = 6679ddeed640f9e9cdd6aa3f71e80a7fb43326b7`; shallow-safe base worktree kept alive until `run()`'s `finally:`; isolated `CARGO_TARGET_DIR`s + distinct-binary SHA-256 VOID guard; `objdump` codegen identity verification (`0` bounds checks in `elim_aos::<131072, false>`); dict-safe `check_no_quota`; strict `RUSTFLAGS` + `CARGO_PROFILE_RELEASE_*` guard; `score_dir` VOID on non-registered runs; `2 s` settle, `100 ms` prespin, `12` paired rounds across 20 cells (`mibz2-workers-lazy` `wikidata` `1/6/8W`, `mibz2` `wikidata` `1/4/6/8/10W`, `mibz2` 6 guards `1/8W`), `AB_SHA256=1` C `libbzip2` parity on every cell, `console.log` tee, and `bench/bundle.sh`.
+3. **Hold status:** lease `8ebee9e996c1` kept live awaiting independent C6 review and physical i9-10900K submission/readback.
