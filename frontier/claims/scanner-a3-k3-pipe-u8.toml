@@ -4,7 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "open"
+status = "review"
+pr = 1343
 owned_paths = ["src/block.rs", "src/huff.rs", "src/bits.rs"]
 mechanisms = ["scanner-a3-k3-pipe-u8"]
 needs_louis = ""
@@ -41,6 +42,8 @@ premises = [
   "frontier/claims/scanner-a2-fast-build.toml",
 ]
 links = [
+  "docs/journal/2026-11-28-scanner-a3-k3/registration.md",
+  "frontier/deltas/2026-11-28-scanner-a3-k3-pipe-u8.md",
   "frontier/claims/scanner-a2-fast-build.toml",
   "frontier/deltas/2026-11-27-explore-scanner-a3-post1034.md",
 ]
