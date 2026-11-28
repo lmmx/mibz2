@@ -1,9 +1,9 @@
-id = "vm-i9-transfer-ledger"
+id = "explore"
 holder = "antigravity"
-session = "657885e780b3"
-claimed_at = "2026-11-28T13:41:58+00:00"
-expires = "2026-11-28T15:41:58+00:00"
+session = "0585b1ff673e"
+claimed_at = "2026-11-28T13:54:19+00:00"
+expires = "2026-11-28T15:54:19+00:00"
 owned_paths = []
 mechanisms = []
-base = "4bdd7386fb17eeff2db163a1f5ac7ee86b292e30"
+base = "18d46bf87eaf7cd21f60b1a04d5f1b7d72bb7576"
 released = false
