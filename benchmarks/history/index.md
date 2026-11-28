@@ -607,6 +607,12 @@ With no releases named, it compares the newest release tag with the one before i
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
 
+### 0.5.18
+
+28 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0518---2026-11-28>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.17...v0.5.18>)
+
+**Changes:** direct Rust abi3-py310 line and streaming delivery ([\#1335](<https://github.com/lmmx/mibz2/pull/1335>)); release merged integration holds at moved descendant PR heads ([\#1303](<https://github.com/lmmx/mibz2/pull/1303>)); release a terminal claim's parked hold after its PR closed unmerged at a moved head ([\#1293](<https://github.com/lmmx/mibz2/pull/1293>)); accept unlimited dict shape from ab env --facts in forward\_adopt ([\#1279](<https://github.com/lmmx/mibz2/pull/1279>)); let take-review resume released or expired PR claims ([\#1215](<https://github.com/lmmx/mibz2/pull/1215>)); bound forward-anchor-lanes Arena to 80 KiB via in-out 4 KiB chunk permutation ([\#1312](<https://github.com/lmmx/mibz2/pull/1312>)); front\_avx2's 64-symbol vptest Pass 1, u32 counts and hoisted XMM steps ([\#1274](<https://github.com/lmmx/mibz2/pull/1274>)); safe Cell 4x wire\_xor and overlapping-SIMD register-cursor wire ([\#1294](<https://github.com/lmmx/mibz2/pull/1294>)); direct selector runs, multi-length code-length LUT and single-write table build ([\#1117](<https://github.com/lmmx/mibz2/pull/1117>)); skip within\_cap pre-scan on \[0.10, 0.15) lazy-admitted blocks, routes unchanged ([\#1246](<https://github.com/lmmx/mibz2/pull/1246>)); clear native push\_slow vzeroupper and record mtf-fold-batch-measure STOP ([\#1234](<https://github.com/lmmx/mibz2/pull/1234>)).
+
 ### 0.5.17
 
 27 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17>)
