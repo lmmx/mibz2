@@ -16,7 +16,7 @@ The same probe built with `--features forward-anchor-lanes` (#1110) flips every 
 Once the four-lane forward walk is the default on master, does routing `t = 1..3` onto OpenCells (and retiring `EagerCells` / `Seq(Cells)`) win on the i9 at `k = 1, 2, 3` without regressing any corpus?
 """
 why = """
-Removes a whole engine (and its permanent `Segmented` fallback, 8.6 MiB a worker on wikidata) from the default path while making the one- to three-thread cases faster and roughly half the memory. Blocked until the forward four-lane walk ships (forward-emission-run, its kill test); do not admit to open before then.
+Removes a whole engine (5,154 LOC across 11 `src/cells*.rs` files unreachable from default paths, plus its 8.6 MiB/worker `Segmented` fallback on wikidata) while cutting `wikidata` 1T..3T CPU by 18.8%..28.9% on `#1312` bounded slabs alone (28.9%..34.2% composed with `#1328` + `default-a5a6a-fast` + `#1311`, zero guard regressions across 21 cells) at 0.48-0.56x peak RSS. Blocked until the bounded 80 KiB four-lane walk ships (`#1324`); do not admit to open before then.
 """
 stop_test = """
 To be frozen before data when admitted. Draft: on the i9 at k = 1, 2, 3 (just submit), OpenCells with forward emission no slower than the shipped route on wikidata and text (95% CI), no secondary corpus > 2% slower, peak RSS <= 1.0x; byte- and error-identical on cargo test, fuzz-smoke and all 7 corpora. Otherwise STOP with a scoped dead-end row.
@@ -26,10 +26,12 @@ A merged striated PR changing the low-thread route, with the i9 run's bundle cit
 """
 premises = [
   "docs/journal/2026-11-27-explore/eager-cells-and-seq-open-dissection.md",
+  "docs/notebook/2026-11-28-low-thread-open-unification-on-1312.md",
   "frontier/claims/forward-emission-run.toml",
 ]
 links = [
   "examples/eager_cells_seq_open_probe.rs",
   "frontier/deltas/2026-11-27-explore-eager-cells-and-seq-open.md",
   "frontier/claims/plan-schedule-and-lazy-threshold.toml",
+  "docs/notebook/2026-11-28-low-thread-open-unification-on-1312.md",
 ]
