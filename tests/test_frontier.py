@@ -12,11 +12,13 @@ import concurrent.futures
 import contextlib
 import datetime as dt
 import fcntl
+import hashlib
 import importlib.util
 import io
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -1472,6 +1474,45 @@ class TestFrontierStress(unittest.TestCase):
         fresh = _load_frontier_module(self.sb.clone("fresh"))
         with mock.patch.object(fresh, "read_pr", return_value=closed):
             fresh.claim("c4", "fresh", 1)
+        lease = fresh.holds()["c1"][1]
+        self.assertTrue(lease["released"])
+        self.assertEqual(lease["terminal"], "closed-unmerged")
+
+    def test_dropped_claim_releases_rebased_closed_unmerged_parked_hold(self):
+        """A parked lease whose PR was rebased after handoff still releases once the claim is
+        dropped on master and the PR is closed unmerged; a live (undropped) claim does not."""
+        self._rebased_parked_hold_releases_when("dropped")
+
+    def test_blocked_claim_releases_rebased_closed_unmerged_parked_hold(self):
+        """The second stranding mode: the claim is terminal as `blocked`, not dropped."""
+        self._rebased_parked_hold_releases_when("blocked")
+
+    def _rebased_parked_hold_releases_when(self, status):
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                reviewer.take_review("c1", 42, head, "reviewer", 1)
+        reviewer.yield_review("c1", _extract_session(out.getvalue()))
+        _git(author, "commit", "--allow-empty", "-m", "rebased")
+        moved = _git(author, "rev-parse", "HEAD")
+        closed = {**pr, "head": {"sha": moved}, "state": "closed", "merged": False}
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=closed):
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, moved, cancelled=True)
+            fresh.reconcile_integrations(fresh.holds())
+        self.assertFalse(fresh.holds()["c1"][1].get("released"))
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "review"', f'status = "{status}"'))
+        _git(author, "commit", "-am", f"mark c1 {status}")
+        _git(author, "push", "origin", "HEAD:master")
+        _git(fresh.ROOT.parent, "fetch", "-q", "origin", "+refs/heads/master:refs/remotes/origin/master")
+        with mock.patch.object(fresh, "read_pr", return_value=closed):
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, moved)
+            fresh.reconcile_integrations(fresh.holds())
         lease = fresh.holds()["c1"][1]
         self.assertTrue(lease["released"])
         self.assertEqual(lease["terminal"], "closed-unmerged")
@@ -2985,6 +3026,930 @@ class TestWorkstationPressure(unittest.TestCase):
         self.assertNotIn("**ws-queue-dispatch**", take_only)
         self.assertNotIn("P1 effective", take_only)
         self.assertIn("**other-p2**", take_only)
+
+
+class TestResultToRelease(unittest.TestCase):
+    """Frozen fixtures for all 10 stop_test classes of `result-to-release`."""
+
+    def setUp(self) -> None:
+        """Create an isolated temporary frontier sandbox for each result-to-release test."""
+        self._td = tempfile.TemporaryDirectory(prefix="frontier-r2r-")
+        self.sb = FrontierSandbox(pathlib.Path(self._td.name))
+
+    def tearDown(self) -> None:
+        """Remove the temporary frontier sandbox."""
+        self._td.cleanup()
+
+    def _reset_state(
+        self,
+        claims: dict[str, str],
+        *,
+        queue_text: str = "# repo: lmmx/mibz2\n",
+        deltas: dict[str, str] | None = None,
+        ledger_rows: list[str] | None = None,
+        dead_ends: list[str] | None = None,
+        max_open_claims: int | None = None,
+        max_live_holds: int | None = None,
+    ) -> str:
+        seed = self.sb.seed
+        cdir = seed / "frontier" / "claims"
+        for existing in list(cdir.glob("*.toml")):
+            existing.unlink()
+        for cid, body in claims.items():
+            (cdir / f"{cid}.toml").write_text(body, encoding="utf-8")
+        ddir = seed / "frontier" / "deltas"
+        for existing in list(ddir.glob("*.md")):
+            if existing.name != "README.md":
+                existing.unlink()
+        for fname, body in (deltas or {}).items():
+            (ddir / fname).write_text(body, encoding="utf-8")
+        (seed / "bench" / "workstation-queue.txt").write_text(queue_text, encoding="utf-8")
+        if ledger_rows is not None:
+            header = "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            (seed / "frontier" / "ledger.tsv").write_text(
+                header + "".join(r + "\n" for r in ledger_rows), encoding="utf-8"
+            )
+        if dead_ends is not None:
+            header = "claim\tverdict\tsummary\tevidence\n"
+            (seed / "frontier" / "dead-ends.tsv").write_text(
+                header + "".join(r + "\n" for r in dead_ends), encoding="utf-8"
+            )
+        if max_open_claims is not None:
+            cfg = (seed / "frontier" / "config.toml").read_text(encoding="utf-8")
+            cfg = re.sub(r"max_open_claims\s*=\s*\d+", f"max_open_claims = {max_open_claims}", cfg)
+            (seed / "frontier" / "config.toml").write_text(cfg, encoding="utf-8")
+        if max_live_holds is not None:
+            cfg_path = seed / "frontier" / "config.toml"
+            cfg_txt = cfg_path.read_text(encoding="utf-8")
+            if "limits_file" in cfg_txt:
+                (seed / "frontier" / "limits.toml").write_text(
+                    f"max_live_holds = {max_live_holds}\n", encoding="utf-8"
+                )
+            else:
+                cfg_txt = re.sub(
+                    r"max_live_holds\s*=\s*\d+", f"max_live_holds = {max_live_holds}", cfg_txt
+                )
+                cfg_path.write_text(cfg_txt, encoding="utf-8")
+        _git(seed, "add", "-A", "frontier", "bench/workstation-queue.txt")
+        _git(seed, "commit", "-m", "configure result-to-release fixture")
+        _git(seed, "push", "origin", "master")
+        return _git(seed, "rev-parse", "HEAD")
+
+    def _publish_evidence(
+        self,
+        bundles: dict[str, str | dict | None],
+        *,
+        message: str = "evidence: fixture/run-20261127T000000Z",
+        sidecar_override: dict[str, str] | None = None,
+    ) -> str:
+        seed = self.sb.seed
+        index = self.sb.tmp / f"r2r-ev-index-{secrets_counter[0]}"
+        secrets_counter[0] += 1
+        env = {**os.environ, **GIT_ENV, "GIT_INDEX_FILE": str(index)}
+        # Preserve existing tree entries from origin/evidence when advancing
+        parent_res = subprocess.run(
+            ["git", "-C", str(seed), "rev-parse", "-q", "--verify", "refs/remotes/origin/evidence^{commit}"],
+            capture_output=True,
+            text=True,
+        )
+        parent = parent_res.stdout.strip() if parent_res.returncode == 0 else ""
+        if parent:
+            _git(seed, "read-tree", parent, env=env)
+        for rel_path, payload in bundles.items():
+            stamp = pathlib.PurePosixPath(rel_path).name.removesuffix(".tar.gz")
+            buf = io.BytesIO()
+            with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+                if isinstance(payload, dict):
+                    data = json.dumps(payload).encode()
+                    ti = tarfile.TarInfo(name=f"{stamp}/provenance.json")
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+                elif payload is not None:
+                    data = f"{payload}\n".encode()
+                    ti = tarfile.TarInfo(name=f"{stamp}/commit.txt")
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+            raw = buf.getvalue()
+            blob = subprocess.run(
+                ["git", "-C", str(seed), "hash-object", "-w", "--stdin"],
+                input=raw,
+                capture_output=True,
+                check=True,
+                env=env,
+            ).stdout.decode().strip()
+            _git(seed, "update-index", "--add", "--cacheinfo", f"100644,{blob},{rel_path}", env=env)
+            digest = (sidecar_override or {}).get(rel_path) or hashlib.sha256(raw).hexdigest()
+            sc_bytes = f"{digest}  {pathlib.PurePosixPath(rel_path).name}\n".encode()
+            sc_blob = subprocess.run(
+                ["git", "-C", str(seed), "hash-object", "-w", "--stdin"],
+                input=sc_bytes,
+                capture_output=True,
+                check=True,
+                env=env,
+            ).stdout.decode().strip()
+            _git(
+                seed,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"100644,{sc_blob},{rel_path}.sha256",
+                env=env,
+            )
+        tree = _git(seed, "write-tree", env=env)
+        if index.exists():
+            index.unlink()
+        args = ["commit-tree", tree, "-m", message]
+        if parent:
+            args += ["-p", parent]
+        ev_sha = _git(seed, *args)
+        _git(seed, "push", "origin", f"{ev_sha}:refs/heads/evidence")
+        _git(seed, "fetch", "-q", "origin", "+refs/heads/evidence:refs/remotes/origin/evidence")
+        return ev_sha
+
+    def _tag_ready(self, recipe: str, sha: str, *, hold: bool = False) -> None:
+        ref = f"refs/tags/{'hold' if hold else 'ready'}/{recipe}"
+        _git(self.sb.seed, "push", "-f", "origin", f"{sha}:{ref}")
+
+    def _run_brief_and_status(self, repo: pathlib.Path, *, can: set[str] | None = None, prs=None, pr_error=None):
+        mod = _load_frontier_module(repo)
+        pr_val = ([], None) if (prs is None and pr_error is None) else (prs, pr_error)
+        with mock.patch.object(mod, "read_open_prs", return_value=pr_val):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief(can or set())
+            brief_out = buf.getvalue()
+            status_out = mod.render()
+        return brief_out, status_out
+
+    def _section(self, text: str, heading: str) -> str:
+        self.assertIn(heading, text)
+        return text.split(heading, 1)[1].split("\n## ", 1)[0]
+
+    # Fixture (1): promising probe with/without concrete successor & admission cap reached
+    def test_r2r_01_promising_probe_successor_and_admission_cap(self) -> None:
+        """Promising probe surfaces missing successor, admission cap, or actionable admit."""
+        self._publish_evidence({})
+        # (a) Promising probe with NO successor -> planned / needs concrete successor
+        self._reset_state(
+            {
+                "probe-win": _claim_toml("probe-win", kind="probe", status="done", priority=2),
+            },
+            deltas={
+                "2026-11-27-probe-win.md": (
+                    "claim: probe-win\nby: antigravity\noutcome: done\n"
+                    "evidence: docs/journal/probe-win.md\nverdict: probe-pass\n\n"
+                    "**What was asked:** probe.\n"
+                ),
+            },
+        )
+        r = self.sb.clone("r2r-01a")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        sec = self._section(brief_out, "## Result-to-release")
+        self.assertIn("probe-win", sec)
+        self.assertIn("planned", sec)
+        self.assertIn("successor", sec)
+        self.assertIn("probe-win", self._section(status_out, "## Result-to-release"))
+
+        # (b) Linked idea successor when admission cap is reached -> explicit cap blocker
+        self._reset_state(
+            {
+                "probe-win": _claim_toml("probe-win", kind="probe", status="done", priority=2),
+                "build-win": _claim_toml(
+                    "build-win",
+                    kind="build",
+                    zone="striated",
+                    status="idea",
+                    priority=2,
+                    owned_paths=["src/block.rs"],
+                    links=["frontier/claims/probe-win.toml"],
+                ),
+                "filler-open": _claim_toml("filler-open", kind="probe", status="open", priority=3),
+            },
+            deltas={
+                "2026-11-27-probe-win.md": (
+                    "claim: probe-win\nby: antigravity\noutcome: done\n"
+                    "evidence: docs/journal/probe-win.md\nverdict: probe-pass\n\n"
+                    "**What was asked:** probe.\n"
+                ),
+            },
+            max_open_claims=1,
+        )
+        r2 = self.sb.clone("r2r-01b")
+        brief2, _ = self._run_brief_and_status(r2, can={"shell", "repo-write"})
+        sec2 = self._section(brief2, "## Result-to-release")
+        self.assertIn("build-win", sec2)
+        self.assertIn("admission cap", sec2)
+
+        # (c) With room under max_open_claims -> actionable admit build-win
+        self._reset_state(
+            {
+                "probe-win": _claim_toml("probe-win", kind="probe", status="done", priority=2),
+                "build-win": _claim_toml(
+                    "build-win",
+                    kind="build",
+                    zone="striated",
+                    status="idea",
+                    priority=2,
+                    owned_paths=["src/block.rs"],
+                    links=["frontier/claims/probe-win.toml"],
+                ),
+            },
+            deltas={
+                "2026-11-27-probe-win.md": (
+                    "claim: probe-win\nby: antigravity\noutcome: done\n"
+                    "evidence: docs/journal/probe-win.md\nverdict: probe-pass\n\n"
+                    "**What was asked:** probe.\n"
+                ),
+            },
+            max_open_claims=12,
+        )
+        r3 = self.sb.clone("r2r-01c")
+        brief3, _ = self._run_brief_and_status(r3, can={"shell", "repo-write"})
+        sec3 = self._section(brief3, "## Result-to-release")
+        self.assertIn("build-win", sec3)
+        self.assertIn("admit", sec3)
+        self.assertNotIn("admission cap", sec3)
+
+    # Fixture (2): ordinary CI-accepted default change requiring no separate i9 adoption run
+    def test_r2r_02_ordinary_ci_default_change_needs_no_i9_run(self) -> None:
+        """Ordinary CI-accepted default build requires no separate i9 adoption run."""
+        self._publish_evidence({})
+        ci_claim = (
+            _claim_toml(
+                "open-prescan-fix",
+                kind="build",
+                zone="striated",
+                status="open",
+                priority=2,
+                owned_paths=["src/open.rs"],
+                done_when="Merge on paired CI/native bench; no separate workstation run.",
+            )
+            + 'validation_kind = "ci"\n'
+        )
+        self._reset_state({"open-prescan-fix": ci_claim})
+        r = self.sb.clone("r2r-02")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "rust", "repo-write"})
+        sec = self._section(brief_out, "## Result-to-release")
+        self.assertIn("open-prescan-fix", sec)
+        self.assertIn("ordinary-ci", sec)
+        self.assertNotIn("missing queue row", sec)
+        self.assertNotIn("missing ready/", sec)
+        self.assertIn("ordinary-ci", self._section(status_out, "## Result-to-release"))
+
+    # Fixture (3): reviewed recipe with missing queue row or pin
+    def test_r2r_03_reviewed_recipe_missing_queue_row_or_pin(self) -> None:
+        """Reviewed recipe with missing queue row or ready pin is prepared and decays to queued."""
+        self._publish_evidence({})
+        run_claim = (
+            _claim_toml(
+                "seam-i9-run",
+                kind="run",
+                zone="striated",
+                status="open",
+                priority=2,
+                needs=["shell", "workflow-dispatch", "repo-write"],
+                owned_paths=["bench/workstation-queue.txt"],
+                done_when="Queue frozen i9 recipe and read bundle.",
+            )
+            + 'recipe = "bench-seam-test"\n'
+        )
+        sha = self._reset_state({"seam-i9-run": run_claim}, queue_text="# repo: lmmx/mibz2\n")
+        r = self.sb.clone("r2r-03a")
+        brief_a, _ = self._run_brief_and_status(r, can={"shell", "workflow-dispatch", "repo-write"})
+        sec_a = self._section(brief_a, "## Result-to-release")
+        self.assertIn("seam-i9-run", sec_a)
+        self.assertIn("prepared", sec_a)
+        self.assertIn("missing queue row", sec_a)
+        self.assertIn("missing ready/bench-seam-test", sec_a)
+
+        # Add queue row only (pin still missing)
+        self._reset_state(
+            {"seam-i9-run": run_claim},
+            queue_text="# repo: lmmx/mibz2\nbench-seam-test master test\n",
+        )
+        r_b = self.sb.clone("r2r-03b")
+        brief_b, _ = self._run_brief_and_status(r_b, can={"shell", "workflow-dispatch", "repo-write"})
+        sec_b = self._section(brief_b, "## Result-to-release")
+        self.assertIn("prepared", sec_b)
+        self.assertIn("missing ready/bench-seam-test", sec_b)
+        self.assertNotIn("missing queue row", sec_b)
+
+        # Pin ready/bench-seam-test -> decays from prepared to queued
+        self._tag_ready("bench-seam-test", sha)
+        r_c = self.sb.clone("r2r-03c")
+        brief_c, _ = self._run_brief_and_status(r_c, can={"shell", "workflow-dispatch", "repo-write"})
+        sec_c = self._section(brief_c, "## Result-to-release")
+        self.assertIn("seam-i9-run", sec_c)
+        self.assertIn("queued", sec_c)
+        self.assertNotIn("prepared", sec_c)
+
+    # Fixture (4): queued current pin without evidence
+    def test_r2r_04_queued_current_pin_without_evidence(self) -> None:
+        """Queued current pin without archived evidence reports queued with no duplicate dispatch."""
+        self._publish_evidence({})
+        run_claim = (
+            _claim_toml(
+                "fwd-lanes-run",
+                kind="run",
+                zone="striated",
+                status="blocked",
+                priority=1,
+                owned_paths=["bench/forward_lanes.py"],
+                done_when="Read i9 bundle.",
+            )
+            + 'recipe = "bench-forward-lanes"\n'
+        )
+        sha = self._reset_state(
+            {"fwd-lanes-run": run_claim},
+            queue_text="# repo: lmmx/mibz2\nbench-forward-lanes master kill test\n",
+        )
+        self._tag_ready("bench-forward-lanes", sha)
+        r = self.sb.clone("r2r-04")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        sec = self._section(brief_out, "## Result-to-release")
+        self.assertIn("fwd-lanes-run", sec)
+        self.assertIn("queued", sec)
+        self.assertNotIn("returned-unread", sec)
+        self.assertIn("queued", self._section(status_out, "## Result-to-release"))
+
+    # Fixture (5): matching archived unread evidence while another recipe is runnable, including parked claim
+    def test_r2r_05_unread_evidence_while_another_recipe_runnable_including_parked(self) -> None:
+        """Archived unread evidence for a parked claim surfaces P1 even when queue is replenished."""
+        parked_claim = (
+            _claim_toml(
+                "adaptive-seam",
+                kind="build",
+                zone="striated",
+                status="blocked",
+                priority=2,
+                needs=["shell", "repo-write"],
+                owned_paths=["src/stream.rs"],
+                done_when="Read archived i9 bundle and record verdict.",
+            )
+            + 'recipe = "bench-adaptive-seam"\n'
+        )
+        other_claim = (
+            _claim_toml(
+                "other-run",
+                kind="run",
+                zone="striated",
+                status="blocked",
+                priority=2,
+                owned_paths=["bench/other.py"],
+            )
+            + 'recipe = "bench-other"\n'
+        )
+        sha = self._reset_state(
+            {"adaptive-seam": parked_claim, "other-run": other_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-adaptive-seam master adaptive seam\n"
+                "bench-other master other runnable recipe\n"
+            ),
+        )
+        self._tag_ready("bench-adaptive-seam", sha)
+        self._tag_ready("bench-other", sha)
+        ev_sha = self._publish_evidence(
+            {"adaptive-seam/run-20261127T192609Z.tar.gz": sha},
+            message="evidence: adaptive-seam/run-20261127T192609Z",
+        )
+        r = self.sb.clone("r2r-05a")
+        brief_a, status_a = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        # Queue is replenished by bench-other, yet unread evidence for parked adaptive-seam MUST surface at P1!
+        self.assertIn("Repository queue: replenished", brief_a)
+        sec_a = self._section(brief_a, "## Result-to-release")
+        self.assertIn("adaptive-seam", sec_a)
+        self.assertIn("returned-unread", sec_a)
+        self.assertIn(ev_sha[:8], sec_a)
+        self.assertIn("P1 effective", sec_a)
+        self.assertIn("returned-unread", self._section(status_a, "## Result-to-release"))
+        # Declared priority in TOML must remain untouched (priority = 2)
+        self.assertIn("priority = 2", (r / "frontier/claims/adaptive-seam.toml").read_text())
+
+        # Record disposition delta naming ev_sha -> returned-unread pressure decays cleanly!
+        self._reset_state(
+            {"adaptive-seam": parked_claim, "other-run": other_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-adaptive-seam master adaptive seam\n"
+                "bench-other master other runnable recipe\n"
+            ),
+            deltas={
+                "2026-11-27-adaptive-seam-verdict.md": (
+                    f"claim: adaptive-seam\nby: antigravity\noutcome: done\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: not-adopted\n\n"
+                    "**What was asked:** read bundle.\n"
+                ),
+            },
+        )
+        r2 = self.sb.clone("r2r-05b")
+        brief_b, _ = self._run_brief_and_status(r2, can={"shell", "repo-write"})
+        sec_b = self._section(brief_b, "## Result-to-release")
+        self.assertNotIn("returned-unread", sec_b)
+
+    # Fixture (6): diagnostic PASS needing adoption vs adoption PASS ready to integrate; never infer PASS from prose
+    def test_r2r_06_diagnostic_pass_vs_adoption_pass_and_no_prose_inference(self) -> None:
+        """Distinguish diagnostic-pass from adoption-pass and never infer PASS from prose."""
+        diag_claim = (
+            _claim_toml(
+                "fwd-diag",
+                kind="run",
+                zone="striated",
+                status="open",
+                priority=2,
+                owned_paths=["bench/fwd.py"],
+            )
+            + 'recipe = "bench-fwd"\nvalidation_kind = "diagnostic"\n'
+        )
+        adopt_claim = (
+            _claim_toml(
+                "a2-adopt",
+                kind="build",
+                zone="striated",
+                status="review",
+                pr=1117,
+                priority=2,
+                owned_paths=["src/block.rs"],
+            )
+            + 'recipe = "bench-a2"\nvalidation_kind = "adoption"\n'
+        )
+        prose_only_claim = (
+            _claim_toml(
+                "prose-only",
+                kind="run",
+                zone="striated",
+                status="blocked",
+                priority=2,
+                owned_paths=["bench/prose.py"],
+            )
+            + 'recipe = "bench-prose"\nvalidation_kind = "adoption"\n'
+        )
+        sha = self._reset_state(
+            {"fwd-diag": diag_claim, "a2-adopt": adopt_claim, "prose-only": prose_only_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-fwd master diag\n"
+                "bench-a2 master adopt\n"
+                "bench-prose master prose\n"
+            ),
+        )
+        for rec in ("bench-fwd", "bench-a2", "bench-prose"):
+            self._tag_ready(rec, sha)
+        ev_sha = self._publish_evidence(
+            {
+                "fwd/run-20261127T100000Z.tar.gz": sha,
+                "a2/run-20261127T100001Z.tar.gz": sha,
+                "prose/run-20261127T100002Z.tar.gz": sha,
+            }
+        )
+        self._reset_state(
+            {"fwd-diag": diag_claim, "a2-adopt": adopt_claim, "prose-only": prose_only_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-fwd master diag\n"
+                "bench-a2 master adopt\n"
+                "bench-prose master prose\n"
+            ),
+            deltas={
+                "2026-11-27-fwd-diag.md": (
+                    f"claim: fwd-diag\nby: antigravity\noutcome: done\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: diagnostic-pass\n\n"
+                    "**What was asked:** diagnostic.\n"
+                ),
+                "2026-11-27-a2-adopt.md": (
+                    f"claim: a2-adopt\nby: antigravity\noutcome: done\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: adoption-pass\n\n"
+                    "**What was asked:** adoption.\n"
+                ),
+                # Prose says PASS without structured verdict: header -> must NOT infer adoption-passed!
+                "2026-11-27-prose-only.md": (
+                    "claim: prose-only\nby: antigravity\noutcome: partial\n"
+                    "evidence: docs/notes.md\n\n"
+                    "**What I found:** Looks like PASS in prose only!\n"
+                ),
+            },
+        )
+        prs = [
+            {
+                "number": 1117,
+                "title": "A2 fast",
+                "body": "Claim: a2-adopt",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            }
+        ]
+        r = self.sb.clone("r2r-06")
+        brief_out, _ = self._run_brief_and_status(r, can={"shell", "repo-write"}, prs=prs)
+        sec = self._section(brief_out, "## Result-to-release")
+        self.assertIn("fwd-diag", sec)
+        self.assertIn("diagnostic-pass", sec)
+        self.assertIn("adoption", sec.split("fwd-diag", 1)[1].splitlines()[0])
+        self.assertIn("a2-adopt", sec)
+        self.assertIn("adoption-passed", sec)
+        self.assertIn("#1117", sec.split("a2-adopt", 1)[1].splitlines()[0])
+        # prose-only still has unread verified bundle and MUST NOT be promoted to adoption-passed
+        prose_line = [ln for ln in sec.splitlines() if "prose-only" in ln][0]
+        self.assertNotIn("adoption-passed", prose_line)
+        self.assertNotIn("diagnostic-pass", prose_line)
+        self.assertIn("returned-unread", prose_line)
+
+    # Fixture (7): STOP/KILL/VOID/INCOMPLETE and superseded pins
+    def test_r2r_07_stop_kill_void_incomplete_and_superseded_pins(self) -> None:
+        """Handle STOP/VOID dispositions without promotion and ignore superseded pins."""
+        stop_claim = (
+            _claim_toml("stopped-line", kind="build", zone="striated", status="open", priority=2, owned_paths=["src/a.rs"])
+            + 'recipe = "bench-stop"\n'
+        )
+        void_claim = (
+            _claim_toml("void-run", kind="run", zone="striated", status="open", priority=2, owned_paths=["bench/v.py"])
+            + 'recipe = "bench-void"\n'
+        )
+        sup_claim = (
+            _claim_toml("superseded-run", kind="run", zone="striated", status="blocked", priority=2, owned_paths=["bench/s.py"])
+            + 'recipe = "bench-sup"\n'
+        )
+        old_sha = self._reset_state(
+            {"stopped-line": stop_claim, "void-run": void_claim, "superseded-run": sup_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-stop master stop\n"
+                "bench-void master void\n"
+                "bench-sup master sup\n"
+            ),
+        )
+        ev_sha = self._publish_evidence(
+            {
+                "stop/run-20261127T010000Z.tar.gz": old_sha,
+                "void/run-20261127T010001Z.tar.gz": old_sha,
+                "sup/run-20261127T010002Z.tar.gz": old_sha,
+            }
+        )
+        new_sha = self._reset_state(
+            {"stopped-line": stop_claim, "void-run": void_claim, "superseded-run": sup_claim},
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-stop master stop\n"
+                "bench-void master void\n"
+                "bench-sup master sup\n"
+            ),
+            deltas={
+                "2026-11-27-stopped-line.md": (
+                    f"claim: stopped-line\nby: antigravity\noutcome: done\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: stop\n\n"
+                    "**What was asked:** stop.\n"
+                ),
+                "2026-11-27-void-run.md": (
+                    f"claim: void-run\nby: antigravity\noutcome: partial\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: void\n\n"
+                    "**What was asked:** void.\n"
+                ),
+            },
+        )
+        self._tag_ready("bench-stop", old_sha)
+        self._tag_ready("bench-void", old_sha)
+        # Superseded pin: ready/bench-sup now points to new_sha != old_sha!
+        self._tag_ready("bench-sup", new_sha)
+        r = self.sb.clone("r2r-07")
+        brief_out, _ = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        sec = self._section(brief_out, "## Result-to-release")
+        stop_line = [ln for ln in sec.splitlines() if "stopped-line" in ln][0]
+        self.assertIn("stop", stop_line.lower())
+        self.assertNotIn("adoption-passed", stop_line)
+        self.assertIn("dead-ends", stop_line.lower())
+        void_line = [ln for ln in sec.splitlines() if "void-run" in ln][0]
+        self.assertIn("void", void_line.lower())
+        self.assertNotIn("adoption-passed", void_line)
+        sup_line = [ln for ln in sec.splitlines() if "superseded-run" in ln][0]
+        # Superseded bundle for old_sha MUST NOT match new_sha!
+        self.assertIn("queued", sup_line)
+        self.assertIn("superseded", sup_line.lower())
+        self.assertNotIn("returned-unread", sup_line)
+
+    # Fixture (8): accepted default merge awaiting tag + recalibration, then tagged release awaiting scaling/recording
+    def test_r2r_08_default_merge_recalibration_and_post_tag_scaling(self) -> None:
+        """Default merge triggers P1 release + recalibration; tagged release tracks scaling."""
+        self._publish_evidence({})
+        self._reset_state({}, ledger_rows=[])
+        seed = self.sb.seed
+        _git(seed, "tag", "v0.5.17")
+        _git(seed, "push", "origin", "v0.5.17")
+        # Land a default-state software change touching src/open.rs (#1222)
+        (seed / "src").mkdir(exist_ok=True)
+        (seed / "src" / "open.rs").write_text("// default change\n", encoding="utf-8")
+        (seed / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "1222\t2026-11-27\tRecalibrates open admission.\tdefault\t-2% wall, VM\tPR #1222\n",
+            encoding="utf-8",
+        )
+        _git(seed, "add", "src/open.rs", "frontier/ledger.tsv")
+        _git(seed, "commit", "-m", "perf(open): recalibrate admission (#1222)")
+        _git(seed, "push", "origin", "master")
+        r = self.sb.clone("r2r-08a")
+        brief_a, status_a = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        sec_a = self._section(brief_a, "## Result-to-release")
+        self.assertIn("merged-default", sec_a)
+        self.assertIn("v0.5.17", sec_a)
+        self.assertIn("recalibration", sec_a.lower())
+        self.assertIn("P1", sec_a)
+        self.assertIn("merged-default", self._section(status_a, "## Result-to-release"))
+
+        # Now tag v0.5.18 and open release-0-5-18 awaiting scaling/recording
+        tag_sha = _git(seed, "rev-parse", "HEAD")
+        _git(seed, "tag", "v0.5.18")
+        _git(seed, "push", "origin", "v0.5.18")
+        self._reset_state(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        self._tag_ready("bench-release-scaling", tag_sha)
+        r_b = self.sb.clone("r2r-08b")
+        brief_b, _ = self._run_brief_and_status(r_b, can={"shell", "repo-write"})
+        sec_b = self._section(brief_b, "## Result-to-release")
+        self.assertIn("released", sec_b)
+        self.assertIn("v0.5.18", sec_b)
+        self.assertIn("scaling", sec_b.lower())
+
+        # Once release-0-5-18 is marked done -> release scaling pressure decays!
+        self._reset_state(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="done",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        r_c = self.sb.clone("r2r-08c")
+        brief_c, _ = self._run_brief_and_status(r_c, can={"shell", "repo-write"})
+        sec_c = self._section(brief_c, "## Result-to-release")
+        self.assertNotIn("merged-default", sec_c)
+        self.assertNotIn("awaiting scaling", sec_c)
+
+    def test_r2r_08b_live_untagged_release_is_not_released(self) -> None:
+        """A live release claim whose own tag does not exist yet is in progress, not released."""
+        self._publish_evidence({})
+        self._reset_state({}, ledger_rows=[])
+        seed = self.sb.seed
+        _git(seed, "tag", "v0.5.17")
+        _git(seed, "push", "origin", "v0.5.17")
+        self._reset_state(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        r = self.sb.clone("r2r-08d")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        for text in (brief_out, status_out):
+            sec = self._section(text, "## Result-to-release")
+            self.assertIn("release-in-progress", sec)
+            self.assertIn("v0.5.18 not yet tagged", sec)
+            self.assertNotIn("`released`", sec)
+            self.assertNotIn("tagged v0.5.17", sec)
+
+    # Fixture (9): experimental-only merge does not by itself imply a production performance release
+    def test_r2r_09_experimental_only_merge_does_not_imply_production_release(self) -> None:
+        """Experimental-only merge does not trigger a production performance release."""
+        self._publish_evidence({})
+        self._reset_state({}, ledger_rows=[])
+        seed = self.sb.seed
+        _git(seed, "tag", "v0.5.17")
+        _git(seed, "push", "origin", "v0.5.17")
+        (seed / "src").mkdir(exist_ok=True)
+        (seed / "src" / "lanes.rs").write_text("// experimental feature only\n", encoding="utf-8")
+        (seed / "frontier" / "ledger.tsv").write_text(
+            "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+            "1217\t2026-11-27\tExperimental forward lanes.\texperimental\t-10% VM\tPR #1217\n",
+            encoding="utf-8",
+        )
+        _git(seed, "add", "src/lanes.rs", "frontier/ledger.tsv")
+        _git(seed, "commit", "-m", "perf(open/lanes): disjoint slabs (#1217)")
+        _git(seed, "push", "origin", "master")
+        r = self.sb.clone("r2r-09")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        # Release due MUST NOT fire for experimental-only merge!
+        rel_sec = self._section(brief_out, "## Release due (P1)")
+        self.assertIn("- nothing", rel_sec)
+        sec = self._section(brief_out, "## Result-to-release")
+        self.assertIn("experimental-only", sec)
+        self.assertNotIn("merged-default", sec)
+        self.assertNotIn("merged-default", self._section(status_out, "## Result-to-release"))
+
+    # Fixture (10): missing/stale/ambiguous evidence, failed checks, owner-only, live hold, capability, cap, conflicting successors
+    def test_r2r_10_fail_closed_unknown_blockers_caps_holds_capabilities_conflicts(self) -> None:
+        """Fail closed on corrupt/missing data, failed checks, caps, holds, and conflicts."""
+        # (a) Corrupt .sha256 sidecar -> fail closed to unknown
+        bad_claim = (
+            _claim_toml("corrupt-ev", kind="run", zone="striated", status="blocked", priority=2, owned_paths=["bench/c.py"])
+            + 'recipe = "bench-corrupt"\n'
+        )
+        louis_claim = (
+            _claim_toml(
+                "owner-blocked",
+                kind="build",
+                zone="striated",
+                status="open",
+                priority=2,
+                needs_louis="Requires owner API decision.",
+                owned_paths=["src/api.rs"],
+            )
+            + 'validation_kind = "ci"\n'
+        )
+        cap_claim = (
+            _claim_toml(
+                "need-dispatch",
+                kind="run",
+                zone="striated",
+                status="open",
+                priority=2,
+                needs=["shell", "workflow-dispatch"],
+                owned_paths=["bench/d.py"],
+            )
+            + 'recipe = "bench-need-dispatch"\n'
+        )
+        failed_ci_claim = (
+            _claim_toml(
+                "failed-ci",
+                kind="build",
+                zone="striated",
+                status="review",
+                pr=999,
+                priority=2,
+                owned_paths=["src/f.rs"],
+            )
+            + 'recipe = "bench-fci"\nvalidation_kind = "adoption"\n'
+        )
+        # Conflicting successors for the same probe
+        probe_conflict = _claim_toml("probe-c", kind="probe", status="done", priority=2)
+        succ_a = _claim_toml(
+            "succ-a",
+            kind="build",
+            zone="striated",
+            status="idea",
+            priority=2,
+            owned_paths=["src/s.rs"],
+            mechanisms=["same-mech"],
+            links=["frontier/claims/probe-c.toml"],
+        )
+        succ_b = _claim_toml(
+            "succ-b",
+            kind="build",
+            zone="striated",
+            status="idea",
+            priority=2,
+            owned_paths=["src/s.rs"],
+            mechanisms=["same-mech"],
+            links=["frontier/claims/probe-c.toml"],
+        )
+        held_claim = (
+            _claim_toml("held-ev", kind="run", zone="striated", status="open", priority=2, owned_paths=["bench/h.py"])
+            + 'recipe = "bench-held"\n'
+        )
+        sha = self._reset_state(
+            {
+                "corrupt-ev": bad_claim,
+                "owner-blocked": louis_claim,
+                "need-dispatch": cap_claim,
+                "failed-ci": failed_ci_claim,
+                "probe-c": probe_conflict,
+                "succ-a": succ_a,
+                "succ-b": succ_b,
+                "held-ev": held_claim,
+            },
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-corrupt master c\n"
+                "bench-fci master f\n"
+                "bench-held master h\n"
+            ),
+            deltas={
+                "2026-11-27-probe-c.md": (
+                    "claim: probe-c\nby: antigravity\noutcome: done\n"
+                    "evidence: docs/p.md\nverdict: probe-pass\n\n**What was asked:** p.\n"
+                ),
+            },
+        )
+        for rec in ("bench-corrupt", "bench-fci", "bench-held"):
+            self._tag_ready(rec, sha)
+        ev_sha = self._publish_evidence(
+            {
+                "corrupt/run-20261127T020000Z.tar.gz": sha,
+                "fci/run-20261127T020001Z.tar.gz": sha,
+                "held/run-20261127T020002Z.tar.gz": sha,
+            },
+            sidecar_override={"corrupt/run-20261127T020000Z.tar.gz": "0" * 64},
+        )
+        # Record adoption-pass on failed-ci, whose PR has failing checks
+        self._reset_state(
+            {
+                "corrupt-ev": bad_claim,
+                "owner-blocked": louis_claim,
+                "need-dispatch": cap_claim,
+                "failed-ci": failed_ci_claim,
+                "probe-c": probe_conflict,
+                "succ-a": succ_a,
+                "succ-b": succ_b,
+                "held-ev": held_claim,
+            },
+            queue_text=(
+                "# repo: lmmx/mibz2\n"
+                "bench-corrupt master c\n"
+                "bench-fci master f\n"
+                "bench-held master h\n"
+            ),
+            deltas={
+                "2026-11-27-probe-c.md": (
+                    "claim: probe-c\nby: antigravity\noutcome: done\n"
+                    "evidence: docs/p.md\nverdict: probe-pass\n\n**What was asked:** p.\n"
+                ),
+                "2026-11-27-failed-ci.md": (
+                    f"claim: failed-ci\nby: antigravity\noutcome: done\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: adoption-pass\n\n"
+                    "**What was asked:** fci.\n"
+                ),
+            },
+        )
+        # Acquire a live hold on held-ev so we verify non-preemption & deduplication
+        holder = self.sb.clone("holder-10")
+        res = self.sb.run_frontier(holder, "claim", "held-ev", "--by", "claude-code")
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+
+        prs = [
+            {
+                "number": 999,
+                "title": "FCI",
+                "body": "Claim: failed-ci",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+                "checks_failed": True,
+            }
+        ]
+        reader = self.sb.clone("r2r-10")
+        brief_out, _ = self._run_brief_and_status(reader, can={"shell", "repo-write"}, prs=prs)
+        sec = self._section(brief_out, "## Result-to-release")
+        # Corrupt sidecar -> fail closed to unknown
+        corrupt_line = [ln for ln in sec.splitlines() if "corrupt-ev" in ln][0]
+        self.assertIn("unknown", corrupt_line)
+        # Owner-only blocker -> explicit needs_louis, no P1 effective
+        owner_line = [ln for ln in sec.splitlines() if "owner-blocked" in ln][0]
+        self.assertIn("needs_louis", owner_line)
+        self.assertNotIn("P1 effective", owner_line)
+        # Absent capability -> capability-blocked handoff
+        cap_line = [ln for ln in sec.splitlines() if "need-dispatch" in ln][0]
+        self.assertIn("workflow-dispatch", cap_line)
+        self.assertIn("capability-blocked", cap_line)
+        # Failed CI checks -> explicit blocker, never recommends merge
+        fci_line = [ln for ln in sec.splitlines() if "failed-ci" in ln][0]
+        self.assertIn("failed checks", fci_line)
+        self.assertNotIn("P1 effective", fci_line)
+        # Conflicting successors -> fail closed to unknown
+        pc_line = [ln for ln in sec.splitlines() if "probe-c" in ln][0]
+        self.assertIn("unknown", pc_line)
+        self.assertIn("conflicting successors", pc_line)
+        # Live hold -> held by claude-code, never preempted
+        held_line = [ln for ln in sec.splitlines() if "held-ev" in ln][0]
+        self.assertIn("held by claude-code", held_line)
+        self.assertNotIn("P1 effective", held_line)
+
+        # (b) Unavailable PR discovery -> fail closed to unknown
+        brief_err, _ = self._run_brief_and_status(reader, can={"shell", "repo-write"}, prs=None, pr_error="gh offline")
+        sec_err = self._section(brief_err, "## Result-to-release")
+        self.assertIn("unknown", sec_err)
+
+        # (c) Live-hold cap reached -> explicit live-hold cap blocker (no new acquisition elevated)
+        self._reset_state(
+            {
+                "held-ev": held_claim,
+                "ready-ci": _claim_toml("ready-ci", kind="build", zone="striated", status="open", priority=2, owned_paths=["src/r.rs"])
+                + 'validation_kind = "ci"\n',
+            },
+            max_live_holds=1,
+        )
+        reader_cap = self.sb.clone("r2r-10-cap")
+        brief_cap, _ = self._run_brief_and_status(reader_cap, can={"shell", "rust", "repo-write"})
+        sec_cap = self._section(brief_cap, "## Result-to-release")
+        self.assertIn("live-hold cap", sec_cap)
 
 
 secrets_counter = [0]

@@ -126,7 +126,9 @@ ideal-delivery = []
 # strips), with no run records, no cut at 127 rows and no re-merge. Exact bytes and errors: any
 # block it cannot finish goes the shipped way. Switchable at run time (`runs::fold::set_enabled`)
 # for the bench's arms. Never a default; frozen registration:
-# docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md. Retain until its run is read
+# docs/journal/2026-11-24-algorithm-level/mtf-fold/registration.md. Its batch measure STOPped
+# (mtf-fold-batch-measure, dead-ends.tsv); retain for the streaming-refusal rescue
+# (claim `mtf-fold-streaming-admission`), and remove if that rescue is dropped
 mtf-fold = []
 # Research only: redesigned open-kernel endpoint elimination and dictionary (`src/open/endpoint.rs`,
 # strip hand-off in `src/open.rs`; claim `a6b-endpoint-build`, frozen registration
@@ -139,7 +141,8 @@ a6b-endpoint-redesign = []
 # anchors, four lanes at a time, into 32 KiB slabs stitched back into `out` (src/open/lanes.rs,
 # the wiring choice in src/open.rs; claim `forward-emission`, frozen kill-test registration
 # docs/journal/2026-11-27-forward-emission/registration.md). Zero new unsafe; default build
-# unchanged. Retain until its workstation kill test is read
+# unchanged. Its i9 kill test read RESCUE (docs/notebook/2026-11-27-forward-emission-i9-verdict.md);
+# retain until the C6 adoption verdict (claim `forward-emission-adopt`) is read
 forward-anchor-lanes = []
 # Research only: zero-copy lock-free scan oracle (S, src/scan_oracle.rs, hooks in
 # src/parallel.rs, src/runs.rs, src/runs/fold.rs, src/mtf.rs): records each block's symbols

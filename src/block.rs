@@ -44,10 +44,11 @@ pub enum Item {
     End(u32),
 }
 
-/// Reusable 55 KiB front-end scratch (`18 KiB` selectors + `6 x 6 KiB` L1d-resident `Huff`
-/// tables + `1 KiB` L1d-hot symbol staging chunk).
+/// Reusable front-end scratch (`72 KiB` of coalesced selector runs + `6 x 6 KiB` L1d-resident
+/// `Huff` tables + `2 KiB` L1d-hot symbol staging chunk).
 pub struct ScanScratch {
-    selectors: Box<[u8; MAX_SELECTORS]>,
+    /// the block's selectors as `(group, count)` runs, adjacent runs of different groups
+    runs: Box<[(u8, u16); MAX_SELECTORS]>,
     tables: Box<[Huff; MAX_GROUPS]>,
     chunk: Box<[u16; CHUNK_LEN]>,
 }
@@ -55,7 +56,7 @@ pub struct ScanScratch {
 impl Default for ScanScratch {
     fn default() -> Self {
         Self {
-            selectors: Box::new([0u8; MAX_SELECTORS]),
+            runs: Box::new([(0u8, 0u16); MAX_SELECTORS]),
             tables: Box::new(std::array::from_fn(|_| Huff::default())),
             chunk: Box::new([0u16; CHUNK_LEN]),
         }
@@ -83,23 +84,16 @@ pub fn read_item(br: &mut Bits, level: u32, syms: Vec<u16>) -> Result<Item, (Err
 #[inline(always)]
 fn decode_runs_inner(
     tables: &[Huff; MAX_GROUPS],
-    sel_buf: &[u8],
+    runs: &[(u8, u16)],
     mut r: Reg,
     data: &[u8],
     chunk: &mut [u16; CHUNK_LEN],
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
     let data_len = data.len();
-    let sel_cap = sel_buf.len();
-    let mut sel = 0usize;
     let mut ck = 0usize;
-    while sel < sel_cap {
-        let g = sel_buf[sel];
-        let mut rem = 1usize;
-        while sel + rem < sel_cap && sel_buf[sel + rem] == g {
-            rem += 1;
-        }
-        sel += rem;
+    for &(g, n) in runs {
+        let mut rem = n as usize;
         let t = &tables[g as usize];
         while rem > 0 {
             // Each symbol consumes at most 20 bits (125 B per 50-symbol group); leaving 16 B of
@@ -137,29 +131,29 @@ fn decode_runs_inner(
 #[target_feature(enable = "bmi2")]
 unsafe fn decode_runs_bmi2(
     tables: &[Huff; MAX_GROUPS],
-    sel_buf: &[u8],
+    runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
     chunk: &mut [u16; CHUNK_LEN],
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
-    decode_runs_inner(tables, sel_buf, r, data, chunk, syms)
+    decode_runs_inner(tables, runs, r, data, chunk, syms)
 }
 
 fn decode_runs_scalar(
     tables: &[Huff; MAX_GROUPS],
-    sel_buf: &[u8],
+    runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
     chunk: &mut [u16; CHUNK_LEN],
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
-    decode_runs_inner(tables, sel_buf, r, data, chunk, syms)
+    decode_runs_inner(tables, runs, r, data, chunk, syms)
 }
 
 fn decode_runs(
     tables: &[Huff; MAX_GROUPS],
-    sel_buf: &[u8],
+    runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
     chunk: &mut [u16; CHUNK_LEN],
@@ -170,9 +164,253 @@ fn decode_runs(
         // SAFETY: `std::is_x86_feature_detected!("bmi2")` guarantees the CPU executes BMI2
         // instructions (`shlx`/`shrx`). `decode_runs_bmi2` executes only safe Rust under
         // `#![deny(unsafe_op_in_unsafe_fn)]`.
-        return unsafe { decode_runs_bmi2(tables, sel_buf, r, data, chunk, syms) };
+        return unsafe { decode_runs_bmi2(tables, runs, r, data, chunk, syms) };
     }
-    decode_runs_scalar(tables, sel_buf, r, data, chunk, syms)
+    decode_runs_scalar(tables, runs, r, data, chunk, syms)
+}
+
+/// `LOW_MASK[j]`: the MTF list's bytes below position `j`
+const LOW_MASK: [u64; MAX_GROUPS] = [0, 0xff, 0xffff, 0xff_ffff, 0xffff_ffff, 0xff_ffff_ffff];
+
+/// Move MTF position `j`'s group to the front, returning it
+#[inline(always)]
+fn mtf_take(mtf: &mut u64, j: usize) -> u8 {
+    let v = (*mtf >> (j * 8)) & 0xff;
+    let lm = LOW_MASK[j];
+    *mtf = (*mtf & !((lm << 8) | 0xff)) | ((*mtf & lm) << 8) | v;
+    v as u8
+}
+
+/// A block's `n_sel` MTF-coded selectors into `runs` as `(group, count)` runs, adjacent runs
+/// of different groups (so the decode never rescans selectors to coalesce them). Returns the
+/// run count and the mask of groups used. Every `0` bit is a selector repeating the front
+/// group, so where the input cannot be overrun a run of them is counted with one
+/// `leading_zeros`, one iteration per run; otherwise one selector at a time, with
+/// libbzip2's overrun check after each. Both read exactly the same bits, and fail at the
+/// same bit with the same error.
+#[inline(always)]
+fn read_selectors(
+    r: &mut Reg,
+    data: &[u8],
+    n_groups: usize,
+    n_sel: usize,
+    runs: &mut [(u8, u16); MAX_SELECTORS],
+) -> Result<(usize, u8), ErrorKind> {
+    let data_len = data.len();
+    let mut mtf: u64 = 0x0000_0504_0302_0100;
+    let mut n_runs = 0usize;
+    let mut used = 0u8;
+    // a selector takes at most `n_groups <= 6` bits, so `n_sel` bytes past the reader's
+    // position (plus a refill's 8) cannot run out: no overrun check is needed
+    if n_sel <= MAX_SELECTORS && r.pos.saturating_add(n_sel + 8) <= data_len {
+        if r.live < 8 {
+            r.refill(data);
+        }
+        let j = (!r.buf).leading_zeros() as usize;
+        if j >= n_groups {
+            r.skip_short(n_groups as u32);
+            return Err(ErrorKind::BadSelector);
+        }
+        r.skip_short((j + 1) as u32);
+        let mut g = mtf_take(&mut mtf, j);
+        let mut run = 1usize;
+        let mut rem = n_sel - 1;
+        while rem > 0 {
+            if r.live < 8 {
+                r.refill(data);
+            }
+            // the `0` bits: selectors repeating `g` (`live` caps the bits counted to real ones)
+            let k = r.buf.leading_zeros().min(r.live).min(rem as u32);
+            r.skip_short(k);
+            run += k as usize;
+            rem -= k as usize;
+            if rem == 0 || r.live < 8 {
+                // (with fewer than 8 bits left the count may have stopped at `live`, not at
+                // a `1`: refill and count on)
+                continue;
+            }
+            // a `1` bit, with 8 or more live as libbzip2's reader has: a selector naming
+            // another group (MTF position `j >= 1`)
+            let j = (!r.buf).leading_zeros() as usize;
+            if j >= n_groups {
+                r.skip_short(n_groups as u32);
+                return Err(ErrorKind::BadSelector);
+            }
+            r.skip_short((j + 1) as u32);
+            rem -= 1;
+            runs[n_runs] = (g, run as u16);
+            n_runs += 1;
+            used |= 1u8 << g;
+            g = mtf_take(&mut mtf, j);
+            run = 1;
+        }
+        runs[n_runs] = (g, run as u16);
+        n_runs += 1;
+        used |= 1u8 << g;
+        return Ok((n_runs, used));
+    }
+    let mut cur: Option<(u8, usize)> = None;
+    for i in 0..n_sel {
+        if r.live < 8 {
+            r.refill(data);
+        }
+        let j = (!r.buf).leading_zeros() as usize;
+        if j >= n_groups {
+            r.skip_short(n_groups as u32);
+            return Err(ErrorKind::BadSelector);
+        }
+        r.skip_short((j + 1) as u32);
+        if i < MAX_SELECTORS {
+            let v = mtf_take(&mut mtf, j);
+            used |= 1u8 << v;
+            cur = match cur {
+                Some((g, n)) if g == v => Some((g, n + 1)),
+                Some((g, n)) => {
+                    runs[n_runs] = (g, n as u16);
+                    n_runs += 1;
+                    Some((v, 1))
+                }
+                None => Some((v, 1)),
+            };
+        }
+        if r.pos > data_len && r.overran(data) {
+            return Err(ErrorKind::Truncated);
+        }
+    }
+    if let Some((g, n)) = cur {
+        runs[n_runs] = (g, n as u16);
+        n_runs += 1;
+    }
+    Ok((n_runs, used))
+}
+
+/// An 8-bit prefix's run of complete delta-coded code lengths (`0`: same, `10`: +1,
+/// `11`: -1, each length ended by a `0`): how many (up to 8) and bits they take, each one's
+/// offset from the starting length, the net change, and the lowest and highest the length
+/// passes through on the way (libbzip2 checks every one is within `1..=20`).
+#[derive(Clone, Copy)]
+#[repr(C, align(16))]
+struct MultiDelta {
+    bits: u8,
+    count: u8,
+    min_off: i8,
+    max_off: i8,
+    net: i8,
+    offs: [i8; 8],
+}
+
+const fn build_delta_lut() -> [MultiDelta; 256] {
+    let mut lut = [MultiDelta {
+        bits: 0,
+        count: 0,
+        min_off: 0,
+        max_off: 0,
+        net: 0,
+        offs: [0; 8],
+    }; 256];
+    let mut p = 0usize;
+    while p < 256 {
+        let mut e = lut[p];
+        // `bit`: the next unread bit's index below the prefix's top (`8` once all read)
+        let mut bit = 0usize;
+        let mut off = 0i8;
+        while e.count < 8 {
+            let (mut b, mut o, mut lo, mut hi) = (bit, off, e.min_off, e.max_off);
+            let mut ended = false;
+            while b < 8 {
+                let first = (p >> (7 - b)) & 1;
+                b += 1;
+                if first == 0 {
+                    ended = true;
+                    break;
+                }
+                if b == 8 {
+                    break;
+                }
+                let second = (p >> (7 - b)) & 1;
+                b += 1;
+                o += if second == 1 { -1 } else { 1 };
+                if o < lo {
+                    lo = o;
+                }
+                if o > hi {
+                    hi = o;
+                }
+            }
+            if !ended {
+                break;
+            }
+            e.offs[e.count as usize] = o;
+            e.count += 1;
+            e.bits = b as u8;
+            e.min_off = lo;
+            e.max_off = hi;
+            e.net = o;
+            bit = b;
+            off = o;
+        }
+        lut[p] = e;
+        p += 1;
+    }
+    lut
+}
+
+/// `4 KiB`, L1d-resident
+static DELTA_LUT: [MultiDelta; 256] = build_delta_lut();
+
+/// One table's `lens.len()` delta-coded code lengths. Where 8 or more remain and the next
+/// 8 bits are real input (so no overrun check could fire), one `DELTA_LUT` lookup takes up
+/// to 8 lengths at once, if every length it passes through is within `1..=20`; otherwise
+/// one length at a time, exactly as libbzip2 (`decompress.c`) checks it.
+#[inline(always)]
+fn read_lengths(r: &mut Reg, data: &[u8], lens: &mut [u8]) -> Result<(), ErrorKind> {
+    let data_len = data.len();
+    let alpha = lens.len();
+    let mut curr = r.bits(data, 5) as i32;
+    let mut i = 0usize;
+    while i < alpha {
+        if r.live < 8 {
+            r.refill(data);
+        }
+        if i + 8 <= alpha && r.pos <= data_len {
+            let e = &DELTA_LUT[(r.buf >> 56) as usize];
+            if e.count != 0 && curr + e.min_off as i32 >= 1 && curr + e.max_off as i32 <= 20 {
+                let base = curr as u8;
+                for (d, &o) in lens[i..i + 8].iter_mut().zip(&e.offs) {
+                    *d = base.wrapping_add(o as u8);
+                }
+                curr += e.net as i32;
+                r.skip_short(e.bits as u32);
+                i += e.count as usize;
+                continue;
+            }
+        }
+        if (r.buf >> 63) == 0 && (1..=20).contains(&curr) {
+            r.skip_short(1);
+            lens[i] = curr as u8;
+            i += 1;
+            continue;
+        }
+        loop {
+            if !(1..=20).contains(&curr) {
+                return Err(ErrorKind::BadCodeLength);
+            }
+            if !r.bit(data) {
+                break;
+            }
+            if r.bit(data) {
+                curr -= 1;
+            } else {
+                curr += 1;
+            }
+            if r.pos > data_len && r.overran(data) {
+                return Err(ErrorKind::Truncated);
+            }
+        }
+        lens[i] = curr as u8;
+        i += 1;
+    }
+    Ok(())
 }
 
 /// The next item of a stream of level `level` (1-9) from `br`, at a block header or the
@@ -211,7 +449,6 @@ pub fn read_item_with_scratch(
     }
 
     let (data, mut r) = br.parts();
-    let data_len = data.len();
 
     let in_use16 = r.bits(data, 16) as u16;
     let mut seq_to_unseq = [0u8; 256];
@@ -244,71 +481,23 @@ pub fn read_item_with_scratch(
         fail!(ErrorKind::BadSelectors);
     }
 
-    // the selectors, move-to-front coded; those past MAX_SELECTORS are read and dropped
-    // (as libbzip2 1.0.8 does: some encoders round their number up)
-    let mut mtf: u64 = 0x0000_0504_0302_0100;
-    let sel_cap = n_sel.min(MAX_SELECTORS);
-    let sel_buf = &mut scratch.selectors[..sel_cap];
-    let mut used_groups = 0u8;
-    // (`i` runs past `sel_buf`'s end: the selectors past MAX_SELECTORS are read, not kept)
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..n_sel {
-        if r.live < 8 {
-            r.refill(data);
-        }
-        let j = (!r.buf).leading_zeros() as usize;
-        if j >= n_groups {
-            r.skip_short(n_groups as u32);
-            br.set(r);
-            fail!(ErrorKind::BadSelector);
-        }
-        r.skip_short((j + 1) as u32);
-        if i < MAX_SELECTORS {
-            let sh = (j * 8) as u32;
-            let v = ((mtf >> sh) & 0xff) as u8;
-            let low_mask = (1u64 << sh) - 1;
-            mtf = (mtf & !((low_mask << 8) | 0xff)) | ((mtf & low_mask) << 8) | (v as u64);
-            sel_buf[i] = v;
-            used_groups |= 1u8 << v;
-        }
-        if r.pos > data_len && r.overran(data) {
-            br.set(r);
-            fail!(ErrorKind::Truncated);
-        }
-    }
+    // the selectors, move-to-front coded, as coalesced runs; those past MAX_SELECTORS are
+    // read and dropped (as libbzip2 1.0.8 does: some encoders round their number up)
+    let (n_runs, used_groups) =
+        match read_selectors(&mut r, data, n_groups, n_sel, &mut scratch.runs) {
+            Ok(v) => v,
+            Err(k) => {
+                br.set(r);
+                fail!(k);
+            }
+        };
 
     let build_pairs = n_sel >= PAIR_GATE_SEL;
     let mut lens = [0u8; MAX_ALPHA];
     for g in 0..n_groups {
-        let mut curr = r.bits(data, 5) as i32;
-        for l in lens[..alpha].iter_mut() {
-            if r.live < 8 {
-                r.refill(data);
-            }
-            if (r.buf >> 63) == 0 && (1..=20).contains(&curr) {
-                r.skip_short(1);
-                *l = curr as u8;
-                continue;
-            }
-            loop {
-                if !(1..=20).contains(&curr) {
-                    br.set(r);
-                    fail!(ErrorKind::BadCodeLength);
-                }
-                if !r.bit(data) {
-                    break;
-                }
-                if r.bit(data) {
-                    curr -= 1;
-                } else {
-                    curr += 1;
-                }
-                if r.pos > data_len && r.overran(data) {
-                    br.set(r);
-                    fail!(ErrorKind::Truncated);
-                }
-            }
-            *l = curr as u8;
+        if let Err(k) = read_lengths(&mut r, data, &mut lens[..alpha]) {
+            br.set(r);
+            fail!(k);
         }
         if (used_groups >> g) & 1 != 0 {
             scratch.tables[g].build_into(&lens[..alpha], build_pairs);
@@ -322,10 +511,9 @@ pub fn read_item_with_scratch(
     } else {
         syms.clear();
     }
-    let sel_buf = &scratch.selectors[..sel_cap];
     let (res, r) = decode_runs(
         &scratch.tables,
-        sel_buf,
+        &scratch.runs[..n_runs],
         r,
         data,
         &mut scratch.chunk,
@@ -441,6 +629,238 @@ mod tests {
             }
         }
         None
+    }
+
+    /// Selectors as the `(group, count)` runs the decode takes
+    fn runs_of(selectors: &[u8]) -> Vec<(u8, u16)> {
+        let mut runs: Vec<(u8, u16)> = Vec::new();
+        for &g in selectors {
+            match runs.last_mut() {
+                Some((h, n)) if *h == g => *n += 1,
+                _ => runs.push((g, 1)),
+            }
+        }
+        runs
+    }
+
+    /// The selector reader `read_selectors` replaced: one selector a time into a byte
+    /// buffer, an overrun check after each, coalesced afterwards
+    fn selectors_reference(
+        r: &mut Reg,
+        data: &[u8],
+        n_groups: usize,
+        n_sel: usize,
+    ) -> Result<(Vec<(u8, u16)>, u8), ErrorKind> {
+        let mut mtf: u64 = 0x0000_0504_0302_0100;
+        let mut sel = Vec::new();
+        let mut used = 0u8;
+        for i in 0..n_sel {
+            if r.live < 8 {
+                r.refill(data);
+            }
+            let j = (!r.buf).leading_zeros() as usize;
+            if j >= n_groups {
+                r.skip_short(n_groups as u32);
+                return Err(ErrorKind::BadSelector);
+            }
+            r.skip_short((j + 1) as u32);
+            if i < MAX_SELECTORS {
+                let sh = (j * 8) as u32;
+                let v = ((mtf >> sh) & 0xff) as u8;
+                let low_mask = (1u64 << sh) - 1;
+                mtf = (mtf & !((low_mask << 8) | 0xff)) | ((mtf & low_mask) << 8) | (v as u64);
+                sel.push(v);
+                used |= 1u8 << v;
+            }
+            if r.pos > data.len() && r.overran(data) {
+                return Err(ErrorKind::Truncated);
+            }
+        }
+        Ok((runs_of(&sel), used))
+    }
+
+    /// The code length reader `read_lengths` replaced: one length a time
+    fn lengths_reference(r: &mut Reg, data: &[u8], lens: &mut [u8]) -> Result<(), ErrorKind> {
+        let data_len = data.len();
+        let mut curr = r.bits(data, 5) as i32;
+        for l in lens.iter_mut() {
+            if r.live < 8 {
+                r.refill(data);
+            }
+            if (r.buf >> 63) == 0 && (1..=20).contains(&curr) {
+                r.skip_short(1);
+                *l = curr as u8;
+                continue;
+            }
+            loop {
+                if !(1..=20).contains(&curr) {
+                    return Err(ErrorKind::BadCodeLength);
+                }
+                if !r.bit(data) {
+                    break;
+                }
+                if r.bit(data) {
+                    curr -= 1;
+                } else {
+                    curr += 1;
+                }
+                if r.pos > data_len && r.overran(data) {
+                    return Err(ErrorKind::Truncated);
+                }
+            }
+            *l = curr as u8;
+        }
+        Ok(())
+    }
+
+    /// Bits whose runs of `0`s are long, as real selectors' and code lengths' are
+    fn biased_bits(rng: &mut Rng, n: usize) -> Vec<u8> {
+        let p_one = 1 + rng.below(8);
+        (0..n)
+            .map(|_| (0..8).fold(0u8, |b, _| (b << 1) | (rng.below(16) < p_one) as u8))
+            .collect()
+    }
+
+    #[test]
+    fn selectors_and_lengths_read_as_reference() {
+        // the same bits, error, end position and runs (or lengths), on both the
+        // `leading_zeros`/multi-length fast paths (input to spare) and near or past the
+        // input's end (each reader's overrun checks)
+        readers_match_reference(0x7a3c_9f12_04d5_be61, 20000, 4000);
+    }
+
+    #[test]
+    fn miri_selectors_and_lengths_read_as_reference() {
+        readers_match_reference(0x0dd1_7e55_a2b9_4c03, 24, 300);
+    }
+
+    fn readers_match_reference(seed: u64, cases: usize, max_len: u64) {
+        let mut rng = Rng(seed);
+        let mut runs = Box::new([(0u8, 0u16); MAX_SELECTORS]);
+        for case in 0..cases {
+            let len = match case % 4 {
+                0 => 1 + rng.below(16) as usize,
+                1 => 16 + rng.below(200) as usize,
+                _ => 200 + rng.below(max_len) as usize,
+            };
+            let data = biased_bits(&mut rng, len);
+            let start = rng.below(8 * len as u64 + 16);
+            let (_, r0) = Bits::at(&data, start).parts();
+            if case % 2 == 0 {
+                let n_groups = 2 + rng.below(5) as usize;
+                let n_sel = match rng.below(8) {
+                    0 if cases > 100 => MAX_SELECTORS + 1 + rng.below(100) as usize,
+                    1 => 1,
+                    _ => 1 + rng.below(4 * len as u64 + 1) as usize,
+                };
+                let (mut ra, mut rb) = (r0, r0);
+                let got = read_selectors(&mut ra, &data, n_groups, n_sel, &mut runs)
+                    .map(|(n, used)| (runs[..n].to_vec(), used));
+                let want = selectors_reference(&mut rb, &data, n_groups, n_sel);
+                let ctx =
+                    format!("case {case}: len {len} start {start} groups {n_groups} n_sel {n_sel}");
+                assert_eq!(got, want, "{ctx}");
+                assert_eq!(ra.bit_pos(), rb.bit_pos(), "{ctx}");
+            } else {
+                let alpha = 3 + rng.below(256) as usize;
+                let (mut ra, mut rb) = (r0, r0);
+                let (mut la, mut lb) = (vec![0u8; alpha], vec![0u8; alpha]);
+                let got = read_lengths(&mut ra, &data, &mut la);
+                let want = lengths_reference(&mut rb, &data, &mut lb);
+                let ctx = format!("case {case}: len {len} start {start} alpha {alpha}");
+                assert_eq!(got, want, "{ctx}");
+                assert_eq!(ra.bit_pos(), rb.bit_pos(), "{ctx}");
+                if got.is_ok() {
+                    assert_eq!(la, lb, "{ctx}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn delta_lut_matches_bitwise_decode() {
+        // every 8-bit prefix: its lengths, bits, net change and range as decoded one bit
+        // at a time
+        for (p, &e) in DELTA_LUT.iter().enumerate() {
+            let mut b = 0usize;
+            let mut off = 0i8;
+            let (mut lo, mut hi) = (0i8, 0i8);
+            for k in 0..e.count as usize {
+                loop {
+                    let first = (p >> (7 - b)) & 1;
+                    b += 1;
+                    if first == 0 {
+                        break;
+                    }
+                    off += if (p >> (7 - b)) & 1 == 1 { -1 } else { 1 };
+                    b += 1;
+                    lo = lo.min(off);
+                    hi = hi.max(off);
+                }
+                assert_eq!(e.offs[k], off, "prefix {p:08b} length {k}");
+            }
+            assert_eq!(
+                (e.bits as usize, e.net, e.min_off, e.max_off),
+                (b, off, lo, hi),
+                "prefix {p:08b}"
+            );
+            // and no further complete length fits in the prefix (unless 8 were taken)
+            if e.count < 8 {
+                let mut c = b;
+                let complete = loop {
+                    if c >= 8 {
+                        break false;
+                    }
+                    if (p >> (7 - c)) & 1 == 0 {
+                        break true;
+                    }
+                    c += 2;
+                };
+                assert!(!complete, "prefix {p:08b}");
+            }
+        }
+    }
+
+    #[test]
+    fn single_write_build_is_bit_identical_to_reference() {
+        // the same sequence of builds into one reused table each way (so stale `SubLut`
+        // entries must match too), over real, incomplete and oversubscribed codes,
+        // alpha 258 (symbol 256 and EOB 257 short), one-length codes and 20-bit tails
+        let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+        let mut fixed: Vec<Vec<u8>> = vec![
+            vec![1, 1],
+            vec![1, 1, 1],
+            vec![20; 258],
+            vec![1; 258],
+            vec![9; 258],
+            vec![10; 258],
+            vec![11; 258],
+        ];
+        let mut sym256 = vec![15u8; 258];
+        sym256[256] = 2;
+        sym256[257] = 2;
+        sym256[0] = 3;
+        sym256[1] = 4;
+        fixed.push(sym256);
+        let mut deep: Vec<u8> = (0..258).map(|i| (1 + (i % 20)) as u8).collect();
+        deep.sort_unstable();
+        fixed.push(deep);
+        let mut a = Huff::default();
+        let mut b = Huff::default();
+        for case in 0..6000 {
+            let lens = if case < fixed.len() {
+                fixed[case].clone()
+            } else if case % 10 == 0 {
+                lengths_of(&mut rng, MAX_ALPHA)
+            } else {
+                lengths(&mut rng)
+            };
+            for pairs in [true, false] {
+                a.build_into(&lens, pairs);
+                b.build_into_reference(&lens, pairs);
+                assert!(a.identical(&b), "case {case} pairs {pairs}: {lens:?}");
+            }
+        }
     }
 
     #[test]
@@ -956,6 +1376,7 @@ mod tests {
                 }
                 selectors.push(cur_g);
             }
+            let runs = runs_of(&selectors);
             let data: Vec<u8> = (0..(32 + rng.below(600) as usize))
                 .map(|_| rng.next() as u8)
                 .collect();
@@ -965,46 +1386,20 @@ mod tests {
             syms_a.clear();
             syms_b.clear();
 
-            let (res_a, ra) = decode_runs_scalar(
-                &sc_a.tables,
-                &selectors,
-                ra,
-                &data,
-                &mut sc_a.chunk,
-                &mut syms_a,
-            );
+            let (res_a, ra) =
+                decode_runs_scalar(&sc_a.tables, &runs, ra, &data, &mut sc_a.chunk, &mut syms_a);
             #[cfg(target_arch = "x86_64")]
             let (res_b, rb) = if std::is_x86_feature_detected!("bmi2") {
                 // SAFETY: guarded immediately by `is_x86_feature_detected!("bmi2")`.
                 unsafe {
-                    decode_runs_bmi2(
-                        &sc_b.tables,
-                        &selectors,
-                        rb,
-                        &data,
-                        &mut sc_b.chunk,
-                        &mut syms_b,
-                    )
+                    decode_runs_bmi2(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b)
                 }
             } else {
-                decode_runs_scalar(
-                    &sc_b.tables,
-                    &selectors,
-                    rb,
-                    &data,
-                    &mut sc_b.chunk,
-                    &mut syms_b,
-                )
+                decode_runs_scalar(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b)
             };
             #[cfg(not(target_arch = "x86_64"))]
-            let (res_b, rb) = decode_runs_scalar(
-                &sc_b.tables,
-                &selectors,
-                rb,
-                &data,
-                &mut sc_b.chunk,
-                &mut syms_b,
-            );
+            let (res_b, rb) =
+                decode_runs_scalar(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b);
 
             assert_eq!(res_a, res_b, "case {case}");
             assert_eq!(ra.bit_pos(), rb.bit_pos(), "case {case}");

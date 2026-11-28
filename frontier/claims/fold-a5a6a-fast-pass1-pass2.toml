@@ -1,0 +1,43 @@
+id = "fold-a5a6a-fast-pass1-pass2"
+title = "Fast A5+A6a for mtf-fold: #1274 64-sym vptest Pass 1, BMI2 dense prescan, and safe hoisted Slot8+NO_MARK OutQ16"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = ["src/runs/fold.rs", "src/open.rs", "src/open/outq.rs"]
+mechanisms = ["mtf-fold-pass1-vptest", "outq-slot8-hoist-nomark"]
+needs_louis = ""
+question = """
+In `#1305` (`docs/notebook/2026-11-28-explore-composed-worker-stack.md`), `A5+A6a` (`src/runs/fold.rs` + `FoldSink` + `OutQ16<1008,1024>`) is `30.0%` (`jcc`) / `31.1%` (`base`) of residual `B4` worker CPU. Dissection in `docs/notebook/2026-11-28-explore-fold-a5a6a-dissection.md` (`4,893 / 4,893` exact parity checks across all 233 Wikidata Open blocks on `base`, `jcc`, and `native`, `0 B` extra heap) proved that combining four surgical changes cuts `A5+A6a` by **`-12.28%` `base` / `-12.62%` `jcc` / `-21.94%` `native`** warm (`-8.93% / -9.16% / -14.62%` L3-cold):
+1. Port `#1274`'s i9-passing 64-symbol `u64 vptest` Pass 1 (zero `vmax`, 2 trailing zero words, O(1) `s2u_injective`) into `src/runs/fold.rs::build_bitmaps_avx2` (`-11.3%..-13.6%` isolated Pass 1, `363 -> 241` insns, `vzu 4 -> 1`);
+2. Return `(cnt, batch_rows)` from `fill_batch_avx2` in its existing single-copy MTF loop (`+1..+3` insns, zero `spw` spills, `0` `vzeroupper`/`0` `ymm`);
+3. In `#![forbid(unsafe_code)]` `src/open/outq.rs` + `src/open.rs`, split-borrow `out` and packed 8-byte `Slot8 { cur, end }` from cold `OutQMeta` (hoisting `out.ptr`/`out.len` out of the 14.39M-run thin loop), hoist `NO_MARK = p.wrapping_sub(pos) >= batch_rows` once per 512 runs, and outline `#[cold] push_strip` (shrinking `flush_batch` `-66.4%..-71.8%` insns and `-77.5%` stack loads, `0` `vzeroupper` in the thin loop and `push_slow`);
+4. Accelerate `bitmap_within_dense_cap` with `#[target_feature(enable = "bmi1,bmi2,lzcnt")]` + inner `while w != 0` + `_bzhi_u64` (`-38.4%..-41.3%` on Wikidata's 31 dense-band blocks, `0` stack stores, `0` `vzeroupper`).
+
+Does porting this `F8` stack into `src/runs/fold.rs`, `src/open.rs`, and `src/open/outq.rs` (sequenced after `mtf-fold-streaming-admission`) cut `wikidata` `1W` `OpenCells` worker CPU by `>= 3.0%` on both `base` and `jcc` (`>= 4.0%` `native`) with `0 B` RSS growth, `0` `vzeroupper`/`0` `ymm` in `fill_batch_avx2` and `push_slow`, Miri `0` UB, and zero guard regressions across all 6 guard corpora?
+"""
+why = """
+Directly attacks the #2 remaining `B4` worker stage (`30.0%` of `B4` worker CPU, worth `~-3.7%..-6.6%` of total `B4` worker CPU on top of `mtf-fold-streaming-admission`), reuses `#1274`'s i9-verified Pass 1 mechanism, keeps `src/open/outq.rs` strictly `#![forbid(unsafe_code)]`, adds `0 B` heap/RSS, and preserves `s.ll.len()` to prevent the `21.5–22.3 ms` `memset(0)` trap when composed with `L6a`.
+"""
+stop_test = """
+Frozen before data (sequenced after `mtf-fold-streaming-admission`; C2 never relaxed):
+1. **Exactness & safety:** `#![forbid(unsafe_code)]` preserved in `src/open/outq.rs`; 100% SHA-256 parity vs C `libbzip2` across all 7 corpora (`wikidata`, `text`, `records`, `random`, `runs`, `pattern`, `onebyte`) at `1W` and `4W`; `cargo test --features mtf-fold` and Miri (`0` UB) green.
+2. **Disassembly gate (`objdump -dC` across `base`, `jcc`, `native`):** `0` `vzeroupper` and `0` `ymm` in `fill_batch_avx2`, `push_slow`, `push_strip` cold path, and `bitmap_within_dense_cap`; `0` `vzeroupper` inside `flush_batch`'s thin-run loop across all 3 builds.
+3. **Local paired benchmark gate (`n >= 9` interleaved repeats, CPU 0, steal-free CPU, `wikidata` `1W` `mibz2-workers-lazy` with `--features mtf-fold`):** candidate vs pre-change `mtf-fold` cuts worker CPU (`wkr_cpu_ms`) with disjoint 95% CIs (`ci_hi <= 0.975`) on BOTH `base` and `jcc` (and `ci_hi <= 0.960` on `native`), peak RSS `<= 1.005x` on `wikidata` (`1W`, `4W`, `8W`), and zero guard regression (`ci_lo <= 1.020`, median `<= 1.020`) across all 6 guard corpora.
+4. **Physical i9-10900K C6 validation:** folds into `mtf-fold`'s C6 adoption run (or runs paired against shipped `mtf-fold` under a reviewed C6 registration) with `wikidata/1` `ci_hi <= 0.975`, peak RSS `<= 1.010x`, and `0` guard regressions `> 1.020`.
+Otherwise STOP and record a scoped dead-end row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Sequenced after `mtf-fold-streaming-admission` (shared `owned_paths`). Implementation PR passes gates 1–3 and CI, with delta and either integration ahead of/into `mtf-fold`'s i9 adoption run or a scoped row in `frontier/dead-ends.tsv`.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-fold-a5a6a-dissection.md",
+  "docs/notebook/2026-11-28-explore-composed-worker-stack.md",
+  "frontier/deltas/2026-11-28-explore-fold-a5a6a-dissection.md",
+]
+links = [
+  "frontier/claims/mtf-fold-streaming-admission.toml",
+  "frontier/claims/runs-front-i9-rescue.toml",
+  "frontier/claims/forward-lanes-mlp-and-prefetch.toml",
+]
