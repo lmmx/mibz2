@@ -1,9 +1,9 @@
-id = "ship-completion-pressure"
+id = "segmented-fused-postwalk-rescue"
 holder = "antigravity"
-session = "789fe6a23372"
-claimed_at = "2026-11-28T09:57:20+00:00"
-expires = "2026-11-28T13:57:20+00:00"
-owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
-mechanisms = ["release-completion-pressure"]
-base = "61763de3f396bd1e7bd7d1c6309c1376431be245"
+session = "23144619b91b"
+claimed_at = "2026-11-28T03:51:15+00:00"
+expires = "2026-11-28T19:08:00+00:00"
+owned_paths = ["src/bwt.rs", "src/rle.rs", "src/lib.rs"]
+mechanisms = ["segmented-fused-postwalk"]
+base = "be5826b5908b6afbddb5a2c05e42e54a93a9bc53"
 released = false
