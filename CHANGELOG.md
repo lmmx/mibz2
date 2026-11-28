@@ -7,6 +7,143 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.18](https://github.com/lmmx/mibz2/compare/v0.5.17...v0.5.18) - 2026-11-28
+
+### <!-- 1 -->Features
+
+- *(python)* direct Rust abi3-py310 line and streaming delivery ([#1335](https://github.com/lmmx/mibz2/pull/1335))
+
+### <!-- 2 -->Bug Fixes
+
+- *(frontier)* release merged integration holds at moved descendant PR heads ([#1303](https://github.com/lmmx/mibz2/pull/1303))
+- *(frontier)* release a terminal claim's parked hold after its PR closed unmerged at a moved head ([#1293](https://github.com/lmmx/mibz2/pull/1293))
+- *(bench)* accept unlimited dict shape from ab env --facts in forward_adopt ([#1279](https://github.com/lmmx/mibz2/pull/1279))
+- *(frontier)* let take-review resume released or expired PR claims ([#1215](https://github.com/lmmx/mibz2/pull/1215))
+
+### <!-- 3 -->Performance
+
+- *(open/lanes)* bound forward-anchor-lanes Arena to 80 KiB via in-out 4 KiB chunk permutation ([#1312](https://github.com/lmmx/mibz2/pull/1312))
+- *(runs)* front_avx2's 64-symbol vptest Pass 1, u32 counts and hoisted XMM steps ([#1274](https://github.com/lmmx/mibz2/pull/1274))
+- *(open/outq)* safe Cell 4x wire_xor and overlapping-SIMD register-cursor wire ([#1294](https://github.com/lmmx/mibz2/pull/1294))
+- *(scanner)* direct selector runs, multi-length code-length LUT and single-write table build ([#1117](https://github.com/lmmx/mibz2/pull/1117))
+- *(open)* skip within_cap pre-scan on [0.10, 0.15) lazy-admitted blocks, routes unchanged ([#1246](https://github.com/lmmx/mibz2/pull/1246))
+- *(open/outq)* clear native push_slow vzeroupper and record mtf-fold-batch-measure STOP ([#1234](https://github.com/lmmx/mibz2/pull/1234))
+
+### <!-- 4 -->Documentation
+
+- *(explore)* Open's admission is block-size-blind on bzip2 -1..-3 input ([#1355](https://github.com/lmmx/mibz2/pull/1355))
+- *(frontier)* shipped i9 Wikidata is worker-bound at every plan, no 8-worker tie ([#1351](https://github.com/lmmx/mibz2/pull/1351))
+- *(blog)* publish Python Stable ABI line delivery post ([#1348](https://github.com/lmmx/mibz2/pull/1348))
+- *(frontier)* record independent C6 review of PR #1343 (scanner-a3-k3-pipe-u8) ([#1345](https://github.com/lmmx/mibz2/pull/1345))
+- *(notebook)* dissect default OpenCells A5+A6a and file default-a5a6a-fast-build ([#1344](https://github.com/lmmx/mibz2/pull/1344))
+- record two-lane scanner Step 1 probe (B=10 and B=9 on 32 KiB L1d) ([#1306](https://github.com/lmmx/mibz2/pull/1306))
+- *(release)* restate 0.5.15's 1t and 12t steps within mode; mode-robust reading in RELEASING §5 ([#1285](https://github.com/lmmx/mibz2/pull/1285))
+- *(frontier)* independent B5 review of the AVX2 runs front at 791ee415: PASS ([#1284](https://github.com/lmmx/mibz2/pull/1284))
+- *(blog)* walking the Burrows–Wheeler cycle forward across four lanes ([#1277](https://github.com/lmmx/mibz2/pull/1277))
+- *(frontier)* price delivery-l3-working-set's gates out from the i9 traces ([#1265](https://github.com/lmmx/mibz2/pull/1265))
+- *(explore)* two-lane interleaved scanner probe and idea claim ([#1251](https://github.com/lmmx/mibz2/pull/1251))
+- *(changelog)* 0.5.17 measured notes, feature review, moonshot lockfile, and partial delta ([#1227](https://github.com/lmmx/mibz2/pull/1227))
+
+### <!-- 7 -->Build System and CI
+
+- *(bench)* add diagnostic 1-thread open-route cell (mibz2-workers-lazy) ([#1245](https://github.com/lmmx/mibz2/pull/1245))
+
+### <!-- 9 -->Other
+
+- *(release)* read back the 0.5.18 i9 preflight (VALID PASS); fail closed on malformed recovery cells ([#1357](https://github.com/lmmx/mibz2/pull/1357))
+- *(synthesise)* twenty-seventh synthesis pass ([#1358](https://github.com/lmmx/mibz2/pull/1358))
+- record v0.5.18 i9 preflight VALID PASS receipt and dequeue completed runs ([#1359](https://github.com/lmmx/mibz2/pull/1359))
+- *(two_arm)* the multi-reference scorer recalibration recipes invoke; ab run --unpinned names its CPUs ([#1353](https://github.com/lmmx/mibz2/pull/1353))
+- admit P1 decentralised continuation runbook claim ([#1352](https://github.com/lmmx/mibz2/pull/1352))
+- read back recalibrate-0518 (pinned trims hold; unpinned VOID on scorer interface) and open two-arm-multi-ref-port ([#1350](https://github.com/lmmx/mibz2/pull/1350))
+- record the AVX2 ring CRC rescue's i9 STOP (40bb1509) ([#1346](https://github.com/lmmx/mibz2/pull/1346))
+- Queue v0.5.18 §5c recalibration and §3.5 physical i9 preflight (7be50513) ([#1340](https://github.com/lmmx/mibz2/pull/1340))
+- compact u8 symbol handover dissection across S, Shared L3, and W ([#1339](https://github.com/lmmx/mibz2/pull/1339))
+- *(release)* enforce physical i9 pre-release regression gate ([#1256](https://github.com/lmmx/mibz2/pull/1256))
+- persistent P1 completion pressure through blocked gates ([#1336](https://github.com/lmmx/mibz2/pull/1336))
+- add ledger entry for #1335 (python-abi3-delivery-build) ([#1338](https://github.com/lmmx/mibz2/pull/1338))
+- admit merged-hold-moved-head (P1); record scanner-a3-k3-pipe-u8 refused on a stranded hold ([#1337](https://github.com/lmmx/mibz2/pull/1337))
+- *(synthesise)* twenty-sixth synthesis pass ([#1333](https://github.com/lmmx/mibz2/pull/1333))
+- admit scanner-a3-k3-pipe-u8 ([#1334](https://github.com/lmmx/mibz2/pull/1334))
+- how shrinking worker scratch speeds the serial scanner ([#1330](https://github.com/lmmx/mibz2/pull/1330))
+- record CI's primary loss on the re-pinned crc32 rescue before the i9 run ([#1331](https://github.com/lmmx/mibz2/pull/1331))
+- admit python-abi3-delivery-build ([#1329](https://github.com/lmmx/mibz2/pull/1329))
+- dissect abi3-py310 Python delivery and file python-abi3-delivery-build ([#1327](https://github.com/lmmx/mibz2/pull/1327))
+- record scanner-contention-bounded-recheck i9 EXPLAINED verdict (1950f77f) ([#1326](https://github.com/lmmx/mibz2/pull/1326))
+- mark scanner-contention-bounded-recheck blocked awaiting i9 bundle ([#1325](https://github.com/lmmx/mibz2/pull/1325))
+- admit scanner-contention-bounded-recheck (idea -> open) ([#1322](https://github.com/lmmx/mibz2/pull/1322))
+- twenty-fifth synthesis pass (working set as scanner time, L6a re-priced, VM-to-i9 transfer, 0.5.18 candidate) ([#1321](https://github.com/lmmx/mibz2/pull/1321))
+- admit a6b-zero-rss-endpoint-build (idea -> open) ([#1320](https://github.com/lmmx/mibz2/pull/1320))
+- *(a6b)* zero-extra-RSS edges-overlaid AoS dissection and build idea ([#1318](https://github.com/lmmx/mibz2/pull/1318))
+- forward-lanes-mlp-and-prefetch scoped C2 STOP (K=8+prefetch -6.2..-18.5%) ([#1319](https://github.com/lmmx/mibz2/pull/1319))
+- Add blog post on Intel clock hysteresis and peak-RSS noise calibration
+- record #1312 in ledger.tsv ([#1316](https://github.com/lmmx/mibz2/pull/1316))
+- record scanner-contention-residual i9 CONFIRMED verdict (a7ac01d8) ([#1315](https://github.com/lmmx/mibz2/pull/1315))
+- add ledger row for #1274 and admit forward-lanes-mlp-and-prefetch ([#1314](https://github.com/lmmx/mibz2/pull/1314))
+- residual B4 A5+A6a (fold.rs + OutQ16) dissection and F8 stack ([#1313](https://github.com/lmmx/mibz2/pull/1313))
+- Fix scanner_contention perf stat invocation (CPU-scoped -C)
+- mark scanner-contention-residual blocked awaiting i9 bundle ([#1309](https://github.com/lmmx/mibz2/pull/1309))
+- twenty-fourth synthesis pass (0.5.18 ledger, post-#1217 balance, 32 KiB L1d trap, 0390e19f forensics) ([#1307](https://github.com/lmmx/mibz2/pull/1307))
+- 4-way composed post-#1217 worker stack and residual B4 dissection ([#1305](https://github.com/lmmx/mibz2/pull/1305))
+- add ledger.tsv row for #1268 (Cargo.toml feature notes) ([#1302](https://github.com/lmmx/mibz2/pull/1302))
+- admit scanner-contention-residual ([#1301](https://github.com/lmmx/mibz2/pull/1301))
+- mark result-to-release done after PR #1241 merge ([#1300](https://github.com/lmmx/mibz2/pull/1300))
+- twenty-third synthesis pass (narrow the lanes rescue off src/open.rs) ([#1299](https://github.com/lmmx/mibz2/pull/1299))
+- drop segmented-fused-postwalk under C2 and admit rescue ([#1297](https://github.com/lmmx/mibz2/pull/1297))
+- record forward-emission-adopt i9 C6 DO NOT ADOPT verdict (ccfa473f) and file P1 bounded-slab rescue ([#1296](https://github.com/lmmx/mibz2/pull/1296))
+- independent reviews of parked-hold-moved-head and crc32-avx2-ring-rescue's C6 registration ([#1292](https://github.com/lmmx/mibz2/pull/1292))
+- *(frontier)* result-to-release visibility and derived P1 pressure ([#1241](https://github.com/lmmx/mibz2/pull/1241))
+- price segmented-fused-postwalk's peak-RSS blocker (nothing removable on pattern) ([#1290](https://github.com/lmmx/mibz2/pull/1290))
+- twenty-second synthesis pass (two stranded RSS-bound rescues) ([#1289](https://github.com/lmmx/mibz2/pull/1289))
+- record crc32-avx2-ring-rescue blocked on a stranded parked hold ([#1288](https://github.com/lmmx/mibz2/pull/1288))
+- twenty-first synthesis pass: two clocks, the seam back in the 8-worker ledger, workers as the long pole ([#1286](https://github.com/lmmx/mibz2/pull/1286))
+- admit parked-hold-moved-head (stranded crc32 reservation) ([#1287](https://github.com/lmmx/mibz2/pull/1287))
+- C6 review of runs-front-i9-rescue ([#1274](https://github.com/lmmx/mibz2/pull/1274)): PASS ([#1278](https://github.com/lmmx/mibz2/pull/1278))
+- *(features)* bring the mtf-fold and forward-anchor-lanes notes up to their verdicts ([#1268](https://github.com/lmmx/mibz2/pull/1268))
+- record i9-clock-modes PASS (mechanism found) verdict (d5658cfb) and route 0.5.15 restatement ([#1283](https://github.com/lmmx/mibz2/pull/1283))
+- admit crc32-avx2-ring-rescue (idea -> open) ([#1281](https://github.com/lmmx/mibz2/pull/1281))
+- admit a6c-wire-redesign (idea -> open) ([#1280](https://github.com/lmmx/mibz2/pull/1280))
+- complete rss-bound-calibration peak-RSS noise census ([#1273](https://github.com/lmmx/mibz2/pull/1273))
+- mark i9-clock-modes blocked on queued i9 run ([#1276](https://github.com/lmmx/mibz2/pull/1276))
+- *(clock-modes)* frozen i9 2x3x2 clock-modes probe and mode-robust ab estimator ([#1201](https://github.com/lmmx/mibz2/pull/1201))
+- admit runs-front-i9-rescue (idea -> open) ([#1272](https://github.com/lmmx/mibz2/pull/1272))
+- mark forward-emission-adopt blocked on queued i9 run ([#1271](https://github.com/lmmx/mibz2/pull/1271))
+- resolve the i9-clock-modes settle-levels flag (2.0 s level added pre-data in #1201) ([#1269](https://github.com/lmmx/mibz2/pull/1269))
+- *(forward-adopt)* C6 physical i9 adoption registration for forward-anchor-lanes ([#1257](https://github.com/lmmx/mibz2/pull/1257))
+- the 8-worker scanner inflation is mostly the turbo bin ([#1262](https://github.com/lmmx/mibz2/pull/1262))
+- admit rss-bound-calibration (idea -> open) ([#1267](https://github.com/lmmx/mibz2/pull/1267))
+- record runs-front-and-fill-build C2 STOP verdict and admit runs-front-i9-rescue ([#1266](https://github.com/lmmx/mibz2/pull/1266))
+- independent C6 review of forward-emission-adopt's i9 recipe ([#1257](https://github.com/lmmx/mibz2/pull/1257)): changes required ([#1263](https://github.com/lmmx/mibz2/pull/1263))
+- admit plan-schedule-and-lazy-threshold (idea -> open) ([#1264](https://github.com/lmmx/mibz2/pull/1264))
+- twentieth synthesis pass: after the lanes, the 8-worker knee needs scanner, lanes and fold together ([#1261](https://github.com/lmmx/mibz2/pull/1261))
+- adaptive seam window NOT ADOPTED on the i9; scoped STOP and composed-lanes rescue ([#1259](https://github.com/lmmx/mibz2/pull/1259))
+- admit delivery-l3-working-set, drop the answered a6b-compact-footprint-rescue ([#1258](https://github.com/lmmx/mibz2/pull/1258))
+- nineteenth synthesis pass: the forward lanes flip Wikidata's 8-worker knee to the scanner ([#1250](https://github.com/lmmx/mibz2/pull/1250))
+- record the fast A2 scanner setup's i9 PASS, independently verified ([#1252](https://github.com/lmmx/mibz2/pull/1252))
+- admit forward-emission-adopt (idea -> open) ([#1255](https://github.com/lmmx/mibz2/pull/1255))
+- route #1117's integration to a non-claude-code participant ([#1254](https://github.com/lmmx/mibz2/pull/1254))
+- release-0-5-18 blocked on the pre-release i9 gate ([#1253](https://github.com/lmmx/mibz2/pull/1253))
+- record the AVX2 ring CRC C2 verdict, stopped on its frozen memory bound ([#1249](https://github.com/lmmx/mibz2/pull/1249))
+- require physical i9 non-regression before publication (P1) ([#1248](https://github.com/lmmx/mibz2/pull/1248))
+- open release-0-5-18 at P1 ([#1247](https://github.com/lmmx/mibz2/pull/1247))
+- queue bench-scanner-a2-fast and mark scanner-a2-fast-i9-run blocked ([#1243](https://github.com/lmmx/mibz2/pull/1243))
+- admit ci-bench-open-route-arm and freeze stop_test ([#1244](https://github.com/lmmx/mibz2/pull/1244))
+- record forward-emission-run i9 RESCUE verdict (e98948b6) and file forward-emission-adopt ([#1242](https://github.com/lmmx/mibz2/pull/1242))
+- i9 slow mode (b) tracks the settle gap, not pinning; flag i9-clock-modes' settle levels ([#1240](https://github.com/lmmx/mibz2/pull/1240))
+- frozen i9 adoption recipe for the fast A2 scanner setup ([#1117](https://github.com/lmmx/mibz2/pull/1117)) against its merge base ([#1237](https://github.com/lmmx/mibz2/pull/1237))
+- route #1237's C6 review to a non-claude-code agent ([#1239](https://github.com/lmmx/mibz2/pull/1239))
+- forward-emission-run queued, blocked on the i9 bundle ([#1233](https://github.com/lmmx/mibz2/pull/1233))
+- eighteenth synthesis pass: the adaptive seam pays only where the scanner binds ([#1229](https://github.com/lmmx/mibz2/pull/1229))
+- *(compose)* verify 3-layer serial scanner stack (#1144 + #1117 + scanner-a3-k3-pipe-u8) ([#1235](https://github.com/lmmx/mibz2/pull/1235))
+- admit runs-front-and-fill-build (idea -> open) ([#1236](https://github.com/lmmx/mibz2/pull/1236))
+- admit scanner-a2-fast-i9-run as a pre-merge i9 run ([#1232](https://github.com/lmmx/mibz2/pull/1232))
+- i9 kill test for forward-anchor-lanes, the disjoint-slab walk at v0.5.17 ([#1168](https://github.com/lmmx/mibz2/pull/1168))
+- seventeenth synthesis pass, 0.5.17's knee loss and CI's open-kernel blind spot ([#1230](https://github.com/lmmx/mibz2/pull/1230))
+- Record 0.5.17 i9 release-scaling and crossover; close release-0-5-17 ([#1228](https://github.com/lmmx/mibz2/pull/1228))
+- record adaptive scanner trace test concurrency failure for #1144 ([#1208](https://github.com/lmmx/mibz2/pull/1208))
+- record paired CI review evidence for AVX2 ring CRC #1179 ([#1207](https://github.com/lmmx/mibz2/pull/1207))
+- close the loop from promising results to releases (P1) ([#1224](https://github.com/lmmx/mibz2/pull/1224))
+
 ## [0.5.17](https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17) - 2026-11-27
 
 ### <!-- 1 -->Features
