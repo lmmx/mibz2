@@ -8,6 +8,8 @@ claim = "forward-emission-bounded-slab-rescue"
 critical = true
 declared_at = 1795884567
 dep = "evidence:bench-forward-adopt-rescue@575fa98a9e80701c4a42c0799017cdc75691fe46"
+disposed_at = 1795887165
+disposition = "DO NOT ADOPT (unrelaxed C2, 10/11 clauses PASS, sole failure wikidata/1 delta_rss=+868.0 KiB > +512.0 KiB pipeline-quantum step) recorded & dequeued in PR #1394 (00579159)"
 first_acquired_at = 1795886649
 independent = false
 key = "forward-emission-bounded-slab-rescue--read-i9-bundle"
@@ -16,4 +18,4 @@ next = "Read back physical i9 bundle, verify SHA-256 and forward_adopt_rescue.py
 priority = 1
 ready_authoritative = 1795885910
 ready_observed = 1795886649
-state = "acquired"
+state = "done"
