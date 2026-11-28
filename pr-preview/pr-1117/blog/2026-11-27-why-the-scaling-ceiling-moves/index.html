@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
+        <meta name="description" content="On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-why-the-scaling-ceiling-moves/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -21,10 +21,10 @@
         
       
       
-        <link rel="prev" href="../2026-11-27-reopening-a6b-and-segmented/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../2026-11-26-true-floor-and-pooled-scan/">
+        <link rel="next" href="../2026-11-27-bounded-memory-on-highly-compressible-input/">
       
       
         
@@ -35,7 +35,7 @@
     
     
       
-        <title>Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls - mibz2</title>
+        <title>Why compression ratio moves the scaling ceiling - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=4178f9a0191b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -91,19 +91,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
-  <meta property="og:description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-off-wikidata-and-eight-worker-coupling/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png">
+  <meta property="og:title" content="Why compression ratio moves the scaling ceiling">
+  <meta property="og:description" content="On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-why-the-scaling-ceiling-moves/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-why-the-scaling-ceiling-moves.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
+  <meta property="og:image:alt" content="Why compression ratio moves the scaling ceiling">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
-  <meta name="twitter:description" content="Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-off-wikidata-and-eight-worker-coupling.png">
-  <meta name="twitter:image:alt" content="Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls">
+  <meta name="twitter:title" content="Why compression ratio moves the scaling ceiling">
+  <meta name="twitter:description" content="On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-why-the-scaling-ceiling-moves.png">
+  <meta name="twitter:image:alt" content="Why compression ratio moves the scaling ceiling">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls
+              Why compression ratio moves the scaling ceiling
             
           </span>
         </div>
@@ -1212,87 +1212,6 @@
                   
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  The 256 KiB L2 cliff and the flipped knee
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-six-gbs-decoder-architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  The architecture of a 6 GB/s decoder
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Reopening Open's middle and off-Wikidata
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-                
-              
-                
-                  
-  
-  
     
   
   
@@ -1312,7 +1231,7 @@
   <span class="md-ellipsis">
     
   
-  Off Wikidata and inside the eight-worker tie
+  Why compression ratio moves the scaling ceiling
 
     
   </span>
@@ -1329,7 +1248,7 @@
   <span class="md-ellipsis">
     
   
-  Off Wikidata and inside the eight-worker tie
+  Why compression ratio moves the scaling ceiling
 
     
   </span>
@@ -1355,10 +1274,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-happens-when-the-decoder-leaves-wikidata" class="md-nav__link">
+  <a href="#1-two-stations-two-currencies" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What happens when the decoder leaves Wikidata
+        1. Two stations, two currencies
       </span>
     </span>
   </a>
@@ -1366,10 +1285,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" class="md-nav__link">
+  <a href="#2-watching-the-knee-move-on-ten-cores" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why the eight-worker tie leaves 8 to 9 ms on the table
+        2. Watching the knee move on ten cores
       </span>
     </span>
   </a>
@@ -1377,71 +1296,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" class="md-nav__link">
+  <a href="#3-why-a-faster-scanner-disappears-on-wikidata-at-eight-threads" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Chunk maintenance stalls and runt-diluted slots
+        3. Why a faster scanner disappears on Wikidata at eight threads
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Chunk maintenance stalls and runt-diluted slots">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-the-irreducible-queueing-floor-and-cross-talk" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4. The irreducible queueing floor and cross-talk
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-changes-next" class="md-nav__link">
+  <a href="#4-two-more-shipped-improvements-in-0516" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What changes next
+        4. Two more shipped improvements in 0.5.16
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-this-means-for-decoding-in-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What this means for decoding in practice
       </span>
     </span>
   </a>
@@ -1452,6 +1332,87 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-bounded-memory-on-highly-compressible-input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Half the memory on compressible files
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-faster-decoding-for-ordinary-text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Faster decoding for ordinary text
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-27-stages-built-to-fit-together/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stages built to fit together
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3568,10 +3529,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-happens-when-the-decoder-leaves-wikidata" class="md-nav__link">
+  <a href="#1-two-stations-two-currencies" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What happens when the decoder leaves Wikidata
+        1. Two stations, two currencies
       </span>
     </span>
   </a>
@@ -3579,10 +3540,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" class="md-nav__link">
+  <a href="#2-watching-the-knee-move-on-ten-cores" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why the eight-worker tie leaves 8 to 9 ms on the table
+        2. Watching the knee move on ten cores
       </span>
     </span>
   </a>
@@ -3590,71 +3551,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" class="md-nav__link">
+  <a href="#3-why-a-faster-scanner-disappears-on-wikidata-at-eight-threads" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Chunk maintenance stalls and runt-diluted slots
+        3. Why a faster scanner disappears on Wikidata at eight threads
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Chunk maintenance stalls and runt-diluted slots">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-the-irreducible-queueing-floor-and-cross-talk" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4. The irreducible queueing floor and cross-talk
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-changes-next" class="md-nav__link">
+  <a href="#4-two-more-shipped-improvements-in-0516" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What changes next
+        4. Two more shipped improvements in 0.5.16
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-this-means-for-decoding-in-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What this means for decoding in practice
       </span>
     </span>
   </a>
@@ -3683,7 +3605,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-off-wikidata-and-eight-worker-coupling.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-why-the-scaling-ceiling-moves.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -3694,410 +3616,338 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="off-wikidata-and-inside-the-eight-worker-tie-route-refusals-and-coupled-stalls">Off Wikidata and inside the eight-worker tie: route refusals and coupled stalls<a class="headerlink" href="#off-wikidata-and-inside-the-eight-worker-tie-route-refusals-and-coupled-stalls" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Off Wikidata, 84% of full blocks bypass our Open kernel and pay dense refusals while trace replay decomposes the eight-worker tie.</p>
-<p class="post-meta">27 November 2026 · 8 min read · <a href="#4-what-changes-next">Research result</a></p>
+<h1 id="why-compression-ratio-moves-the-scaling-ceiling">Why compression ratio moves the scaling ceiling<a class="headerlink" href="#why-compression-ratio-moves-the-scaling-ceiling" title="Permanent link">&para;</a></h1>
+<p class="post-dek">On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.</p>
+<p class="post-meta">27 November 2026 · 8 min read · <a href="#5-what-this-means-for-decoding-in-practice">Research result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p><strong>Two measurements from primary traces sharpen where mibz2 should spend its next engineering effort.</strong> First, moving off our Wikidata benchmark exposes a blind spot. Across seven other corpora, 84% of full blocks bypass the Open inverse-BWT kernel completely, and every block in Open's dense admission band is refused <em>after</em> paying for a failed first pass. Second, replaying per-block timestamps at eight workers on Wikidata explains the 8 to 9 millisecond gap between shipped wall time and the bottleneck lower bound. Most of that gap is either already targeted by our seam-window patch or part of an irreducible queueing floor, leaving no hidden 3% lever in pipeline coordination.</p>
-<p>Both findings follow directly from <a href="../2026-11-26-true-floor-and-pooled-scan/">The decoder's true floor and the limits of a pooled scan</a>. That post established that on our 10-core Intel i9-10900K machine, decoding four copies of Wikidata (838.8 MB uncompressed) at eight workers puts the serial Huffman scanner (<code>S</code>) and the eight workers (<code>W/8</code>) in a near-exact tie near 185 ms, while shipped wall time sits at 192.9 to 194.6 ms. Two natural questions remained open: how much of our Wikidata-tuned worker surface actually runs on ordinary files, and whether the 8 to 9 ms coupling gap at the eight-worker tie hides an unowned speedup.</p>
-<p>This post answers both from primary evidence.
-<a href="#1-what-happens-when-the-decoder-leaves-wikidata">Section 1</a> reports the off-Wikidata route census and the exact cost of dense-band refusals.
-<a href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table">Section 2</a> corrects a common accounting mistake about our 5.2 ms plumbing floor and validates a discrete-event replay of the parallel decoder.
-<a href="#3-chunk-maintenance-stalls-and-runt-diluted-slots">Section 3</a> isolates the two mechanisms driving mid-stream stalls and prices the remaining floor at a future 150 ms tie.
-<a href="#4-what-changes-next">Section 4</a> sets out the concrete changes these measurements justify.</p>
+<p>Benchmark a parallel bzip2 decoder on a ten-core processor with a 210 MB Wikidata dump. Adding
+threads keeps paying off all the way to nine workers. Now hand that same binary a compressed
+archive of Rust source code or JSON. It stops speeding up at four or five workers. Give it eight or
+ten workers and it actually runs slower.</p>
+<p>The reason has nothing to do with thread scheduling or the tool that compressed the file. It is
+built into bzip2 itself. Every block passes through two stations in sequence
+(<a href="../2026-11-25-the-decoder-as-a-queueing-network/">the decoder as a queueing network</a>). One serial
+front stage decodes Huffman symbols. A pool of parallel workers then inverts the Burrows–Wheeler
+transform (BWT) to recover the original bytes. The serial stage pays per Huffman symbol. The
+parallel workers pay per output byte. Compression ratio sets the exchange rate between those two
+currencies.</p>
+<p>Alongside these hardware measurements, three default-path improvements have shipped in mibz2 0.5.15
+and 0.5.16. They bring a faster Huffman scanner, wider branchless run decoding and chunked
+whole-file reads in Python. Together they show why the same speed-up can stay hidden on one
+benchmark yet pay off cleanly on another.</p>
 <p><strong>Takeaways</strong></p>
 <ul>
-<li><strong>Off Wikidata, Open runs on only 16% of full blocks.</strong> Across seven local corpora (107 full blocks), 90 blocks run the Segmented fallback instead of Open, and all 25 blocks in Open's dense band (<span class="arithmatex">\(r/n \in [0.15, 0.28]\)</span>) are refused after running Open's first pass to its cap.</li>
-<li><strong>Dense-band refusals cost 13 to 48% extra inverse time on refused blocks.</strong> On ordinary prose, that wasted pass makes production 1.09 to 1.32 times slower than Segmented alone. A single pass over the run records predicts every refusal before Open begins.</li>
-<li><strong>Do not subtract 5.2 ms of empty-pipeline plumbing from the eight-worker tie gap.</strong> When real work runs, per-block handoffs overlap behind active stages. Unoverlapped handoff overhead is only 1.12 to 1.16 ms.</li>
-<li><strong>Chunk maintenance amplifies the eight-worker tie by about 2.15 ms.</strong> Eleven discrete 0.53 to 1.54 ms copy-and-drain stalls in <code>ChannelSource::view</code> skew the scanner across the four corpus copies. Removing them via a reused seam buffer recovers that coupling loss on top of its 10 to 11 ms direct scan reduction.</li>
-<li><strong>No standalone 3% lever hides in the remaining coupling gap.</strong> Post-seam at a balanced 150 ms tie, about 4.5 ms is an irreducible queueing, startup and handoff floor. The remaining unowned levers (runt-exempt slots and a smaller initial read chunk) cap near 2.5 ms combined, or 1.6% of wall time.</li>
+<li><strong>The scaling knee moves with the input.</strong> On a ten-core Intel Core i9-10900K, Wikidata keeps
+  scaling to nine workers. Ordinary source code and JSON peak at four or five workers.</li>
+<li><strong>Symbol density drives the shift.</strong> Scanner time per Huffman symbol barely varies across text
+  corpora (1.41 to 1.48 ns). Ordinary text simply packs three to five times more symbols into each
+  output megabyte than a repetitive dump does.</li>
+<li><strong>Extra threads hurt past the knee.</strong> Once the serial scanner saturates on Rust source or JSON,
+  adding workers past six slows decoding down. Moving from five workers to ten costs roughly twice
+  as much total processor time.</li>
+<li><strong>Faster scanning hides until the scanner binds.</strong> The new Huffman scanner in 0.5.15 cut serial
+  scan time on Wikidata by 10.5% and ten-thread time by 4.0%. Four-thread and eight-thread Wikidata
+  timings barely moved because workers still set the pace there.</li>
+<li><strong>Two more default improvements landed in 0.5.16.</strong> Raising the run-decoding ceiling from 50% to
+  75% speeds up compressible Markdown, ELF binaries and JSON. Whole-file Python reads now pull
+  1 MiB chunks directly without changing wheel compatibility.</li>
 </ul>
-<h2 id="1-what-happens-when-the-decoder-leaves-wikidata">1. What happens when the decoder leaves Wikidata<a class="headerlink" href="#1-what-happens-when-the-decoder-leaves-wikidata" title="Permanent link">&para;</a></h2>
-<p>Almost every worker-side speedup we have measured so far targets the <a href="../2026-11-19-open-returns/">Open Returns</a> inverse-BWT kernel (<code>OpenCells</code>). On our Wikidata benchmark (<code>corpora/wikidata.bz2</code>, 431 blocks), all 233 full blocks enter Open because their run-to-row ratio <span class="arithmatex">\(r/n\)</span> sits near 0.068. To test how often Open actually runs on other data, we ran a <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/route-census.md">route census</a> across Wikidata and seven container-built <code>bzip2 -9</code> corpora spanning prose, source code, JSON, binaries, DNA and random bytes.</p>
-<p>Each full block (<span class="arithmatex">\(n \ge 100{,}000\)</span>) takes one of three routes:</p>
-<ol>
-<li><strong>Column route (<code>Segmented</code>):</strong> move-to-front keeps the flat BWT column because runs are too short to compress into run records.</li>
-<li><strong>Open route (<code>OpenCells</code>):</strong> run records pass admission and stay within Open's retained-row and thick-strip caps.</li>
-<li><strong>Run-route fallback (<code>Segmented</code>):</strong> run records enter the run path, fail Open's gates or its dense-band cap, and fall back to Segmented inversion.</li>
-</ol>
+<h2 id="1-two-stations-two-currencies">1. Two stations, two currencies<a class="headerlink" href="#1-two-stations-two-currencies" title="Permanent link">&para;</a></h2>
+<p>In a block-parallel bzip2 decoder, one thread must scan the compressed bit stream in order. bzip2
+blocks are not byte-aligned and carry no index of their boundaries. That thread reads each block's
+headers, selector list and Huffman-coded symbols. It then hands the decoded symbols to whichever
+worker is free. The workers run move-to-front decoding, BWT inversion, run-length expansion and CRC
+verification in parallel.</p>
+<p>Ignore startup and teardown for a moment. Suppose scanning a block takes time <span class="arithmatex">\(S\)</span> and worker
+processing takes time <span class="arithmatex">\(W\)</span>. Then <span class="arithmatex">\(k\)</span> workers keep pace with the scanner when <span class="arithmatex">\(W / k = S\)</span>. That gives
+a natural balance point:</p>
+<div class="arithmatex">\[
+k^* = \frac{W}{S} = \frac{w_{\text{byte}}}{s_{\text{sym}} \cdot \rho}
+\]</div>
+<p>Here <span class="arithmatex">\(s_{\text{sym}}\)</span> is the scanner's cost per Huffman symbol and <span class="arithmatex">\(w_{\text{byte}}\)</span> is
+the worker's cost per output byte. The factor <span class="arithmatex">\(\rho\)</span> is the number of Huffman symbols per output
+byte. Repetitive data compresses tightly because move-to-front and zero-run encoding collapse long
+runs into very few symbols. That makes <span class="arithmatex">\(\rho\)</span> small. Higher-entropy text leaves far more non-zero
+symbols behind, pushing <span class="arithmatex">\(\rho\)</span> up.</p>
+<p>We measured <span class="arithmatex">\(S\)</span> and <span class="arithmatex">\(W\)</span> directly on one pinned core of an Intel Core i9-10900K. Two controlled runs
+covered seven corpora in all. The first tested Wikidata beside three repository corpora: Rust
+source, JSON and Markdown. The second tested Wikidata beside mixed prose and code, random bytes and
+fixed-width records.</p>
 <table>
 <thead>
 <tr>
-<th>Corpus</th>
-<th style="text-align: right;">Full blocks</th>
-<th style="text-align: right;">Column (<code>Segmented</code>)</th>
-<th style="text-align: right;"><code>Open</code></th>
-<th style="text-align: right;">Run-route fallback (<code>Segmented</code>)</th>
-<th><span class="arithmatex">\(r/n\)</span> p10 / p50 / p90</th>
+<th>corpus</th>
+<th style="text-align: right;">compression ratio</th>
+<th style="text-align: right;">symbols / output byte</th>
+<th style="text-align: right;">scanner, ns / sym</th>
+<th style="text-align: right;">worker, ns / byte</th>
+<th style="text-align: right;">balance <span class="arithmatex">\(k^*\)</span></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>wikidata</code></td>
-<td style="text-align: right;">233</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">233</td>
-<td style="text-align: right;">0</td>
-<td>0.063 / 0.068 / 0.115</td>
+<td>Wikidata dump</td>
+<td style="text-align: right;">17.7×</td>
+<td style="text-align: right;">0.119</td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">9.55</td>
 </tr>
 <tr>
-<td><code>prose</code></td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">7</td>
-<td>0.162 / 0.170 / 0.175</td>
-</tr>
-<tr>
-<td><code>pysrc</code></td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">9</td>
-<td>0.226 / 0.294 / 0.314</td>
-</tr>
-<tr>
-<td><code>rustsrc</code></td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">8</td>
-<td>0.053 / 0.158 / 0.229</td>
-</tr>
-<tr>
-<td><code>json</code></td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">4</td>
-<td>0.053 / 0.070 / 0.217</td>
-</tr>
-<tr>
-<td><code>elf</code></td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">6</td>
-<td>0.232 / 0.261 / 0.413</td>
-</tr>
-<tr>
-<td><code>dna</code></td>
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td>0.724</td>
-</tr>
-<tr>
-<td><code>random</code></td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p>The split is stark. Off Wikidata, Open admits only <strong>17 of 107 full blocks (16%)</strong>. The column route takes 55 blocks and the run-route fallback takes 35, putting <strong>84% of non-Wikidata full blocks</strong> onto the Segmented kernel. Where Open does admit a block off Wikidata, it wins cleanly: 0.38 times Segmented on <code>json</code> (<span class="arithmatex">\(r/n &lt; 0.15\)</span>) and 0.76 times on <code>rustsrc</code>, matching its 0.48 ratio on Wikidata.</p>
-<p>The real surprise sits in the dense band (<span class="arithmatex">\(r/n \in [0.15, 0.28]\)</span>). In <a href="../2026-11-21-a-memory-gain-is-a-gain/">Admitting dense blocks to Open</a>, we added a bounded cap (<code>Cap::dense</code>: at most <span class="arithmatex">\(\min(256{,}000, 0.3n)\)</span> retained rows and 16,384 thick strips) fitted to Wikidata's five dense blocks. All five Wikidata blocks pass that cap and finish in 0.78 times Segmented's time. Off Wikidata, however, <strong>all 25 blocks in the dense band fail the cap</strong> — after Open has already executed its first pass up to the limit.</p>
-<table>
-<thead>
-<tr>
-<th>Corpus and dense-band outcome</th>
-<th style="text-align: right;">Blocks</th>
-<th style="text-align: right;">Production inverse (ms)</th>
-<th style="text-align: right;"><code>Segmented</code> inverse (ms)</th>
-<th style="text-align: right;">Ratio</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>prose</code> (refused)</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">21.0</td>
-<td style="text-align: right;">17.1</td>
-<td style="text-align: right;">1.23</td>
-</tr>
-<tr>
-<td><code>rustsrc</code> (refused)</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">28.0</td>
-<td style="text-align: right;">20.6</td>
-<td style="text-align: right;">1.36</td>
-</tr>
-<tr>
-<td><code>json</code> (refused)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">17.6</td>
-<td style="text-align: right;">11.8</td>
+<td>mixed prose and code</td>
+<td style="text-align: right;">6.5×</td>
+<td style="text-align: right;">0.339</td>
 <td style="text-align: right;">1.48</td>
+<td style="text-align: right;">2.56</td>
+<td style="text-align: right;">5.09</td>
 </tr>
 <tr>
-<td><code>elf</code> (refused)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">16.4</td>
-<td style="text-align: right;">14.5</td>
-<td style="text-align: right;">1.13</td>
-</tr>
-<tr>
-<td><code>pysrc</code> (refused)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">7.0</td>
-<td style="text-align: right;">6.9</td>
-<td style="text-align: right;">1.02</td>
-</tr>
-<tr>
-<td><code>wikidata</code> (admitted)</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">11.4</td>
-<td style="text-align: right;">14.6</td>
-<td style="text-align: right;">0.78</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Single-thread timings on a 4-vCPU Xeon VM, production vs Segmented on the same blocks; shares and ratios are diagnostic, not workstation adoption evidence.)</em></p>
-<p>Those 25 refused blocks waste about 19 ms (~0.8 ms per block), or 13 to 48% on top of the fallback's own inverse time. On the whole <code>prose</code> file, production finishes 1.09 to 1.32 times slower than running Segmented directly. Yet the refusal is completely predictable before Open allocates or scans anything. Retained rows are simply the rows belonging to maximal runs of at most 16 bytes, plus the marked row. Summing thin runs across the run records in one cheap pass separates the two populations cleanly: every refused block exceeds 256,000 retained rows (the smallest is 257,495 on <code>elf</code>, and <code>prose</code> spans 311,318 to 380,411), while every admitted Wikidata block lies between 199,189 and 231,600. Thick strips never bind (at most 8,081 against 16,384).</p>
-<p>This reveals a sharp corpus asymmetry. Serial Huffman scanner improvements benefit every corpus equally because every route reads the same compressed bitstream. Open-kernel worker speedups cover 100% of Wikidata's full blocks but only 16% off Wikidata. Fixing the dense-band pre-check and dissecting the unowned Segmented fallback are therefore essential for ordinary text and source code.</p>
-<h2 id="2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table">2. Why the eight-worker tie leaves 8 to 9 ms on the table<a class="headerlink" href="#2-why-the-eight-worker-tie-leaves-8-to-9-ms-on-the-table" title="Permanent link">&para;</a></h2>
-<p>Turning back to eight workers on Wikidata (<code>wikidata ×4</code>, 1,724 blocks, 838.8 MB output on our i9-10900K), the operational lower bound is</p>
-<div class="arithmatex">\[
-L = \max\!\left(S,\;\frac{W}{k}\right),
-\]</div>
-<p>where <span class="arithmatex">\(S\)</span> is total serial scanner busy time and <span class="arithmatex">\(W/k\)</span> is mean worker busy time across <span class="arithmatex">\(k = 8\)</span> workers. Across three primary i9-10900K evidence bundles — <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/math-targets/data/character-stage1/report.txt">character stage 1</a> (48 grid runs plus 4 complete nanosecond per-block traces), the <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/ideal-parts/results/floor/README.md">zero-copy floor</a> (<code>cc8ba137</code>), and the <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-24-algorithm-level/pooled-scan/results/README.md">pooled-scan run</a> (<code>c71c4a56</code>) — shipped wall time exceeds <span class="arithmatex">\(L\)</span> by <strong>7.6 to 9.1 ms</strong> (4.0 to 4.7% of wall):</p>
-<table>
-<thead>
-<tr>
-<th>Primary i9-10900K bundle (<code>k = 8</code>, medians, ms)</th>
-<th style="text-align: right;">Untimed wall</th>
-<th style="text-align: right;">Traced wall</th>
-<th style="text-align: right;"><code>scan_busy</code></th>
-<th style="text-align: right;"><code>wkr_busy/8</code></th>
-<th style="text-align: right;"><code>wall − max</code></th>
-<th style="text-align: right;"><code>slot_wait</code> (waits)</th>
-<th style="text-align: right;"><code>in_wait</code></th>
-<th style="text-align: right;"><code>job_wait/8</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>character-stage1</code> grid <code>none</code> (<span class="arithmatex">\(n = 48\)</span>)</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">192.27</td>
-<td style="text-align: right;">184.45</td>
-<td style="text-align: right;">182.67</td>
-<td style="text-align: right;"><strong>7.57</strong></td>
-<td style="text-align: right;">3.25 (13)</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">8.41</td>
-</tr>
-<tr>
-<td><code>character-stage1</code> traced <code>r0</code>–<code>r3</code> mean</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">195.61</td>
-<td style="text-align: right;">184.99</td>
-<td style="text-align: right;">185.64</td>
-<td style="text-align: right;"><strong>9.13</strong></td>
-<td style="text-align: right;">5.20 (19)</td>
+<td>JSON</td>
+<td style="text-align: right;">4.9×</td>
+<td style="text-align: right;">0.432</td>
 <td style="text-align: right;">1.43</td>
-<td style="text-align: right;">9.57</td>
+<td style="text-align: right;">2.59</td>
+<td style="text-align: right;">4.19</td>
 </tr>
 <tr>
-<td><code>zero-copy-floor</code> <code>none</code> (pinned CPU 6)</td>
-<td style="text-align: right;">194.57</td>
-<td style="text-align: right;">194.36</td>
-<td style="text-align: right;">184.35</td>
-<td style="text-align: right;">186.35</td>
-<td style="text-align: right;"><strong>8.01</strong></td>
-<td style="text-align: right;">6.10 (24)</td>
-<td style="text-align: right;">1.26</td>
-<td style="text-align: right;">6.94</td>
+<td>Rust source</td>
+<td style="text-align: right;">5.2×</td>
+<td style="text-align: right;">0.419</td>
+<td style="text-align: right;">1.48</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: right;">4.16</td>
 </tr>
 <tr>
-<td><code>pooled-scan</code> <code>none</code> (unpinned)</td>
-<td style="text-align: right;">192.93</td>
-<td style="text-align: right;">193.72</td>
-<td style="text-align: right;">184.79</td>
-<td style="text-align: right;">184.86</td>
-<td style="text-align: right;"><strong>8.86</strong></td>
-<td style="text-align: right;">4.11 (14)</td>
-<td style="text-align: right;">1.34</td>
-<td style="text-align: right;">8.50</td>
+<td>random bytes</td>
+<td style="text-align: right;">1.1×</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">7.79</td>
+<td style="text-align: right;">3.90</td>
 </tr>
 <tr>
-<td><code>pooled-scan</code> <code>S</code> (scan ideal, workers bind)</td>
-<td style="text-align: right;">184.88</td>
-<td style="text-align: right;">185.35</td>
-<td style="text-align: right;">1.61</td>
-<td style="text-align: right;">184.19</td>
-<td style="text-align: right;"><strong>1.16</strong></td>
-<td style="text-align: right;">180.14 (1,342)</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">0.22</td>
+<td>fixed records</td>
+<td style="text-align: right;">1.0×</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">2.08</td>
+<td style="text-align: right;">7.62</td>
+<td style="text-align: right;">3.68</td>
 </tr>
 <tr>
-<td><code>pooled-scan</code> <code>SC</code> (scan + construction ideal)</td>
-<td style="text-align: right;">135.31</td>
-<td style="text-align: right;">133.30</td>
-<td style="text-align: right;">1.46</td>
-<td style="text-align: right;">132.18</td>
-<td style="text-align: right;"><strong>1.12</strong></td>
-<td style="text-align: right;">129.15 (1,256)</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">0.23</td>
+<td>Markdown docs</td>
+<td style="text-align: right;">3.9×</td>
+<td style="text-align: right;">0.553</td>
+<td style="text-align: right;">1.44</td>
+<td style="text-align: right;">2.72</td>
+<td style="text-align: right;">3.43</td>
 </tr>
 </tbody>
 </table>
-<p>That table immediately corrects a tempting accounting error. It is easy to subtract our all-ideal <code>SFCMRD</code> plumbing floor (5.2 ms) from the 9.1 ms gap and assume only ~3.9 ms is queueing loss. <strong>That subtraction is wrong.</strong> In <code>SFCMRD</code>, all 5.2 ms sit exposed because no real decoding work runs alongside them. As soon as real worker stages run (<code>S</code> and <code>SC</code> above, or <code>SFMRD</code> at 0.88 ms and <code>SECMRD</code> at 0.69 ms), per-block handoffs (<code>issue</code> 0.65 ms, <code>pool+publish</code> 0.07 ms per worker, and mutex acquisitions of 0.3 ms scanner / 0.06 ms worker) overlap behind real compute. The true unoverlapped handoff residual above <span class="arithmatex">\(L\)</span> is only <strong>1.12 to 1.16 ms</strong>.</p>
-<p>To break down the rest of the 9.13 ms gap without guessing, our <a href="https://github.com/lmmx/mibz2/blob/6f8a26f507567fd8a8eac9076da42f6f5821c973/docs/journal/2026-11-27-explore/eight-worker-coupling.md">coupling dissection</a> built a discrete-event simulator implementing the exact admission guard (<code>Shared::full</code>), FIFO job queue (<code>Jobs</code>), <span class="arithmatex">\(k\)</span>-worker pool, and in-order <code>Ready</code> ring from <code>src/parallel.rs</code>. Fed the recorded per-block service times from all four traced rounds (<code>blocks-r00</code> to <code>blocks-r03</code>), the replay tracks real wall time to within <strong>0.94 to 1.36 ms</strong> (mean <strong>+1.15 ms</strong>, matching <code>S</code> and <code>SC</code>'s handoff residual):</p>
+<p>Look at the fourth column first. Across every text and structured corpus, the scanner spends almost
+the same time per Huffman symbol: 1.41 to 1.48 ns. On random bytes and uncompressible records,
+longer average codewords nudge that cost to 2.00 to 2.08 ns.</p>
+<p>What changes dramatically is the third column. Wikidata needs only 0.119 symbols per output byte.
+Rust source and JSON need 0.419 and 0.432 — more than three and a half times as many. Markdown
+needs 0.553, nearly five times as many. Worker cost per output byte rises too, because less
+compressible blocks move to the general-purpose kernel
+(<a href="../2026-11-27-faster-decoding-for-ordinary-text/">faster decoding for ordinary text</a>). Yet worker
+cost rises by only 1.6 to 1.7 times on the text panel, far less than symbol density does. The
+balance point <span class="arithmatex">\(k^*\)</span> therefore drops by more than half.</p>
+<figure class="bf-fig" id="station-balance">
+<p class="bf-title">Workers needed to match the serial scanner on ten-core hardware</p>
+<!-- fig:station-balance -->
+<svg viewBox="0 0 720 326" role="img" aria-label="Horizontal bar chart of single-thread station balance k* on an Intel Core i9-10900K. Wikidata dump 9.55, mixed prose and code 5.09, JSON 4.19, Rust source 4.16, random bytes 3.90, fixed records 3.68, Markdown docs 3.43."><text class="bf-tm" x="150" y="24" text-anchor="end" style="font-size:11px">corpus</text><text class="bf-tm" x="214" y="24" text-anchor="end" style="font-size:11px">ratio</text><text class="bf-tm" x="230" y="24" text-anchor="start" style="font-size:11px">workers needed to match the scanner (k* = W / S)</text><line x1="230.0" y1="36.0" x2="230.0" y2="286.0" style="stroke:var(--bf-vz-axis);stroke-width:1.5"/><text class="bf-tm" x="230.0" y="302.0" text-anchor="middle" style="font-size:11px">0</text><line x1="314.0" y1="36.0" x2="314.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="314.0" y="302.0" text-anchor="middle" style="font-size:11px">2</text><line x1="398.0" y1="36.0" x2="398.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="398.0" y="302.0" text-anchor="middle" style="font-size:11px">4</text><line x1="482.0" y1="36.0" x2="482.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="482.0" y="302.0" text-anchor="middle" style="font-size:11px">6</text><line x1="566.0" y1="36.0" x2="566.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="566.0" y="302.0" text-anchor="middle" style="font-size:11px">8</text><line x1="650.0" y1="36.0" x2="650.0" y2="286.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="650.0" y="302.0" text-anchor="middle" style="font-size:11px">10</text><text class="bf-t-strong" x="150.0" y="58.0" text-anchor="end" style="font-size:12px">Wikidata dump</text><text class="bf-tm" x="214.0" y="58.0" text-anchor="end" style="font-size:11px">17.7×</text><rect x="230.0" y="45.0" width="401.1" height="18.0" rx="3" style="fill:var(--bf-vz-1)"><title>Wikidata dump: k* = 9.55, compression 17.7×, 0.119 symbols/byte</title></rect><text class="bf-t-strong" x="639.1" y="58.0" text-anchor="start" style="font-size:12px">9.55</text><text class="bf-tm" x="150.0" y="93.0" text-anchor="end" style="font-size:12px">Mixed prose & code</text><text class="bf-tm" x="214.0" y="93.0" text-anchor="end" style="font-size:11px">6.5×</text><rect x="230.0" y="80.0" width="213.8" height="18.0" rx="3" style="fill:var(--bf-vz-3)"><title>Mixed prose & code: k* = 5.09, compression 6.5×, 0.339 symbols/byte</title></rect><text class="bf-tm" x="451.8" y="93.0" text-anchor="start" style="font-size:12px">5.09</text><text class="bf-tm" x="150.0" y="128.0" text-anchor="end" style="font-size:12px">JSON</text><text class="bf-tm" x="214.0" y="128.0" text-anchor="end" style="font-size:11px">4.9×</text><rect x="230.0" y="115.0" width="176.0" height="18.0" rx="3" style="fill:var(--bf-vz-2)"><title>JSON: k* = 4.19, compression 4.9×, 0.432 symbols/byte</title></rect><text class="bf-tm" x="414.0" y="128.0" text-anchor="start" style="font-size:12px">4.19</text><text class="bf-tm" x="150.0" y="163.0" text-anchor="end" style="font-size:12px">Rust source</text><text class="bf-tm" x="214.0" y="163.0" text-anchor="end" style="font-size:11px">5.2×</text><rect x="230.0" y="150.0" width="174.7" height="18.0" rx="3" style="fill:var(--bf-vz-2)"><title>Rust source: k* = 4.16, compression 5.2×, 0.419 symbols/byte</title></rect><text class="bf-tm" x="412.7" y="163.0" text-anchor="start" style="font-size:12px">4.16</text><text class="bf-tm" x="150.0" y="198.0" text-anchor="end" style="font-size:12px">Random bytes</text><text class="bf-tm" x="214.0" y="198.0" text-anchor="end" style="font-size:11px">1.1×</text><rect x="230.0" y="185.0" width="163.8" height="18.0" rx="3" style="fill:var(--bf-vz-4)"><title>Random bytes: k* = 3.90, compression 1.1×, 1.000 symbols/byte</title></rect><text class="bf-tm" x="401.8" y="198.0" text-anchor="start" style="font-size:12px">3.90</text><text class="bf-tm" x="150.0" y="233.0" text-anchor="end" style="font-size:12px">Fixed records</text><text class="bf-tm" x="214.0" y="233.0" text-anchor="end" style="font-size:11px">1.0×</text><rect x="230.0" y="220.0" width="154.6" height="18.0" rx="3" style="fill:var(--bf-vz-4)"><title>Fixed records: k* = 3.68, compression 1.0×, 1.000 symbols/byte</title></rect><text class="bf-tm" x="392.6" y="233.0" text-anchor="start" style="font-size:12px">3.68</text><text class="bf-tm" x="150.0" y="268.0" text-anchor="end" style="font-size:12px">Markdown docs</text><text class="bf-tm" x="214.0" y="268.0" text-anchor="end" style="font-size:11px">3.9×</text><rect x="230.0" y="255.0" width="144.1" height="18.0" rx="3" style="fill:var(--bf-vz-2)"><title>Markdown docs: k* = 3.43, compression 3.9×, 0.553 symbols/byte</title></rect><text class="bf-tm" x="382.1" y="268.0" text-anchor="start" style="font-size:12px">3.43</text><text class="bf-tm" x="650.0" y="320.0" text-anchor="end" style="font-size:11px">k* = worker time / scanner time (1 thread, Intel Core i9-10900K)</text></svg>
+<figcaption>Single-thread station balance on an Intel Core i9-10900K (median of three rounds,
+fastest of five passes per block). Wikidata, Rust source, JSON and Markdown come from the
+text-panel run; mixed prose and code, random bytes and fixed records come from the workstation's
+default-build balance sweep on the same machine.</figcaption>
+</figure>
+
+<p>A separate eleven-corpus survey on a virtual machine ruled out the encoder as a confound. The
+Wikidata dump was compressed by lbzip2, while the text corpora were compressed with standard bzip2
+at level 9. Re-encoding Wikidata with standard bzip2 left its balance point within 2% of the
+original dump. The difference comes from the data, not the compressor.</p>
+<h2 id="2-watching-the-knee-move-on-ten-cores">2. Watching the knee move on ten cores<a class="headerlink" href="#2-watching-the-knee-move-on-ten-cores" title="Permanent link">&para;</a></h2>
+<p>Single-thread station balance predicts demand, not real wall time. Cache contention, thread wakeups
+and memory traffic can shift the true knee. We therefore ran a pre-registered thread sweep on the
+same Intel Core i9-10900K. It tested four to ten workers over nine interleaved rounds per thread
+count. Each text corpus was concatenated into a multi-stream file of roughly 183 to 190 MB of
+output so startup noise stayed small. Wikidata was tested as four concatenated copies totalling
+839 MB.</p>
+<p>The frozen criterion defined a corpus's scaling knee as the smallest worker count within 2% of its
+best nine-round median elapsed time.</p>
 <table>
 <thead>
 <tr>
-<th>Round (<code>k = 8</code>)</th>
-<th style="text-align: right;"><span class="arithmatex">\(S\)</span> (ms)</th>
-<th style="text-align: right;"><span class="arithmatex">\(W/8\)</span> (ms)</th>
-<th style="text-align: right;"><span class="arithmatex">\(L = \max\)</span></th>
-<th style="text-align: right;">Real wall (<code>slot_wait</code>)</th>
-<th style="text-align: right;">Replay wall (<code>slot_wait</code>)</th>
-<th style="text-align: right;">Real − Replay</th>
+<th>corpus</th>
+<th style="text-align: right;">balance <span class="arithmatex">\(k^*\)</span></th>
+<th style="text-align: right;">4 workers, ms</th>
+<th style="text-align: right;">5 workers, ms</th>
+<th style="text-align: right;">6 workers, ms</th>
+<th style="text-align: right;">8 workers, ms</th>
+<th style="text-align: right;">9 workers, ms</th>
+<th style="text-align: right;">10 workers, ms</th>
+<th style="text-align: right;">median knee</th>
+<th style="text-align: right;">fastest-round knee</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>r0</code></td>
-<td style="text-align: right;">183.99</td>
-<td style="text-align: right;">188.31</td>
-<td style="text-align: right;">188.31</td>
-<td style="text-align: right;">198.89 (9.61)</td>
-<td style="text-align: right;">197.53 (8.72)</td>
-<td style="text-align: right;">+1.36 ms</td>
+<td>Wikidata (839 MB)</td>
+<td style="text-align: right;">9.55</td>
+<td style="text-align: right;">473.9</td>
+<td style="text-align: right;">403.8</td>
+<td style="text-align: right;">358.1</td>
+<td style="text-align: right;">300.7</td>
+<td style="text-align: right;">269.6</td>
+<td style="text-align: right;">288.5</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
 </tr>
 <tr>
-<td><code>r1</code></td>
-<td style="text-align: right;">183.24</td>
-<td style="text-align: right;">182.58</td>
-<td style="text-align: right;">183.24</td>
-<td style="text-align: right;">192.02 (3.27)</td>
-<td style="text-align: right;">190.93 (2.56)</td>
-<td style="text-align: right;">+1.09 ms</td>
+<td>Rust source (183 MB)</td>
+<td style="text-align: right;">4.16</td>
+<td style="text-align: right;">207.2</td>
+<td style="text-align: right;">202.9</td>
+<td style="text-align: right;">203.2</td>
+<td style="text-align: right;">256.5</td>
+<td style="text-align: right;">256.2</td>
+<td style="text-align: right;">263.9</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr>
-<td><code>r2</code></td>
-<td style="text-align: right;">184.13</td>
-<td style="text-align: right;">181.43</td>
-<td style="text-align: right;">184.13</td>
-<td style="text-align: right;">192.33 (2.18)</td>
-<td style="text-align: right;">191.11 (1.46)</td>
-<td style="text-align: right;">+1.21 ms</td>
+<td>JSON (190 MB)</td>
+<td style="text-align: right;">4.19</td>
+<td style="text-align: right;">218.5</td>
+<td style="text-align: right;">217.5</td>
+<td style="text-align: right;">221.5</td>
+<td style="text-align: right;">259.4</td>
+<td style="text-align: right;">270.1</td>
+<td style="text-align: right;">257.4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr>
-<td><code>r3</code></td>
-<td style="text-align: right;">188.59</td>
-<td style="text-align: right;">190.24</td>
-<td style="text-align: right;">190.24</td>
-<td style="text-align: right;">199.21 (5.74)</td>
-<td style="text-align: right;">198.27 (5.10)</td>
-<td style="text-align: right;">+0.94 ms</td>
-</tr>
-<tr>
-<td><strong>Mean</strong></td>
-<td style="text-align: right;"><strong>184.99</strong></td>
-<td style="text-align: right;"><strong>185.64</strong></td>
-<td style="text-align: right;"><strong>186.48</strong></td>
-<td style="text-align: right;"><strong>195.61 (5.20)</strong></td>
-<td style="text-align: right;"><strong>194.46 (4.46)</strong></td>
-<td style="text-align: right;"><strong>+1.15 ms</strong></td>
+<td>Markdown (184 MB)</td>
+<td style="text-align: right;">3.43</td>
+<td style="text-align: right;">296.6</td>
+<td style="text-align: right;">298.8</td>
+<td style="text-align: right;">303.8</td>
+<td style="text-align: right;">203.9</td>
+<td style="text-align: right;">253.8</td>
+<td style="text-align: right;">240.3</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">4</td>
 </tr>
 </tbody>
 </table>
-<p>Because the replay reproduces real wall time and <code>slot_wait</code> closely across all four rounds, toggling one pipeline rule at a time isolates each physical source of delay.</p>
-<h2 id="3-chunk-maintenance-stalls-and-runt-diluted-slots">3. Chunk maintenance stalls and runt-diluted slots<a class="headerlink" href="#3-chunk-maintenance-stalls-and-runt-diluted-slots" title="Permanent link">&para;</a></h2>
-<p>Four mechanisms explain the entire gap above <span class="arithmatex">\(L\)</span>.</p>
-<h3 id="1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus">1. Stop-the-world chunk maintenance creates a mid-decode phase inversion (~2.15 ms coupling bonus)<a class="headerlink" href="#1-stop-the-world-chunk-maintenance-creates-a-mid-decode-phase-inversion-215-ms-coupling-bonus" title="Permanent link">&para;</a></h3>
-<p>Whenever a block's lookahead crosses a 4 MiB input chunk boundary, <code>ChannelSource::view</code> (<code>src/parallel.rs</code>) drains the buffer and copies the incoming chunk on the serial scanner thread (<code>in_maint</code>: 10.1 to 11.2 ms at eight workers). In the per-block traces, that 10.1 ms is not smooth overhead. It arrives as <strong>11 discrete stop-the-world stalls of 0.16 to 1.54 ms</strong>, heavily front-loaded across the four identical 431-block copies as the window buffer grows and faults pages:</p>
-<div class="arithmatex">\[
-\text{in\_maint}(c_0, c_1, c_2, c_3) = (3.81,\; 3.09,\; 1.86,\; 1.40)\;\text{ms}.
-\]</div>
-<p>That slope pulls scanner time from 48.74 ms on copy 0 down to 44.61 ms on copy 3, while worker time changes far less (47.95 to 45.22 ms). On copies 0 and 1, the scanner falls behind and starves the workers. On copies 2 and 3, the scanner surges ahead and hits the admission window. In the exact-tie replay (<span class="arithmatex">\(S = W/8\)</span>, zero startup), removing <code>in_maint</code> drops the mid-stream coupling gap from <strong>6.61 ms to 4.46 ms</strong> — a <strong>2.15 ms coupling bonus</strong> that our seam-window patch captures automatically on top of its 10 to 11 ms direct scan cut.</p>
-<h3 id="2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie">2. Runt blocks dilute the 32-slot window (1.21 ms at a 150 ms post-seam tie)<a class="headerlink" href="#2-runt-blocks-dilute-the-32-slot-window-121-ms-at-a-150-ms-post-seam-tie" title="Permanent link">&para;</a></h3>
-<p>Wikidata is not clustered into bursts of full blocks and bursts of tiny runts. Its 233 full blocks (~900 KB) and 198 runts (median 8 to 30 bytes) alternate almost everywhere (<code>F.F.F.F…</code>; max runt streak is 2). Yet <code>Shared::full</code> counts every block equally against <code>SLOTS_PER_THREAD × k = 32</code> slots. As a result, <strong>15 to 16 of the 32 slots always hold tiny runts</strong>, leaving only 15 to 17 full blocks of slack.</p>
-<p>Meanwhile, <code>READY_BYTES</code> (12 MiB) <strong>never fires at eight workers</strong>: <code>slot_cap</code> is 0.00 ms across all 48 grid runs, and median peak ready bytes is only 6.01 MiB. Every single <code>slot_wait</code> at eight workers is a 32-slot head-of-line stall caused by one slow executing block (such as block offsets 56, 171, 278, and 389, taking 2.1 to 3.4 ms). While that single worker finishes, the scanner runs 32 places ahead (offsets 88, 203, 310, and 421) and blocks.</p>
-<p>Importantly, <code>slot_wait</code> and worker <code>job_wait</code> are <strong>sequential, not simultaneous</strong>. Intersecting the exact nanosecond intervals in <code>blocks-r00</code> through <code>blocks-r03</code> shows mean worker idle time during <code>slot_wait</code> is only <strong>0.033 to 0.042 ms</strong> in rounds 1 to 3 (matching <code>pooled-scan</code>'s 0.04 ms). Every worker is busy while the scanner waits, and the lost scanner time reappears downstream as worker starvation once the slow block clears.</p>
-<p>Expanding the window to 64 slots — or exempting tiny runts from the 32-slot count — captures 100% of the infinite-window wall saving. Today (with <code>in_maint</code> still present) that saves 2.10 ms (1.08%); at a future 150 ms exact tie <em>after</em> the seam window lands, it saves only <strong>1.21 ms (0.77%)</strong>. Trying to inline runt decoding onto the scanner thread makes wall time <em>worse</em> (+1.12 ms) because it adds worker CPU directly onto the tied serial scanner.</p>
-<h3 id="3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable">3. Startup and the 4 MiB initial read chunk (2.62 ms total; 1.35 ms recoverable)<a class="headerlink" href="#3-startup-and-the-4-mib-initial-read-chunk-262-ms-total-135-ms-recoverable" title="Permanent link">&para;</a></h3>
-<p>Startup accounts for 2.41 ms median across 48 runs (2.62 ms mean in <code>r0</code>–<code>r3</code>), split into two pieces:</p>
+<p>The pre-registered hypothesis passed cleanly. The text panel's median scaling knee was five
+workers, while Wikidata's knee was nine. On Rust source and JSON, adding workers past six did not
+merely flatten out. It made decoding measurably slower. Moving from five workers to ten pushed
+median time up 30% on Rust source and 18% on JSON. Total processor time roughly doubled as extra
+threads contended for shared L3 cache and queue locks.</p>
+<p>Markdown looks like an outlier in the median column. It landed at eight workers even though its
+single-thread balance point is the lowest at 3.43. The per-round timings explain why. The
+workstation ran under Linux's powersave governor, idling at 800 MHz between runs. Individual 200 ms
+bursts therefore split cleanly into two speed clusters depending on turbo ramp-up. Full-clock runs
+at 4.9 GHz took about 190 to 200 ms, while slower-ramp runs took 260 to 305 ms. On Markdown, four
+of nine rounds stayed fast at four and five workers, versus five of nine at eight workers. That
+single round flipped which side of the gap the median landed on.</p>
+<figure class="bf-fig" id="scaling-curves">
+<p class="bf-title">Normalised decode time from four to ten workers on ten-core hardware</p>
+<!-- fig:scaling-curves -->
+<svg viewBox="0 0 720 344" role="img" aria-label="Two-panel line chart of elapsed decode time from 4 to 10 workers on an Intel Core i9-10900K, normalised to 4 workers. Left panel shows nine-round medians: Wikidata falls to 0.57x at 9 workers while Rust source bottoms at 0.98x at 5 and JSON at 1.00x at 4 to 5 before rising past 1.2x. Right panel shows fastest-of-nine rounds: Wikidata falls to 0.52x at 9 workers, Rust source bottoms at 0.85x at 5, JSON is flat at 1.00x at 4 to 6, and Markdown is already at its floor of 1.00x at 4 workers."><line x1="52.0" y1="20.0" x2="72.0" y2="20.0" style="stroke:var(--bf-vz-1);stroke-width:2.5"/><circle cx="62.0" cy="20.0" r="3.5" style="fill:var(--bf-vz-1)"/><text class="bf-tm" x="78.0" y="24.0" text-anchor="start" style="font-size:12px">Wikidata (17.7×)</text><line x1="218.0" y1="20.0" x2="238.0" y2="20.0" style="stroke:var(--bf-vz-2);stroke-width:2.5"/><circle cx="228.0" cy="20.0" r="3.5" style="fill:var(--bf-vz-2)"/><text class="bf-tm" x="244.0" y="24.0" text-anchor="start" style="font-size:12px">Rust source (5.2×)</text><line x1="384.0" y1="20.0" x2="404.0" y2="20.0" style="stroke:var(--bf-vz-3);stroke-width:2.5"/><circle cx="394.0" cy="20.0" r="3.5" style="fill:var(--bf-vz-3)"/><text class="bf-tm" x="410.0" y="24.0" text-anchor="start" style="font-size:12px">JSON (4.9×)</text><line x1="550.0" y1="20.0" x2="570.0" y2="20.0" style="stroke:var(--bf-vz-4);stroke-width:2.5;stroke-dasharray:4,3"/><circle cx="560.0" cy="20.0" r="3.5" style="fill:var(--bf-vz-4)"/><text class="bf-tm" x="576.0" y="24.0" text-anchor="start" style="font-size:12px">Markdown (3.9×)</text><text class="bf-t-strong" x="200.0" y="54.0" text-anchor="middle" style="font-size:12px">Nine-round median (pre-registered)</text><line x1="56.0" y1="254.0" x2="344.0" y2="254.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="48.0" y="258.0" text-anchor="end" style="font-size:11px">0.6×</text><line x1="56.0" y1="206.0" x2="344.0" y2="206.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="48.0" y="210.0" text-anchor="end" style="font-size:11px">0.8×</text><line x1="56.0" y1="158.0" x2="344.0" y2="158.0" style="stroke:var(--bf-vz-axis);stroke-width:1.4"/><text class="bf-tm" x="48.0" y="162.0" text-anchor="end" style="font-size:11px">1.0×</text><line x1="56.0" y1="110.0" x2="344.0" y2="110.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="48.0" y="114.0" text-anchor="end" style="font-size:11px">1.2×</text><line x1="56.0" y1="74.0" x2="56.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="56.0" y="308.0" text-anchor="middle" style="font-size:11px">4</text><line x1="104.0" y1="74.0" x2="104.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="104.0" y="308.0" text-anchor="middle" style="font-size:11px">5</text><line x1="152.0" y1="74.0" x2="152.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="152.0" y="308.0" text-anchor="middle" style="font-size:11px">6</text><line x1="200.0" y1="74.0" x2="200.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="200.0" y="308.0" text-anchor="middle" style="font-size:11px">7</text><line x1="248.0" y1="74.0" x2="248.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="248.0" y="308.0" text-anchor="middle" style="font-size:11px">8</text><line x1="296.0" y1="74.0" x2="296.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="296.0" y="308.0" text-anchor="middle" style="font-size:11px">9</text><line x1="344.0" y1="74.0" x2="344.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="344.0" y="308.0" text-anchor="middle" style="font-size:11px">10</text><text class="bf-tm" x="200.0" y="326.0" text-anchor="middle" style="font-size:11px">worker threads</text><polyline fill="none" points="56.0,158.0 104.0,193.5 152.0,216.6 200.0,233.1 248.0,245.6 296.0,261.4 344.0,251.8" style="stroke:var(--bf-vz-1);stroke-width:2.3"/><circle cx="56.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 4 workers: 1.00×</title></circle><circle cx="104.0" cy="193.5" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 5 workers: 0.85×</title></circle><circle cx="152.0" cy="216.6" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 6 workers: 0.76×</title></circle><circle cx="200.0" cy="233.1" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 7 workers: 0.69×</title></circle><circle cx="248.0" cy="245.6" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 8 workers: 0.64×</title></circle><circle cx="296.0" cy="261.4" r="5.0" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2.0"><title>Wikidata, 9 workers: 0.57×</title></circle><circle cx="344.0" cy="251.8" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 10 workers: 0.61×</title></circle><polyline fill="none" points="56.0,158.0 104.0,163.0 152.0,162.6 200.0,131.1 248.0,100.9 296.0,101.4 344.0,92.2" style="stroke:var(--bf-vz-2);stroke-width:2.3"/><circle cx="56.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 4 workers: 1.00×</title></circle><circle cx="104.0" cy="163.0" r="5.0" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2.0"><title>Rust source, 5 workers: 0.98×</title></circle><circle cx="152.0" cy="162.6" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 6 workers: 0.98×</title></circle><circle cx="200.0" cy="131.1" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 7 workers: 1.11×</title></circle><circle cx="248.0" cy="100.9" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 8 workers: 1.24×</title></circle><circle cx="296.0" cy="101.4" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 9 workers: 1.24×</title></circle><circle cx="344.0" cy="92.2" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 10 workers: 1.27×</title></circle><polyline fill="none" points="56.0,158.0 104.0,159.2 152.0,154.6 200.0,140.0 248.0,113.1 296.0,101.4 344.0,115.3" style="stroke:var(--bf-vz-3);stroke-width:2.3"/><circle cx="56.0" cy="158.0" r="5.0" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:2.0"><title>JSON, 4 workers: 1.00×</title></circle><circle cx="104.0" cy="159.2" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 5 workers: 0.99×</title></circle><circle cx="152.0" cy="154.6" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 6 workers: 1.01×</title></circle><circle cx="200.0" cy="140.0" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 7 workers: 1.07×</title></circle><circle cx="248.0" cy="113.1" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 8 workers: 1.19×</title></circle><circle cx="296.0" cy="101.4" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 9 workers: 1.24×</title></circle><circle cx="344.0" cy="115.3" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 10 workers: 1.18×</title></circle><polyline fill="none" points="56.0,158.0 104.0,156.3 152.0,152.2 200.0,188.5 248.0,233.1 296.0,192.6 344.0,203.6" style="stroke:var(--bf-vz-4);stroke-width:2.3;stroke-dasharray:4,3"/><circle cx="56.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 4 workers: 1.00×</title></circle><circle cx="104.0" cy="156.3" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 5 workers: 1.01×</title></circle><circle cx="152.0" cy="152.2" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 6 workers: 1.02×</title></circle><circle cx="200.0" cy="188.5" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 7 workers: 0.87×</title></circle><circle cx="248.0" cy="233.1" r="5.0" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:2.0"><title>Markdown, 8 workers: 0.69×</title></circle><circle cx="296.0" cy="192.6" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 9 workers: 0.86×</title></circle><circle cx="344.0" cy="203.6" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 10 workers: 0.81×</title></circle><text class="bf-t-strong" x="552.0" y="54.0" text-anchor="middle" style="font-size:12px">Fastest of nine rounds (full turbo clock)</text><line x1="408.0" y1="254.0" x2="696.0" y2="254.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="400.0" y="258.0" text-anchor="end" style="font-size:11px">0.6×</text><line x1="408.0" y1="206.0" x2="696.0" y2="206.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="400.0" y="210.0" text-anchor="end" style="font-size:11px">0.8×</text><line x1="408.0" y1="158.0" x2="696.0" y2="158.0" style="stroke:var(--bf-vz-axis);stroke-width:1.4"/><text class="bf-tm" x="400.0" y="162.0" text-anchor="end" style="font-size:11px">1.0×</text><line x1="408.0" y1="110.0" x2="696.0" y2="110.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="400.0" y="114.0" text-anchor="end" style="font-size:11px">1.2×</text><line x1="408.0" y1="74.0" x2="408.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="408.0" y="308.0" text-anchor="middle" style="font-size:11px">4</text><line x1="456.0" y1="74.0" x2="456.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="456.0" y="308.0" text-anchor="middle" style="font-size:11px">5</text><line x1="504.0" y1="74.0" x2="504.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="504.0" y="308.0" text-anchor="middle" style="font-size:11px">6</text><line x1="552.0" y1="74.0" x2="552.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="552.0" y="308.0" text-anchor="middle" style="font-size:11px">7</text><line x1="600.0" y1="74.0" x2="600.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="600.0" y="308.0" text-anchor="middle" style="font-size:11px">8</text><line x1="648.0" y1="74.0" x2="648.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="648.0" y="308.0" text-anchor="middle" style="font-size:11px">9</text><line x1="696.0" y1="74.0" x2="696.0" y2="290.0" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="696.0" y="308.0" text-anchor="middle" style="font-size:11px">10</text><text class="bf-tm" x="552.0" y="326.0" text-anchor="middle" style="font-size:11px">worker threads</text><polyline fill="none" points="408.0,158.0 456.0,205.0 504.0,233.4 552.0,254.7 600.0,265.5 648.0,274.4 696.0,269.4" style="stroke:var(--bf-vz-1);stroke-width:2.3"/><circle cx="408.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 4 workers: 1.00×</title></circle><circle cx="456.0" cy="205.0" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 5 workers: 0.80×</title></circle><circle cx="504.0" cy="233.4" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 6 workers: 0.69×</title></circle><circle cx="552.0" cy="254.7" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 7 workers: 0.60×</title></circle><circle cx="600.0" cy="265.5" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 8 workers: 0.55×</title></circle><circle cx="648.0" cy="274.4" r="5.0" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:2.0"><title>Wikidata, 9 workers: 0.52×</title></circle><circle cx="696.0" cy="269.4" r="3.2" style="fill:var(--bf-vz-1);stroke:var(--bf-surface);stroke-width:1.2"><title>Wikidata, 10 workers: 0.54×</title></circle><polyline fill="none" points="408.0,158.0 456.0,195.0 504.0,182.2 552.0,156.6 600.0,132.6 648.0,154.6 696.0,128.7" style="stroke:var(--bf-vz-2);stroke-width:2.3"/><circle cx="408.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 4 workers: 1.00×</title></circle><circle cx="456.0" cy="195.0" r="5.0" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:2.0"><title>Rust source, 5 workers: 0.85×</title></circle><circle cx="504.0" cy="182.2" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 6 workers: 0.90×</title></circle><circle cx="552.0" cy="156.6" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 7 workers: 1.01×</title></circle><circle cx="600.0" cy="132.6" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 8 workers: 1.11×</title></circle><circle cx="648.0" cy="154.6" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 9 workers: 1.01×</title></circle><circle cx="696.0" cy="128.7" r="3.2" style="fill:var(--bf-vz-2);stroke:var(--bf-surface);stroke-width:1.2"><title>Rust source, 10 workers: 1.12×</title></circle><polyline fill="none" points="408.0,158.0 456.0,156.8 504.0,158.0 552.0,135.9 600.0,94.6 648.0,106.2 696.0,98.0" style="stroke:var(--bf-vz-3);stroke-width:2.3"/><circle cx="408.0" cy="158.0" r="5.0" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:2.0"><title>JSON, 4 workers: 1.00×</title></circle><circle cx="456.0" cy="156.8" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 5 workers: 1.00×</title></circle><circle cx="504.0" cy="158.0" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 6 workers: 1.00×</title></circle><circle cx="552.0" cy="135.9" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 7 workers: 1.09×</title></circle><circle cx="600.0" cy="94.6" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 8 workers: 1.26×</title></circle><circle cx="648.0" cy="106.2" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 9 workers: 1.22×</title></circle><circle cx="696.0" cy="98.0" r="3.2" style="fill:var(--bf-vz-3);stroke:var(--bf-surface);stroke-width:1.2"><title>JSON, 10 workers: 1.25×</title></circle><polyline fill="none" points="408.0,158.0 456.0,153.4 504.0,148.2 552.0,144.8 600.0,144.3 648.0,142.9 696.0,146.0" style="stroke:var(--bf-vz-4);stroke-width:2.3;stroke-dasharray:4,3"/><circle cx="408.0" cy="158.0" r="5.0" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:2.0"><title>Markdown, 4 workers: 1.00×</title></circle><circle cx="456.0" cy="153.4" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 5 workers: 1.02×</title></circle><circle cx="504.0" cy="148.2" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 6 workers: 1.04×</title></circle><circle cx="552.0" cy="144.8" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 7 workers: 1.05×</title></circle><circle cx="600.0" cy="144.3" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 8 workers: 1.06×</title></circle><circle cx="648.0" cy="142.9" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 9 workers: 1.06×</title></circle><circle cx="696.0" cy="146.0" r="3.2" style="fill:var(--bf-vz-4);stroke:var(--bf-surface);stroke-width:1.2"><title>Markdown, 10 workers: 1.05×</title></circle><text class="bf-tm" x="696.0" y="338.0" text-anchor="end" style="font-size:11px">elapsed time relative to 4 workers (lower is faster; enlarged dot marks the knee)</text></svg>
+<figcaption>Intel Core i9-10900K, nine interleaved rounds per worker count, each corpus normalised
+to its four-worker time (lower is faster). Left: pre-registered nine-round medians, including the
+frequency-ramp split on Markdown. Right: fastest of nine rounds, which isolates full-clock runs and
+shows Markdown already at its floor at four workers while Wikidata drops to 0.52× (183 ms, 4.58 GB/s)
+at nine workers.</figcaption>
+</figure>
+
+<p>The right-hand panel isolates full-clock runs by taking the fastest of the nine rounds at each
+worker count. Every single corpus then lines up with its single-thread station balance. Wikidata
+drops smoothly from 355.5 ms at four workers to 183.2 ms at nine, reaching 4.58 GB/s before ticking
+up at ten. Rust source hits its floor at five workers (167.4 ms, 1.09 GB/s). JSON sits flat from
+four to six workers (184.6 ms, 1.03 GB/s) before climbing. Markdown is already at its fastest at
+four workers (187.5 ms, 0.98 GB/s) and drifts gently upward from there.</p>
+<h2 id="3-why-a-faster-scanner-disappears-on-wikidata-at-eight-threads">3. Why a faster scanner disappears on Wikidata at eight threads<a class="headerlink" href="#3-why-a-faster-scanner-disappears-on-wikidata-at-eight-threads" title="Permanent link">&para;</a></h2>
+<p>Once you know where the balance point sits, a puzzle from mibz2 0.5.15 makes immediate sense.</p>
+<p>Version 0.5.15 shipped a redesigned Huffman scanner in the default decoder. Normally a bzip2
+decoder switches Huffman tables every 50 symbols. The new scanner coalesces consecutive groups that
+reuse the same table into one run. It also packs the primary lookup table into a compact
+byte-aligned layout and skips redundant zero-initialisation of scratch arrays. Finally, it
+dispatches BMI2 bit-shift instructions once per block rather than checking inside the hot loop.</p>
+<p>On the ten-core workstation, isolated phase timings confirmed a clean 10.5% cut in serial scanning
+time. Across four copies of Wikidata, scanning fell from 160 ms to 143 ms with non-overlapping
+ranges over ten paired rounds. In a construction-free test where workers are artificially fast,
+that scanner win translated directly into 7.8% faster eight-thread decoding and 5.8% faster
+ten-thread decoding.</p>
+<p>Yet in the real decoder on the very same machine, the wall-clock picture was much subtler:</p>
 <ul>
-<li><strong>1.22 ms</strong> spawning <code>k + 2</code> OS threads before the scanner starts block 0 (a one-shot per-stream cost that amortises to zero on larger inputs);</li>
-<li><strong>1.40 ms</strong> of block-0 <code>in_wait</code> (1.26 to 1.40 ms across all three bundles), because the feeder thread (<code>src/read.rs</code>) allocates a fresh 4 MiB buffer and reads all 4 MiB before pushing chunk 0, while the scanner and all eight workers sit idle waiting for a ~25 KiB first block.</li>
+<li>On four copies of Wikidata, eight-thread decoding sped up by 1.9% and ten-thread decoding by
+  4.0%. Thirty guard measurements across six other corpora showed zero regressions.</li>
+<li>On the single-copy Wikidata release check comparing 0.5.15 against 0.5.14, single-thread decoding
+  ran 5.7% faster and two-thread decoding 3.4% faster. Elapsed time at four, eight and ten threads
+  stayed flat within 0.4%. At twelve unpinned threads a 9.5% gain re-emerged.</li>
 </ul>
-<p>Starting with a smaller first chunk (for example 256 KiB before ramping to 4 MiB) recovers about <strong>1.35 ms</strong> (0.68% today; 0.86% at a 150 ms tie), once per stream.</p>
-<h3 id="4-the-irreducible-queueing-floor-and-cross-talk">4. The irreducible queueing floor and cross-talk<a class="headerlink" href="#4-the-irreducible-queueing-floor-and-cross-talk" title="Permanent link">&para;</a></h3>
-<p>Even with infinite slots, zero startup, and zero <code>in_maint</code>, a balanced 150 ms tie still pays <strong>2.19 ms (1.44%)</strong> above <span class="arithmatex">\(L\)</span>: about 0.7 ms for one-block fill and drain, 0.6 ms from full-vs-runt size bimodality, and 0.9 ms from within-class block-time variance and eight-worker end-of-stream finish spread. Adding thread spawn (1.22 ms) and unoverlapped handoff overhead (~1.1 ms) gives an <strong>irreducible floor near 4.5 ms</strong>.</p>
-<p>Cache cross-talk between the scanner and workers is also smaller than it looks at first glance. Comparing pinned <code>none</code> against scan-alone <code>FCMRD</code> at eight workers (<code>zero-copy-floor</code>) shows scanner active time rising by +9.67 ms: +4.16 ms is <code>in_maint</code> memory contention (already removed by the seam window), +1.50 ms is the 4.95 → 4.90 GHz all-core turbo step, and +4.46 ms in Huffman decode (<code>A3</code>) is a one-worker cross-core <code>free_syms</code> coherence handoff that is already present at <span class="arithmatex">\(k = 1\)</span> and stays completely flat (746 to 752 Gcycles) from 6 to 10 workers. Worker-side cross-talk from the scanner is only +0.67 ms (<code>S</code> vs <code>none</code>).</p>
-<table>
-<thead>
-<tr>
-<th>Component of the 8-worker coupling gap</th>
-<th style="text-align: right;">Today (<code>r0</code>–<code>r3</code>, ~195.6 ms)</th>
-<th style="text-align: right;">Future 150 ms tie (post-seam, ~157.5 ms)</th>
-<th>Status / ceiling</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>in_maint</code> coupling amplification</td>
-<td style="text-align: right;">~2.15 ms</td>
-<td style="text-align: right;">0.00 ms</td>
-<td>Covered by seam-window patch</td>
-</tr>
-<tr>
-<td>32-slot HOL window (runt dilution)</td>
-<td style="text-align: right;">~2.10 ms</td>
-<td style="text-align: right;"><strong>1.21 ms (0.77%)</strong></td>
-<td>Unowned; runt-exempt 32 slots</td>
-</tr>
-<tr>
-<td>Block-0 <code>in_wait</code> (4 MiB first chunk)</td>
-<td style="text-align: right;">1.40 ms</td>
-<td style="text-align: right;"><strong>1.35 ms (0.86%)</strong></td>
-<td>Unowned; one-shot startup</td>
-</tr>
-<tr>
-<td>OS thread spawn (<code>t_first_scan_start</code>)</td>
-<td style="text-align: right;">1.22 ms</td>
-<td style="text-align: right;">1.22 ms (0.77%)</td>
-<td>Irreducible per decode call</td>
-</tr>
-<tr>
-<td>Indivisible-block variance &amp; drain tail</td>
-<td style="text-align: right;">~1.11 ms</td>
-<td style="text-align: right;"><strong>2.19 ms (1.39%)</strong></td>
-<td>Irreducible queueing floor</td>
-</tr>
-<tr>
-<td>Handoff / wakeup residual (<code>Real − Replay</code>)</td>
-<td style="text-align: right;">1.15 ms</td>
-<td style="text-align: right;">~1.1 ms (0.7%)</td>
-<td>Closed plumbing residual</td>
-</tr>
-<tr>
-<td><strong>Total coupling gap</strong></td>
-<td style="text-align: right;"><strong>9.13 ms (4.67%)</strong></td>
-<td style="text-align: right;"><strong>~7.5 ms (4.8%)</strong></td>
-<td><strong>Combined unowned ceiling: ~2.5 ms (1.6%)</strong></td>
-</tr>
-</tbody>
-</table>
-<h2 id="4-what-changes-next">4. What changes next<a class="headerlink" href="#4-what-changes-next" title="Permanent link">&para;</a></h2>
-<p>Together, these two measurements close a dead-end temptation and open a neglected axis of real performance work:</p>
-<ol>
-<li><strong>Do not chase a standalone coupling project at eight workers.</strong> Once the input seam window removes <code>in_maint</code> and its 2.15 ms coupling bonus, the remaining unowned coupling mechanisms cap near 2.5 ms (1.6% at a 150 ms tie). Reaching our 6 GB/s (~140 ms) research milestone still depends on algorithmic cuts to both the scanner and the workers.</li>
-<li><strong>Keep <code>READY_BYTES</code> distinct from <code>SLOTS_PER_THREAD</code> when tuning L3 cache pressure.</strong> Because <code>READY_BYTES</code> never fires at eight workers while 32 slots already suffer runt-diluted head-of-line stalls, shrinking <code>SLOTS_PER_THREAD</code> below 4 would regress eight-worker throughput unless runts are excluded from the slot count. Bounding <code>READY_BYTES</code> alone protects 9-to-10-worker L3 residency without hurting eight workers.</li>
-<li><strong>Fix dense-band refusals and map the Segmented fallback.</strong> A one-pass thin-run pre-check removes the 13 to 48% dense-band regression on prose and source code with zero Wikidata impact, and a dedicated phase dissection of <code>Segmented</code> now targets the 84% of non-Wikidata blocks that our Wikidata-only surface never showed.</li>
-<li><strong>Land the seam window first on the workstation queue.</strong> It removes 10 to 11 ms of serial <code>in_maint</code> copy work plus 2.15 ms of coupling distortion, giving both the worker-side fold test and the combined scanner improvements a clean, stationary baseline.</li>
-</ol>
+<p>Nothing went wrong with the scanner. On Wikidata, <span class="arithmatex">\(k^*\)</span> is about 9.5. At four or eight threads, the
+workers still take longer than the serial scanner. Shaving 10.5% off the scanner therefore just
+gives that thread more idle margin while it waits for the admission window. At one and two threads,
+every saved microsecond comes straight off the active core's total work. At ten threads, workers
+finally catch up to the scanner and the speed-up shows through again. On ordinary text, where <span class="arithmatex">\(k^*\)</span>
+is four to five, the scanner already limits throughput well before eight cores.</p>
+<h2 id="4-two-more-shipped-improvements-in-0516">4. Two more shipped improvements in 0.5.16<a class="headerlink" href="#4-two-more-shipped-improvements-in-0516" title="Permanent link">&para;</a></h2>
+<p>Two further default-path improvements shipped in mibz2 0.5.16. Both target real workloads that a
+Wikidata-only benchmark never exercises.</p>
+<p><strong>Wider branchless run decoding.</strong> When a bzip2 block compresses well, its decoded symbol stream
+consists largely of run-length tokens rather than dense literal bytes. mibz2's branchless run
+front previously accepted a block only up to 50% of the block length bound. A census across
+fourteen corpora found forty compressible blocks sitting just above that line, between 50% and 75%
+of the bound. Those blocks came from Markdown, ELF executables, JSON, prose and Python source, and
+still held 17% to 49% run symbols.</p>
+<p>Version 0.5.16 raises the admission ceiling to 75% of the bound. In the newly widened band, a block
+must also carry at least 12.5% run symbols. That guard keeps short, small-alphabet random streams
+(near 3.8% runs) on the column path where they belong. Isolated virtual-machine benchmarks across
+three compiler profiles measured clear cuts in move-to-front and inverse-BWT processor time.
+Markdown ran 13.2% to 32.4% faster, ELF binaries 14.5% to 24.7% faster and JSON 9.0% to 9.9%
+faster. Not a single Wikidata, random, records or pattern block changed route. On the ten-core
+workstation's 0.5.16 release check, Wikidata elapsed times stayed flat from one to twenty threads,
+matching the prediction.</p>
+<p><strong>Chunked whole-file reads in Python.</strong> Profiling the Python bindings turned up an unexpected cost
+on the classic <code>mibz2.open(path).read()</code> path. Because <code>BZ2Reader</code> inherited <code>RawIOBase.readall()</code>,
+a whole-file read looped through <code>readinto()</code> in 8 KiB pieces. Reading one 210 MB file took 25,829
+calls across the Python–Rust boundary.</p>
+<p>Version 0.5.16 overrides whole-file <code>readall()</code> and <code>read()</code> in <code>BZ2Reader</code> to pull 1 MiB chunks
+directly from the Rust reader and join them once. On a virtual machine decoding Wikidata,
+<code>mibz2.open(...).read()</code> used 6.3% to 6.8% less processor time and finished 5.7% to 12.5% faster.
+Direct <code>BZ2Reader.read()</code> calls cut processor time by 8.5% and wall time by 20.0%, at 0.99× peak
+memory. Because the change lives purely in Python above the existing reader, the single stable-ABI
+wheel for Python 3.10 and newer stays unchanged.</p>
+<h2 id="5-what-this-means-for-decoding-in-practice">5. What this means for decoding in practice<a class="headerlink" href="#5-what-this-means-for-decoding-in-practice" title="Permanent link">&para;</a></h2>
+<p>Two practical rules fall straight out of these measurements.</p>
+<p>First, throwing every core on a machine at a parallel bzip2 decoder only helps when the file
+compresses tightly. Highly repetitive dumps (15× to 20× compression) keep eight to ten workers fed.
+Ordinary source trees, JSON exports and documentation (4× to 6× compression) saturate the serial
+Huffman scanner around four to six workers. Beyond that point, extra worker threads burn processor
+time and cache bandwidth for slower wall-clock throughput.</p>
+<p>Second, a single benchmark corpus can hide half the optimisation surface. On Wikidata, worker speed
+dominates up to eight cores. That masks scanner improvements while leaving ordinary text's run-path
+threshold untouched. Measuring station balance alongside full-file scaling exposes both sides of
+the pipeline. All three software changes described here are live by default in mibz2 0.5.16 on
+crates.io and PyPI.</p>
+<hr />
+<p><strong>Sources:</strong></p>
+<ul>
+<li>Physical ten-core text-panel scaling sweep and station balance: <a href="https://github.com/lmmx/mibz2/blob/af7ff4829277a1687c692c5eb8c2f9f5208958c4/docs/journal/2026-11-27-text-knee-i9/registration.md">registration and recipe</a> (<a href="https://github.com/lmmx/mibz2/pull/1135">#1135</a>, <a href="https://github.com/lmmx/mibz2/pull/1139">#1139</a>), archived Intel Core i9-10900K bundle <code>origin/evidence</code> <code>5e3f28cc</code> (<code>text-knee/run-20261127T172728Z.tar.gz</code>).</li>
+<li>Four-corpus single-thread station balance on the same workstation: archived bundle <code>origin/evidence</code> <code>77236472</code> (<code>jcc-aligned-release/run-20261127T135104Z.tar.gz</code>) and <a href="https://github.com/lmmx/mibz2/pull/1172">verdict record</a> (<a href="https://github.com/lmmx/mibz2/pull/1172">#1172</a>).</li>
+<li>Eleven-corpus virtual-machine station-balance survey and bzip2-vs-lbzip2 control: <a href="https://github.com/lmmx/mibz2/blob/c5c34377/docs/journal/2026-11-27-explore/station-balance-off-wikidata.md">research note</a>.</li>
+<li>Coalesced Huffman scanner in 0.5.15: <a href="https://github.com/lmmx/mibz2/pull/1034">#1034</a>, i9-10900K hardware verdict (<a href="https://github.com/lmmx/mibz2/pull/1151">#1151</a>, <code>origin/evidence</code> <code>9de7b6e0</code>), and 0.5.15 release scaling (<code>origin/evidence</code> <code>bce3914d</code>, <a href="https://github.com/lmmx/mibz2/blob/c5c34377/frontier/deltas/2026-11-27-release-0-5-15-done.md">release record</a>).</li>
+<li>Wider branchless run admission in 0.5.16: <a href="https://github.com/lmmx/mibz2/pull/1175">#1175</a>, <a href="https://github.com/lmmx/mibz2/blob/7cbbb78d/docs/journal/2026-11-27-explore/runs-takes-runs-post-1080.md">dissection note</a>, and 0.5.16 workstation scaling check (<a href="https://github.com/lmmx/mibz2/pull/1199">#1199</a>, <code>origin/evidence</code> <code>4710ef99</code>).</li>
+<li>Chunked whole-file Python reads in 0.5.16: <a href="https://github.com/lmmx/mibz2/pull/1176">#1176</a> and <a href="https://github.com/lmmx/mibz2/blob/9001629a/frontier/deltas/2026-11-27-python-readall-abi3.md">delta</a>.</li>
+</ul>
 
 
 
@@ -4140,7 +3990,7 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reopening Open&#x27;s middle and off-Wikidata">
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Blog">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -4150,20 +4000,20 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
                 Previous
               </span>
               <div class="md-ellipsis">
-                Reopening Open's middle and off-Wikidata
+                Blog
               </div>
             </div>
           </a>
         
         
           
-          <a href="../2026-11-26-true-floor-and-pooled-scan/" class="md-footer__link md-footer__link--next" aria-label="Next: The decoder&#x27;s true floor and a pooled scan">
+          <a href="../2026-11-27-bounded-memory-on-highly-compressible-input/" class="md-footer__link md-footer__link--next" aria-label="Next: Half the memory on compressible files">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                The decoder's true floor and a pooled scan
+                Half the memory on compressible files
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4258,21 +4108,21 @@ L = \max\!\left(S,\;\frac{W}{k}\right),
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/bench.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/blog.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/announce.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/frontier.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/observatory.js?v=4178f9a0191b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/katex.js?v=4178f9a0191b"></script>
       
     
   </body>

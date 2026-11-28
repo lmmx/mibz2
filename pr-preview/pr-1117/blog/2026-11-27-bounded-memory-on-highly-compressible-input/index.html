@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
+        <meta name="description" content="Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-six-gbs-decoder-architecture/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-bounded-memory-on-highly-compressible-input/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -21,10 +21,10 @@
         
       
       
-        <link rel="prev" href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/">
+        <link rel="prev" href="../2026-11-27-why-the-scaling-ceiling-moves/">
       
       
-        <link rel="next" href="../2026-11-27-reopening-a6b-and-segmented/">
+        <link rel="next" href="../2026-11-27-faster-decoding-for-ordinary-text/">
       
       
         
@@ -35,7 +35,7 @@
     
     
       
-        <title>The architecture of a 6 GB/s bzip2 decoder - mibz2</title>
+        <title>Half the memory on bzip2's most compressible files - mibz2</title>
       
     
     
@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=4178f9a0191b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=cacf5dee0199">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=4178f9a0191b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -91,19 +91,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The architecture of a 6 GB/s bzip2 decoder">
-  <meta property="og:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-six-gbs-decoder-architecture/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
+  <meta property="og:title" content="Half the memory on bzip2's most compressible files">
+  <meta property="og:description" content="Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/blog/2026-11-27-bounded-memory-on-highly-compressible-input/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-bounded-memory-on-highly-compressible-input.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta property="og:image:alt" content="Half the memory on bzip2's most compressible files">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The architecture of a 6 GB/s bzip2 decoder">
-  <meta name="twitter:description" content="Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-six-gbs-decoder-architecture.png">
-  <meta name="twitter:image:alt" content="The architecture of a 6 GB/s bzip2 decoder">
+  <meta name="twitter:title" content="Half the memory on bzip2's most compressible files">
+  <meta name="twitter:description" content="Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-1117/assets/social/blog-2026-11-27-bounded-memory-on-highly-compressible-input.png">
+  <meta name="twitter:image:alt" content="Half the memory on bzip2's most compressible files">
 
   </head>
   
@@ -156,7 +156,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The architecture of a 6 GB/s bzip2 decoder
+              Half the memory on bzip2's most compressible files
             
           </span>
         </div>
@@ -1215,14 +1215,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-nav__link">
+      <a href="../2026-11-27-why-the-scaling-ceiling-moves/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  The 256 KiB L2 cliff and the flipped knee
+  Why compression ratio moves the scaling ceiling
 
     
   </span>
@@ -1258,7 +1258,7 @@
   <span class="md-ellipsis">
     
   
-  The architecture of a 6 GB/s decoder
+  Half the memory on compressible files
 
     
   </span>
@@ -1275,7 +1275,7 @@
   <span class="md-ellipsis">
     
   
-  The architecture of a 6 GB/s decoder
+  Half the memory on compressible files
 
     
   </span>
@@ -1301,205 +1301,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+  <a href="#1-how-can-1522-bytes-become-two-gigabytes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+        1. How can 1,522 bytes become two gigabytes?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keeping SIMD wiring untouched
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+  <a href="#2-why-did-the-queue-fill-with-giant-blocks" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+        2. Why did the queue fill with giant blocks?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-three-designs-stopped" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why three designs stopped
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <code>fused_4l_tile4096_vec</code> passes
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+  <a href="#3-how-does-the-fix-bound-the-memory" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+        3. How does the fix bound the memory?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        A 160-byte inline <code>ReadyBlock</code>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero consumer tax and bounded RSS
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+  <a href="#4-what-did-it-measure" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+        4. What did it measure?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-direct-folding-regressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why direct folding regressed
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-two-part-rescue-1055" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The two-part rescue (<code>#1055</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+  <a href="#5-what-it-means-for-a-caller" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The realized 8-worker wall-time law
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero-plumbing design and below-the-knee safety
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6. How the five pieces fit and what builds next
+        5. What it means for a caller
       </span>
     </span>
   </a>
@@ -1522,14 +1371,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-nav__link">
+      <a href="../2026-11-27-faster-decoding-for-ordinary-text/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Reopening Open's middle and off-Wikidata
+  Faster decoding for ordinary text
 
     
   </span>
@@ -1549,14 +1398,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../2026-11-27-off-wikidata-and-eight-worker-coupling/" class="md-nav__link">
+      <a href="../2026-11-27-stages-built-to-fit-together/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Off Wikidata and inside the eight-worker tie
+  Stages built to fit together
 
     
   </span>
@@ -3680,205 +3529,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-sampled-anchor-four-lane-forward-emission-1057" class="md-nav__link">
+  <a href="#1-how-can-1522-bytes-become-two-gigabytes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Sampled-anchor four-lane forward emission (<code>#1057</code>)
+        1. How can 1,522 bytes become two gigabytes?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Sampled-anchor four-lane forward emission (#1057)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#keeping-simd-wiring-untouched" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keeping SIMD wiring untouched
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-s-16-beats-s-4-by-order-statistics" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-upstream-vectored-rle1crc-fusion-1045" class="md-nav__link">
+  <a href="#2-why-did-the-queue-fill-with-giant-blocks" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)
+        2. Why did the queue fill with giant blocks?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Upstream vectored RLE1+CRC fusion (#1045)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-three-designs-stopped" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why three designs stopped
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-fused_4l_tile4096_vec-passes" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why <code>fused_4l_tile4096_vec</code> passes
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-the-zero-cost-vectored-delivery-boundary-1058" class="md-nav__link">
+  <a href="#3-how-does-the-fix-bound-the-memory" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. The zero-cost vectored delivery boundary (<code>#1058</code>)
+        3. How does the fix bound the memory?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. The zero-cost vectored delivery boundary (#1058)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-160-byte-inline-readyblock" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        A 160-byte inline <code>ReadyBlock</code>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-consumer-tax-and-bounded-rss" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero consumer tax and bounded RSS
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" class="md-nav__link">
+  <a href="#4-what-did-it-measure" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)
+        4. What did it measure?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Rescuing MTF folding with L1 batching and guard zones (#1048, #1055)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-direct-folding-regressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why direct folding regressed
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-two-part-rescue-1055" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The two-part rescue (<code>#1055</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" class="md-nav__link">
+  <a href="#5-what-it-means-for-a-caller" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Closing the loop to 6 GB&#x2f;s with slack-only hybrid scanning (#1056)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-realized-8-worker-wall-time-law" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The realized 8-worker wall-time law
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-plumbing-design-and-below-the-knee-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Zero-plumbing design and below-the-knee safety
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-how-the-five-pieces-fit-and-what-builds-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6. How the five pieces fit and what builds next
+        5. What it means for a caller
       </span>
     </span>
   </a>
@@ -3907,7 +3605,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-six-gbs-decoder-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-27-bounded-memory-on-highly-compressible-input.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -3918,461 +3616,234 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-architecture-of-a-6-gbs-bzip2-decoder">The architecture of a 6 GB/s bzip2 decoder<a class="headerlink" href="#the-architecture-of-a-6-gbs-bzip2-decoder" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Five merged studies show how four-lane forward emission, fused slices and batched MTF pair with slack-only scanning to reach 6 GB/s.</p>
-<p class="post-meta">27 November 2026 · 10 min read · <a href="#6-how-the-five-pieces-fit-and-what-builds-next">Research synthesis</a></p>
+<h1 id="half-the-memory-on-bzip2s-most-compressible-files">Half the memory on bzip2's most compressible files<a class="headerlink" href="#half-the-memory-on-bzip2s-most-compressible-files" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.</p>
+<p class="post-meta">27 November 2026 · 9 min read · <a href="#5-what-it-means-for-a-caller">Research synthesis</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p><strong>Five freshly merged studies turn mibz2's ideal-parts matrix into one coherent 6 GB/s architecture.</strong> On our 10-core Intel i9-10900K, shipped mibz2 decodes 839 MB of Wikidata (<code>wikidata ×4</code>) in 192.9 to 194.6 ms at eight workers. That is 4.31 GB/s. Reaching 6 GB/s means finishing the same workload in 140 ms. No single stage can carry that drop alone. Five designs fit end to end across the worker pipeline and the eight-worker schedule. Together they pair sampled-anchor four-lane forward emission and vectored RLE1+CRC fusion with a zero-copy boundary, L1-batched MTF folding and slack-only hybrid scanning.</p>
-<p>This post builds on <a href="../2026-11-27-reopening-a6b-and-segmented/">Reopening Open's middle and the off-Wikidata decoder</a> and <a href="../2026-11-26-true-floor-and-pooled-scan/">The decoder's true floor and the limits of a pooled scan</a>. One evidence boundary belongs up front. The i9-10900K baselines (<code>1,306 ms</code> single-worker and <code>192.9–194.6 ms</code> eight-worker) are direct workstation measurements. The four stage studies (<code>#1057</code>, <code>#1045</code>, <code>#1058</code>, <code>#1055</code> and <code>#1048</code>) are steal-free probes on a 2-vCPU Haswell Xeon VM. Every arm passed byte-exact parity on every tested block. The eight-worker trajectory (<code>#1056</code>) replays <code>src/parallel.rs</code> deterministically against primary i9-10900K traces. Every projection below awaits production builds and direct 10-core i9-10900K confirmation.</p>
-<p><a href="#1-sampled-anchor-four-lane-forward-emission-1057">Section 1</a> shows how 16 scalar anchor tags unlock 4-lane forward emission without breaking SIMD wiring.
-<a href="#2-upstream-vectored-rle1crc-fusion-1045">Section 2</a> explains why zero-scratch tiled fusion beats both 1-lane emission and contiguous stitching.
-<a href="#3-the-zero-cost-vectored-delivery-boundary-1058">Section 3</a> prices a 160-byte vectored <code>ReadyBlock</code> across six real consumer paths and memory budgets.
-<a href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">Section 4</a> diagnoses why direct MTF folding spilled registers and how L1 batching rescues it.
-<a href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">Section 5</a> maps how slack-only helper scanning clears the 140 ms wall without regressing below the knee.
-<a href="#6-how-the-five-pieces-fit-and-what-builds-next">Section 6</a> summarizes the combined architecture and its workstation gates.</p>
+<p>mibz2 decodes a bzip2 file the way <a href="https://github.com/kjn/lbzip2">lbzip2</a> does, many blocks at a
+time. One thread, the scanner, reads each compressed block's
+<a href="../2026-11-05-huffman-bit-buffer/">Huffman codes</a> in order. A pool of workers rebuilds the blocks'
+text in parallel, and a reader hands the finished blocks to the caller in sequence
+(<a href="../2026-11-25-the-decoder-as-a-queueing-network/#4-the-decoder-drawn-as-stations">the decoder, drawn as stations</a>).
+Between the scanner and the reader sits an admission window, a fixed number of blocks allowed in
+flight at once. Beside it sits a cap of 12 MiB on decoded output that the caller has not yet read.
+Together they are meant to keep the decoder's memory small whatever file it is given.</p>
+<p>For ordinary files they do. A block of JSON or text decodes to about a megabyte, so a window of
+thirty-two blocks holds a few tens of megabytes. But the size of a compressed block says very
+little about the size of what it decodes to. Two gigabytes of zeros compress to a file of 1,522
+bytes. Decoding that file with the library's default settings for eight threads once took 1.27 GB
+of memory. The cap on unread output was there all along; it was simply checked at a moment when it
+could not see the danger.</p>
+<p>That has now been fixed. Workers consult the cap themselves before they start a block, and the
+pool of spare output buffers is bounded in bytes rather than in buffers. Take the same file, four
+workers and a thirty-two-block window: peak memory fell from 1,118 MiB to 545 MiB, a cut of 51%.
+The decode also finished about 15% sooner. More to the point, memory on such a file no longer
+grows with the window at all. It is the same 545 MiB with eight, sixteen or thirty-two blocks in
+flight.</p>
 <p><strong>Takeaways</strong></p>
 <ul>
-<li><strong>Four-lane forward emission is paid in full (<code>#1057</code>, PASS).</strong> Tagging 16 uniform BWT-row anchors in bit 31 keeps unmodified SIMD wiring and cuts <code>A6c + A7</code> thread CPU by 31.0 to 35.8% with zero <code>unsafe</code>. Native L3-cold runs reach 97.4% of a prebuilt oracle and project +208 to +235 ms saved on one i9 worker.</li>
-<li><strong>Fusion only pays off if delivery stays vectored (<code>#1045</code>, PASS / scoped STOP).</strong> Zero-scratch in-place tile compaction with 64 KiB PCLMULQDQ CRC32 cuts <code>E + A9</code> writes by 53.4%. It projects +31.8 to +49.9 ms saved on one i9 worker, whereas contiguous stitching moves 74.9% of the output and erases the win.</li>
-<li><strong>Vectored delivery costs nothing at the boundary (<code>#1058</code>).</strong> An inline 160-byte <code>ReadyBlock</code> keeps all six consumer paths at 0.86× to 1.01× of contiguous delivery while holding RSS at 1.017× with zero Wikidata overflows.</li>
-<li><strong>L1 batching and guard zones rescue MTF folding (<code>#1048</code>, <code>#1055</code>, PASS).</strong> Direct per-run folding spilled <code>runs::front_avx2</code>'s 15 live registers and regressed up to +4.3%. A 2 KiB L1d batch plus a 496/512 <code>OutQ16</code> guard zone cuts <code>push_slow</code> 6.22×. Together they drop <code>A5 + A6a</code> by 12.1% baseline and 19.1% native.</li>
-<li><strong>Slack-only hybrid scanning crosses 6 GB/s (<code>#1056</code>).</strong> Offloading candidate finding to the 91.6%-idle reader thread and scanning only from worker <code>job_wait</code> slack pushes eight-worker wall time to 131.8 ms (6.36 GB/s) at <code>W'/8 = 125 ms</code>. Below the knee, <code>k = 6</code> stays at 0.997× to 0.999×.</li>
+<li><strong>A tiny file can decode to a vast one.</strong> bzip2's first stage writes a run of up to 259 equal
+  bytes as five. One block of a single repeated byte therefore decodes to about 46.6 MB, from a
+  few dozen compressed bytes.</li>
+<li><strong>The old cap watched the wrong moment.</strong> It was checked only when the scanner admitted a block.
+  Blocks of runs are scanned in microseconds, so the whole window was admitted before any output
+  existed. The workers then decoded every admitted block in full.</li>
+<li><strong>Now a worker waits instead.</strong> While the unread output is over the cap, no worker starts a
+  block more than the worker count plus two places ahead of the reader. A bounded pool stops spare
+  46 MB buffers from piling up behind it.</li>
+<li><strong>Memory now follows the workers, not the window.</strong> Four workers need a flat 545 MiB for any
+  window from eight to thirty-two blocks. They had needed 589 to 1,118 MiB. Eight workers need
+  955 MiB, down from 1,528, and ordinary files decode no slower.</li>
+<li><strong>It is in the default decoder.</strong> The change is on master, in every decoder the library builds
+  by default, and will ship in the next release.</li>
 </ul>
-<figure class="bf-fig">
-<div class="bf-title">End-to-end 6 GB/s decoder architecture assembled from five merged studies</div>
-<svg viewBox="0 0 640 286" role="img" aria-label="Architecture diagram of the 6 GB/s bzip2 decoder: reader thread runs AVX2 Finder into Arc Chunk OnceLock; serial scanner feeds Policy A slack-only helpers; each worker runs L1d-batched MTF and OutQ16 guard zone, safe 64K SoA A6b, SIMD Reader::wire with S=16 bit-31 anchor tags, 4-lane forward emission with zero-scratch tiled RLE1 and CRC32 into a 160-byte vectored ReadyBlock for BzReader and decode_parallel.">
-  <defs>
-    <marker id="arr6g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="var(--bf-ink-2)"/>
-    </marker>
-  </defs>
-  <!-- Top lane: Feeder & Scan plane -->
-  <text class="bf-t-strong" style="font-size:10.5px" x="14" y="18">INPUT &amp; SCAN PLANE (#1056)</text>
-  <rect x="14" y="26" width="166" height="58" rx="5" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="97" y="45" text-anchor="middle">mibz2-read (91.6% idle)</text>
-  <text class="bf-ttiny" x="97" y="60" text-anchor="middle">AVX2 Finder → Arc&lt;Chunk&gt;</text>
-  <text class="bf-ttiny" x="97" y="74" text-anchor="middle">OnceLock cands (0 ms tax)</text>
-
-  <line x1="180" y1="55" x2="212" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <rect x="214" y="26" width="184" height="58" rx="5" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="306" y="45" text-anchor="middle">Serial Scanner (Policy A)</text>
-  <text class="bf-ttiny" x="306" y="60" text-anchor="middle">skip helper-verified blocks</text>
-  <text class="bf-ttiny" x="306" y="74" text-anchor="middle">11 seam blocks on serial path</text>
-
-  <line x1="398" y1="55" x2="430" y2="55" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <rect x="432" y="26" width="194" height="58" rx="5" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="529" y="45" text-anchor="middle">Slack-Only Helpers</text>
-  <text class="bf-ttiny" x="529" y="60" text-anchor="middle">prio-1 decode, prio-2 scan</text>
-  <text class="bf-ttiny" x="529" y="74" text-anchor="middle">local L2 scratch · full_only</text>
-
-  <!-- Connector down to worker pipeline -->
-  <line x1="306" y1="84" x2="306" y2="108" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-  <line x1="529" y1="84" x2="529" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
-  <line x1="529" y1="96" x2="306" y2="96" stroke="var(--bf-ink-2)" stroke-width="1.2" stroke-dasharray="3 2"/>
-
-  <!-- Middle lane: Worker pipeline -->
-  <rect x="14" y="110" width="612" height="92" rx="6" fill="none" stroke="var(--bf-rule)" stroke-width="1.2" stroke-dasharray="4 3"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="24" y="126">PER-WORKER OPEN PIPELINE (×8 WORKERS, #![forbid(unsafe_code)] IN NEW KERNELS)</text>
-
-  <rect x="24" y="134" width="132" height="58" rx="4" fill="var(--bf-vz-2)" opacity="0.22" stroke="var(--bf-vz-2)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="90" y="151" text-anchor="middle">A5 + A6a (#1055)</text>
-  <text class="bf-ttiny" x="90" y="166" text-anchor="middle">2 KiB L1d run batch</text>
-  <text class="bf-ttiny" x="90" y="180" text-anchor="middle">OutQ16 496/512 guard</text>
-
-  <line x1="156" y1="163" x2="174" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="176" y="134" width="114" height="58" rx="4" fill="var(--bf-vz-1)" opacity="0.18" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="233" y="151" text-anchor="middle">A6b (#1046)</text>
-  <text class="bf-ttiny" x="233" y="166" text-anchor="middle">64K u16-link SoA</text>
-  <text class="bf-ttiny" x="233" y="180" text-anchor="middle">gen-tagged dict</text>
-
-  <line x1="290" y1="163" x2="308" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="310" y="134" width="140" height="58" rx="4" fill="var(--bf-green)" opacity="0.18" stroke="var(--bf-green)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="380" y="151" text-anchor="middle">A6c + A7 (#1057)</text>
-  <text class="bf-ttiny" x="380" y="166" text-anchor="middle">SIMD Reader::wire</text>
-  <text class="bf-ttiny" x="380" y="180" text-anchor="middle">S=16 bit-31 · 4 lanes</text>
-
-  <line x1="450" y1="163" x2="468" y2="163" stroke="var(--bf-ink-2)" stroke-width="1.3" marker-end="url(#arr6g)"/>
-
-  <rect x="470" y="134" width="146" height="58" rx="4" fill="var(--bf-green)" opacity="0.28" stroke="var(--bf-green)" stroke-width="1.4"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="543" y="151" text-anchor="middle">Fused RLE1+CRC (#1045)</text>
-  <text class="bf-ttiny" x="543" y="166" text-anchor="middle">zero-scratch 4K tiles</text>
-  <text class="bf-ttiny" x="543" y="180" text-anchor="middle">64K CRC + GF(2) combine</text>
-
-  <!-- Connector down to delivery -->
-  <line x1="543" y1="192" x2="543" y2="218" stroke="var(--bf-ink-2)" stroke-width="1.4" marker-end="url(#arr6g)"/>
-
-  <!-- Bottom lane: Vectored Delivery -->
-  <rect x="14" y="220" width="612" height="54" rx="5" fill="var(--bf-vz-1)" opacity="0.12" stroke="var(--bf-vz-1)" stroke-width="1.2"/>
-  <text class="bf-t-strong" style="font-size:11px" x="320" y="239" text-anchor="middle">ZERO-COPY VECTORED DELIVERY BOUNDARY (#1058)</text>
-  <text class="bf-tm" x="320" y="256" text-anchor="middle">160 B ReadyBlock { buf, ranges: [(u32, u32); 16], count, total_len } → BzReader / Python / decode_parallel · RSS 1.017×</text>
-</svg>
-<figcaption>Each stage removes a separate currency: random-scatter stalls and register spills in <code>A5+A6a</code>, bounds checks in <code>A6b</code>, XOR wiring and 1-lane dependency chains in <code>A6c+A7</code>, full-block re-reads in <code>A9</code>, and serial-scan idle slack across 8 workers.</figcaption>
+<h2 id="1-how-can-1522-bytes-become-two-gigabytes">1. How can 1,522 bytes become two gigabytes?<a class="headerlink" href="#1-how-can-1522-bytes-become-two-gigabytes" title="Permanent link">&para;</a></h2>
+<p>bzip2 compresses in stages, and two of them encode runs. The first is applied to the raw input
+before anything else. It replaces any run of four to 259 identical bytes by four copies of the
+byte, followed by a count. A block at the strongest setting holds at most 900,000 bytes <em>after</em>
+this stage. If all of them encode maximal runs, the block holds 180,000 runs of 259 bytes, and it
+decodes to</p>
+<div class="arithmatex">\[
+\frac{900{,}000}{5} \times 259 = 46{,}620{,}000 \text{ bytes} \approx 46.6 \text{ MB}.
+\]</div>
+<p>The remaining stages then make that block almost free to store. The
+<a href="../2026-11-08-bwt-runs-from-mtf-codes/">Burrows–Wheeler transform</a> of so regular a text is itself
+a handful of long runs, and move-to-front turns them into zeros. The second run-length stage
+writes a run of zeros by the binary digits of its length, so the number of symbols grows only with
+the logarithm of the run. The whole block's coded symbols fit in a few dozen bytes. Two gigabytes
+of zeros make about 46 such blocks, held in a file of 1,522 bytes: an expansion of well over a
+million to one.</p>
+<aside class="il-gloss">
+<p><strong>Two run-length stages.</strong> bzip2 encodes runs twice. The first
+stage, on the raw input, exists to protect the block sort from long runs; the second, after
+move-to-front, compresses the zeros that move-to-front produces. The first stage is what fixes a
+block's decoded size: at most 900,000 bytes go in, and up to about 52 times as many can come
+out.</p>
+</aside>
+<p>None of this is an attack peculiar to mibz2. Any input dominated by long runs behaves this way: a
+sparse disk image, a zero-filled log, or a deliberately constructed
+<a href="https://en.wikipedia.org/wiki/Zip_bomb">decompression bomb</a>. A decoder that holds several blocks
+at once has to be ready for each of them to be 46 MB rather than one.</p>
+<h2 id="2-why-did-the-queue-fill-with-giant-blocks">2. Why did the queue fill with giant blocks?<a class="headerlink" href="#2-why-did-the-queue-fill-with-giant-blocks" title="Permanent link">&para;</a></h2>
+<p>The window counts blocks, not bytes. Library callers get four blocks in flight per thread, so
+thirty-two at eight threads. The byte cap was meant to cover the rest. Once 12 MiB of decoded
+output was waiting for the reader, the scanner would admit blocks only up to the worker count,
+plus two, ahead of the reader.</p>
+<p>The flaw was in <em>when</em> that rule was applied. The scanner checked the cap only at the moment it
+admitted a block, and only the scanner checked it. On a file of runs the scanner finishes each
+block in microseconds, long before any worker has finished decoding the first one. When it
+admitted the second block, and the tenth, and the thirty-second, no output existed yet, so the
+cap's test passed every time. The window filled entirely with admitted blocks, and the workers
+then decoded every one of them, each into a buffer of its own of about 46 MB. A pool kept up to
+one returned buffer per slot for reuse, so that memory stayed held until the decoder was dropped.</p>
+<p>A probe on a cloud machine with four virtual CPUs measured the consequence. With four workers, peak memory rose
+with the window, from 457 MiB with four slots to 943 MiB with thirty-two. At the default window
+for eight threads it reached 1,273 MiB. At sixteen threads it reached 1,818 MiB, limited only
+because the file had run out of blocks. Ordinary text, at comparable settings, used between 99
+and 148 MiB. The extra memory also cost time, because the kernel zeroes every new page as it is
+first touched. With four workers, the sixteen- and thirty-two-block windows ran 24% to 28% slower
+than the eight-block one.</p>
+<p>No earlier test had seen this. The most compressible sample in the benchmark set decodes to
+20 MB, less than a single block of runs.</p>
+<figure class="bf-fig" id="window">
+<p class="bf-title">Which blocks in the window may be decoded, on a file of runs</p>
+<!-- fig:window -->
+<svg viewBox="0 0 720 300" role="img" aria-label="Schematic of a 32-block window with four workers on a file of runs only. Before the fix every slot in the window may end up holding a decoded block of about 46 MB. After it, only the six blocks nearest the reader, four workers plus two, may be decoded while the unread output is over its cap; the rest wait as scanned blocks, holding only their symbols."><text class="bf-tm" x="120" y="18" text-anchor="start" style="font-size:11.5px">reader takes the oldest block here</text><path d="M126,24 L126,34" style="stroke:var(--bf-frame);stroke-width:1.5"/><text class="bf-t-strong" x="16" y="76" text-anchor="start" style="font-size:13px">Before</text><text class="bf-tm" x="16" y="94" text-anchor="start" style="font-size:11.5px">any slot may</text><rect x="120" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 1: a decoded block, about 46 MB</title></rect><rect x="138" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 2: a decoded block, about 46 MB</title></rect><rect x="156" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 3: a decoded block, about 46 MB</title></rect><rect x="174" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 4: a decoded block, about 46 MB</title></rect><rect x="192" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 5: a decoded block, about 46 MB</title></rect><rect x="210" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 6: a decoded block, about 46 MB</title></rect><rect x="228" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 7: a decoded block, about 46 MB</title></rect><rect x="246" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 8: a decoded block, about 46 MB</title></rect><rect x="264" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 9: a decoded block, about 46 MB</title></rect><rect x="282" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 10: a decoded block, about 46 MB</title></rect><rect x="300" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 11: a decoded block, about 46 MB</title></rect><rect x="318" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 12: a decoded block, about 46 MB</title></rect><rect x="336" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 13: a decoded block, about 46 MB</title></rect><rect x="354" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 14: a decoded block, about 46 MB</title></rect><rect x="372" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 15: a decoded block, about 46 MB</title></rect><rect x="390" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 16: a decoded block, about 46 MB</title></rect><rect x="408" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 17: a decoded block, about 46 MB</title></rect><rect x="426" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 18: a decoded block, about 46 MB</title></rect><rect x="444" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 19: a decoded block, about 46 MB</title></rect><rect x="462" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 20: a decoded block, about 46 MB</title></rect><rect x="480" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 21: a decoded block, about 46 MB</title></rect><rect x="498" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 22: a decoded block, about 46 MB</title></rect><rect x="516" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 23: a decoded block, about 46 MB</title></rect><rect x="534" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 24: a decoded block, about 46 MB</title></rect><rect x="552" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 25: a decoded block, about 46 MB</title></rect><rect x="570" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 26: a decoded block, about 46 MB</title></rect><rect x="588" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 27: a decoded block, about 46 MB</title></rect><rect x="606" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 28: a decoded block, about 46 MB</title></rect><rect x="624" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 29: a decoded block, about 46 MB</title></rect><rect x="642" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 30: a decoded block, about 46 MB</title></rect><rect x="660" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 31: a decoded block, about 46 MB</title></rect><rect x="678" y="50" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 32: a decoded block, about 46 MB</title></rect><line x1="116" y1="120" x2="696" y2="120" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="16" y="108" text-anchor="start" style="font-size:11.5px">hold one</text><text class="bf-t-strong" x="16" y="206" text-anchor="start" style="font-size:13px">After</text><text class="bf-tm" x="16" y="224" text-anchor="start" style="font-size:11.5px">only the first six</text><rect x="120" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 1: a decoded block, about 46 MB</title></rect><rect x="138" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 2: a decoded block, about 46 MB</title></rect><rect x="156" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 3: a decoded block, about 46 MB</title></rect><rect x="174" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 4: a decoded block, about 46 MB</title></rect><rect x="192" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 5: a decoded block, about 46 MB</title></rect><rect x="210" y="180" width="16" height="70" rx="2" style="fill:var(--bf-vz-2)"><title>slot 6: a decoded block, about 46 MB</title></rect><rect x="228" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 7: scanned, waiting: its symbols only</title></rect><rect x="246" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 8: scanned, waiting: its symbols only</title></rect><rect x="264" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 9: scanned, waiting: its symbols only</title></rect><rect x="282" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 10: scanned, waiting: its symbols only</title></rect><rect x="300" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 11: scanned, waiting: its symbols only</title></rect><rect x="318" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 12: scanned, waiting: its symbols only</title></rect><rect x="336" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 13: scanned, waiting: its symbols only</title></rect><rect x="354" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 14: scanned, waiting: its symbols only</title></rect><rect x="372" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 15: scanned, waiting: its symbols only</title></rect><rect x="390" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 16: scanned, waiting: its symbols only</title></rect><rect x="408" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 17: scanned, waiting: its symbols only</title></rect><rect x="426" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 18: scanned, waiting: its symbols only</title></rect><rect x="444" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 19: scanned, waiting: its symbols only</title></rect><rect x="462" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 20: scanned, waiting: its symbols only</title></rect><rect x="480" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 21: scanned, waiting: its symbols only</title></rect><rect x="498" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 22: scanned, waiting: its symbols only</title></rect><rect x="516" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 23: scanned, waiting: its symbols only</title></rect><rect x="534" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 24: scanned, waiting: its symbols only</title></rect><rect x="552" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 25: scanned, waiting: its symbols only</title></rect><rect x="570" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 26: scanned, waiting: its symbols only</title></rect><rect x="588" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 27: scanned, waiting: its symbols only</title></rect><rect x="606" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 28: scanned, waiting: its symbols only</title></rect><rect x="624" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 29: scanned, waiting: its symbols only</title></rect><rect x="642" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 30: scanned, waiting: its symbols only</title></rect><rect x="660" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 31: scanned, waiting: its symbols only</title></rect><rect x="678" y="242" width="16" height="8" rx="2" style="fill:var(--bf-vz-1)"><title>slot 32: scanned, waiting: its symbols only</title></rect><line x1="116" y1="250" x2="696" y2="250" style="stroke:var(--bf-vz-axis);stroke-width:1"/><text class="bf-tm" x="16" y="238" text-anchor="start" style="font-size:11.5px">may be decoded</text><path d="M227.0,160 L227.0,258" style="stroke:var(--bf-ink);stroke-width:1.5;stroke-dasharray:4 3"/><text class="bf-tm" x="235.0" y="176" text-anchor="start" style="font-size:11.5px">four workers + two: decoding goes no further</text><text class="bf-tm" x="235.0" y="192" text-anchor="start" style="font-size:11.5px">while the unread output is over the cap</text><rect x="120" y="274" width="14" height="14" rx="2" style="fill:var(--bf-vz-2)"/><text class="bf-tm" x="140" y="286" text-anchor="start" style="font-size:11.5px">decoded block, about 46 MB</text><rect x="350" y="280" width="14" height="8" rx="2" style="fill:var(--bf-vz-1)"/><text class="bf-tm" x="370" y="286" text-anchor="start" style="font-size:11.5px">scanned block, waiting: its symbols only</text></svg>
+<figcaption>Schematic, four workers and a window of thirty-two blocks. Before the fix, nothing
+stopped any admitted block from being decoded, and each decoded block of runs is about 46 MB.
+After it, while the unread output is over its 12 MiB cap, only the blocks within six places of
+the reader may be decoded; the rest wait, holding only their scanned symbols.</figcaption>
 </figure>
 
-<h2 id="1-sampled-anchor-four-lane-forward-emission-1057">1. Sampled-anchor four-lane forward emission (<code>#1057</code>)<a class="headerlink" href="#1-sampled-anchor-four-lane-forward-emission-1057" title="Permanent link">&para;</a></h2>
-<p>The single largest worker prize in mibz2 sits inside <code>A6c + A7</code> (<code>651.7 ms</code> on one i9 worker, or half of total single-worker time). Earlier work showed why shipped bidirectional emission is expensive. To walk two lanes per edge without knowing endpoints in advance, <code>wire_xor</code> stores XOR-linked adjacency in <code>A6c</code>. That scalar XOR wiring breaks SIMD throughput. Forward 1-lane emission removes XOR wiring yet pays a long pointer-chasing dependency chain across <code>A7</code>.</p>
-<p>The <a href="https://github.com/lmmx/mibz2/blob/7f5a1c6afac636c24a7db14987cca1681e9d9e8b/docs/journal/2026-11-27-explore/forward-4lane-anchor-probe.md">sampled-anchor 4-lane probe</a> (<code>#1057</code>) resolves that tension cleanly with <code>#![forbid(unsafe_code)]</code>. Every arm matched byte for byte across all 11,961 checks on Wikidata and synthetic edge cases.</p>
-<h3 id="keeping-simd-wiring-untouched">Keeping SIMD wiring untouched<a class="headerlink" href="#keeping-simd-wiring-untouched" title="Permanent link">&para;</a></h3>
-<p>First, <code>A6c</code> keeps the unmodified SIMD <code>outq::Reader::wire</code> loop. On the VM, SIMD <code>Reader::wire</code> takes roughly <strong>30 ms warm</strong> and <strong>40 ms L3-cold</strong> across the 233 Open-admitted Wikidata blocks. Shipped <code>wire_xor</code> takes 91 ms warm and 108 ms cold. That is <strong>2.7× to 3.0× slower</strong>.</p>
-<p>Second, the probe checks bit 31 of <code>edges[u]</code>. Every Wikidata Open block packs a destination index (<code>max_bits = 18</code>) and a dictionary index (<code>max_dict = 1,712</code>). Because <span class="arithmatex">\(18 + 11 = 29 \le 31\)</span>, bit 31 is free on all 233 blocks.</p>
-<p>Third, after <code>Reader::wire</code> finishes, the probe marks <span class="arithmatex">\(S\)</span> uniform BWT-row anchor indices:</p>
-<div class="arithmatex">\[a_k = \left(\text{mark} + \left\lfloor \frac{k \cdot m}{S} \right\rfloor\right) \bmod m, \qquad k = 0, \dots, S - 1\]</div>
-<p>Tagging <span class="arithmatex">\(S = 16\)</span> anchor entries takes just 16 scalar writes per block. That adds roughly <strong>30 nanoseconds per block</strong>, or 7 microseconds across all 233 blocks.</p>
-<h3 id="why-s-16-beats-s-4-by-order-statistics">Why <span class="arithmatex">\(S = 16\)</span> beats <span class="arithmatex">\(S = 4\)</span> by order statistics<a class="headerlink" href="#why-s-16-beats-s-4-by-order-statistics" title="Permanent link">&para;</a></h3>
-<p>Choosing <span class="arithmatex">\(S\)</span> uniform BWT-row indices partitions the single cycle of length <span class="arithmatex">\(m\)</span> into <span class="arithmatex">\(S\)</span> random segments whose lengths behave like independent exponential spacings. With only <span class="arithmatex">\(S = 4\)</span> segments, four parallel lanes must wait for the longest of four exponential pieces. Its expected length follows the fourth harmonic number <span class="arithmatex">\(H_4 = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} = 2.083\times\)</span> the mean segment length. Measured across Wikidata at <span class="arithmatex">\(S = 4\)</span>, the longest segment is indeed <strong><span class="arithmatex">\(2.081\times\)</span></strong> the mean, leaving three lanes idle for over half the tail.</p>
-<p>Oversampling to <span class="arithmatex">\(S = 16\)</span> fixes load balance dynamically. Four lanes pull from the queue of 16 segments as each segment ends. Whenever any lane hits an anchor edge, a single sign-bit check catches all four lanes at once:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">ed0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ed3</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">i32</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* retire hit lane, pull next anchor */</span><span class="w"> </span><span class="p">}</span>
-</code></pre></div>
-<p>That branch fires only ~16 times per block (<strong>0.014%</strong> of iterations). At <span class="arithmatex">\(S = 16\)</span>, the longest single segment shrinks to <strong><span class="arithmatex">\(0.818 \times (m / 4)\)</span></strong> and effective lane parallelism rises to <strong><code>eff_K = 3.153</code></strong> across the whole block (including the <code>3 → 2 → 1</code> drain). Each segment writes into a <strong>32 KiB slab-continuation arena</strong> (<code>max_arena = 992 KiB</code>, averaging <code>41.6</code> ordered slices per block regardless of <span class="arithmatex">\(S\)</span>).</p>
+<h2 id="3-how-does-the-fix-bound-the-memory">3. How does the fix bound the memory?<a class="headerlink" href="#3-how-does-the-fix-bound-the-memory" title="Permanent link">&para;</a></h2>
+<p>It has two parts, both in the code that coordinates the scanner, the workers and the reader.</p>
+<p><strong>The workers check the cap.</strong> Before a worker starts decoding a block, it reads the total of
+decoded bytes still waiting for the reader. That total is kept in an atomic counter beside the
+shared state. On an ordinary file the total never reaches 12 MiB, so the check is a single memory
+read and takes no lock. Only at or over the cap does the worker look further. If its block lies
+more than the worker count plus two places ahead of the block the reader needs next, it sleeps.
+The reader wakes the sleeping workers each time it takes a block, and each re-checks its own
+position. Cancelling the decode wakes them too, so none is left waiting on a decode that has
+ended.</p>
+<p>Waiting threads invite deadlock, and this design avoids it by construction. Blocks are handed to
+workers strictly in order. The block the reader needs next, and the few after it, were therefore
+handed out before any block far enough ahead to be held back, and they are never made to wait.
+They finish, the reader takes them, and its progress releases the workers behind.</p>
+<p><strong>The spare-buffer pool is bounded in bytes.</strong> The pool used to keep up to one buffer per slot. It
+now also stops accepting buffers once their total capacity passes the cap plus 2 MiB for each
+block that may be in flight: 24 MiB at four workers. Even past that, it keeps up to one buffer per
+worker. That exception matters. Without it, every block of runs would free its 46 MB buffer and
+allocate a fresh one, paying the kernel's page faults again each time.</p>
+<p>Taken together, the two parts change what the memory on a file of runs is proportional to. Before,
+it was the window; now it is about two decoded blocks for each worker, whatever the window's size.
+The change adds no unsafe code. One new test drives a stream of high-expansion blocks through a
+decoder whose cap is forced to bind, and checks the peak. Another cancels a decode while workers
+wait behind the cap, and checks that they wake and exit.</p>
+<h2 id="4-what-did-it-measure">4. What did it measure?<a class="headerlink" href="#4-what-did-it-measure" title="Permanent link">&para;</a></h2>
+<p>The change was measured on its author's development machine, against the master branch it was
+built on. Each setting decoded the 1,522-byte file of zeros three times, interleaved with the old
+build, in one session.</p>
 <table>
 <thead>
 <tr>
-<th><code>A6c + A7</code> arm (233 Wikidata Open blocks)</th>
-<th style="text-align: right;">Base warm (ms)</th>
-<th style="text-align: right;">Base L3-cold (ms)</th>
-<th style="text-align: right;">Native warm (ms)</th>
-<th style="text-align: right;">Native L3-cold (ms)</th>
-<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
+<th style="text-align: right;">Workers</th>
+<th style="text-align: right;">Window (blocks)</th>
+<th style="text-align: right;">Peak memory before → after</th>
+<th style="text-align: right;">Change</th>
+<th style="text-align: right;">Elapsed time before → after</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>shipped_bidi</code> (baseline)</td>
-<td style="text-align: right;">335.89</td>
-<td style="text-align: right;">486.28</td>
-<td style="text-align: right;">328.07</td>
-<td style="text-align: right;">472.47</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">589 → 545 MiB</td>
+<td style="text-align: right;">7% less</td>
+<td style="text-align: right;">1.27 → 1.27 s</td>
 </tr>
 <tr>
-<td><code>fwd_4lane_oracle</code> (prebuilt ceiling)</td>
-<td style="text-align: right;">222.84</td>
-<td style="text-align: right;">323.46</td>
-<td style="text-align: right;">212.50</td>
-<td style="text-align: right;">295.66</td>
-<td style="text-align: right;">—</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">811 → 545 MiB</td>
+<td style="text-align: right;">33% less</td>
+<td style="text-align: right;">1.44 → 1.35 s</td>
 </tr>
 <tr>
-<td><code>fwd_4lane_sampled_S16_vec</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>231.80 (−31.0%)</strong></td>
-<td style="text-align: right;"><strong>323.61 (−33.5%)</strong></td>
-<td style="text-align: right;"><strong>221.83 (−32.4%)</strong></td>
-<td style="text-align: right;"><strong>303.41 (−35.8%)</strong></td>
-<td style="text-align: right;"><strong>+208.4 / +221.3..+235.4 ms</strong></td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1,118 → 545 MiB</td>
+<td style="text-align: right;">51% less</td>
+<td style="text-align: right;">1.38 → 1.18 s</td>
 </tr>
 <tr>
-<td><code>fwd_4lane_sampled_S16_stitch</code></td>
-<td style="text-align: right;">249.60 (−25.7%)</td>
-<td style="text-align: right;">351.43 (−27.7%)</td>
-<td style="text-align: right;">239.44 (−27.0%)</td>
-<td style="text-align: right;">323.49 (−31.5%)</td>
-<td style="text-align: right;">+174.9 / +208.3 ms</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1,528 → 955 MiB</td>
+<td style="text-align: right;">37% less</td>
+<td style="text-align: right;">2.03 → 1.60 s</td>
 </tr>
 </tbody>
 </table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% disjoint spreads against <code>shipped_bidi</code>. Modeled i9 columns scale VM ratios to the 651.7 ms <code>A6c + A7</code> i9-10900K baseline.)</em></p>
-<p>The cold-cache result is striking. Under L3-cold pressure, <code>fwd_4lane_sampled_S16_vec</code> reaches <strong>1.000×</strong> of the prebuilt oracle on baseline (<code>323.61</code> vs <code>323.46 ms</code>). On native it reaches <strong>1.026×</strong>, or 97.4% of the oracle (<code>303.41</code> vs <code>295.66 ms</code>). That projects <strong>+208 to +235 ms</strong> saved on one i9 worker. That is 16.0% to 18.0% of single-worker time, or <strong>+29 to +33 ms/worker</strong> at eight workers.</p>
-<h2 id="2-upstream-vectored-rle1crc-fusion-1045">2. Upstream vectored RLE1+CRC fusion (<code>#1045</code>)<a class="headerlink" href="#2-upstream-vectored-rle1crc-fusion-1045" title="Permanent link">&para;</a></h2>
-<p>Once emission runs forward in four lanes, <code>A9</code> (RLE1 expansion plus CRC32) sits right behind it. On one i9 worker, <code>A9</code> takes 66.6 to 74.4 ms. Earlier standalone post-emit work (<code>#988</code>) stopped because a separate pass over the output buffer hit a 72.3% L1d-hot compute floor. Moving RLE1+CRC upstream into the 4-lane emitter seemed promising. Yet <a href="https://github.com/lmmx/mibz2/blob/e61ec1276a59ed3d164fe165de869d147555a95f/docs/journal/2026-11-27-explore/forward-rle1-crc-fusion.md">the fusion probe</a> (<code>#1045</code>) showed that <strong>three of four candidate designs fail</strong>. Only one clears the gate. Every arm passed all 13,360 exactness checks across Wikidata and edge-case corpora.</p>
-<h3 id="why-three-designs-stopped">Why three designs stopped<a class="headerlink" href="#why-three-designs-stopped" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>1-lane fused (<code>fused_1lane</code> — STOP).</strong> Fusing RLE1+CRC into a single forward lane surrenders 4-lane memory-level parallelism. It regresses by <strong>−92 to −186 ms</strong> projected on one i9 worker.</li>
-<li><strong>Inline per-step FSM (<code>fused_4l_fsm</code> — STOP).</strong> Running the RLE1 state machine byte-by-byte inside the 4-lane pointer-chase loop bloats <code>WordMeta</code> and spills live lane state. It regresses by <strong>−126 to −205 ms</strong> projected on one i9 worker.</li>
-<li><strong>4-lane contiguous stitched (<code>fused_4l_tile4096_stitch</code> — STOP).</strong> Even when each lane fuses RLE1+CRC cleanly in 4 KiB tiles, compacting the four output segments back into one flat <code>Vec&lt;u8&gt;</code> destroys the win. On Wikidata, <strong>86.4%</strong> of lanes change length after RLE1 expansion. Re-packing lanes 1 to 3 moves 74.53 of 99.56 MiB (<strong>74.9%</strong> of all output). Across <code>wikidata ×4</code>, that copies <strong>598.9 MiB</strong> of extra bytes. Write savings drop from −53.4% to −18.6% (<code>1,718.2 → 1,398.8 MiB</code>), leaving timing flat at −23 to +11 ms projected.</li>
-</ol>
-<h3 id="why-fused_4l_tile4096_vec-passes">Why <code>fused_4l_tile4096_vec</code> passes<a class="headerlink" href="#why-fused_4l_tile4096_vec-passes" title="Permanent link">&para;</a></h3>
-<p>The winning arm (<code>fused_4l_tile4096_vec</code>) keeps the 4-lane pointer-chase loop clean and delivers vectored slices without stitching:</p>
-<ul>
-<li><strong>Zero-scratch single-pass in-place tile compaction.</strong> Each lane emits raw BWT bytes straight into its own output slice until it fills a 4 KiB tile. Then it expands RLE1 in place. Because <strong>89.4%</strong> of Wikidata 4-byte runs have <code>extra == 0</code> (four equal bytes followed by a zero repeat count), expansion shrinks the stream so <code>dst &lt;= src</code>. Only when a rare long repeat causes net growth does the tile spill its short suffix to a tiny scratch buffer. Across all 431 Wikidata blocks, <strong>zero</strong> RLE1 runs straddled a lane boundary.</li>
-<li><strong>L2-hot 64 KiB PCLMULQDQ CRC32 + GF(2) combine.</strong> Every 64 KiB of finalized lane output feeds hardware-accelerated CRC32 while still hot in L2 cache. At block end, four <code>crc32_combine</code> calls over <span class="arithmatex">\(\text{GF}(2)\)</span> fold the four lane CRCs into the exact bzip2 block CRC in microseconds.</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th><code>E + A9</code> arm (native VM, 233 Wikidata blocks)</th>
-<th style="text-align: right;">Warm (ms)</th>
-<th style="text-align: right;">L3-cold (ms)</th>
-<th style="text-align: right;">Logical writes (<code>wikidata ×4</code>)</th>
-<th style="text-align: right;">Modeled i9 1W Δ (warm / cold)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>base_4lane_sep</code> (unfused baseline)</td>
-<td style="text-align: right;">112.35</td>
-<td style="text-align: right;">150.98</td>
-<td style="text-align: right;">1,718.2 MiB</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
-</tr>
-<tr>
-<td><code>floor_4lane_plus_crc</code> (zero-RLE1 floor)</td>
-<td style="text-align: right;">101.20</td>
-<td style="text-align: right;">139.89</td>
-<td style="text-align: right;">—</td>
-<td style="text-align: right;">—</td>
-</tr>
-<tr>
-<td><code>fused_4l_tile4096_vec</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>99.54 (0.886×)</strong></td>
-<td style="text-align: right;"><strong>139.89 (0.927×)</strong></td>
-<td style="text-align: right;"><strong>799.9 MiB (−53.4%)</strong></td>
-<td style="text-align: right;"><strong>+49.9 / +31.8 ms</strong></td>
-</tr>
-<tr>
-<td><code>fused_4l_tile4096_stitch</code> (STOP)</td>
-<td style="text-align: right;">116.40 (1.036×)</td>
-<td style="text-align: right;">148.55 (0.984×)</td>
-<td style="text-align: right;">1,398.8 MiB (−18.6%)</td>
-<td style="text-align: right;">−23.0 / +11.0 ms</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats. On warm runs <code>fused_4l_tile4096_vec</code> beats even the zero-RLE1 separate-CRC floor because 64 KiB tiled CRC stays L2-hot. On cold runs it matches the floor to 0.00 ms.)</em></p>
-<h2 id="3-the-zero-cost-vectored-delivery-boundary-1058">3. The zero-cost vectored delivery boundary (<code>#1058</code>)<a class="headerlink" href="#3-the-zero-cost-vectored-delivery-boundary-1058" title="Permanent link">&para;</a></h2>
-<p>Both <code>#1057</code> and <code>#1045</code> point to the same architectural need: stop forcing workers to stitch emitted slices into one flat <code>Vec&lt;u8&gt;</code>. Before touching <code>src/parallel.rs</code>, we priced the vectored delivery boundary in <a href="https://github.com/lmmx/mibz2/blob/28c4c8c43e633a04dd3b7aa14b639a2d5fa8201f/docs/journal/2026-11-27-explore/vectored-delivery-boundary.md">a dedicated probe</a> (<code>#1058</code>). It uses <code>#![forbid(unsafe_code)]</code> and tests 200 MiB of real Wikidata blocks plus synthetic guards (<code>runs</code>, <code>onebyte</code>, <code>max16</code>).</p>
-<h3 id="a-160-byte-inline-readyblock">A 160-byte inline <code>ReadyBlock</code><a class="headerlink" href="#a-160-byte-inline-readyblock" title="Permanent link">&para;</a></h3>
-<p>Instead of heap-allocating a <code>Vec&lt;Vec&lt;u8&gt;&gt;</code> per block, a worker hands the reader an inline 160-byte struct:</p>
-<div class="language-rust highlight"><pre><span></span><code><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ReadyBlock</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">buf</span><span class="p">:</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="kt">u8</span><span class="o">&gt;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ranges</span><span class="p">:</span><span class="w"> </span><span class="p">[(</span><span class="kt">u32</span><span class="p">,</span><span class="w"> </span><span class="kt">u32</span><span class="p">);</span><span class="w"> </span><span class="mi">16</span><span class="p">],</span>
-<span class="w">    </span><span class="n">count</span><span class="p">:</span><span class="w"> </span><span class="kt">u8</span><span class="p">,</span>
-<span class="w">    </span><span class="n">total_len</span><span class="p">:</span><span class="w"> </span><span class="kt">u32</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>It allocates <strong>zero</strong> extra heap buffers. When the consumer finishes draining the last range, <code>into_buf()</code> recycles <code>buf</code> directly into <code>free_out</code> with zero changes to pool accounting, while <code>Ready::size</code> tracks logical <code>total_len</code>.</p>
-<h3 id="zero-consumer-tax-and-bounded-rss">Zero consumer tax and bounded RSS<a class="headerlink" href="#zero-consumer-tax-and-bounded-rss" title="Permanent link">&para;</a></h3>
-<p>We timed six real consumer paths across contiguous, stitched, 4-lane vectored and 16-segment vectored delivery. Those paths cover zero-copy <code>fill_buf_hash</code>, <code>read_64k</code> and <code>read_256k</code> (both single-slice and scatter-fill) and <code>decode_parallel</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Consumer path (native L3-cold, 200 MiB Wikidata)</th>
-<th style="text-align: right;"><code>contiguous_1slice</code></th>
-<th style="text-align: right;"><code>vectored_4lane</code></th>
-<th style="text-align: right;"><code>vectored_16seg</code></th>
-<th style="text-align: right;"><code>stitched_4lane</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>fill_buf_hash</code> (zero-copy <code>BufRead</code>)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.92×–1.00×</strong></td>
-<td style="text-align: right;"><strong>0.94×–1.00×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-<tr>
-<td><code>read_64k</code> / <code>read_256k</code> (scatter-fill)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.86×–1.01×</strong></td>
-<td style="text-align: right;"><strong>0.88×–1.01×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-<tr>
-<td><code>decode_parallel</code> (parallel sink)</td>
-<td style="text-align: right;">1.00×</td>
-<td style="text-align: right;"><strong>0.95×–1.00×</strong></td>
-<td style="text-align: right;"><strong>0.96×–1.01×</strong></td>
-<td style="text-align: right;">+33%..+80%</td>
-</tr>
-</tbody>
-</table>
-<p><em>(Stitched 4-lane adds +16 to +22 ms per 200 MiB, or roughly +64 to +88 ms across <code>wikidata ×4</code>. Vectored 4-lane and 16-segment stay at parity with contiguous delivery.)</em></p>
-<p>Python's single-copy <code>read(size)</code> path (<code>#1033</code>) also stays clean. At <code>K = 4</code>, single-<code>fill_buf</code> call counts rise <strong>+0.0%</strong> at <code>read(256K)</code> (<code>1,130</code> calls) and <strong>+13.5%</strong> at <code>read(64K)</code>. At <code>S = 16</code>, scatter-fill inside <code>Read::read</code> keeps calls completely flat at <code>3,200</code> (<code>64K</code>) and <code>800</code> (<code>256K</code>).</p>
-<p>Slab sizing turned up an equally important guard against naive headroom. A flat <code>+25%</code> (<code>span / 4</code>) per lane inflates Wikidata RSS to <strong>1.178×</strong> (<code>1,100 KiB</code> per block), breaching our <code>&lt;= 1.05×</code> budget. Worse, it still overflows pathological <code>runs</code> (<code>2.07×</code>) and <code>onebyte</code> (<code>51.8×</code>). Keeping shipped <code>+6.25% + 64 B</code> gives zero Wikidata overflows at <strong>1.0002×</strong> (<code>K = 4</code>) and <strong>1.0010×</strong> (<code>S = 16</code>). Adding <code>4,096 B</code> per lane for in-place tile headroom (<code>+16 KiB</code> per 900 KB block) holds peak RSS at <strong>1.017×</strong> with zero overflows, cleanly inside the <code>&lt;= 1.05×</code> gate.</p>
-<h2 id="4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055">4. Rescuing MTF folding with L1 batching and guard zones (<code>#1048</code>, <code>#1055</code>)<a class="headerlink" href="#4-rescuing-mtf-folding-with-l1-batching-and-guard-zones-1048-1055" title="Permanent link">&para;</a></h2>
-<p>Earlier in the programme, <code>mtf-fold</code> (<code>#1010</code>) tried to remove the 1 MiB <code>runs</code> buffer between <code>A5</code> (<code>runs::front_avx2</code>) and <code>A6a</code> (<code>Open::from_runs</code>). It streamed each run straight into an inline <code>FoldSink</code>. In theory, folding should remove memory traffic. In practice, <a href="https://github.com/lmmx/mibz2/blob/5c57286dffa7c44a2efb88ec1e80c73499f60766/docs/journal/2026-11-27-explore/mtf-fold-and-outq-dissection.md">our cold dissection</a> (<code>#1048</code>) caught that direct folding <strong>regressed</strong> <code>A5 + A6a</code>. Baseline ran <strong>+1.61%</strong> slower across all seven repeats, and native ran <strong>+4.33%</strong> slower.</p>
-<h3 id="why-direct-folding-regressed">Why direct folding regressed<a class="headerlink" href="#why-direct-folding-regressed" title="Permanent link">&para;</a></h3>
-<p>Disassembling <code>runs::front_avx2</code> exposed three compounding costs hidden inside the hot loop:</p>
-<ol>
-<li><strong>Register exhaustion (15 live x86-64 GPRs).</strong> Standalone <code>runs::front_avx2</code> is a tight 22-instruction loop that already occupies all 15 general-purpose registers. On baseline, inlining <code>FoldSink + Pass::take + OutQ16</code> spilled the <code>sink</code> pointer (reloaded 10 times per literal) plus seven GPRs. On native, it spilled the hot MTF-front registers <code>f0</code> and <code>f1</code> on every literal.</li>
-<li><strong>Zero-hit dead check.</strong> Direct folding ran a <code>c == self.c</code> merge check on every emitted run that triggered <strong>0 times in 15,141,602 runs</strong>.</li>
-<li><strong>Tail-overrun <code>push_slow</code> storm and <code>vzeroupper</code>.</strong> <code>OutQ16</code> called <code>push_slow</code> <strong>417,041 times</strong> across 233 Wikidata blocks. <strong>84.3%</strong> of those calls (<code>351,722</code>) were pure end-of-chunk <code>f + 16 &gt; 512</code> tail-overrun guards, not genuine thick-strip overflows. On baseline x86-64, every cold call across the AVX2 boundary also paid <code>vzeroupper</code>.</li>
-</ol>
-<h3 id="the-two-part-rescue-1055">The two-part rescue (<code>#1055</code>)<a class="headerlink" href="#the-two-part-rescue-1055" title="Permanent link">&para;</a></h3>
-<p><a href="https://github.com/lmmx/mibz2/blob/3a2b770282ce2e56c52f7e74380b599eaac8face/docs/journal/2026-11-27-explore/mtf-l1-batch-rescue-probe.md">The L1-batch rescue probe</a> (<code>#1055</code>) fixed both halves together:</p>
-<ul>
-<li><strong>L1d-resident <code>[u32; 512]</code> packed run batch (2 KiB).</strong> <code>front_avx2</code> stays completely decoupled, emitting packed maximal runs <code>(c &lt;&lt; 24) | total</code> into a 2 KiB L1d stack buffer with <code>second_cold</code> kept out of line. That produces a 24-instruction hot loop with <strong>zero <code>f0</code>/<code>f1</code>/GPR spills and zero <code>vzeroupper</code></strong>. When the 512-run batch fills, <code>flush_batch_direct</code> consumes it from L1d with <code>m</code>, <code>in_out</code> and <code>f.runs</code> hoisted in registers.</li>
-<li><strong>Power-of-2 <code>OutQ16</code> guard zone (<code>496 / 512</code>).</strong> Reserving 16 guard slots at the end of each 1,024-byte chunk (<code>CHUNK = 496</code>, <code>STRIDE = 512</code>) lets the 16-wide SIMD write land unconditionally until <code>f &gt;= 496</code>. That cuts <code>push_slow</code> calls <strong>6.22×</strong> (<code>417,041 → 67,001</code>), driving <code>tail_guard</code> and <code>ovf_chunks</code> to <strong>zero</strong> with zero <code>A6c</code> readback regression.</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th><code>A5 + A6a</code> arm (233 Wikidata Open blocks)</th>
-<th style="text-align: right;">Base CPU (ms)</th>
-<th style="text-align: right;">Base ratio</th>
-<th style="text-align: right;">Native CPU (ms)</th>
-<th style="text-align: right;">Native ratio</th>
-<th style="text-align: right;">Modeled i9 1W Δ (base / nat)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>shipped_two_pass</code> (1 MiB <code>runs</code> vec)</td>
-<td style="text-align: right;">188.79</td>
-<td style="text-align: right;">1.0000×</td>
-<td style="text-align: right;">187.58</td>
-<td style="text-align: right;">1.0000×</td>
-<td style="text-align: right;">0.0 / 0.0 ms</td>
-</tr>
-<tr>
-<td><code>direct_fold_1010</code> (<code>#1010</code> regression)</td>
-<td style="text-align: right;">191.83</td>
-<td style="text-align: right;">1.0161×</td>
-<td style="text-align: right;">195.70</td>
-<td style="text-align: right;">1.0433×</td>
-<td style="text-align: right;">−5.4 / −14.4 ms</td>
-</tr>
-<tr>
-<td><code>l1_batch_512_only</code> (no guard zone)</td>
-<td style="text-align: right;">176.95</td>
-<td style="text-align: right;">0.9373×</td>
-<td style="text-align: right;">162.80</td>
-<td style="text-align: right;">0.8679×</td>
-<td style="text-align: right;">+20.9 / +44.0 ms</td>
-</tr>
-<tr>
-<td><code>l1_batch_512_guard496</code> (<strong>PASS</strong>)</td>
-<td style="text-align: right;"><strong>166.88</strong></td>
-<td style="text-align: right;"><strong>0.8793×</strong></td>
-<td style="text-align: right;"><strong>151.41</strong></td>
-<td style="text-align: right;"><strong>0.8087×</strong></td>
-<td style="text-align: right;"><strong>+40.2 / +63.6 ms</strong></td>
-</tr>
-</tbody>
-</table>
-<p><em>(Diagnostic VM medians of steal-free thread CPU across 7 interleaved repeats; 100% bit-exact output and disjoint spreads on both builds. Both halves are required. L1d batching alone reaches only +1.60% 1W on baseline, below the 2.5% gate. Adding <code>guard496</code> clears +3.08% baseline and +4.87% native, or +5.7 to +9.1 ms/worker at 8W.)</em></p>
-<h2 id="5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056">5. Closing the loop to 6 GB/s with slack-only hybrid scanning (<code>#1056</code>)<a class="headerlink" href="#5-closing-the-loop-to-6-gbs-with-slack-only-hybrid-scanning-1056" title="Permanent link">&para;</a></h2>
-<p>Stacking the four worker wins (<code>#1046</code>, <code>#1057</code>, <code>#1045</code> and <code>#1055</code>) pulls per-worker compute <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor (<span class="arithmatex">\(S' \approx 145\text{–}150\text{ ms}\)</span> on the i9-10900K). At that point, the serial scanner caps throughput around 150.9 ms (5.56 GB/s). Workers sit idle in <code>job_wait</code> for <strong>10.9 to 20.4 ms/worker</strong>.</p>
-<p>Our earlier pooled-scan prototype (<code>#942</code>) tried to break that ceiling by having workers scan unconditionally. It failed because helper scanning stole cycles below the knee (<code>1.105×–1.149×</code> slower at <code>k = 6..7</code>). It also paid 5.27 ms of <code>pool_copy</code> overhead plus 4.82 ms of candidate finding.</p>
-<p><a href="https://github.com/lmmx/mibz2/blob/72286cff15a6048c801def3549df86875806c5fb/docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md">The slack-only hybrid scan study</a> (<code>#1056</code>) replayed <code>src/parallel.rs</code> deterministically against primary i9-10900K traces (<code>character-stage1</code> <code>r0..r3</code> and <code>pooled-scan</code> <code>c71c4a56</code>). It found that <strong>63.1% to 70.2%</strong> of post-worker <code>job_wait</code> idle time arrives in continuous bursts at least one full-block scan wide.</p>
-<h3 id="the-realized-8-worker-wall-time-law">The realized 8-worker wall-time law<a class="headerlink" href="#the-realized-8-worker-wall-time-law" title="Permanent link">&para;</a></h3>
-<p>Workers drain <code>job_queue</code> at priority 1. Only when <code>job_queue</code> is empty do they pull speculative scan candidates at priority 2. That lets the serial scanner and eight workers share scanning at 9-way capacity:</p>
-<div class="arithmatex">\[\text{wall}_{8\text{W}} \approx \frac{8 \cdot (W'/8) + S'}{9} + 4.85\text{ ms}\]</div>
-<p>The <code>4.85 ms</code> coupling residual breaks into <code>2.62 ms</code> startup, <code>1.15 ms</code> validated handoff residual and <code>0.83–1.18 ms</code> scheduling and drain tail. Using a smaller initial chunk 0 drops <code>in_wait</code> to <code>0.05 ms</code> and trims the residual to <strong>+3.50 ms</strong>.</p>
-<p>Breaking <strong>6 GB/s</strong> (<span class="arithmatex">\(\le 140.0\text{ ms}\)</span>) at <span class="arithmatex">\(S' = 145\text{ ms}\)</span> requires <span class="arithmatex">\(W'/8 \le 133.9\text{ ms}\)</span>, or <span class="arithmatex">\(\le 135.4\text{ ms}\)</span> with small chunk 0. With L1-batched MTF (<code>W'/8 = 125 ms</code>), eight-worker wall time reaches <strong>131.82 ms (6.36 GB/s)</strong>. That clears the 6 GB/s target with <strong>+8.18 ms</strong> to spare.</p>
-<figure class="bf-fig">
-<div class="bf-title">Coupled eight-worker wall time on wikidata ×4 (839 MB): trace-replay trajectory across the 6 GB/s line</div>
-<svg viewBox="0 0 640 270" role="img" aria-label="Horizontal bar chart of coupled 8-worker wall time on 839 MB wikidata x4 against the 140 ms (6 GB/s) target line: shipped mibz2 is 194.6 ms (4.31 GB/s); worker stack with serial scan hits 150.9 ms ceiling (5.56 GB/s); slack-only hybrid without MTF fold reaches 141.1 ms (139.7 ms small chunk 0); slack-only hybrid with MTF fold reaches 131.8 ms (6.36 GB/s). Bottom comparison shows k=6 non-regression at 0.998x vs killed pooled-scan at 1.105x.">
-  <line class="bf-rule" x1="192" y1="20" x2="192" y2="162"/>
-  <line class="bf-grid" x1="292" y1="20" x2="292" y2="162"/>
-  <line class="bf-grid" x1="392" y1="20" x2="392" y2="162"/>
-  <line class="bf-grid" x1="492" y1="20" x2="492" y2="162"/>
-  <line class="bf-grid" x1="592" y1="20" x2="592" y2="162"/>
-
-  <!-- 140 ms = 6 GB/s vertical dashed target line: x = 192 + 140 * 2.0 = 472 -->
-  <line x1="472" y1="14" x2="472" y2="168" style="stroke:var(--bf-green);stroke-width:2;stroke-dasharray:5 3"/>
-  <text class="bf-t-green" style="font-size:10.5px" x="477" y="25">6 GB/s (140 ms)</text>
-
-  <!-- Bars (scale: 2.0 px per ms, 0..200 ms -> 192..592) -->
-  <text class="bf-tm" x="184" y="47" text-anchor="end">Shipped mibz2 (i9 meas.)</text>
-  <rect x="192" y="34" width="389.2" height="18" rx="2" fill="var(--bf-vz-2)"/>
-  <text class="bf-ttiny" x="386" y="47" text-anchor="middle" style="fill:var(--bf-vz-2-ink)">194.6 ms · 4.31 GB/s</text>
-
-  <text class="bf-tm" x="184" y="77" text-anchor="end">Workers + serial scan (S'=145)</text>
-  <rect x="192" y="64" width="301.8" height="18" rx="2" fill="var(--bf-vz-1)"/>
-  <text class="bf-ttiny" x="342" y="77" text-anchor="middle" style="fill:var(--bf-vz-1-ink)">150.9 ms · 5.56 GB/s</text>
-
-  <text class="bf-tm" x="184" y="107" text-anchor="end">Slack hybrid, no MTF fold</text>
-  <rect x="192" y="94" width="282.2" height="18" rx="2" fill="var(--bf-vz-1)" opacity="0.72"/>
-  <text class="bf-ttiny" x="480" y="107">141.1 ms (139.7 small c0)</text>
-
-  <text class="bf-t-strong" style="font-size:11px" x="184" y="137" text-anchor="end">Slack hybrid + MTF fold</text>
-  <rect x="192" y="124" width="263.6" height="18" rx="2" fill="var(--bf-green)"/>
-  <text class="bf-ttiny" x="323" y="137" text-anchor="middle" style="fill:var(--bf-vz-3-ink)">131.8 ms · 6.36 GB/s</text>
-
-  <!-- Axis labels -->
-  <text class="bf-tm" x="192" y="178" text-anchor="middle">0</text>
-  <text class="bf-tm" x="292" y="178" text-anchor="middle">50</text>
-  <text class="bf-tm" x="392" y="178" text-anchor="middle">100</text>
-  <text class="bf-tm" x="492" y="178" text-anchor="middle">150</text>
-  <text class="bf-tm" x="592" y="178" text-anchor="middle">200 ms</text>
-
-  <!-- Bottom strip: k=6 non-regression guard -->
-  <line class="bf-rule" x1="18" y1="194" x2="622" y2="194"/>
-  <text class="bf-t-strong" style="font-size:10.5px" x="18" y="210">BELOW-THE-KNEE GUARD (k = 6 WORKERS, RATIO VS SERIAL SCAN; 1.000× = PARITY)</text>
-  <text class="bf-tm" x="184" y="230" text-anchor="end">Killed pooled-scan (#942 P)</text>
-  <rect x="192" y="219" width="221.0" height="14" rx="2" fill="var(--bf-vz-s5)"/>
-  <text class="bf-tm" x="420" y="230">1.105× (regressed +10.5%)</text>
-
-  <text class="bf-t-strong" style="font-size:10.5px" x="184" y="252" text-anchor="end">Slack-only hybrid (#1056)</text>
-  <rect x="192" y="241" width="199.6" height="14" rx="2" fill="var(--bf-green)"/>
-  <text class="bf-t-green" style="font-size:10.5px" x="399" y="252">0.998× (3–4 helper blocks, 0.5–0.7 ms)</text>
-</svg>
-<figcaption>Source: <code>docs/journal/2026-11-27-explore/slack-hybrid-scan-feasibility.md</code> (#1056). Shipped baseline is directly measured on the 10-core i9-10900K; post-worker and hybrid bars are discrete-event replays of <code>src/parallel.rs</code> driven by primary i9 traces at <code>S' = 145 ms</code> and <code>W'/8 = 135 ms</code> (no fold) or <code>125 ms</code> (with L1-batched MTF).</figcaption>
+<figure class="bf-fig" id="peak">
+<p class="bf-title">Peak memory decoding 2 GiB of zeros from a 1,522-byte file</p>
+<!-- fig:peak -->
+<svg viewBox="0 0 720 300" role="img" aria-label="Peak memory decoding 2 GiB of zeros compressed to 1,522 bytes, before and after the fix. Four workers with 8 slots: 589 to 545 MiB. With 16 slots: 811 to 545. With 32 slots: 1,118 to 545. Eight workers with 32 slots: 1,528 to 955."><line x1="170.0" y1="28" x2="170.0" y2="252" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="170.0" y="268" text-anchor="middle" style="font-size:11.5px">0</text><line x1="297.5" y1="28" x2="297.5" y2="252" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="297.5" y="268" text-anchor="middle" style="font-size:11.5px">400</text><line x1="425.0" y1="28" x2="425.0" y2="252" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="425.0" y="268" text-anchor="middle" style="font-size:11.5px">800</text><line x1="552.5" y1="28" x2="552.5" y2="252" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="552.5" y="268" text-anchor="middle" style="font-size:11.5px">1,200</text><line x1="680.0" y1="28" x2="680.0" y2="252" style="stroke:var(--bf-vz-grid);stroke-width:1"/><text class="bf-tm" x="680.0" y="268" text-anchor="middle" style="font-size:11.5px">1,600</text><text class="bf-tm" x="425.0" y="288" text-anchor="middle" style="font-size:11.5px">peak memory (MiB)</text><text class="bf-t" x="160" y="65" text-anchor="end" style="font-size:12.5px">4 workers, 8 slots</text><rect x="170" y="40" width="187.7" height="18" rx="2" style="fill:var(--bf-vz-mid)"><title>4 workers, 8 slots, before: 588.9 MiB</title></rect><text class="bf-tm" x="363.7" y="54" text-anchor="start" style="font-size:12px">589</text><rect x="170" y="62" width="173.8" height="18" rx="2" style="fill:var(--bf-vz-1)"><title>4 workers, 8 slots, after: 545.2 MiB</title></rect><text class="bf-t-strong" x="349.8" y="76" text-anchor="start" style="font-size:12px">545</text><text class="bf-t" x="160" y="121" text-anchor="end" style="font-size:12.5px">4 workers, 16 slots</text><rect x="170" y="96" width="258.4" height="18" rx="2" style="fill:var(--bf-vz-mid)"><title>4 workers, 16 slots, before: 810.6 MiB</title></rect><text class="bf-tm" x="434.4" y="110" text-anchor="start" style="font-size:12px">811</text><rect x="170" y="118" width="173.8" height="18" rx="2" style="fill:var(--bf-vz-1)"><title>4 workers, 16 slots, after: 545.2 MiB</title></rect><text class="bf-t-strong" x="349.8" y="132" text-anchor="start" style="font-size:12px">545</text><text class="bf-t" x="160" y="177" text-anchor="end" style="font-size:12.5px">4 workers, 32 slots</text><rect x="170" y="152" width="356.3" height="18" rx="2" style="fill:var(--bf-vz-mid)"><title>4 workers, 32 slots, before: 1,117.9 MiB</title></rect><text class="bf-tm" x="532.3" y="166" text-anchor="start" style="font-size:12px">1,118</text><rect x="170" y="174" width="173.8" height="18" rx="2" style="fill:var(--bf-vz-1)"><title>4 workers, 32 slots, after: 545.4 MiB</title></rect><text class="bf-t-strong" x="349.8" y="188" text-anchor="start" style="font-size:12px">545</text><text class="bf-t" x="160" y="233" text-anchor="end" style="font-size:12.5px">8 workers, 32 slots</text><rect x="170" y="208" width="487.0" height="18" rx="2" style="fill:var(--bf-vz-mid)"><title>8 workers, 32 slots, before: 1,528.0 MiB</title></rect><text class="bf-tm" x="663.0" y="222" text-anchor="start" style="font-size:12px">1,528</text><rect x="170" y="230" width="304.4" height="18" rx="2" style="fill:var(--bf-vz-1)"><title>8 workers, 32 slots, after: 955.1 MiB</title></rect><text class="bf-t-strong" x="480.4" y="244" text-anchor="start" style="font-size:12px">955</text><line x1="170" y1="28" x2="170" y2="252" style="stroke:var(--bf-vz-axis);stroke-width:1"/><rect x="170" y="8" width="14" height="12" rx="2" style="fill:var(--bf-vz-mid)"/><text class="bf-tm" x="190" y="18" text-anchor="start" style="font-size:11.5px">before</text><rect x="250" y="8" width="14" height="12" rx="2" style="fill:var(--bf-vz-1)"/><text class="bf-tm" x="270" y="18" text-anchor="start" style="font-size:11.5px">after</text></svg>
+<figcaption>Before and after the fix, on the same machine in one session, three interleaved repeats
+of each setting. With four workers, memory no longer depends on the window. The machine differs
+from the cloud probe of §2, so the two sets of "before" figures are not directly
+comparable.</figcaption>
 </figure>
 
-<h3 id="zero-plumbing-design-and-below-the-knee-safety">Zero-plumbing design and below-the-knee safety<a class="headerlink" href="#zero-plumbing-design-and-below-the-knee-safety" title="Permanent link">&para;</a></h3>
-<p>Four concrete design choices eliminate every overhead that killed <code>#942</code>:</p>
-<ol>
-<li><strong>Offload AVX2 <code>Finder</code> to the 91.6%-idle reader thread (<code>0.00 ms</code> tax).</strong> Primary <code>per_k.tsv</code> traces show <code>mibz2-read</code> is active for just <strong>12.34 ms</strong> and sleeps in <code>feed_wait</code> for <strong>134.10 ms</strong> at <code>k = 8</code>. Wrapping each read chunk in <code>Arc&lt;Chunk { base, bytes, cands: OnceLock&lt;Vec&lt;Cand&gt;&gt; }&gt;</code> lets <code>mibz2-read</code> push chunk 0 immediately and populate K4's 4.82 ms AVX2 <code>Finder</code> (<code>9.84 GB/s</code>) while waiting on backpressure.</li>
-<li><strong>Eliminate <code>pool_copy</code> by skipping seam blocks (<code>5.27 → 0.00 ms</code>).</strong> Fewer than 0.7% of blocks (11 of 1,724) straddle a 4 MiB chunk boundary. Helpers simply skip seam-straddling candidates and leave them to the serial scanner's existing seam window (<code>#1031</code>).</li>
-<li><strong>Priority-1 decode draining plus <code>full_only</code> filtering.</strong> Helpers touch scan candidates only when <code>job_queue</code> is empty. At <code>k = 6</code>, that runs just <strong>3 to 4 helper blocks</strong> (<code>0.5–0.7 ms</code>). Wall time across <code>k = 6..7</code> stays at <strong>0.997× to 0.999×</strong>, versus <code>#942</code>'s <code>1.105×–1.149×</code>. Filtering <code>gap &gt;= 512 B</code> (<code>full_only</code>) cuts helper handoffs by <strong>−35% to −41%</strong>.</li>
-<li><strong>Policy A jump-ahead scanner and worker-local scratch.</strong> Instead of stalling on speculative validation (<code>#770</code>'s <code>+1.2–2.3 ms</code> <code>serial_wait</code>), the scanner verifies completed helper bit-chains asynchronously and jumps straight past validated blocks. Each worker keeps a thread-local <code>ScanScratch</code> and <code>Vec&lt;u16&gt;</code> (<code>~200 KiB</code>, L2-hot), avoiding cross-core <code>free_syms</code> coherence ping-pong (<code>#1034</code>).</li>
-</ol>
-<h2 id="6-how-the-five-pieces-fit-and-what-builds-next">6. How the five pieces fit and what builds next<a class="headerlink" href="#6-how-the-five-pieces-fit-and-what-builds-next" title="Permanent link">&para;</a></h2>
-<p>Viewed together, the five studies expose a clean architectural stack where each win amplifies the next:</p>
-<table>
-<thead>
-<tr>
-<th>Stage / boundary</th>
-<th>Primary study</th>
-<th>Mechanism</th>
-<th>VM / replay finding</th>
-<th>i9-10900K gate</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>A5 + A6a</code></td>
-<td><code>#1048</code>, <code>#1055</code></td>
-<td>2 KiB L1d run batch + <code>OutQ16</code> 496/512 guard</td>
-<td>−12.1% base / −19.1% native (<code>A5 + A6a</code>)</td>
-<td>≥ 2.5% 1W, 0 <code>A6c</code> regression</td>
-</tr>
-<tr>
-<td><code>A6b</code></td>
-<td><code>#1046</code></td>
-<td>Fused setup + safe 64K SoA + gen-tagged dict</td>
-<td>−27.4%..−28.8% <code>A6b</code>, −5.4%..−7.6% <code>C+E</code></td>
-<td>RSS &amp; 8–10W L3 scaling</td>
-</tr>
-<tr>
-<td><code>A6c + A7</code></td>
-<td><code>#1057</code></td>
-<td>SIMD <code>Reader::wire</code> + <code>S=16</code> bit-31 + 4 lanes</td>
-<td>−31.0%..−35.8% <code>A6c+A7</code> (97.4% of oracle)</td>
-<td>+208..+235 ms 1W, 0 <code>unsafe</code></td>
-</tr>
-<tr>
-<td><code>E + A9</code></td>
-<td><code>#1045</code></td>
-<td>Zero-scratch 4K tiles + 64K CRC + GF(2)</td>
-<td>−53.4% writes, +31.8..+49.9 ms 1W proj.</td>
-<td>Vectored only (no stitch)</td>
-</tr>
-<tr>
-<td>Delivery</td>
-<td><code>#1058</code></td>
-<td>160 B inline <code>ReadyBlock</code>, <code>+16 KiB</code> tile slab</td>
-<td>0.86×–1.01× consumers, RSS 1.017×</td>
-<td>≤ 1.05× RSS, 0 overflows</td>
-</tr>
-<tr>
-<td>8W scan</td>
-<td><code>#1056</code></td>
-<td><code>mibz2-read</code> Finder + slack-only Policy A</td>
-<td>131.8 ms (6.36 GB/s) @ 8W, 0.998× @ 6W</td>
-<td>≥ 6 GB/s @ 8W, ≤ 1.005× @ 6W</td>
-</tr>
-</tbody>
-</table>
-<p>The dependency order for production builds is equally crisp. First, ship the independent worker kernels (<code>a6b-endpoint-build</code>, opt-in <code>forward-emission</code> and <code>mtf-l1-batch-build</code>) alongside the vectored <code>ReadyBlock</code> boundary (<code>#1058</code>). That lets upstream RLE1+CRC fusion (<code>#1045</code>) land without paying stitching's 74.9% copy tax. Second, verify on the 10-core i9-10900K that the worker stack pulls <span class="arithmatex">\(W'/8\)</span> below the post-<code>#1031</code>/<code>#1034</code> serial scan floor. Then enable <code>pooled-scan-hybrid</code> (<code>#1056</code>) to turn newly exposed <code>job_wait</code> slack into 6 GB/s throughput with zero below-the-knee regressions.</p>
+<p>With four workers and thirty-two slots, the decode took half as many page faults as before, about
+140,000 instead of 286,000. It also used 23% less processor time. Fewer fresh pages for the kernel
+to zero is the likely source of most of the 15% saving in elapsed time. At eight workers the
+elapsed time fell by 21%.</p>
+<p>Ordinary input had to decode no slower, a condition fixed before any measurement. Text and a
+sample of the Wikidata dump were decoded at one and four workers, seven times each, and every 95%
+interval included no change. The continuous-integration runner, a Xeon with four CPUs, then ran ten
+paired rounds over the benchmark corpora. At four threads it found the Wikidata sample 2.0%
+faster, with a 95% interval from 0.3% to 3.7%. The rest were within noise but for one small cell,
+random data at four threads, which came out 5.2% slower. That file's whole output is 8 MB, under
+the 12 MiB cap, so neither new check can act on it.</p>
+<h2 id="5-what-it-means-for-a-caller">5. What it means for a caller<a class="headerlink" href="#5-what-it-means-for-a-caller" title="Permanent link">&para;</a></h2>
+<p>A caller of the parallel decoder, from Rust or from Python, chooses how many threads to use. That
+choice also sets how many blocks may be in flight. Until now, it also set the worst-case memory on
+a highly compressible file. A 1,522-byte input could claim more than a gigabyte at an everyday
+setting, and more again with more threads. A file of that kind no longer costs memory in
+proportion to the queue. It costs about two blocks per worker. A wider window can be chosen for
+throughput without enlarging the worst case, and the decode no longer slows itself by faulting in
+memory nobody needs.</p>
+<p>The bound is not the 12 MiB of the cap itself. A block that is being decoded must have somewhere
+to go. Each block within the worker count plus two of the reader may still hold a full decoded
+block of runs, and each worker may keep a spare buffer; 545 MiB at four workers is that floor. A
+decoder that wanted to go lower would have to decode a block of runs in pieces, which is a
+different design.</p>
+<p>The fix is on the master branch and will ship in the next release. It applies to every decoder
+the library builds by default: the pool of workers that each take a whole block, and the teams
+that share one. It changes nothing about their output. The test suite, a fuzzing run and checksums
+of the decoded files all show the same bytes, and the same errors, as before.</p>
+<hr />
+<p><strong>Sources:</strong></p>
+<ul>
+<li>The fix: <a href="https://github.com/lmmx/mibz2/pull/1129">pull request #1129</a>, merged as
+  <a href="https://github.com/lmmx/mibz2/commit/1429f54f74fa718d06d9ecda83f3a876fc9716a9">1429f54f</a>; its
+  measurements in <a href="https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/frontier/deltas/2026-11-27-ready-cap-worker-gate.md">the delta record</a>;
+  the question and its stop test, frozen before data, in
+  <a href="https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/frontier/claims/ready-cap-worker-gate.toml">the claim</a>,
+  admitted in <a href="https://github.com/lmmx/mibz2/pull/1121">pull request #1121</a>; the code in
+  <a href="https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/src/parallel.rs">src/parallel.rs</a>
+  and its tests in <a href="https://github.com/lmmx/mibz2/blob/1429f54f74fa718d06d9ecda83f3a876fc9716a9/src/parallel/plateau_tests.rs">src/parallel/plateau_tests.rs</a>.</li>
+<li>The continuous-integration benchmark: the paired run
+  <a href="https://github.com/lmmx/mibz2/actions/runs/45963424147">45963424147</a>, head a1d9b317 against
+  base 30479058, Intel Xeon 6973P-C, four CPUs, reported on the pull request.</li>
+<li>The problem: <a href="https://github.com/lmmx/mibz2/blob/0b1c0813c1c43a4c0c538103e317dbde3ac5fec8/docs/journal/2026-11-27-explore/expansive-block-memory.md">the memory probe</a>
+  (<a href="https://github.com/lmmx/mibz2/pull/1094">pull request #1094</a>; a four-vCPU Xeon cloud machine),
+  and the <a href="https://github.com/lmmx/mibz2/blob/583e9b83293997aa9bcf24945c15fe9f7938ffb8/docs/journal/2026-11-27-synthesis/eleventh-pass.md">synthesis that raised its priority</a>
+  (<a href="https://github.com/lmmx/mibz2/pull/1103">pull request #1103</a>).</li>
+<li>The pipeline and its admission rule: <a href="../2026-11-25-the-decoder-as-a-queueing-network/">The decoder as a queueing network</a>.</li>
+</ul>
 
 
 
@@ -4415,7 +3886,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2026-11-27-l2-cliff-register-wall-and-scanner-a2/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The 256 KiB L2 cliff and the flipped knee">
+          <a href="../2026-11-27-why-the-scaling-ceiling-moves/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Why compression ratio moves the scaling ceiling">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -4425,20 +3896,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                The 256 KiB L2 cliff and the flipped knee
+                Why compression ratio moves the scaling ceiling
               </div>
             </div>
           </a>
         
         
           
-          <a href="../2026-11-27-reopening-a6b-and-segmented/" class="md-footer__link md-footer__link--next" aria-label="Next: Reopening Open&#x27;s middle and off-Wikidata">
+          <a href="../2026-11-27-faster-decoding-for-ordinary-text/" class="md-footer__link md-footer__link--next" aria-label="Next: Faster decoding for ordinary text">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Reopening Open's middle and off-Wikidata
+                Faster decoding for ordinary text
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4533,21 +4004,21 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/bench.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/blog.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/announce.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/frontier.js?v=4178f9a0191b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/observatory.js?v=4178f9a0191b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=cacf5dee0199"></script>
+        <script src="../../assets/javascripts/katex.js?v=4178f9a0191b"></script>
       
     
   </body>
