@@ -104,6 +104,13 @@ def check_baseline_env(env: dict[str, str] | None = None) -> None:
             raise InvalidRun(f"non-empty {var}={val!r}; registered adoption run requires baseline")
 
 
+def check_no_quota(facts: dict[str, Any]) -> None:
+    """VOID under a CPU quota (registration section 3): `ab env --facts` reports null when unlimited."""
+    quota = facts.get("cpu_quota")
+    if quota is not None:
+        raise InvalidRun(f"registered run requires no CPU quota; cgroup quota is {quota} CPUs")
+
+
 def check_host_i9(out: Path, require_i9: bool = True) -> dict[str, Any]:
     """Record lscpu + affinity and verify unrestricted 10-core / 20-CPU i9-10900K when strict."""
     lscpu_txt = output("lscpu")
@@ -795,6 +802,17 @@ def run_adoption(
     )
 
     if strict_i9:
+        overrides = {
+            "--rounds": rounds,
+            "--settle": settle_s,
+            "--prespin-ms": prespin_ms,
+            "--base-ab": prebuilt_base,
+            "--cand-ab": prebuilt_cand,
+            "--windows-exe": prebuilt_windows,
+        }
+        used = sorted(flag for flag, val in overrides.items() if val is not None)
+        if used:
+            raise InvalidRun(f"registered run takes no overrides; got {', '.join(used)}")
         check_baseline_env()
         if output("git", "status", "--porcelain", "--untracked-files=no"):
             raise InvalidRun("recipe checkout has tracked changes")
@@ -845,6 +863,8 @@ def run_adoption(
         # Record passive env facts via base ab binary.
         env_facts = output(str(bins["base_ab"]), "env", "--facts")
         (out / "env-facts.json").write_text(env_facts + "\n", encoding="utf-8")
+        if strict_i9:
+            check_no_quota(json.loads(env_facts))
 
         all_rows: list[dict[str, Any]] = []
         w_1t = tuple(k for k in eff_w_counts if k == 1)
@@ -968,6 +988,15 @@ def score_dir(out: Path) -> dict[str, Any]:
         for line in (out / "runs.jsonl").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+    registered = (
+        prov.get("strict_i9") is True
+        and int(prov["rounds"]) == ROUNDS
+        and str(prov["settle_s"]) == SETTLE_S
+        and int(prov["prespin_ms"]) == PRESPIN_MS
+        and tuple(prov["wikidata_counts"]) == WIKIDATA_COUNTS
+        and tuple(prov["guard_corpora"]) == GUARD_CORPORA
+        and tuple(prov["guard_counts"]) == GUARD_COUNTS
+    )
     summary = score(
         rows,
         refs,
@@ -979,6 +1008,13 @@ def score_dir(out: Path) -> dict[str, Any]:
         distinct_binaries=bool(bins.get("distinct_binaries", False)),
         host_ok=True,
     )
+    if not registered and summary["verdict"] != "VOID":
+        summary = {
+            **summary,
+            "verdict": "VOID",
+            "reason": "not the registered run (smoke, "
+            "non-i9 host or overridden parameters); diagnostic only: " + summary["reason"],
+        }
     save(out / "summary.json", summary)
     txt = format_summary(summary)
     (out / "summary.txt").write_text(txt, encoding="utf-8")

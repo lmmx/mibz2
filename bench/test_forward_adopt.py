@@ -224,36 +224,67 @@ class IsolationAndWiringTests(unittest.TestCase):
                     prebuilt_windows=bins["windows"],
                 )
 
+    def _write_run_dir(self, out: Path, prov: dict) -> None:
+        rows = make_rows(rounds=int(prov["rounds"]))
+        (out / "provenance.json").write_text(json.dumps(prov))
+        (out / "binaries.json").write_text(
+            json.dumps(
+                {
+                    "base": {"path": "/tmp/base-ab", "sha256": "11" * 32},
+                    "cand": {"path": CAND_EXE, "sha256": "22" * 32},
+                    "distinct_binaries": True,
+                }
+            )
+        )
+        (out / "inputs.json").write_text(json.dumps(REFS))
+        (out / "runs.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+    def registered_prov(self, **changes) -> dict:
+        return {
+            "strict_i9": True,
+            "rounds": fa.ROUNDS,
+            "settle_s": fa.SETTLE_S,
+            "prespin_ms": fa.PRESPIN_MS,
+            "wikidata_counts": list(fa.WIKIDATA_COUNTS),
+            "guard_corpora": list(fa.GUARD_CORPORA),
+            "guard_counts": list(fa.GUARD_COUNTS),
+            **changes,
+        }
+
     def test_score_dir_roundtrip(self):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td)
-            rows = make_rows(rounds=4)
-            (out / "provenance.json").write_text(
-                json.dumps(
-                    {
-                        "rounds": 4,
-                        "wikidata_counts": list(fa.WIKIDATA_COUNTS),
-                        "guard_corpora": list(fa.GUARD_CORPORA),
-                        "guard_counts": list(fa.GUARD_COUNTS),
-                    }
-                )
-            )
-            (out / "binaries.json").write_text(
-                json.dumps(
-                    {
-                        "base": {"path": "/tmp/base-ab", "sha256": "11" * 32},
-                        "cand": {"path": CAND_EXE, "sha256": "22" * 32},
-                        "distinct_binaries": True,
-                    }
-                )
-            )
-            (out / "inputs.json").write_text(json.dumps(REFS))
-            (out / "runs.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+            self._write_run_dir(out, self.registered_prov())
             res = fa.score_dir(out)
             self.assertEqual(res["verdict"], "ADOPT")
             self.assertTrue((out / "summary.json").exists())
             self.assertTrue((out / "summary.txt").exists())
             self.assertTrue((out / "outcome.txt").read_text().startswith("ADOPT:"))
+
+    def test_score_dir_unregistered_run_is_void(self):
+        for changes in (
+            {"strict_i9": False},
+            {"rounds": 4},
+            {"settle_s": "0"},
+            {"prespin_ms": 0},
+        ):
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as td:
+                out = Path(td)
+                self._write_run_dir(out, self.registered_prov(**changes))
+                res = fa.score_dir(out)
+                self.assertEqual(res["verdict"], "VOID")
+                self.assertIn("not the registered run", res["reason"])
+                self.assertTrue((out / "outcome.txt").read_text().startswith("VOID:"))
+
+    def test_quota_is_void(self):
+        fa.check_no_quota({"cpu_quota": None})
+        with self.assertRaises(fa.InvalidRun):
+            fa.check_no_quota({"cpu_quota": 8.0})
+
+    def test_strict_run_refuses_overrides(self):
+        with tempfile.TemporaryDirectory() as td, self.assertRaises(fa.InvalidRun) as ctx:
+            fa.run_adoption(Path(td), rounds=8)
+        self.assertIn("--rounds", str(ctx.exception))
 
     def test_just_recipe_registration_and_defaults(self):
         self.assertEqual(fa.SETTLE_S, "2")
