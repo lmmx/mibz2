@@ -1,0 +1,18 @@
+claim: none
+by: claude-code
+outcome: done
+evidence: PR #1324 at e125ef95fdbf8d4c5797d7d52a4e1c27ef55d5be (base e23d8c76); fix branch review/forward-adopt-rescue-fixes at 474cba46 (one commit on e125ef95); `cargo test --release --locked --features forward-anchor-lanes` at e125ef95 (tree = master bd75fc83 + bench files): all suites ok, lib 218 passed; local 1T RSS spot check, master bd75fc83 ab default vs +forward-anchor-lanes, 5 rounds, 6 guard corpora (`ab gen 1`)
+
+**What was asked:** the one independent C6 review #1324's registration needs before `bench-forward-adopt-rescue` is queued (author antigravity; I am a different agent). I took no hold and wrote nothing to the author's branch.
+**What I found: CHANGES REQUIRED, one small recipe fix (plus one hardening). Design, arms and decision rule are sound.**
+- *Rule against the claim's frozen Clause 3:* every threshold matches: CI upper bounds 0.900 / 0.900 / 0.975 / 0.985 at k = 1/6/8/10; k = 8 also paired median <= 0.960 and CPU GM <= 0.940; guards fail on `t_ci95_lo > 1.020` or paired median > 1.020; RSS paired GM 1.020 at k = 1, 1.030 at k = 6..12, 1.050 on guards. The k = 1 "1.020x (<= +0.5 MiB)" is scored as both (AND), the stricter reading, frozen in §4 before data: accepted.
+- *Arms:* same commit, default vs `--features forward-anchor-lanes`, isolated target dirs, distinct-binary VOID. The feature gates only the OpenCells walk; production enters OpenCells at 6 trimmed threads and on the lazy route from 8, so k = 6 is a live cell (ccfa473f measured 0.865 there), not a null one. #1282 lowering `LAZY_FROM_THREADS` to 4 would not change that.
+- *Integrity:* x4 SHA pinned; hash per timed repeat tied to AB_SHA256 parity; quota, overrides, RUSTFLAGS/profile env, dirty tree, toolchain and topology all VOID a strict run. The earlier review's two fixes on #1257 are carried over.
+- *Required, outcome of a non-strict run:* `run --allow-any-host` (or `--smoke`) wrote a live ADOPT / DO NOT ADOPT to `outcome.txt` and `summary.json`; only `score_dir` marked it VOID. Fix: `mark_unregistered`, shared by both paths.
+- *Hardening:* `score_dir` on a registered directory without `parity.jsonl` silently skipped the timed 64-bit hash check (real `inputs.json` carries no hash). Now VOID.
+- *Fix (tested):* `review/forward-adopt-rescue-fixes` at 474cba46. Three new tests fail without it and pass with it; 19 passed, 38 subtests; ruff check and format clean.
+- *Clause 1 at the queued tree:* CI runs the lanes Miri tests but not `cargo test` with the feature. I ran it at e125ef95: every suite ok. The verdict should cite CI Miri plus this run (or a rerun at the queued commit).
+- *Clause 2's CI bench is vacuous for this feature* (bench.yml builds default features on both arms). The local 1T spot check covers its RSS half: guard median RSS delta -904..+80 KiB, all within "<= 1.010x or <= +0.5 MiB" (text's GM 1.019 is with a -28 KiB median delta: allocator noise). Walls from that check are noise (n = 5, a cargo build running alongside): not evidence.
+**What changed:** this delta and the fix branch. Nothing queued, tagged or merged.
+**What's next:** the holder applies 474cba46 (or an equivalent) to #1324 and merges under the gates; then `ready/bench-forward-adopt-rescue` and the queue entry at the merged commit under the standing authorisation, after checking the queue and `evidence` for an earlier run. On those points the review reads PASS; no second review needed. Prefer queueing before #1282/#1328/#1343 merge, or record which are in the queued base.
+**Caveats:** code reading, unit tests and a VM test run only; no smoke run of the recipe here (the author's smoke at 3214a002 covers build and parity wiring).

@@ -119,18 +119,20 @@ These words are optional shorthand for work, not a conversational interface or a
 
 ## The frontier is itself a hybrid system
 
-The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/decoder-as-hybrid-system.md`). The frontier has the same structure, so the team runs as one rather than having one explained to it:
+The decoder was modelled as a hybrid system (`docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/decoder-as-hybrid-system.md`), $\mathcal{H} = (C, F, D, G)$. The frontier borrows that vocabulary so the team can reason about shared state and guards in the same terms, **not** because the two are the same mathematical object. Following Rosenstiehl and Petitot (1974, p. 62) and [`sensate-backpressure.md`](sensate-backpressure.md), each row below states whether the correspondence is an **identity** (the same mathematical object), a **model** (a mapping with explicit assumptions), or an **analogy** (suggestive; where it breaks). Zero rows are identities:
 
-| hybrid system | the decoder | the frontier |
-|---|---|---|
-| state | blocks, queues, buffers | the files: the claims, the cards, `surface.tsv` |
-| flows (progress between events) | workers decoding | sessions working on a claim |
-| events (discrete jumps) | admit, dispatch, finish, take | claim, delta, release, merge |
-| guards (when an event may fire) | the admission window, the in-order reader | `needs`, leases, frozen stop tests, the merge gates |
-| reset maps (what an event changes) | a block changes owner | a delta updates the surface and opens claims |
-| ownership | a block's owner | `owned_paths` in the striated zone |
+| hybrid system | the decoder | the frontier | kind | assumption or where it breaks |
+|---|---|---|---|---|
+| state | blocks, queues, buffers | the files: the claims, the cards, `surface.tsv` | **analogy** | breaks: shared state also lives outside tracked files (`hold/*`, `frontier-admission`, `wait/*`, GitHub PR/CI state), active session work lives off-repo until pushed, and deltas/claims grow an unbounded archive rather than moving in a fixed finite-dimensional state space |
+| flows (progress between events) | workers decoding | sessions working on a claim | **analogy** | breaks: shared state is static between commits, with no continuous differential inclusion $\dot{x} \in F(x)$ or monotonically decreasing remaining-work coordinate; sessions backtrack, dead-end, or vanish without moving shared state |
+| events (discrete jumps) | admit, dispatch, finish, take | claim, delta, release, merge | **model** | assumes we model only the discrete-event transition skeleton of atomic CAS pushes (`claim`, `renew`, `release`, review transfers) and exact-head merges, dropping continuous flow and abstracting local edits until committed (a delta is not an atomic event until merged) |
+| guards (when an event may fire) | the admission window, the in-order reader | `needs`, leases, frozen stop tests, the merge gates | **model** (partial) | holds for mechanical preconditions (`max_live_holds`, disjoint `owned_paths`, open flags, Git CAS, `check`, `expectedHeadSha`) assuming all writers use the protocol tools; breaks for self-declared or judgemental gates (`needs`, declared identity, judging a `stop_test`, substantive review), which are not computable set-membership predicates $x \in D$ |
+| reset maps (what an event changes) | a block changes owner | a delta updates the surface and opens claims | **analogy** | breaks: a delta's findings, new claims, and surface edits are open-ended creative outputs rather than a pre-specified map $x^+ \in G(x)$ of the prior state; only mechanical lease updates (`claim`/`renew`/`release`) act as fixed reset maps |
+| ownership | a block's owner | `owned_paths` in the striated zone | **model** | cooperative mutual exclusion assuming every writer claims via `frontier.py`, declares accurate `owned_paths`, and runs `verify` before merging; unlike Rust/decoder ownership, Git does not block uncooperative pushes, leases expire by wall-clock TTL, and the smooth zone has no path ownership |
 
-**The structural levers** (`levers.md`) are edited here as files:
+**What this permits and forbids:** design arguments may use discrete-event mutual-exclusion and CAS reasoning for the mechanical hold/merge skeleton, but must not import continuous-flow theorems (such as lifetime bounds $U$, control stability, or differential-inclusion guarantees) from $\mathcal{H} = (C, F, D, G)$.
+
+**The structural levers** (`levers.md`) are edited here by analogy as files:
 - a flow's rate, by who takes what;
 - a guard, by a gate or a lease;
 - a reset, by what a delta must change;

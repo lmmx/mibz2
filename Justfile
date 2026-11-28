@@ -16,6 +16,7 @@ import ".just/clock-modes.just"
 import ".just/forward-adopt.just"
 import ".just/scanner-contention.just"
 import ".just/block-size-route.just"
+import ".just/forward-adopt-rescue.just"
 import ".just/a6b-zero-rss.just"
 
 default: clippy

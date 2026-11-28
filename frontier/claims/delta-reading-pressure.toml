@@ -1,0 +1,24 @@
+id = "delta-reading-pressure"
+title = "A pressure for deltas nobody has read cold"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 3
+status = "idea"
+owned_paths = []
+mechanisms = ["frontier-brief-readings"]
+needs_louis = ""
+question = """
+asoc-autom's brief asks for a cold reading after every pass: a different session goes to the texts and sources the pass cites, not to the pass's own account of them, and says what holds, what does not and what is missing (its AGENTS.md, "reading"; tools/swarm.py sense(), kind "reading"). Should the frontier sense done deltas of kind probe or explore whose evidence nobody else has re-read, as a pressure rather than a gate?
+"""
+why = """
+The recurring synthesise claim connects deltas, but reads them, not their evidence; a mis-stated number propagates into the next synthesis. Independent review is reserved for substantive risk and stays so: this is attraction, not a new gate.
+"""
+stop_test = """
+Decide before building: which deltas qualify (suggested: probe and explore deltas with numeric findings, last 7 days), and the relief (a delta whose `claim` is the read one and whose `by` differs). No change to merge gates.
+"""
+done_when = """
+Admitted and built, or declined with the reason in a delta.
+"""
+premises = ["frontier/tools/frontier.py", "frontier/deltas/README.md", "frontier/sensate-backpressure.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/AGENTS.md"]

@@ -391,6 +391,13 @@
     "section": " · Research blog",
     "title": "How shrinking one thread's scratch memory sped up a different thread"
   },
+  "assets/social/blog-2026-11-28-when-the-virtual-machine-lies.png": {
+    "description": "Cloud benchmarks invert small-block cache behavior and misprice parallel gains, so mibz2 now gates every release on physical hardware.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "When the virtual machine lies: why mibz2 now gates releases on real hardware"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

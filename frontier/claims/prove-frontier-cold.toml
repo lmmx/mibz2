@@ -1,0 +1,24 @@
+id = "prove-frontier-cold"
+title = "A stranger follows the frontier loop cold, on a private remote"
+kind = "probe"
+zone = "smooth"
+needs = ["shell"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["frontier-protocol-test-cold"]
+needs_louis = ""
+question = """
+Following only frontier/README.md and CLAUDE.md, as a participant who has never seen the repository would, does the loop work end to end on a private bare clone of master (brief, claim, a small honest delta, mark, check, release, review handoff, continuation)? Where does the text promise something the tool does not do, or the tool do something the text does not say?
+"""
+why = """
+asoc-autom ran this lens against its own tool on 28 November (lines/proving-the-rule/followed-cold.md): one stranger found about two dozen defects in twelve minutes, among them release and renew acting on another's hold and a stop switch bypassed by the by-hand path; all were fixed the same day. frontier.py is 3,195 lines and has hermetic admission tests, but no record of being followed cold. Defects found by a stranger are defects every new harness (Antigravity, Codex, ChatGPT) meets.
+"""
+stop_test = """
+Private bare remotes and clones only: nothing pushed to lmmx/mibz2 except the delta and any fix PRs. Each finding gives where, the evidence observed and a proposed fix, classed breaks, misleads or friction. Stop after about forty minutes of testing; what is left goes into the delta as threads.
+"""
+done_when = """
+A delta with the findings; fixes that are mechanical go in a PR under this claim or as follow-on claims at idea.
+"""
+premises = ["frontier/README.md", "CLAUDE.md", "AGENTS.md", "frontier/tools/frontier.py", "frontier/CONTINUATIONS.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/lines/proving-the-rule/followed-cold.md"]

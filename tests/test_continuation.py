@@ -834,5 +834,226 @@ class TestViewAfterFreeze(unittest.TestCase):
         self.assertEqual(cont.summarise_checks(runs[::-1][:1], st)[0], "failure")
 
 
+class TestContinuationHardening(unittest.TestCase):
+    """Regression tests for #1386 Defect #9 and #1385 B1/B2/M3/F5."""
+
+    def test_b1_manual_resume_and_non_manual_refusal(self):
+        store = cont.MemoryStore()
+        clock = FakeClock()
+        cont.declare(
+            store,
+            "c1",
+            "hand",
+            "manual:wait for human sign-off",
+            next_text="proceed",
+            by="author-a",
+            independent=True,
+            clock=clock,
+        )
+        # Without --manual, probe keeps it waiting (not-ready)
+        r0 = cont.resume(
+            store,
+            "c1--hand",
+            session="s1",
+            by="peer-b",
+            probe=cont.live_probe,
+            clock=clock,
+        )
+        self.assertEqual(r0.outcome, "not-ready")
+        self.assertIn("--manual", r0.detail)
+        # Independent check still refuses author even with manual=True
+        r_self = cont.resume(
+            store,
+            "c1--hand",
+            session="s1",
+            by="author-a",
+            probe=cont.live_probe,
+            clock=clock,
+            manual=True,
+        )
+        self.assertEqual(r_self.outcome, "refused")
+        # Independent peer acquires with manual=True and sees --session in done hint (M3)
+        r_ok = cont.resume(
+            store,
+            "c1--hand",
+            session="s-peer-1",
+            by="peer-b",
+            probe=cont.live_probe,
+            clock=clock,
+            manual=True,
+        )
+        self.assertEqual(r_ok.outcome, "acquired")
+        self.assertIn("continuation.py done c1--hand --session s-peer-1 --disposition", r_ok.detail)
+        # Non-manual pin refuses manual=True
+        cont.declare(store, "c2", "ci", f"pr:7@{SHA_A}", by="author-a", clock=clock)
+        r_bad = cont.resume(
+            store,
+            "c2--ci",
+            session="s2",
+            by="peer-b",
+            probe=lambda _: obs("waiting"),
+            clock=clock,
+            manual=True,
+        )
+        self.assertEqual(r_bad.outcome, "refused")
+        self.assertIn("manual:", r_bad.detail)
+
+    def test_b2_resume_ttl_bounds(self):
+        store = cont.MemoryStore()
+        clock = FakeClock()
+        cont.declare(store, "c1", "gate", "manual:go", by="a", clock=clock)
+        for bad_ttl in (0, -60, float("nan"), float("inf"), cont.MAX_ACQUIRE_TTL + 1):
+            with self.assertRaises(cont.ContinuationError):
+                cont.resume(
+                    store, "c1--gate", session="s1", by="b", clock=clock, ttl=bad_ttl, manual=True
+                )
+        # Upper boundary succeeds
+        r = cont.resume(
+            store,
+            "c1--gate",
+            session="s1",
+            by="b",
+            clock=clock,
+            ttl=cont.MAX_ACQUIRE_TTL,
+            manual=True,
+        )
+        self.assertEqual(r.outcome, "acquired")
+
+    def test_m3_and_f5_next_step_and_iso_timings(self):
+        store = cont.MemoryStore()
+        clock = FakeClock()
+        cont.declare(store, "c1", "gate", f"pr:1@{SHA_A}", by="a", clock=clock)
+        probe = Script(clock, [(T0, obs("ready", at=T0))])
+        r = cont.resume(store, "c1--gate", session="sess-42", by="peer", probe=probe, clock=clock)
+        self.assertTrue(r.ok)
+        self.assertIn("--session sess-42 --disposition", r.detail)
+        self.assertEqual(cont._format_timing("declared_at", T0), f"{cont.iso(T0)} ({T0})")
+        self.assertEqual(cont._format_timing("ready_to_acquire", 12), "12")
+
+    def test_defect9_malformed_wait_refs_isolated_on_bare_remote(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = pathlib.Path(td)
+            remote = tmp / "remote.git"
+            work = tmp / "work"
+            subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "clone", str(remote), str(work)], check=True, capture_output=True
+            )
+            for args in (
+                ("config", "user.name", "Test"),
+                ("config", "user.email", "t@example.com"),
+            ):
+                subprocess.run(["git", "-C", str(work), *args], check=True, capture_output=True)
+
+            store = cont.GitRefStore(repo=work, remote="origin")
+            cont.declare(store, "good", "ci", "manual:ok", by="a", clock=FakeClock())
+
+            def push_raw(ref, fname, payload: bytes):
+                h = subprocess.run(
+                    ["git", "-C", str(work), "hash-object", "-w", "--stdin"],
+                    input=payload,
+                    capture_output=True,
+                    check=True,
+                )
+                blob = h.stdout.decode().strip()
+                t = subprocess.run(
+                    ["git", "-C", str(work), "mktree"],
+                    input=f"100644 blob {blob}\t{fname}\n",
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                )
+                tree = t.stdout.strip()
+                c = subprocess.run(
+                    ["git", "-C", str(work), "commit-tree", tree, "-m", "raw"],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                )
+                sha = c.stdout.strip()
+                subprocess.run(
+                    ["git", "-C", str(work), "push", "-f", "origin", f"{sha}:{ref}"],
+                    check=True,
+                    capture_output=True,
+                )
+
+            push_raw("refs/heads/wait/bad--toml", "continuation.toml", b"state = [broken\n")
+            push_raw("refs/heads/wait/bad--missing", "other.txt", b"oops\n")
+            push_raw(
+                "refs/heads/wait/bad--utf8", "continuation.toml", b'state = "waiting"\n# \xff\n'
+            )
+            push_raw("refs/heads/wait/bad--empty", "continuation.toml", b"")
+            push_raw(
+                "refs/heads/wait/bad--types",
+                "continuation.toml",
+                (
+                    b'key = "bad--types"\nclaim = "bad"\naction = "types"\n'
+                    b'dep = "manual:x"\nstate = "waiting"\npriority = "high"\n'
+                    b'waiter_session = "w1"\nwaiter_until = "never"\n'
+                ),
+            )
+
+            rows = cont.view(store, clock=FakeClock())
+            by_key = {r["key"]: r for r in rows}
+            self.assertEqual(by_key["good--ci"]["class"], "waiting")
+            for k in ("bad--toml", "bad--missing", "bad--utf8", "bad--empty"):
+                self.assertEqual(by_key[k]["class"], "malformed", k)
+            self.assertEqual(by_key["bad--types"]["class"], "waiting")
+            self.assertEqual(by_key["bad--types"]["priority"], 3)
+
+            # Strict get() on broken refs raises ContinuationError, not raw traceback
+            for k in ("bad--toml", "bad--missing", "bad--utf8"):
+                with self.assertRaises(cont.ContinuationError):
+                    store.get(k)
+
+            # CLI integration: --hours bounds, --manual resume, and ISO show output
+            def run_cli(*args):
+                orig_cls = cont.GitRefStore
+                cont.GitRefStore = lambda repo=work, remote="origin": orig_cls(
+                    repo=work, remote=remote
+                )
+                try:
+                    import io
+                    from contextlib import redirect_stderr, redirect_stdout
+
+                    out, err = io.StringIO(), io.StringIO()
+                    with redirect_stdout(out), redirect_stderr(err):
+                        rc = cont.main(list(args))
+                    return rc, out.getvalue(), err.getvalue()
+                finally:
+                    cont.GitRefStore = orig_cls
+
+            rc_neg, _, err_neg = run_cli(
+                "resume", "good--ci", "--session", "s1", "--by", "peer", "--hours", "-5", "--manual"
+            )
+            self.assertEqual(rc_neg, 2)
+            self.assertIn("--hours", err_neg)
+
+            rc_big, _, err_big = run_cli(
+                "resume",
+                "good--ci",
+                "--session",
+                "s1",
+                "--by",
+                "peer",
+                "--hours",
+                "9999",
+                "--manual",
+            )
+            self.assertEqual(rc_big, 2)
+            self.assertIn("--hours", err_big)
+
+            rc_man, out_man, _ = run_cli(
+                "resume", "good--ci", "--session", "s1", "--by", "peer", "--hours", "1", "--manual"
+            )
+            self.assertEqual(rc_man, 0)
+            self.assertIn("--session s1 --disposition", out_man)
+
+            rc_show, out_show, _ = run_cli("show", "good--ci")
+            self.assertEqual(rc_show, 0)
+            self.assertIn("# declared_at: ", out_show)
+            self.assertIn("Z (", out_show)
+
+
 if __name__ == "__main__":
     unittest.main()

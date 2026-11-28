@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 3
-status = "idea"
+status = "dropped"
 owned_paths = ["src/open.rs"]
 mechanisms = ["block-size-aware-open-admission"]
 needs_louis = ""
@@ -13,6 +13,8 @@ question = """
 """
 why = """
 Every route figure in the frontier prices 900k blocks. Small-block files (bzip2 -1..-3, and tools that pick a low level for speed) take Open everywhere and lose to the fallback that the same worker already holds. On the VM the oracle is -19% of the -1 inverse and -13% at -2, and a two-parameter rule gets -17% and -9%. On the whole -1 file, `Segmented` alone already beats production by 6-19%. It is a cold-path change in `cap`, with no new kernel and no change for wikidata -9. The crossover is a cache property, so the machines it ships on have to set it.
+
+28 Nov 2026 (Step 1 physical i9 calibration, `origin/evidence 7f03816b`, `#1374`): STOP — on the physical i9-10900K (256 KiB L2, 20 MiB L3), no `<400k` row-count bin reached pooled `Open/Seg >= 1.05` (max `1.0321` on `text -1`, matching `text -9` `1.0359`; `wikidata -1` = `1.0149`, `-2` = `0.8795`, `-3` = `0.8457`), and the 2D `(row_bin x r/n_bin)` grid is flat across `100k..900k` rows inside every `r/n` band. Scoped STOP row recorded in `frontier/dead-ends.tsv` (`docs/notebook/2026-11-28-block-size-route-i9-verdict.md`).
 """
 stop_test = """
 Frozen before data:

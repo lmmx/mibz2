@@ -1,0 +1,50 @@
+id = "scanner-post-a3-direct-u8-avx2"
+title = "Post-A3+u8 serial scanner: direct SymBuf write, 4-step overlapped K=1 refill, inline SubLut, and single-write AVX2 K=3 table build"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/block.rs", "src/huff.rs", "src/bits.rs"]
+mechanisms = ["scanner-direct-symbuf-write", "scanner-k1-overlapped-refill", "scanner-inline-sublut", "huff-single-write-avx2-k3-build"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-explore-post-a3-u8-scanner.md` dissected the serial Huffman scanner (`S`) on top of `#1343` (`B=10, K=3` `u8`-chunk) + `#1339` (direct `u8` `SymBuf { bytes: Vec<u8>, pos256: Vec<u32> }`) across all 5 primary/guard corpora (`wikidata`, `text`, `records`, `random`, `runs`; 100% exact on all 7 corpora + bit-identical LUT; `n = 11` alternating pairs on CPU 0 in both `BASE` and `JCC-32B`, `warm1` and `cold32`):
+
+1. **Direct `SymBuf::bytes` write (no `chunk: [u8; 1042]` staging, no `CHUNK_STOP` clamp, no `25 MB` `memcpy`) + fast 1-refill tail:** eliminates redundant byte staging once `SymBuf` is `u8`, reclaiming almost the entire gap to the zero-store floor (`D0_nostore`) in both `warm1` and `cold32`.
+2. **4-step overlapped refill on `!self.multi` (`K=1` tables):** switches `records` and `random` from `#1343`'s 5-step non-overlapped refill to 4-step overlapped refill, hiding `load + bswap + shrx` under Step 3's L1d load (`-12.8%..-18.2%` on `records`/`random`).
+3. **Inline `SubLut` hit (`1.42%` of lookups on `wikidata`, `2.20%` on `text`):** handles `SUB_PTR` hits inline in the cold path (avoiding `#[inline(never)] decode_entry_slow` call overhead, `0 vzeroupper` in every decode kernel).
+4. **Single-write `K=3` + `#[target_feature(enable = "avx2,bmi2")]` table builder (100% safe Rust, gated on `build_pairs && build_triples`):** writes every `lut[0..1024]` entry once with 12 auto-vectorized AVX2 `vpaddd` template-clone loops (strictly outside decode), cutting `Huff::build_into` `-19.8%..-27.4%` on `wikidata` and `-22.9%..-24.9%` on `text` (bit-identical to `#1343`'s LUT).
+
+On the VM (`n = 11`, `JCC-32B cold32` / `BASE warm..cold32`):
+- **100% safe Rust (`G1_safe_sub`, zero new `unsafe`):** `wikidata` `-4.32%` (`-3.55%..-7.62%`), `text` `-6.36%` (`-5.21%..-6.36%`), `records` `-14.31%` (`-12.83%..-17.38%`), `random` `-14.62%` (`-12.88%..-18.21%`), `runs` `-1.23%` (`-1.23%..-2.92%`).
+- **Minimal hoisted-`unsafe` (`G3_ptr_sub`, raw `out_ptr` + hoisted `refill_unchecked`):** `wikidata` `-7.46%` (`-6.17%..-8.69%`), `text` `-7.73%` (`-7.45%..-9.07%` except 1 noisy base-cold32 pair), `records` `-14.45%`, `random` `-13.17%`, `runs` `-6.29%`.
+
+Queued behind `scanner-a3-k3-pipe-u8` and `u8-syms-handover-build`: does composing these four mechanisms on top of `K=3 + SymBuf` (starting with 100% safe `G1_safe_sub`, and evaluating minimal-`unsafe` `G3_ptr_sub` only if justified under Miri) cut physical i9-10900K `mibz2-scan` CPU by `>= 3.5%` and 8W/10T `wikidata-x4` wall by `>= 2.5%` with zero guard regressions?
+"""
+why = """
+After `M5` (`#1362`) makes 8W/10T 100% serial-scanner-bound and `#1368` (`vm-i9-transfer-ledger`) establishes 1:1 (`1.01x-1.05x`) VM->i9 transfer on Station `S`, an additional `-4.3%..-7.5%` off `S` on top of `K=3 + u8` projects `-5.5..-10.0 ms` directly off i9 8W/10T `wikidata-x4` wall (~6.7 -> ~7.0-7.3 GB/s), plus `-5%..-9%` on scanner-bound `text` and `-13%..-18%` on `records`/`random`.
+"""
+stop_test = """
+Frozen before building:
+1. Sequencing & safety: built strictly after `scanner-a3-k3-pipe-u8` and `u8-syms-handover-build` land on `master`. Evaluate 100% safe `G1_safe_sub` first (`#![forbid(unsafe_code)]` preserved in `src/huff.rs`, `#![deny(unsafe_op_in_unsafe_fn)]` in `src/block.rs`); any hoisted-pointer `G3_ptr_sub` variant must pass Miri with 0 UB on all unit + `alpha = 258` + truncated/corrupt edge tests. Disassembly audit must confirm `0 vzeroupper` across `decode_runs_bmi2` (`vzeroupper` allowed strictly inside `build_table_avx2_bmi2`), bit-identical `Huff` LUTs vs 2-pass `build_into`, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, full unit/integration/feature-gate tests, `fuzz-smoke`, and 100% C `libbzip2` SHA-256 parity across all 7 corpora + `wikidata-x4`.
+2. Physical i9-10900K C6 verification (`--settle 2`, dict-safe `check_no_quota`, `n >= 12` paired alternating rounds, fresh processes, `AB_SHA256=1` parity):
+   - `wikidata-x4` serial scanner `mibz2-scan` CPU `<= 0.965x` (`>= 3.5%` reduction, 95% CI strictly `< 0.985`), and 8W or 10T `wikidata-x4` wall `<= 0.975x` (`>= 2.5%` wall win, 95% CI strictly `< 0.995`) with peak RSS `<= 1.010x`.
+   - Guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` across 1T and multi-thread): zero regressions (`wall <= 1.010x`, RSS `<= 1.010x`), with `records`/`random` `mibz2-scan` CPU `<= 0.920x` (`>= 8%` scanner win).
+Otherwise STOP/REVERT and record a scoped dead-end row preserving i9 evidence (C2).
+"""
+done_when = """
+Striated PR on `src/block.rs`, `src/huff.rs`, `src/bits.rs` (after `scanner-a3-k3-pipe-u8` and `u8-syms-handover-build`) merged after passing all safety/Miri/CI gates and physical i9-10900K C6 verification under the frozen stop test, with delta and `frontier/ledger.tsv` entry.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-post-a3-u8-scanner.md",
+  "docs/notebook/2026-11-28-vm-i9-transfer-ledger.md",
+  "docs/notebook/2026-11-28-explore-u8-syms-handover.md",
+  "frontier/claims/scanner-a3-k3-pipe-u8.toml",
+  "frontier/claims/u8-syms-handover-build.toml",
+]
+links = [
+  "frontier/deltas/2026-11-28-explore-post-a3-u8-scanner.md",
+  "frontier/claims/scanner-a3-k3-pipe-u8.toml",
+  "frontier/claims/u8-syms-handover-build.toml",
+]

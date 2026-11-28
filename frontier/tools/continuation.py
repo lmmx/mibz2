@@ -23,7 +23,7 @@ Usage (see frontier/CONTINUATIONS.md):
   continuation.py declare <claim> <action> <dep> [--next TEXT] [--priority N] [--critical]
                   [--independent] --by AGENT
   continuation.py watch <key> --session S --by AGENT [--timeout SEC]   # blocks; exits on change
-  continuation.py resume <key> --session S --by AGENT [--hours H]
+  continuation.py resume <key> --session S --by AGENT [--hours H] [--manual]
   continuation.py done <key> --session S --disposition TEXT
                   [--next-action A --next-dep DEP [--next TEXT]]
   continuation.py view [--can caps] [--probe] [--all]                  # read-only
@@ -39,6 +39,7 @@ import dataclasses
 import datetime as dt
 import importlib.util
 import json
+import math
 import os
 import pathlib
 import re
@@ -62,6 +63,8 @@ KEY_RE = re.compile(rf"({TOKEN})--({TOKEN})")
 TERMINAL = ("done", "superseded", "failed")
 WAITER_TTL = 900  # an active wait is visible this long without renewal
 ACQUIRE_TTL = 1800  # an acquired execution lapses back to ready after this, unless done
+MAX_ACQUIRE_HOURS = 8.0
+MAX_ACQUIRE_TTL = int(MAX_ACQUIRE_HOURS * 3600)
 CLASS_RANK = {
     "ready": 0,
     "waiting": 1,
@@ -70,6 +73,7 @@ CLASS_RANK = {
     "owner-blocked": 3,
     "capability-blocked": 3,
     "failed": 4,
+    "malformed": 5,
     "superseded": 5,
     "done": 6,
 }
@@ -250,13 +254,15 @@ class GitRefStore:
     def _git(self, *args, inp=None, env=None):
         r = subprocess.run(
             ["git", "-C", str(self.repo), *args],
-            input=inp,
+            input=inp.encode("utf-8") if isinstance(inp, str) else inp,
             capture_output=True,
-            text=True,
             env={**os.environ, **(env or {})},
             timeout=60,
         )
-        return r.returncode, r.stdout.strip(), r.stderr.strip()
+        stderr = r.stderr.decode("utf-8", errors="replace").strip()
+        if r.returncode != 0:
+            return r.returncode, r.stdout.decode("utf-8", errors="replace").strip(), stderr
+        return r.returncode, r.stdout.decode("utf-8").strip(), stderr
 
     def _identity(self):
         rc1, name, _ = self._git("config", "--get", "user.name")
@@ -282,7 +288,7 @@ class GitRefStore:
             found[ref] = sha
         return found
 
-    def _read(self, shas):
+    def _read(self, shas, *, tolerate=False):
         need = [s for s in shas if self._git("cat-file", "-e", f"{s}^{{commit}}")[0]]
         if need:
             rc, _, err = self._git(
@@ -292,10 +298,32 @@ class GitRefStore:
                 raise ContinuationError(f"cannot fetch continuation state: {err}")
         out = {}
         for s in shas:
-            rc, body, err = self._git("show", f"{s}:{RECORD_FILE}")
-            if rc:
-                raise ContinuationError(f"unreadable continuation {s[:8]}: {err}")
-            out[s] = tomllib.loads(body)
+            try:
+                rc, body, err = self._git("show", f"{s}:{RECORD_FILE}")
+                if rc:
+                    msg = f"unreadable continuation {s[:8]}: {err}"
+                    if tolerate:
+                        out[s] = {"state": "malformed", "_error": msg}
+                        continue
+                    raise ContinuationError(msg)
+                rec = tomllib.loads(body)
+            except (tomllib.TOMLDecodeError, UnicodeDecodeError, ValueError) as exc:
+                msg = f"malformed continuation {s[:8]}: {exc}"
+                if tolerate:
+                    out[s] = {"state": "malformed", "_error": msg}
+                    continue
+                raise ContinuationError(msg) from exc
+            if tolerate and (
+                not isinstance(rec, dict)
+                or not isinstance(rec.get("state"), str)
+                or not isinstance(rec.get("dep"), str)
+            ):
+                out[s] = {
+                    "state": "malformed",
+                    "_error": f"malformed continuation {s[:8]}: missing required state/dep fields",
+                }
+                continue
+            out[s] = rec
         return out
 
     def get(self, key):
@@ -309,7 +337,7 @@ class GitRefStore:
     def list(self):
         """Every continuation as {key: (token, record)}."""
         refs = self._remote_refs(WAIT_PREFIX + "*")
-        recs = self._read(list(refs.values())) if refs else {}
+        recs = self._read(list(refs.values()), tolerate=True) if refs else {}
         return {ref.removeprefix(WAIT_PREFIX): (sha, recs[sha]) for ref, sha in refs.items()}
 
     def cas(self, key, expected, record):
@@ -383,14 +411,19 @@ def declare(
     return key
 
 
+def _safe_int(value, default=0):
+    """Return `value` if it is a strict int (not bool), else `default`."""
+    return value if type(value) is int else default
+
+
 def waiter_live(rec, t):
     """Whether a live session is actively waiting on this record."""
-    return bool(rec.get("waiter_session")) and int(rec.get("waiter_until", 0)) > t
+    return bool(rec.get("waiter_session")) and _safe_int(rec.get("waiter_until"), 0) > t
 
 
 def acquired_live(rec, t):
     """Whether a peer's execution acquisition is still in force."""
-    return rec.get("state") == "acquired" and int(rec.get("acquired_until", 0)) > t
+    return rec.get("state") == "acquired" and _safe_int(rec.get("acquired_until"), 0) > t
 
 
 def acquire_waiter(store, key, session, holder, clock, ttl=WAITER_TTL):
@@ -514,19 +547,24 @@ def watch(
     )
 
 
-def _next_step(rec, by):
+def _next_step(rec, by, session):
     nxt = rec.get("next") or "(see the claim's runbook)"
     return (
         f"acquired {rec['key']}. Next: {nxt}. Take the ordinary reservation before acting: "
         f"python3 frontier/tools/frontier.py claim {rec['claim']} --by {by} (or take-review for "
         "a review handoff), then frontier.py verify before anything consequential. Ready means "
         "the pinned dependency is observable, not that it passed: read and judge it, then record "
-        f"`continuation.py done {rec['key']} --disposition ...`."
+        f"`continuation.py done {rec['key']} --session {session} --disposition ...`."
     )
 
 
-def resume(store, key, *, session, by, probe=None, clock=None, ttl=ACQUIRE_TTL):
+def resume(store, key, *, session, by, probe=None, clock=None, ttl=ACQUIRE_TTL, manual=False):
     """Acquire execution of a ready continuation (one peer wins); revalidate its pin first."""
+    if type(ttl) not in (int, float) or not math.isfinite(ttl) or ttl <= 0 or ttl > MAX_ACQUIRE_TTL:
+        raise ContinuationError(
+            f"resume ttl must be finite and in (0, {MAX_ACQUIRE_TTL}] seconds (0 < --hours <= {MAX_ACQUIRE_HOURS:g})"
+        )
+    ttl = int(ttl)
     clock = clock or SystemClock()
     for _ in range(4):
         tok, rec = store.get(key)
@@ -545,8 +583,19 @@ def resume(store, key, *, session, by, probe=None, clock=None, ttl=ACQUIRE_TTL):
             )
         if rec.get("independent") and by == rec.get("by"):
             return Result("refused", f"{key} needs an agent other than its author {by}", 0, rec)
-        if probe is not None:
-            o = probe(parse_dep(rec["dep"]))
+        dep = parse_dep(rec["dep"])
+        if manual:
+            if dep[0] != "manual":
+                return Result(
+                    "refused",
+                    f"--manual only applies to manual: pins, not {rec['dep']}",
+                    0,
+                    rec,
+                )
+            rec.setdefault("ready_observed", t)
+            rec["last_detail"] = f"resumed manually by {by}"
+        elif probe is not None:
+            o = probe(dep)
             if o.state in ("failed", "superseded"):
                 _apply(rec, o, t)
                 store.cas(key, tok, rec)
@@ -562,7 +611,7 @@ def resume(store, key, *, session, by, probe=None, clock=None, ttl=ACQUIRE_TTL):
         rec.update(acquired_at=t, acquired_by=by, acquired_session=session, acquired_until=t + ttl)
         ok, _ = store.cas(key, tok, rec)
         if ok:
-            return Result("acquired", _next_step(rec, by), 0, rec)
+            return Result("acquired", _next_step(rec, by, session), 0, rec)
     return Result("held", "contended", 0, store.get(key)[1])
 
 
@@ -622,7 +671,9 @@ def timings(rec):
     nxt = rec.get("next_started_at")
 
     def d(a, b):
-        return None if a is None or b is None else int(b) - int(a)
+        if type(a) is not int or type(b) is not int:
+            return None
+        return b - a
 
     return {
         "declared_at": rec.get("declared_at"),
@@ -650,6 +701,22 @@ def view(store, *, clock=None, claims=None, holds=None, can=None, probe=None, in
     rows = []
     for key, (_, rec) in store.list().items():
         state = rec.get("state", "unknown")
+        if state == "malformed" or rec.get("_error"):
+            rows.append(
+                {
+                    "key": key,
+                    "class": "malformed",
+                    "claim": rec.get("claim"),
+                    "action": rec.get("action"),
+                    "dep": rec.get("dep"),
+                    "critical": False,
+                    "priority": 9,
+                    "since": 0,
+                    "detail": rec.get("_error", "malformed continuation"),
+                    "next": "",
+                }
+            )
+            continue
         cls, detail = state, rec.get("last_detail", "")
         c = claims.get(rec.get("claim"), {})
         h = holds.get(rec.get("claim"))
@@ -689,8 +756,9 @@ def view(store, *, clock=None, claims=None, holds=None, can=None, probe=None, in
             detail = (detail + "; " if detail else "") + f"watched by {rec.get('waiter_holder')}"
         if cls == "done" and not include_done:
             continue
-        prio = min(int(rec.get("priority", 3)), int(c.get("priority", 9)))
+        prio = min(_safe_int(rec.get("priority"), 3), _safe_int(c.get("priority"), 9))
         tm = timings(rec)
+        since_val = tm["ready_at"] if tm["ready_at"] is not None else rec.get("declared_at", 0)
         rows.append(
             {
                 "key": key,
@@ -700,9 +768,7 @@ def view(store, *, clock=None, claims=None, holds=None, can=None, probe=None, in
                 "dep": rec.get("dep"),
                 "critical": bool(rec.get("critical")),
                 "priority": prio,
-                "since": tm["ready_at"]
-                if tm["ready_at"] is not None
-                else rec.get("declared_at", 0),
+                "since": _safe_int(since_val, 0),
                 "detail": detail,
                 "next": rec.get("next", ""),
             }
@@ -937,7 +1003,9 @@ def live_probe(dep):
             if h and fr.live(h[1]):
                 return Observation("waiting", detail=f"held by {h[1].get('holder')}")
             return Observation("ready", None, f"no live hold on {a['claim']}")
-        return Observation("waiting", detail=f"manual: {a.get('text', '')}; resume by hand")
+        return Observation(
+            "waiting", detail=f"manual: {a.get('text', '')}; resume by hand with --manual"
+        )
     except SystemExit as exc:
         return Observation("unknown", detail=str(exc))
     except Exception as exc:
@@ -981,6 +1049,22 @@ EXIT = {
     "missing": 17,
     "done": 0,
 }
+
+_EPOCH_KEYS = {
+    "declared_at",
+    "ready_at",
+    "ready_observed",
+    "acquired_at",
+    "disposed_at",
+    "next_started_at",
+}
+
+
+def _format_timing(key, val):
+    """Render epoch timestamps as ISO-8601 alongside the raw epoch second."""
+    if key in _EPOCH_KEYS and type(val) is int:
+        return f"{iso(val)} ({val})"
+    return str(val)
 
 
 def _print_result(r):
@@ -1029,6 +1113,11 @@ def main(argv=None):
     r.add_argument("--session", required=True)
     r.add_argument("--by", required=True)
     r.add_argument("--hours", type=float, default=ACQUIRE_TTL / 3600)
+    r.add_argument(
+        "--manual",
+        action="store_true",
+        help="explicitly resume a manual:<text> pin by hand",
+    )
     f = sub.add_parser("done")
     f.add_argument("key")
     f.add_argument("--session", required=True)
@@ -1076,6 +1165,11 @@ def main(argv=None):
                 )
             )
         if a.cmd == "resume":
+            if not math.isfinite(a.hours) or a.hours <= 0 or a.hours > MAX_ACQUIRE_HOURS:
+                raise ContinuationError(
+                    f"--hours must be finite and in (0, {MAX_ACQUIRE_HOURS:g}], got {a.hours!r}"
+                )
+            ttl = max(1, int(round(a.hours * 3600)))
             return _print_result(
                 resume(
                     store,
@@ -1083,7 +1177,8 @@ def main(argv=None):
                     session=a.session,
                     by=a.by,
                     probe=live_probe,
-                    ttl=int(a.hours * 3600),
+                    ttl=ttl,
+                    manual=a.manual,
                 )
             )
         if a.cmd == "done":
@@ -1121,7 +1216,7 @@ def main(argv=None):
             print(dump_record(rec), end="")
             print(f"# token {tok}")
             for k, val in timings(rec).items():
-                print(f"# {k}: {val}")
+                print(f"# {k}: {_format_timing(k, val)}")
             return 0
     except ContinuationError as exc:
         print(f"refused: {exc}", file=sys.stderr)
