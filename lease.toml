@@ -1,9 +1,9 @@
-id = "plan-schedule-and-lazy-threshold"
+id = "rss-bound-calibration"
 holder = "antigravity"
-session = "680e219ff5fb"
-claimed_at = "2026-11-28T01:04:47+00:00"
-expires = "2026-11-28T09:04:47+00:00"
-owned_paths = ["src/parallel.rs"]
-mechanisms = ["plan-schedule", "lazy-threshold", "window-scaling"]
-base = "ab47049b7a92ef81b4f15dac0ff178055e34a5fe"
+session = "9d2c42f899c9"
+claimed_at = "2026-11-28T01:11:53+00:00"
+expires = "2026-11-28T09:11:53+00:00"
+owned_paths = []
+mechanisms = ["evidence-method"]
+base = "3715f0e5e21508a1d8f3487fcbb60e709e071de0"
 released = false
