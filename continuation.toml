@@ -11,4 +11,4 @@ priority = 1
 state = "waiting"
 waiter_holder = "claude-code"
 waiter_session = "w6"
-waiter_until = 1795868886
+waiter_until = 1795869381
