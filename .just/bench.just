@@ -2154,6 +2154,30 @@ bench-scanner-a2-fast:
     trap finish EXIT
     python3 bench/scanner_a2_fast.py "$out"
 
+# Frozen adoption run for the three-symbol A3 scanner decode against its master parent (C6;
+# docs/journal/2026-11-28-scanner-a3-k3/registration.md).
+bench-scanner-a3-k3:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export RUSTUP_TOOLCHAIN=1.99.1
+    parent="$PWD/target/scanner-a3-k3"
+    mkdir -p "$parent"
+    out="$parent/run-$(date -u +%Y%m%dT%H%M%SZ)"
+    mkdir "$out"
+    exec 3>&1 4>&2
+    exec > >(tee -a "$out/console.log") 2>&1
+    logger=$!
+    finish() {
+      rc=$?
+      if [[ ! -s "$out/outcome.txt" ]]; then echo "INCOMPLETE (exit $rc)" > "$out/outcome.txt"; fi
+      exec 1>&3 2>&4
+      wait "$logger" || rc=1
+      bash bench/bundle.sh "$out" || rc=1
+      exit "$rc"
+    }
+    trap finish EXIT
+    python3 bench/scanner_a3_k3.py "$out"
+
 # Frozen adoption study: baseline x86-64 + JCC-32B alignment vs default (C6).
 bench-jcc-aligned-release:
     #!/usr/bin/env bash
