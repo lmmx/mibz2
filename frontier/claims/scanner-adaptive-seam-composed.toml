@@ -1,0 +1,31 @@
+id = "scanner-adaptive-seam-composed"
+title = "Re-test the adaptive lookahead and one-shot seam window (PR #1144 code) composed with the forward lanes, where 8-worker Wikidata is scanner-bound"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/stream.rs", "src/parallel.rs", "src/trace.rs"]
+mechanisms = ["scanner-adaptive-lookahead", "scanner-oneshot-seam"]
+needs_louis = ""
+question = """
+PR #1144's adaptive 16-block-peak lookahead and one-shot seam window removed 96% of the scanner's window maintenance on the i9 (traced in_maint 10.358 -> 0.413 ms at 8 workers) and cut peak RSS 7-9% at every count, with the same bytes. It was NOT ADOPTED only because both judged counts (10T, 12T) run 8 workers, where Wikidata is worker-bound on today's decoder; it was FASTER (0.966 [0.943, 0.989]) at 9 workers, where the scanner binds. The forward-lanes trace (origin/evidence e98948b6) shows 8-worker Wikidata becomes scanner-bound once the lanes are the default. Rebased on master with the lanes as default, does the same seam code turn into a paid 8-worker wall gain on the i9, paired against its merge base?
+"""
+why = """
+The coupled model (frontier/DECODER.md) predicts a scanner cut pays only where the scanner binds; the first i9 run confirmed exactly that. If forward-emission-adopt makes the scanner the 8-worker bottleneck, ~10 ms of pure serial scanner wall becomes payable at the default count, and #1117's S' cut composes with it.
+"""
+stop_test = """
+To be frozen by the taker before any new data (RULES C1a). Gated on forward-emission-adopt reaching master; do not reuse origin/evidence d6bc8ca2 as evidence for it. The harness bench-scanner-adaptive-seam (on PR #1144's branch) is reusable.
+"""
+done_when = """
+Merged with an i9 paired verdict on the lanes-default decoder and green CI, or a scoped STOP there.
+"""
+premises = [
+  "frontier/deltas/2026-11-28-scanner-adaptive-seam-window-verdict.md",
+  "docs/notebook/2026-11-27-synthesis-eighteenth-pass.md",
+  "frontier/DECODER.md",
+]
+links = [
+  "frontier/claims/scanner-adaptive-seam-window.toml",
+  "frontier/claims/forward-emission-adopt.toml",
+]
