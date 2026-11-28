@@ -1561,7 +1561,16 @@ class TestFrontierStress(unittest.TestCase):
             "merged": True,
             "merge_commit_sha": merge_sha,
         }
-        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        # A --no-local clone copies only branches, so the moved head is reachable only through
+        # refs/pull/42/head: reconciliation must fetch it to prove ancestry, as in production.
+        dst = self.sb.tmp / "fresh"
+        _git(self.sb.tmp, "clone", "-q", "--no-local", str(self.sb.remote), str(dst))
+        _git(dst, "config", "--local", "user.name", GIT_ENV["GIT_AUTHOR_NAME"])
+        _git(dst, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
+        self.assertNotEqual(subprocess.run(
+            ["git", "cat-file", "-e", f"{moved}^{{commit}}"], cwd=dst, capture_output=True
+        ).returncode, 0)
+        fresh = _load_frontier_module(dst)
         with mock.patch.object(fresh, "read_pr", return_value=merged):
             # Passing the stale pre-merge head still fails closed.
             with self.assertRaises(SystemExit):

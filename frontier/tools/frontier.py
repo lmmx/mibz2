@@ -670,6 +670,9 @@ def _merged_pr_head_descends(number, recorded_head, actual_head, merge):
     """Return True iff `recorded_head` is a verified git ancestor of `actual_head` or `merge`."""
     if not (isinstance(recorded_head, str) and re.fullmatch(r"[0-9a-f]{40}", recorded_head)):
         return False
+    # A merge-commit (non-squash) merge contains the recorded head; for a squash this passes only
+    # if the recorded head is already on master. The caller has matched the API head exactly,
+    # put the merge on origin/master and required the claim terminal there.
     if git("merge-base", "--is-ancestor", recorded_head, merge)[0] == 0:
         return True
     if git("merge-base", "--is-ancestor", recorded_head, actual_head)[0] == 0:
