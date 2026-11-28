@@ -6,4 +6,4 @@ expires = "2026-11-28T19:08:15+00:00"
 owned_paths = ["src/open/lanes.rs"]
 mechanisms = ["forward-anchor-lanes-bounded-rss"]
 base = "b0b788717b505711b6899b2d7dc413cb40763445"
-released = false
+released = true
