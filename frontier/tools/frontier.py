@@ -661,12 +661,22 @@ def yield_review(cid, session):
     print(f"{cid}: integration yielded; any independent participant can take it")
 
 
+# Claim states on origin/master under which a closed-unmerged PR's parked or integration
+# reservation is identified by claim + PR number, not by its (possibly rebased) recorded head.
+TERMINAL_CLAIM_STATES = ("dropped", "done", "blocked")
+
+
 def finish_review(cid, number, head, *, cancelled=False):
     """Release exactly a verified terminal PR reservation, even after session loss."""
     sha, lease = holds().get(cid, (None, None))
+    # A dropped, done or blocked claim's closed-unmerged PR may have been rebased after its reservation
+    # recorded a head; the claim's terminal status on origin/master, not the stale head, then
+    # identifies the reservation (otherwise a parked lease would hold its paths forever).
+    moved_terminal = cancelled and _trunk_item(cid).get("status") in TERMINAL_CLAIM_STATES
     if (
         not lease or lease.get("phase") not in ("integration", "parked")
-        or lease.get("pr") != number or lease.get("pr_head") != head
+        or lease.get("pr") != number
+        or (lease.get("pr_head") != head and not moved_terminal)
     ):
         sys.exit("no matching integration reservation")
     if cancelled:
@@ -764,7 +774,10 @@ def reconcile_integrations(all_holds, *, fetch_master=True):
             try:
                 pr = read_pr(lease["pr"])
                 if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
-                    finish_review(cid, lease["pr"], lease["pr_head"], cancelled=not pr["merged"])
+                    head = lease["pr_head"]
+                    if not pr["merged"] and _trunk_item(cid).get("status") in TERMINAL_CLAIM_STATES:
+                        head = pr["head"]["sha"]
+                    finish_review(cid, lease["pr"], head, cancelled=not pr["merged"])
             except (SystemExit, KeyError, TypeError, ValueError):
                 print(
                     f"{cid}: integration reconciliation unavailable; reservation retained",
