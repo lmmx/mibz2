@@ -1533,6 +1533,37 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(fresh.live(holds["c4"][1]))
         self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
 
+    def test_done_claim_releases_merged_integration_whose_head_moved(self):
+        """The integrator merges master into the PR after take-review, so the merged head is not
+        the recorded one: once the claim is done on master the merged PR still releases the hold;
+        before that it is retained."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        _git(author, "commit", "--allow-empty", "-m", "merge master into PR")
+        moved = _git(author, "rev-parse", "HEAD")
+        _git(author, "push", "origin", "HEAD:master")
+        merged = {
+            **pr, "head": {"sha": moved}, "state": "closed", "merged": True,
+            "merge_commit_sha": moved,
+        }
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.reconcile_integrations(fresh.holds())
+        self.assertFalse(fresh.holds()["c1"][1].get("released"))
+        card = author / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "review"', 'status = "done"'))
+        _git(author, "commit", "-am", "mark c1 done")
+        _git(author, "push", "origin", "HEAD:master")
+        merged["merge_commit_sha"] = _git(author, "rev-parse", "HEAD")
+        _git(fresh.ROOT.parent, "fetch", "-q", "origin", "+refs/heads/master:refs/remotes/origin/master")
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.reconcile_integrations(fresh.holds())
+        lease = fresh.holds()["c1"][1]
+        self.assertTrue(lease["released"])
+        self.assertEqual(lease["terminal"], merged["merge_commit_sha"])
+
     def _stale_docs_team_pair(self):
         """Set up archive-team-strata holding docs/team/ and migrate-rules needing docs/team/RULES.md."""
         seed = self.sb.seed
