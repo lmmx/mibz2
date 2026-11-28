@@ -6,4 +6,4 @@ expires = "2026-11-28T11:43:18+00:00"
 owned_paths = ["src/python.rs", "python/mibz2/__init__.py", "python/mibz2/_mibz2.pyi", "python/tests/"]
 mechanisms = ["python-rust-line-iterator", "python-direct-buffered-reader", "python-swar-newline"]
 base = "6ce89cc5cb62c64cfed098b5fa01a16a528ad59d"
-released = false
+released = true
