@@ -1,0 +1,16 @@
+claim: explore
+by: antigravity
+outcome: done
+evidence: docs/notebook/2026-11-28-explore-u8-syms-handover.md; frontier/claims/u8-syms-handover-build.toml; 7-corpus block/sym census; objdump -dC of isolated & production ab kernels (0 vzeroupper in decode_runs_bmi2, 6->0 vpermq & 6->0 vpack & 1->0 vptest in runs::front_avx2); Haswell-EP VM pinned CPU 0 CLOCK_THREAD_CPUTIME_ID isolated S/W1/W2 (n=11, base & JCC-32B, warm & L3-cold); full coupled E2E prototype (32 cells, 1T/4T/8T, default & forward-anchor-lanes, all 7 corpora + wikidata-x4 839 MB, 100% SHA-256 parity)
+
+**Cross-station dissection of compact `u8` symbol handover (`SymBuf { bytes: Vec<u8>, pos256: Vec<u32> }`) vs shipped `Vec<u16>`:**
+
+1. **7-corpus census:** `100.0%` of blocks on `wikidata` (`431/431`, `max_niu = 102`), `text` (`27/27`, `142`), `runs` (`1/1`, `252`), `onebyte` (`1/1`, `3`), and `pattern` (`44/44`, `7`) have `n_in_use <= 255` (`0` occurrences of `sym == 256`). Even on `n_in_use == 256` (`random` `18/18`, `records` `22/22`), `sym == 256` is only `0.1563%` / `0.8743%`. Storing `EOB` implicitly at `bytes.len()` and `255u8` placeholders at `pos256` indices yields one unified `Vec<u8>` pool (`MAX_SYMS = 879 KiB` vs `1.72 MiB`), cutting handover bytes `-48.5%..-50.0%` across all 7 corpora with zero dual-pool RSS bloat and `0 B` `pos256` allocation for `n_in_use <= 255`.
+2. **Isolated stations (`n = 11`, CPU 0, `BASE` & `JCC-32B`, 100% exact):**
+   - **Station `S` (`decode_runs_bmi2`):** `0 vzeroupper`, `30 -> 22` `shlx`/`shrx`. Cuts shipped `K = 2` `cold32` A3 `-7.45%..-7.78%` (`wikidata`) / `-9.18%..-11.40%` (`text`). On top of `#1153` (`K = 3` `u8`-chunk A3), removing `flush_u8_patched` widening cuts an **extra `-6.75%..-9.19%` on `wikidata`** (`-15.80%..-17.14%` cold32 vs shipped `K = 2`) and flips `K = 3` on `random`/`records` from `+4.4%..+9.1%` slower to `-2.1%..-6.9%` faster.
+   - **Station `W1` (`runs::front_avx2`):** Pass 1 drops `6 vpermq`, `6 vpack`, `1 vptest` -> **`0/0/0`** (`-50.3%..-51.4%` Pass 1 across both builds; `-7.70%` full `front_avx2` `JCC-32B` `wikidata`, `-8.92%` `text`).
+   - **Station `W2` (`mtf_avx2`):** segmented `u8 + pos256` cuts `random` `-4.61%..-8.72%` and `records` `-4.88%..-6.40%`.
+3. **Coupled E2E prototype (`ab child`, `n = 7..9` paired, 100% SHA-256 exact across all 32 cells):**
+   - **Default `wikidata-x4` `8T`:** `mibz2-scan` CPU **`-9.70%` (`0.9030 [0.8838, 0.9226]`)**, `wkr_sum` CPU **`-2.77%` (`0.9723 [0.9543, 0.9906]`)**, total CPU **`-3.33%` (`0.9667`)**, `VmHWM` **`-3.89 MiB` (`0.9455×`)** (`-4.43 MiB` / `0.9319×` in 20-cell run). `wikidata/mibz2-workers-lazy/1T` CPU **`-4.40%` (`0.9560 [0.9410, 0.9712]`)**.
+   - **`--features forward-anchor-lanes` `wikidata-x4` `8T`:** `mibz2-scan` **`-8.47%` (`0.9153 [0.9056, 0.9251]`)**, `wkr_sum` **`-3.64%` (`0.9636 [0.9546, 0.9727]`)**, total CPU **`-3.85%` (`0.9615`)**, wall **`-4.86%` (`0.9514×`)**, `VmHWM` **`-3.55 MiB` (`0.9474×`)**; `text` 8T RSS `-5.20 MiB` (`0.949×`), `random`/`records` 8T CPU `-4.5%..-6.2%` & RSS `-3.0..-4.6 MiB`.
+4. **Follow-on:** Filed P2 `idea` claim `u8-syms-handover-build` (internal `CompactSymbols` / `SymBuf` preserving public `block::Symbols` semver compatibility, zero `needs_louis`, frozen physical i9 C6 stop test).

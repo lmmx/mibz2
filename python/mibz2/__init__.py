@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import io
 import os
-from typing import IO, Union
+from collections.abc import Iterator
+from typing import IO, TYPE_CHECKING, Any, NoReturn, Union, cast
 
 from ._mibz2 import DecodeError, Reader, decompress
 
@@ -24,8 +25,40 @@ __all__ = ["BZ2Reader", "DecodeError", "decompress", "open"]
 #: What a reader reads from: a path, or a binary file object open for reading
 Source = Union[str, "os.PathLike[str]", IO[bytes], io.RawIOBase, io.BufferedIOBase]
 
-#: Chunk size for ``BZ2Reader.readall`` (1 MiB, above the 900 kB max bzip2 block).
+#: Chunk size for whole-stream ``readall`` (1 MiB, above the 900 kB max bzip2 block).
 _READALL_CHUNK = 1 << 20
+
+
+def _copy_into(b: Any, data: bytes) -> int:
+    """Copy ``data`` into writable buffer ``b`` and return the number of bytes copied."""
+    n = len(data)
+    if n == 0:
+        return 0
+    if isinstance(b, memoryview) and b.ndim == 1 and b.format == "B":
+        b[:n] = data
+    elif isinstance(b, bytearray):
+        memoryview(b)[:n] = data
+    else:
+        memoryview(b).cast("B")[:n] = data
+    return n
+
+
+def _readall_from(reader: Reader) -> bytes:
+    """Drain all remaining decoded bytes from ``reader`` in 1 MiB chunks."""
+    chunks: list[bytes] = []
+    read = reader.read
+    while chunk := read(_READALL_CHUNK):
+        chunks.append(chunk)
+    if not chunks:
+        return b""
+    if len(chunks) == 1:
+        return chunks[0]
+    return b"".join(chunks)
+
+
+def _detached(*_args: Any, **_kwargs: Any) -> NoReturn:
+    """Raise ``ValueError`` when a detached buffered reader is used."""
+    raise ValueError("raw stream has been detached")
 
 
 class BZ2Reader(io.RawIOBase):
@@ -57,32 +90,28 @@ class BZ2Reader(io.RawIOBase):
         super().__init__()
         if isinstance(source, (str, os.PathLike)):
             source = os.fspath(source)
-        self._reader = Reader(source, threads)
+        reader = Reader(source, threads)
+        self._reader = reader
+        # Bind hot C methods directly on the instance to avoid a Python call hop per
+        # line while preserving ValueError on closed readers (enforced in Rust).
+        self.__dict__["readline"] = reader.readline
+        self.__dict__["readlines"] = reader.readlines
 
     def readable(self) -> bool:
         """True: a reader is readable."""
         return True
 
-    def readinto(self, b) -> int:
+    def readinto(self, b: Any) -> int:
         """Read up to ``len(b)`` decoded bytes into ``b``; 0 at the end (when verified)."""
-        data = self._reader.read(len(b))
-        n = len(data)
-        memoryview(b).cast("B")[:n] = data
-        return n
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        return _copy_into(b, self._reader.read(len(b)))
 
     def readall(self) -> bytes:
         """Read and return all remaining decoded bytes until EOF."""
         if self.closed:
             raise ValueError("I/O operation on closed file")
-        chunks: list[bytes] = []
-        read = self._reader.read
-        while chunk := read(_READALL_CHUNK):
-            chunks.append(chunk)
-        if not chunks:
-            return b""
-        if len(chunks) == 1:
-            return chunks[0]
-        return b"".join(chunks)
+        return _readall_from(self._reader)
 
     def read(self, size: int | None = -1) -> bytes:
         """Read up to ``size`` bytes, or all remaining bytes if ``size`` is negative or ``None``."""
@@ -91,6 +120,18 @@ class BZ2Reader(io.RawIOBase):
         if self.closed:
             raise ValueError("I/O operation on closed file")
         return self._reader.read(size)
+
+    def readline(self, size: int | None = -1) -> bytes:
+        """Read and return one line, or up to ``size`` bytes if ``size >= 0``."""
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        return self._reader.readline(size)
+
+    def readlines(self, hint: int = -1) -> list[bytes]:
+        """Read and return a list of lines; stop after ``hint`` bytes if ``hint > 0``."""
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        return self._reader.readlines(hint)
 
     @property
     def verified(self) -> bool:
@@ -106,6 +147,113 @@ class BZ2Reader(io.RawIOBase):
         if not self.closed:
             self._reader.close()
         super().close()
+
+
+if TYPE_CHECKING:
+    _BufferedBase = io.BufferedReader[BZ2Reader]
+else:
+    _BufferedBase = io.BufferedReader
+
+
+class _BZ2BufferedReader(_BufferedBase):
+    """Buffered reader delegating directly to Rust's block-buffered ``Reader``.
+
+    Preserves ``isinstance(..., io.BufferedReader)``, ``.raw``, ``.raw.verified``,
+    ``detach()``, and ``io.TextIOWrapper`` compatibility without double-buffering
+    through ``io.BufferedReader``'s C buffer.
+    """
+
+    def __init__(self, raw: BZ2Reader, buffer_size: int = 1 << 20) -> None:
+        if buffer_size <= 0:
+            raise ValueError("buffer size must be strictly positive")
+        super().__init__(raw, 1)
+        reader = raw._reader
+        self._reader: Reader | None = reader
+        self._buf_size = buffer_size
+        self.__dict__["readline"] = reader.readline
+        self.__dict__["readlines"] = reader.readlines
+        self.__dict__["peek"] = reader.peek
+
+    def _active_reader(self) -> Reader:
+        """Return the underlying Rust ``Reader`` or raise if detached."""
+        reader = self._reader
+        if reader is None:
+            raise ValueError("raw stream has been detached")
+        return reader
+
+    def detach(self) -> BZ2Reader:
+        """Separate and return the underlying raw ``BZ2Reader``."""
+        self._reader = None
+        self.__dict__["readline"] = _detached
+        self.__dict__["readlines"] = _detached
+        self.__dict__["peek"] = _detached
+        return cast(BZ2Reader, super().detach())
+
+    def read(self, size: int | None = -1) -> bytes:
+        """Read up to ``size`` bytes, or all remaining bytes if ``size`` is negative or ``None``."""
+        reader = self._active_reader()
+        if size is None or size < 0:
+            return _readall_from(reader)
+        return reader.read_full(size)
+
+    def read1(self, size: int = -1) -> bytes:
+        """Read up to ``size`` bytes from at most one decoded block."""
+        reader = self._active_reader()
+        if size < 0:
+            size = self._buf_size
+        return reader.read(size)
+
+    def readinto(self, b: Any) -> int:
+        """Read decoded bytes into ``b`` until full or EOF; return bytes read."""
+        reader = self._active_reader()
+        if isinstance(b, memoryview) and b.ndim == 1 and b.format == "B":
+            mv = b
+        elif isinstance(b, bytearray):
+            mv = memoryview(b)
+        else:
+            mv = memoryview(b).cast("B")
+        cap = len(mv)
+        if cap == 0:
+            reader.read(0)
+            return 0
+        total = 0
+        read = reader.read
+        while total < cap:
+            chunk = read(cap - total)
+            n = len(chunk)
+            if n == 0:
+                break
+            mv[total : total + n] = chunk
+            total += n
+        return total
+
+    def readinto1(self, b: Any) -> int:
+        """Read bytes from at most one decoded block into ``b``; return bytes read."""
+        reader = self._active_reader()
+        return _copy_into(b, reader.read(len(b)))
+
+    def peek(self, size: int = 0) -> bytes:
+        """Return buffered bytes without advancing the stream position."""
+        return self._active_reader().peek(size)
+
+    def readline(self, size: int | None = -1) -> bytes:
+        """Read and return one line, or up to ``size`` bytes if ``size >= 0``."""
+        return self._active_reader().readline(size)
+
+    def readlines(self, hint: int = -1) -> list[bytes]:
+        """Read and return a list of lines; stop after ``hint`` bytes if ``hint > 0``."""
+        return self._active_reader().readlines(hint)
+
+    def __iter__(self) -> Iterator[bytes]:
+        """Iterate decoded lines directly over the Rust block buffer."""
+        reader = self._active_reader()
+        if self.closed:
+            raise ValueError("I/O operation on closed file")
+        return reader
+
+    def __next__(self) -> bytes:
+        """Return the next decoded line, or raise ``StopIteration`` at EOF."""
+        return next(self._active_reader())
 
 
 def open(  # noqa: A001
@@ -142,4 +290,4 @@ def open(  # noqa: A001
     >>> lines, verified
     ([b'line one\n', b'line two\n'], True)
     """
-    return io.BufferedReader(BZ2Reader(source, threads), buffer_size)
+    return _BZ2BufferedReader(BZ2Reader(source, threads), buffer_size)

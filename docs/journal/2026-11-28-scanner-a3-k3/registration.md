@@ -11,7 +11,7 @@
 
 ## 2. Correctness (VOID if any fails)
 
-Gate 1 of the claim's stop test passed before this registration (delta `2026-11-28-scanner-a3-k3-pipe-u8.md`):
+Gate 1 of the claim's stop test passed before this registration (delta `2026-11-28-scanner-a3-k3-pipe-u8-2.md`):
 - No new `unsafe`. The one `unsafe` touched is the existing BMI2 dispatch, which gains a `patches` argument under the same safety argument.
 - `cargo test --release` passes, including libbzip2 parity. One new test asserts that every fast LUT entry equals the greedy bit-by-bit decode of its 10 bits, up to 1, 2 or 3 symbols as built. Another asserts that `decode_runs` equals libbzip2's bit-by-bit loop in result, end bit and symbols over 500 random tables and streams. The K≤2 build stays bit-identical to the two-pass reference.
 - Miri is clean on `miri_decode_runs_scalar_exact` and `miri_selectors_and_lengths_read_as_reference`.
