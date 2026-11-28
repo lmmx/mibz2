@@ -4,7 +4,7 @@ kind = "probe"
 zone = "striated"
 needs = ["shell", "rust", "workstation"]
 priority = 2
-status = "open"
+status = "blocked"
 owned_paths = [
   "bench/block_size_route.py",
   "bench/test_block_size_route.py",
