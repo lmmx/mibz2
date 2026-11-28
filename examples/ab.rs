@@ -32,6 +32,10 @@
 //!                      is spawned and after it exits, with their timestamps. The child is
 //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
 //!                      cleared (bench 3.5.0; recorded and never judged)
+//!     --unpinned       run every run, whatever its threads (1 included), on every online
+//!                      CPU (`taskset -c` with the explicit list, recorded as the record's
+//!                      `cpus`), so an unpinned record names its CPUs rather than `all`
+//!                      (inherited affinity); refused beside --spread, --pin or --hold-cpu
 //!     --hold-cpu N|auto
 //!                      hold one CPU busy around each run (bench 3.8.0; off by default, and
 //!                      for workstation runs: an idle machine starts a decode in a slow mode,
@@ -1707,6 +1711,40 @@ fn group(allowed: &[usize], siblings: impl Fn(usize) -> Option<Vec<usize>>) -> V
     out
 }
 
+/// `ab run --unpinned`'s CPUs: every online CPU, in order, as one `taskset -c` list; None if
+/// there are none
+fn unpinned_list(online: &[Vec<usize>]) -> Option<String> {
+    let mut cpus: Vec<usize> = online.iter().flatten().copied().collect();
+    cpus.sort_unstable();
+    cpus.dedup();
+    (!cpus.is_empty()).then(|| {
+        cpus.iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
+/// Why `ab run` refuses `--unpinned` beside another placement option, or None
+fn unpinned_refusal(
+    unpinned: bool,
+    spread: bool,
+    pinned_to: bool,
+    held: bool,
+) -> Option<&'static str> {
+    if !unpinned {
+        None
+    } else if spread {
+        Some("--unpinned and --spread: a run is pinned or it is not")
+    } else if pinned_to {
+        Some("--unpinned and --pin: --unpinned runs 1-thread runs unpinned too")
+    } else if held {
+        Some("--unpinned and --hold-cpu: an unpinned decode may run on any CPU, so no CPU is free to hold")
+    } else {
+        None
+    }
+}
+
 /// `--spread`'s CPUs for `t` threads: the first CPU of each of the first `t` cores, where
 /// there are at least `t` (and `t` > 1); None runs unpinned
 fn spread_list(cores: &[Vec<usize>], t: usize) -> Option<String> {
@@ -2371,6 +2409,8 @@ fn run(args: &[String]) {
     let mut settle = 2.0;
     let mut pin = "1".to_string();
     let mut spread = false;
+    let mut unpinned = false;
+    let mut pinned_to = false;
     let mut machine_state = false;
     let mut sysfs_state = false;
     let mut hold: Option<Hold> = None;
@@ -2395,9 +2435,11 @@ fn run(args: &[String]) {
             }
             "--pin" => {
                 pin = args[i + 1].clone();
+                pinned_to = true;
                 i += 1;
             }
             "--spread" => spread = true,
+            "--unpinned" => unpinned = true,
             "--machine-state" => machine_state = true,
             "--sysfs-state" => sysfs_state = true,
             "--hold-cpu" => {
@@ -2431,6 +2473,17 @@ fn run(args: &[String]) {
         }
         i += 1;
     }
+    if let Some(e) = unpinned_refusal(unpinned, spread, pinned_to, hold.is_some()) {
+        eprintln!("ab run: {e}");
+        std::process::exit(2);
+    }
+    // (--unpinned: every run on every online CPU, named explicitly)
+    let all = unpinned.then(|| {
+        unpinned_list(&online_cores()).unwrap_or_else(|| {
+            eprintln!("ab run: --unpinned: no online CPU");
+            std::process::exit(2)
+        })
+    });
     let me = std::env::current_exe().unwrap();
     let mut out = std::fs::OpenOptions::new()
         .create(true)
@@ -2455,7 +2508,9 @@ fn run(args: &[String]) {
                         continue;
                     }
                     let waited = Instant::now();
-                    let cpus = if t == 1 {
+                    let cpus = if let Some(list) = &all {
+                        Some(list.clone())
+                    } else if t == 1 {
                         Some(pin.clone())
                     } else {
                         spread_cpus(t)
@@ -5119,6 +5174,24 @@ mod machine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unpinned_names_every_online_cpu_and_refuses_other_placements() {
+        let online = vec![vec![0, 10], vec![1, 11], vec![2, 12]];
+        assert_eq!(unpinned_list(&online).as_deref(), Some("0,1,2,10,11,12"));
+        assert_eq!(unpinned_list(&[]), None);
+        assert_eq!(unpinned_refusal(false, true, true, true), None);
+        assert_eq!(unpinned_refusal(true, false, false, false), None);
+        assert!(unpinned_refusal(true, true, false, false)
+            .unwrap()
+            .contains("--spread"));
+        assert!(unpinned_refusal(true, false, true, false)
+            .unwrap()
+            .contains("--pin"));
+        assert!(unpinned_refusal(true, false, false, true)
+            .unwrap()
+            .contains("--hold-cpu"));
+    }
 
     #[test]
     fn every_arm_runs_in_every_position_equally() {
