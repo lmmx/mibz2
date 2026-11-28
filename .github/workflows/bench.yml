@@ -34,6 +34,11 @@
 # STAGE_REPEATS passes of the file in decode order; a
 # table of each stage's cycles a byte (head over base on a pull request), beside the
 # decoder's figures, not part of them.
+#
+# The open-route diagnostic: `mibz2-workers-lazy` (open kernel forced at one worker,
+# examples/ab.rs) at 1 thread on wikidata and text, paired head against base on a pull
+# request (head only on master/dispatch), ROUNDS rounds; reported beside the primary cells
+# as a diagnostic outside PERFORMANCE-POLICY section 2's acceptance rule.
 name: Benchmark
 
 on:
@@ -245,6 +250,28 @@ jobs:
           python3 bench/stages.py run stages.jsonl --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" corpora/wikidata.bz2 $arms
           echo "stages: $((SECONDS - start)) s"
 
+      # Forced open-kernel route at 1 thread on wikidata and text: a paired diagnostic beside
+      # the default cells, outside PERFORMANCE-POLICY section 2's acceptance rule
+      - name: Open-route diagnostic
+        run: |
+          if [ "$MODE" = pr ]; then
+            if grep -q '"mibz2-workers-lazy"' .base-src/examples/ab.rs 2>/dev/null; then
+              open_arms="mibz2-workers-lazy,mibz2-workers-lazy@base/ab"
+              open_ref="mibz2-workers-lazy@base/ab"
+            else
+              open_arms="mibz2-workers-lazy"
+              open_ref="mibz2-workers-lazy"
+            fi
+          else
+            open_arms="mibz2-workers-lazy"
+            open_ref="mibz2-workers-lazy"
+          fi
+          start=$SECONDS
+          bin/ab run open-route.jsonl --arms "$open_arms" --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/wikidata.bz2 corpora/text.bz2
+          open_s=$((SECONDS - start))
+          echo "open-route: ${open_s} s"
+          { echo "OPEN_ROUTE_REF=$open_ref"; echo "OPEN_ROUTE_SECS=$open_s"; } >> "$GITHUB_ENV"
+
       # The inverse BWT alone, mibz2's against bz2ngrs's phase by phase, on one CPU (master
       # and the Actions tab only: bench/alternatives' kernels binary)
       - name: Kernels
@@ -265,11 +292,24 @@ jobs:
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
             ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json --kernels kernels.jsonl \
             --out result.json --md comment.md
+          if [ -s open-route.jsonl ]; then
+            {
+              echo
+              echo "### Open-route diagnostic (forced open route, 1 thread)"
+              echo
+              echo "Diagnostic only (outside PERFORMANCE-POLICY section 2's acceptance rule; \`mibz2-workers-lazy\`, 1 thread, ${ROUNDS} rounds, added wall: ${OPEN_ROUTE_SECS} s)."
+              bin/ab summary open-route.jsonl --ref "$OPEN_ROUTE_REF" | sed 's/^### /#### /'
+            } > open-route-summary.md
+            cat open-route-summary.md >> comment.md
+          fi
           # (each arm's compiler, as its build reported it)
           { echo; echo "<details><summary>Toolchains</summary>"; echo; echo '```'; cat toolchains.txt; echo '```'; echo; echo "</details>"; } >> comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
           # (the resources section in the log too, where a dispatched run's figures can be read)
           sed -n '/^### Resources/,/^<\/details>/p' comment.md
+          if [ -s open-route-summary.md ]; then
+            cat open-route-summary.md
+          fi
 
       - name: Comment
         if: "!cancelled() && github.event_name == 'pull_request'"
@@ -290,6 +330,8 @@ jobs:
           name: bench-${{ env.MODE }}-${{ env.HEAD_SHA }}
           path: |
             runs.jsonl
+            open-route.jsonl
+            open-route-summary.md
             env.json
             toolchains.txt
             stages.jsonl

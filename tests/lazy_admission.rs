@@ -97,9 +97,17 @@ fn every_corpus_the_same_bytes() {
 #[test]
 fn corrupt_input_the_same_errors() {
     let k = Kernels::detect();
-    let z = compress(&copies(2_000_000, 75), 9);
-    let starts = block_starts(&z);
-    assert!(starts.len() >= 3, "{}", starts.len());
+    // (the text is this crate's own sources, whose runs RLE1 shortens: grow the input
+    // until bzip2 writes at least three blocks of it, whatever the sources hold)
+    let mut len = 2_000_000;
+    let (z, starts) = loop {
+        let z = compress(&copies(len, 75), 9);
+        let starts = block_starts(&z);
+        if starts.len() >= 3 {
+            break (z, starts);
+        }
+        len += 500_000;
+    };
     let flip = |at: u64| {
         let mut bad = z.clone();
         if ((at / 8) as usize) < bad.len() {

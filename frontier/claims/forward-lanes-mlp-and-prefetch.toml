@@ -1,0 +1,37 @@
+id = "forward-lanes-mlp-and-prefetch"
+title = "Probe K=6/8 forward lanes (<=128 KiB bounded slabs) and edges[next] prefetch for residual A7 (33% of B4 worker time)"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "rust"]
+priority = 3
+status = "done"
+owned_paths = []
+mechanisms = ["forward-anchor-lanes-mlp"]
+needs_louis = ""
+question = """
+In the 4-way composed post-#1217 worker-stack dissection (`docs/notebook/2026-11-28-explore-composed-worker-stack.md`), `A7` (`lanes::walk_into_arena`, `K = 4` forward lanes) is the #1 remaining worker stage at `B4` — `33.1%` (`196.27 ms` of `592.60 ms` `jcc`) / `31.9%` (`208.21 ms` of `653.49 ms` `base`) across all 233 Wikidata Open blocks.
+
+`src/open/lanes.rs` already tags `ANCHORS = 16` sampled forward anchors, yet walks only `K = 4` lanes concurrently with zero software prefetching of `edges[next_e]`, even though `edges[..m]` is `~1.0–1.4 MiB/block` (`> L2` under multi-worker L3 contention, where Intel Core LFB depth is `10–12` and 4 lanes expose under half of available L3 memory-level parallelism).
+
+Can increasing forward lane concurrency (`K = 6` or `K = 8` lanes, using `16 KiB` bounded slabs so active per-worker slab scratch stays `<= 8 × 16 KiB = 128 KiB/worker`, zero extra RSS vs `4 × 32 KiB`) and/or adding 1-step `edges[next_e]` software prefetching cut `A7` (`walk_into_arena`) by `>= 12%` (`>= 4%` of `B4` worker CPU) under both L3-warm and L3-cold conditions without inflating slab-spill/register pressure or peak RSS?
+"""
+why = """
+Once `forward-emission-bounded-slab-rescue`, `L6a` (`forward-rle1-crc-vectored-build`), and `mtf-fold-streaming-admission` land, `A7` (`33.1%` of `B4`) and `A5+A6a` (`30.0%` of `B4`) together represent `63%` of all remaining worker CPU, while `A6c` (`5.2%`) and `A8+A9` (`10.3%`) are small and `A6b` (`20.3%`) has a documented RSS/L3 wall (`dead-ends.tsv`). Unlike `L4` (unsafe bounds-check elimination, `<= 0.23%`, stopped in `dead-ends.tsv`), MLP depth (`K = 6/8`) and `edges[next]` prefetching attack `A7`'s actual L2/L3 miss latency and have never been probed.
+"""
+stop_test = """
+Frozen before data: smooth-zone probe in `examples/` (zero `src/` edits) built on the post-`forward-emission-bounded-slab-rescue` bounded-slab architecture. Must be 100% byte- and CRC-exact against `bwt::walk` across all 233 Wikidata Open blocks + `runs.bz2` and `<= 128 KiB/worker` active slab scratch. Measure `n >= 7` interleaved repeats (pinned CPU 0, steal-free `CLOCK_THREAD_CPUTIME_ID`) on BOTH baseline x86-64 and JCC-32B, under BOTH L3-warm and L3-cold (`> 20 MiB` LLC flush between blocks) conditions, comparing `K = 4` (32 KiB bounded slabs) vs `K = 6` (16 KiB), `K = 8` (16 KiB), and `+ edges[next]` prefetch (`PREFETCHT0` / `PREFETCHT1`) on isolated `A7` and end-to-end `A7 + A8+A9`.
+
+PASS and admit a striated build claim ONLY IF at least one variant cuts L3-cold `A7` by `>= 12.0%` (corresponding to `>= 4.0%` of `B4` worker CPU) with disjoint 95% CIs on BOTH `base` and `jcc`, does not regress L3-warm `A7 + A8+A9` by `> 1.0%`, and keeps per-worker slab scratch `<= 128 KiB`. Otherwise STOP and append a scoped row to `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Sequenced after `forward-emission-bounded-slab-rescue` (`P1`). Probe harness, notebook report, <= 40-line delta, and either a striated build claim at `idea` (on PASS) or a scoped row in `frontier/dead-ends.tsv` (on STOP).
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-composed-worker-stack.md",
+  "frontier/deltas/2026-11-28-explore-composed-worker-stack.md",
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+]
+links = [
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+  "frontier/claims/forward-rle1-crc-vectored-build.toml",
+]

@@ -520,6 +520,22 @@ Wikidata 210 MB, all outputs byte-identical):
 - **Unpinned (12–20 threads):** 0.5.14/0.5.15 wall is **1.095** [1.030, 1.164] at 12 threads
   (CPU 1.054 [1.009, 1.101]), 1.012 [0.954, 1.073] at 16 threads, and 1.063 [0.990, 1.142] at 20
   threads. Peak RSS stayed within 42–68 MB (0–2 MB of 0.5.14 across all thread counts).
+- **Within-mode restatement (28 November, `i9-clock-modes`):** the 1- and 12-thread steps are
+  mostly a shift in run-mode occupancy, not in the decoder. Figures are from
+  `bench/clock_modes.py analyze` on the same bundle, with modes classified by wall alone, since
+  this recipe records no cycle counters:
+  - **1 thread:** pooled 1.057 [1.012, 1.104]. Within the fast mode it is 1.018 [0.972, 1.065],
+    within the slow mode 1.002 [0.990, 1.014], and same-mode paired 1.016 [0.991, 1.042] (n = 3).
+    0.5.14 ran 8 of 10 rounds in the slow mode and 0.5.15 ran 3. Every within-mode interval
+    spans 1.
+  - **12 threads:** pooled 1.095 [1.030, 1.164]. Within the fast mode it is 1.043 [1.003, 1.084],
+    and same-mode paired 1.046 [1.014, 1.079] (n = 7). The three slowest 0.5.14 rounds
+    (0.074–0.078 s) have no 0.5.15 counterpart. The fast mode itself holds two clusters (about
+    0.060 and 0.065 s), and within them the step is about 1.006–1.02.
+  - The probe (`docs/notebook/2026-11-28-i9-clock-modes-verdict.md`) found the i9's slow clock
+    mode at a 0.2 s settle. This recipe runs back to back, where that probe saw no slow-clock
+    runs. Its 1-thread slow rounds are therefore more likely the full-turbo, higher-CPI layout
+    mode the probe also found than a clock drop.
 - **Attribution (RELEASING §5b):** recorded as row `0.5.14 → 0.5.15` in
   `docs/journal/release-attribution.md`.
 

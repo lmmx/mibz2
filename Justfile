@@ -12,6 +12,9 @@ import ".just/release-preflight.just"
 import ".just/ship.just"
 import ".just/share-nothing.just"
 import ".just/text-knee.just"
+import ".just/clock-modes.just"
+import ".just/forward-adopt.just"
+import ".just/scanner-contention.just"
 
 default: clippy
 

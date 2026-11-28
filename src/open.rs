@@ -170,7 +170,7 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 /// The first pass over a block's runs: the queues and the thick strips it writes, and its
 /// counts (`512/512` on the shipped path; `FOLD_CHUNK/FOLD_STRIDE` with a 16-rank guard zone
 /// under `mtf-fold`)
-struct Pass<'a, const CHUNK: usize = 512, const STRIDE: usize = 512> {
+struct Pass<'a, const CHUNK: usize = { outq::CHUNK }, const STRIDE: usize = { outq::STRIDE }> {
     queues: outq::QueuesOf<'a, CHUNK, STRIDE>,
     edges: &'a mut Vec<u32>,
     ns: usize,
@@ -224,6 +224,7 @@ impl<const CHUNK: usize, const STRIDE: usize> Pass<'_, CHUNK, STRIDE> {
             let f = &mut self.f;
             if p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
+                f.mark_byte = c;
             }
             if QUEUE {
                 self.queues.push(a, f.m, w, &f.thin);
@@ -259,6 +260,7 @@ struct First {
     thick: [u32; 256],
     m: u32,
     mark: u32,
+    mark_byte: u8,
     runs: usize,
 }
 
@@ -270,6 +272,7 @@ impl Default for First {
             thick: [0; 256],
             m: 0,
             mark: 0,
+            mark_byte: 0,
             runs: 0,
         }
     }
@@ -422,7 +425,9 @@ impl Kernel {
         out: &[u8],
         heads: &outq::Heads,
     ) -> (Counts, u32, u32) {
-        self.finish_with::<INDUCE, QUEUE, 512, 512>(f, ns, records, n, p, limit, out, heads)
+        self.finish_with::<INDUCE, QUEUE, { outq::CHUNK }, { outq::STRIDE }>(
+            f, ns, records, n, p, limit, out, heads,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -448,6 +453,7 @@ impl Kernel {
             thick,
             m,
             mark,
+            mark_byte,
             runs,
         } = *f;
         let mut stats = Counts {
@@ -592,44 +598,30 @@ impl Kernel {
         #[cfg(not(feature = "forward-anchor-lanes"))]
         let xor = true;
         if QUEUE && !wide && m >= 65_536 && xor {
-            let edges = &mut self.edges[..m as usize];
-            edges.fill(0);
-            let mut predecessor = mark;
-            let mut k = 0;
-            for a in 0..256 {
-                let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
-                let mut queue = outq::ReaderOf::<CHUNK, STRIDE>::new(out, &self.spill, heads, a);
-                for &band in &self.bands[cursors[a]..end] {
-                    queue.wire_xor(
-                        edges,
-                        band.dst() as usize,
-                        (band.end() - k) as usize,
-                        band.code() << bits,
-                        mark,
-                        &mut predecessor,
-                    );
-                    k = band.end();
-                }
-            }
-            self.predecessor = Some(predecessor);
+            self.predecessor = Some(wire_xor_edges::<CHUNK, STRIDE>(
+                out,
+                &self.spill,
+                heads,
+                &self.bands,
+                &cursors,
+                m as usize,
+                mark,
+                mark_byte,
+                bits,
+                &mut self.edges,
+            ));
         } else if QUEUE {
-            let mut k = 0;
-            for a in 0..256 {
-                let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
-                let mut queue = outq::ReaderOf::<CHUNK, STRIDE>::new(out, &self.spill, heads, a);
-                for &b in &self.bands[cursors[a]..end] {
-                    let bend = b.end();
-                    let span = (bend - k) as usize;
-                    let dst = b.dst() as usize;
-                    let bcode = b.code();
-                    let pack = if wide { 0 } else { bcode << bits };
-                    if wide {
-                        self.extra[dst..dst + span].fill(bcode);
-                    }
-                    queue.wire(&mut self.edges[dst..dst + span], pack);
-                    k = bend;
-                }
-            }
+            wire_fwd_edges::<CHUNK, STRIDE>(
+                out,
+                &self.spill,
+                heads,
+                &self.bands,
+                &cursors,
+                bits,
+                wide,
+                &mut self.edges,
+                &mut self.extra,
+            );
         } else {
             let mut stream = starts(thin);
             let mut j = 0;
@@ -800,6 +792,86 @@ impl Kernel {
             bits,
             out,
         );
+    }
+}
+
+/// Outlined bidirectional XOR wiring: keeping this out of `Kernel::finish` / `StreamDecoder`
+/// gives the 4× `Cell` scatter loop full register availability with zero stack reloads.
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn wire_xor_edges<const CHUNK: usize, const STRIDE: usize>(
+    out: &[u8],
+    spill: &outq::Spill,
+    heads: &outq::Heads,
+    bands: &[Band],
+    cursors: &[usize; 256],
+    m: usize,
+    mark: u32,
+    mark_byte: u8,
+    bits: u32,
+    edges: &mut [u32],
+) -> u32 {
+    edges[..m].fill(0);
+    let cells = std::cell::Cell::from_mut(edges).as_slice_of_cells();
+    let mut predecessor = mark;
+    let mut k = 0;
+    for a in 0..256 {
+        let end = cursors.get(a + 1).copied().unwrap_or(bands.len());
+        let bslice = &bands[cursors[a]..end];
+        if bslice.is_empty() {
+            continue;
+        }
+        let mut queue =
+            outq::XorReaderOf::<CHUNK, STRIDE>::new(out, spill, heads, a, cells, mark, mark_byte);
+        for &band in bslice {
+            let bend = band.end();
+            queue.wire_xor(
+                band.dst() as usize,
+                (bend - k) as usize,
+                band.code() << bits,
+                &mut predecessor,
+            );
+            k = bend;
+        }
+    }
+    predecessor
+}
+
+/// Outlined forward wiring: keeps the register-resident cursor and overlapping `8/4/2/1` SIMD
+/// loop isolated from `Kernel::finish` / `StreamDecoder`.
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn wire_fwd_edges<const CHUNK: usize, const STRIDE: usize>(
+    out: &[u8],
+    spill: &outq::Spill,
+    heads: &outq::Heads,
+    bands: &[Band],
+    cursors: &[usize; 256],
+    bits: u32,
+    wide: bool,
+    edges: &mut [u32],
+    extra: &mut [u32],
+) {
+    let mut k = 0;
+    for a in 0..256 {
+        let end = cursors.get(a + 1).copied().unwrap_or(bands.len());
+        let bslice = &bands[cursors[a]..end];
+        if bslice.is_empty() {
+            continue;
+        }
+        let mut queue = outq::ReaderOf::<CHUNK, STRIDE>::new(out, spill, heads, a);
+        for &b in bslice {
+            let bend = b.end();
+            let span = (bend - k) as usize;
+            let dst = b.dst() as usize;
+            let bcode = b.code();
+            let pack = if wide { 0 } else { bcode << bits };
+            if wide {
+                extra[dst..dst + span].fill(bcode);
+            }
+            queue.wire(&mut edges[dst..dst + span], pack);
+            k = bend;
+        }
     }
 }
 
@@ -995,6 +1067,7 @@ impl FoldSink<'_> {
                 let a = usize::from(c);
                 if p.wrapping_sub(cur) < width {
                     self.pass.f.mark = m + (p - cur);
+                    self.pass.f.mark_byte = c;
                 }
                 self.pass
                     .queues
@@ -1234,17 +1307,25 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         self.fold(b, scratch, buf, k, admitted)
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
-        if let Some(cap) = Self::cap(r.records().len(), n, p) {
-            if cap.m != u32::MAX && !within_cap(r.records(), p, LIMIT, cap) {
+        let recs = r.records();
+        if let Some(cap) = Self::cap(recs.len(), n, p) {
+            // Skip the scalar `within_cap` pre-scan on `lazy_counts_admit` blocks
+            // (`0.10 <= r/n < 0.15`): on Wikidata all 30/30 blocks pass the cap, so the
+            // separate scan was pure wasted CPU (+2.63% 8T / +1.52% 10T on 0.5.17 i9,
+            // `5182d546`). `try_run` enforces the exact same `cap` inside Pass 1 and falls
+            // back cleanly to `Segmented` on overflow, preserving identical routes on every
+            // block. Keep `within_cap` in `[0.15, 0.21)` where most off-Wikidata blocks refuse.
+            if cap.m != u32::MAX
+                && !crate::cells::lazy_counts_admit(recs.len(), n)
+                && !within_cap(recs, p, LIMIT, cap)
+            {
                 #[cfg(test)]
                 {
                     self.capped += 1;
                 }
                 return self.fallback.invert_runs(r, n, p, out, k);
             }
-            let ran = self
-                .open
-                .try_run::<true, true>(r.records(), n, p, LIMIT, cap, out);
+            let ran = self.open.try_run::<true, true>(recs, n, p, LIMIT, cap, out);
             #[cfg(feature = "census")]
             if let Some(c) = &ran {
                 crate::census::record(r.records(), n, p, LIMIT, c);

@@ -1,0 +1,26 @@
+id = "mtf-fold-streaming-admission"
+title = "Refuse dense-band blocks inside the fold's stream, by a bound that n <= max_len makes sound"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/open.rs", "src/runs/fold.rs", "src/lib.rs"]
+mechanisms = ["mtf-fold"]
+needs_louis = ""
+question = """
+mtf-fold's STOP (#1234) is on guards only: `text` +36..+47% because its 28 full blocks run the whole fold (Pass 1 + 2, OutQ16, edges) and are refused only at the end by `f.m > cap.m`; `runs` +8..+32% from A9 staging on its 20 MiB expansion (`decode_folded`'s `s.ll`/`out` swap). The fold's only early refusal, `fold::refused`, is on literals.
+
+Because n <= bound (`b.max_len`), `f.m` and the streamed record count only grow, and `Cap::dense(n).m = min(256000, 0.27 n)` is non-decreasing in n, two streaming tests are sound (never refuse a block the shipped `cap` opens): records-so-far >= ceil(0.21 bound) => NotOpen; records-so-far >= ceil(0.10 bound) and (f.m > Cap::dense(bound).m or ns > DENSE_STRIPS) => NotOpen. Does adding them inside `FoldSink`, plus a fix for the `runs` A9 staging, clear #1234's guard gate while keeping its Wikidata gain (portable build -3.38% worker CPU, A5+A6a -13%)?
+"""
+why = """
+Twentieth synthesis pass, sections 1-2: after forward lanes and A2 the 8-worker Wikidata knee is a tie, and the only measured exact worker cut on the stations the lanes leave untouched (A5+A6a) is mtf-fold; derived 8W wall ~175 -> ~167 ms with it. The text failure is the dense-band refuse-on-m population that #1040 and #1246 already refuse cheaply on the shipped path.
+"""
+stop_test = """
+Frozen before data. Step 1 (VM, census, before timing): count on text, records, random, runs, onebyte, pattern and wikidata how many blocks each new test refuses and at what fraction of the stream; route identity with `cap` on every block of the seven corpora (any mismatch is a bug, STOP). Step 2 (VM, n >= 31 interleaved ON/OFF pinned, portable build, the #1234 harness `examples/mtf_a6a_dissection.rs`): Wikidata worker CPU 95% CI upper <= 0.98, every guard (text, runs, onebyte, random, records) CI upper <= 1.02. Exactness: byte- and CRC-identical, Miri on the fold tests, 0 new unsafe. On PASS, mtf-fold-run's frozen i9 kill test becomes the next step; on a miss, optimise the expensive phase once and remeasure, else a scoped dead-ends row.
+"""
+done_when = """
+A PR behind --features mtf-fold passing steps 1-2, a delta, surface row update; or a scoped dead-ends row.
+"""
+premises = ["frontier/deltas/2026-11-27-mtf-fold-batch-measure.md", "frontier/deltas/2026-11-27-open-cap-prescan-cost.md", "docs/notebook/2026-11-28-synthesis-twentieth-pass.md"]
+links = ["frontier/claims/mtf-fold-run.toml", "frontier/claims/forward-emission-adopt.toml"]

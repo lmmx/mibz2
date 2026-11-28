@@ -1,0 +1,45 @@
+id = "python-abi3-delivery-build"
+title = "Direct Rust abi3-py310 line and streaming delivery in Reader and mibz2.open() (zero unsafe, no packaging change)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "python"]
+priority = 2
+status = "open"
+owned_paths = ["src/python.rs", "python/mibz2/__init__.py", "python/mibz2/_mibz2.pyi", "python/tests/"]
+mechanisms = ["python-rust-line-iterator", "python-direct-buffered-reader", "python-swar-newline"]
+question = """
+`docs/notebook/2026-11-28-explore-python-abi3-delivery.md` dissected all `abi3-py310` Python API paths (`src/python.rs`, `python/mibz2/__init__.py`) after `#1033`/`#1176`/`#1117`/`#1294` with zero `unsafe` and zero packaging change:
+1. `BZ2Reader` inherits `io.IOBase.readline()`, issuing 1-byte `read(1)` calls when iterated directly (`~25x` slower on `text_1m.bz2`).
+2. `mibz2.open()` wraps `BZ2Reader` in stock `io.BufferedReader(1 MiB)` on top of `BzReader::fill_buf()`, causing 3 copies per block (`BzReader -> temp PyBytes -> memoryview into BufferedReader -> returned PyBytes`) and `2x` slower line framing (`+114%` CPU overhead on `text.bz2`).
+3. A 100% safe-Rust `abi3-py310` prototype adding `avail_rem`-tracked `Reader::{readline, readlines, read_full, peek, __iter__, __next__}` (safe 8-byte SWAR newline search, block-batched `readlines`, zero GIL detach while buffered bytes remain) plus `_BZ2BufferedReader(io.BufferedReader)` (preserving `isinstance(f, io.BufferedReader)`, `f.raw`, `f.raw.verified`, `detach()`, and `io.TextIOWrapper(f)`, with C-bound `readline`/`readlines`/`peek` and direct 2-copy `readinto`) while retaining shipped `b"".join` `readall()` and `decompress()` (`py.detach(|| drop(out))`) achieved in `n = 7` interleaved paired A/B (`28/28` pytest + edge-case tests, 100% SHA-256 parity):
+   - `BZ2Reader` line iteration (`text_1m`, `n = 5`): `-96.1%` CPU (`25.4x`), `-94.3%` wall.
+   - `text.bz2` `open().readlines()`: `-27.7%` CPU (`-34.8%` wall) at `t = 1`, `-29.3%` CPU (`-41.4%` wall) at `t = 2`.
+   - `text.bz2` `for line in open()`: `-13.5%` CPU at `t = 1`, `-15.3%` CPU (`-26.6%` wall) at `t = 2`, `-5.4..-6.7%` HWM.
+   - `wikidata.bz2` `open().read(64 KiB)`: `-9.7%` CPU (`-12.8%` HWM) at `t = 1`, `-7.4%` CPU at `t = 2`; `open_iter_lines` `-6.5% / -5.0%` CPU; `open_read_1m` `-5.3% / -3.5%` CPU; `open_readlines` `-4.8% / -4.2%` CPU; `open_read_all` and `decompress` neutral (`0/25` regressions).
+"""
+why = """
+Delivers 13-29% faster line reading and 4-10% faster streaming reads (plus eliminating a 25x raw-reader line-iteration cliff) for every Python user strictly inside the existing `abi3-py310` wheel with zero `unsafe` and zero packaging or `needs_louis` dependencies, orthogonal to `python-zero-extra-copy`'s whole-stream `2x` RSS work.
+"""
+stop_test = """
+Frozen before data:
+1. Exactness, safety & API compatibility: zero `unsafe` in `src/python.rs`; `Cargo.toml` keeps `abi3-py310` unchanged; `python/mibz2/_mibz2.pyi` updated; `isinstance(mibz2.open(...), io.BufferedReader)` is True with `.raw`, `.raw.verified`, `detach()`, `peek()`, `readinto()`, `readinto1()`, and `io.TextIOWrapper(...)` preserved; 100% SHA-256 bit-exact across all existing `python/tests/` plus new tests covering `readline(0/limit/negative/None/cross-block/no-trailing-newline/closed/corrupt)`, `readlines(hint/0/negative/None/closed/corrupt)`, `for line in BZ2Reader` / `mibz2.open`, `next()`, `peek()`, `read_full()`, `detach()`, and `TextIOWrapper`.
+2. Powered interleaved paired A/B (`n >= 7` alternating pairs in fresh subprocesses for `VmHWM` on `text.bz2` and `wikidata.bz2` at `t = 1, 2`, plus `n >= 5` on `text_1m.bz2` `raw_iter_lines`):
+   - `raw_iter_lines` (`text_1m`, `t = 1`): paired median CPU ratio `<= 0.10x` (`>= 10x` faster).
+   - `text.bz2` `open_readlines` (`t = 1, 2`): paired median CPU ratio `<= 0.80x` (`>= 20%` faster) with 2nd-order CI upper `< 1.00`.
+   - `text.bz2` `open_iter_lines` (`t = 1, 2`): paired median CPU ratio `<= 0.90x` (`>= 10%` faster) with 2nd-order CI upper `< 1.00`.
+   - `wikidata.bz2` `open_read_64k` (`t = 1, 2`): paired median CPU ratio `<= 0.95x` (`>= 5%` faster) with 2nd-order CI upper `< 1.00`.
+   - Guardrails: no workload (`open_readline`, `open_read_1m`, `open_read1_64k`, `open_read_all`, `decompress`, `open_readinto_1m`, `raw_readinto_1m`) regresses `> 1.02x` paired median CPU or `> 1.02x` median `VmHWM` peak RSS.
+"""
+done_when = """
+Striated PR on `src/python.rs`, `python/mibz2/__init__.py`, `python/mibz2/_mibz2.pyi`, and `python/tests/`, passing all Python/Rust/wheel CI checks and the frozen stop test, with delta and `frontier/surface.tsv` row `D` updated.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-python-abi3-delivery.md",
+  "frontier/deltas/2026-11-28-explore-python-abi3-delivery.md",
+  "src/python.rs",
+  "python/mibz2/__init__.py",
+]
+links = [
+  "frontier/claims/python-zero-extra-copy.toml",
+  "frontier/claims/python-read-single-copy.toml",
+]

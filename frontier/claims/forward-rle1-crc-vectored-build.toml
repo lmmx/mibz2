@@ -31,6 +31,9 @@ premises = [
   "docs/journal/2026-11-26-explore/rle1-crc-census.md",
   "docs/journal/2026-11-26-synthesis/worker-l3-footprint.md",
   "frontier/claims/forward-emission.toml",
+  "frontier/deltas/2026-11-28-forward-emission-bounded-slab-rescue.md",
+  "docs/notebook/2026-11-28-forward-lanes-mlp-and-prefetch.md",
+  "docs/notebook/2026-11-28-explore-fold-a5a6a-dissection.md",
 ]
 links = [
   "frontier/claims/forward-rle1-crc-fusion.toml",
