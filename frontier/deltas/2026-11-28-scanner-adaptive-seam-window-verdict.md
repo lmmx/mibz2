@@ -1,7 +1,7 @@
 claim: scanner-adaptive-seam-window
 by: claude-code
 outcome: dropped
-evidence: origin/evidence d6bc8ca2, scanner-adaptive-seam/run-20261127T192609Z.tar.gz, SHA-256 c14e53b4f2fe345e30122c92b782aff9e530bb7bd11d0bc736e4b4c73cc57c59 (matches the archived .sha256); #1144 at 0fda23812aec (base 07e4fadd); frontier/claims/scanner-adaptive-seam-window.toml stop_test §3
+evidence: PR #1260 (this record); origin/evidence d6bc8ca2, scanner-adaptive-seam/run-20261127T192609Z.tar.gz, SHA-256 c14e53b4f2fe345e30122c92b782aff9e530bb7bd11d0bc736e4b4c73cc57c59 (matches the archived .sha256); #1144 at 0fda23812aec (base 07e4fadd); frontier/claims/scanner-adaptive-seam-window.toml stop_test §3
 
 **What was asked:** read the returned i9 bundle for #1144 (the adaptive per-block lookahead and one-shot seam window) and, under the frozen stop_test, merge it or record a scoped dead end. The producer was another agent kind; the integration was parked and blocked on this bundle.
 
