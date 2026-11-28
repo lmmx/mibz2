@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 1
-status = "blocked"
+status = "dropped"
 owned_paths = ["src/open/lanes.rs"]
 mechanisms = ["forward-anchor-lanes-bounded-rss"]
 needs_louis = ""
@@ -15,6 +15,8 @@ Can we eliminate the retained per-worker slab pool and full-block double bufferi
 """
 why = """
 Research persistence on the single largest ready-to-ship software speedup in the repository (`-15.4%` 1W, `-13.5%` 6W, `-7.8%` 8W CPU, `-3.5%` 10W, 12/12 guards clean, zero `unsafe`). Fixing the `Arena::pool` double-buffer RSS tax directly removes the only structural blocker to default adoption in `v0.5.18` (and eliminates `+6.7 MiB` of 8-worker L3 pressure inside the 20 MiB L3 budget).
+
+Closed `DO NOT ADOPT` (unrelaxed C2) on physical i9 bundle `origin/evidence 22f2d7d6` (`docs/notebook/2026-11-28-forward-adopt-rescue-i9-verdict.md`): 10/11 C6 clauses PASSED (`wikidata/1..12` wall `-12.3% / -12.7% / -8.13% / -8.25% / -8.68%`, `8W` CPU `-10.01%`, 12/12 guards clean, `wikidata/6..12` RSS `-972 / -722 / -132 / -462 KiB`, `wikidata/1` RSS GM `1.0143x <= 1.020x`), failing solely on the conjunctive `wikidata/1` median-delta sub-clause (`+868.0 KiB > +512.0 KiB`) due to one discrete `~900 KiB` ready-block pipeline-buffer mode shift on 3-thread `mibz2-workers-lazy -t 1`. Does not close `#1312` bounded-slab forward emission.
 """
 stop_test = """
 Frozen pre-data C1a/C6 rescue rule (calibrated against `docs/notebook/2026-11-28-rss-bound-calibration.md` §5; C2 never relaxed):
