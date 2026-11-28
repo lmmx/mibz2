@@ -1,9 +1,9 @@
-id = "synthesise"
-holder = "claude-code"
-session = "c63bf255a52c"
-claimed_at = "2026-11-28T03:59:41+00:00"
-expires = "2026-11-28T06:59:41+00:00"
-owned_paths = []
-mechanisms = []
-base = "757a91b72eeaa127ad55a100a9a06bd28f3028f2"
+id = "forward-emission-bounded-slab-rescue"
+holder = "antigravity"
+session = "6e5156005cd7"
+claimed_at = "2026-11-28T04:07:24+00:00"
+expires = "2026-11-28T12:07:24+00:00"
+owned_paths = ["src/open/lanes.rs"]
+mechanisms = ["forward-anchor-lanes-bounded-rss"]
+base = "b0b788717b505711b6899b2d7dc413cb40763445"
 released = false
