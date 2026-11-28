@@ -396,10 +396,7 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
         if n >= b.max_len {
             return Err(ErrorKind::BlockTooLong);
         }
-        let nn = ((s - 1) as usize).min(255);
-        let v = list[nn];
-        list.copy_within(0..nn, 1);
-        list[0] = v;
+        let v = super::mtf::mtf_move_fast15(&mut list, ((s - 1) as usize).min(255));
         let c = b.seq_to_unseq[v as usize];
         #[cfg(any(test, feature = "ideal-mtf"))]
         close(open, runs, per);
