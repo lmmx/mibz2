@@ -81,13 +81,48 @@ base_toolchain=rustc 1.99.1 (abc 2026-11-01) | cargo 1.99.1
 """
 
 CORPUS_META = {
-    "wikidata": {"hash": "a8830caee5c511a6", "out": 209_700_196, "base_wall": 0.400, "base_rss_kb": 42_000},
-    "text": {"hash": "b112233445566778", "out": 16_000_000, "base_wall": 0.120, "base_rss_kb": 24_000},
-    "records": {"hash": "c223344556677889", "out": 12_000_000, "base_wall": 0.090, "base_rss_kb": 20_000},
-    "random": {"hash": "d334455667788990", "out": 10_000_000, "base_wall": 0.110, "base_rss_kb": 22_000},
-    "pattern": {"hash": "e445566778899001", "out": 14_000_000, "base_wall": 0.080, "base_rss_kb": 18_000},
-    "onebyte": {"hash": "f556677889900112", "out": 16_000_000, "base_wall": 0.060, "base_rss_kb": 16_000},
-    "runs": {"hash": "0667788990011223", "out": 14_000_000, "base_wall": 0.070, "base_rss_kb": 18_000},
+    "wikidata": {
+        "hash": "a8830caee5c511a6",
+        "out": 209_700_196,
+        "base_wall": 0.400,
+        "base_rss_kb": 42_000,
+    },
+    "text": {
+        "hash": "b112233445566778",
+        "out": 16_000_000,
+        "base_wall": 0.120,
+        "base_rss_kb": 24_000,
+    },
+    "records": {
+        "hash": "c223344556677889",
+        "out": 12_000_000,
+        "base_wall": 0.090,
+        "base_rss_kb": 20_000,
+    },
+    "random": {
+        "hash": "d334455667788990",
+        "out": 10_000_000,
+        "base_wall": 0.110,
+        "base_rss_kb": 22_000,
+    },
+    "pattern": {
+        "hash": "e445566778899001",
+        "out": 14_000_000,
+        "base_wall": 0.080,
+        "base_rss_kb": 18_000,
+    },
+    "onebyte": {
+        "hash": "f556677889900112",
+        "out": 16_000_000,
+        "base_wall": 0.060,
+        "base_rss_kb": 16_000,
+    },
+    "runs": {
+        "hash": "0667788990011223",
+        "out": 14_000_000,
+        "base_wall": 0.070,
+        "base_rss_kb": 18_000,
+    },
 }
 
 TEST_GIT_ENV = {
@@ -283,7 +318,10 @@ class ScratchRepo:
         self.write("src/parallel.rs", "// v0.5.16 trims\n")
         self.write("docs/journal/decisions.md", "# Decisions\n")
         self.write("frontier/deltas/README.md", "# Deltas\n")
-        self.write("frontier/claims/release-0-5-18.toml", 'id = "release-0-5-18"\nstatus = "open"\nneeds_louis = ""\n')
+        self.write(
+            "frontier/claims/release-0-5-18.toml",
+            'id = "release-0-5-18"\nstatus = "open"\nneeds_louis = ""\n',
+        )
         self.v0516_sha = self.commit("initial v0.5.16")
         self.tag("v0.5.16", self.v0516_sha)
         self.write("Cargo.toml", '[package]\nname = "mibz2"\nversion = "0.5.17"\n')
@@ -357,13 +395,17 @@ class ScratchRepo:
         )
         if not omit_sidecar:
             sum_bytes = f"{sidecar_digest}  {stamp_file}\n".encode()
-            sum_blob = subprocess.run(
-                ["git", "hash-object", "-w", "--stdin"],
-                cwd=self.origin,
-                input=sum_bytes,
-                check=True,
-                capture_output=True,
-            ).stdout.decode().strip()
+            sum_blob = (
+                subprocess.run(
+                    ["git", "hash-object", "-w", "--stdin"],
+                    cwd=self.origin,
+                    input=sum_bytes,
+                    check=True,
+                    capture_output=True,
+                )
+                .stdout.decode()
+                .strip()
+            )
             subprocess.run(
                 [
                     "git",
@@ -377,11 +419,24 @@ class ScratchRepo:
                 check=True,
             )
         tree = subprocess.run(
-            ["git", "write-tree"], cwd=self.origin, env=env, check=True, capture_output=True, text=True
+            ["git", "write-tree"],
+            cwd=self.origin,
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
         ).stdout.strip()
         idx.unlink(missing_ok=True)
         env.pop("GIT_INDEX_FILE", None)
-        cmd = ["git", "commit-tree", tree, "-m", f"evidence: {rel_path}", "-m", f"sha256 {actual_sha}"]
+        cmd = [
+            "git",
+            "commit-tree",
+            tree,
+            "-m",
+            f"evidence: {rel_path}",
+            "-m",
+            f"sha256 {actual_sha}",
+        ]
         if parent:
             cmd[2:2] = ["-p", parent]
         ev_commit = subprocess.run(
@@ -487,7 +542,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         tar_bytes, digest = build_tarball_bytes(
             rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
         )
-        ev_commit, _ = self.repo.publish_evidence("release-preflight/20261128T010000Z.tar.gz", tar_bytes)
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T010000Z.tar.gz", tar_bytes
+        )
         head = self.repo.write_preflight_delta(
             "2026-11-28-release-0-5-18-preflight.md",
             candidate_sha=cand,
@@ -516,7 +573,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         tar_bytes, digest = build_tarball_bytes(
             rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
         )
-        ev_commit, _ = self.repo.publish_evidence("release-preflight/20261128T010100Z.tar.gz", tar_bytes)
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T010100Z.tar.gz", tar_bytes
+        )
         self.repo.write_preflight_delta(
             "2026-11-28-preflight-8t-reg.md",
             candidate_sha=cand,
@@ -648,17 +707,24 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
 
         # Passing bundle archived on origin/evidence, BUT unread (no delta receipt recorded!)
         rows = make_paired_rows()
-        tar_bytes, _ = build_tarball_bytes(rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha)
+        tar_bytes, _ = build_tarball_bytes(
+            rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
+        )
         self.repo.publish_evidence("release-preflight/20261128T010500Z.tar.gz", tar_bytes)
         res_unread = rp.verify_release(self.repo.work)
         self.assertFalse(res_unread["allowed"])
-        self.assertTrue(any("receipt" in p.lower() or "unread" in p.lower() for p in res_unread["problems"]), res_unread)
+        self.assertTrue(
+            any("receipt" in p.lower() or "unread" in p.lower() for p in res_unread["problems"]),
+            res_unread,
+        )
 
     def test_05b_digest_mismatch_and_corrupt_bundle_rejected(self) -> None:
         self.repo.write("src/open/dense.rs", "// digest mismatch test\n")
         cand = self.repo.commit("perf(open): digest test")
         rows = make_paired_rows()
-        tar_bytes, digest = build_tarball_bytes(rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha)
+        tar_bytes, digest = build_tarball_bytes(
+            rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
+        )
 
         # Sidecar digest mismatch on origin/evidence
         ev_commit, _ = self.repo.publish_evidence(
@@ -678,7 +744,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         )
         res = rp.verify_release(self.repo.work)
         self.assertFalse(res["allowed"])
-        self.assertTrue(any("sha256" in p.lower() or "digest" in p.lower() for p in res["problems"]), res)
+        self.assertTrue(
+            any("sha256" in p.lower() or "digest" in p.lower() for p in res["problems"]), res
+        )
 
         # Corrupt / non-gzip bundle
         corrupt_path = self.tmp / "corrupt.tar.gz"
@@ -698,7 +766,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
             lscpu_txt=CI_EPYC_LSCPU,
             env_json=CI_ENV_JSON,
         )
-        ev_commit, _ = self.repo.publish_evidence("release-preflight/20261128T010700Z.tar.gz", tar_bytes)
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T010700Z.tar.gz", tar_bytes
+        )
         # Even if delta prose claims "PASS", gate MUST reject wrong machine!
         self.repo.write_preflight_delta(
             "2026-11-28-wrong-machine.md",
@@ -713,22 +783,32 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         )
         res = rp.verify_release(self.repo.work)
         self.assertFalse(res["allowed"])
-        self.assertTrue(any("i9-10900k" in p.lower() or "machine" in p.lower() for p in res["problems"]), res)
+        self.assertTrue(
+            any("i9-10900k" in p.lower() or "machine" in p.lower() for p in res["problems"]), res
+        )
 
         # Disallowed RUSTFLAGS override in inputs.txt -> REJECT
         bad_inputs_tar, bad_inputs_sha = build_tarball_bytes(
             rows=rows,
             candidate_sha=cand,
             base_sha=self.repo.v0517_sha,
-            inputs_txt=DEFAULT_INPUTS_TXT.replace("rustflags=\n", "rustflags=-C target-cpu=native\n"),
+            inputs_txt=DEFAULT_INPUTS_TXT.replace(
+                "rustflags=\n", "rustflags=-C target-cpu=native\n"
+            ),
         )
         p = self.tmp / "bad-inputs.tar.gz"
         p.write_bytes(bad_inputs_tar)
         v_inputs = rp.judge_bundle(
-            p, expected_candidate=cand, expected_base=self.repo.v0517_sha, expected_sha256=bad_inputs_sha
+            p,
+            expected_candidate=cand,
+            expected_base=self.repo.v0517_sha,
+            expected_sha256=bad_inputs_sha,
         )
         self.assertFalse(v_inputs["pass"])
-        self.assertTrue(any("rustflags" in m.lower() or "build" in m.lower() for m in v_inputs["problems"]), v_inputs)
+        self.assertTrue(
+            any("rustflags" in m.lower() or "build" in m.lower() for m in v_inputs["problems"]),
+            v_inputs,
+        )
 
         # Missing primary corpus (`text`) or missing 8T/10T thread counts -> REJECT
         rows_no_text = make_paired_rows(corpora=("wikidata",))
@@ -748,7 +828,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         tar_wrong_base, sha_wb = build_tarball_bytes(
             rows=rows, candidate_sha=cand1, base_sha=self.repo.v0516_sha
         )
-        ev_wb, _ = self.repo.publish_evidence("release-preflight/20261128T010800Z.tar.gz", tar_wrong_base)
+        ev_wb, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T010800Z.tar.gz", tar_wrong_base
+        )
         self.repo.write_preflight_delta(
             "2026-11-28-wrong-base.md",
             candidate_sha=cand1,
@@ -784,14 +866,23 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         self.repo.commit("perf(open): late edit after preflight")
         res_stale = rp.verify_release(self.repo.work)
         self.assertFalse(res_stale["allowed"])
-        self.assertTrue(any("stale" in p.lower() or "changed" in p.lower() for p in res_stale["problems"]), res_stale)
+        self.assertTrue(
+            any("stale" in p.lower() or "changed" in p.lower() for p in res_stale["problems"]),
+            res_stale,
+        )
 
         # 6c. Race at dispatch: origin/master advances past local HEAD (or expected_head)
         # Rewind local worktree 1 commit behind origin/master
         git(self.repo.work, "reset", "--hard", good_head)
         res_race = rp.verify_release(self.repo.work, expected_head=good_head)
         self.assertFalse(res_race["allowed"])
-        self.assertTrue(any("master" in p.lower() or "race" in p.lower() or "advanced" in p.lower() for p in res_race["problems"]), res_race)
+        self.assertTrue(
+            any(
+                "master" in p.lower() or "race" in p.lower() or "advanced" in p.lower()
+                for p in res_race["problems"]
+            ),
+            res_race,
+        )
 
     # ------------------------------------------------------------------
     # 7. Non-performance metadata-only changes (whole release & post-preflight reuse)
@@ -806,7 +897,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         self.assertEqual(res_docs["mode"], "non-performance-metadata")
 
         # 7b. Mixed change (Cargo.toml + docs/) -> REJECT without i9 evidence
-        self.repo.write("Cargo.toml", '[package]\nname = "mibz2"\nversion = "0.5.17"\n# build flag\n')
+        self.repo.write(
+            "Cargo.toml", '[package]\nname = "mibz2"\nversion = "0.5.17"\n# build flag\n'
+        )
         self.repo.commit("chore: touch Cargo.toml")
         res_mixed = rp.verify_release(self.repo.work)
         self.assertFalse(res_mixed["allowed"])
@@ -905,7 +998,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         tar_bytes, digest = build_tarball_bytes(
             rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
         )
-        ev_commit, _ = self.repo.publish_evidence("release-preflight/20261128T011000Z.tar.gz", tar_bytes)
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T011000Z.tar.gz", tar_bytes
+        )
         head = self.repo.write_preflight_delta(
             "2026-11-28-shallow-pass.md",
             candidate_sha=cand,
@@ -947,7 +1042,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         tar_bytes, digest = build_tarball_bytes(
             rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
         )
-        ev_commit, _ = self.repo.publish_evidence("release-preflight/20261128T011100Z.tar.gz", tar_bytes)
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T011100Z.tar.gz", tar_bytes
+        )
 
         # 10a. Unrecorded / pending recalibration -> REJECT
         self.repo.write_preflight_delta(
@@ -961,7 +1058,10 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         )
         res_pending = rp.verify_release(self.repo.work)
         self.assertFalse(res_pending["allowed"])
-        self.assertTrue(any("5c" in p.lower() or "recalibration" in p.lower() for p in res_pending["problems"]), res_pending)
+        self.assertTrue(
+            any("5c" in p.lower() or "recalibration" in p.lower() for p in res_pending["problems"]),
+            res_pending,
+        )
 
         # 10b. Waiving §5c citing unchanged route census or prior crossover -> REJECT
         self.repo.write_preflight_delta(
@@ -979,7 +1079,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         # 10c. Stale recalibration: recalibrated at cand, then worker-cost kernel changed again!
         self.repo.write("src/open/dense.rs", "// second worker cost edit after recalibration\n")
         cand2 = self.repo.commit("perf(open): second worker cost edit")
-        tar2, sha2 = build_tarball_bytes(rows=rows, candidate_sha=cand2, base_sha=self.repo.v0517_sha)
+        tar2, sha2 = build_tarball_bytes(
+            rows=rows, candidate_sha=cand2, base_sha=self.repo.v0517_sha
+        )
         ev2, _ = self.repo.publish_evidence("release-preflight/20261128T011200Z.tar.gz", tar2)
         self.repo.write_preflight_delta(
             "2026-11-28-recal-stale.md",
@@ -998,7 +1100,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         # then final preflight measured on cand3 -> ALLOW!
         self.repo.write("src/parallel.rs", "// retuned trims from 5c sweep\n")
         cand3 = self.repo.commit("perf(parallel): retune trims after 5c sweep")
-        tar3, sha3 = build_tarball_bytes(rows=rows, candidate_sha=cand3, base_sha=self.repo.v0517_sha)
+        tar3, sha3 = build_tarball_bytes(
+            rows=rows, candidate_sha=cand3, base_sha=self.repo.v0517_sha
+        )
         ev3, _ = self.repo.publish_evidence("release-preflight/20261128T011300Z.tar.gz", tar3)
         head3 = self.repo.write_preflight_delta(
             "2026-11-28-recal-valid.md",
@@ -1029,11 +1133,15 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         cand = self.repo.commit("fix(open): partial prescan fix")
 
         # 11a. Candidate omits v0.5.16 recovery arm -> REJECT
-        rows_no_rec = make_paired_rows(wall_ratios={("wikidata", 8): 0.985, ("wikidata", 10): 0.990})
+        rows_no_rec = make_paired_rows(
+            wall_ratios={("wikidata", 8): 0.985, ("wikidata", 10): 0.990}
+        )
         tar_no_rec, sha_no_rec = build_tarball_bytes(
             rows=rows_no_rec, candidate_sha=cand, base_sha=self.repo.v0517_sha
         )
-        ev_no_rec, _ = self.repo.publish_evidence("release-preflight/20261128T011400Z.tar.gz", tar_no_rec)
+        ev_no_rec, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T011400Z.tar.gz", tar_no_rec
+        )
         self.repo.write_preflight_delta(
             "2026-11-28-corrective-no-rec.md",
             candidate_sha=cand,
@@ -1060,7 +1168,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
             base_sha=self.repo.v0517_sha,
             recovery_base_sha=self.repo.v0516_sha,
         )
-        ev_partial, _ = self.repo.publish_evidence("release-preflight/20261128T011500Z.tar.gz", tar_partial)
+        ev_partial, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T011500Z.tar.gz", tar_partial
+        )
         self.repo.write_preflight_delta(
             "2026-11-28-corrective-partial.md",
             candidate_sha=cand,
@@ -1075,7 +1185,9 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         )
         res_partial = rp.verify_release(self.repo.work)
         self.assertFalse(res_partial["allowed"])
-        self.assertTrue(any("recovery" in p.lower() and "8" in p for p in res_partial["problems"]), res_partial)
+        self.assertTrue(
+            any("recovery" in p.lower() and "8" in p for p in res_partial["problems"]), res_partial
+        )
 
         # 11c. Full recovery against v0.5.16 AND beats v0.5.17 -> ALLOW
         rows_recovered = make_paired_rows(
@@ -1150,7 +1262,10 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         """Execute a release guard script mirroring .just/ship.just with fake tools."""
         self.repo.write("src/open/dense.rs", "// unverified change\n")
         self.repo.commit("perf(open): unverified")
-        shutil.copyfile(REPO_ROOT / "bench/release_preflight.py", self.repo.work / "bench/release_preflight.py")
+        (self.repo.work / "bench").mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            REPO_ROOT / "bench/release_preflight.py", self.repo.work / "bench/release_preflight.py"
+        )
         # Keep bench/release_preflight.py tracked & clean
         self.repo.commit("ops: add preflight verifier")
         before_cargo = (self.repo.work / "Cargo.toml").read_text()
