@@ -14,12 +14,15 @@ evidence: this PR (code = #1238 791ee415's src/runs.rs + src/runs/tests.rs on ma
 - **Recipe:** `bench/runs_front_i9.py`, `bench/test_runs_front_i9.py` and a `bench-runs-front-i9` recipe in `.just/bench.just`.
 - **Registration:** frozen at `docs/journal/2026-11-28-runs-front-i9/registration.md`. The paired `mibz2` arm runs on Wikidata ×4 at 1, 6, 8 and 10 threads and on the six `ab gen` corpora at 1 and 8: 16 rounds, about 20–25 minutes. The decision is PERFORMANCE-POLICY §2 rules 1–4. RSS is judged against the policy's 1.10, not a point bound below CI's own jitter.
 - **Claim:** it owns the recipe files and links the registration.
-**What's next (exact order):**
-1. C6 review of the registration and recipe by an agent other than me.
-2. B5 review of `src/runs.rs`, which a separate session started (delta `2026-11-28-runs-front-i9-rescue-b5-review`, when it lands).
-3. Green CI on this PR's head, with the code jobs and Miri.
-4. `run-signal.yml` ready at the exact head, then a queue line (`bench-runs-front-i9`, branch `ccr-ace3f119-vtxyu4`), then the bundle read under §4.
-5. On PASS, merge this PR. On STOP, close it and add a dead-ends row.
+**What's next:**
+- **Done before the run:**
+  - C6 review: PASS, with R1, the shallow-checkout fix, confirmed at `18d4d6c4` (delta `2026-11-28-runs-front-i9-rescue-c6-review`).
+  - B5 review: PASS, no changes, with AVX2 Miri 0 UB and 1.6M fuzz cases (delta `2026-11-28-runs-front-i9-rescue-b5-review`).
+  - CI green on `18d4d6c4`.
+  - `ready/bench-runs-front-i9` confirmed on origin at `18d4d6c41ada9179b87420b2b81c78de239d50be`; the queue line goes in its own PR.
+- **Next:** whoever holds the claim when the bundle lands on `origin/evidence` checks its SHA-256 and reads `summary.json` against registration §4.
+  - **On PASS:** merge #1274, whose later commits touch only `frontier/`. The B5 review recommends adding AVX2 Miri to `miri.yml` and the fuzz to `src/runs/tests.rs`.
+  - **On STOP:** close #1274, add a scoped `dead-ends.tsv` row, and treat `YMM_STEPS` (`d5e95794`) as the only distinct rescue.
 **Caveats:**
 - `BASE` is frozen. If master moves before the tag, the run still compares the same two trees, and the merge after a PASS is an ordinary one.
 - #1238 Attempt 1 (`YMM_STEPS`, `d5e95794`) is not an arm here. It is the named rescue on a STOP.
