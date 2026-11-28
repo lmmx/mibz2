@@ -4093,6 +4093,884 @@ class TestResultToRelease(unittest.TestCase):
         self.assertIn("live-hold cap", sec_cap)
 
 
+class TestShipCompletionPressure(unittest.TestCase):
+    """Frozen regression fixtures for all 9 stop_test classes + v0.5.18 stall reproduction."""
+
+    def setUp(self) -> None:
+        """Create an isolated temporary frontier sandbox for each test."""
+        self._td = tempfile.TemporaryDirectory(prefix="frontier-ship-")
+        self.sb = FrontierSandbox(pathlib.Path(self._td.name))
+
+    def tearDown(self) -> None:
+        """Remove the temporary frontier sandbox."""
+        self._td.cleanup()
+
+    def _reset(
+        self,
+        claims: dict[str, str],
+        *,
+        queue_text: str = "# repo: lmmx/mibz2\n",
+        deltas: dict[str, str] | None = None,
+        ledger_rows: list[str] | None = None,
+        max_open_claims: int | None = None,
+        max_live_holds: int | None = None,
+    ) -> str:
+        return TestResultToRelease._reset_state(
+            self,
+            claims,
+            queue_text=queue_text,
+            deltas=deltas,
+            ledger_rows=ledger_rows,
+            max_open_claims=max_open_claims,
+            max_live_holds=max_live_holds,
+        )
+
+    def _ev(
+        self,
+        bundles: dict[str, str | dict | None],
+        *,
+        message: str = "evidence: fixture/run-20261128T000000Z",
+        sidecar_override: dict[str, str] | None = None,
+    ) -> str:
+        return TestResultToRelease._publish_evidence(
+            self, bundles, message=message, sidecar_override=sidecar_override
+        )
+
+    def _tag_ready(self, recipe: str, sha: str, *, hold: bool = False) -> None:
+        TestResultToRelease._tag_ready(self, recipe, sha, hold=hold)
+
+    def _run(
+        self,
+        repo: pathlib.Path,
+        *,
+        can: set[str] | None = None,
+        prs=None,
+        pr_error=None,
+        queue_override: dict | None = None,
+    ):
+        mod = _load_frontier_module(repo)
+        pr_val = ([], None) if (prs is None and pr_error is None) else (prs, pr_error)
+        ctx = [mock.patch.object(mod, "read_open_prs", return_value=pr_val)]
+        if queue_override is not None:
+            ctx.append(
+                mock.patch.object(mod, "read_workstation_queue_state", return_value=queue_override)
+            )
+        with contextlib.ExitStack() as stack:
+            for c in ctx:
+                stack.enter_context(c)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                mod.brief(can if can is not None else set())
+            brief_out = buf.getvalue()
+            status_out = mod.render()
+        return brief_out, status_out, mod
+
+    def _section(self, text: str, heading: str) -> str:
+        self.assertIn(heading, text)
+        return text.split(heading, 1)[1].split("\n## ", 1)[0]
+
+    def _commit_default_change(
+        self, rel_path: str = "src/open.rs", pr_num: int = 1234, body: str = "// default\n"
+    ) -> str:
+        seed = self.sb.seed
+        target = seed / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+        ledger = seed / "frontier" / "ledger.tsv"
+        existing = (
+            ledger.read_text(encoding="utf-8")
+            if ledger.exists()
+            else "pr\tmerged\teffect\tstate\tmeasured\tevidence\n"
+        )
+        ledger.write_text(
+            existing + f"{pr_num}\t2026-11-28\tDefault change.\tdefault\t-2% wall\tPR #{pr_num}\n",
+            encoding="utf-8",
+        )
+        _git(seed, "add", rel_path, "frontier/ledger.tsv")
+        _git(seed, "commit", "-m", f"perf: default change (#{pr_num})")
+        _git(seed, "push", "origin", "master")
+        return _git(seed, "rev-parse", "HEAD")
+
+    # Fixture (1): default merges + blocked/held release still expose persistent P1 (not 'nothing')
+    def test_ship_01_blocked_and_held_release_keep_persistent_p1(self) -> None:
+        """Blocked or held untagged release retains persistent P1 in brief and status."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        r_blk = self.sb.clone("ship-01-blocked")
+        brief_b, status_b, _ = self._run(r_blk, can={"shell", "repo-write"})
+        for out in (brief_b, status_b):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertNotIn("- nothing", rel)
+            self.assertIn("release-0-5-18", rel)
+            self.assertIn("blocked-on-named-gate", rel)
+            self.assertIn("P1 persistent", rel)
+
+        # Open & held release still keeps persistent P1 visible, naming holder without duplicate claim
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        holder = self.sb.clone("ship-01-holder")
+        res = self.sb.run_frontier(holder, "claim", "release-0-5-18", "--by", "claude-code")
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        r_held = self.sb.clone("ship-01-held")
+        brief_h, status_h, _ = self._run(r_held, can={"shell", "repo-write"})
+        for out in (brief_h, status_h):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertNotIn("- nothing", rel)
+            self.assertIn("release-0-5-18", rel)
+            self.assertIn("held by claude-code", rel)
+        self.assertNotIn("release-0-5-18", self._section(brief_h, "## What you can take"))
+
+    # Fixture (2): #1256-like pending reviewed-gate dependency & §5c recalibration, review ordering
+    def test_ship_02_dependency_review_ordering_recalibration_and_transfer(self) -> None:
+        """Pending gate PR gets P1 release-critical ordering, transfer command, and §5c notice."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        sha = self._commit_default_change("src/open.rs", 1246)
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    links=["frontier/claims/pre-release-i9-gate.toml"],
+                ),
+                "pre-release-i9-gate": _claim_toml(
+                    "pre-release-i9-gate",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=2,
+                    owned_paths=["bench/release_preflight.py"],
+                    mechanisms=["release-preflight"],
+                ),
+                "unrelated-opt": _claim_toml(
+                    "unrelated-opt",
+                    kind="build",
+                    zone="striated",
+                    status="open",
+                    priority=2,
+                    owned_paths=["src/other.rs"],
+                ),
+            }
+        )
+        # Hold pre-release-i9-gate by another agent AND have PR #1256 open for review
+        holder = self.sb.clone("ship-02-holder")
+        res = self.sb.run_frontier(holder, "claim", "pre-release-i9-gate", "--by", "chatgpt")
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        prs = [
+            {
+                "number": 1300,
+                "title": "Unrelated opt",
+                "body": "Claim: unrelated-opt",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+            {
+                "number": 1256,
+                "title": "Pre-release i9 gate",
+                "body": "Claim: pre-release-i9-gate",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+        ]
+        r = self.sb.clone("ship-02-reader")
+        brief_out, status_out, _ = self._run(r, can={"shell", "repo-write"}, prs=prs)
+        for out in (brief_out, status_out):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertIn("pre-release-i9-gate", rel)
+            self.assertIn("PR #1256", rel)
+            self.assertIn("take-review pre-release-i9-gate", rel)
+            self.assertIn("currently held by chatgpt", rel)
+            self.assertIn("§5c worker-count recalibration", rel)
+            # Review ordering MUST put release-critical PR #1256 FIRST ahead of unrelated PR #1300
+            rev = self._section(out, "## Awaiting review or merge")
+            self.assertIn("[P1 release-critical]", rev)
+            self.assertLess(rev.index("pre-release-i9-gate"), rev.index("unrelated-opt"))
+        # No duplicate claim offered for held/pending pre-release-i9-gate
+        self.assertNotIn("pre-release-i9-gate", self._section(brief_out, "## What you can take"))
+
+    # Fixture (3): unrelated runnable queue entry cannot clear release pressure
+    def test_ship_03_unrelated_runnable_queue_entry_cannot_clear_release_pressure(self) -> None:
+        """An unrelated runnable workstation queue recipe cannot clear release P1 pressure."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        sha = self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-unrelated master u\n",
+        )
+        self._tag_ready("bench-unrelated", sha)
+        r = self.sb.clone("ship-03")
+        brief_out, status_out, _ = self._run(r, can={"shell", "repo-write", "workflow-dispatch"})
+        ws = self._section(brief_out, "## Workstation replenishment pressure")
+        self.assertIn("replenished", ws)
+        for out in (brief_out, status_out):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertNotIn("- nothing", rel)
+            self.assertIn("release-0-5-18", rel)
+            self.assertIn("bench-release-preflight", rel)
+
+    # Fixture (4): matching current-pin evidence: queued -> unread -> fail -> pass -> corrupt
+    def test_ship_04_preflight_pin_queued_unread_corrupt_fail_and_pass(self) -> None:
+        """Current-pin preflight evidence transitions queued -> unread -> fail/pass, fail-closed on corrupt."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        base_rel = (
+            _claim_toml(
+                "release-0-5-18",
+                kind="ops",
+                zone="striated",
+                status="open",
+                priority=1,
+                owned_paths=["CHANGELOG.md"],
+            )
+            + 'preflight_recipe = "bench-release-preflight"\n'
+        )
+        pin_sha = self._reset(
+            {"release-0-5-18": base_rel},
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+        )
+        self._tag_ready("bench-release-preflight", pin_sha)
+        # (a) Queued exact candidate
+        r_a = self.sb.clone("ship-04a")
+        brief_a, _, _ = self._run(r_a, can={"shell", "repo-write", "workflow-dispatch"})
+        rel_a = self._section(brief_a, "## Release due (P1)")
+        self.assertIn("queued-exact-candidate", rel_a)
+        self.assertIn(pin_sha[:8], rel_a)
+
+        # (b) Valid matching bundle arrives -> returned-unread (never inferred PASS)
+        ev_sha = self._ev(
+            {"release-preflight/run-20261128T020000Z.tar.gz": pin_sha},
+            message="evidence: release-preflight/run-20261128T020000Z",
+        )
+        r_un = self.sb.clone("ship-04-unread")
+        brief_un, _, _ = self._run(r_un, can={"shell", "repo-write", "workflow-dispatch"})
+        rel_un = self._section(brief_un, "## Release due (P1)")
+        self.assertIn("returned-unread", rel_un)
+        self.assertNotIn("ready-to-publish", rel_un)
+
+        # (c) Recorded preflight-fail -> gate-failed
+        self._reset(
+            {"release-0-5-18": base_rel + f'candidate_pin = "{pin_sha}"\n'},
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+            deltas={
+                "2026-11-28-rel-fail.md": (
+                    f"claim: release-0-5-18\nby: antigravity\noutcome: blocked\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: preflight-fail\n\n"
+                    "**What was asked:** preflight failed at 8T.\n"
+                )
+            },
+        )
+        r_fail = self.sb.clone("ship-04-fail")
+        brief_fail, _, _ = self._run(r_fail, can={"shell", "repo-write", "workflow-dispatch"})
+        rel_fail = self._section(brief_fail, "## Release due (P1)")
+        self.assertIn("gate-failed", rel_fail)
+        self.assertNotIn("ready-to-publish", rel_fail)
+
+        # (d) Recorded preflight-pass -> ready-to-publish
+        self._reset(
+            {"release-0-5-18": base_rel + f'candidate_pin = "{pin_sha}"\n'},
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+            deltas={
+                "2026-11-28-rel-pass.md": (
+                    f"claim: release-0-5-18\nby: antigravity\noutcome: open\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: preflight-pass\n\n"
+                    "**What was asked:** preflight passed.\n"
+                )
+            },
+        )
+        r_pass = self.sb.clone("ship-04-pass")
+        brief_pass, status_pass, _ = self._run(
+            r_pass, can={"shell", "repo-write", "workflow-dispatch"}
+        )
+        for out in (brief_pass, status_pass):
+            rel_p = self._section(out, "## Release due (P1)")
+            self.assertIn("ready-to-publish", rel_p)
+            self.assertIn(pin_sha[:8], rel_p)
+
+        # (e) Corrupt sidecar on evidence branch -> fail closed to unknown (never ready-to-publish)
+        self._ev(
+            {"release-preflight/run-20261128T030000Z.tar.gz": pin_sha},
+            sidecar_override={"release-preflight/run-20261128T030000Z.tar.gz": "0" * 64},
+        )
+        r_bad = self.sb.clone("ship-04-bad")
+        brief_bad, _, _ = self._run(r_bad, can={"shell", "repo-write", "workflow-dispatch"})
+        rel_bad = self._section(brief_bad, "## Release due (P1)")
+        self.assertIn("`unknown`", rel_bad)
+        self.assertNotIn("ready-to-publish", rel_bad)
+
+    # Fixture (5): blocked release becomes resumable on dependency completion via normal transitions
+    def test_ship_05_blocked_release_resumable_on_dependency_done(self) -> None:
+        """Blocked release becomes resumable on dependency completion using normal transitions."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    links=["frontier/claims/pre-release-i9-gate.toml"],
+                ),
+                "pre-release-i9-gate": _claim_toml(
+                    "pre-release-i9-gate",
+                    kind="ops",
+                    zone="striated",
+                    status="done",
+                    priority=1,
+                    owned_paths=["bench/release_preflight.py"],
+                    mechanisms=["release-preflight"],
+                ),
+            }
+        )
+        r = self.sb.clone("ship-05")
+        brief_out, status_out, _ = self._run(r, can={"shell", "repo-write"})
+        for out in (brief_out, status_out):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertIn("resumable now", rel)
+            self.assertIn("pre-release-i9-gate", rel)
+            self.assertIn("frontier.py mark release-0-5-18 --status open", rel)
+        # Normal transition reopens cleanly and allows normal CAS claim (no forced lease)
+        res_mark = self.sb.run_frontier(r, "mark", "release-0-5-18", "--status", "open")
+        self.assertEqual(res_mark.returncode, 0, res_mark.stderr + res_mark.stdout)
+        _git(r, "add", "frontier/claims/release-0-5-18.toml")
+        _git(r, "commit", "-m", "frontier: reopen release-0-5-18")
+        _git(r, "push", "origin", "master")
+        res_claim = self.sb.run_frontier(r, "claim", "release-0-5-18", "--by", "antigravity")
+        self.assertEqual(res_claim.returncode, 0, res_claim.stderr + res_claim.stdout)
+        self.assertIn("acquired release-0-5-18", res_claim.stdout)
+
+    # Fixture (6): pinned candidate + branch work, metadata-only merge, perf deferral, invalidation
+    def test_ship_06_candidate_fingerprint_metadata_safe_deferral_and_invalidation(self) -> None:
+        """Pinned candidate tolerates metadata merges, defers perf merges, and invalidates on perf edits."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234, body="// v1\n")
+        rel_body = (
+            _claim_toml(
+                "release-0-5-18",
+                kind="ops",
+                zone="striated",
+                status="open",
+                priority=1,
+                owned_paths=["CHANGELOG.md"],
+            )
+            + 'preflight_recipe = "bench-release-preflight"\n'
+        )
+        perf_claim = _claim_toml(
+            "unrelated-perf",
+            kind="build",
+            zone="striated",
+            status="open",
+            priority=2,
+            owned_paths=["src/other.rs"],
+        )
+        docs_claim = _claim_toml(
+            "docs-update",
+            kind="ops",
+            zone="striated",
+            status="open",
+            priority=2,
+            owned_paths=["docs/README.md"],
+        )
+        pin_sha = self._reset(
+            {
+                "release-0-5-18": rel_body,
+                "unrelated-perf": perf_claim,
+                "docs-update": docs_claim,
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+        )
+        self._tag_ready("bench-release-preflight", pin_sha)
+
+        # (a) Safe metadata-only merge on master MUST keep identical perf-fp and NOT invalidate!
+        (self.sb.seed / "docs").mkdir(exist_ok=True)
+        (self.sb.seed / "docs" / "note.md").write_text("metadata only\n", encoding="utf-8")
+        _git(self.sb.seed, "add", "docs/note.md")
+        _git(self.sb.seed, "commit", "-m", "docs: safe metadata note")
+        _git(self.sb.seed, "push", "origin", "master")
+
+        r1 = self.sb.clone("ship-06-meta")
+        brief_1, status_1, mod1 = self._run(r1, can={"shell", "rust", "repo-write"})
+        inv1 = mod1.candidate_invalidation_check(pin_sha, "origin/master")
+        self.assertFalse(inv1["invalidated"])
+        self.assertTrue(inv1["safe_metadata_only"])
+        self.assertEqual(inv1["pinned_fp"], inv1["current_fp"])
+        rel_1 = self._section(brief_1, "## Release due (P1)")
+        self.assertIn("Candidate validation active", rel_1)
+        self.assertIn(inv1["pinned_fp"], rel_1)
+        # Unrelated performance-input claim is visibly deferred (branch work OK); docs claim is NOT
+        take_1 = self._section(brief_1, "## What you can take")
+        perf_line = [ln for ln in take_1.splitlines() if "unrelated-perf" in ln][0]
+        docs_line = [ln for ln in take_1.splitlines() if "docs-update" in ln][0]
+        self.assertIn("defer merge until v0.5.18 publishes", perf_line)
+        self.assertIn("branch work OK", perf_line)
+        self.assertNotIn("defer merge", docs_line)
+        self.assertLess(take_1.index("docs-update"), take_1.index("unrelated-perf"))
+        self.assertIn("defer merge until v0.5.18 publishes", status_1)
+
+        # (b) Required correction touching src/open.rs invalidates the pinned candidate!
+        self._commit_default_change("src/open.rs", 1299, body="// corrected kernel\n")
+        r2 = self.sb.clone("ship-06-inv")
+        brief_2, _, mod2 = self._run(r2, can={"shell", "rust", "repo-write"})
+        inv2 = mod2.candidate_invalidation_check(pin_sha, "origin/master")
+        self.assertTrue(inv2["invalidated"])
+        self.assertIn("src/open.rs", inv2["changed_perf_paths"])
+        self.assertNotEqual(inv2["pinned_fp"], inv2["current_fp"])
+        rel_2 = self._section(brief_2, "## Release due (P1)")
+        self.assertIn("gate-failed", rel_2)
+        self.assertIn("INVALIDATED", rel_2)
+        self.assertIn("src/open.rs", rel_2)
+
+    # Fixture (7): passed candidate -> published-awaiting-reporting -> decays ONLY after done
+    def test_ship_07_published_awaiting_reporting_decays_only_after_done(self) -> None:
+        """Published tag remains P1 awaiting reporting and decays only after release is done."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        tag_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        _git(self.sb.seed, "tag", "v0.5.18")
+        _git(self.sb.seed, "push", "origin", "v0.5.18")
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                )
+            }
+        )
+        self._tag_ready("bench-release-scaling", tag_sha)
+        r_pub = self.sb.clone("ship-07-pub")
+        brief_p, status_p, _ = self._run(r_pub, can={"shell", "repo-write", "workflow-dispatch"})
+        for out in (brief_p, status_p):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertIn("published-awaiting-reporting", rel)
+            self.assertIn("v0.5.18", rel)
+            self.assertNotIn("- nothing", rel)
+
+        # Mark release done -> pressure decays completely
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="done",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                )
+            }
+        )
+        r_done = self.sb.clone("ship-07-done")
+        brief_d, status_d, _ = self._run(r_done, can={"shell", "repo-write", "workflow-dispatch"})
+        for out in (brief_d, status_d):
+            self.assertIn("- nothing", self._section(out, "## Release due (P1)"))
+
+    # Fixture (8): optional experimental work cannot delay a ready release or steal release-critical P1
+    def test_ship_08_optional_experimental_work_cannot_delay_ready_release(self) -> None:
+        """Optional experimental or P2 research claims cannot delay a verified ready release."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234)
+        exp_claim = (
+            _claim_toml(
+                "forward-emission-bounded-slab-rescue",
+                kind="build",
+                zone="striated",
+                status="open",
+                priority=1,
+                owned_paths=["src/open/lanes.rs"],
+                mechanisms=["forward-anchor-lanes"],
+            )
+            + 'validation_kind = "adoption"\n'
+        )
+        p2_opt = _claim_toml(
+            "plan-schedule-and-lazy-threshold",
+            kind="build",
+            zone="striated",
+            status="open",
+            priority=2,
+            owned_paths=["src/parallel.rs"],
+            mechanisms=["plan-schedule"],
+        )
+        pin_sha = self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    links=[
+                        "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+                        "frontier/claims/plan-schedule-and-lazy-threshold.toml",
+                    ],
+                )
+                + 'preflight_recipe = "bench-release-preflight"\n',
+                "forward-emission-bounded-slab-rescue": exp_claim,
+                "plan-schedule-and-lazy-threshold": p2_opt,
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+        )
+        ev_sha = self._ev(
+            {"release-preflight/run-20261128T030000Z.tar.gz": pin_sha},
+            message="evidence: release-preflight/run-20261128T030000Z",
+        )
+        self._tag_ready("bench-release-preflight", pin_sha)
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    links=[
+                        "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+                        "frontier/claims/plan-schedule-and-lazy-threshold.toml",
+                    ],
+                )
+                + f'preflight_recipe = "bench-release-preflight"\ncandidate_pin = "{pin_sha}"\n',
+                "forward-emission-bounded-slab-rescue": exp_claim,
+                "plan-schedule-and-lazy-threshold": p2_opt,
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+            deltas={
+                "2026-11-28-rel-pass.md": (
+                    f"claim: release-0-5-18\nby: antigravity\noutcome: open\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: preflight-pass\n\n"
+                    "**What was asked:** preflight passed.\n"
+                )
+            },
+        )
+        prs = [
+            {
+                "number": 1324,
+                "title": "Bounded slab rescue",
+                "body": "Claim: forward-emission-bounded-slab-rescue",
+                "head": {"sha": pin_sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+            {
+                "number": 1282,
+                "title": "Plan schedule",
+                "body": "Claim: plan-schedule-and-lazy-threshold",
+                "head": {"sha": pin_sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+        ]
+        r = self.sb.clone("ship-08")
+        brief_out, _, _ = self._run(r, can={"shell", "repo-write", "workflow-dispatch"}, prs=prs)
+        rel = self._section(brief_out, "## Release due (P1)")
+        self.assertIn("ready-to-publish", rel)
+        rev = self._section(brief_out, "## Awaiting review or merge")
+        self.assertNotIn("[P1 release-critical]", rev)
+
+    # Fixture (9): no default work, missing data, stale tags, conflicts, cap, needs_louis, dup PRs, workflow-dispatch
+    def test_ship_09_edge_cases_unknown_stale_cap_owner_duplicates_and_dispatch(self) -> None:
+        """Edge cases report unknown, stale tags, caps, conflicts, needs_louis, duplicates, and dispatch."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+
+        # (a) No default work -> - nothing
+        r0 = self.sb.clone("ship-09a")
+        brief_0, _, _ = self._run(r0, can={"shell", "repo-write"})
+        self.assertIn("- nothing", self._section(brief_0, "## Release due (P1)"))
+
+        # (b) Missing PR discovery while release is live -> fail-closed unknown RETAINING unresolved release
+        old_sha = self._commit_default_change("src/open.rs", 1234)
+        pin_sha = self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    links=["frontier/claims/gate-idea.toml"],
+                )
+                + f'preflight_recipe = "bench-release-preflight"\ncandidate_pin = "{old_sha}"\n',
+                "gate-idea": _claim_toml(
+                    "gate-idea",
+                    kind="ops",
+                    zone="striated",
+                    status="idea",
+                    priority=1,
+                    owned_paths=["bench/g.py"],
+                    mechanisms=["release-preflight"],
+                ),
+            },
+            max_open_claims=1,
+        )
+        r_unk = self.sb.clone("ship-09-unk")
+        brief_u, status_u, _ = self._run(
+            r_unk, can={"shell", "repo-write"}, prs=None, pr_error="gh api 503"
+        )
+        for out in (brief_u, status_u):
+            rel_u = self._section(out, "## Release due (P1)")
+            self.assertIn("`unknown`", rel_u)
+            self.assertIn("release-0-5-18", rel_u)
+            self.assertIn("gh api 503", rel_u)
+            r2r_u = self._section(out, "## Result-to-release")
+            self.assertIn("release-0-5-18", r2r_u)
+            self.assertIn("unknown", r2r_u)
+
+        # (c) Stale ready/ tag (ready_pin != candidate_pin) + admission cap + duplicate PRs
+        self._tag_ready("bench-release-preflight", pin_sha)
+        dup_prs = [
+            {
+                "number": 2001,
+                "title": "Rel PR 1",
+                "body": "Claim: release-0-5-18",
+                "head": {"sha": pin_sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+            {
+                "number": 2002,
+                "title": "Rel PR 2",
+                "body": "Claim: release-0-5-18",
+                "head": {"sha": pin_sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+        ]
+        r_stale = self.sb.clone("ship-09-stale")
+        brief_s, _, _ = self._run(r_stale, can={"shell", "repo-write"}, prs=dup_prs)
+        rel_s = self._section(brief_s, "## Release due (P1)")
+        self.assertIn("stale ready/bench-release-preflight tag", rel_s)
+        self.assertIn("admission cap", rel_s)
+        self.assertIn("duplicate open PRs for release-0-5-18", rel_s)
+
+        # (d) Owner-only needs_louis + inaccessible workflow-dispatch + live hold conflict
+        ev_sha = self._ev({"release-preflight/run-20261128T040000Z.tar.gz": pin_sha})
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                    needs_louis="Owner approval required for exception.",
+                )
+                + f'preflight_recipe = "bench-release-preflight"\ncandidate_pin = "{pin_sha}"\n',
+                "conflict-holder": _claim_toml(
+                    "conflict-holder",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=2,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-release-preflight master p\n",
+            deltas={
+                "2026-11-28-rel-pass.md": (
+                    f"claim: release-0-5-18\nby: antigravity\noutcome: open\n"
+                    f"evidence: origin/evidence {ev_sha[:8]}\nverdict: preflight-pass\n\n"
+                    "**What was asked:** preflight passed.\n"
+                )
+            },
+        )
+        ch = self.sb.clone("ship-09-conflict-holder")
+        res_ch = self.sb.run_frontier(ch, "claim", "conflict-holder", "--by", "claude-code")
+        self.assertEqual(res_ch.returncode, 0, res_ch.stderr + res_ch.stdout)
+        r_nodisp = self.sb.clone("ship-09-nodisp")
+        # Worker lacks workflow-dispatch capability AND release has needs_louis + path conflict
+        brief_nd, _, _ = self._run(r_nodisp, can={"shell", "repo-write"})
+        rel_nd = self._section(brief_nd, "## Release due (P1)")
+        self.assertNotIn("ready-to-publish", rel_nd)
+        self.assertIn("needs_louis", rel_nd)
+        self.assertIn("blocked by live hold conflict-holder", rel_nd)
+        self.assertIn("workflow-dispatch", rel_nd)
+
+    # Live reproduction of the overnight v0.5.18 stall state
+    def test_ship_10_reproduces_v0_5_18_overnight_stall_with_persistent_p1(self) -> None:
+        """Reproduces the v0.5.18 overnight stall and verifies persistent P1 + review ordering."""
+        self._ev({})
+        self._reset({}, ledger_rows=[])
+        _git(self.sb.seed, "tag", "v0.5.17")
+        _git(self.sb.seed, "push", "origin", "v0.5.17")
+        self._commit_default_change("src/open.rs", 1234, body="// #1234\n")
+        sha = self._commit_default_change("src/open.rs", 1246, body="// #1246\n")
+        self._reset(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md", "Cargo.toml", "pyproject.toml"],
+                    links=[
+                        "https://github.com/lmmx/mibz2/pull/1234",
+                        "frontier/claims/pre-release-i9-gate.toml",
+                        "https://github.com/lmmx/mibz2/pull/1256",
+                        "frontier/claims/plan-schedule-and-lazy-threshold.toml",
+                    ],
+                ),
+                "pre-release-i9-gate": _claim_toml(
+                    "pre-release-i9-gate",
+                    kind="ops",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["bench/release_preflight.py"],
+                    mechanisms=["release-preflight"],
+                ),
+                "plan-schedule-and-lazy-threshold": _claim_toml(
+                    "plan-schedule-and-lazy-threshold",
+                    kind="build",
+                    zone="striated",
+                    status="open",
+                    priority=2,
+                    owned_paths=["src/parallel.rs"],
+                    mechanisms=["plan-schedule"],
+                ),
+                "forward-emission-bounded-slab-rescue": _claim_toml(
+                    "forward-emission-bounded-slab-rescue",
+                    kind="build",
+                    zone="striated",
+                    status="open",
+                    priority=1,
+                    owned_paths=["src/open/lanes.rs"],
+                    mechanisms=["forward-anchor-lanes"],
+                )
+                + 'validation_kind = "adoption"\n',
+            },
+            queue_text="# repo: lmmx/mibz2\nbench-old master o\n",
+        )
+        self._tag_ready("bench-old", sha)
+        self._ev({"old/run-20261127T230000Z.tar.gz": sha})
+        prs = [
+            {
+                "number": 1324,
+                "title": "Bounded slab rescue",
+                "body": "Claim: forward-emission-bounded-slab-rescue",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+            {
+                "number": 1282,
+                "title": "Plan schedule",
+                "body": "Claim: plan-schedule-and-lazy-threshold",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+            {
+                "number": 1256,
+                "title": "Enforce i9 pre-release gate",
+                "body": "Claim: pre-release-i9-gate",
+                "head": {"sha": sha},
+                "base": {"ref": "master"},
+                "state": "open",
+                "draft": False,
+            },
+        ]
+        r = self.sb.clone("ship-10-v0518")
+        brief_out, status_out, _ = self._run(r, can={"shell", "rust", "repo-write"}, prs=prs)
+        for out in (brief_out, status_out):
+            rel = self._section(out, "## Release due (P1)")
+            self.assertNotIn("- nothing", rel)
+            self.assertIn("release-0-5-18", rel)
+            self.assertIn("pre-release-i9-gate", rel)
+            self.assertIn("PR #1256", rel)
+            self.assertIn("take-review pre-release-i9-gate", rel)
+            self.assertIn("§5c worker-count recalibration", rel)
+            rev = self._section(out, "## Awaiting review or merge")
+            self.assertLess(
+                rev.index("pre-release-i9-gate"), rev.index("forward-emission-bounded-slab-rescue")
+            )
+            self.assertLess(
+                rev.index("pre-release-i9-gate"), rev.index("plan-schedule-and-lazy-threshold")
+            )
+            # Only pre-release-i9-gate is tagged P1 release-critical (not optional experiments)
+            p1_lines = [ln for ln in rev.splitlines() if "[P1 release-critical]" in ln]
+            self.assertEqual(len(p1_lines), 1)
+            self.assertIn("pre-release-i9-gate", p1_lines[0])
+
+
 class TestBriefRule(unittest.TestCase):
     """Claim brief-state-first: the brief prints the state first and the rule only when this checkout has not seen it."""
 
