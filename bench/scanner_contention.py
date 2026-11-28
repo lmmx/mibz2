@@ -55,6 +55,13 @@ PERF_EVENTS = (
     "cycle_activity.stalls_l3_miss:u",
     "LLC-load-misses:u",
 )
+PERF_EVENTS_FALLBACK = (
+    "cycles",
+    "ref-cycles",
+    "instructions",
+    "cycle_activity.stalls_l3_miss",
+    "LLC-load-misses",
+)
 EVENT_KEY_MAP = {
     "cycles": "cycles",
     "ref-cycles": "ref_cycles",
@@ -341,42 +348,62 @@ def prepare_input(
 
 
 def normalize_event_name(raw_event: str) -> str | None:
-    """Normalize a `perf stat` event name (stripping `:u`/`:k` modifiers) to canonical key."""
-    base = raw_event.strip().split(":", 1)[0].lower()
-    for pat, key in EVENT_KEY_MAP.items():
-        if base == pat.lower() or base.endswith(f"/{pat.lower()}/"):
-            return key
+    """Normalize a `perf stat` event name (handling `:u`, `cpu/<ev>/u`, etc.) to canonical key."""
+    text = raw_event.strip().split(":", 1)[0].lower()
+    candidates = [p for p in text.split("/") if p] if "/" in text else [text]
+    for cand in candidates:
+        for pat, key in EVENT_KEY_MAP.items():
+            if cand == pat.lower():
+                return key
     return None
 
 
-def parse_perf_per_thread_csv(
+def parse_perf_scanner_csv(
     text: str,
     *,
+    scanner_cpu: int | None = None,
     thread_prefix: str = SCANNER_THREAD_PREFIX,
 ) -> dict[str, Any]:
-    """Parse `perf stat --per-thread -x,` CSV output strictly for the unique scanner thread."""
-    tids: set[str] = set()
+    """Parse `perf stat -C <scanner_cpu> -x,` (or prefixed `CPU<n>` / `mibz2-scan-*`) CSV output."""
+    scopes: set[str] = set()
     counts: dict[str, float] = {}
     pct_running: dict[str, float] = {}
+    expected_cpu = f"CPU{scanner_cpu}" if scanner_cpu is not None else None
 
     for raw_line in text.splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue
         parts = line.split(",")
-        if len(parts) < 4:
+        if len(parts) < 3:
             continue
-        comm_tid = parts[0].strip()
-        if not comm_tid.startswith(f"{thread_prefix}-"):
+
+        key2 = normalize_event_name(parts[2])
+        key3 = normalize_event_name(parts[3]) if len(parts) >= 4 else None
+        if key2 is not None:
+            scope = expected_cpu or "cpu"
+            val_str = parts[0].strip()
+            event_str = parts[2].strip()
+            pct_str = parts[4].strip() if len(parts) >= 5 else ""
+            key = key2
+        elif key3 is not None:
+            scope = parts[0].strip()
+            if not (
+                scope.startswith(f"{thread_prefix}-")
+                or (expected_cpu is not None and scope == expected_cpu)
+                or (expected_cpu is None and scope.startswith("CPU"))
+            ):
+                continue
+            val_str = parts[1].strip()
+            event_str = parts[3].strip()
+            pct_str = parts[5].strip() if len(parts) >= 6 else ""
+            key = key3
+        else:
             continue
-        tids.add(comm_tid)
-        val_str = parts[1].strip()
-        event_str = parts[3].strip()
-        key = normalize_event_name(event_str)
-        if key is None:
-            continue
+
+        scopes.add(scope)
         if val_str.startswith("<") or not val_str:
-            raise InvalidRun(f"PMU event {event_str!r} on {comm_tid} not counted: {val_str!r}")
+            raise InvalidRun(f"PMU event {event_str!r} on {scope} not counted: {val_str!r}")
         try:
             val = float(val_str)
         except ValueError as exc:
@@ -384,24 +411,24 @@ def parse_perf_per_thread_csv(
         if not math.isfinite(val) or val < 0:
             raise InvalidRun(f"non-finite or negative PMU value {val!r} for {event_str!r}")
         counts[key] = val
-        if len(parts) >= 6 and parts[5].strip():
+        if pct_str:
             try:
-                pct_running[key] = float(parts[5].strip())
+                pct_running[key] = float(pct_str)
             except ValueError:
                 pass
 
-    if len(tids) != 1:
+    if len(scopes) != 1:
         raise InvalidRun(
-            f"expected exactly 1 `{thread_prefix}-*` thread in perf CSV, found {sorted(tids)}"
+            f"expected exactly 1 scanner PMU scope in perf CSV, found {sorted(scopes)}"
         )
     missing = [k for k in REQUIRED_PMU_KEYS if k not in counts]
     if missing:
-        raise InvalidRun(f"missing required PMU event(s) on scanner thread: {', '.join(missing)}")
+        raise InvalidRun(f"missing required PMU event(s) on scanner CPU: {', '.join(missing)}")
     if counts["cycles"] <= 0 or counts["ref_cycles"] <= 0:
         raise InvalidRun(f"non-positive cycles/ref_cycles in perf CSV: {counts!r}")
 
     return {
-        "scanner_thread": next(iter(tids)),
+        "scanner_scope": next(iter(scopes)),
         **counts,
         "pct_running": pct_running,
         "clock_ratio": counts["cycles"] / counts["ref_cycles"],
@@ -410,23 +437,73 @@ def parse_perf_per_thread_csv(
     }
 
 
-def preflight_perf(out: Path, perf_cmd: str = "perf") -> None:
-    """Verify `perf stat --per-thread` can count all required user-space PMU events."""
-    events = ",".join(PERF_EVENTS)
-    done = subprocess.run(
-        [perf_cmd, "stat", "--per-thread", "-x,", "-e", events, "--", "true"],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    (out / "perf-preflight.txt").write_text(done.stderr + done.stdout, encoding="utf-8")
-    if done.returncode != 0:
-        raise InvalidRun(f"perf preflight failed (rc={done.returncode}): {done.stderr.strip()}")
-    for raw_line in done.stderr.splitlines():
-        parts = raw_line.strip().split(",")
-        if len(parts) >= 4 and normalize_event_name(parts[3]) is not None:
-            if parts[1].strip().startswith("<"):
-                raise InvalidRun(f"perf preflight event unsupported: {raw_line.strip()}")
+parse_perf_per_thread_csv = parse_perf_scanner_csv
+
+
+def build_perf_stat_cmd(
+    perf_cmd: str,
+    scanner_cpu: int,
+    perf_csv: Path,
+    events: tuple[str, ...],
+    inner: list[str],
+) -> list[str]:
+    """Construct `perf stat -C <scanner_cpu> -x, -o <csv> -e <events> -- <inner>`."""
+    return [
+        perf_cmd,
+        "stat",
+        "-C",
+        str(scanner_cpu),
+        "-x,",
+        "-o",
+        str(perf_csv),
+        "-e",
+        ",".join(events),
+        "--",
+        *inner,
+    ]
+
+
+def preflight_perf(
+    out: Path,
+    scanner_cpu: int = 0,
+    perf_cmd: str = "perf",
+) -> tuple[str, ...]:
+    """Verify `perf stat -C <scanner_cpu>` counts all 5 required PMU events on a pinned workload.
+
+    Tries user-space `:u` events first (excluding kernel IRQs on `scanner_cpu`), falling back
+    to plain event names if a PMU alias rejects `:u` under `perf_event_paranoid == 0`.
+    """
+    inner = [
+        "taskset",
+        "-c",
+        str(scanner_cpu),
+        sys.executable,
+        "-c",
+        "sum(range(200000))",
+    ]
+    errors: list[str] = []
+    for idx, events in enumerate((PERF_EVENTS, PERF_EVENTS_FALLBACK)):
+        csv_path = out / f"perf-preflight-{idx}.csv"
+        cmd = build_perf_stat_cmd(perf_cmd, scanner_cpu, csv_path, events, inner)
+        done = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        csv_text = csv_path.read_text(encoding="utf-8") if csv_path.exists() else ""
+        (out / "perf-preflight.txt").write_text(
+            f"$ {' '.join(cmd)}\n" + done.stderr + done.stdout + "\n" + csv_text,
+            encoding="utf-8",
+        )
+        if done.returncode != 0:
+            errors.append(f"events[{idx}] rc={done.returncode}: {done.stderr.strip()}")
+            csv_path.unlink(missing_ok=True)
+            continue
+        try:
+            parse_perf_scanner_csv(csv_text or done.stderr, scanner_cpu=scanner_cpu)
+        except InvalidRun as exc:
+            errors.append(f"events[{idx}]: {exc}")
+            csv_path.unlink(missing_ok=True)
+            continue
+        csv_path.unlink(missing_ok=True)
+        return events
+    raise InvalidRun("perf preflight failed: " + " | ".join(errors))
 
 
 def verify_parity(
@@ -512,7 +589,7 @@ def _stub_pmu_sample(arm: str, k: int, wall_s: float) -> dict[str, Any]:
     cycles = ref_cycles * clock_ratio * (1.03 if (arm == "lanes" and k == 8) else 1.0)
     stalls_l3 = cycles * (0.14 if (arm == "lanes" and k == 8) else 0.11)
     return {
-        "scanner_thread": f"{SCANNER_THREAD_PREFIX}-0",
+        "scanner_scope": "CPU0",
         "cycles": cycles,
         "ref_cycles": ref_cycles,
         "instructions": cycles * 1.65,
@@ -536,10 +613,11 @@ def measure_sample(
     scanner_cpu: int,
     worker_mask: str,
     perf_cmd: str = "perf",
+    events: tuple[str, ...] = PERF_EVENTS,
     stub_pmu: bool = False,
     tmp: Path,
 ) -> dict[str, Any]:
-    """Run one timed decode under `perf stat --per-thread` and extract `mibz2-scan` counters."""
+    """Run one timed decode under `perf stat -C <scanner_cpu>` and extract scanner CPU counters."""
     inner = [
         "taskset",
         "-c",
@@ -565,18 +643,7 @@ def measure_sample(
         pmu = _stub_pmu_sample(arm, k, float(sample["wall_s"]))
     else:
         perf_csv = tmp / f"perf-{arm}-k{k}-{time.time_ns()}.csv"
-        cmd = [
-            perf_cmd,
-            "stat",
-            "--per-thread",
-            "-x,",
-            "-o",
-            str(perf_csv),
-            "-e",
-            ",".join(PERF_EVENTS),
-            "--",
-            *inner,
-        ]
+        cmd = build_perf_stat_cmd(perf_cmd, scanner_cpu, perf_csv, events, inner)
         done = subprocess.run(
             cmd,
             stdout=subprocess.DEVNULL,
@@ -589,7 +656,7 @@ def measure_sample(
         sample = json.loads(done.stderr.strip())
         pmu_text = perf_csv.read_text(encoding="utf-8")
         perf_csv.unlink(missing_ok=True)
-        pmu = parse_perf_per_thread_csv(pmu_text)
+        pmu = parse_perf_scanner_csv(pmu_text, scanner_cpu=scanner_cpu)
 
     if sample.get("out") != ref["out"]:
         raise InvalidRun(f"output length mismatch on {arm}/k={k}")
@@ -887,14 +954,15 @@ def run_probe(
     scanner_cpu = int(host["scanner_cpu"])
     worker_mask = str(host["worker_mask"])
 
+    eff_events: tuple[str, ...] = PERF_EVENTS
     if not eff_stub_pmu:
         if smoke and perf_cmd is None:
             try:
-                preflight_perf(out, perf_cmd=eff_perf)
+                eff_events = preflight_perf(out, scanner_cpu=scanner_cpu, perf_cmd=eff_perf)
             except (InvalidRun, FileNotFoundError):
                 eff_stub_pmu = True
         else:
-            preflight_perf(out, perf_cmd=eff_perf)
+            eff_events = preflight_perf(out, scanner_cpu=scanner_cpu, perf_cmd=eff_perf)
 
     save(
         out / "provenance.json",
@@ -907,7 +975,7 @@ def run_probe(
             "settle_s": eff_settle,
             "arms": list(ARMS),
             "counts": list(COUNTS),
-            "events": list(PERF_EVENTS),
+            "events": list(eff_events),
             "scanner_cpu": scanner_cpu,
             "worker_mask": worker_mask,
             "seed": SEED,
@@ -959,6 +1027,7 @@ def run_probe(
                     scanner_cpu=scanner_cpu,
                     worker_mask=worker_mask,
                     perf_cmd=eff_perf,
+                    events=eff_events,
                     stub_pmu=eff_stub_pmu,
                     tmp=tmp,
                 )

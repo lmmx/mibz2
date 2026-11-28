@@ -74,6 +74,25 @@ def make_rows(
 
 
 class PerfParsingTests(unittest.TestCase):
+    def test_parse_perf_standard_cpu_csv_and_slash_modifiers(self):
+        csv_text = "\n".join(
+            [
+                "# started on Sat Nov 28 05:00:00 2026",
+                "850000000,,cycles:u,180000000,100.00,,",
+                "640000000,,ref-cycles:u,180000000,100.00,,",
+                "1400000000,,instructions:u,180000000,100.00,1.65,insn per cycle",
+                "120000000,,cpu/cycle_activity.stalls_l3_miss/u,180000000,100.00,,",
+                "1100000,,LLC-load-misses:u,180000000,100.00,,",
+            ]
+        )
+        pmu = sc.parse_perf_scanner_csv(csv_text, scanner_cpu=0)
+        self.assertEqual(pmu["scanner_scope"], "CPU0")
+        self.assertEqual(pmu["cycles"], 850_000_000.0)
+        self.assertEqual(pmu["ref_cycles"], 640_000_000.0)
+        self.assertEqual(pmu["stalls_l3_miss"], 120_000_000.0)
+        self.assertEqual(pmu["llc_load_misses"], 1_100_000.0)
+        self.assertAlmostEqual(pmu["clock_ratio"], 850.0 / 640.0, places=5)
+
     def test_parse_perf_per_thread_csv_extracts_scanner_only(self):
         csv_text = "\n".join(
             [
@@ -87,7 +106,7 @@ class PerfParsingTests(unittest.TestCase):
             ]
         )
         pmu = sc.parse_perf_per_thread_csv(csv_text)
-        self.assertEqual(pmu["scanner_thread"], "mibz2-scan-1002")
+        self.assertEqual(pmu["scanner_scope"], "mibz2-scan-1002")
         self.assertEqual(pmu["cycles"], 850_000_000.0)
         self.assertEqual(pmu["ref_cycles"], 640_000_000.0)
         self.assertEqual(pmu["stalls_l3_miss"], 120_000_000.0)
@@ -96,18 +115,57 @@ class PerfParsingTests(unittest.TestCase):
 
     def test_parse_perf_rejects_missing_thread_or_uncounted_event(self):
         with self.assertRaises(sc.InvalidRun):
-            sc.parse_perf_per_thread_csv("mibz2-0-1001,100,,cycles:u,10,100.00\n")
+            sc.parse_perf_scanner_csv("mibz2-0-1001,100,,cycles:u,10,100.00\n")
         bad_ev = "\n".join(
             [
-                "mibz2-scan-1002,850000000,,cycles:u,180000000,100.00",
-                "mibz2-scan-1002,640000000,,ref-cycles:u,180000000,100.00",
-                "mibz2-scan-1002,1400000000,,instructions:u,180000000,100.00",
-                "mibz2-scan-1002,<not supported>,,cycle_activity.stalls_l3_miss:u,0,100.00",
-                "mibz2-scan-1002,1100000,,LLC-load-misses:u,180000000,100.00",
+                "850000000,,cycles:u,180000000,100.00",
+                "640000000,,ref-cycles:u,180000000,100.00",
+                "1400000000,,instructions:u,180000000,100.00",
+                "<not supported>,,cycle_activity.stalls_l3_miss:u,0,100.00",
+                "1100000,,LLC-load-misses:u,180000000,100.00",
             ]
         )
         with self.assertRaises(sc.InvalidRun):
-            sc.parse_perf_per_thread_csv(bad_ev)
+            sc.parse_perf_scanner_csv(bad_ev, scanner_cpu=0)
+
+    def test_perf_stat_cmd_uses_cpu_pin_never_per_thread_with_workload(self):
+        cmd = sc.build_perf_stat_cmd("perf", 0, Path("/tmp/p.csv"), sc.PERF_EVENTS, ["true"])
+        self.assertNotIn("--per-thread", cmd)
+        self.assertIn("-C", cmd)
+        self.assertEqual(cmd[cmd.index("-C") + 1], "0")
+        self.assertIn("-o", cmd)
+
+    def test_preflight_perf_falls_back_from_u_to_plain_events(self):
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            seen_cmds: list[list[str]] = []
+
+            def fake_run(cmd, capture_output=False, text=False, timeout=None):
+                seen_cmds.append(cmd)
+                self.assertNotIn("--per-thread", cmd)
+                csv_path = Path(cmd[cmd.index("-o") + 1])
+                if len(seen_cmds) == 1:
+                    # Simulate :u rejected on a PMU alias
+                    return mock.Mock(returncode=1, stdout="", stderr="invalid event modifier")
+                csv_path.write_text(
+                    "\n".join(
+                        [
+                            "10000000,,cycles,1000000,100.00",
+                            "7000000,,ref-cycles,1000000,100.00",
+                            "15000000,,instructions,1000000,100.00",
+                            "100000,,cycle_activity.stalls_l3_miss,1000000,100.00",
+                            "1000,,LLC-load-misses,1000000,100.00",
+                        ]
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                return mock.Mock(returncode=0, stdout="", stderr="")
+
+            with mock.patch("subprocess.run", side_effect=fake_run):
+                active = sc.preflight_perf(out, scanner_cpu=0)
+            self.assertEqual(active, sc.PERF_EVENTS_FALLBACK)
+            self.assertEqual(len(seen_cmds), 2)
 
 
 class ScoringTests(unittest.TestCase):
