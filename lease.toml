@@ -6,4 +6,4 @@ expires = "2026-11-28T23:58:56+00:00"
 owned_paths = []
 mechanisms = ["frontier-protocol-test-cold"]
 base = "77de5b6984059f69fec551098f4757511f07c2b6"
-released = false
+released = true
