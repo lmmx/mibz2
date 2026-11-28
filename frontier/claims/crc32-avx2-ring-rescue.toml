@@ -25,7 +25,9 @@ premises = [
   "frontier/deltas/2026-11-27-crc32-ring-paired-review.md",
   "docs/journal/2026-11-27-explore/crc32-bzip2-dissection.md",
   "docs/team/PERFORMANCE-POLICY.md",
+  "docs/notebook/2026-11-28-rss-bound-calibration.md",
 ]
 links = [
   "frontier/claims/crc32-avx2-ring-barrett-build.toml",
+  "frontier/claims/rss-bound-calibration.toml",
 ]

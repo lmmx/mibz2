@@ -24,9 +24,11 @@ premises = [
   "frontier/deltas/2026-11-28-runs-front-and-fill-build-stop.md",
   "docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md",
   "docs/team/PERFORMANCE-POLICY.md",
+  "docs/notebook/2026-11-28-rss-bound-calibration.md",
   "src/runs.rs",
 ]
 links = [
   "frontier/claims/runs-front-and-fill-build.toml",
+  "frontier/claims/rss-bound-calibration.toml",
   "examples/runs_front_fill_dissection.rs",
 ]
