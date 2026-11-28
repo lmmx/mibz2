@@ -1,0 +1,11 @@
+action = "await-ci-c1e2394"
+by = "claude-code"
+claim = "continuation-runbook"
+critical = false
+declared_at = 1795868642
+dep = "pr:1356@c1e2394d59d5df61745d89b852abd1c48afc6af9"
+independent = true
+key = "continuation-runbook--await-ci-c1e2394"
+next = "independent review of #1356 (take-review), then merge under the exact-head gates"
+priority = 1
+state = "waiting"
