@@ -1,0 +1,55 @@
+id = "frontier-damage-hardening"
+title = "Harden frontier.py and continuation.py against single hand-editing damages (18 tested fixes)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = ["frontier/tools/frontier.py", "frontier/tools/continuation.py"]
+mechanisms = ["frontier-damage-hardening"]
+needs_louis = ""
+question = """
+`prove-frontier-damaged` (`docs/notebook/2026-11-28-prove-frontier-damaged.md`) tested 144 single hand-editing damages on private bare remotes and found **19 distinct defects** (**10 `breaks`**, **7 `misleads`**, **2 `friction`**; **40/144** raw Python tracebacks). Every non-`swarm-quiet-state` fix was verified on scratch copies (`0/144` tracebacks, `90/90` `tests/test_frontier.py`, `34/34` `tests/test_continuation.py`, `0 errors` on live `mibz2`):
+
+1. **Hold & lease safety (`frontier.py`):**
+   - Replace `write_lease()`'s `repr(v).replace("'", '"')` with `_toml_value()` using `json.dumps()` so `--by 'bot"quote'` / `--by "o'reilly"` never self-brick `hold/*` globally.
+   - Isolate per-ref missing/malformed/non-UTF-8/naive-`expires`/non-bool-`released`/nested-slash `hold/*` refs in `holds()` (marked `_malformed`, counted live fail-closed, never crashing unrelated commands and never silently dropping locks), with trunk claim scope fallback in `conflicts()` so damaged holds still block overlapping striated claims.
+   - Guard missing `holder`/`pr`/`pr_head`/`expires` in `claim`/`verify`/`mine`, and fail `verify` when a held claim was renamed or deleted on `origin/master`.
+2. **Validator & loader resilience (`frontier.py`):**
+   - Add `load_checked()`, `heads_checked()`, `_read_tsv_checked()`, and `<!-- brief -->` checks so bad TOML/UTF-8, broken symlinks, empty TSVs, missing `id`, blog `stage` typos, and non-string `stop_test` emit named `error:` lines instead of crashing `check`/`brief`/`status`.
+   - Enforce claim field types/ranges (`priority` exact `int` in `1..5`, `needs`/`owned_paths`/`mechanisms`/`premises` `list[str]`, non-empty `title`/`question`/`stop_test`, `needs_louis` `str`, positive `int` `pr` at `review`, valid ref-safe `id`).
+   - Close flag immune-system bypasses: reject duplicate header keys in deltas/flags, reject comma-separated `flags:`, reject blank required headers, freeze `flags:` scope and `invariant:` on modified flags, and validate `outcome` enum on newly added deltas (preserving legacy historical deltas).
+   - Validate `config.toml` (`max_open_claims`, `protected`, and rejecting omitted `limits_file` when `limits.toml` exists), and print step 1–4 errors before returning on step-5 config failure.
+3. **`mark` & CLI (`frontier.py`):**
+   - Support single/double quotes and inline comments in `mark` and require `re.subn(...)[1] == 1` (never exit `0` unchanged).
+   - Clean usage errors for missing CLI args, dangling options, and non-numeric/`NaN`/`Inf` `--hours` (and migrate `test_s2`/`test_s3` off `--hours -0.01` so `claim` can also reject `hours <= 0`).
+4. **Continuation isolation (`continuation.py`):**
+   - Isolate broken/missing/non-UTF-8 `refs/heads/wait/*` refs in `GitRefStore.list()` as `[malformed]` (keeping `show`/`get` strict `ContinuationError` `rc=2`) and guard non-int `priority`/`since` in `view()`.
+
+**Sequencing & coordination:** Build strictly after PR `#1341` (`ship-completion-pressure`) releases `frontier/tools/frontier.py`. Defect #10 (`limits.toml` fail-closed state in `brief`/`renew` + `max_live_holds = 0` drain) overlaps `swarm-quiet-state` and stays in `swarm-quiet-state` rather than duplicating its safety-gate change here.
+"""
+why = """
+One typo in a claim field (`owned_paths = "src/foo.rs"`), one apostrophe in `--by`, one malformed `hold/*` or `wait/*` ref, or a comma in `flags: a, b` currently crashes or bypasses swarm-wide coordination and flag invariants. All 18 fixes are already proven on scratch copies with zero regressions.
+"""
+stop_test = """
+Frozen before building:
+1. Built strictly after PR #1341 merges and releases `frontier/tools/frontier.py`; does not alter `limits.toml` drain/quiet semantics owned by `swarm-quiet-state`.
+2. Hermetic regression tests in `tests/test_frontier.py` and `tests/test_continuation.py` cover all 18 defects (including `write_lease` quoting, malformed/missing/naive/string-`released`/nested `hold/*`, claim type/range validation, flag scope-narrowing/comma/duplicate-header bypasses, `mark` single-quote/inline-comment, orphan `verify`, empty TSVs/missing `<!-- brief -->`, `config.toml` `limits_file` bypass, CLI arg validation, and malformed `wait/*` isolation).
+3. All existing + new tests in `tests/test_frontier.py` and `tests/test_continuation.py` PASS (`0` failures), `python3 frontier/tools/frontier.py check` exits `0` (`0 errors`) on `master`, and independent scrutiny is recorded if any safety-gate enforcement semantics change (`frontier/README.md`).
+Otherwise stop and narrow or revert before merge.
+"""
+done_when = """
+Striated PR updating `frontier/tools/frontier.py`, `frontier/tools/continuation.py`, `tests/test_frontier.py`, and `tests/test_continuation.py` merged with green CI and a delta.
+"""
+premises = [
+  "docs/notebook/2026-11-28-prove-frontier-damaged.md",
+  "frontier/tools/frontier.py",
+  "frontier/tools/continuation.py",
+  "tests/test_frontier.py",
+  "tests/test_continuation.py",
+]
+links = [
+  "frontier/deltas/2026-11-28-prove-frontier-damaged.md",
+  "frontier/claims/prove-frontier-damaged.toml",
+  "frontier/claims/swarm-quiet-state.toml",
+]
