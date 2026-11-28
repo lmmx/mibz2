@@ -18,6 +18,6 @@ evidence: PR #1256 (author head 653048a0, reviewed and integrated by a different
 - **Not changed (noted):**
   - The recovery arm is found by "recovery" in its binary path. That works, since the recipe names it `ab-recovery_base`.
   - Scanner files count as worker-cost paths, so §5c is demanded for them. That is conservative, but RELEASING's knee clause covers it.
-**What changed:** the three files above, plus this delta. Claim back to `open`, `pr = 0`.
+**What changed:** the three files above, plus this delta. Claim back to `open` (`pr = 1256` kept: the integration record), since `done_when` still needs a real run.
 **What's next:** `done_when` still needs the first real run, on the 0.5.18 candidate against v0.5.17, with v0.5.16 recovery auto-detected at wikidata 8T and 10T. §5c recalibration must be completed first, since worker-cost paths changed. Then a receipt delta. That run belongs to release-0-5-18 (P1).
 **Caveats:** this review did not run the recipe on hardware. The `run` path (materialize, build, `ab run`) was read, not executed.
