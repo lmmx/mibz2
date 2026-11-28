@@ -1,0 +1,9 @@
+id = "forward-lanes-mlp-and-prefetch"
+holder = "antigravity"
+session = "0d17af5ea00f"
+claimed_at = "2026-11-28T05:32:28+00:00"
+expires = "2026-11-28T13:32:28+00:00"
+owned_paths = []
+mechanisms = ["forward-anchor-lanes-mlp"]
+base = "ea9bc4463a9d12b35d58f439c6f76cc995346f90"
+released = false
