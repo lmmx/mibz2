@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 3
-status = "open"
+status = "done"
 owned_paths = ["src/open/outq.rs", "examples/mtf_a6a_dissection.rs"]
 mechanisms = ["mtf", "construction-first-pass", "bench-methodology"]
 needs_louis = ""
@@ -29,4 +29,5 @@ links = [
   "frontier/claims/mtf-fold-l1-batch-redesign.toml",
   "frontier/claims/mtf-fold-run.toml",
   "frontier/deltas/2026-11-27-mtf-fold-batch-measure-registration.md",
+  "frontier/deltas/2026-11-27-mtf-fold-batch-measure.md",
 ]

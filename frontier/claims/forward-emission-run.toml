@@ -4,7 +4,7 @@ kind = "run"
 zone = "striated"
 needs = ["shell", "rust", "repo-write"]
 priority = 1  # sixteenth synthesis pass: the verdict gates Cells-route retirement at t=1..7; re-pinned to #1217 (registration-disjoint-slabs.md)
-status = "blocked"
+status = "done"
 pr = 1168
 owned_paths = [".just/bench.just", "bench/forward_lanes.py", "bench/test_forward_lanes.py"]
 mechanisms = ["forward-lanes-workstation-validation"]
@@ -22,4 +22,8 @@ done_when = """
 The recipe is reviewed and green, and the queue entry and ready signal are set under the standing authorisation, having first checked the queue history and the `evidence` branch. Then the bundle is read, the verdict recorded against §3 in a delta, and `C-A6c`/`E-walk` updated in surface.tsv.
 """
 premises = ["frontier/claims/forward-emission.toml", "docs/journal/2026-11-27-forward-emission/registration.md", "docs/journal/2026-11-27-forward-emission/registration-disjoint-slabs.md", "frontier/DECODER.md"]
-links = []
+links = [
+  "frontier/deltas/2026-11-27-forward-emission-run-verdict.md",
+  "docs/notebook/2026-11-27-forward-emission-i9-verdict.md",
+  "frontier/claims/forward-emission-adopt.toml",
+]

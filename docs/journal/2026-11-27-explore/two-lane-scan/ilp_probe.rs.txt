@@ -1,0 +1,511 @@
+/// (explore probe, not production) cross-block 2-lane interleaved Huffman decode
+#[cfg(test)]
+pub(crate) mod ilp_probe {
+    use super::*;
+    use crate::huff::{CNT_SH, CHUNK_STOP, LUT_BITS, STEPS, SYM1, SYM2};
+    use std::time::Instant;
+
+    pub struct Prep {
+        pub tables: Box<[Huff; MAX_GROUPS]>,
+        pub sel: Vec<u8>,
+        pub r: Reg,
+        pub eob: u16,
+        pub reference: Vec<u16>,
+    }
+
+    fn prep(br: &mut Bits, level: u32) -> Option<Prep> {
+        let magic = (br.bits(24) as u64) << 24 | br.bits(24) as u64;
+        if magic == END_MAGIC {
+            br.bits(32);
+            return None;
+        }
+        assert_eq!(magic, BLOCK_MAGIC);
+        br.bits(32);
+        assert!(!br.bit());
+        br.bits(24);
+        let _ = level;
+        let (data, mut r) = br.parts();
+        let in_use16 = r.bits(data, 16) as u16;
+        let mut n_in_use = 0usize;
+        for i in 0..16 {
+            if in_use16 & (0x8000 >> i) != 0 {
+                n_in_use += (r.bits(data, 16) as u16).count_ones() as usize;
+            }
+        }
+        let alpha = n_in_use + 2;
+        let n_groups = r.bits(data, 3) as usize;
+        let n_sel = r.bits(data, 15) as usize;
+        let mut mtf: u64 = 0x0000_0504_0302_0100;
+        let mut sel = Vec::with_capacity(n_sel);
+        for _ in 0..n_sel {
+            if r.live < 8 {
+                r.refill(data);
+            }
+            let j = (!r.buf).leading_zeros() as usize;
+            r.skip_short((j + 1) as u32);
+            let sh = (j * 8) as u32;
+            let v = ((mtf >> sh) & 0xff) as u8;
+            let low_mask = (1u64 << sh) - 1;
+            mtf = (mtf & !((low_mask << 8) | 0xff)) | ((mtf & low_mask) << 8) | (v as u64);
+            sel.push(v);
+        }
+        sel.truncate(MAX_SELECTORS);
+        let build_pairs = n_sel >= PAIR_GATE_SEL;
+        let mut tables: Box<[Huff; MAX_GROUPS]> = Box::new(std::array::from_fn(|_| Huff::default()));
+        let mut lens = [0u8; MAX_ALPHA];
+        for g in 0..n_groups {
+            let mut curr = r.bits(data, 5) as i32;
+            for l in lens[..alpha].iter_mut() {
+                loop {
+                    if !r.bit(data) {
+                        break;
+                    }
+                    if r.bit(data) {
+                        curr -= 1;
+                    } else {
+                        curr += 1;
+                    }
+                }
+                *l = curr as u8;
+            }
+            tables[g].build_into(&lens[..alpha], build_pairs);
+        }
+        let eob = (alpha - 1) as u16;
+        let mut syms = Vec::with_capacity(MAX_SYMS);
+        let mut chunk = Box::new([0u16; CHUNK_LEN]);
+        let (res, r2) = decode_runs(&tables, &sel, r, data, &mut chunk, &mut syms);
+        res.unwrap();
+        br.set(r2);
+        Some(Prep { tables, sel, r, eob, reference: syms })
+    }
+
+    pub fn prep_all(data: &[u8]) -> Vec<Prep> {
+        let mut out = Vec::new();
+        let mut byte = 0usize;
+        while byte + 4 <= data.len() && &data[byte..byte + 3] == b"BZh" {
+            let level = (data[byte + 3] - b'0') as u32;
+            let mut br = Bits::at(data, ((byte + 4) * 8) as u64);
+            while let Some(p) = prep(&mut br, level) {
+                out.push(p);
+            }
+            byte = br.parts().1.bit_pos().div_ceil(8) as usize;
+        }
+        out
+    }
+
+    struct Lane<'a> {
+        tables: &'a [Huff; MAX_GROUPS],
+        sel: &'a [u8],
+        si: usize,
+        rem: usize,
+        g: u8,
+        r: Reg,
+        ck: usize,
+        eob: u16,
+        done: bool,
+    }
+
+    impl<'a> Lane<'a> {
+        fn new(p: &'a Prep) -> Self {
+            let mut l = Lane { tables: &p.tables, sel: &p.sel, si: 0, rem: 0, g: 0, r: p.r, ck: 0, eob: p.eob, done: false };
+            l.next_run();
+            l
+        }
+        #[inline(always)]
+        fn next_run(&mut self) {
+            let g = self.sel[self.si];
+            let mut n = 1;
+            while self.si + n < self.sel.len() && self.sel[self.si + n] == g {
+                n += 1;
+            }
+            self.si += n;
+            self.g = g;
+            self.rem = n * GROUP;
+        }
+        /// production path for the rest of the current run
+        #[inline(never)]
+        fn finish_run(&mut self, data: &[u8], chunk: &mut [u16; CHUNK_LEN], syms: &mut Vec<u16>) {
+            let t = &self.tables[self.g as usize];
+            let fin = t.decode_run(&mut self.r, data, chunk, &mut self.ck, syms, self.rem).unwrap();
+            self.rem = 0;
+            if fin {
+                self.done = true;
+            } else {
+                self.next_run();
+            }
+        }
+    }
+
+    macro_rules! step {
+        ($l:ident, $t:ident, $batch:ident, $bk:ident, $stop:ident, $data:ident) => {{
+            if !$stop {
+                let e = $t.lut[$l.r.peek_live(LUT_BITS) as usize];
+                let c = (e >> CNT_SH) as usize;
+                if c != 0 {
+                    $l.r.skip_short_shl_u8(e);
+                    let idx = $bk & 15;
+                    let dst = &mut $batch[idx..idx + 2];
+                    dst[0] = ((e >> SYM1) as u8) as u16;
+                    dst[1] = ((e >> SYM2) as u8) as u16;
+                    $bk += c;
+                } else {
+                    let (s, after) = $t.decode_entry_slow(e, $l.r, $data);
+                    $l.r = after;
+                    let s = s.unwrap();
+                    $batch[$bk & 15] = s;
+                    $bk += 1;
+                    if s == $l.eob {
+                        $stop = true;
+                    }
+                }
+            }
+        }};
+    }
+
+    macro_rules! stepl {
+        ($r:ident, $t:ident, $batch:ident, $bk:ident, $stop:ident, $eob:expr, $data:ident) => {{
+            let e = $t.lut[$r.peek_live(LUT_BITS) as usize];
+            let c = (e >> CNT_SH) as usize;
+            if c != 0 {
+                $r.skip_short_shl_u8(e);
+                let idx = $bk & 15;
+                let dst = &mut $batch[idx..idx + 2];
+                dst[0] = ((e >> SYM1) as u8) as u16;
+                dst[1] = ((e >> SYM2) as u8) as u16;
+                $bk += c;
+            } else if !$stop {
+                let (s, after) = $t.decode_entry_slow(e, $r, $data);
+                $r = after;
+                let s = s.unwrap();
+                $batch[$bk & 15] = s;
+                $bk += 1;
+                if s == $eob {
+                    $stop = true;
+                }
+            }
+        }};
+    }
+
+    /// the lockstep inner loop on register-resident locals; returns (ea, eb)
+    #[inline(always)]
+    fn lockstep(a: &mut Lane, b: &mut Lane, data: &[u8], ca: &mut [u16; CHUNK_LEN], cb: &mut [u16; CHUNK_LEN],
+                sa: &mut Vec<u16>, sb: &mut Vec<u16>) {
+        let ta = &a.tables[a.g as usize];
+        let tb = &b.tables[b.g as usize];
+        let (mut ra, mut rb) = (a.r, b.r);
+        let (mut cka, mut ckb) = (a.ck, b.ck);
+        let (mut rema, mut remb) = (a.rem, b.rem);
+        let (eoba, eobb) = (a.eob, b.eob);
+        let (mut ea, mut eb) = (false, false);
+        let (mut fa, mut fb) = (0usize, 0usize);
+        loop {
+            let (mut bka, mut bkb) = (0usize, 0usize);
+            {
+                let ba: &mut [u16; 18] = (&mut ca[cka..cka + 18]).try_into().unwrap();
+                let bb: &mut [u16; 18] = (&mut cb[ckb..ckb + 18]).try_into().unwrap();
+                for _ in 0..STEPS {
+                    stepl!(ra, ta, ba, bka, ea, eoba, data);
+                    stepl!(rb, tb, bb, bkb, eb, eobb, data);
+                    // (after an EOB a lane's further steps read past its block: harmless
+                    // garbage in the scratch batch, cut off below)
+                    if ea && fa == 0 { fa = bka; }
+                    if eb && fb == 0 { fb = bkb; }
+                }
+            }
+            if ea || eb {
+                // commit: a finished lane's symbols up to its EOB; the other lane's whole batch
+                if ea { cka += fa; } else { cka += bka; rema -= bka; }
+                if eb { ckb += fb; } else { ckb += bkb; remb -= bkb; }
+                break;
+            }
+            cka += bka;
+            ckb += bkb;
+            rema -= bka;
+            remb -= bkb;
+            ra.refill(data);
+            rb.refill(data);
+            if cka > CHUNK_STOP {
+                sa.extend_from_slice(&ca[..cka]);
+                cka = 0;
+            }
+            if ckb > CHUNK_STOP {
+                sb.extend_from_slice(&cb[..ckb]);
+                ckb = 0;
+            }
+            if rema < 2 * STEPS || remb < 2 * STEPS {
+                break;
+            }
+        }
+        a.r = ra; b.r = rb; a.ck = cka; b.ck = ckb; a.rem = rema; b.rem = remb;
+        if ea {
+            sa.extend_from_slice(&ca[..a.ck]);
+            a.ck = 0;
+            a.done = true;
+        }
+        if eb {
+            sb.extend_from_slice(&cb[..b.ck]);
+            b.ck = 0;
+            b.done = true;
+        }
+        if !a.done { a.r.refill(data); }
+        if !b.done { b.r.refill(data); }
+    }
+
+    /// decode two blocks' symbols in one thread, lookups of the two interleaved
+    #[inline(never)]
+    pub fn decode2(
+        pa: &Prep,
+        pb: &Prep,
+        data: &[u8],
+        ca: &mut [u16; CHUNK_LEN],
+        cb: &mut [u16; CHUNK_LEN],
+        sa: &mut Vec<u16>,
+        sb: &mut Vec<u16>,
+    ) {
+        sa.clear();
+        sb.clear();
+        let mut a = Lane::new(pa);
+        let mut b = Lane::new(pb);
+        a.r.refill(data);
+        b.r.refill(data);
+        loop {
+            if a.done || b.done {
+                break;
+            }
+            if a.rem < 2 * STEPS {
+                a.finish_run(data, ca, sa);
+                a.r.refill(data);
+                continue;
+            }
+            if b.rem < 2 * STEPS {
+                b.finish_run(data, cb, sb);
+                b.r.refill(data);
+                continue;
+            }
+            let ta = &a.tables[a.g as usize];
+            let tb = &b.tables[b.g as usize];
+            // the inner batch loop, both lanes in lockstep, until either needs its tail
+            loop {
+                let (mut bka, mut bkb) = (0usize, 0usize);
+                let (mut ea, mut eb) = (false, false);
+                {
+                    let ba: &mut [u16; 18] = (&mut ca[a.ck..a.ck + 18]).try_into().unwrap();
+                    let bb: &mut [u16; 18] = (&mut cb[b.ck..b.ck + 18]).try_into().unwrap();
+                    for _ in 0..STEPS {
+                        step!(a, ta, ba, bka, ea, data);
+                        step!(b, tb, bb, bkb, eb, data);
+                    }
+                }
+                a.ck += bka;
+                b.ck += bkb;
+                a.rem -= bka;
+                b.rem -= bkb;
+                a.r.refill(data);
+                b.r.refill(data);
+                if ea {
+                    sa.extend_from_slice(&ca[..a.ck]);
+                    a.ck = 0;
+                    a.done = true;
+                }
+                if eb {
+                    sb.extend_from_slice(&cb[..b.ck]);
+                    b.ck = 0;
+                    b.done = true;
+                }
+                if a.ck > CHUNK_STOP {
+                    sa.extend_from_slice(&ca[..a.ck]);
+                    a.ck = 0;
+                }
+                if b.ck > CHUNK_STOP {
+                    sb.extend_from_slice(&cb[..b.ck]);
+                    b.ck = 0;
+                }
+                if ea || eb || a.rem < 2 * STEPS || b.rem < 2 * STEPS {
+                    break;
+                }
+            }
+        }
+        for (l, c, s) in [(&mut a, ca, sa), (&mut b, cb, sb)] {
+            while !l.done {
+                l.finish_run(data, c, s);
+            }
+        }
+    }
+
+    /// two lanes; a lane that finishes takes the next block at once (out-of-order by at most one)
+    #[inline(never)]
+    pub fn decode_rolling(
+        ps: &[&Prep],
+        data: &[u8],
+        ca: &mut [u16; CHUNK_LEN],
+        cb: &mut [u16; CHUNK_LEN],
+        sa: &mut Vec<u16>,
+        sb: &mut Vec<u16>,
+        check: bool,
+    ) {
+        if ps.is_empty() {
+            return;
+        }
+        let mut next = 0usize;
+        let mut take = |next: &mut usize| -> Option<(usize, Lane<'_>)> {
+            if *next < ps.len() {
+                let i = *next;
+                *next += 1;
+                let mut l = Lane::new(ps[i]);
+                l.r.refill(data);
+                Some((i, l))
+            } else {
+                None
+            }
+        };
+        let (mut ia, mut a) = take(&mut next).unwrap();
+        let mut bopt = take(&mut next);
+        sa.clear();
+        sb.clear();
+        while let Some((ib, ref mut b)) = bopt {
+            // run until either lane completes a block
+            loop {
+                if a.done || b.done {
+                    break;
+                }
+                if a.rem < 2 * STEPS {
+                    a.finish_run(data, ca, sa);
+                    a.r.refill(data);
+                    continue;
+                }
+                if b.rem < 2 * STEPS {
+                    b.finish_run(data, cb, sb);
+                    b.r.refill(data);
+                    continue;
+                }
+                lockstep(&mut a, b, data, ca, cb, sa, sb);
+            }
+            if a.done {
+                if check {
+                    assert!(*sa == ps[ia].reference, "lane a block {ia}");
+                }
+                std::hint::black_box(&*sa);
+                sa.clear();
+                match take(&mut next) {
+                    Some((i, l)) => {
+                        ia = i;
+                        a = l;
+                    }
+                    None => {
+                        // finish b alone, then stop
+                        while !b.done {
+                            b.finish_run(data, cb, sb);
+                        }
+                        if check {
+                            assert!(*sb == ps[ib].reference, "lane b block {ib}");
+                        }
+                        std::hint::black_box(&*sb);
+                        return;
+                    }
+                }
+            }
+            if b.done {
+                if check {
+                    assert!(*sb == ps[ib].reference, "lane b block {ib}");
+                }
+                std::hint::black_box(&*sb);
+                sb.clear();
+                bopt = take(&mut next);
+            }
+        }
+        while !a.done {
+            a.finish_run(data, ca, sa);
+        }
+        if check {
+            assert!(*sa == ps[ia].reference, "lane a tail block {ia}");
+        }
+        std::hint::black_box(&*sa);
+    }
+
+    fn median(v: &mut [f64]) -> f64 {
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        v[v.len() / 2]
+    }
+
+    /// `PROBE_BZ2=path cargo test --release --lib ilp_probe -- --ignored --nocapture`
+    #[test]
+    #[ignore]
+    fn ilp_probe() {
+        let path = std::env::var("PROBE_BZ2").expect("PROBE_BZ2");
+        let reps: usize = std::env::var("PROBE_REPS").ok().and_then(|s| s.parse().ok()).unwrap_or(15);
+        let mut data = std::fs::read(&path).unwrap();
+        let real = data.len();
+        data.resize(real + (4 << 20), 0);
+        let data = &data[..];
+        let preps = prep_all(&data[..real]);
+        // (re-point at the padded slice: Reg holds positions only)
+        let nsym: usize = preps.iter().map(|p| p.reference.len()).sum();
+        let minsym: usize = std::env::var("PROBE_MIN").ok().and_then(|s| s.parse().ok()).unwrap_or(100_000);
+        let full: Vec<&Prep> = preps.iter().filter(|p| p.reference.len() > minsym).collect();
+        let nfull: usize = full.iter().map(|p| p.reference.len()).sum();
+        eprintln!("blocks {} (full {}), syms {} (full {})", preps.len(), full.len(), nsym, nfull);
+        let mut ca = Box::new([0u16; CHUNK_LEN]);
+        let mut cb = Box::new([0u16; CHUNK_LEN]);
+        let mut sa = Vec::with_capacity(MAX_SYMS);
+        let mut sb = Vec::with_capacity(MAX_SYMS);
+        // exactness first
+        for pair in full.chunks(2) {
+            if pair.len() < 2 {
+                break;
+            }
+            decode2(pair[0], pair[1], data, &mut ca, &mut cb, &mut sa, &mut sb);
+            assert!(sa == pair[0].reference && sb == pair[1].reference, "mismatch");
+        }
+        eprintln!("exact: {} pairs", full.len() / 2);
+        let npair = full.len() / 2 * 2;
+        let nsym_p: usize = full[..npair].iter().map(|p| p.reference.len()).sum();
+        decode_rolling(&full, data, &mut ca, &mut cb, &mut sa, &mut sb, true);
+        eprintln!("rolling exact: {} blocks", full.len());
+        let (mut t1, mut t2, mut t3) = (Vec::new(), Vec::new(), Vec::new());
+        for rep in 0..reps {
+            let arms: [u8; 3] = [[1, 2, 3], [3, 1, 2], [2, 3, 1]][rep % 3];
+            for arm in arms {
+                let t = Instant::now();
+                if arm == 1 {
+                    for p in &full[..npair] {
+                        sa.clear();
+                        let (res, _) = decode_runs(&p.tables, &p.sel, p.r, data, &mut ca, &mut sa);
+                        res.unwrap();
+                        std::hint::black_box(&sa);
+                    }
+                    t1.push(t.elapsed().as_secs_f64());
+                } else if arm == 3 {
+                    decode_rolling(&full[..npair], data, &mut ca, &mut cb, &mut sa, &mut sb, false);
+                    t3.push(t.elapsed().as_secs_f64());
+                } else {
+                    for pair in full[..npair].chunks(2) {
+                        decode2(pair[0], pair[1], data, &mut ca, &mut cb, &mut sa, &mut sb);
+                        std::hint::black_box((&sa, &sb));
+                    }
+                    t2.push(t.elapsed().as_secs_f64());
+                }
+            }
+        }
+        let r2: Vec<f64> = t2.iter().zip(&t1).map(|(a, b)| a / b).collect();
+        let r3: Vec<f64> = t3.iter().zip(&t1).map(|(a, b)| a / b).collect();
+        let (mut r2s, mut r3s) = (r2.clone(), r3.clone());
+        let (q2, q3) = (median(&mut r2s), median(&mut r3s));
+        let w2 = r2.iter().filter(|&&x| x < 1.0).count();
+        let w3 = r3.iter().filter(|&&x| x < 1.0).count();
+        let mut t3s = t3.clone();
+        let m3 = median(&mut t3s);
+        let min = |v: &[f64]| v.iter().cloned().fold(f64::MAX, f64::min);
+        eprintln!("paired ratio median: static {q2:.4} ({w2}/{} faster), rolling {q3:.4} ({w3}/{} faster)", r2.len(), r3.len());
+        eprintln!("min-of-reps ratio: static {:.4}, rolling {:.4}; rolling median {:.3} ms {:.3} ns/sym",
+            min(&t2) / min(&t1), min(&t3) / min(&t1), m3 * 1e3, m3 * 1e9 / nsym_p as f64);
+        let (m1, m2) = (median(&mut t1), median(&mut t2));
+        let (lo1, hi1) = (t1[0], t1[t1.len() - 1]);
+        let (lo2, hi2) = (t2[0], t2[t2.len() - 1]);
+        eprintln!(
+            "single: {:.3} ms [{:.3}, {:.3}] {:.3} ns/sym\npair:   {:.3} ms [{:.3}, {:.3}] {:.3} ns/sym\nratio pair/single {:.4}",
+            m1 * 1e3, lo1 * 1e3, hi1 * 1e3, m1 * 1e9 / nsym_p as f64,
+            m2 * 1e3, lo2 * 1e3, hi2 * 1e3, m2 * 1e9 / nsym_p as f64,
+            m2 / m1
+        );
+    }
+}

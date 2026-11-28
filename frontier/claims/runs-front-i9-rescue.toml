@@ -1,0 +1,34 @@
+id = "runs-front-i9-rescue"
+title = "Validate 64-sym u64 vptest Pass 1, hoisted STEPS, and zero-dead-per [u32; 256] front_avx2 (PR #1238 code) on physical i9-10900K"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["runs-front-u64-vptest-p1", "runs-front-u32-counts", "runs-front-hoisted-steps"]
+needs_louis = ""
+question = """
+PR #1238's `front_avx2` redesign (64-symbol `u64` `vptest` Pass 1 + zero-dead-`per` `[u32; 256]` stack `cnt` freeing a GPR to hoist the step table + zero hot spills/calls/`vzeroupper`) is 100% exact, 7/7 SHA-256 identical, and Miri-clean (0 UB including direct AVX2+BMI1+BMI2+LZCNT+POPCNT interpretation). Attempt 1 (`d5e95794`, 256-bit `YMM_STEPS`, `23 insns / 105 B`) won Intel Xeon VM (`-3.9..-4.5%` `wikidata` 1t, `-7.2..-7.8%` `workers-lazy` 1t, `-6.4%` `text` 1t JCC) but went neutral on AMD EPYC 7763 Zen 3 (`wikidata` 1t `+0.4%`, 2t CPU `+0.7%` slower) because `vpermq $0x4e` inserted a 3-cycle cross-lane stall (`2 -> 5` cycles) on Zen 3's dual shuffle pipes. Attempt 2 (`791ee415`, zero-`vpermq` 2-cycle 128-bit VEX `(f0, f1)` XMM + hoisted `STEPS`, `25 insns / 118 B` in both baseline and JCC-32B with 0 alignment NOPs) eliminated all Zen regressions, held `-2.9..-5.0%` on Intel Xeon VM, and moved AMD EPYC 9V45 Zen 5 CI to `text` 1t `-2.2% (-4.6%, +0.2%)` and `text` 4t `-4.6% (-10.0%, +1.1%)`, missing `runs-front-and-fill-build`'s frozen CI gate only because `text` 1t's 95% CI crossed zero by `0.2%`, `runs::front` is `<10%` of Zen 5 `wikidata` 1t wall (`276 ms`), and `text` 2t RSS jitter (`+3.6%`) exceeded the frozen `<= 1.005x` point bound. Does `791ee415` (and optionally a paired comparison against `d5e95794`'s `YMM_STEPS` on Intel single-Port-5) deliver a paid whole-decoder speedup on the physical Comet Lake i9-10900K target machine under a noise-calibrated memory rule (PERFORMANCE-POLICY section 2), with CI used for no-regression + B5/Miri verification?
+"""
+why = """
+`runs::front_avx2` executes on 100% of Wikidata's 233 Open blocks (`M` = 132.4 ms at 1W / 19.3 ms/w at 8W on i9-10900K) and all post-#1175 `Runs`-routed compressible blocks (`text`, `mdjournal`, `elf`, `json`, `runs`), with `0 B` extra heap and `-1 KiB` `Runs` struct/stack. Both `#1238` heads passed 100% green CI (including full `miri`, `rust`, `fuzz-smoke`, wheels) and were stopped solely by AMD EPYC CI visibility and an instrument-noise `<= 1.005x` point RSS bound, not by a refutation of the Intel advantage.
+"""
+stop_test = """
+To be frozen by the taker before any new data (RULES C1a); do not reuse CI runs 46078359802 or 46086718747 as evidence for it. Must specify an i9-10900K paired wall/CPU decision rule, an independent B5 review of `src/runs.rs`, and a noise-calibrated memory rule (A/A control or PERFORMANCE-POLICY section 2) alongside non-regressing CI.
+"""
+done_when = """
+Merged with an independent B5 review, a paired i9-10900K verdict, and green CI, or a scoped STOP on the i9.
+"""
+premises = [
+  "frontier/deltas/2026-11-28-runs-front-and-fill-build-stop.md",
+  "docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+  "docs/notebook/2026-11-28-rss-bound-calibration.md",
+  "src/runs.rs",
+]
+links = [
+  "frontier/claims/runs-front-and-fill-build.toml",
+  "frontier/claims/rss-bound-calibration.toml",
+  "examples/runs_front_fill_dissection.rs",
+]

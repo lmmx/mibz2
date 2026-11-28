@@ -13,6 +13,7 @@ question = """
 """
 why = """
 Derived room is about 12% of 10T worker demand at zero code cost (one constant), if per-worker cost holds under the extra contention. Fifteenth synthesis pass, section 1.
+Nineteenth synthesis pass, section 4: the forward lanes (forward-emission-adopt) cut W about 17% and move k* to about 7.2-7.9, so once they are default this room shrinks to 0-15 ms (0-8%); re-premise on the post-adoption worker before admitting. The stop test is unchanged.
 """
 stop_test = """
 Frozen before data. On the i9, pinned 10T, wikidata x4 plus text, records and random as guards, 12 paired rounds with order balanced and position-stratified (see i9-clock-modes): 8 workers over 7 must have a 95% CI upper bound <= 0.97 on Wikidata wall, no guard worse than 1.01, and peak RSS <= 1.05x. Otherwise STOP with a dead-end row.
@@ -20,5 +21,5 @@ Frozen before data. On the i9, pinned 10T, wikidata x4 plus text, records and ra
 done_when = """
 Sequenced after plan-schedule-and-lazy-threshold (same file). A merged one-constant PR on PASS, or a dead-end row on STOP, with a delta.
 """
-premises = ["docs/notebook/2026-11-27-synthesis-fifteenth-pass.md", "frontier/deltas/2026-11-27-jcc-aligned-release-i9-verdict.md"]
+premises = ["docs/notebook/2026-11-27-synthesis-fifteenth-pass.md", "docs/notebook/2026-11-27-synthesis-nineteenth-pass.md", "frontier/deltas/2026-11-27-jcc-aligned-release-i9-verdict.md"]
 links = ["frontier/claims/plan-schedule-and-lazy-threshold.toml", "frontier/claims/i9-clock-modes.toml"]

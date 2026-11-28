@@ -239,13 +239,27 @@ impl<'a, const C: usize, const STRIDE: usize> QueuesOf<'a, C, STRIDE> {
                 self.fill[a] as usize
             };
             let lo = m & (EPOCH - 1);
-            let take = left.min((C - f) as u32).min(EPOCH - lo);
+            // Write at most 4 ranks (8 bytes) per outer step without an inner loop so
+            // `-C target-cpu=native` never auto-vectorizes to 256-bit YMM or emits `vzeroupper`.
+            let take = left.min((C - f) as u32).min(EPOCH - lo).min(4);
             let chunk = self.chunk_mut(self.tails[a]);
-            for (i, d) in chunk[2 * f..2 * (f + take as usize)]
-                .chunks_exact_mut(2)
-                .enumerate()
-            {
-                d.copy_from_slice(&((lo + i as u32) as u16).to_le_bytes());
+            let dst = &mut chunk[2 * f..][..2 * (take as usize)];
+            let mut v = lo as u16;
+            let mut it = dst.chunks_exact_mut(2);
+            if let Some(d) = it.next() {
+                d.copy_from_slice(&v.to_le_bytes());
+                v = v.wrapping_add(1);
+            }
+            if let Some(d) = it.next() {
+                d.copy_from_slice(&v.to_le_bytes());
+                v = v.wrapping_add(1);
+            }
+            if let Some(d) = it.next() {
+                d.copy_from_slice(&v.to_le_bytes());
+                v = v.wrapping_add(1);
+            }
+            if let Some(d) = it.next() {
+                d.copy_from_slice(&v.to_le_bytes());
             }
             self.fill[a] += take;
             m += take;
