@@ -1,0 +1,9 @@
+id = "a6b-zero-rss-endpoint-build"
+holder = "antigravity"
+session = "8ebee9e996c1"
+claimed_at = "2026-11-28T06:37:28+00:00"
+expires = "2026-11-28T14:37:28+00:00"
+owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
+mechanisms = ["construction-induction-dict", "edges-overlay-aos-u64", "zero-extra-rss"]
+base = "6679ddeed640f9e9cdd6aa3f71e80a7fb43326b7"
+released = false
