@@ -231,9 +231,39 @@ replaced by shipped #1294); `owned-writer` still has no retention note; and `mem
 checked against their removal conditions (`forward-anchor-lanes` stays retained pending its C6
 adoption verdict).
 
-**Release scaling and team threshold (RELEASING §5, §5a):** `bench-release-scaling` and
-`bench-crossover` are queued at `v0.5.18` (`edf2ceaf`, #1360, ready tags confirmed on origin);
-their figures and verdicts will be recorded here once the i9 bundles return.
+**Release scaling (RELEASING §5):** 0.5.18 against 0.5.17 on the i9-10900K
+(`release-scaling/run-20261128T125005Z`, evidence `16d5e409`, sha256 `c6c46332…7778`;
+`bench/release-scaling/2026-11-28-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.18/`, 10 rounds,
+Wikidata 210 MB, 240/240 byte-identical): flat at 1–4 threads and 12–20 threads, and
+**+3.9% faster at 8 threads / +4.1% faster at 10 threads** (pinned `OpenCells`, 10/10 fast clock
+mode), fully recovering 0.5.17's regression and moving net faster than 0.5.16.
+- **Pinned (1–10 threads, one CPU per core):** 0.5.17/0.5.18 wall is 1.007 [0.963, 1.054] at
+  1 thread (same-mode paired 1.019 [0.993, 1.045], n = 7; 0.5.17 6 fast / 4 slow, 0.5.18 5 fast /
+  5 slow), 1.007 [0.987, 1.028] at 2 (10/10 fast), 1.006 [0.981, 1.031] at 4 (10/10 fast),
+  **1.039 [1.034, 1.044]** at 8 (10/10 fast; within-fast 1.039 [1.032, 1.046]; CPU 1.038 [1.033,
+  1.043], 0.436 → 0.420 s; wall 0.067 → 0.065 s) and **1.041 [1.036, 1.046]** at 10 (10/10 fast;
+  within-fast 1.041 [1.036, 1.047]; CPU 1.035 [1.031, 1.040], 0.448 → 0.431 s; wall 0.061 →
+  0.058 s).
+- **Unpinned (12–20 threads):** 1.037 [0.970, 1.108] at 12 (within-fast 1.013 [0.971, 1.057],
+  9/10 fast), 1.058 [0.971, 1.152] at 16 (within-fast 1.037 [0.980, 1.098], 9/10 fast) and 0.995
+  [0.966, 1.025] at 20 (10/10 fast), each interval spanning 1. Across thread counts, median peak
+  RSS over ten rounds ranged from 27.8 to 67.1 MiB, within 1.6 MiB of 0.5.17 at every count
+  (42.0 vs 41.6 MiB at 8 threads, 44.6 vs 44.0 MiB at 10 threads); the highest individual peak was
+  70.6 MiB at 4 threads.
+- **Attribution (RELEASING §5b):** 8 threads (+3.9%) and 10 threads (+4.1%) clear the 3% bar with
+  95% intervals excluding zero; recorded as the `0.5.17 → 0.5.18` row in
+  `docs/journal/release-attribution.md`.
+
+**The team threshold (RELEASING §5a): unmoved.** `crossover/run-20261128T130104Z`, evidence
+`6e5d4cbb` (sha256 `f05627ad…0c16`, commit `edf2ceaf`, 10 rounds on Wikidata, 400/400 same bytes).
+No team arm is faster than the shipped decoder at any count: `mibz2-team2` is 1.214–2.353 wall and
+`mibz2-team3` is 1.386–2.216 wall at 4–10 threads. At the trimmed worker counts, `mibz2-workers-w`
+is 1.314 [1.274, 1.355] at 6 threads, 1.038 [1.016, 1.060] at 8 and 1.062 [1.022, 1.104] at 10;
+at 4 threads pinned, `mibz2-workers-w` (4 eager workers vs shipped 3) is 0.986 [0.966, 1.007] wall
+(spanning 1) for 1.070 [1.058, 1.083] CPU and 81 vs 69 MB RSS. Sanity (the same plan as shipped):
+0.975 [0.946, 1.006] at 5, 0.976 [0.953, 0.999] at 7 (CPU 0.992 [0.973, 1.012], near-miss noise
+under §5a.3) and 0.990 [0.960, 1.022] at 9 threads. SMT counts (12, 16, 20), reported only:
+`mibz2-workers-w` 1.018–1.157 wall (1.323–1.553 CPU).
 
 ## [0.5.17](https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17) - 2026-11-27
 
