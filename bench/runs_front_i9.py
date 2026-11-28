@@ -54,7 +54,7 @@ ROOT = BENCH_DIR.parent
 REGISTRATION = ROOT / "docs/journal/2026-11-28-runs-front-i9/registration.md"
 
 # The master commit the candidate is built on (its control), frozen before any data.
-BASE = "629222aab45f65743ae2d98443f76b1d1c7a1265"
+BASE = "4bb6591087c3d007ff508905446c1b333096aa76"
 # Every path that can change the decoder or the harness binaries; between BASE and HEAD only
 # CANDIDATE_FILES may differ under them.
 DECODER_PATHS = ("src", "Cargo.toml", "Cargo.lock", "build.rs", "examples", "benches")
@@ -314,8 +314,7 @@ def run(out: Path, smoke: bool = False) -> dict[str, Any]:
             verify_parity(out, bins, files, refs, cells=cells)
             facts = output(str(bins["base_ab"]), "env", "--facts")
             (out / "env-facts.json").write_text(facts + "\n", encoding="utf-8")
-            if not smoke:
-                check_no_quota(json.loads(facts))
+            check_no_quota(json.loads(facts))  # in smoke too, so a smoke run exercises it
             common = dict(
                 arm_name=ARM,
                 rounds=rounds,

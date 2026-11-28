@@ -1,11 +1,11 @@
 claim: runs-front-i9-rescue
 by: claude-code
 outcome: partial
-evidence: this PR (code 4c788237 = #1238 791ee415's src/runs.rs + src/runs/tests.rs on master 629222aa; recipe bench/runs_front_i9.py, just bench-runs-front-i9); docs/journal/2026-11-28-runs-front-i9/registration.md; bench/test_runs_front_i9.py 12/12; VM smoke run (SMOKE, all prerequisites and identity passed)
+evidence: this PR (code = #1238 791ee415's src/runs.rs + src/runs/tests.rs on master 4bb65910; recipe bench/runs_front_i9.py, just bench-runs-front-i9); docs/journal/2026-11-28-runs-front-i9/registration.md; bench/test_runs_front_i9.py 12/12; VM smoke run (SMOKE, all prerequisites and identity passed)
 
 **What was asked:** take #1238's exact, Miri-clean `front_avx2` (stopped on AMD CI visibility and a noise-level RSS bound, not refuted) to a frozen, reviewed, green i9 recipe. The workstation queue is starved: every ready entry already has evidence.
 **What I found:**
-- **The code applies unchanged.** `src/runs.rs` is untouched on master since #1238's base `32b0c9ec`, so the final head's two files apply to master `629222aa` as one commit.
+- **The code applies unchanged.** `src/runs.rs` is untouched on master since #1238's base `32b0c9ec`, so the final head's two files apply to master as one commit. It was first drafted on `629222aa` and re-pinned to `4bb65910` before any data, to take #1117's `src/` change into the base and #1279's fix to the quota check the recipe imports.
 - **Codegen identity is deterministic.** The candidate's `front_avx2` has 1 `vptest` and the base's has 0. That is the 64-symbol Pass 1. Instruction counts are 766 and 788, and `vzeroupper` 4 and 5. The candidate has 6 `vpermq` against the base's 3, all outside the hot loop; Attempt 2 removed only the hot-loop one. So identity is checked by `vptest`, not by `vpermq`.
 - **The recipe runs end to end** on the VM in smoke mode (2 rounds, small inputs, decides nothing): build, source check, identity, libbzip2 parity, both `ab` sweeps, scoring.
 **What changed:**

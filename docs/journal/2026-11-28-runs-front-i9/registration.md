@@ -8,7 +8,7 @@
   - Pass 1 builds the literal and one-run bitmaps 64 symbols at a time, with a `u64` `vptest`.
   - The dead `Runs.per` is compiled out in production, so counting uses a `[u32; 256]` stack array and frees a register to hoist the step table.
   - The step table is a two-cycle 128-bit `(f0, f1)` pair with no `vpermq` in the hot loop. Removing `vpermq` is what fixed Attempt 1's Zen 3 regression.
-- **Control:** `BASE = 629222aab45f65743ae2d98443f76b1d1c7a1265`, master when this was frozen.
+- **Control:** `BASE = 4bb6591087c3d007ff508905446c1b333096aa76`, master when this was frozen. It includes #1117's scanner setup and #1279's fix to the quota check, which this recipe imports. The candidate was first drafted on `629222aa`; it was re-pinned before any data, because #1117 then touched `src/` and #1279 fixed a check that would have voided the run.
 - **The recipe refuses to run (VOID)** unless `BASE` is an ancestor of `HEAD`, and unless the only files that differ under `src/`, `examples/`, `benches/`, `Cargo.toml`, `Cargo.lock` and `build.rs` are exactly `src/runs.rs` and `src/runs/tests.rs`. Recipe, test and this file differ too, but no binary reads them. The base is built from a `git worktree` at `BASE`, the candidate from the tagged checkout itself.
 - **Arm:** `ab`'s `mibz2`, the production default, at every thread count. `runs::front` is reached through every path that takes runs:
   - `src/lib.rs:484`, `:665` and `:682` (sequential);
@@ -25,7 +25,7 @@
 
 ## 3. Grid
 
-- **Pairing:** `ab run --arms mibz2,mibz2@<cand>`. Each sample is a fresh process, with a 2 s settle, the busy check at 1.5 cores, a 100 ms prespin, `--pin` at core 0's first CPU and `--machine-state` counters. There are 16 paired rounds. `ab`'s `arm_order` rotates the arms each round, so each arm goes first in 8 of them.
+- **Pairing:** `ab run --arms mibz2,mibz2@<cand>`. Each sample is a fresh process, with a 2 s settle (the i9-clock-modes verdict, `origin/evidence` `d5658cfb`, found the slow clock mode only at a 0.2 s gap: 0/48 slow at 2 s), the busy check at 1.5 cores, a 100 ms prespin, `--pin` at core 0's first CPU and `--machine-state` counters. There are 16 paired rounds. `ab`'s `arm_order` rotates the arms each round, so each arm goes first in 8 of them.
 - **Wikidata ×4** (`0b820d14…ce08e`): 1, 6, 8 and 10 threads.
 - **`ab gen` corpora at scale 4:** `text` (primary), plus `records`, `random`, `runs`, `pattern` and `onebyte` (secondary), each at 1 and 8 threads.
 - **Size:** 16 cells and 512 timed processes. That is about 20–25 minutes plus three builds, under the 30-minute threshold of PERFORMANCE-POLICY.md §4a.
