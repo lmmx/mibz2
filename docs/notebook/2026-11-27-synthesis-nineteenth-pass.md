@@ -91,6 +91,13 @@ that is cold between blocks. #1053's growth sat inside the hot loop's working se
   wall, if reported, is the masked figure. The composed re-test is the one that decides value:
   lanes + seam + A2 at the same counts. That is the rescue the eighteenth pass named, and it is now
   conditioned only on `forward-emission-adopt`.
+- **Addendum, after #1252.** The fast A2 setup (#1117) passed its i9 gate while this pass was open.
+  Solo `S′` on wikidata x4 is 0.9548 [0.9514, 0.9582], 142.8 → 136.3 ms (`origin/evidence
+  9dacc085`, recorded by that claim; not re-read here). By §2, on the lane worker that is about
+  −7.5 ms of contended scanner at 8 workers *(derived)*. That nearly closes the 9.8 ms by which the
+  scanner exceeds the workers. Lanes + A2 would then sit near a tie at ~170 ms (about 4.9 GB/s);
+  the seam and A3 levers would then pay only alongside further worker cuts. On the non-lane base
+  the same cut is masked at 8 workers.
 - **6 GB/s (140 ms) arithmetic, derived:** the lanes' ideal-scan wall is 168.3 ms (4.99 GB/s).
   Reaching 140 ms at 8 workers needs both stations under ~135 ms. Workers need another ~19% off
   166 ms per worker; `A6a` construction (34 ms) and `A9` (12 ms) are the untouched stages. The
