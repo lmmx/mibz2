@@ -43,6 +43,7 @@ GitHub Actions.
 
 import contextlib
 import datetime as dt
+import hashlib
 import io
 import json
 import os
@@ -88,6 +89,26 @@ SURFACE_COLS = ["target", "part", "what", "room_1w", "room_8w", "state", "eviden
 WORKSTATION_RE = re.compile(r"\b(?:workstation|i9(?:-\d+[a-z]*)?|workstation-queue)\b", re.IGNORECASE)
 RECENT_QUEUE_TAIL = 3
 PROVENANCE_RUN_KEYS = ("recipe", "head", "commit")
+DELTA_VERDICTS = {
+    "probe-pass",
+    "ci-pass",
+    "diagnostic-pass",
+    "adoption-pass",
+    "stop",
+    "kill",
+    "void",
+    "incomplete",
+    "not-adopted",
+}
+RECALIBRATION_PATHS = (
+    "src/open.rs",
+    "src/open/",
+    "src/parallel.rs",
+    "src/parallel/",
+    "src/bwt.rs",
+    "src/block.rs",
+)
+NON_DEFAULT_LEDGER_STATES = {"experimental", "prototype", "target"}
 
 
 def config(ref=None):
@@ -874,16 +895,31 @@ def _dead_end_ids():
     return dead
 
 
-def _bundle_commits(ev_sha, rel_path):
-    """Extract 40-hex commit SHAs from commit(s).txt inside an origin/evidence tarball."""
+def _bundle_inspect(ev_sha, rel_path, tree_files=None):
+    """Extract commits and verify optional `.sha256` sidecar for an origin/evidence tarball."""
     res = subprocess.run(
         ["git", "-C", str(REPO), "cat-file", "blob", f"{ev_sha}:{rel_path}"],
         capture_output=True,
     )
     if res.returncode != 0:
         raise ValueError(f"cannot read evidence bundle {rel_path}")
+    raw = res.stdout
+    digest = hashlib.sha256(raw).hexdigest()
+    sidecar_status = "missing"
+    sc_path = f"{rel_path}.sha256"
+    if tree_files is None or sc_path in tree_files:
+        sc = subprocess.run(
+            ["git", "-C", str(REPO), "cat-file", "blob", f"{ev_sha}:{sc_path}"],
+            capture_output=True,
+        )
+        if sc.returncode == 0:
+            found = re.findall(r"\b[0-9a-f]{64}\b", sc.stdout.decode("utf-8", errors="replace").lower())
+            if found and found[0] == digest:
+                sidecar_status = "ok"
+            else:
+                sidecar_status = "mismatch"
     commits = set()
-    with tarfile.open(fileobj=io.BytesIO(res.stdout), mode="r:gz") as tf:
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tf:
         for member in tf.getmembers():
             if not member.isfile():
                 continue
@@ -894,8 +930,6 @@ def _bundle_commits(ev_sha, rel_path):
                     text = fh.read().decode("utf-8", errors="replace").lower()
                     commits.update(re.findall(r"\b[0-9a-f]{40}\b", text))
             elif name == "provenance.json":
-                # Newer recipes record the run's commit here, under a recipe-specific key; only
-                # the run identity keys count (never source/base commits or tree/blob ids).
                 fh = tf.extractfile(member)
                 if fh is not None:
                     data = json.loads(fh.read().decode("utf-8", errors="replace"))
@@ -904,7 +938,20 @@ def _bundle_commits(ev_sha, rel_path):
                             val = data.get(key)
                             if isinstance(val, str) and re.fullmatch(r"[0-9a-f]{40}", val.lower()):
                                 commits.add(val.lower())
-    return commits
+    return {"commits": commits, "sha256": digest, "sidecar": sidecar_status}
+
+
+def _bundle_commits(ev_sha, rel_path):
+    """Extract 40-hex commit SHAs from commit(s).txt or provenance.json inside an evidence tarball."""
+    return _bundle_inspect(ev_sha, rel_path)["commits"]
+
+
+def _evidence_bundle_commit(ev_sha, rel_path):
+    """Return the commit SHA on origin/evidence that added `rel_path`, or ev_sha on fallback."""
+    rc, out = git("log", "-n", "1", "--format=%H", ev_sha, "--", rel_path)
+    if rc == 0 and re.fullmatch(r"[0-9a-f]{40}", out.strip()):
+        return out.strip()
+    return ev_sha
 
 
 def read_workstation_queue_state(fetch=True):
@@ -944,6 +991,7 @@ def read_workstation_queue_state(fetch=True):
             "held_tags": [],
         }
     entries = []
+    entry_lines = []
     for raw in queue_body.splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -951,6 +999,7 @@ def read_workstation_queue_state(fetch=True):
         parts = line.split()
         if len(parts) >= 2:
             entries.append((parts[0], parts[1]))
+            entry_lines.append((parts[0], parts[1], line))
     rc_t, tag_out = git("ls-remote", "--tags", "origin")
     if rc_t != 0:
         return {
@@ -994,8 +1043,9 @@ def read_workstation_queue_state(fetch=True):
             "ready_count": 0,
             "held_tags": [],
         }
+    tree_files = set(tree_out.splitlines())
     bundles_by_dir = {}
-    for rel in tree_out.splitlines():
+    for rel in tree_files:
         if rel.endswith(".tar.gz") and "/" in rel:
             top = rel.split("/", 1)[0]
             bundles_by_dir.setdefault(top, []).append(rel)
@@ -1007,6 +1057,15 @@ def read_workstation_queue_state(fetch=True):
         for recipe, branch in entries
         if recipe in ready_tags and recipe not in hold_tags
     ]
+    extra = {
+        "entries": entry_lines,
+        "ready_tags": ready_tags,
+        "hold_tags": hold_tags,
+        "ev_sha": ev_sha,
+        "tree_files": tree_files,
+        "bundles_by_dir": bundles_by_dir,
+        "bundle_cache": {},
+    }
     if not ready_list:
         return {
             "state": "starved",
@@ -1014,16 +1073,17 @@ def read_workstation_queue_state(fetch=True):
             "runnable": [],
             "ready_count": 0,
             "held_tags": held_tags,
+            **extra,
         }
-    bundle_cache = {}
+    bundle_cache = extra["bundle_cache"]
 
     def has_evidence(recipe, sha):
         dirs = list(dict.fromkeys([recipe, recipe.removeprefix("bench-")]))
         for d in dirs:
             for rel in bundles_by_dir.get(d, []):
                 if rel not in bundle_cache:
-                    bundle_cache[rel] = _bundle_commits(ev_sha, rel)
-                if sha in bundle_cache[rel]:
+                    bundle_cache[rel] = _bundle_inspect(ev_sha, rel, tree_files)
+                if sha in bundle_cache[rel]["commits"]:
                     return True
         return False
 
@@ -1050,6 +1110,7 @@ def read_workstation_queue_state(fetch=True):
             "runnable": [],
             "ready_count": len(ready_list),
             "held_tags": held_tags,
+            **extra,
         }
     if runnable:
         return {
@@ -1058,6 +1119,7 @@ def read_workstation_queue_state(fetch=True):
             "runnable": runnable,
             "ready_count": len(ready_list),
             "held_tags": held_tags,
+            **extra,
         }
     return {
         "state": "starved",
@@ -1065,6 +1127,7 @@ def read_workstation_queue_state(fetch=True):
         "runnable": [],
         "ready_count": len(ready_list),
         "held_tags": held_tags,
+        **extra,
     }
 
 
@@ -1234,6 +1297,639 @@ def format_pressure_lines(pressure):
     return lines
 
 
+def _read_delta_records():
+    """Parse delta headers including optional structured `verdict:` (never inferred from prose)."""
+    records = []
+    d = ROOT / "deltas"
+    if not d.is_dir():
+        return records
+    for p in sorted(d.glob("*.md"), reverse=True):
+        if p.name == "README.md":
+            continue
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        head = _parse_head(lines, DELTA_HEAD)
+        verdict = ""
+        for line in lines[:10]:
+            if not line.strip():
+                break
+            if line.startswith("verdict:"):
+                val = line.split(":", 1)[1].strip().lower()
+                if val in DELTA_VERDICTS:
+                    verdict = val
+                break
+        head["verdict"] = verdict
+        records.append((p, head))
+    return records
+
+
+def _claim_recipe(c, entries):
+    """Join claim `c` to a single workstation recipe name, or fail closed on ambiguity."""
+    explicit = str(c.get("recipe", "")).strip()
+    if explicit:
+        return explicit, None
+    cid = c["id"]
+    pr = c.get("pr") if isinstance(c.get("pr"), int) and c.get("pr") > 0 else None
+    matches = []
+    for recipe, _branch, raw in entries:
+        if recipe == f"bench-{cid}" or re.search(rf"\b{re.escape(cid)}\b", raw):
+            matches.append(recipe)
+        elif pr is not None and re.search(rf"#{pr}\b", raw):
+            matches.append(recipe)
+    unique = list(dict.fromkeys(matches))
+    if len(unique) == 1:
+        return unique[0], None
+    if len(unique) > 1:
+        return None, f"ambiguous recipe join ({', '.join(unique)})"
+    return None, None
+
+
+def _is_ordinary_ci_claim(c, recipe):
+    """Whether a build claim follows ordinary CI/native acceptance rather than an i9 run."""
+    vk = str(c.get("validation_kind", "")).strip().lower()
+    if vk == "ci":
+        return True
+    if vk in ("diagnostic", "adoption") or recipe is not None:
+        return False
+    if c.get("kind") != "build":
+        return False
+    blob = " ".join(str(c.get(k, "")) for k in ("stop_test", "done_when")).lower()
+    if "no separate workstation run" in blob or "no separate i9" in blob:
+        return True
+    return not _mentions_workstation(c)
+
+
+def _claim_successors(c, claims_by_id):
+    """Find concrete downstream successor claims linked from or to `c`."""
+    found = []
+    for key in ("successor", "successors"):
+        val = c.get(key)
+        if isinstance(val, str) and val.strip():
+            found.append(val.strip())
+        elif isinstance(val, list):
+            found.extend(str(x).strip() for x in val if str(x).strip())
+    ref = f"frontier/claims/{c['id']}.toml"
+    for other_id, other in claims_by_id.items():
+        if other_id == c["id"]:
+            continue
+        if other.get("kind") not in ("build", "run", "ops"):
+            continue
+        links = [str(x) for x in (other.get("links") or [])]
+        if ref in links:
+            found.append(other_id)
+    out = []
+    for sid in dict.fromkeys(found):
+        if sid in claims_by_id:
+            out.append(claims_by_id[sid])
+    return out
+
+
+def _conflicting_successors(succs):
+    """Return True if >=2 active/idea successors claim overlapping mechanisms or paths."""
+    live_succs = [s for s in succs if s.get("status") not in ("done", "dropped")]
+    if len(live_succs) < 2:
+        return False
+    for i, a in enumerate(live_succs):
+        a_mechs = set(a.get("mechanisms") or [])
+        a_paths = a.get("owned_paths") or []
+        for b in live_succs[i + 1 :]:
+            if a_mechs & set(b.get("mechanisms") or []):
+                return True
+            if any(overlaps(pa, pb) for pa in a_paths for pb in (b.get("owned_paths") or [])):
+                return True
+    return False
+
+
+def _inspect_recipe_evidence(recipe, pin_sha, queue_state):
+    """Inspect archived bundles for `recipe` against `pin_sha`; fail closed on corruption."""
+    ev_sha = queue_state.get("ev_sha")
+    bundles_by_dir = queue_state.get("bundles_by_dir") or {}
+    tree_files = queue_state.get("tree_files")
+    cache = queue_state.setdefault("bundle_cache", {})
+    if not ev_sha:
+        return {"error": "origin/evidence unavailable", "matched": [], "superseded": []}
+    dirs = list(dict.fromkeys([recipe, recipe.removeprefix("bench-")]))
+    matched, superseded = [], []
+    for d in dirs:
+        for rel in bundles_by_dir.get(d, []):
+            try:
+                if rel not in cache:
+                    cache[rel] = _bundle_inspect(ev_sha, rel, tree_files)
+                info = cache[rel]
+            except (OSError, tarfile.TarError, EOFError, ValueError) as exc:
+                return {"error": f"corrupt/unreadable evidence {rel}: {exc}", "matched": [], "superseded": []}
+            if pin_sha and pin_sha in info["commits"]:
+                if info["sidecar"] == "mismatch":
+                    return {
+                        "error": f"SHA-256 sidecar mismatch for {rel}",
+                        "matched": [],
+                        "superseded": [],
+                    }
+                ev_commit = info.get("ev_commit")
+                if not ev_commit:
+                    ev_commit = _evidence_bundle_commit(ev_sha, rel)
+                    info["ev_commit"] = ev_commit
+                stamp = pathlib.PurePosixPath(rel).name.removesuffix(".tar.gz")
+                matched.append(
+                    {
+                        "rel": rel,
+                        "stamp": stamp,
+                        "ev_commit": ev_commit,
+                        "sha256": info["sha256"],
+                        "sidecar": info["sidecar"],
+                    }
+                )
+            elif info["commits"]:
+                superseded.append(rel)
+    return {"error": None, "matched": matched, "superseded": superseded}
+
+
+def _delta_disposes_bundle(claim_deltas, bundle):
+    """Return matching delta record if a delta for this claim cites this bundle's commit/stamp/sha."""
+    tokens = {
+        bundle["ev_commit"][:8].lower(),
+        bundle["ev_commit"].lower(),
+        bundle["stamp"].lower(),
+        bundle["sha256"][:12].lower(),
+    }
+    for p, h in claim_deltas:
+        ev = h.get("evidence", "").lower()
+        if any(tok in ev for tok in tokens):
+            return p, h
+    return None
+
+
+def _commits_since_tag():
+    """Return (tag, commits, default_commits, experimental_only, recalibration_needed) or None."""
+    rc, tag = git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", "origin/master")
+    if rc != 0 or not tag:
+        return None
+    rc, log = git(
+        "log", "--first-parent", "--format=%h %s", f"{tag}..origin/master", "--", *RELEASE_PATHS
+    )
+    commits = [line for line in log.splitlines() if line.strip()] if rc == 0 else []
+    ledger = _ledger_rows() or []
+    by_pr = {r["pr"]: r.get("state", "") for r in ledger}
+    default_commits = []
+    exp_commits = []
+    for line in commits:
+        prs_in_line = [int(m) for m in PR_SUBJECT_RE.findall(line)]
+        if prs_in_line and all(
+            pr in by_pr and by_pr[pr] in NON_DEFAULT_LEDGER_STATES for pr in prs_in_line
+        ):
+            exp_commits.append(line)
+        else:
+            default_commits.append(line)
+    experimental_only = bool(commits) and not default_commits
+    recal = False
+    if default_commits:
+        rc_d, changed = git("diff", "--name-only", f"{tag}..origin/master", "--", *RELEASE_PATHS)
+        if rc_d == 0:
+            recal = any(
+                any(overlaps(p, rp) for rp in RECALIBRATION_PATHS)
+                for p in changed.splitlines()
+                if p.strip()
+            )
+    return {
+        "tag": tag,
+        "commits": commits,
+        "default_commits": default_commits,
+        "exp_commits": exp_commits,
+        "experimental_only": experimental_only,
+        "recalibration": recal,
+    }
+
+
+def release_pipeline_state(claims, queue_state):
+    """Classify the release end of the pipeline: merged-default, experimental-only, or released."""
+    info = _commits_since_tag()
+    if info is None:
+        return []
+    tag = info["tag"]
+    items = []
+    live_releases = [
+        c
+        for c in claims
+        if c["id"].startswith("release-") and c.get("status") not in ("done", "dropped")
+    ]
+    if info["default_commits"] and not live_releases:
+        recal_note = (
+            "; check pre-release worker-count recalibration / crossover (docs/RELEASING.md §5c)"
+            if info["recalibration"]
+            else ""
+        )
+        items.append(
+            {
+                "id": f"release-after-{tag}",
+                "stage": "merged-default",
+                "derived_p1": True,
+                "action": (
+                    f"{len(info['default_commits'])} default-path software commit(s) on master since "
+                    f"{tag}; open release-<version> at P1 and run docs/RELEASING.md{recal_note}"
+                ),
+                "blockers": [],
+                "evidence": tag,
+            }
+        )
+    elif info["experimental_only"] and not live_releases:
+        items.append(
+            {
+                "id": f"experimental-since-{tag}",
+                "stage": "experimental-only",
+                "derived_p1": False,
+                "action": (
+                    f"{len(info['exp_commits'])} experimental-only software commit(s) since {tag}; "
+                    "does not by itself imply a production performance release"
+                ),
+                "blockers": [],
+                "evidence": tag,
+            }
+        )
+    for rel in live_releases:
+        # A release claim is `released` only once its own version tag exists; before that it is
+        # in preparation, and the last tag says nothing about its scaling run.
+        own_tag = "v" + rel["id"].removeprefix("release-").replace("-", ".")
+        rc_t, tag_sha = git("rev-parse", "--verify", "-q", f"refs/tags/{own_tag}^{{commit}}")
+        if rc_t != 0 or not tag_sha:
+            items.append(
+                {
+                    "id": rel["id"],
+                    "stage": "release-in-progress",
+                    "derived_p1": False,
+                    "action": f"{own_tag} not yet tagged (claim {rel.get('status')}; last tag {tag})",
+                    "blockers": [f"claim {rel.get('status')}"] if rel.get("status") != "open" else [],
+                    "evidence": tag,
+                }
+            )
+            continue
+        scaling_note = "awaiting post-tag release-scaling/crossover recording"
+        if rc_t == 0 and queue_state.get("state") != "unknown":
+            ev = _inspect_recipe_evidence("bench-release-scaling", tag_sha, queue_state)
+            if ev["error"]:
+                scaling_note = f"unknown ({ev['error']})"
+            elif ev["matched"]:
+                b = ev["matched"][0]
+                scaling_note = f"release-scaling evidence archived at origin/evidence {b['ev_commit'][:8]}; verify and record in CHANGELOG"
+        items.append(
+            {
+                "id": rel["id"],
+                "stage": "released",
+                "derived_p1": True,
+                "action": f"tagged {own_tag}: {scaling_note}",
+                "blockers": [],
+                "evidence": own_tag,
+            }
+        )
+    return items
+
+
+def result_to_release(
+    claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure, can=None
+):
+    """Derive continuous result-to-release next actions, blockers, and effective P1 priority."""
+    out = {
+        "items": [],
+        "effective_priority": {},
+        "fail_closed": None,
+    }
+    if queue_state.get("state") == "unknown":
+        out["fail_closed"] = f"unknown (fail-closed: {queue_state.get('reason', 'queue unavailable')})"
+        return out
+    if prs is None or (review_lines and review_lines[0].startswith("- UNAVAILABLE:")):
+        reason = pr_error or "open PR discovery unavailable"
+        out["fail_closed"] = f"unknown (fail-closed: {reason})"
+        return out
+
+    claims_by_id = {c["id"]: c for c in claims}
+    dead = _dead_end_ids()
+    deltas = _read_delta_records()
+    deltas_by_claim = {}
+    for p, h in deltas:
+        cid = h.get("claim", "").strip()
+        if cid and cid != "none":
+            deltas_by_claim.setdefault(cid, []).append((p, h))
+    live_holds = {k: v for k, (_, v) in all_holds.items() if live(v)}
+    try:
+        cfg = config()
+        max_open = cfg.get("max_open_claims", 12)
+    except (OSError, ValueError):
+        max_open = 12
+    try:
+        hold_cap = config("origin/master")["max_live_holds"]
+    except (OSError, ValueError):
+        hold_cap = cfg.get("max_live_holds", 20) if "cfg" in locals() else 20
+    n_open = sum(c.get("status") == "open" for c in claims)
+    live_cap_reached = len(live_holds) >= hold_cap
+    prs_by_claim = {}
+    for pr in prs:
+        cid = claim_header(pr.get("body"))
+        if cid and cid != "none":
+            prs_by_claim.setdefault(cid, []).append(pr)
+
+    entries = queue_state.get("entries") or []
+    queued_recipes = {r for r, _, _ in entries}
+    ready_tags = queue_state.get("ready_tags") or {}
+    hold_tags = queue_state.get("hold_tags") or set()
+
+    def common_blockers(c, *, allow_parked=False):
+        cid = c["id"]
+        blockers = []
+        if c.get("needs_louis"):
+            blockers.append(f"needs_louis: {c['needs_louis']}")
+        if any(_flag_matches(h, cid, c) for _, h in flags):
+            blockers.append("open flag")
+        if cid in live_holds:
+            holder = live_holds[cid].get("holder", "unknown")
+            if not (allow_parked and live_holds[cid].get("phase") == "parked"):
+                blockers.append(f"held by {holder}")
+        else:
+            paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+            hit = conflicts(cid, paths, c.get("mechanisms", []), all_holds)
+            if hit:
+                other_id, holder, shared = hit[0]
+                blockers.append(f"blocked by live hold {other_id} ({holder}) on {', '.join(shared)}")
+            elif live_cap_reached and c.get("status") == "open":
+                blockers.append(f"live-hold cap ({len(live_holds)}/{hold_cap})")
+        if can:
+            missing = sorted(set(c.get("needs", [])) - can)
+            if missing:
+                blockers.append(f"capability-blocked (needs {', '.join(missing)})")
+        return blockers
+
+    for c in sorted(claims, key=lambda x: (x["priority"], x["id"])):
+        cid = c["id"]
+        status = c.get("status")
+        cdeltas = deltas_by_claim.get(cid, [])
+        verdicts = [(p, h) for p, h in cdeltas if h.get("verdict")]
+        latest_verdict = verdicts[0][1]["verdict"] if verdicts else ""
+        latest_verdict_ev = verdicts[0][1].get("evidence", "") if verdicts else ""
+
+        # 1. Promising probes -> planned / successor admission
+        if c.get("kind") in ("probe", "explore") and latest_verdict == "probe-pass":
+            succs = _claim_successors(c, claims_by_id)
+            if _conflicting_successors(succs):
+                names = ", ".join(s["id"] for s in succs if s.get("status") not in ("done", "dropped"))
+                out["items"].append(
+                    {
+                        "id": cid,
+                        "stage": "unknown",
+                        "derived_p1": False,
+                        "action": f"conflicting successors ({names}); reconcile before admitting",
+                        "blockers": ["conflicting successors"],
+                        "evidence": latest_verdict_ev,
+                    }
+                )
+                continue
+            if not succs:
+                out["items"].append(
+                    {
+                        "id": cid,
+                        "stage": "planned",
+                        "derived_p1": False,
+                        "action": "open concrete successor claim (smallest build/validation step)",
+                        "blockers": [],
+                        "evidence": latest_verdict_ev,
+                    }
+                )
+                continue
+            idea_succs = [s for s in succs if s.get("status") == "idea"]
+            active_or_done = [s for s in succs if s.get("status") in ("open", "review", "done")]
+            if idea_succs and not active_or_done:
+                succ = idea_succs[0]
+                if n_open >= max_open:
+                    out["items"].append(
+                        {
+                            "id": succ["id"],
+                            "stage": "planned",
+                            "derived_p1": False,
+                            "action": f"successor of {cid} ready to admit",
+                            "blockers": [f"admission cap ({n_open}/{max_open})"],
+                            "evidence": latest_verdict_ev,
+                        }
+                    )
+                else:
+                    out["items"].append(
+                        {
+                            "id": succ["id"],
+                            "stage": "planned",
+                            "derived_p1": False,
+                            "action": f"admit {succ['id']} (successor of {cid})",
+                            "blockers": [],
+                            "evidence": latest_verdict_ev,
+                        }
+                    )
+            continue
+
+        if status in ("done", "dropped", "idea"):
+            continue
+        if cid.startswith("release-"):
+            continue
+
+        # 2. Recipe-backed workstation validation claims (including parked/blocked claims!)
+        recipe, recipe_err = _claim_recipe(c, entries)
+        if recipe_err:
+            out["items"].append(
+                {
+                    "id": cid,
+                    "stage": "unknown",
+                    "derived_p1": False,
+                    "action": recipe_err,
+                    "blockers": ["ambiguous recipe join"],
+                    "evidence": "",
+                }
+            )
+            continue
+
+        if recipe is not None:
+            in_queue = recipe in queued_recipes
+            pin_sha = ready_tags.get(recipe)
+            on_hold_tag = recipe in hold_tags
+            blockers = common_blockers(c, allow_parked=True)
+            if not in_queue or not pin_sha:
+                missing_parts = []
+                if not in_queue:
+                    missing_parts.append("missing queue row")
+                if not pin_sha:
+                    missing_parts.append(f"missing ready/{recipe} pin")
+                all_b = blockers + missing_parts
+                eligible = not blockers
+                if eligible and status == "open":
+                    out["effective_priority"][cid] = 1
+                out["items"].append(
+                    {
+                        "id": cid,
+                        "stage": "prepared",
+                        "derived_p1": eligible,
+                        "action": f"queue {recipe} and confirm ready/{recipe} pin under standing authorisation",
+                        "blockers": all_b,
+                        "evidence": recipe,
+                    }
+                )
+                continue
+
+            ev = _inspect_recipe_evidence(recipe, pin_sha, queue_state)
+            if ev["error"]:
+                out["items"].append(
+                    {
+                        "id": cid,
+                        "stage": "unknown",
+                        "derived_p1": False,
+                        "action": ev["error"],
+                        "blockers": ["unverified evidence"],
+                        "evidence": recipe,
+                    }
+                )
+                continue
+
+            if ev["matched"]:
+                bundle = ev["matched"][0]
+                disp = _delta_disposes_bundle(cdeltas, bundle)
+                ev_ref = f"origin/evidence {bundle['ev_commit'][:8]} ({bundle['stamp']})"
+                if disp is None and cid not in dead:
+                    eligible = not blockers
+                    if eligible and status == "open":
+                        out["effective_priority"][cid] = 1
+                    out["items"].append(
+                        {
+                            "id": cid,
+                            "stage": "returned-unread",
+                            "derived_p1": eligible,
+                            "action": f"read, verify SHA-256, and record verdict for {recipe} ({ev_ref})",
+                            "blockers": blockers,
+                            "evidence": ev_ref,
+                        }
+                    )
+                    continue
+                if disp is not None:
+                    _dp, dh = disp
+                    v = dh.get("verdict", "")
+                    if v == "diagnostic-pass":
+                        out["items"].append(
+                            {
+                                "id": cid,
+                                "stage": "diagnostic-pass",
+                                "derived_p1": False,
+                                "action": "diagnostic PASS (not adoption); open/review C6 adoption registration and default-promotion build",
+                                "blockers": blockers,
+                                "evidence": ev_ref,
+                            }
+                        )
+                        continue
+                    if v == "adoption-pass":
+                        c_prs = prs_by_claim.get(cid, [])
+                        pr_nums = [p["number"] for p in c_prs] or (
+                            [c["pr"]] if isinstance(c.get("pr"), int) and c["pr"] > 0 else []
+                        )
+                        failed = any(
+                            p.get("checks_failed") is True
+                            or p.get("checks_state") in ("failure", "error")
+                            for p in c_prs
+                        )
+                        b_list = list(blockers)
+                        if failed:
+                            b_list.append("failed checks")
+                        eligible = not b_list and bool(pr_nums)
+                        if eligible and status == "open":
+                            out["effective_priority"][cid] = 1
+                        refs = ", ".join(f"#{n}" for n in pr_nums) if pr_nums else "PR"
+                        out["items"].append(
+                            {
+                                "id": cid,
+                                "stage": "adoption-passed",
+                                "derived_p1": eligible,
+                                "action": f"integrate {refs} under exact-head / O2 gates",
+                                "blockers": b_list,
+                                "evidence": ev_ref,
+                            }
+                        )
+                        continue
+                    if v in ("stop", "kill", "not-adopted"):
+                        if cid not in dead:
+                            out["items"].append(
+                                {
+                                    "id": cid,
+                                    "stage": f"disposed ({v})",
+                                    "derived_p1": False,
+                                    "action": "record scoped dead-ends.tsv row or open explicit distinct rescue (never auto-promote or repeat)",
+                                    "blockers": blockers,
+                                    "evidence": ev_ref,
+                                }
+                            )
+                        continue
+                    if v in ("void", "incomplete"):
+                        out["items"].append(
+                            {
+                                "id": cid,
+                                "stage": f"disposed ({v})",
+                                "derived_p1": False,
+                                "action": "fix harness defect and re-pin (never promote)",
+                                "blockers": blockers,
+                                "evidence": ev_ref,
+                            }
+                        )
+                        continue
+                continue
+
+            # Queued current pin without matching archived evidence
+            sup_note = (
+                f"; prior evidence superseded by pin {pin_sha[:8]}"
+                if ev["superseded"]
+                else ""
+            )
+            hold_note = f"; hold/{recipe} set" if on_hold_tag else ""
+            out["items"].append(
+                {
+                    "id": cid,
+                    "stage": "queued",
+                    "derived_p1": False,
+                    "action": f"{recipe} pinned at {pin_sha[:8]} awaiting i9 bundle{sup_note}{hold_note}",
+                    "blockers": [],
+                    "evidence": f"ready/{recipe}@{pin_sha[:8]}",
+                }
+            )
+            continue
+
+        # 3. Ordinary CI-accepted default builds (requiring no separate i9 adoption run)
+        if _is_ordinary_ci_claim(c, recipe):
+            blockers = common_blockers(c)
+            c_prs = prs_by_claim.get(cid, [])
+            if any(
+                p.get("checks_failed") is True or p.get("checks_state") in ("failure", "error")
+                for p in c_prs
+            ):
+                blockers.append("failed checks")
+            out["items"].append(
+                {
+                    "id": cid,
+                    "stage": "ordinary-ci",
+                    "derived_p1": False,
+                    "action": "ordinary CI/native acceptance route (no separate i9 adoption run required)",
+                    "blockers": blockers,
+                    "evidence": f"PR #{c_prs[0]['number']}" if c_prs else "",
+                }
+            )
+
+    # 4. Release pipeline entries (merged-default, experimental-only, released)
+    out["items"].extend(release_pipeline_state(claims, queue_state))
+    return out
+
+
+def format_result_to_release_lines(r2r):
+    """Render compact plain-language result-to-release lines for brief and status."""
+    if r2r.get("fail_closed"):
+        return [f"- Pipeline state: {r2r['fail_closed']}"]
+    items = r2r.get("items") or []
+    if not items:
+        return ["- none"]
+    lines = []
+    for item in items:
+        p1_note = " (P1 effective)" if item.get("derived_p1") else ""
+        b_note = f" [blocked: {'; '.join(item['blockers'])}]" if item.get("blockers") else ""
+        lines.append(
+            f"- **{item['id']}** [`{item['stage']}`]{p1_note}: {item['action']}{b_note}"
+        )
+    return lines
+
+
 def render():
     """STATUS.md from files and live PRs (live holds are in `brief` and `holds`)."""
     claims, cards = load("claims"), load("blog")
@@ -1271,6 +1967,10 @@ def render():
         claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state
     )
     out += ["", "## Workstation replenishment pressure", ""] + format_pressure_lines(pressure)
+    r2r = result_to_release(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure
+    )
+    out += ["", "## Result-to-release", ""] + format_result_to_release_lines(r2r)
     for state, title in (
         ("open", "Open claims, by priority"),
         ("blocked", "Blocked"),
@@ -1330,20 +2030,18 @@ RELEASE_PATHS = ["src", "python", "Cargo.toml", "Cargo.lock", "pyproject.toml", 
 
 
 def release_due(claims):
-    """Software merged to master since the last release tag, and no live release claim.
+    """Default-path software merged to master since the last release tag, with no live release claim.
 
-    Returns (tag, commits) when a release is due, else None. Releases are P1 once recognised
-    (Louis, 27 November 2026; docs/RELEASING.md section 1): this is how they are recognised.
+    Experimental-only merges (every commit's PR explicitly non-default in frontier/ledger.tsv)
+    do not by themselves trigger a production performance release.
     """
-    rc, tag = git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", "origin/master")
-    if rc != 0 or not tag:
+    info = _commits_since_tag()
+    if info is None or not info["default_commits"]:
         return None
-    rc, log = git("log", "--first-parent", "--format=%h %s", f"{tag}..origin/master", "--", *RELEASE_PATHS)
-    commits = [line for line in log.splitlines() if line.strip()] if rc == 0 else []
     live_release = any(
         c["id"].startswith("release-") and c.get("status") not in ("done", "dropped") for c in claims
     )
-    return (tag, commits) if commits and not live_release else None
+    return (info["tag"], info["default_commits"]) if not live_release else None
 
 
 LEDGER_STATES = {"default", "experimental", "awaiting-review", "prototype", "target"}
@@ -1726,7 +2424,11 @@ def brief(can):
         claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=can
     )
     print("\n## Workstation replenishment pressure\n" + "\n".join(format_pressure_lines(pressure)))
-    eff_p = pressure["effective_priority"]
+    r2r = result_to_release(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure, can=can
+    )
+    print("\n## Result-to-release\n" + "\n".join(format_result_to_release_lines(r2r)))
+    eff_p = {**pressure["effective_priority"], **r2r["effective_priority"]}
     tiers = pressure["tiers"]
     take = [
         c
