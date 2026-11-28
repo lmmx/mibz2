@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Clock hysteresis and memory noise](<https://lmmx.github.io/mibz2/blog/2026-11-28-clock-modes-and-memory-noise/index.md>): A brief pause between runs can trap a desktop processor below full boost, while parallel queue jitter dominates peak memory across six server chips.
 - [Walking the BWT cycle forward across four lanes](<https://lmmx.github.io/mibz2/blog/2026-11-28-four-lanes-forward/index.md>): Walking the inverse BWT cycle forward across four safe Rust lanes lets workers outrun the serial scanner, alongside three default speedups.
 - [Why compression ratio moves the scaling ceiling](<https://lmmx.github.io/mibz2/blog/2026-11-27-why-the-scaling-ceiling-moves/index.md>): On a ten-core processor, the same parallel bzip2 decoder scales to nine threads on structured dumps yet peaks at five on ordinary source code and text.
 - [Half the memory on compressible files](<https://lmmx.github.io/mibz2/blog/2026-11-27-bounded-memory-on-highly-compressible-input/index.md>): Workers that pause rather than race far ahead of the reader now let mibz2 unpack a tiny file of runs in half the memory, and sooner as well.
