@@ -1,0 +1,36 @@
+# MONODROMY record 84: new and changed edges for docs/team/acquisition/primitives.toml.
+# K_k, lmax and the frontier profile are measured on the six authenticated blocks (record 84).
+
+[[edge]]
+id = "refinement_tower"
+inputs = ["domain_partition", "lf_affine"]
+output = "cut_tower_k"
+status = "proved"
+cost = { W = "sum_{j<=k} K_j", D = "k", B = "K_k", Q = "0", M = "K_k" }
+dependent = false
+evidence = "Cut_{k+1} = Cut_k u LF(Cut_k); LF of a row-sorted set is affine per run and, bucketed by symbol and concatenated, sorted, so each level is a sigma-stream merge. Proved: K_k = r + sum_c min(k, l(c)) (l = persistence-arc length). Measured: K1 = 1.208-1.249r, K2 = 1.342-1.424r, K3 = 1.458-1.577r on the six blocks; it reaches n only at k = max l + 1 (848-17,545)."
+
+[[edge]]
+id = "arc_synchronous_walk"
+inputs = ["runs", "lf_affine", "codomain_partition", "p"]
+output = "text"
+status = "verified"
+cost = { W = "n", D = "lmax + r", B = "n", Q = "n", M = "n" }
+dependent = false
+evidence = "arcs c -> d advanced one row per round from the free ends (C-bar, D-bar), chained d -> LF(d). Exact on 23,093 small cases and the six blocks. Rounds 848-17,545; rounds narrower than 64 hold 0.5-12.4% of the visits (record 84)."
+
+[[edge]]
+id = "labels_determine_text"
+inputs = ["run_label_sequences", "runs"]
+output = "text"
+status = "proved"
+cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+dependent = false
+evidence = "text[j] = symbol(run label of j): the labels are a text emission in disguise, so copy_run_labels costs at least an inversion (record 84)"
+
+# Changed: copy_run_labels. Keep status "open" only for the narrower question.
+# evidence: "All per-byte labels: closed by reduction (labels_determine_text), so no cheaper
+# than inversion. Open only: the potential schedule's ~0.12 n fragment boundaries in o(n)
+# (record 84)."
+# Changed: partition_overlaps. evidence: "K = 2r - |D-bar n C-bar| = 1.208-1.249 r on the
+# six blocks (record 84)."

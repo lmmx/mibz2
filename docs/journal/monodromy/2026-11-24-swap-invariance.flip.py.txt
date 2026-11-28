@@ -1,0 +1,42 @@
+import random
+def lf(L):
+    n=len(L); order=sorted(range(n),key=lambda x:(L[x],x)); s=[0]*n
+    for r,x in enumerate(order): s[x]=r
+    return s
+def pos(s,o):
+    n=len(s); p=[-1]*n; x=o
+    for t in range(n):
+        if p[x]>=0: return None
+        p[x]=t; x=s[x]
+    return p
+random.seed(1); tot=val=0; nu=[]
+for trial in range(300):
+    n=random.randint(8,60); q=random.choice([2,3,4,8])
+    while True:
+        T=[random.randrange(q) for _ in range(n)]
+        rots=sorted(range(n),key=lambda k:T[k:]+T[:k])
+        if len({tuple(T[k:]+T[:k]) for k in range(n)})==n: break
+    L=[T[k-1] for k in rots]; o=rots.index(0); s=lf(L); p=pos(s,o); assert p
+    moved=set()
+    for i in range(n):
+        for j in range(i+1,n):
+            a,b=L[i],L[j]
+            if a==b: continue
+            mid=L[i+1:j]; ma=mid.count(a); mb=mid.count(b)
+            if ma+mb!=1: continue
+            m=i+1+(mid.index(b) if mb else mid.index(a))
+            # orbit order from i
+            d=lambda x:(p[x]-p[i])%n
+            pred = d(m)<d(j) if mb else d(j)<d(m)
+            L2=L[:]; L2[i],L2[j]=b,a; p2=pos(lf(L2),o)
+            tot+=1; assert (p2 is not None)==pred,(L,i,j)
+            if pred:
+                val+=1
+                # arcs: cut after i, after first, after second (in orbit order from i)
+                c1,c2=sorted([d(m),d(j)])
+                arc=lambda x:0 if d(x)==0 or d(x)>c2 else (1 if d(x)<=c1 else 2)
+                for x in range(n):
+                    assert (p2[x]==p[x])==(arc(x)==arc(o)),(L,i,j,x)
+                    if arc(x)!=arc(o): moved.add(x)
+    nu.append(len(moved)/n)
+print(tot,val,sum(nu)/len(nu))

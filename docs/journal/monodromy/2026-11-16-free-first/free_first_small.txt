@@ -1,0 +1,36 @@
+sigma 2 n 3: columns 2, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 4: columns 8, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 5: columns 22, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 6: columns 52, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 7: columns 114, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 8: columns 240, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 2 n 9: columns 494, free-first-largest above least on 0, no free-first order optimal on 0
+n 10 column [1, 1, 0, 0, 0, 0, 1, 0, 1, 0]: least 8, free-first-largest 9, best free-first order 8
+  optimal: E@9[1/free]1 E@10[1/free]1 T@6[4]1 T@5[3/free]1 E@2[2/free]2 B@8[1/free]2 E@4[1/free]1 E@3[1/free]1
+  free-first-largest: E@9[1/free]1 E@10[1/free]1 B@8[1]2 E@7[1/free]1 T@6[4]1 T@5[3/free]1 T@4[2/free]1 E@1[1/free]1 E@3[1/free]1
+sigma 2 n 10: columns 1004, free-first-largest above least on 1, no free-first order optimal on 0
+n 11 column [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0]: least 7, free-first-largest 9, best free-first order 7
+  optimal: T@11[4/free]1 B@7[1]3 T@6[4/free]2 E@4[2/free]2 E@2[2/free]2 B@10[1/free]2 E@8[1/free]1
+  free-first-largest: T@11[4/free]1 T@10[3]2 E@8[1/free]1 B@7[1]2 T@6[4]1 T@5[3/free]1 T@4[2/free]1 E@3[1/free]1 E@1[1/free]1
+sigma 2 n 11: columns 2026, free-first-largest above least on 7, no free-first order optimal on 0
+sigma 2 n 12: columns 4072, free-first-largest above least on 33, no free-first order optimal on 1
+sigma 2 n 13: columns 8166, free-first-largest above least on 104, no free-first order optimal on 2
+sigma 2 n 14: columns 16356, free-first-largest above least on 299, no free-first order optimal on 5
+sigma 3 n 3: columns 12, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 3 n 4: columns 60, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 3 n 5: columns 216, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 3 n 6: columns 696, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 3 n 7: columns 2148, free-first-largest above least on 0, no free-first order optimal on 0
+n 8 column [1, 1, 1, 1, 2, 1, 0, 0]: least 6, free-first-largest 7, best free-first order 6
+  optimal: B@6[1]4 B@5[1/free]3 E@2[2/free]2 T@8[2/free]1 E@7[1/free]1 E@3[1/free]1
+  free-first-largest: T@8[2]1 E@7[1/free]1 B@6[1]4 B@5[1/free]3 T@2[2/free]1 E@3[1/free]1 E@1[1/free]1
+n 8 column [2, 2, 0, 0, 0, 0, 1, 0]: least 6, free-first-largest 7, best free-first order 6
+  optimal: T@6[4]1 T@5[3/free]1 E@2[2/free]2 T@4[2/free]1 E@7[1/free]1 E@8[1/free]1
+  free-first-largest: B@8[1]2 E@7[1/free]1 T@6[4]1 T@5[3/free]1 T@4[2/free]1 E@1[1/free]1 E@3[1/free]1
+sigma 3 n 8: columns 6516, free-first-largest above least on 2, no free-first order optimal on 0
+sigma 3 n 9: columns 19632, free-first-largest above least on 15, no free-first order optimal on 0
+sigma 4 n 3: columns 36, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 4 n 4: columns 216, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 4 n 5: columns 972, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 4 n 6: columns 4032, free-first-largest above least on 0, no free-first order optimal on 0
+sigma 4 n 7: columns 16308, free-first-largest above least on 0, no free-first order optimal on 0

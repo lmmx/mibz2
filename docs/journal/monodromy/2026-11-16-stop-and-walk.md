@@ -79,7 +79,14 @@ Wikidata, medians over 233 blocks:
 - *Invariant I* (§2 of `2026-11-10-rauzy-veech.md`): rotation(T x) = w_α · rotation(x).
 - *So, in the text:* place(T x) = place(x) − |w_α| (mod n), and w_α occupies
   [place(T x), place(x)).
-- *The cycle:* LF is one n-cycle, so T is one m-cycle on D.
+- *The cycle (a hypothesis):* LF is one n-cycle, so T is one m-cycle on D.
+  - *Correction, 16 November, from the Researcher's account of Cells:* this is a hypothesis, not
+    a fact of every block. A block whose text is a power, abab say, has an LF of several cycles
+    (abab has two). There the rule mod n with one anchor does not place every point.
+  - *Where the hypothesis enters:* Lemma 1 and everything resting on it (records 21, 23, 25 and
+    26) hold for single-cycle blocks only.
+  - *Other blocks:* Cells writes a power by copying its period. The built arm detects a stopped
+    exchange that is not one cycle and falls back (REVIEW 6916500604).
 
 **Lemma 1 (segments).** Let K ⊂ D be nonempty. For s ∈ K, its segment is s, T s, …, up to but not
 including the next element of K. Its bytes: len(s) = Σ |w_α(x)| over the segment.

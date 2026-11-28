@@ -1,0 +1,54 @@
+"""Small texts: Neon's F_self_ns (Phi-sourced, in place) against LZ77 (copies from any earlier output,
+self-overlap allowed), the depth floor lambda_max - 1 and the sweep floor max alt(R_a)."""
+import itertools
+from collections import Counter
+def bwt(s):
+    n=len(s); rots=sorted(range(n),key=lambda i:s[i:]+s[:i]); return [s[i-1] for i in rots], rots.index(0) if False else rots
+def analyse(s):
+    n=len(s); rots=sorted(range(n),key=lambda i:s[i:]+s[:i])
+    L=[s[i-1] for i in rots]; row={i:k for k,i in enumerate(rots)}
+    cnt=Counter(L); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    p0=row[0]; z=p0; rowat=[]; t=[0]*n
+    for j in range(n): rowat.append(z); t[z]=j; z=lf[z]
+    if z!=p0: return None
+    heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; isH=set(heads)
+    run={}
+    for k,d in enumerate(heads):
+        e=heads[k+1] if k+1<len(heads) else n
+        for x in range(d,e): run[x]=k
+    F=0; j=0
+    while j<n:
+        if rowat[j] in isH: j+=1; continue
+        s0=j
+        while j<n and rowat[j] not in isH: j+=1
+        src=t[rowat[s0]-1]
+        if not(src+(j-s0)<=s0 or src>=j): F+=1; continue
+        used=set(); f=1
+        for q in range(s0,j):
+            a_=run[rowat[q]]
+            if a_ in used: f+=1; used={a_}
+            else: used.add(a_)
+        F+=f
+    # B[t] = L[row at t]: the text in this orbit order is the reverse of s, rotated; LZ77 on B
+    B=[L[x] for x in rowat]; z=0; i=0
+    while i<n:
+        best=0
+        for st in range(i):
+            l=0
+            while i+l<n and B[st+l]==B[i+l]: l+=1
+            best=max(best,l)
+        i+=max(best,1); z+=1
+    return len(heads),F,z,B
+ex=None; cnt=Counter()
+for n in range(2,17):
+    for s in itertools.product('ab',repeat=n):
+        res=analyse(''.join(s))
+        if res is None: continue
+        r,F,z,B=res; cnt['texts']+=1
+        if z < r+F: cnt['lz_fewer_ops']+=1
+        if ex is None or (z < r+F and (r+F-z)>ex[0]): 
+            if z<r+F: ex=(r+F-z,''.join(s),r,F,z)
+print(dict(cnt)); print('largest gap (r+F_self - z, text, r, F_self, LZ77 phrases):',ex)

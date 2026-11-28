@@ -1,0 +1,42 @@
+"""Independent max-heap selection of the most frequent delimiter return (Astra E item 4)."""
+import sys, heapq, bisect
+from collections import defaultdict
+L=open(sys.argv[1],'rb').read(); n=len(L)
+cnt=[0]*257
+for c in L: cnt[c+1]+=1
+C=[0]*257
+for c in range(1,257): C[c]=C[c-1]+cnt[c]
+pos=defaultdict(list)
+for i,c in enumerate(L): pos[c].append(i)
+starts=[0]+[i for i in range(1,n) if L[i]!=L[i-1]]
+def children(a,b):
+    """child intervals of [a,b) by preceding byte, and the number of run pieces"""
+    k=bisect.bisect_right(starts,a)-1; pieces=0; seen={}
+    while k<len(starts) and starts[k]<b:
+        lo=max(starts[k],a); hi=min(starts[k+1] if k+1<len(starts) else n,b)
+        c=L[lo]; seen[c]=seen.get(c,0)+(hi-lo); pieces+=1; k+=1
+    out=[]
+    for c,w in seen.items():
+        lo=C[c]+bisect.bisect_left(pos[c],a); out.append((lo,lo+w))
+    return out,pieces
+def select(slo,shi):
+    heap=[(-(shi-slo),slo,shi)]; best=None; expanded=pieces=0; widths_sum=0
+    while heap:
+        w=-heap[0][0]
+        if best and w<best[0]: break
+        _,a,b=heapq.heappop(heap); expanded+=1; widths_sum+=b-a
+        ch,pc=children(a,b); pieces+=pc
+        for lo,hi in ch:
+            if lo>=slo and hi<=shi:            # terminal: inside the section
+                f=hi-lo
+                if best is None or f>best[0] or (f==best[0] and lo<best[1]): best=(f,lo,hi)
+            elif hi<=slo or lo>=shi: heapq.heappush(heap,(-(hi-lo),lo,hi))
+            else: raise SystemExit('child straddles the section')
+    return best,expanded,pieces,widths_sum
+slo,shi=C[ord('"')],C[ord('"')+1]
+print('quote section',shi-slo)
+for level in range(1,5):
+    best,e,p,ws=select(slo,shi)
+    f=best[0]
+    print(f'level {level}: section {shi-slo} rows -> winner f={f} at [{best[1]},{best[2]}); expanded {e}, pieces {p}, floor(n/f)={n//f}, sum of expanded widths {ws} <= n {ws<=n}')
+    slo,shi=best[1],best[2]

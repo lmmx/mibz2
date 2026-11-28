@@ -1,0 +1,72 @@
+"""Round 5, scope: every gap's separation depth from the head and tail positions alone (Theorem 1's
+output). depth(x) = min{j >= 0 : LF^j(x) is a run head}. Within a run, from its head d, gap x = d+o
+needs pos(x-1): the first tail on x-1's orbit at or after pos(x-1) is LF^{depth(x)}(x-1), and its
+head (tail + 1) fixes pos(x). One successor search per gap, sequential along the run."""
+import sys, bisect, itertools
+from collections import Counter, defaultdict
+def lf_of(L):
+    n=len(L); cnt=Counter(L); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    return lf
+def lf_cycles(L):
+    lf=lf_of(L); n=len(L); cyc=[-1]*n; k=0
+    for s0 in range(n):
+        if cyc[s0]>=0: continue
+        z=s0
+        while cyc[z]<0: cyc[z]=k; z=lf[z]
+        k+=1
+    return cyc
+def study(L):
+    n=len(L); lf=lf_of(L)
+    cyc=[-1]*n; pos=[0]*n; clen=[]
+    for s in range(n):
+        if cyc[s]>=0: continue
+        k=len(clen); z=s; t=0
+        while cyc[z]<0: cyc[z]=k; pos[z]=t; t+=1; z=lf[z]
+        clen.append(t)
+    heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; Hs=set(heads)
+    if {cyc[h] for h in heads}!=set(range(len(clen))): return None
+    # truth by a backward sweep over each cycle: depth(x) = 0 at heads, else 1 + depth(LF x)
+    depth=[None]*n
+    for x in range(n):
+        if depth[x] is not None: continue
+        path=[]; z=x
+        while depth[z] is None and z not in Hs: path.append(z); z=lf[z]
+        dz=0 if z in Hs else depth[z]
+        if z in Hs: depth[z]=0
+        for y in reversed(path): dz+=1; depth[y]=dz
+    # Theorem 1's output: positions of heads and tails, per cycle; tails sorted per cycle
+    tails=defaultdict(list)
+    for d in heads[1:]: tails[cyc[d-1]].append((pos[d-1],d-1))
+    for k in tails: tails[k].sort()
+    searches=0; bad=0
+    ends=heads[1:]+[n]
+    for d,e in zip(heads,ends):
+        px,cx=pos[d],cyc[d]            # known: the head's position
+        for x in range(d+1,e):
+            lst=tails[cx]; i=bisect.bisect_left(lst,(px,-1)); searches+=1
+            if not lst: bad+=1; break
+            tp,t=lst[i] if i<len(lst) else lst[0]
+            dep=(tp-px)%clen[cx]
+            if dep!=depth[x]: bad+=1
+            hd=t+1; cx=cyc[hd]; px=(pos[hd]-dep)%clen[cx]
+            if cx!=cyc[x] or px!=pos[x]: bad+=1
+    return n,len(heads),searches,bad,depth,heads
+if len(sys.argv)>1:
+    L=open(sys.argv[1],'rb').read()
+    n,r,s,bad,depth,heads=study(L)
+    ends=heads[1:]+[n]
+    offs=sum(o for d,e in zip(heads,ends) for o in range(1,e-d))
+    print(f'n={n} r={r} interior gaps={n-r} searches={s} wrong={bad}; one gap at offset o costs o searches: mean o over interior gaps {offs/(n-r):.1f}, max {max(e-d for d,e in zip(heads,ends))-1}; mean depth {sum(depth)/n:.1f}, max depth {max(depth)}')
+else:
+    tot=Counter()
+    for alph,maxn in ((2,10),(3,7),(4,6)):
+        for n in range(1,maxn+1):
+            for L in itertools.product(range(alph),repeat=n):
+                res=study(L)
+                if res is None: tot['skipped_passive_cycle']+=1; continue
+                _,_,s,bad,_,_=res; tot['columns']+=1; tot['searches']+=s; tot['wrong']+=bad
+                tot['multi_cycle']+=(len(set(lf_cycles(L)))>1)
+    print(dict(tot))

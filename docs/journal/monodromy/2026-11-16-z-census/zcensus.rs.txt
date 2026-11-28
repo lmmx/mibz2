@@ -1,0 +1,117 @@
+//! Per block: n, r (runs of L), z (LZ77 phrases: greedy longest previous factor, self-reference
+//! allowed, a literal when there is none), on the block's text. Suffix array by prefix doubling,
+//! LCP by Kasai, previous/next smaller values, LPF (Crochemore and Ilie).
+//!   zcensus FILE.bz2 [EVERY] [MIN_ROWS]
+use mibz2::bwt::{build, walk, TVector};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+fn suffix_array(t: &[u8]) -> Vec<u32> {
+    let n = t.len();
+    let mut sa: Vec<u32> = (0..n as u32).collect();
+    let mut rank: Vec<u32> = t.iter().map(|&b| b as u32).collect();
+    let mut tmp = vec![0u32; n];
+    let mut k = 1usize;
+    loop {
+        let key = |i: u32| -> u64 { let i = i as usize; ((rank[i] as u64) << 32) | if i + k < n { rank[i + k] as u64 + 1 } else { 0 } };
+        sa.sort_unstable_by_key(|&i| key(i));
+        tmp[sa[0] as usize] = 0;
+        for j in 1..n { tmp[sa[j] as usize] = tmp[sa[j - 1] as usize] + (key(sa[j]) != key(sa[j - 1])) as u32; }
+        std::mem::swap(&mut rank, &mut tmp);
+        if rank[sa[n - 1] as usize] as usize == n - 1 { break; }
+        k *= 2;
+    }
+    sa
+}
+
+fn lz77_phrases(t: &[u8]) -> usize {
+    let n = t.len();
+    let sa = suffix_array(t);
+    let mut isa = vec![0u32; n];
+    for (j, &s) in sa.iter().enumerate() { isa[s as usize] = j as u32; }
+    // Kasai LCP: lcp[j] = lcp(sa[j-1], sa[j])
+    let mut lcp = vec![0u32; n];
+    let mut h = 0usize;
+    for i in 0..n {
+        let r = isa[i] as usize;
+        if r > 0 {
+            let j = sa[r - 1] as usize;
+            while i + h < n && j + h < n && t[i + h] == t[j + h] { h += 1; }
+            lcp[r] = h as u32;
+            if h > 0 { h -= 1; }
+        } else { h = 0; }
+    }
+    // previous and next smaller values in text order over the suffix array (by position)
+    // LPF[i] = max(lcp(i, psv(i)), lcp(i, nsv(i))) where psv/nsv are the nearest SA neighbours
+    // with a smaller text position; computed with a stack over SA order
+    let mut psv = vec![u32::MAX; n];
+    let mut nsv = vec![u32::MAX; n];
+    let mut st: Vec<u32> = Vec::new();
+    for j in 0..n {
+        while let Some(&top) = st.last() { if sa[top as usize] > sa[j] { nsv[top as usize] = j as u32; st.pop(); } else { break; } }
+        psv[j] = st.last().copied().unwrap_or(u32::MAX);
+        st.push(j as u32);
+    }
+    // range minimum of lcp between two SA ranks, by a sparse table
+    let lg = 32 - (n as u32).leading_zeros() as usize;
+    let mut sp: Vec<Vec<u32>> = vec![lcp.clone()];
+    for k in 1..lg { let prev = &sp[k - 1]; let half = 1 << (k - 1); let mut cur = vec![0u32; n]; for j in 0..n { cur[j] = if j + half < n { prev[j].min(prev[j + half]) } else { prev[j] }; } sp.push(cur); }
+    let rmq = |a: usize, b: usize| -> u32 { // min lcp[a+1..=b], a < b
+        let (l, r) = (a + 1, b);
+        let k = 31 - ((r - l + 1) as u32).leading_zeros() as usize;
+        sp[k][l].min(sp[k][r + 1 - (1 << k)])
+    };
+    let mut lpf = vec![0u32; n];
+    for j in 0..n {
+        let i = sa[j] as usize;
+        let mut best = 0;
+        if psv[j] != u32::MAX { best = best.max(rmq(psv[j] as usize, j)); }
+        if nsv[j] != u32::MAX { best = best.max(rmq(j, nsv[j] as usize)); }
+        lpf[i] = best;
+    }
+    let (mut z, mut i) = (0usize, 0usize);
+    while i < n { z += 1; i += (lpf[i] as usize).max(1); }
+    z
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).unwrap();
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut tt) = (Vec::new(), [0u32; 256], TVector::new());
+    let mut syms = Vec::new();
+    let mut walked = Vec::new();
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= min {
+            if i % every == 0 {
+                build(&ll, &counts, &mut tt);
+                walked.clear();
+                walk(&tt, b.orig_ptr, &mut walked);
+                let n = ll.len();
+                let r = 1 + (1..n).filter(|&j| ll[j] != ll[j - 1]).count();
+                let z = lz77_phrases(&walked);
+                if std::env::var("CHECK").is_ok() {
+                    // naive greedy LZ77 (self-reference allowed) on a prefix, against the fast parse
+                    for &m in &[300usize, 2000, 5000] {
+                        let t = &walked[..m];
+                        let (mut zn, mut p) = (0usize, 0usize);
+                        while p < m {
+                            let mut best = 0;
+                            for q in 0..p { let mut l = 0; while p + l < m && t[q + l] == t[p + l] { l += 1; } best = best.max(l); }
+                            zn += 1; p += best.max(1);
+                        }
+                        assert_eq!(zn, lz77_phrases(t), "LZ77 mismatch on a prefix of {m}");
+                    }
+                }
+                println!("{{\"block\":{i},\"n\":{n},\"r\":{r},\"z\":{z}}}");
+            }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+}

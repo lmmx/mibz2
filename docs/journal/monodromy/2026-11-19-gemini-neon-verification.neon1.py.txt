@@ -1,0 +1,75 @@
+"""Theorem 1: r(T_X') <= r + (c-1) + |dX' \ (D u C)|, on generic dIETs and on LF, every section."""
+import itertools
+from collections import Counter
+ST=Counter(); EX={}
+def pieces(n,T,lab,Xs):
+    X=sorted(Xs); idx={x:i for i,x in enumerate(X)}; ret=[]
+    for x in X:
+        w=[lab[x]]; z=T[x]
+        while z not in Xs: w.append(lab[z]); z=T[z]
+        ret.append((idx[z],tuple(w)))
+    r=1
+    for i in range(1,len(X)):
+        if not (ret[i][0]==ret[i-1][0]+1 and ret[i][1]==ret[i-1][1]): r+=1
+    return r
+def bound_terms(n,T,D,Xs):
+    Tinv=[0]*n
+    for x in range(n): Tinv[T[x]]=x
+    C={b for b in range(1,n) if Tinv[b]!=Tinv[b-1]+1}
+    comps=0; bd=set()
+    for x in range(n):
+        if x in Xs and (x==0 or x-1 not in Xs): comps+=1
+        if 0<x and ((x in Xs)!=(x-1 in Xs)): bd.add(x)
+    return comps,len(bd),len(bd-(D|C)),C
+def run(kind,n,T,D,lab,r):
+    for mask in range(1,1<<n):
+        Xs={x for x in range(n) if mask>>x&1}
+        rp=pieces(n,T,lab,Xs); c,h,h2,_=bound_terms(n,T,D,Xs)
+        b=r+(c-1)+h2
+        ST[kind+'_sections']+=1
+        if rp>b: ST[kind+'_VIOLATION']+=1; EX.setdefault(kind,(n,T,Xs))
+        if rp==b: ST[kind+'_tight']+=1
+        if rp>r+(c-1)+h: ST[kind+'_astraE_violation']+=1
+        if r+(c-1)+h2<r+(c-1)+h: ST[kind+'_sharper_than_astraE']+=1
+        if c==1 and rp==r+2: ST[kind+'_interval_r+2']+=1; ST[kind+'_interval_r+2_both_ends_outside_DC']+=(h2==2)
+# (a) generic dIETs: composition of n into r parts, any order of the codomain blocks, one label per interval
+for n in range(1,8):
+    for cuts in itertools.chain.from_iterable(itertools.combinations(range(1,n),k) for k in range(n)):
+        bnds=[0,*cuts,n]; r=len(bnds)-1; lens=[bnds[i+1]-bnds[i] for i in range(r)]
+        for perm in itertools.permutations(range(r)):
+            # perm = codomain order of the intervals
+            start={}; acc=0
+            for i in perm: start[i]=acc; acc+=lens[i]
+            T=[0]*n; lab=[0]*n
+            for i in range(r):
+                for o in range(lens[i]): T[bnds[i]+o]=start[i]+o; lab[bnds[i]+o]=i
+            run('dIET',n,T,set(cuts),lab,r)
+# (b) LF on strings, words are the bytes read; D = run seams
+def lf_of(L):
+    n=len(L); cnt=Counter(L); Cc={}; acc=0
+    for c in sorted(cnt): Cc[c]=acc; acc+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=Cc[c]+seen[c]; seen[c]+=1
+    return lf
+for alph,maxn in ((2,9),(3,7)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            if alph==3 and len(set(L))<3: continue
+            T=lf_of(L); D={x for x in range(1,n) if L[x]!=L[x-1]}; r=len(D)+1
+            run('LF',n,T,D,L,r)
+            # (c) word cylinders: rows whose rotation starts with P (F-side), via the inverse of LF
+            Tinv=[0]*n
+            for x in range(n): Tinv[T[x]]=x
+            F=sorted(L)
+            def rot(x,k):
+                s=[]; z=x
+                for _ in range(k): s.append(F[z]); z=Tinv[z]
+                return tuple(s)
+            for k in range(1,4):
+                cyl={}
+                for x in range(n): cyl.setdefault(rot(x,k),set()).add(x)
+                for P,Xs in cyl.items():
+                    ST['cyl']+=1
+                    if pieces(n,T,L,Xs)>r: ST['cyl_VIOLATION']+=1
+for k in sorted(ST): print(k,ST[k])
+print(EX)

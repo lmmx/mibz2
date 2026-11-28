@@ -1,0 +1,11 @@
+use mibz2::bwt::{Cells, LazyCells};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{decode_block, Kernels, Scratch};
+macro_rules! go { ($ty:ty, $data:expr, $tag:expr) => {{
+    let k = Kernels::detect(); let mut sc = Scanner::new(SliceSource($data)); let mut s = Scratch::<$ty>::default();
+    let (mut out, mut i) = (Vec::new(), 0usize);
+    while let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() {
+        out.clear(); let (a0, c0) = (s.cells_counts().admitted, s.cells_counts().cells); decode_block(&b, k, &mut s, &mut out).unwrap();
+        let c = s.cells_counts(); println!("{} {i} {} {} {}", $tag, c.admitted > a0, c.cells - c0, b.orig_ptr); i += 1;
+    } }}; }
+fn main() { let a: Vec<String> = std::env::args().collect(); let data = std::fs::read(&a[1]).unwrap(); go!(Cells, &data, "eager"); go!(LazyCells, &data, "lazy"); }

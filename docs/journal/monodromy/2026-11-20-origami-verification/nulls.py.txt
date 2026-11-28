@@ -1,0 +1,33 @@
+import sys, random, json, glob
+exec(open('ori.py').read().split("if __name__")[0])
+def kc(L):
+    n=len(L); lf=lf_of(L); psi=[0]*n
+    for x in range(n): psi[lf[x]]=x
+    k=[lf[(psi[(x-1)%n]+1)%n] for x in range(n)]
+    cyc=[l for l in cycles(k) if l>1]
+    return len(cyc), sum(cyc)
+mode=sys.argv[1]
+if mode=='N1':
+    R=int(sys.argv[2]); rng=random.Random(R); cs=[]
+    while len(cs)<2000:
+        p=list(range(R)); rng.shuffle(p)
+        if any(p[i]==i for i in range(R)): continue
+        cyc=cycles(p)
+        if (R-len(cyc))%2: continue
+        cs.append(len(cyc))
+    cs.sort(); print(json.dumps({"N1_R":R,"p5":cs[len(cs)//20],"median":cs[len(cs)//2],"p95":cs[19*len(cs)//20],"min":cs[0],"mean":sum(cs)/len(cs)}))
+elif mode=='N2':
+    man=json.load(open(sys.argv[2])); base=sys.argv[2].rsplit('/',1)[0]
+    for blk in man['blocks']:
+        L=list(open(base+'/'+blk['file'],'rb').read()); n=len(L)
+        heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; runs=[(L[d],(heads[i+1] if i+1<len(heads) else n)-d) for i,d in enumerate(heads)]
+        rng=random.Random(blk['file']); cs=[]
+        for _ in range(20):
+            rng.shuffle(runs); M=[s for s,l in runs for _ in range(l)]
+            cs.append(kc(M)[0])
+        cs.sort(); print(json.dumps({"N2":blk['file'],"cs":cs,"p5":cs[1],"median":cs[10]}))
+elif mode=='N3':
+    out=[]
+    for f in sorted(glob.glob(sys.argv[2]+'/*.col')):
+        L=list(open(f,'rb').read()); c,R=kc(L); out.append((f.rsplit('/',1)[1],len(L),R,c))
+    print(json.dumps(out))

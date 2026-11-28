@@ -1,0 +1,59 @@
+"""Theorem 2' (response-2): F_1=F_2=1, w_1=b, w_2=a, w_q=w_{q-1}w_{q-2}; P_k = prefix of length F_k - 2.
+Checks |I(P_k)|, the two pieces' return times and multiplicities, W, and whether right-end
+Rauzy-Veech from the whole column passes through I(P_k), and after how many steps."""
+exec(open('neon3.py').read().split('def touched')[0])
+F={1:1,2:1}
+for k in range(3,40): F[k]=F[k-1]+F[k-2]
+w={1:'b',2:'a'}
+for q in range(3,30): w[q]=w[q-1]+w[q-2]
+bad=Counter(); rv_hit=Counter(); tested=0
+for q in range(4,19):
+    s=w[q]; n=len(s); assert n==F[q]
+    rots=sorted(range(n),key=lambda i:s[i:]+s[:i]); row={i:k for k,i in enumerate(rots)}
+    L=tuple(s[i-1] for i in rots)
+    LF=[row[(rots[k]-1)%n] for k in range(n)]
+    # right-end RV sections: the sequence of surviving row sets
+    R=Run(L,0,set()); secs=[frozenset(range(n))]; steps=0
+    while R.I and steps<10*q:
+        Fr=R.fronts(); A,B=Fr[1]
+        if A==B: break
+        R.step(A,B); steps+=1; secs.append(frozenset(x for I in R.I.values() for x in I['dom']))
+    for k in range(4,q+1):
+        tested+=1; P=s[:F[k]-2]
+        X={row[i] for i in range(n) if (s[i:]+s[:i]).startswith(P)}
+        Xs=sorted(X); idx={x:j for j,x in enumerate(Xs)}; ret=[]
+        for x in Xs:
+            ww=[L[x]]; z=LF[x]
+            while z not in X: ww.append(L[z]); z=LF[z]
+            ret.append((idx[z],''.join(ww)))
+        pcs=[[ret[0]]]
+        for j in range(1,len(Xs)):
+            if ret[j][0]==ret[j-1][0]+1 and ret[j][1]==ret[j-1][1]: pcs[-1].append(ret[j])
+            else: pcs.append([ret[j]])
+        mult={}
+        for pc in pcs: mult[len(pc[0][1])]=mult.get(len(pc[0][1]),0)+len(pc)
+        ok_size=len(X)==F[q-k+3]; ok_r=len(pcs)==2
+        ok_tau=mult=={F[k-1]:F[q-k+2],F[k-2]:F[q-k+1]} if F[k-1]!=F[k-2] else True
+        ok_W=sum(len(pc[0][1]) for pc in pcs)==F[k]
+        for nm,v in (('size',ok_size),('pieces',ok_r),('tau_mult',ok_tau),('W',ok_W)): bad[nm]+=not v
+        if frozenset(X) in secs:
+            rv_hit['reached']+=1; rv_hit['steps_eq_k-3']+=(secs.index(frozenset(X))==k-3)
+        else: rv_hit['not_an_RV_section']+=1
+        if q==10 and k in (4,5,6,10): print('q=10 k=%d |P|=%d rows=%s RV-section=%s'%(k,len(P),(min(X),max(X)),frozenset(X) in secs))
+print('tested',tested,'failures',dict(bad),'RV',dict(rv_hit))
+# the right-end sections themselves: sizes and return-time multisets after t steps
+agree=0; tot=0
+for q in range(4,19):
+    s=w[q]; n=len(s); rots=sorted(range(n),key=lambda i:s[i:]+s[:i]); row={i:k for k,i in enumerate(rots)}
+    L=tuple(s[i-1] for i in rots); R=Run(L,0,set()); t=0
+    while R.I:
+        Fr=R.fronts(); A,B=Fr[1]
+        if A==B: break
+        R.step(A,B); t+=1; k=t+3
+        if k>q: break
+        tot+=1; size=sum(len(I['dom']) for I in R.I.values())
+        mult={}
+        for I in R.I.values(): mult[len(I['w'])]=mult.get(len(I['w']),0)+len(I['dom'])
+        want={F[k-1]:F[q-k+2],F[k-2]:F[q-k+1]} if F[k-1]!=F[k-2] else {F[k-1]:F[q-k+2]+F[q-k+1]}
+        agree+=(size==F[q-k+3] and mult==want and len(R.I)==2)
+print('right-end sections after t=k-3 steps with the stated size and return times:',agree,'of',tot)

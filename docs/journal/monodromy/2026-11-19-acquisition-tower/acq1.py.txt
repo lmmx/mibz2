@@ -1,0 +1,113 @@
+"""Acquisition-first, deliverable 1. From I0 only (runs, C, p):
+ (a) the refinement tower Cut_0 = D, Cut_{k+1} = Cut_k u LF(Cut_k): |Cut_k| counted directly by
+     sorted merges, against the closed form r + sum_c min(k, l(c)) (l = arc length);
+ (b) the arc-synchronous LF walk: every arc c, LF c, ..., d (c in C-bar, ending at its first
+     run head d) advanced one point per round, the frontier kept row-sorted by a bucket-by-symbol
+     concatenation (no sort, no search beyond a merge with the run heads). Arcs chain by
+     d -> LF(d). The text is checked byte for byte against the plain LF walk.
+ Frontier profile: rounds, sizes, and the work done in small-frontier rounds (the latency tail)."""
+import sys, bisect
+from collections import Counter
+def setup(L):
+    n=len(L); cnt=Counter(L); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; r=len(heads)
+    seen=Counter(); delta=[]   # LF(x) = x + delta[run] inside a run
+    for k,d in enumerate(heads):
+        e=heads[k+1] if k+1<r else n; c=L[d]
+        delta.append(C[c]+seen[c]-d); seen[c]+=e-d
+    return n,r,heads,delta,C
+def tower(L,kmax):
+    n,r,heads,delta,C=setup(L)
+    syms=sorted(set(L)); out=[]
+    cut=list(heads)                         # sorted
+    for k in range(1,kmax+1):
+        # LF of a sorted cut set: per run affine; bucket by symbol, concatenate in symbol order
+        b={s:[] for s in syms}; ri=0
+        for x in cut:
+            while ri+1<len(heads) and heads[ri+1]<=x: ri+=1
+            b[L[heads[ri]]].append(x+delta[ri])
+        img=[y for s in syms for y in b[s]]
+        assert all(img[i]<img[i+1] for i in range(len(img)-1))
+        # merge (two-pointer) and dedupe: the events
+        i=j=0; m=[]
+        while i<len(cut) or j<len(img):
+            if j==len(img) or (i<len(cut) and cut[i]<img[j]): v=cut[i]; i+=1
+            elif i==len(cut) or img[j]<cut[i]: v=img[j]; j+=1
+            else: v=cut[i]; i+=1; j+=1
+            m.append(v)
+        cut=m; out.append(len(cut))
+    return out
+def arcwalk(L,p0):
+    n,r,heads,delta,C=setup(L)
+    isH=set(heads); syms=sorted(set(L))
+    runof=lambda x: bisect.bisect_right(heads,x)-1
+    starts=sorted((heads[k]+delta[k],k) for k in range(r))     # c = LF(d_k): arc id k
+    front=[(c,k) for c,k in starts]; rounds=0; sizes=[]
+    arcbytes=[[] for _ in range(r)]; end=[None]*r; where_p=None
+    while front:
+        sizes.append(len(front)); b={s:[] for s in syms}; ri=0
+        for x,a in front:                     # front is row-sorted: run pointer only advances
+            while ri+1<r and heads[ri+1]<=x: ri+=1
+            arcbytes[a].append(L[x])
+            if x==p0: where_p=(a,len(arcbytes[a])-1)
+            if x in isH and len(arcbytes[a])>1 or (x in isH and x!=heads[a]+delta[a]) or (x in isH and len(arcbytes[a])==1 and x==heads[a]+delta[a]):
+                end[a]=x; continue
+            b[L[heads[ri]]].append((x+delta[ri],a))
+        front=[t for s in syms for t in b[s]]; rounds+=1
+    # chain: arc a ends at head d = end[a]; the next arc is the one starting at LF(d), id = run of d
+    nxt=[runof(end[a]) for a in range(r)]
+    a,o=where_p; B=[]
+    while len(B)<n:
+        B.extend(arcbytes[a][o:]); a=nxt[a]; o=0
+    return B[:n],rounds,sizes
+def lfwalk(L,p0):
+    n,r,heads,delta,C=setup(L); B=[]; x=p0
+    for _ in range(n):
+        B.append(L[x]); k=bisect.bisect_right(heads,x)-1; x=x+delta[k]
+    return B
+if __name__=='__main__':
+    if sys.argv[1]=='--small':
+        import itertools; bad=0; cases=0
+        for alph,maxn in ((2,12),(3,8),(4,6)):
+            for n in range(1,maxn+1):
+                for L in itertools.product(range(alph),repeat=n):
+                    # single cycle only: the block text is one cycle
+                    n_,r,heads,delta,C=setup(L); x=0; seen=0
+                    while True:
+                        k=bisect.bisect_right(heads,x)-1; x=x+delta[k]; seen+=1
+                        if x==0: break
+                    if seen!=n: continue
+                    n_,r,heads,_,_=setup(L)
+                    for p0 in range(n):
+                        cases+=1
+                        if arcwalk(list(L),p0)[0]!=lfwalk(list(L),p0): bad+=1
+                    # tower formula
+                    t=tower(list(L),3)
+                    # arc lengths
+                    isH=set(heads); lens=[]
+                    for k in range(r):
+                        z=heads[k]+delta[k]; l=0
+                        while z not in isH:
+                            kk=bisect.bisect_right(heads,z)-1; z=z+delta[kk]; l+=1
+                        lens.append(l)
+                    for kk in range(1,4):
+                        if t[kk-1]!=r+sum(min(kk,l) for l in lens): bad+=1
+        print('small single-cycle columns x start rows:',cases,'failures',bad)
+    else:
+        import json
+        man=json.load(open(sys.argv[1]))
+        base=sys.argv[1].rsplit('/',1)[0]
+        for blk in man['blocks']:
+            L=open(base+'/'+blk['file'],'rb').read(); p0=blk['primary_index']; n=len(L)
+            n,r,heads,delta,C=setup(L)
+            t=tower(L,3)
+            B,rounds,sizes=arcwalk(L,p0)
+            ok=(B==lfwalk(L,p0))
+            tail={th:sum(s for s in sizes if s<th) for th in (16,64,256)}
+            rs=sum(1 for s in sizes if s<64)
+            print(json.dumps({"block":blk['file'],"n":n,"r":r,"K1":t[0],"K2":t[1],"K3":t[2],
+               "K1/r":round(t[0]/r,3),"K2/r":round(t[1]/r,3),"K3/r":round(t[2]/r,3),
+               "arcs_nontrivial":sizes[1] if len(sizes)>1 else 0,"rounds":rounds,"visits":sum(sizes),
+               "mean_frontier":round(sum(sizes)/rounds,1),"rounds_frontier_lt64":rs,
+               "tail_visits_lt16":tail[16],"tail_visits_lt64":tail[64],"tail_visits_lt256":tail[256],"text_exact":ok}))

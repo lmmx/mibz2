@@ -1,0 +1,59 @@
+"""Round 4 on real blocks: the identity's prediction for single-end RV (Cells, K=1), the measured
+steps (pointer simulation, matching the shipped cell counter), the 2r - |D∩C| floor, accelerated
+(Zorich) steps, and the random-order model r(2 ln(n/r) + 2γ - 1)."""
+import sys, math
+from collections import Counter
+L=open(sys.argv[1],'rb').read(); n=len(L)
+cnt=Counter(L); C={}; acc=0
+for c in sorted(cnt): C[c]=acc; acc+=cnt[c]
+seen=Counter(); lf=[0]*n
+for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+runs=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; r=len(runs)
+D=set(runs); Cb=[lf[x] for x in runs]; Cset=set(Cb)
+dc=len(D&Cset); floor=2*r-dc
+# identity for K=1 full: pi decreasing in x, so records are strict prefix/suffix minima of rows
+pred=r; arclen=0; tot_len=0; n_ell0=0
+for c in Cb:
+    a=[c]; z=c
+    while z not in D: z=lf[z]; a.append(z)
+    tot_len+=len(a); n_ell0+=(len(a)==1)
+    i=min(range(len(a)),key=lambda k:a[k])
+    m=10**9; p=0
+    for k in range(i):
+        if a[k]<m: m=a[k]; p+=1
+    m=10**9; s=0
+    for k in range(len(a)-1,i,-1):
+        if a[k]<m: m=a[k]; s+=1
+    pred+=p+s
+# pointer simulation, K=1, counting steps, closures and accelerated steps
+ln=[0]*(r+1); dn=[0]*(r+2); dp=[0]*(r+2); cn=[0]*(r+2); cp=[0]*(r+2); H=r; T_=r+1
+for i in range(r): ln[i]=(runs[i+1] if i+1<r else n)-runs[i]
+dseq=[H]+list(range(r))+[T_]; cseq=[H]+sorted(range(r),key=lambda i:Cb[i])+[T_]
+for nx,pv,seq in ((dn,dp,dseq),(cn,cp,cseq)):
+    for a,b in zip(seq,seq[1:]): nx[a]=b; pv[b]=a
+def unlink(nx,pv,X): p,q=pv[X],nx[X]; nx[p]=q; pv[q]=p
+def ins_after(nx,pv,A,X): q=nx[A]; nx[A]=X; pv[X]=A; nx[X]=q; pv[q]=X
+S=0; clos=0; zor=0; last=None; eq=0
+while dp[T_]!=H:
+    A,B=dp[T_],cp[T_]; S+=1
+    if A==B:
+        unlink(dn,dp,A); unlink(cn,cp,A); clos+=1
+        if last!=('w',A): zor+=1
+        last=None; continue
+    a,b=ln[A],ln[B]
+    if a>b:
+        w=('w',A); unlink(cn,cp,B); ins_after(cn,cp,A,B); ln[A]=a-b
+    elif a<b:
+        w=('w',B); unlink(dn,dp,A); ins_after(dn,dp,B,A); ln[B]=b-a
+    else:
+        w=None; eq+=1
+        unlink(dn,dp,A); unlink(cn,cp,B); pa=cp[A]; ins_after(cn,cp,pa,B); unlink(cn,cp,A)
+    if w is None:
+        if last not in (('w',A),('w',B)): zor+=1
+    elif w!=last: zor+=1
+    last=w
+model=r*(2*math.log(n/r)+2*0.5772156649-1)
+print(f'{sys.argv[1].split("/")[-1]} n={n} r={r} r/n={r/n:.4f} |D∩C|={dc} floor={floor} ({floor/r:.3f}r) '
+      f'steps={S} ({S/r:.3f}r; cells excl. closures {S-clos}) identity={pred} {"OK" if pred==S else "MISMATCH"} '
+      f'steps/floor={S/floor:.3f} equal+closures={eq+clos} accelerated={zor} ({zor/r:.3f}r) '
+      f'random-order model={model:.0f} ({model/r:.2f}r) arcs cover={tot_len} arcs with l=0: {n_ell0}')

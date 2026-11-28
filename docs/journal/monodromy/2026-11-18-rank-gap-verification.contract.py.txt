@@ -1,0 +1,84 @@
+# MONODROMY's independent row-level model of the adjacent-rank-gap contraction (from proof.md's statements).
+import random, sys, itertools
+from collections import Counter
+
+def lf_of(L):
+    cnt=Counter(L); base={}; t=0
+    for a in sorted(cnt): base[a]=t; t+=cnt[a]
+    seen=dict(base); f=[0]*len(L)
+    for i,a in enumerate(L): f[i]=seen[a]; seen[a]+=1
+    return f
+
+def reference(L,p):
+    f=lf_of(L); n=len(L); cyc=[]; x=p
+    while True:
+        cyc.append(L[x]); x=f[x]
+        if x==p: break
+    w=bytes(reversed(cyc)); return (w*(n//len(w)+1))[:n]
+
+def contract(L,p,words=True,check=True):
+    n=len(L); f=lf_of(L)
+    g=[(f[(x+p)%n]-p)%n for x in range(n)]
+    lab=[L[(x+p)%n] for x in range(n)]
+    start=[x==0 or g[x]!=g[x-1]+1 or lab[x]!=lab[x-1] for x in range(n)]
+    R=sum(start)
+    S=list(range(n)); G=g[:]; lam=[1]*n; bit=start[:]
+    W=[bytes([lab[x]]) for x in range(n)] if words else None
+    # dict-free arrays indexed by original rank; inactive entries ignored
+    gmap={x:G[x] for x in S}; lmap={x:1 for x in S}; bmap={x:bit[x] for x in S}; wmap={x:W[x] for x in S} if words else None
+    levels=[]; bad=0
+    while True:
+        comp={x:i for i,x in enumerate(S)}
+        k=0; prev=None
+        for x in S:
+            same = prev is not None and x==prev+1 and comp[gmap[x]]==comp[gmap[prev]]+1 and lmap[x]==lmap[prev] and not bmap[x]
+            if same and check and words and wmap[x]!=wmap[prev]: bad+=1
+            if not same: k+=1
+            prev=x
+        levels.append((len(S),k))
+        if gmap[0]==0: break
+        # predecessor map
+        pre={y:x for x,y in gmap.items()}
+        keep=set()
+        for x in S:
+            a,b=pre[x],gmap[x]
+            if a==x: continue          # fixed point (mark handled above)
+            if x<a and x<b: keep.add(x)
+        keep.add(0)
+        ng={}; nl={}; nb={}; nw={} if words else None
+        for x in keep:
+            y=x; l=0; bt=False; parts=[]
+            while True:
+                l+=lmap[y]; bt=bt or bmap[y]
+                if words: parts.append(wmap[y])
+                y=gmap[y]
+                if y in keep: break
+            ng[x]=y; nl[x]=l; nb[x]=bt
+            if words: nw[x]=b"".join(reversed(parts))
+        S=sorted(keep); gmap,lmap,bmap=ng,nl,nb
+        if words: wmap=nw
+    out=None
+    if words:
+        w=wmap[0]; out=(w*(n//len(w)+1))[:n]
+    return R,levels,bad,out
+
+if __name__=="__main__" and sys.argv[1:]==["small"]:
+    random.seed(3); worst=0; worst_case=None; tot=badtot=wrong=viol=0; maxratio=0
+    def bwt(t):
+        n=len(t); sa=sorted(range(n),key=lambda i:t[i:]+t[:i]); return bytes(t[(i-1)%n] for i in sa), sa.index(0)
+    cases=[]
+    for n in range(1,8):
+        for L in itertools.product(b"abc",repeat=n):
+            L=bytes(L); cases.append((L,random.randrange(n)))
+    for _ in range(4000):
+        k=random.randint(2,5); m=random.randint(1,60)
+        u=bytes(random.choice(b"abcde"[:k]) for _ in range(random.randint(1,m)))
+        t=u*random.randint(1,4) if random.random()<0.3 else u
+        L,p=bwt(t); cases.append((L,p))
+        Lr=bytes(random.choice(b"abcd"[:k]) for _ in range(random.randint(1,60))); cases.append((Lr,random.randrange(len(Lr))))
+    for L,p in cases:
+        R,levels,bad,out=contract(L,p)
+        tot+=1; badtot+=bad; wrong+= out!=reference(L,p)
+        kmax=max(k for _,k in levels); viol+= kmax>3*R-2
+        if kmax/(3*R-2)>maxratio: maxratio=kmax/(3*R-2); worst_case=(L,p,R,levels)
+    print("cases",tot,"output mismatches",wrong,"certificate merges with unequal words",badtot,"bound violations (k>3R-2)",viol,"max k/(3R-2) %.3f"%maxratio, worst_case)

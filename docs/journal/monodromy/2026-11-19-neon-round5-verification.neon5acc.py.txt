@@ -1,0 +1,42 @@
+"""Round 5, step counts: how often Neon's quotient condition (Case 1: A = cod_prev(B); Case 2:
+B = dom_prev(A)) holds with q >= 2, against record 80's winner runs, on a real block (K = 1)."""
+import sys
+from collections import Counter
+L=open(sys.argv[1],'rb').read(); n=len(L)
+cnt=Counter(L); C={}; acc=0
+for c in sorted(cnt): C[c]=acc; acc+=cnt[c]
+seen=Counter(); lf=[0]*n
+for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+runs=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; r=len(runs); Cb=[lf[x] for x in runs]
+ln=[0]*(r+1); dn=[0]*(r+2); dp=[0]*(r+2); cn=[0]*(r+2); cp=[0]*(r+2); H=r; T_=r+1
+for i in range(r): ln[i]=(runs[i+1] if i+1<r else n)-runs[i]
+for nx,pv,seq in ((dn,dp,[H]+list(range(r))+[T_]),(cn,cp,[H]+sorted(range(r),key=lambda i:Cb[i])+[T_])):
+    for a,b in zip(seq,seq[1:]): nx[a]=b; pv[b]=a
+def unlink(nx,pv,X): p,q=pv[X],nx[X]; nx[p]=q; pv[q]=p
+def ins_after(nx,pv,A,X): q=nx[A]; nx[A]=X; pv[X]=A; nx[X]=q; pv[q]=X
+st=Counter(); raw=0; neon=0; last=None; zor=0
+while dp[T_]!=H:
+    A,B=dp[T_],cp[T_]; neon+=1
+    if A==B:
+        unlink(dn,dp,A); unlink(cn,cp,A); raw+=1; st['3b']+=1
+        if last!=A: zor+=1
+        last=None; continue
+    a,b=ln[A],ln[B]
+    if a>b:
+        q=(a-1)//b if cp[B]==A else 1; st['case1']+=1; st['case1_adjacent']+=(cp[B]==A); st['case1_q>=2']+=(q>=2)
+        for _ in range(q):
+            unlink(cn,cp,B); ins_after(cn,cp,A,B); ln[A]-=b; raw+=1
+        if last!=A: zor+=1
+        last=A
+    elif a<b:
+        q=(b-1)//a if dp[A]==B else 1; st['case2']+=1; st['case2_adjacent']+=(dp[A]==B); st['case2_q>=2']+=(q>=2)
+        for _ in range(q):
+            unlink(dn,dp,A); ins_after(dn,dp,B,A); ln[B]-=a; raw+=1
+        if last!=B: zor+=1
+        last=B
+    else:
+        st['3a']+=1; raw+=1
+        if last not in (A,B): zor+=1
+        last=None
+        unlink(dn,dp,A); unlink(cn,cp,B); pa=cp[A]; ins_after(cn,cp,pa,B); unlink(cn,cp,A)
+print(f'{sys.argv[1].split("/")[-1]} r={r} raw steps={raw} Neon accelerated steps={neon} ({neon/r:.3f}r) winner runs={zor} ({zor/r:.3f}r)', dict(st))

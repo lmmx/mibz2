@@ -1,0 +1,42 @@
+//! Boundary-orbit profile q_k on every large block: q_k = |B_{k+1} \ B_k|, B_k = U_{j<k} T^{-j} D_s,
+//! with T = LF and D_s the internal run starts. Also C (coincidences) and E0. Not built by the crate.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap(); let kmax: usize = a.get(2).map_or(8, |s| s.parse().unwrap());
+    let k = Kernels::detect(); let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]); let mut syms = Vec::new(); let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= 65536 { prof(i, &ll, kmax); i += 1; }
+        syms = b.syms;
+    }
+}
+fn prof(blk: usize, l: &[u8], kmax: usize) {
+    let n = l.len();
+    let mut cnt = [0usize; 257]; for &c in l { cnt[c as usize + 1] += 1; }
+    for c in 1..257 { cnt[c] += cnt[c - 1]; }
+    let mut lf = vec![0u32; n]; let mut seen = cnt;
+    for (x, &c) in l.iter().enumerate() { lf[x] = seen[c as usize] as u32; seen[c as usize] += 1; }
+    let mut fl = vec![0u32; n]; for x in 0..n { fl[lf[x] as usize] = x as u32; }
+    let starts: Vec<u32> = (0..n).filter(|&x| x == 0 || l[x] != l[x - 1]).map(|x| x as u32).collect();
+    let r = starts.len();
+    let ds: Vec<u32> = starts[1..].to_vec();                 // internal run starts
+    let mut isd = vec![false; n]; for &d in &ds { isd[d as usize] = true; }
+    // image cuts of TP: images of all run starts, excluding row 0
+    let mut img = vec![false; n]; for &s in &starts { let y = lf[s as usize] as usize; if y != 0 { img[y] = true; } }
+    let c = (0..n).filter(|&x| isd[x] && img[x]).count();
+    let e0 = 2 * r - 1 - c;
+    // q_k: generation j points T^{-j} D_s (T^{-1} = FL)
+    let mut inb = vec![false; n]; let mut cur = ds.clone(); let mut q = Vec::new();
+    for _j in 0..=kmax {
+        let mut new = 0usize; for &y in &cur { if !inb[y as usize] { inb[y as usize] = true; new += 1; } }
+        q.push(new);
+        for y in cur.iter_mut() { *y = fl[*y as usize]; }
+    }
+    // also |T^{-1}D_s ∩ D_s| directly
+    let pre_hits = ds.iter().filter(|&&d| isd[fl[d as usize] as usize]).count();
+    let qs: Vec<String> = q.iter().map(|v| v.to_string()).collect();
+    println!("{{\"blk\":{blk},\"n\":{n},\"r\":{r},\"C\":{c},\"E0\":{e0},\"pre_hits\":{pre_hits},\"q\":[{}]}}", qs.join(","));
+}

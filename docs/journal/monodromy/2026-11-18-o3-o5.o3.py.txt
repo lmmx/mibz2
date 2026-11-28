@@ -1,0 +1,29 @@
+import sys, time
+exec(open('forest.py').read().split('if __name__')[0])
+L=open('/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/reference-column','rb').read()
+p=264045; n=len(L); f=lf_of(L)
+run=[0]*n; rid=0
+for i in range(1,n):
+    if L[i]!=L[i-1]: rid+=1
+    run[i]=rid
+r=rid+1
+def presentation(k):
+    # label_k(x) = (run(x), run(f x), ..., run(f^{k-1} x)); sites = maximal row intervals of equal label
+    lab=[(run[x],) for x in range(n)]
+    cur=list(range(n))
+    labs=[run[:]]  # component j: run(f^j x)
+    y=list(range(n))
+    for j in range(1,k):
+        y=[f[v] for v in y]; labs.append([run[v] for v in y])
+    sites=[]; s=0
+    for i in range(1,n+1):
+        if i==n or any(c[i]!=c[i-1] for c in labs): sites.append(list(range(s,i))); s=i
+    return sites
+for k in [int(a) for a in sys.argv[1:]]:
+    t0=time.time(); sites=presentation(k); g={i:f[i] for i in range(n)}
+    tot=0; lv=[]
+    while True:
+        info,sites,g,arcs,tree,chords=level(sites,g,p)
+        tot+=info['E']; lv.append((info['V'],info['E'],info['q'],info['mass']))
+        if info['mass']<=1: break
+    print("k=%d V0=%d E0=%d E0-V0=%d first chord mass %d | levels %d | sum arcs %d = %.3f r | %.0fs"%(k,lv[0][0],lv[0][1],lv[0][1]-lv[0][0],lv[0][3],len(lv),tot,tot/r,time.time()-t0)); sys.stdout.flush()

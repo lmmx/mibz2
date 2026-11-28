@@ -1,0 +1,53 @@
+import sys, random
+from collections import Counter
+exec(open('openret.py').read().split('if __name__')[0])
+def runs_of(L):
+    out=[]; s=0
+    for i in range(1,len(L)+1):
+        if i==len(L) or L[i]!=L[i-1]: out.append((s,i)); s=i
+    return out
+def bands(L,p,t):
+    n=len(L); f=lf_of(L); F=sorted(L)
+    strip=[-1]*n; S=[]; H=0
+    for a,b in runs_of(L):
+        if b-a<=t: S.extend(range(a,b))
+        else:
+            # wide run, split at the primary
+            pieces=[(a,b)] if not (a<=p<b) else [(a,p),(p+1,b)]
+            if a<=p<b: S.append(p)
+            for x,y in pieces:
+                if y>x:
+                    for r in range(x,y): strip[r]=H
+                    H+=1
+    Sset=set(S); S.sort(); idx={s:i for i,s in enumerate(S)}; m=len(S)
+    E=sorted(f[s] for s in S); Eset=set(E)
+    B=U=A=nonempty=0; prev=None
+    for e in E:
+        x=e; itin=[]
+        while x not in Sset: itin.append(strip[x]); x=f[x]
+        sig=(tuple(itin),); ex=idx[x]; h=len(itin)
+        if prev is not None and e==prev[0]+1 and F[e]==F[prev[0]] and sig==prev[1] and ex==prev[2]+1:
+            pass
+        else:
+            B+=1; U+=h; nonempty+= h>0
+        A+=h; prev=(e,sig,ex)
+    sigma=len(set(L))
+    return dict(n=n,m=m,H=H,B=B,nonempty=nonempty,U=U,A=A,bound=3*H+sigma)
+if __name__=="__main__":
+    if sys.argv[1]=="frozen":
+        L=open('/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/reference-column','rb').read()
+        for t in (1,16,256): print(t, bands(L,264045,t))
+    else:
+        random.seed(7); worst=0; ws=None; tot=viol=0
+        for _ in range(20000):
+            n=random.randint(4,60); A_=random.randint(2,4)
+            # run-structured columns: random runs of random widths
+            L=bytearray()
+            while len(L)<n: L+=bytes([random.choice(b"abcd"[:A_])])*random.randint(1,8)
+            L=bytes(L[:n]); p=random.randrange(n); t=random.choice((1,2,3,4))
+            d=bands(L,p,t)
+            if d['H']==0: continue
+            tot+=1; viol+= d['B']>d['bound']
+            r=d['B']/d['bound']
+            if r>worst: worst=r; ws=(L,p,t,d)
+        print("cases",tot,"violations",viol,"max B/(3H+sigma) %.3f"%worst, ws)

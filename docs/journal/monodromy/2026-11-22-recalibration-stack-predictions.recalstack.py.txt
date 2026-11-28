@@ -1,0 +1,46 @@
+"""Record 89: predictions for bench-recalibrate-stack (master 53f7ecf9). Base: the diet run's
+measured ratios (recalibrate-diet/run-20261121T124719Z); at 10 threads and up, where that run's
+intervals were 2-3x 0.5.8's, the base is the inverse-variance mean of record 88's prediction and
+the diet run's reading. The stack (#719) moves lazy arms by g(W): its adoption run
+(open-stack/run-20261122T022924Z, unpinned default decoder) gives wall 0.952 / 0.975 / 0.987 at
+W = 6 / 7 / 8 with CPU ~0.95 flat. Below W = 6 g is taken as the CPU saving, 0.95 [0.94, 0.96] (N);
+at W = 10, 1.00 [0.99, 1.01] (N, the front-end cap). Eager arms are unchanged."""
+g={3:0.95,4:0.95,5:0.95,6:0.952,7:0.975,8:0.987,10:1.00}
+def comb(p,ph,m,lo,hi):
+    mh=(hi-lo)/2; w1=1/ph**2; w2=1/mh**2; c=(p*w1+m*w2)/(w1+w2); h=(1/(w1+w2))**0.5; return c,h
+rows=[]
+# (placement, threads, ref, arm label, W, refW, lazy_arm, lazy_ref, diet measured, lo, hi, rec88 pred, rec88 half)
+D=[('p',10,'lazy 7/28','lazy 6/24',6,7,1,1,1.1630,0.9381,1.4418,1.07,0.03),
+   ('p',10,'lazy 7/28','lazy 8/32',8,7,1,1,0.9126,0.7377,1.1288,1.01,0.08),
+   ('p',10,'lazy 7/28','lazy 10/40',10,7,1,1,1.0955,0.9094,1.3197,1.14,0.125),
+   ('p',8,'lazy 6/24','lazy 5/20',5,6,1,1,1.1491,1.1456,1.1526,None,None),
+   ('p',8,'lazy 6/24','lazy 7/28',7,6,1,1,1.0656,1.0574,1.0738,None,None),
+   ('p',8,'lazy 6/24','lazy 8/32',8,6,1,1,1.0651,1.0583,1.0719,None,None),
+   ('p',6,'lazy 5/20','lazy 4/16',4,5,1,1,1.1538,1.1457,1.1620,None,None),
+   ('p',6,'lazy 5/20','lazy 6/24',6,5,1,1,1.0801,1.0669,1.0936,None,None),
+   ('p',6,'lazy 5/20','eager 6/24',6,5,0,1,1.2528,1.2434,1.2623,None,None),
+   ('p',4,'eager 3/12','eager 2/8',2,3,0,0,1.3342,1.3124,1.3564,None,None),
+   ('p',4,'eager 3/12','eager 4/16',4,3,0,0,1.0402,1.0213,1.0595,None,None),
+   ('p',4,'eager 3/12','lazy 3/12',3,3,1,0,1.0203,1.0042,1.0367,None,None),
+   ('u',4,'lazy 4/16','lazy 3/12',3,4,1,1,1.3004,1.2594,1.3428,None,None),
+   ('u',4,'lazy 4/16','eager 4/16',4,4,0,1,1.0251,0.9965,1.0545,None,None),
+   ('u',6,'lazy 6/24','lazy 5/20',5,6,1,1,1.2213,1.0365,1.4391,None,None),
+   ('u',6,'lazy 6/24','eager 6/24',6,6,0,1,1.2728,1.1250,1.4401,None,None),
+   ('u',8,'lazy 8/32','lazy 7/28',7,8,1,1,1.0650,0.8414,1.3481,0.995,0.11),
+   ('u',10,'lazy 7/28','lazy 6/24',6,7,1,1,0.9768,0.8158,1.1696,1.05,0.09),
+   ('u',10,'lazy 7/28','lazy 8/32',8,7,1,1,0.8894,0.7371,1.0732,1.02,0.115),
+   ('u',10,'lazy 7/28','lazy 10/40',10,7,1,1,1.0072,0.8355,1.2142,1.05,0.115),
+   ('u',12,'lazy 7/28','lazy 8/32',8,7,1,1,0.9345,0.7600,1.1490,1.015,0.085),
+   ('u',12,'lazy 7/28','lazy 10/48',10,7,1,1,0.9992,0.8091,1.2341,1.04,0.04),
+   ('u',16,'lazy 7/28','lazy 8/32',8,7,1,1,0.9864,0.7964,1.2216,1.02,0.04),
+   ('u',16,'lazy 7/28','lazy 10/64',10,7,1,1,0.9251,0.7532,1.1362,1.10,0.11),
+   ('u',20,'lazy 7/28','lazy 8/32',8,7,1,1,1.0292,0.8175,1.2959,0.956,0.075),
+   ('u',20,'lazy 7/28','lazy 10/80',10,7,1,1,1.0326,0.8584,1.2422,1.03,0.115)]
+for pl,N,ref,arm,W,R,la,lr,m,lo,hi,p,ph in D:
+    if p is not None: base,h=comb(p,ph,m,lo,hi)
+    else: base,h=m,(hi-lo)/2
+    d=(g[W] if la else 1.0)/(g[R] if lr else 1.0)
+    nb = (la and W in (3,4,5,10)) or (lr and R in (3,4,5,10))
+    h=h+0.01+(0.02 if nb else 0)
+    pred=base*d
+    print(f"{'pinned' if pl=='p' else 'unpinned'} {N:2d} ref {ref:10s} {arm:11s}: base {base:.3f} x {d:.3f} = {pred:.3f} [{pred-h:.2f}, {pred+h:.2f}]{' N' if nb else ''}")

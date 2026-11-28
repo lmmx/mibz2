@@ -1,0 +1,75 @@
+# Record 120 check: strip contraction by label-ordered rounds, no searches.
+# G(y) = y if y is retained, else G(LF(y)). Claim: processing pieces label by label, each
+# label's stream in row order, the layout cursor of every label only moves forward, and the
+# next round's streams come out sorted. Compared with brute force on every strip row.
+import random, sys
+def run(seed, kind, W):
+    random.seed(seed)
+    if kind=="template":
+        T=[]
+        for _ in range(random.randint(40,160)):
+            T+=list(b'{"id":"')+[random.choice(b'0123456789abcdef') for _ in range(random.randint(2,9))]+list(b'","k":')+[random.choice(b'01')]+list(b'},\n')
+    elif kind=="periodic":
+        T=list(b'ab'*random.randint(5,40))+list(b'c')+list(b'aab'*random.randint(3,30))+[random.choice(b'abcd') for _ in range(30)]
+    else:
+        T=[random.choice(b'abc') for _ in range(random.randint(50,400))]
+    n=len(T)
+    if len({bytes(T[i:]+T[:i]) for i in range(n)})<n: return None
+    rot=sorted(range(n),key=lambda i:T[i:]+T[:i]); L=[T[(i-1)%n] for i in rot]
+    order=sorted(range(n),key=lambda i:(L[i],i)); LF=[0]*n
+    for r,i in enumerate(order): LF[i]=r
+    # layout: runs; a run of width >= W keeps its first row, the rest is a strip
+    segs=[]; i=0                              # (start, end_exclusive, is_strip, label)
+    while i<n:
+        j=i
+        while j<n and L[j]==L[i]: j+=1
+        if j-i>=W: segs.append((i,i+1,False,L[i])); segs.append((i+1,j,True,L[i]))
+        else: segs.append((i,j,False,L[i]))
+        i=j
+    strip_of={}                                # strip start -> LF(start)
+    streams={}
+    for (a,b,st,c) in segs:
+        if st: streams.setdefault(c,[]).append((a,b-a,a,a))   # (cur_start,len,origin,strip_start)
+    ptr={}; G={}; rounds=0; pieces=[]; steps=0
+    import bisect
+    starts=[s[0] for s in segs]
+    while streams:
+        rounds+=1; nxt={}; cnt=0
+        for c in sorted(streams):
+            last=-1
+            p=ptr.get((rounds,c),0)
+            for (cur,ln,org,sa) in streams[c]:
+                assert cur>last, "stream not sorted"; last=cur
+                img=LF[sa]+(cur-sa)                         # translation on the strip
+                while segs[p][1]<=img: p+=1; steps+=1       # forward only
+                assert segs[p][0]<=img, "cursor overshot"
+                q=p; pos=img; end=img+ln
+                while pos<end:
+                    a,b,st,c2=segs[q]; e=min(end,b); cnt+=1
+                    if st: nxt.setdefault(c2,[]).append((pos,e-pos,org+(pos-img),a))
+                    else:
+                        for t in range(pos,e): G[org+(t-img)]=t
+                    pos=e
+                    if pos<end: q+=1; steps+=1
+                p=q
+        pieces.append(cnt); streams=nxt
+    # brute force
+    retained=[True]*n
+    for (a,b,st,c) in segs:
+        if st:
+            for y in range(a,b): retained[y]=False
+    for y in range(n):
+        if not retained[y]:
+            z=LF[y]
+            while not retained[z]: z=LF[z]
+            assert G[y]==z,(y,G.get(y),z)
+    return n,sum(1 for s in segs if s[2]),sum(1 for r in retained if not r),rounds,sum(pieces),steps
+tot=0
+for kind in ("template","periodic","random"):
+    worst=(0,)*6
+    for seed in range(300):
+        for W in (2,4):
+            r=run(seed,kind,W)
+            if r: tot+=1; worst=max(worst,r,key=lambda t:t[3])
+    print(kind,"deepest case: n=%d strips=%d strip rows=%d rounds=%d pieces=%d"%worst[:5])
+print(tot,"systems: contraction exact, streams sorted, cursors forward only")

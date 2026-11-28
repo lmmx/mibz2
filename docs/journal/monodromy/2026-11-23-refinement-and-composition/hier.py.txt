@@ -1,0 +1,118 @@
+"""Right-end induction step counts for the trace (first-return) hierarchy of a BWT column.
+For a retained set S_tau = rows of runs of width <= tau (plus the primary), build Open's auxiliary
+exchange (terminals [0,m), shifted rows [m,m+n)) and induce it down to the terminal prefix,
+counting elementary steps K. tau=0 is S={p}: the whole exchange, Cells' case.
+Also checks: every step consumes rows of a single original run (the S >= #runs argument)."""
+import json, sys, os
+B = sys.argv[1]
+man = json.load(open(os.path.join(B, 'manifest.json')))
+TAUS = [int(t) for t in sys.argv[2].split(',')] if len(sys.argv) > 2 else [0,1,2,3,4,6,8,12,16,24,32,64]
+
+def lf(L):
+    n = len(L); cnt = [0]*256
+    for b in L: cnt[b] += 1
+    C = [0]*256; s = 0
+    for c in range(256): C[c] = s; s += cnt[c]
+    heads = [0] + [x for x in range(1, n) if L[x] != L[x-1]]
+    ends = heads[1:] + [n]
+    occ = [0]*256; runs = []
+    for d, e in zip(heads, ends):
+        c = L[d]; runs.append((d, e, C[c] + occ[c] - d)); occ[c] += e - d
+    return runs
+
+def induce(pieces, N, P):
+    """pieces: [ds, de, is_, ie], rigid translations forming a bijection of [0,N).
+    Right-end induction down to the prefix [0,P); returns the number of elementary steps."""
+    dom = {}; img = {}
+    for k, pc in enumerate(pieces):
+        dom[pc[1]] = k; img[pc[3]] = k
+    b = N; steps = 0
+    while b > P:
+        x = dom.pop(b); y = img.pop(b); X = pieces[x]; steps += 1
+        if x == y:                      # a fixed interval, disconnected from the prefix
+            b = X[0]; continue
+        Y = pieces[y]; wx = X[1]-X[0]; wy = Y[3]-Y[2]; c = min(wx, wy)
+        assert c <= b - P
+        Yde, Xie = Y[1], X[3]
+        del dom[Yde]
+        if wy > c:
+            Y[1] -= c; Y[3] = b - c; dom[Y[1]] = y; img[Y[3]] = y
+        z = len(pieces); pieces.append([Yde - c, Yde, Xie - c, Xie]); dom[Yde] = z; img[Xie] = z
+        if wx > c:
+            X[1] = b - c; X[3] = Xie - c; dom[X[1]] = x; img[X[3]] = x
+        b -= c
+    return steps
+
+def aux(runs, n, p, tau):
+    """Open's auxiliary exchange for S = rows of runs of width <= tau, plus p."""
+    Srows = []
+    for d, e, t in runs:
+        if e - d <= tau: Srows.append((d, e))
+    # add p if not covered
+    if not any(d <= p < e for d, e in Srows):
+        Srows.append((p, p+1)); Srows.sort()
+    # merge adjacent S intervals
+    S = []
+    for d, e in Srows:
+        if S and S[-1][1] == d: S[-1][1] = e
+        else: S.append([d, e])
+    m = sum(e - d for d, e in S)
+    sset = S
+    # E = f(S) as intervals: per run piece intersect S
+    pieces = []; Eint = []
+    import bisect
+    starts = [d for d, e in S]
+    for d, e, t in runs:
+        # split run [d,e) into S part and complement part (S intervals align with runs except p)
+        cur = d
+        i = bisect.bisect_right(starts, d) - 1
+        segs = []
+        while cur < e:
+            if i >= 0 and i < len(S) and S[i][0] <= cur < S[i][1]:
+                hi = min(e, S[i][1]); segs.append((cur, hi, True)); cur = hi; i += 1
+            else:
+                nxt = S[i+1][0] if i+1 < len(S) else n
+                if i+1 < len(S) and S[i+1][0] <= cur: i += 1; continue
+                hi = min(e, nxt); segs.append((cur, hi, False)); cur = hi
+        for a, bb, inS in segs:
+            if inS: Eint.append((a + t, bb + t))
+            else: pieces.append([m + a, m + bb, m + a + t, m + bb + t])
+    Eint.sort()
+    E = []
+    for a, bb in Eint:
+        if E and E[-1][1] == a: E[-1][1] = bb
+        else: E.append([a, bb])
+    k = 0
+    for a, bb in E:  # terminals k.. -> m + E
+        w = bb - a; pieces.append([k, k + w, m + a, m + bb]); k += w
+    i = 0
+    for a, bb in S:  # m + s_i -> i
+        w = bb - a; pieces.append([m + a, m + bb, i, i + w]); i += w
+    H = sum(1 for pc in pieces if pc[0] >= m and pc[2] >= m)
+    return pieces, m, H, len(S), len(E)
+
+def check_bij(pieces, N):
+    tot = sum(pc[1]-pc[0] for pc in pieces)
+    assert tot == N, (tot, N)
+    ds = sorted((pc[0], pc[1]) for pc in pieces); im = sorted((pc[2], pc[3]) for pc in pieces)
+    c = 0
+    for a, b in ds: assert a == c; c = b
+    c = 0
+    for a, b in im: assert a == c; c = b
+
+out = []
+for blk in man['blocks']:
+    L = open(os.path.join(B, blk['file']), 'rb').read(); n = len(L); p = blk['primary_index']
+    runs = lf(L); r = len(runs)
+    row = {'block': blk['file'], 'n': n, 'r': r}
+    for tau in TAUS:
+        pieces, m, H, s, e = aux(runs, n, p, tau)
+        check_bij(pieces, m + n)
+        K = induce(pieces, m + n, m)
+        row[tau] = (m, H, K)
+    out.append(row)
+    print(row['block'], 'n', n, 'r', r, flush=True)
+    for tau in TAUS:
+        m, H, K = row[tau]
+        print(f"  tau {tau:3d}: walk m {m:7d} ({m/n:.3f} n)  thick H {H:7d}  K {K:7d} ({K/r:.3f} r, {K/max(H,1):.2f}/strip)  m+K {m+K:7d} ({(m+K)/n:.3f} n)", flush=True)
+json.dump(out, open('hier.json', 'w'))

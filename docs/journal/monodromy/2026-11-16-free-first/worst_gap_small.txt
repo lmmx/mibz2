@@ -1,0 +1,16 @@
+sigma 2 n 3: columns 2, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 4: columns 8, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 5: columns 22, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 6: columns 52, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 7: columns 114, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 8: columns 240, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 9: columns 494, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 2 n 10: columns 1004, free-first-largest above least on 1 (worst gap 1), no free-first order optimal on 0
+sigma 2 n 11: columns 2026, free-first-largest above least on 7 (worst gap 2), no free-first order optimal on 0
+sigma 2 n 12: columns 4072, free-first-largest above least on 33 (worst gap 2), no free-first order optimal on 1
+sigma 3 n 3: columns 12, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 3 n 4: columns 60, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 3 n 5: columns 216, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 3 n 6: columns 696, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 3 n 7: columns 2148, free-first-largest above least on 0 (worst gap 0), no free-first order optimal on 0
+sigma 3 n 8: columns 6516, free-first-largest above least on 2 (worst gap 1), no free-first order optimal on 0

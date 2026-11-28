@@ -1,0 +1,47 @@
+# Record 118 check. Random hex text; rows = sorted rotations. A step x -> LF(x)
+# "descends" when LF(x) is processed before x. Count failing (non-descending) steps for:
+#  row order; min-key orders tau_j(x) = min(x, psi x, .., psi^j x) (ties in text order);
+#  a greedy 16-queue scheduler (pieces = first digit) with several deadlock rules.
+import random, sys
+random.seed(int(sys.argv[1]) if len(sys.argv)>1 else 1)
+sg=16; n=int(sys.argv[2]) if len(sys.argv)>2 else 200000
+T=bytes(random.randrange(sg) for _ in range(n)); TT=T+T[:64]
+sa=sorted(range(n),key=lambda i:TT[i:i+40])
+rank=[0]*n
+for r,p in enumerate(sa): rank[p]=r
+row=rank                                  # row[p] = row of text position p
+def fails(key):                           # key[p] = processing time of position p's row; need key[p-1] < key[p]
+    return sum(1 for p in range(n) if not key[p-1] < key[p])/n
+print("row order            ",round(fails(row),4),"(theory 1/2)")
+for j in (1,2,3):
+    # time = (min row over window p..p+j, -offset to that min) : ties processed in text order
+    key=[]
+    for p in range(n):
+        w=[row[(p+i)%n] for i in range(j+1)]; m=min(w); key.append((m,-w.index(m)))
+    print("min-key order j=%d    "%j,round(fails(key),4),"(theory 1/%d)"%(j+2))
+# lower bound A_sigma(2) for pieces = first digit, all increasing
+A2=sum((sg*a+b)/(sg*sg-1) for a in range(sg) for b in range(a+1,sg))/sg**2
+print("lower bound, depth 1 ",round(A2,4))
+# greedy interleaved scheduler, pieces = first digit
+C=[0]*(sg+1)
+for c in T: C[c+1]+=1
+for c in range(sg): C[c+1]+=C[c]
+pred=[0]*n                                # pred[row] = row of previous text position
+for p in range(n): pred[row[p]]=row[p-1]
+def greedy(rule):
+    head=C[:sg]; done=bytearray(n); bad=0; left=n
+    while left:
+        prog=True
+        while prog:
+            prog=False
+            for a in range(sg):
+                while head[a]<C[a+1] and done[pred[head[a]]]:
+                    done[head[a]]=1; head[a]+=1; left-=1; prog=True
+        if not left: break
+        live=[a for a in range(sg) if head[a]<C[a+1]]
+        a=rule(live,head); done[head[a]]=1; head[a]+=1; left-=1; bad+=1
+    return bad/n
+rules={"least progress":lambda L,h:min(L,key=lambda a:(h[a]-C[a])/(C[a+1]-C[a])),
+       "most progress ":lambda L,h:max(L,key=lambda a:(h[a]-C[a])/(C[a+1]-C[a])),
+       "lowest digit  ":lambda L,h:min(L), "highest digit ":lambda L,h:max(L)}
+for k,r in rules.items(): print("greedy,",k,round(greedy(r),4))

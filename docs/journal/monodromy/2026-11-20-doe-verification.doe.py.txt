@@ -1,0 +1,133 @@
+"""DOE audit (CHECKPOINT 7027995386), from the CHECKPOINT's definitions only.
+Claim 1: (a) c(E) <= 2m; (b) |P_exit(E)| <= c(E) + |dU \\ Cbar| <= 4m, with Neon's charging checked
+split by split (first step the pair separates across dU or lands in different strips; the charged
+point must lie in dU \\ Cbar, and the map split -> point must be injective).
+Claim 2: the retained walk wired through P_exit's exits (orig, len, out_thin, word) equals the LF
+walk from p0 for n bytes. Also |A0| + |X0| + |E0| against 6m - 1, and Open-style exits (row-
+contiguous destinations, as Open's terminals coalesce on S components) against P_exit."""
+import sys, itertools
+from collections import Counter
+def lf_of(L):
+    n=len(L); cnt=Counter(L); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    return lf
+def analyse(L,p0,tau,lf=None,inv=None):
+    n=len(L); lf=lf or lf_of(L)
+    if inv is None:
+        inv=[0]*n
+        for x in range(n): inv[lf[x]]=x
+    heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; Dbar=heads; Cbar=set(lf[d] for d in Dbar)
+    ends=heads[1:]+[n]; strips=[]
+    for a,b in zip(heads,ends):
+        if b-a>tau:
+            if a<=p0<b:
+                if p0>a: strips.append((a,p0))
+                if p0+1<b: strips.append((p0+1,b))
+            else: strips.append((a,b))
+    m=len(strips)
+    sid=[-1]*n
+    for j,(a,b) in enumerate(strips):
+        for x in range(a,b): sid[x]=j
+    inU=[s>=0 for s in sid]
+    thin_id=[-1]*n; k=0
+    for x in range(n):
+        if not inU[x]: thin_id[x]=k; k+=1
+    E=[y for y in range(n) if inU[y] and not inU[inv[y]]]; Eset=set(E)
+    cE=sum(1 for y in E if y-1 not in Eset)
+    dU=set()
+    for a,b in strips:
+        if a>0: dU.add(a)
+        if b<n: dU.add(b)
+    dUC=dU-Cbar
+    info={}
+    for y in E:
+        w=[L[y]]; z=lf[y]; t=1
+        while inU[z]: w.append(L[z]); z=lf[z]; t+=1
+        info[y]=(tuple(w),z)
+    # P_exit: maximal intervals of E with constant W and thin_id(Exit) a +1 translation
+    P=0; Popen=0; splits=[]
+    for y in E:
+        if y-1 not in Eset: P+=1; Popen+=1; continue
+        (w0,z0),(w1,z1)=info[y-1],info[y]
+        if not(w0==w1 and thin_id[z1]==thin_id[z0]+1): P+=1; splits.append(y)
+        if not(w0==w1 and z1==z0+1): Popen+=1
+    # Neon's charging for every split pair (y-1, y)
+    charged={}; bad_point=0; uncharged=0; same_step_diff_run=0
+    for y in splits:
+        a,b=y-1,y; t=0; p=None
+        while True:
+            if b!=a+1: break
+            sa,sb=sid[a],sid[b]
+            if sa!=sb: p=b; break                 # different strips, or one side in S
+            if sa<0: break                        # both in S: exited together
+            a,b=lf[a],lf[b]; t+=1
+        if p is None: uncharged+=1; continue
+        if p not in dUC: bad_point+=1
+        charged.setdefault(p,[]).append((y,t))
+    noninj=sum(1 for v in charged.values() if len(v)>1)
+    # same step, different thin runs: pairs (y-1,y) in one E interval that exit together into S
+    for y in E:
+        if y-1 in Eset:
+            (w0,z0),(w1,z1)=info[y-1],info[y]
+            if w0==w1 and len(w0)==len(w1) and z1==z0+1 and (L[z0]!=L[z1]): same_step_diff_run+=1
+    # initial node counts: strips cut by their image's U/S changes, plus entry intervals
+    A0=X0=0
+    for a,b in strips:
+        prev=None
+        for x in range(a,b):
+            kind=inU[lf[x]]
+            if kind!=prev or (x>a and lf[x]!=lf[x-1]+1): 
+                if kind: A0+=1
+                else: X0+=1
+            prev=kind
+    return dict(n=n,m=m,cE=cE,P=P,Popen=Popen,dUC=len(dUC),bound=cE+len(dUC),A0=A0,X0=X0,E0=cE,
+                splits=len(splits),uncharged=uncharged,bad_point=bad_point,noninj=noninj,
+                same_step_diff_run=same_step_diff_run,thin_id=thin_id,info=info,inU=inU,lf=lf,E=E)
+def exact(L,p0,res):
+    n=len(L); lf=res['lf']; inU=res['inU']; info=res['info']
+    # retained walk (bytes in LF order) from p0, through the exits
+    out=[]; x=p0
+    while len(out)<n:
+        out.append(L[x]); y=lf[x]
+        if inU[y]: w,z=info[y]; out.extend(w); x=z
+        else: x=y
+    ref=[]; x=p0
+    for _ in range(n): ref.append(L[x]); x=lf[x]
+    return out[:n]==ref
+if __name__=='__main__':
+    if sys.argv[1]=='--small':
+        T=Counter(); EX={}
+        for alph,maxn in ((2,8),(3,5)):
+            for n in range(1,maxn+1):
+                for L in itertools.product(range(alph),repeat=n):
+                    L=list(L); lf=lf_of(L); inv=[0]*n
+                    for x in range(n): inv[lf[x]]=x
+                    for p0 in range(n):
+                        for tau in (1,2,4):
+                            r=analyse(L,p0,tau,lf,inv); T['cases']+=1
+                            m=r['m']
+                            if r['cE']>2*m: T['A_FAIL']+=1; EX.setdefault('a',(L,p0,tau))
+                            if r['P']>r['bound']: T['B1_FAIL']+=1; EX.setdefault('b1',(L,p0,tau,r['P'],r['cE'],r['dUC']))
+                            if r['bound']>4*m and m>0: T['B2_FAIL_bound_gt_4m']+=1; EX.setdefault('b2',(L,p0,tau,r['bound'],m))
+                            if r['P']>4*m and m>0: T['P_gt_4m']+=1
+                            if r['bad_point']: T['charge_not_in_dU_minus_C']+=r['bad_point']; EX.setdefault('charge',(L,p0,tau))
+                            if r['uncharged']: T['split_uncharged']+=r['uncharged']; EX.setdefault('unch',(L,p0,tau))
+                            if r['noninj']: T['charging_noninjective']+=1; EX.setdefault('inj',(L,p0,tau))
+                            T['same_step_diff_run_pairs']+=r['same_step_diff_run']
+                            if r['A0']+r['X0']+r['E0']>6*m-1 and m>0: T['NODE_BOUND_FAIL']+=1; EX.setdefault('nodes',(L,p0,tau,r['A0'],r['X0'],r['E0'],m))
+                            if not exact(L,p0,r): T['EXACT_FAIL']+=1; EX.setdefault('exact',(L,p0,tau))
+                            T['P_lt_Popen']+=(r['P']<r['Popen']); T['splits']+=r['splits']
+                            T['multi_cycle']+=0
+        for k in sorted(T): print(k,T[k])
+        for k,v in EX.items(): print('example',k,v)
+    else:
+        import json
+        man=json.load(open(sys.argv[1])); base=sys.argv[1].rsplit('/',1)[0]
+        for blk in man['blocks']:
+            L=list(open(base+'/'+blk['file'],'rb').read()); p0=blk['primary_index']
+            r=analyse(L,p0,16)
+            print(json.dumps({"block":blk['file'],"m":r['m'],"c(E)":r['cE'],"|P_exit|":r['P'],"|dU\\C|":r['dUC'],
+              "c(E)+|dU\\C|":r['bound'],"4m":4*r['m'],"open_style_exits":r['Popen'],"A0+X0+E0":r['A0']+r['X0']+r['E0'],"6m-1":6*r['m']-1,
+              "uncharged_splits":r['uncharged'],"charge_outside_dU\\C":r['bad_point'],"noninjective":r['noninj'],"exact":exact(L,p0,r)}))

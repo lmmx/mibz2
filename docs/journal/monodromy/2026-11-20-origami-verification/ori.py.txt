@@ -1,0 +1,109 @@
+"""Origami lift audit. r = LF (stable), u = +1 mod n, k = r u r^-1 u^-1 (right to left:
+k(x) = LF(Psi(x-1) + 1)). Bottom-left corners of x and k(x) are one vertex, so vertices = cycles of k.
+Checks: support vs r and vs C-bar minus 'shared translation' exceptions; cycle count c; genus
+1 + (R - c)/2 against Euler characteristic computed independently (V - E + F); phi conjugation;
+horizontal (r-orbit), vertical (u-orbit) and diagonal (u r-orbit) saddle connections."""
+import sys, itertools, random
+from collections import Counter
+def lf_of(L):
+    n=len(L); cnt=Counter(L); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    return lf
+def cycles(perm, pts=None):
+    n=len(perm); seen=bytearray(n); out=[]
+    for s in (pts if pts is not None else range(n)):
+        if seen[s]: continue
+        l=0; z=s
+        while not seen[z]: seen[z]=1; l+=1; z=perm[z]
+        out.append(l)
+    return out
+def analyse(L, full=True):
+    n=len(L); lf=lf_of(L); psi=[0]*n
+    for x in range(n): psi[lf[x]]=x
+    k=[lf[(psi[(x-1)%n]+1)%n] for x in range(n)]
+    moved=[x for x in range(n) if k[x]!=x]; R=len(moved)
+    heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; r=len(heads)
+    Cbar=set(lf[d] for d in heads)
+    # exceptions: cyclically adjacent runs (tail e=d-1, head d) with LF(d) = LF(d-1) + 1 mod n
+    exc=[d for d in heads if lf[d]==(lf[(d-1)%n]+1)%n]
+    cyc=[l for l in cycles(k) if l>1]; c=len(cyc)
+    out=dict(n=n,r=r,R=R,exceptions=len(exc),supp_eq_Cbar_minus_exc=(set(moved)==Cbar-set(lf[d] for d in exc)),
+             c=c,largest=max(cyc) if cyc else 0,lf_one_cycle=(len(cycles(lf))==1))
+    # genus two ways: Riemann-Hurwitz, and Euler characteristic V - E + F with V = #cycles of k (all)
+    V=len(cycles(k)); E=2*n; F=n; chi=V-E+F
+    out['genus_RH']=1+(R-c)//2 if (R-c)%2==0 else None
+    out['genus_euler']=(2-chi)//2; out['parity_ok']=((R-c)%2==0)
+    if full:
+        # saddle connections: gaps between consecutive singular corners along the orbits of
+        # r (horizontal), u (vertical), u o r (diagonal, slope 1)
+        sing=bytearray(n)
+        for x in moved: sing[x]=1
+        def gaps(step):
+            res=[]; seen=bytearray(n)
+            for s in range(n):
+                if seen[s] or not sing[s]: continue
+                # walk this orbit from s, recording gaps between singular points
+                z=s; g=0; first=True
+                while True:
+                    seen[z]=1; z=step(z); g+=1
+                    if sing[z]: res.append(g); g=0
+                    if z==s: break
+            return res
+        out['hgaps']=gaps(lambda z: lf[z]); out['vgaps']=gaps(lambda z:(z+1)%n); out['dgaps']=gaps(lambda z:(lf[z]+1)%n)
+        out['DC']=len(set(heads)&Cbar)
+        # arcs (record 80): from c in C-bar to its first head; lengths l(c)+1 should equal the h-gaps
+        Hs=set(heads); arcs=[]
+        for d in heads:
+            z=lf[d]; l=0
+            while z not in Hs: z=lf[z]; l+=1
+            arcs.append(l+1)
+        out['arc_lengths']=arcs
+        out['runs']=[(heads[i+1] if i+1<r else n)-heads[i] for i in range(r)]
+    return out,lf,k
+def phi_check(L,p):
+    n=len(L); out,lf,k=analyse(L,full=False)
+    SA=[0]*n; x=p; t=0
+    for _ in range(n): SA[x]=t%n; x=lf[x]; t-=1
+    row=[0]*n
+    for i in range(n): row[SA[i]]=i
+    phi=[SA[(row[j]-1)%n] for j in range(n)]; phinv=[0]*n
+    for j in range(n): phinv[phi[j]]=j
+    return all(SA[k[row[j]]]==(phinv[(phi[j]+1)%n]-1)%n for j in range(n))
+if __name__=='__main__':
+    mode=sys.argv[1]
+    if mode=='--small':
+        T=Counter(); ex={}
+        for alph,maxn in ((2,12),(3,8),(4,6)):
+            for n in range(1,maxn+1):
+                for L in itertools.product(range(alph),repeat=n):
+                    L=list(L); o,lf,k=analyse(L,full=True); T['columns']+=1
+                    one=o['lf_one_cycle']; T['single_cycle']+=one
+                    if o['R']!=o['r']:
+                        T['R!=r']+=1; T['R!=r single']+=one
+                        key='single' if one else 'any'
+                        if key not in ex or len(L)<len(ex[key][0]): ex[key]=(L,o['r'],o['R'],o['exceptions'])
+                    if o['R']!=o['r']-o['exceptions']: T['R!=r-exc']+=1
+                    if not o['supp_eq_Cbar_minus_exc']: T['SUPP_FAIL']+=1
+                    if o['genus_RH']!=o['genus_euler']: T['GENUS_FAIL']+=1
+                    if not o['parity_ok']: T['PARITY_FAIL']+=1
+                    if sorted(o['hgaps'])!=sorted(o['arc_lengths']) and o['exceptions']==0: T['HGAP_NE_ARCS']+=1
+                    if sorted(o['vgaps'])!=sorted(o['runs']) and o['exceptions']==0: T['VGAP_NE_RUNS']+=1
+                    if o['exceptions']==0 and sum(1 for g in o['hgaps'] if g==1)!=o['DC']: T['DC_NE_len1']+=1
+                    if one:
+                        for p in range(len(L)):
+                            if not phi_check(L,p): T['PHI_FAIL']+=1
+                        T['phi_checked']+=len(L)
+        print(dict(T)); print('smallest R != r:',ex)
+    elif mode=='--blocks':
+        import json
+        man=json.load(open(sys.argv[2])); base=sys.argv[2].rsplit('/',1)[0]
+        for blk in man['blocks']:
+            L=list(open(base+'/'+blk['file'],'rb').read()); o,lf,k=analyse(L,full=True)
+            h=sorted(o['hgaps']); v=sorted(o['vgaps']); d=sorted(o['dgaps'])
+            def summ(g): return dict(count=len(g),len1=sum(1 for x in g if x==1),median=g[len(g)//2] if g else 0,max=g[-1] if g else 0,mean=round(sum(g)/len(g),2) if g else 0)
+            print(json.dumps({"block":blk['file'],"r":o['r'],"R":o['R'],"exceptions":o['exceptions'],"c":o['c'],"largest":o['largest'],
+              "genus":o['genus_RH'],"genus_euler":o['genus_euler'],"lf_one_cycle":o['lf_one_cycle'],"|D∩C|":o['DC'],
+              "h_saddle":summ(h),"h_eq_arcs":h==sorted(o['arc_lengths']),"v_saddle":summ(v),"v_eq_runs":v==sorted(o['runs']),
+              "v_saddle_gt16":sum(1 for x in v if x>16),"d_saddle":summ(d),"phi_ok":phi_check(L,blk['primary_index'])}))

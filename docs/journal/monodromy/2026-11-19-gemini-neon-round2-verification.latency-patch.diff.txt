@@ -1,0 +1,37 @@
+diff --git a/src/cells_lazy.rs b/src/cells_lazy.rs
+index ae52c06fb..60ea653d6 100644
+--- a/src/cells_lazy.rs
++++ b/src/cells_lazy.rs
+@@ -223,6 +223,17 @@ impl Kernel {
+         &mut self,
+         budget: usize,
+         out: &mut Vec<u8>,
++    ) -> Result<(u32, u32, usize), Refusal> {
++        let t0 = std::time::Instant::now();
++        let r = self.induce_variant_inner(budget, out);
++        crate::INDUCE_NS.fetch_add(t0.elapsed().as_nanos() as u64, std::sync::atomic::Ordering::Relaxed);
++        if let Ok((_, _, c)) = r { crate::INDUCE_CELLS.fetch_add(c as u64, std::sync::atomic::Ordering::Relaxed); }
++        r
++    }
++    fn induce_variant_inner(
++        &mut self,
++        budget: usize,
++        out: &mut Vec<u8>,
+     ) -> Result<(u32, u32, usize), Refusal> {
+         match self.variant {
+             LAZY => self.induce_lazy(budget, out),
+diff --git a/src/lib.rs b/src/lib.rs
+index acd745eb1..09af6e026 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -81,6 +81,10 @@ pub mod bits;
+ pub mod block;
+ pub mod bwt;
+ mod cells;
++#[doc(hidden)]
++pub static INDUCE_NS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++#[doc(hidden)]
++pub static INDUCE_CELLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+ // (research only: the grammar replay harness, with `grammar-replay`)
+ #[cfg(feature = "grammar-replay")]
+ #[doc(hidden)]

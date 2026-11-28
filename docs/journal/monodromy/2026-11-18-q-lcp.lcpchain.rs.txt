@@ -1,0 +1,104 @@
+//! Gap chains, reducible/irreducible LCP and the q_k profile on every large block of a .bz2 file.
+//! Research only; not built by the crate. Sites x = 1..n-1 sit between rows x-1 and x.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let k = Kernels::detect(); let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]); let mut syms = Vec::new(); let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= 65536 { run(i, &ll); i += 1; }
+        syms = b.syms;
+    }
+}
+fn lf_of(l: &[u8]) -> Vec<u32> {
+    let n = l.len(); let mut cnt = [0usize; 257]; for &c in l { cnt[c as usize + 1] += 1; }
+    for c in 1..257 { cnt[c] += cnt[c - 1]; }
+    let mut lf = vec![0u32; n]; for (x, &c) in l.iter().enumerate() { lf[x] = cnt[c as usize] as u32; cnt[c as usize] += 1; }
+    lf
+}
+/// Cyclic Kasai: lcp[x] for x>=1 = lcp of rotations at rows x-1, x (capped at n).
+fn kasai(t: &[u8], sa: &[u32], rank: &[u32]) -> Vec<u32> {
+    let n = t.len(); let mut lcp = vec![0u32; n]; let mut h = 0usize;
+    for i in 0..n {
+        let r = rank[i] as usize; if r == 0 { h = 0; continue; }
+        let j = sa[r - 1] as usize;
+        while h < n && t[(i + h) % n] == t[(j + h) % n] { h += 1; }
+        lcp[r] = h as u32; if h > 0 { h -= 1; }
+    }
+    lcp
+}
+/// Sorted cyclic rotations by prefix doubling.
+fn rot_sort(s: &[u8]) -> Vec<u32> {
+    let n = s.len(); let mut p = vec![0u32; n]; let mut c = vec![0u32; n];
+    let mut cnt = vec![0usize; 257.max(n + 1)];
+    for &ch in s { cnt[ch as usize] += 1; } for x in 1..256 { cnt[x] += cnt[x - 1]; }
+    for i in (0..n).rev() { let ch = s[i] as usize; cnt[ch] -= 1; p[cnt[ch]] = i as u32; }
+    let mut classes = 1u32; c[p[0] as usize] = 0;
+    for i in 1..n { if s[p[i] as usize] != s[p[i - 1] as usize] { classes += 1; } c[p[i] as usize] = classes - 1; }
+    let (mut pn, mut cn) = (vec![0u32; n], vec![0u32; n]); let mut h = 1usize;
+    while h < n && (classes as usize) < n {
+        for i in 0..n { pn[i] = ((p[i] as usize + n - h) % n) as u32; }
+        for x in cnt.iter_mut().take(classes as usize) { *x = 0; }
+        for i in 0..n { cnt[c[pn[i] as usize] as usize] += 1; }
+        for x in 1..classes as usize { cnt[x] += cnt[x - 1]; }
+        for i in (0..n).rev() { let cl = c[pn[i] as usize] as usize; cnt[cl] -= 1; p[cnt[cl]] = pn[i]; }
+        cn[p[0] as usize] = 0; classes = 1;
+        for i in 1..n {
+            let (a, b) = (p[i] as usize, p[i - 1] as usize);
+            if (c[a], c[(a + h) % n]) != (c[b], c[(b + h) % n]) { classes += 1; }
+            cn[a] = classes - 1;
+        }
+        std::mem::swap(&mut c, &mut cn); h *= 2;
+    }
+    p
+}
+fn run(blk: usize, l: &[u8]) {
+    let n = l.len(); let lf = lf_of(l);
+    let mut fl = vec![0u32; n]; for x in 0..n { fl[lf[x] as usize] = x as u32; }
+    // single cycle?
+    let (mut y, mut m) = (lf[0] as usize, 1usize); while y != 0 { y = lf[y] as usize; m += 1; }
+    if m != n { println!("{{\"blk\":{blk},\"n\":{n},\"cycle\":{m}}}"); return; }
+    // text and rows: pos(LF^k(0)) = (n-k) mod n; T[pos-1] = L[row]
+    let (mut t, mut sa) = (vec![0u8; n], vec![0u32; n]); let mut x = 0usize;
+    for kk in 0..n { let pos = (n - kk) % n; sa[x] = pos as u32; t[(pos + n - 1) % n] = l[x]; x = lf[x] as usize; }
+    let mut rank = vec![0u32; n]; for (row, &p) in sa.iter().enumerate() { rank[p as usize] = row as u32; }
+    let lcp = kasai(&t, &sa, &rank);
+    let ind = |x: usize| x >= 1 && l[x] != l[x - 1];        // D: run-boundary sites
+    let r = 1 + (1..n).filter(|&x| ind(x)).count();
+    // reducibility law: x not in D  =>  LF(x)-1 = LF(x-1) and lcp(LF x) = lcp(x) + 1
+    let mut viol = 0usize;
+    for x in 1..n { if !ind(x) { let y = lf[x] as usize; if !(y >= 1 && lf[x - 1] as usize == y - 1 && lcp[y] == lcp[x] + 1) { viol += 1; } } }
+    // chains, walked backwards from each terminal t in D: predecessor of site y is FL(y) if it is a site not in D
+    let mut d = vec![u32::MAX; n]; let mut lens: Vec<u32> = Vec::new();
+    let (mut s_irr, mut s_init, mut len_bad) = (0u64, 0u64, 0usize);
+    for tt in 1..n { if !ind(tt) { continue; }
+        d[tt] = 0; let mut y = tt; let mut ell = 0u32;
+        loop { let p = fl[y] as usize; if p == 0 || ind(p) { break; } ell += 1; d[p] = ell; y = p; }
+        lens.push(ell); s_irr += lcp[tt] as u64; s_init += lcp[y] as u64;
+        if lcp[tt] as i64 - lcp[y] as i64 != ell as i64 { len_bad += 1; }
+    }
+    let uncovered = (1..n).filter(|&x| d[x] == u32::MAX).count();
+    // q_site[k] = #{sites at distance k}; survival S(k) = #{chains with len >= k}
+    let kmax = 8usize; let mut qs = vec![0u64; kmax + 1]; for x in 1..n { if (d[x] as usize) <= kmax { qs[d[x] as usize] += 1; } }
+    let mut surv = vec![0u64; kmax + 1]; for &e in &lens { for kk in 0..=kmax.min(e as usize) { surv[kk] += 1; } }
+    // row 0's entry time into B_k: first j>=1 with LF^j(0) in D
+    let (mut y, mut d0) = (0usize, 0usize); loop { y = lf[y] as usize; d0 += 1; if ind(y) || d0 > n { break; } }
+    let sum_len: u64 = lens.iter().map(|&e| e as u64).sum();
+    let trunc8: u64 = lens.iter().map(|&e| e.min(8) as u64).sum();
+    let s_all: u64 = (1..n).map(|x| lcp[x] as u64).sum();
+    let maxlen = *lens.iter().max().unwrap_or(&0);
+    // reversed text
+    let tr: Vec<u8> = t.iter().rev().cloned().collect(); let sr = rot_sort(&tr);
+    let mut rr = vec![0u32; n]; for (row, &p) in sr.iter().enumerate() { rr[p as usize] = row as u32; }
+    let lr = kasai(&tr, &sr, &rr);
+    let lrev: Vec<u8> = sr.iter().map(|&p| tr[(p as usize + n - 1) % n]).collect();
+    let (mut r_rev, mut s_irr_rev) = (1usize, 0u64);
+    for x in 1..n { if lrev[x] != lrev[x - 1] { r_rev += 1; s_irr_rev += lr[x] as u64; } }
+    let s_all_rev: u64 = (1..n).map(|x| lr[x] as u64).sum();
+    let j = |v: &[u64]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(",");
+    println!("{{\"blk\":{blk},\"n\":{n},\"r\":{r},\"viol\":{viol},\"len_bad\":{len_bad},\"uncovered\":{uncovered},\"chains\":{},\"sum_len\":{sum_len},\"trunc8\":{trunc8},\"maxlen\":{maxlen},\"d0\":{d0},\"q_site\":[{}],\"surv\":[{}],\"s_irr\":{s_irr},\"s_init\":{s_init},\"s_all\":{s_all},\"r_rev\":{r_rev},\"s_irr_rev\":{s_irr_rev},\"s_all_rev\":{s_all_rev}}}",
+        lens.len(), j(&qs), j(&surv));
+}
