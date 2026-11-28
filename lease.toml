@@ -6,4 +6,4 @@ expires = "2026-11-29T00:37:34+00:00"
 owned_paths = []
 mechanisms = ["frontier-correspondence-kinds"]
 base = "9d1858c1655131c0978f12c83445182dfac95c48"
-released = false
+released = true
