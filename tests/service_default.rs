@@ -225,30 +225,33 @@ fn the_existing_plan_otherwise() {
         (limited.clone(), 6, false, 6, false),
         (limited.clone(), 8, false, 8, false),
         (limited.clone(), 10, false, 10, false),
-        (limited, 20, false, 10, false),
+        (limited, 20, false, 10, true),
         (same_shape.clone(), 6, false, 6, false),
         (same_shape.clone(), 8, false, 8, false),
         (same_shape.clone(), 10, false, 10, false),
-        (same_shape, 20, false, 10, false),
+        (same_shape, 20, false, 10, true),
         (unknown_quota.clone(), 10, false, 10, false),
-        (unknown_quota, 20, false, 10, false),
+        (unknown_quota, 20, false, 10, true),
         (small, 10, false, 10, false),
         // pinned one CPU a core on exactly the threads asked, as the sweeps measured: the
-        // machine is the i9's whatever the mask, so the cells trim (eager 3/12 at 4, lazy
-        // 5/20 at 6 from 0.5.7, lazy 6/24 at 8, lazy 7/28 at 10)
+        // machine is the i9's whatever the mask, so the cells trim monotonically from 4 to 10
+        // (eager 3/12 at 4, lazy 4/16 at 5, 5/20 at 6, 6/24 at 7 and 8, 7/28 at 9 and 10)
         (Machine::pinned_i9(4), 4, false, 3, true),
+        (Machine::pinned_i9(5), 5, false, 4, true),
         (Machine::pinned_i9(6), 6, false, 5, true),
+        (Machine::pinned_i9(7), 7, false, 6, true),
         // one CPU a core on more cores than the threads asked: never trimmed
         (Machine::pinned_i9(8), 4, false, 4, false),
         (Machine::pinned_i9(8), 6, false, 6, false),
         (Machine::pinned_i9(10), 8, false, 8, false),
         (Machine::pinned_i9(8), 8, false, 6, true),
+        (Machine::pinned_i9(9), 9, false, 7, true),
         (Machine::pinned_i9(10), 10, false, 7, true),
-        (Machine::pinned_i9(7), 7, false, 7, false),
-        // fewer cores than the threads asked: never trimmed
+        // fewer cores than the threads asked: never trimmed by trim_cell; when plan_with caps
+        // workers below threads (`n < t`), the window scales to `n`
         (Machine::pinned_i9(4), 6, false, 6, false),
         (Machine::pinned_i9(4), 8, false, 8, false),
-        (Machine::pinned_i9(10), 12, false, 10, false),
+        (Machine::pinned_i9(10), 12, false, 10, true),
         // two CPUs of a core ({0,10,1,11}; {0-3,10-13}; {0-4,10-14}): never trimmed
         (two_a_core(2), 4, false, 4, false),
         (two_a_core(4), 8, false, 8, false),
