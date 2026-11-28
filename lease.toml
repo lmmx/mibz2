@@ -6,4 +6,4 @@ expires = "2026-11-28T23:52:00+00:00"
 owned_paths = []
 mechanisms = ["frontier-brief"]
 base = "bd75fc83933322154aaa848ce436b017292b0e2e"
-released = false
+released = true
