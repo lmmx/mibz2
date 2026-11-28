@@ -1,0 +1,9 @@
+id = "scanner-contention-residual"
+holder = "antigravity"
+session = "baac4ee466e5"
+claimed_at = "2026-11-28T04:17:07+00:00"
+expires = "2026-11-28T12:17:07+00:00"
+owned_paths = []
+mechanisms = []
+base = "0e9b59fff879456941b72de3cb6c0681dd583266"
+released = false
