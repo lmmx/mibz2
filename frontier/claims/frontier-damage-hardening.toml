@@ -29,7 +29,7 @@ question = """
 **Sequencing & coordination:** Build strictly after PR `#1341` (`ship-completion-pressure`) releases `frontier/tools/frontier.py`. Defect #10 (`limits.toml` fail-closed state in `brief`/`renew` + `max_live_holds = 0` drain) overlaps `swarm-quiet-state` and stays in `swarm-quiet-state` rather than duplicating its safety-gate change here.
 """
 why = """
-One typo in a claim field (`owned_paths = "src/foo.rs"`), one apostrophe in `--by`, one malformed `hold/*` or `wait/*` ref, or a comma in `flags: a, b` currently crashes or bypasses swarm-wide coordination and flag invariants. All 18 fixes are already proven on scratch copies with zero regressions.
+One typo in a claim field (`owned_paths = "src/foo.rs"`), one apostrophe in `--by`, one malformed `hold/*` or `wait/*` ref, or a comma in `flags: a, b` currently crashes or bypasses swarm-wide coordination and flag invariants. All 18 fixes are already proven on scratch copies with zero regressions. Note: the `continuation.py` portion (Defect #9) is already landed separately on `ops/continuation-hardening`, leaving only the `frontier/tools/frontier.py` items once `#1341` merges.
 """
 stop_test = """
 Frozen before building:
