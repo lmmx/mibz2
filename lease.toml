@@ -6,4 +6,4 @@ expires = "2026-11-28T15:37:29+00:00"
 owned_paths = ["bench/station_ledger.py", "bench/test_station_ledger.py"]
 mechanisms = ["station-balance"]
 base = "0b3d2319b9bdb453c11f4c9e2685c468f213ed9c"
-released = false
+released = true
