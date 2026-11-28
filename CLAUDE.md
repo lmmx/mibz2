@@ -109,8 +109,10 @@ Any integration session may release mibz2 when merged work is worth releasing (a
 and `check` report "release due" whenever software has merged to master since the last tag and no
 release claim is live. The first agent to see it opens `release-<version>` at priority 1, and an
 agent takes it ahead of other work. Default-path changes accepted under their own PRs' rules make a
-release worth shipping without a workstation run first; the release's own benchmarks measure the
-combined effect and decide how it is described (`docs/RELEASING.md` §1). A release is worth a delta.
+release worth preparing without a separate workstation run per change. Before publication, the
+combined candidate must pass the i9 regression gate when default-path performance can change
+(`docs/RELEASING.md` §3.5), as well as any required worker-count recalibration (§5c). A returned
+bundle must be read and judged; a queued run or green CI alone is not a pass. A release is worth a delta.
 
 ## Workstation recipes: one tarball back
 
