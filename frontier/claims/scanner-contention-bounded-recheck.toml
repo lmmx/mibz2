@@ -4,7 +4,7 @@ kind = "probe"
 zone = "smooth"
 needs = ["shell", "i9"]
 priority = 3
-status = "blocked"
+status = "done"
 owned_paths = []
 needs_louis = ""
 question = """
@@ -33,4 +33,6 @@ links = [
   "frontier/claims/scanner-contention-residual.toml",
   "frontier/claims/forward-emission-bounded-slab-rescue.toml",
   "docs/journal/2026-11-28-scanner-contention-residual/registration.md",
+  "docs/notebook/2026-11-28-scanner-contention-bounded-recheck-verdict.md",
+  "frontier/deltas/2026-11-28-scanner-contention-bounded-recheck-verdict.md",
 ]
