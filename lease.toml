@@ -1,13 +1,13 @@
 id = "result-to-release"
 holder = "claude-code"
-session = "0f74b7bc5e7c"
+session = "e6bf01a661fb"
 claimed_at = "2026-11-27T22:44:45+00:00"
-expires = "2026-11-28T08:29:34+00:00"
+expires = "2026-11-28T06:36:01+00:00"
 owned_paths = ["frontier/tools/", "tests/test_frontier.py"]
 mechanisms = ["result-to-release-pressure"]
 base = "21c9bc6e9b0ebe2423655eb26037715bbfb7fb65"
 released = false
 producer = "antigravity"
-phase = "parked"
+phase = "integration"
 pr = 1241
-pr_head = "9dd1b182c69e3638239b8f8d3cca464f815e2748"
+pr_head = "bb2276c2a642db160a83e1d96b87fa9e56c97e63"
