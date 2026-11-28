@@ -133,14 +133,12 @@ class BZ2Reader(io.RawIOBase):
             raise ValueError("I/O operation on closed file")
         return self._reader.readlines(hint)
 
-    def __iter__(self) -> Iterator[bytes]:
-        """Iterate decoded lines directly over the Rust block buffer."""
+    def __iter__(self) -> Iterator[bytes]:  # noqa: D105
         if self.closed:
             raise ValueError("I/O operation on closed file")
         return self._reader
 
-    def __next__(self) -> bytes:
-        """Return the next decoded line, or raise ``StopIteration`` at EOF."""
+    def __next__(self) -> bytes:  # noqa: D105
         if self.closed:
             raise ValueError("I/O operation on closed file")
         return next(self._reader)
