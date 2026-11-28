@@ -1,9 +1,9 @@
 id = "explore"
 holder = "antigravity"
-session = "7acaf56f6ae4"
-claimed_at = "2026-11-28T02:10:14+00:00"
-expires = "2026-11-28T10:10:14+00:00"
+session = "1dcfb2b78acf"
+claimed_at = "2026-11-28T04:44:37+00:00"
+expires = "2026-11-28T12:44:37+00:00"
 owned_paths = []
 mechanisms = []
-base = "85e4918b75849a91526d7ce7ec4c2ed3bfbc4acc"
-released = true
+base = "a276fdbca54e56b6ec695f582686dc8d1e2d1766"
+released = false
