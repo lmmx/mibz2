@@ -64,6 +64,15 @@ land, are not recorded or shown here; experiments are written up in the
   mibz2's at that count, and shown as 1-thread runs, never as a decode on more threads.
 - **On a pull request**, the base's own harness binary is an arm (`mibz2@base/ab`), so
   both builds run in the same process shape on the same runner.
+- **Open-route diagnostic:** after the default grid and stage table, each run executes a
+  1-thread diagnostic on `wikidata` and `text` with `mibz2-workers-lazy`, which forces the
+  open kernel route on a single worker for 10 rounds (`--spread`, `--settle 0.25`). On a
+  pull request it runs paired against the base build (`mibz2-workers-lazy@base/ab`, when the
+  base harness defines that arm); on master pushes and manual dispatches without a base it
+  runs the head build alone. Its table is shown in the pull request comment and workflow
+  summary (and saved as `open-route.jsonl` in the run artifact) strictly as a diagnostic
+  outside the performance policy's acceptance rules, and is not recorded into the master
+  history.
 - **Paired ratios:** each round's ratio of one arm's time to the reference arm's (the
   base; or mibz2, against the alternatives), their geometric mean, and its 95% t-interval
   over the rounds. A change is called faster or slower only where the interval excludes
