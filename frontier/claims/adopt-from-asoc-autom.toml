@@ -1,0 +1,24 @@
+id = "adopt-from-asoc-autom"
+title = "What the frontier can adopt from the asoc-autom swarm"
+kind = "synthesise"
+zone = "smooth"
+needs = ["shell", "long-context"]
+priority = 3
+status = "done"
+owned_paths = []
+mechanisms = ["frontier-protocol-porosity"]
+needs_louis = ""
+question = """
+qu-reeds/asoc-autom runs a second coordinator-free swarm, built on 28 November 2026 from a close reading of Rosenstiehl and Petitot (1974) and from this frontier. Louis invited it to "act porously upon that swarm, upgrade it to any new best practices you find" (asoc-autom prompts/2026-11-28-setup.md), and on 28 November asked what mibz2 can adopt from it. Which of its mechanisms does the frontier lack, which are proven there and which only asserted, and what is the smallest claim that would bring each across?
+"""
+why = """
+The frontier's protocol has grown by accretion: `brief` reprints about 16 KB of loop prose before 7 KB of state at every checkpoint, there is no designed way to bring the whole swarm to rest, and frontier.py has had no adversarial test by a stranger or a careless hand. asoc-autom solved each of these more simply and tested two of them.
+"""
+stop_test = """
+Each candidate is classed as adopt (a claim opened), consider (a claim at idea), or decline (reason in the delta), from the files of both repositories at named commits, never from memory.
+"""
+done_when = """
+A delta naming each candidate and its disposition; the claims it opens; a matching pass in asoc-autom's lines/porosity-with-mibz2.md.
+"""
+premises = ["frontier/README.md", "frontier/tools/frontier.py", "frontier/limits.toml", "frontier/sensate-backpressure.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/AGENTS.md", "https://github.com/qu-reeds/asoc-autom/blob/master/lines/porosity-with-mibz2.md", "https://github.com/qu-reeds/asoc-autom/tree/master/lines/proving-the-rule"]
