@@ -1,9 +1,9 @@
-id = "parked-hold-moved-head"
+id = "crc32-avx2-ring-rescue"
 holder = "claude-code"
-session = "175e49670c42"
-claimed_at = "2026-11-28T03:01:05+00:00"
-expires = "2026-11-28T11:01:05+00:00"
-owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
-mechanisms = []
-base = "e42326f154af9796ba99cb70c5fb86c5b24e146d"
+session = "68b546a7967f"
+claimed_at = "2026-11-28T03:20:45+00:00"
+expires = "2026-11-28T15:20:45+00:00"
+owned_paths = ["src/crc.rs"]
+mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
+base = "0179ca9ddd74d49c83d3fe064c2f076a9d2f504a"
 released = false
