@@ -19,8 +19,18 @@ def rows(wall=None, rss=None, drop=None):
                     continue
                 w = 2.0 * (wall.get(cell, 1.0) * jitter if arm == "head" else 1.0)
                 m = 50_000 * (rss.get(cell, 1.0) if arm == "head" else 1.0)
-                out.append(dict(arm=label, corpus=corpus, threads=k, round=r, out=100,
-                                hash="h", wall=w, rss_kb=m))
+                out.append(
+                    dict(
+                        arm=label,
+                        corpus=corpus,
+                        threads=k,
+                        round=r,
+                        out=100,
+                        hash="h",
+                        wall=w,
+                        rss_kb=m,
+                    )
+                )
     return out
 
 

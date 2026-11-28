@@ -27,8 +27,11 @@ import wikidata
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRATION = "docs/journal/2026-11-28-crc32-ring-rescue/registration.md"
 # The master commit the candidate is based on, and the two `src` trees.
-BASE = "0179ca9ddd74d49c83d3fe064c2f076a9d2f504a"
-PINNED_TREES = {"head": "970ee2020bfe99902aa7ee83111f6c21fcbe3627", "base": "8b8180589d333afb68a44df365a1c9a5a880e879"}
+BASE = "31c35662e3261e762d92d4ed5b64e62e23b5c2b8"
+PINNED_TREES = {
+    "head": "a407b10a27085a00fa093b0c4eafa81080a81837",
+    "base": "c50c5a65bee03035eeb543fd375d8406b4dc0328",
+}
 X4_SHA256 = "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e"
 WIKIDATA_COUNTS = (1, 4, 8, 10)
 GUARD_CORPORA = ("text", "records", "random", "runs", "pattern", "onebyte")

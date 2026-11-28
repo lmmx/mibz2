@@ -6,16 +6,18 @@
 
 PR #1179's no-prefetch arm (8-slot AVX2 `vpshufb` ring feeding 8-lane `vpclmulqdq`, zero-table Barrett tail; `src/crc.rs` only, no heap allocation, a 1 KiB stack ring) was exact and B5-sound, and stopped on its frozen whole-decoder gate only on a peak-RSS point bound of 1.005× (delta `2026-11-27-crc32-avx2-ring-barrett-build-2.md`). The RSS calibration census (`docs/notebook/2026-11-28-rss-bound-calibration.md`) shows that bound fails on 27 of 27 identical-binary CI runs at 2–4 threads: it sat below the instrument's own noise. Its CI runner (Zen 4) also cannot see the mechanism, an Intel single-port Port-5 saving (CRC stage 0.52 → 0.29 c/B on wikidata). This attempt therefore measures where the gain lives, against a memory rule calibrated before the data.
 
-The candidate is #1179's `src/crc.rs` (blob `b67187a1`, identical at its evaluated head `af34b183` and its rebased head `8cb68208`) with only `# Safety` sections added to its three `unsafe fn` entry points, on master `0179ca9d`. No other file under `src/`, `Cargo.*`, `examples/ab.rs` or `examples/station_balance.rs` differs; the recipe refuses to run otherwise.
+The candidate is #1179's `src/crc.rs` (blob `b67187a1`, identical at its evaluated head `af34b183` and its rebased head `8cb68208`) with only `# Safety` sections added to its three `unsafe fn` entry points, on master `31c35662`. No other file under `src/`, `Cargo.*`, `examples/ab.rs` or `examples/station_balance.rs` differs; the recipe refuses to run otherwise.
 
 ## 2. What is compared, and how (VOID if any check fails)
 
-- **Head:** this checkout, whose `src` tree must equal the pinned candidate tree. **Base:** master `0179ca9d`, in a private worktree; it must be an ancestor of the head, with equal `Cargo.toml`, `Cargo.lock`, `examples/ab.rs`, `examples/station_balance.rs`.
+- **Head:** this checkout, whose `src` tree must equal the pinned candidate tree. **Base:** master `31c35662`, in a private worktree; it must be an ancestor of the head, with equal `Cargo.toml`, `Cargo.lock`, `examples/ab.rs`, `examples/station_balance.rs`.
 - Rust 1.99.1, release profile as shipped (baseline x86-64, fat LTO), no `RUSTFLAGS`. The head's `ab` must contain `mibz2::crc::avx2_ring8_update` and the base's must not.
 - i9-10900K, unrestricted 10C/20T, no CPU quota. Inputs: `wikidata ×4` (`0b820d14…ce08e`) and `ab gen … 4` `text`, `records`, `random`, `runs`, `pattern`, `onebyte`.
 - Parity: every cell decodes in both arms with SHA-256 equal to libbz2's and the same hash between arms; every timed sample checks size and hash.
 - Timing: `ab run --arms mibz2,mibz2@<head ab>` (bench 3.9.0), 16 paired rounds, held pin on core 0, 100 ms pre-spin, **2 s settle** (a 0.2 s settle lands in HWP's ramp hysteresis: `docs/notebook/2026-11-28-i9-clock-modes-verdict.md`), `--max-busy 1.5`. Cells: `wikidata ×4` at 1, 4, 8 and 10 workers; each guard corpus at 1 and 8.
 - Diagnostic only: 1T `station_balance` (5 rounds × 5 passes, pinned, alternating order) on wikidata, text, records, random, reporting S and W per arm.
+
+*Re-pinned 28 November after the first attempt was VOID (no data; evidence 0390e19f): base moved from `0179ca9d` to `31c35662`, the master the candidate now sits on, so the run measures the change as it would merge. Rule and grid unchanged.*
 
 Estimated time: about 30–40 minutes with cached inputs, plus two builds.
 
