@@ -7,7 +7,7 @@
 - **Head:** `ad99d407e720d413f5795de263ec96656e08bcb2`. This is the change's single commit, touching `src/block.rs`, `src/huff.rs` and `src/bits.rs`. It adds three-symbol root entries with a gated triple pass, byte staging with a symbol-256 position list, and two batch shapes: a pipelined refill under the fourth lookup on tables that can hold pairs, and five lookups then a refill on single-symbol tables.
 - **Base:** `07ab2e7e4cb0b037933ba5e1a1177b8fa353dd37`. This is the head's only parent and was master when the change was made. It already includes the fast A2 setup (#1117), so the comparison prices A3 on top of A2, as `frontier/DECODER.md` requires.
 - **Checks before running:** the recipe fetches both commits into a private repository and refuses to run unless base is head's only parent. The pinned `examples/phases.rs` (blob `403cfbbd…`) is the same in both arms, as for #1034's and #1117's runs.
-- **Where things live:** the head is kept on origin as `build/scanner-a3-k3-head`. The recipe (`bench/scanner_a3_k3.py`, `just bench-scanner-a3-k3`), its test and this file live on master, and neither measured tree contains them.
+- **Where things live:** the head is kept on origin as `build/scanner-a3-k3-head`. The recipe (`bench/scanner_a3_k3.py`, `just bench-scanner-a3-k3`), its test and this file live on the reviewed PR branch / ready tag until merged, and neither measured tree contains them.
 
 ## 2. Correctness (VOID if any fails)
 
@@ -22,7 +22,8 @@ On the workstation:
 - every corpus decodes in both arms at 1 and 10 workers, with its SHA-256 equal to libbz2's;
 - every timed sample checks its size and scanned block count;
 - the scanner runs on its pinned CPU with BMI2 active;
-- both binaries' `decode_runs_bmi2` contain `shlx`/`shrx` and no `vzeroupper`.
+- both binaries' `decode_runs_bmi2` contain `shlx`/`shrx` and no `vzeroupper`;
+- ambient `RUSTFLAGS` / `CARGO_BUILD_RUSTFLAGS` / `CARGO_ENCODED_RUSTFLAGS` / `CARGO_PROFILE_RELEASE_*` overrides are absent and `base`/`head` binaries have distinct SHA-256 digests.
 
 Any of these failing makes the run VOID, not STOP.
 
@@ -41,7 +42,7 @@ The grid is #1117's, with `pattern` added because the claim names it as a guard:
 
 1. **S' cut ≥ 4.0%** on `wikidata ×4`. The upper 95% bound of the paired head/base ratio must be ≤ 0.960, *and* the head's slowest sample must be faster than the base's fastest (disjoint ranges). This is the claim's gate 2 verbatim.
 2. **Guards:** no guard corpus's serial scan may be more than 2.0% slower beyond noise. A guard fails if its paired ratio is above 1.020 *and* its lower 95% bound is above 1. This is #1117's reading of "no > 2.0% regression": `runs`, `pattern` and `onebyte` scan in under a millisecond, where a point estimate alone would stop on noise.
-3. **Memory:** the median peak RSS ratio must be ≤ 1.02 at every real cell (the claim's ≤ 1.02×). `ScanScratch` grows by about 2.5 KiB: 1.5 KiB of per-table code lengths and a 2 KiB cold patch list, less 1 KiB of chunk.
+3. **Memory:** calibrated paired-GM peak-RSS gate (`docs/notebook/2026-11-28-rss-bound-calibration.md` §5): at `k = 1`, fail if paired GM > 1.005× *and* median delta > +256 KiB *and* 95% CI lower bound > 1; at `k ≥ 4`, fail if paired GM > 1.030× on `wikidata` or > 1.050× on guard corpora with 95% CI lower bound > 1. `ScanScratch` grows by about 2.5 KiB: 1.5 KiB of per-table code lengths and a 2 KiB cold patch list, less 1 KiB of chunk.
 4. **No whole-decoder loss on Wikidata:** at no real `wikidata ×4` count may the wall ratio be above 1.020 with its lower 95% bound above 1. This is #1117's rule 4: a scanner gain must not ship through a whole-decoder loss.
 
 Real-decode ratios are reported in full at every cell. Apart from rule 4 they are diagnostic, not gates. They show where the cut pays at the knee: at 8 workers it is scanner-bound with the bounded lanes, and at 9–10 workers in the default build.

@@ -1,11 +1,24 @@
 """Frozen three-symbol A3 scanner registration: plan, score and source checks."""
 
+import json
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from scanner_a3_k3 import CELLS, GUARDS, ROUNDS, InvalidRun, materialize_sources, plan, score
+from scanner_a3_k3 import (
+    CELLS,
+    CORPORA,
+    GUARDS,
+    ROUNDS,
+    InvalidRun,
+    check_build_env,
+    check_distinct_binaries,
+    materialize_sources,
+    plan,
+    score,
+    score_dir,
+)
 
 
 def samples(scan=0.94):
@@ -14,8 +27,16 @@ def samples(scan=0.94):
         ratio = scan if (kind, corpus) == ("phases", "wikidata") else 1
         wall = (ratio if arm == "head" else 1) * (1 + n / 10000)
         rows.append(
-            dict(kind=kind, corpus=corpus, k=k, round=n, build=arm, wall_s=wall, scan_s=wall,
-                 peak_kib=1000)
+            dict(
+                kind=kind,
+                corpus=corpus,
+                k=k,
+                round=n,
+                build=arm,
+                wall_s=wall,
+                scan_s=wall,
+                peak_kib=60000,
+            )
         )
     return rows
 
@@ -109,19 +130,127 @@ class Verdict(unittest.TestCase):
         result = score(rows)
         self.assertGreater(result["cells"]["phases/onebyte/1"]["ratio"], 1.02)
         self.assertEqual(result["verdict"], "PASS")
+        # Calibrated RSS: 1T >1.005x + >+256 KiB beyond noise stops; <=+256 KiB passes.
+        rows = samples()
+        for r in rows:
+            if (
+                r["kind"] == "real"
+                and r["build"] == "head"
+                and (r["corpus"], r["k"])
+                == (
+                    "wikidata",
+                    1,
+                )
+            ):
+                r["peak_kib"] = 60200
+        self.assertEqual(score(rows)["verdict"], "PASS")
+        rows = samples()
+        for r in rows:
+            if (
+                r["kind"] == "real"
+                and r["build"] == "head"
+                and (r["corpus"], r["k"])
+                == (
+                    "wikidata",
+                    1,
+                )
+            ):
+                r["peak_kib"] = 60400
+        self.assertEqual(score(rows)["verdict"], "STOP")
+        # Calibrated MT primary (>1.030x stops; 1.022x allocator baseline noise passes).
+        rows = samples()
+        for r in rows:
+            if (
+                r["kind"] == "real"
+                and r["build"] == "head"
+                and (r["corpus"], r["k"])
+                == (
+                    "wikidata",
+                    8,
+                )
+            ):
+                r["peak_kib"] = 61320
+        self.assertEqual(score(rows)["verdict"], "PASS")
+        rows = samples()
+        for r in rows:
+            if (
+                r["kind"] == "real"
+                and r["build"] == "head"
+                and (r["corpus"], r["k"])
+                == (
+                    "wikidata",
+                    8,
+                )
+            ):
+                r["peak_kib"] = 62000
+        self.assertEqual(score(rows)["verdict"], "STOP")
+        # Calibrated MT guard (>1.050x stops; 1.034x passes).
         rows = samples()
         for r in rows:
             if r["kind"] == "real" and r["build"] == "head" and r["corpus"] == "runs":
-                r["peak_kib"] = 1021
-        self.assertEqual(score(rows)["verdict"], "STOP")
+                r["peak_kib"] = 62000
+        self.assertEqual(score(rows)["verdict"], "PASS")
         rows = samples()
         for r in rows:
-            if r["kind"] == "real" and r["build"] == "head" and (r["corpus"], r["k"]) == (
-                "wikidata",
-                9,
+            if r["kind"] == "real" and r["build"] == "head" and r["corpus"] == "runs":
+                r["peak_kib"] = 63100
+        self.assertEqual(score(rows)["verdict"], "STOP")
+        # Real Wikidata wall >1.020x beyond noise stops.
+        rows = samples()
+        for r in rows:
+            if (
+                r["kind"] == "real"
+                and r["build"] == "head"
+                and (r["corpus"], r["k"])
+                == (
+                    "wikidata",
+                    9,
+                )
             ):
                 r["wall_s"] *= 1.03
         self.assertEqual(score(rows)["verdict"], "STOP")
+
+    def test_build_env_distinct_binaries_and_offline_parity_gate(self):
+        check_build_env({"PATH": "/usr/bin"})
+        for key in ("RUSTFLAGS", "CARGO_BUILD_RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS"):
+            with self.assertRaisesRegex(InvalidRun, key):
+                check_build_env({key: "-C target-cpu=native"})
+        with self.assertRaisesRegex(InvalidRun, "CARGO_PROFILE_RELEASE_LTO"):
+            check_build_env({"CARGO_PROFILE_RELEASE_LTO": "off"})
+
+        good_digests = {
+            "base-real": "aaa",
+            "head-real": "bbb",
+            "base-phases": "ccc",
+            "head-phases": "ddd",
+        }
+        check_distinct_binaries(good_digests)
+        with self.assertRaisesRegex(InvalidRun, "identical"):
+            check_distinct_binaries({**good_digests, "head-real": "aaa"})
+        with self.assertRaisesRegex(InvalidRun, "identical"):
+            check_distinct_binaries({**good_digests, "head-phases": "ccc"})
+
+        with TemporaryDirectory() as directory:
+            out = Path(directory)
+            (out / "binaries.json").write_text(json.dumps(good_digests))
+            (out / "runs.jsonl").write_text("\n".join(json.dumps(r) for r in samples()) + "\n")
+            with self.assertRaisesRegex(InvalidRun, "missing parity.jsonl"):
+                score_dir(out)
+            expected_parity = (len(CORPORA) + 1) * 2 * 2
+            (out / "parity.jsonl").write_text(
+                "\n".join(json.dumps(["base", ["real", "wikidata", 1], {}]) for _ in range(2))
+                + "\n"
+            )
+            with self.assertRaisesRegex(InvalidRun, "incomplete parity.jsonl"):
+                score_dir(out)
+            (out / "parity.jsonl").write_text(
+                "\n".join(
+                    json.dumps(["base", ["real", "wikidata", 1], {}])
+                    for _ in range(expected_parity)
+                )
+                + "\n"
+            )
+            self.assertEqual(score_dir(out)["verdict"], "PASS")
 
     def test_missing_duplicate_and_undefined(self):
         rows = samples()

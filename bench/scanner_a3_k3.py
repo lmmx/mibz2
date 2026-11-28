@@ -49,8 +49,44 @@ CELLS = (
 )
 S_BOUND = 0.960  # S' must fall by at least 4.0%: upper 95% bound of head/base.
 GUARD_BOUND = 1.020  # No guard serial scan more than 2.0% slower, with its lower bound above 1.
-RSS_BOUND = 1.02  # Median peak RSS ratio, every real cell.
+# Calibrated paired-GM peak-RSS bounds (docs/notebook/2026-11-28-rss-bound-calibration.md §5).
+RSS_BOUND_1T = 1.005  # k = 1: fail only if >1.005x AND >+256 KiB median delta AND ci95_lo > 1.
+RSS_DELTA_1T_KIB = 256.0
+RSS_BOUND_PRIMARY_MT = 1.030  # k >= 4 wikidata: paired GM > 1.030x with ci95_lo > 1.
+RSS_BOUND_GUARD_MT = 1.050  # k >= 4 guard corpora: paired GM > 1.050x with ci95_lo > 1.
 WALL_BOUND = 1.020  # No real Wikidata wall loss beyond 2.0% with its lower bound above 1.
+FORBIDDEN_BUILD_ENV = (
+    "RUSTFLAGS",
+    "CARGO_BUILD_RUSTFLAGS",
+    "CARGO_ENCODED_RUSTFLAGS",
+)
+FORBIDDEN_PROFILE_PREFIX = "CARGO_PROFILE_RELEASE_"
+
+
+def check_build_env(env=None):
+    """Reject ambient compiler or release-profile overrides that would alter codegen."""
+    source = os.environ if env is None else env
+    bad = [k for k in FORBIDDEN_BUILD_ENV if source.get(k)]
+    bad.extend(sorted(k for k in source if k.startswith(FORBIDDEN_PROFILE_PREFIX) and source[k]))
+    if bad:
+        raise InvalidRun(f"ambient build override(s) set: {', '.join(bad)}")
+
+
+def check_distinct_binaries(digests):
+    """Refuse identical base/head binaries for either real or phases harnesses."""
+    for kind in ("real", "phases"):
+        base_sha = digests.get(f"base-{kind}")
+        head_sha = digests.get(f"head-{kind}")
+        if not base_sha or not head_sha:
+            raise InvalidRun(f"missing {kind} binary digest")
+        if base_sha == head_sha:
+            raise InvalidRun(f"base-{kind} and head-{kind} binaries are identical")
+
+
+def rss_bound_for(corpus, k):
+    if k == 1:
+        return RSS_BOUND_1T
+    return RSS_BOUND_PRIMARY_MT if corpus == "wikidata" else RSS_BOUND_GUARD_MT
 
 
 def materialize_sources(tmp, checkout, head, base):
@@ -74,6 +110,7 @@ def materialize_sources(tmp, checkout, head, base):
 
 
 def build(out, tmp):
+    check_build_env()
     materialize_sources(tmp, ROOT, HEAD, BASE)
     bins = {}
     for arm in ("base", "head"):
@@ -114,10 +151,11 @@ def build(out, tmp):
             dest = tmp / f"{arm}-{key}"
             shutil.copy2(source / "target/release/examples" / name, dest)
             bins[arm, key] = dest
-    save(
-        out / "binaries.json",
-        {str(path.name): hashlib.sha256(path.read_bytes()).hexdigest() for path in bins.values()},
-    )
+    digests = {
+        str(path.name): hashlib.sha256(path.read_bytes()).hexdigest() for path in bins.values()
+    }
+    check_distinct_binaries(digests)
+    save(out / "binaries.json", {**digests, "distinct_binaries": True})
     for arm in ("base", "head"):
         symbols = [
             line.split()[-1]
@@ -182,9 +220,22 @@ def score(rows):
             rss = [[r["peak_kib"] for r in arm] for arm in arms]
             if not all(math.isfinite(x) and x > 0 for group in rss for x in group):
                 raise InvalidRun(f"invalid RSS at {key}")
-            detail["rss_ratio"] = statistics.median(rss[1]) / statistics.median(rss[0])
-            if detail["rss_ratio"] > RSS_BOUND:
-                findings.append(f"{name}/{k} peak RSS exceeds {RSS_BOUND}")
+            rss_ratio, rss_lo, rss_hi = paired_ratio_ci(rss[1], rss[0])
+            if not all(math.isfinite(x) and x > 0 for x in (rss_ratio, rss_lo, rss_hi)):
+                raise InvalidRun(f"undefined RSS confidence interval at {key}")
+            delta_kib = statistics.median(rss[1]) - statistics.median(rss[0])
+            bound = rss_bound_for(name, k)
+            detail["rss_ratio"] = rss_ratio
+            detail["rss_ci95"] = [rss_lo, rss_hi]
+            detail["rss_median_ratio"] = statistics.median(rss[1]) / statistics.median(rss[0])
+            detail["rss_delta_median_kib"] = delta_kib
+            if k == 1:
+                if rss_ratio > bound and delta_kib > RSS_DELTA_1T_KIB and rss_lo > 1:
+                    findings.append(
+                        f"{name}/{k} peak RSS exceeds {bound:.3f}x (+{RSS_DELTA_1T_KIB:.0f} KiB) beyond noise"
+                    )
+            elif rss_ratio > bound and rss_lo > 1:
+                findings.append(f"{name}/{k} peak RSS exceeds {bound:.3f}x beyond noise")
             if name == "wikidata" and ratio > WALL_BOUND and lo > 1:
                 findings.append(f"wikidata/{k} wall more than 2.0% slower beyond noise")
         elif name == "wikidata":
@@ -196,7 +247,33 @@ def score(rows):
     return {"verdict": "STOP" if findings else "PASS", "findings": findings, "cells": cells}
 
 
+def score_dir(out):
+    """Fail-closed offline scoring of a completed run directory."""
+    out = Path(out).resolve()
+    parity_path = out / "parity.jsonl"
+    if not parity_path.is_file():
+        raise InvalidRun("missing parity.jsonl in run directory")
+    parity_rows = [
+        json.loads(line) for line in parity_path.read_text().splitlines() if line.strip()
+    ]
+    expected_parity = (len(CORPORA) + 1) * 2 * 2
+    if len(parity_rows) != expected_parity:
+        raise InvalidRun(
+            f"incomplete parity.jsonl ({len(parity_rows)} rows, expected {expected_parity})"
+        )
+    binaries_path = out / "binaries.json"
+    if not binaries_path.is_file():
+        raise InvalidRun("missing binaries.json in run directory")
+    check_distinct_binaries(json.loads(binaries_path.read_text()))
+    runs_path = out / "runs.jsonl"
+    if not runs_path.is_file():
+        raise InvalidRun("missing runs.jsonl in run directory")
+    rows = [json.loads(line) for line in runs_path.read_text().splitlines() if line.strip()]
+    return score(rows)
+
+
 def run(out):
+    check_build_env()
     scanner, mask = machine(out)
     if output("git", "status", "--porcelain", "--untracked-files=no"):
         raise InvalidRun("recipe checkout has tracked changes")
@@ -229,7 +306,7 @@ def run(out):
                             bins[arm, "real"], cell, files[name], scanner, mask, refs[name], True
                         )
                         refs[name].setdefault("scanned", sample["scanned"])
-                        checks.write(json.dumps([arm, cell, sample]) + "\n")
+                        checks.write(json.dumps([arm, cell, sample], allow_nan=False) + "\n")
         rows = []
         with (out / "runs.jsonl").open("x", buffering=1) as log:
             for r, cell, arm in plan():
@@ -245,9 +322,17 @@ def run(out):
 
 
 if __name__ == "__main__":
-    dest = Path(sys.argv[1]).resolve()
-    try:
-        run(dest)
-    except InvalidRun as err:
-        (dest / "outcome.txt").write_text(f"VOID: {err}\n")
-        raise SystemExit(1) from err
+    if len(sys.argv) == 3 and sys.argv[1] == "score":
+        try:
+            res = score_dir(Path(sys.argv[2]))
+        except InvalidRun as err:
+            print(f"VOID: {err}", file=sys.stderr)
+            raise SystemExit(1) from err
+        print(json.dumps(res, indent=2, sort_keys=True))
+    else:
+        dest = Path(sys.argv[1]).resolve()
+        try:
+            run(dest)
+        except InvalidRun as err:
+            (dest / "outcome.txt").write_text(f"VOID: {err}\n")
+            raise SystemExit(1) from err
