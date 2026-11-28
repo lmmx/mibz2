@@ -4,7 +4,7 @@ kind = "probe"
 zone = "smooth"
 needs = ["shell", "i9"]
 priority = 3
-status = "open"
+status = "blocked"
 owned_paths = []
 needs_louis = ""
 question = """
@@ -25,4 +25,7 @@ premises = [
 ]
 links = [
   "frontier/claims/forward-emission-adopt.toml",
+  "docs/journal/2026-11-28-scanner-contention-residual/registration.md",
+  "https://github.com/lmmx/mibz2/pull/1304",
+  "https://github.com/lmmx/mibz2/pull/1308",
 ]
