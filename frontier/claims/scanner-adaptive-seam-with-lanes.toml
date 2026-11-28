@@ -1,0 +1,31 @@
+id = "scanner-adaptive-seam-with-lanes"
+title = "Re-test the adaptive seam window (PR #1144 code) on the i9 once the forward lanes are the default"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/stream.rs", "src/parallel.rs", "src/trace.rs"]
+mechanisms = ["scanner-adaptive-lookahead", "scanner-oneshot-seam"]
+needs_louis = ""
+question = """
+PR #1144's adaptive lookahead and one-shot seam window cut traced scanner maintenance by 96% at 8 workers and peak RSS by 7-9% at every count on the i9, but its wall gain showed only at 9 threads (0.9658, the one count where 9 workers make the scanner bind). At the judged 10 and 12 threads the default runs 8 workers, which bind and mask a scanner-side cut. The forward-lane walk's i9 trace (evidence e98948b6) makes Wikidata scanner-bound at 8 workers. With the lanes as the production default (forward-emission-adopt), does the same seam code, rebased onto that default, pass a wall adoption at the 8-worker judged counts, paired against its merge base?
+"""
+why = """
+The seam's local effect is large and measured on the target machine; it lost only to station coupling (DECODER.md's tie). A worker-side cut moves the bottleneck to the scanner, where this cut pays. It also keeps an unconditional 4-6 MiB peak-RSS saving.
+"""
+stop_test = """
+Admit only once forward-emission-adopt has merged the lanes as the default. The taker freezes a new decision rule before any new data (RULES C1a, C6 registration with one review by a different agent); do not reuse run d6bc8ca2 as evidence for it. The harness bench-scanner-adaptive-seam on PR #1144's branch can be reused against the new base.
+"""
+done_when = """
+Merged with an i9 paired adoption verdict and green CI, or a scoped NOT ADOPTED on the composed default.
+"""
+premises = [
+  "frontier/deltas/2026-11-28-scanner-adaptive-seam-window-verdict.md",
+  "docs/notebook/2026-11-27-synthesis-eighteenth-pass.md",
+  "frontier/DECODER.md",
+]
+links = [
+  "frontier/claims/scanner-adaptive-seam-window.toml",
+  "frontier/claims/forward-emission-adopt.toml",
+]
