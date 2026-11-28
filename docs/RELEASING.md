@@ -47,6 +47,51 @@ Docs, journal, bench-harness or blog changes alone are not.
 - **If work becomes releasable while they are indisposed,** release it when they are next
   available, and say so.
 
+## 2a. Release completion pressure (maintainer direction, 28 November 2026)
+
+A release is not a single claim to announce and then leave blocked. Accepted, unreleased
+default-path software creates persistent P1 **completion pressure** until it is published and
+the required reporting is dispositioned. A release claim existing, being held, parked, or
+marked blocked does not discharge that pressure. At every frontier checkpoint, expose the
+current release, accepted untagged work, the exact next unmet gate, its existing dependency
+claim/PR, and the first eligible action. If unavailable or ambiguous, show that explicitly;
+do not print "nothing" as though the release were complete.
+
+- **Priority follows the dependency, not the label.** Required substantive review, recipe
+  repair, worker-count recalibration, queueing, evidence readback, regression correction,
+  final CI, publication and recording inherit effective P1 when they are on the release's
+  shortest feasible completion path. Order these actions ahead of discretionary experiments,
+  even when the workstation already has other runnable work. A prepared recipe is not a queued
+  run; a returned bundle is not a verdict. Use existing claims and exact-head review/lease
+  transfers; do not wait for the original author or for the owner to direct the work.
+- **Make blocked work actionable.** Record the actual blocker and linked successor on the
+  release claim. A release blocked from publication can still have eligible preparation work;
+  leave that work open or admit the smallest nonconflicting dependency. When waiting on a
+  dependency or hardware, persist exact pins and the next action, and release/yield ownership
+  under the existing rules where appropriate. On evidence or dependency completion, recheck
+  and reopen/resume the release automatically at ordinary frontier checkpoints. A blocked
+  claim must not be an invisible terminal state.
+- **Use a stable release candidate.** Take the accepted default-path batch already on master
+  as the candidate. Do not hold it for optional future optimisations, including a promising
+  experimental feature not yet adopted. During final recalibration and preflight, participants
+  inspect the shared release state before merging changes that invalidate the pinned
+  performance inputs; defer those unrelated merges on their branches until publication.
+  Continue research, preparation, reviews, documentation and non-invalidating work in
+  parallel. A necessary repair or retune may change the candidate; explicitly supersede the
+  pin, retain old evidence, and run only the required new checks. No perpetual moving target,
+  global code freeze, or extra approval authority.
+- **Finish the critical path.** Give the next eligible release-critical workstation recipe
+  priority over not-yet-started discretionary validation using the existing queue protocol.
+  Never interrupt a running job, bypass another repository's runner lock, or spend beyond
+  standing authority. Keep useful independent work going when release dependencies genuinely
+  wait. After a valid §3 pass, publish without seeking routine permission, subject to §2.
+  Mechanical preflight tooling is desirable; while it is pending, use the reviewed equivalent
+  existing harness and the full §3.5 gate rather than wait for tooling alone or publish untested.
+
+This is local, derived pressure from shared evidence, not a coordinator, assignment service,
+new budget, fixed worker quota, or relaxation of any frozen adoption or publication gate.
+A release never requires the maintainer to keep reminding the swarm to finish it.
+
 ## 3. Before
 
 1. **Master is green:** Test, Fingerprint and the site.
