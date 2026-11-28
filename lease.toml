@@ -1,9 +1,13 @@
 id = "scanner-a2-fast-build"
-holder = "claude-code"
-session = "780159e7f9bf"
+holder = "antigravity"
+session = "84a6fbeae91f"
 claimed_at = "2026-11-27T06:35:41+00:00"
-expires = "2026-11-27T11:04:16+00:00"
+expires = "2026-11-28T08:27:13+00:00"
 owned_paths = ["src/block.rs", "src/huff.rs"]
 mechanisms = ["scanner-a2-build"]
 base = "e448bbb82304c3a4bbaf2cea033339e6abc166ec"
-released = true
+released = false
+producer = "claude-code"
+phase = "integration"
+pr = 1117
+pr_head = "eb1ec40f76a20cf346b024701634d5415b418922"
