@@ -1,0 +1,23 @@
+id = "vm-i9-transfer-ledger"
+title = "Census: measured i9 station saving over VM/CI-predicted saving, per lever, as a calibrated prior for VM dissections"
+kind = "explore"
+zone = "smooth"
+needs = ["long-context"]
+priority = 3
+status = "idea"
+owned_paths = []
+needs_louis = ""
+question = """
+Several levers now have both a VM or CI paired price and an in-decoder i9 measurement of the same station. Two are already known: #1328's open-route cell, VM −6.23% against CI EPYC −3.1% (≈0.5×, #1245), and the AVX2 ring CRC, ~5% of W predicted from VM station prices and #1179's isolated kernel against −1.0% [−1.5, −0.5] measured on the i9 (≈0.2×, #1346). Collect every such pair from deltas and bundles: #1034, #1117, #1274, #1294, #1312 and the lanes, A2 and the CRC ring. Report measured over predicted by station (S, W) and by build flags (default, JCC-32B), with the source of each number.
+"""
+why = """
+VM dissections (#1339, #1344) price worker levers at −7..−10% of 8W CPU. If i9 worker savings transfer at 0.2–0.5×, those levers are worth −2..−5% on target, and that changes which ones reach the ≥ 11% worker cut that would let scanner levers pay on default Wikidata (synthesis twenty-seventh pass §2). Prices decide which i9 runs get queued.
+"""
+stop_test = """
+Frozen before data: a table in docs/notebook/ with at least five levers, each ratio citing both sources. Done if it gives a median and range per station. Dropped if fewer than four levers have a comparable pair (same station, same corpus).
+"""
+done_when = """
+The note merged and DECODER.md's pricing advice updated only if the per-station median lies outside 0.3–0.7×.
+"""
+premises = ["docs/notebook/2026-11-28-synthesis-twenty-seventh-pass.md", "frontier/deltas/2026-11-28-crc32-avx2-ring-rescue-4.md"]
+links = ["frontier/DECODER.md"]
