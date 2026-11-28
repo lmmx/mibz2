@@ -471,6 +471,7 @@ impl Kernel {
         let use_redesign = INDUCE && !self.wide(ns);
         #[cfg(not(feature = "a6b-endpoint-redesign"))]
         let use_redesign = false;
+        let use_overlay = INDUCE && !use_redesign && self.use_overlay_aos(ns);
         let need = if INDUCE {
             self.arena_words(ns, m as usize)
         } else {
@@ -482,7 +483,7 @@ impl Kernel {
             self.edges.resize(need, 0);
         }
         self.tiles.clear();
-        if !use_redesign {
+        if !use_redesign && !use_overlay {
             let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
             let image_order = &mut rest_edges[..ns];
             let (mut last_x, mut retained_x) = (0, 0u32);
@@ -548,7 +549,11 @@ impl Kernel {
                 self.induced(ns, n, &thin, &mut stats)
             }
             #[cfg(not(feature = "a6b-endpoint-redesign"))]
-            self.induced(ns, n, &thin, &mut stats)
+            if use_overlay {
+                self.induced_overlay_aos(ns, n, m, &first, &mut write, &thin, &mut stats)
+            } else {
+                self.induced(ns, n, &thin, &mut stats)
+            }
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
