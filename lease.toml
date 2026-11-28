@@ -6,4 +6,4 @@ expires = "2026-11-28T07:24:11+00:00"
 owned_paths = [".github/workflows/bench.yml"]
 mechanisms = ["ci-bench-coverage"]
 base = "dd244f5183f65879ecbd0faac5c4e6725364a48f"
-released = false
+released = true
