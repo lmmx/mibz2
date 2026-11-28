@@ -66,19 +66,19 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=f2bc2e6a10d9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=8fecbabb51d7">
+      <link rel="stylesheet" href="../../assets/stylesheets/illuminated.css?v=f2bc2e6a10d9">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -7783,7 +7783,19 @@ explains in its front matter (<code>releases: ["0.5.8"]</code>), and its header 
 figures behind each summary are in the CHANGELOG.</p>
 <h3 id="release-0-5-18">0.5.18<a class="headerlink" href="#release-0-5-18" title="Permanent link">&para;</a></h3>
 <p class="rn-meta">28 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0518---2026-11-28">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.17...v0.5.18">its diff</a></p>
-<p><strong>Changes:</strong> direct Rust abi3-py310 line and streaming delivery (<a href="https://github.com/lmmx/mibz2/pull/1335">#1335</a>); release merged integration holds at moved descendant PR heads (<a href="https://github.com/lmmx/mibz2/pull/1303">#1303</a>); release a terminal claim's parked hold after its PR closed unmerged at a moved head (<a href="https://github.com/lmmx/mibz2/pull/1293">#1293</a>); accept unlimited dict shape from ab env --facts in forward_adopt (<a href="https://github.com/lmmx/mibz2/pull/1279">#1279</a>); let take-review resume released or expired PR claims (<a href="https://github.com/lmmx/mibz2/pull/1215">#1215</a>); bound forward-anchor-lanes Arena to 80 KiB via in-out 4 KiB chunk permutation (<a href="https://github.com/lmmx/mibz2/pull/1312">#1312</a>); front_avx2's 64-symbol vptest Pass 1, u32 counts and hoisted XMM steps (<a href="https://github.com/lmmx/mibz2/pull/1274">#1274</a>); safe Cell 4x wire_xor and overlapping-SIMD register-cursor wire (<a href="https://github.com/lmmx/mibz2/pull/1294">#1294</a>); direct selector runs, multi-length code-length LUT and single-write table build (<a href="https://github.com/lmmx/mibz2/pull/1117">#1117</a>); skip within_cap pre-scan on [0.10, 0.15) lazy-admitted blocks, routes unchanged (<a href="https://github.com/lmmx/mibz2/pull/1246">#1246</a>); clear native push_slow vzeroupper and record mtf-fold-batch-measure STOP (<a href="https://github.com/lmmx/mibz2/pull/1234">#1234</a>).</p>
+<ul>
+<li>Direct Rust <code>abi3-py310</code> Python line and streaming delivery (#1335). <code>Reader</code> in <code>src/python.rs</code> tracks <code>avail_rem</code> to avoid per-line GIL detach on lent <code>BzReader::fill_buf()</code> slices, uses safe 8-byte SWAR newline scanning, and exposes <code>readline</code>, block-batched <code>readlines</code>, <code>read_full</code>, <code>peek</code>, <code>__iter__</code>, and…</li>
+<li>Skip redundant <code>within_cap</code> pre-scan on <code>[0.10, 0.15)</code> blocks (#1246). <code>OpenCellsOf::invert_runs</code> skips the separate scalar pre-scan on <code>lazy_counts_admit</code> blocks while <code>Kernel::try_run</code> enforces the exact same <code>Cap::dense(n)</code> inside Pass 1 with <code>Segmented</code> fallback (<code>0</code> new <code>unsafe</code>, 489/489 blocks across all 7 CI…</li>
+<li>Faster block-header scanner (#1117). Collapses consecutive identical selector runs into <code>(table, remaining_symbols)</code> pairs, decodes multiple canonical code-length deltas per LUT lookup, and populates the decode lookup table in a single write pass (<code>0</code> new <code>unsafe</code>; i9-10900K <code>phases/wikidata/1</code> −4.52% wall, 0.9548…</li>
+<li>Safe <code>Cell</code> 4× <code>wire_xor</code> and overlapping-SIMD register-cursor wire (#1294). Replaces bounds-checked scalar wiring in <code>src/open</code> with safe <code>Cell</code> 4× <code>wire_xor</code> and overlapping-SIMD register-cursor forward wiring (<code>0</code> new <code>unsafe</code>).</li>
+<li>AVX2 runs front-end (#1274). 64-symbol <code>u64</code> <code>vptest</code> Pass 1 bitmap builder, <code>[u32; 256]</code> stack counts (compiling out dead <code>Runs.per</code>), and hoisted 128-bit <code>(f0, f1)</code> XMM step table (i9 C6 <code>bench-runs-front-i9</code> PASS: Wikidata 6T 0.989 [0.985, 0.993], zero primary loss, flat peak RSS).</li>
+<li>Clean native <code>QueuesOf::push_slow</code> codegen (#1234).</li>
+<li>The paired run on CI compared <code>v0.5.17</code> at <code>01acd74d</code> with candidate <code>7be50513</code> (Benchmark run 46131501937, AMD EPYC 9V45 96-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).</li>
+<li>Pre-release physical i9 regression gate: VALID PASS.</li>
+<li>Worker counts: recalibrated on <code>7be50513</code>; shipped trims unchanged.</li>
+<li>Features reviewed: none removed in the release; <code>[features]</code> holds the same 20 research features as 0.5.17 (#1268 updated <code>mtf-fold</code> and <code>forward-anchor-lanes</code> retention notes).</li>
+</ul>
+<p><strong>Changes:</strong> direct Rust abi3-py310 line and streaming delivery (<a href="https://github.com/lmmx/mibz2/pull/1335">#1335</a>); release merged integration holds at moved descendant PR heads (<a href="https://github.com/lmmx/mibz2/pull/1303">#1303</a>); release a terminal claim's parked hold after its PR closed unmerged at a moved head (<a href="https://github.com/lmmx/mibz2/pull/1293">#1293</a>); accept unlimited dict shape from ab env --facts in forward_adopt (<a href="https://github.com/lmmx/mibz2/pull/1279">#1279</a>); let take-review resume released or expired PR claims (<a href="https://github.com/lmmx/mibz2/pull/1215">#1215</a>); bound forward-anchor-lanes Arena to 80 KiB via in-out 4 KiB chunk permutation (<a href="https://github.com/lmmx/mibz2/pull/1312">#1312</a>); front_avx2's 64-symbol vptest Pass 1, u32 counts and hoisted XMM steps (<a href="https://github.com/lmmx/mibz2/pull/1274">#1274</a>); safe Cell 4x wire_xor and overlapping-SIMD register-cursor wire (<a href="https://github.com/lmmx/mibz2/pull/1294">#1294</a>); direct selector runs, multi-length code-length LUT and single-write table build (<a href="https://github.com/lmmx/mibz2/pull/1117">#1117</a>); skip within_cap pre-scan on [0.10, 0.15) lazy-admitted blocks, routes unchanged (<a href="https://github.com/lmmx/mibz2/pull/1246">#1246</a>); clear native push_slow vzeroupper and record mtf-fold-batch-measure STOP (<a href="https://github.com/lmmx/mibz2/pull/1234">#1234</a>); the multi-reference scorer recalibration recipes invoke; ab run --unpinned names its CPUs (<a href="https://github.com/lmmx/mibz2/pull/1353">#1353</a>); bring the mtf-fold and forward-anchor-lanes notes up to their verdicts (<a href="https://github.com/lmmx/mibz2/pull/1268">#1268</a>).</p>
 <h3 id="release-0-5-17">0.5.17<a class="headerlink" href="#release-0-5-17" title="Permanent link">&para;</a></h3>
 <p class="rn-meta">27 November 2026 · <a href="https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0517---2026-11-27">the CHANGELOG</a> · <a href="https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17">its diff</a></p>
 <ul>
@@ -8254,21 +8266,21 @@ figures behind each summary are in the CHANGELOG.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/bench.js?v=f2bc2e6a10d9"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=f2bc2e6a10d9"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/blog.js?v=f2bc2e6a10d9"></script>
       
-        <script src="../../assets/javascripts/announce.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/announce.js?v=f2bc2e6a10d9"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/frontier.js?v=f2bc2e6a10d9"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/observatory.js?v=f2bc2e6a10d9"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8fecbabb51d7"></script>
+        <script src="../../assets/javascripts/katex.js?v=f2bc2e6a10d9"></script>
       
     
   </body>
