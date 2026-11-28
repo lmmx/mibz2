@@ -14,6 +14,7 @@ import ".just/text-knee.just"
 import ".just/clock-modes.just"
 import ".just/forward-adopt.just"
 import ".just/scanner-contention.just"
+import ".just/crc32-ring-rescue.just"
 
 default: clippy
 

@@ -5,7 +5,7 @@ zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
 status = "open"
-owned_paths = ["src/crc.rs"]
+owned_paths = ["src/crc.rs", "bench/crc32_ring_rescue.py", "bench/test_crc32_ring_rescue.py", ".just/crc32-ring-rescue.just"]
 mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
 needs_louis = ""
 question = """
@@ -28,6 +28,7 @@ premises = [
   "docs/notebook/2026-11-28-rss-bound-calibration.md",
 ]
 links = [
+  "docs/journal/2026-11-28-crc32-ring-rescue/registration.md",
   "frontier/claims/crc32-avx2-ring-barrett-build.toml",
   "frontier/claims/rss-bound-calibration.toml",
 ]
