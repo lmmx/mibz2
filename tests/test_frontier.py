@@ -1481,6 +1481,13 @@ class TestFrontierStress(unittest.TestCase):
     def test_dropped_claim_releases_rebased_closed_unmerged_parked_hold(self):
         """A parked lease whose PR was rebased after handoff still releases once the claim is
         dropped on master and the PR is closed unmerged; a live (undropped) claim does not."""
+        self._rebased_parked_hold_releases_when("dropped")
+
+    def test_blocked_claim_releases_rebased_closed_unmerged_parked_hold(self):
+        """The second stranding mode: the claim is terminal as `blocked`, not dropped."""
+        self._rebased_parked_hold_releases_when("blocked")
+
+    def _rebased_parked_hold_releases_when(self, status):
         author, _, head, pr = self._submitted_review()
         reviewer = _load_frontier_module(self.sb.clone("reviewer"))
         with mock.patch.object(reviewer, "read_pr", return_value=pr):
@@ -1498,8 +1505,8 @@ class TestFrontierStress(unittest.TestCase):
             fresh.reconcile_integrations(fresh.holds())
         self.assertFalse(fresh.holds()["c1"][1].get("released"))
         card = author / "frontier/claims/c1.toml"
-        card.write_text(card.read_text().replace('status = "review"', 'status = "dropped"'))
-        _git(author, "commit", "-am", "drop c1")
+        card.write_text(card.read_text().replace('status = "review"', f'status = "{status}"'))
+        _git(author, "commit", "-am", f"mark c1 {status}")
         _git(author, "push", "origin", "HEAD:master")
         _git(fresh.ROOT.parent, "fetch", "-q", "origin", "+refs/heads/master:refs/remotes/origin/master")
         with mock.patch.object(fresh, "read_pr", return_value=closed):
