@@ -4,12 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1
-<<<<<<< Updated upstream
-status = "open"
-=======
 status = "done"
 pr = 1303
->>>>>>> Stashed changes
 owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
 needs_louis = ""
 question = """
