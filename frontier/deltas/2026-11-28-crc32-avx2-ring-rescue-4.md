@@ -14,6 +14,6 @@ evidence: evidence 40bb1509 crc32-ring-rescue/run-20261128T082026Z.tar.gz (sha25
 - `frontier/dead-ends.tsv`: a row scoped to this kernel under this rule.
 - `frontier/surface.tsv`: row R annotated with the result.
 - The claim is marked dropped.
-- #1295 is closed unmerged, the queue entry is removed (separate queue-only PR) and the hold is released.
+- #1295 is closed unmerged, the queue entry is removed in this PR (#1346), and the hold is released.
 **What's next:** with the measured 1% worker saving, a standalone CRC kernel swap has no credible lever for a whole-decoder gain at the bars used here, on either Intel or AMD. Do not re-run this arm. The CRC cost remains reachable only inside a fusion that removes a pass (forward-rle1-crc, segmented-fused-postwalk), where the zero-table combine helpers from #1179 may still pay. That is evidence for those claims, not a new one.
 **Caveats:** one 16-round run. The prediction error comes from pricing W from a VM and an isolated kernel; the station figure here is the first in-decoder i9 measurement of the saving.
