@@ -1,0 +1,24 @@
+id = "correspondence-kinds"
+title = "Say whether each frontier correspondence is an identity, a model or an analogy"
+kind = "write"
+zone = "smooth"
+needs = ["shell"]
+priority = 4
+status = "idea"
+owned_paths = []
+mechanisms = ["frontier-correspondence-kinds"]
+needs_louis = ""
+question = """
+frontier/README.md says the frontier "has the same structure" as the decoder's hybrid system, "so the team runs as one rather than having one explained to it", and tabulates the correspondence. asoc-autom requires every such sentence to say whether it is an identity (the same mathematical object), a model (a mapping with its assumptions stated) or an analogy (suggestive; say where it breaks), following the article's own closing caution (Rosenstiehl and Petitot 1974, p62). Which is the hybrid-system table, and where does it break?
+"""
+why = """
+sensate-backpressure.md already takes this care ("a metaphor, not a claim"); the README's table does not, and design arguments lean on it.
+"""
+stop_test = """
+Each row of the table classed with its stated assumption or break, in a delta; the README edited only to add the classification.
+"""
+done_when = """
+Admitted and written, or declined in a delta.
+"""
+premises = ["frontier/README.md", "frontier/sensate-backpressure.md", "docs/journal/2026-11-24-algorithm-level/reading/hybrid-dynamical-systems/relevance/decoder-as-hybrid-system.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/AGENTS.md"]
