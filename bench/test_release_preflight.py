@@ -562,6 +562,49 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         self.assertEqual(res["base_sha"], self.repo.v0517_sha)
         self.assertEqual(res["candidate_sha"], cand)
 
+    def test_01b_harness_and_queue_churn_after_receipt_keeps_it_fresh(self) -> None:
+        # Added at integration review (not one of the frozen fixtures): queueing the preflight
+        # itself edits bench/workstation-queue.txt after the candidate is pinned, so harness,
+        # test and recipe paths must not stale a receipt; a build input still must.
+        self.repo.write("src/open/dense.rs", "// prescan removed\n")
+        cand = self.repo.commit("perf(open): remove dense prescan")
+        rows = make_paired_rows(wall_ratios={})
+        tar_bytes, digest = build_tarball_bytes(
+            rows=rows, candidate_sha=cand, base_sha=self.repo.v0517_sha
+        )
+        ev_commit, _ = self.repo.publish_evidence(
+            "release-preflight/20261128T010001Z.tar.gz", tar_bytes
+        )
+        for rel in (
+            "bench/workstation-queue.txt",
+            "tests/extra.rs",
+            "examples/ab.rs",
+            ".just/x.just",
+        ):
+            self.repo.write(rel, "# churn\n")
+        self.repo.commit("bench: queue the preflight; harness and test churn")
+        head = self.repo.write_preflight_delta(
+            "2026-11-28-release-0-5-18-preflight-churn.md",
+            candidate_sha=cand,
+            base_sha=self.repo.v0517_sha,
+            ev_commit=ev_commit,
+            bundle_path="release-preflight/20261128T010001Z.tar.gz",
+            sha256=digest,
+            recalibration="completed",
+            recalibration_commit=cand,
+        )
+        res = rp.verify_release(self.repo.work, expected_head=head)
+        self.assertTrue(res["allowed"], res)
+        self.assertEqual(res["mode"], "verified-i9-pass")
+
+        for rel in (".cargo/config.toml", "uv.lock", ".github/workflows/CI.yml"):
+            with self.subTest(rel=rel):
+                self.repo.write(rel, f"# build input change {rel}\n")
+                head = self.repo.commit(f"build: change {rel}")
+                res = rp.verify_release(self.repo.work, expected_head=head)
+                self.assertFalse(res["allowed"], res)
+                self.assertTrue(any("stale" in p for p in res["problems"]), res["problems"])
+
     # ------------------------------------------------------------------
     # 2. Simulated 0.5.17-style primary regression at 8T / 10T (<3%, neutral CI)
     # ------------------------------------------------------------------

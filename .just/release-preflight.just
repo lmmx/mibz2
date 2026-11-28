@@ -7,9 +7,30 @@
 # Verify the gate locally before releasing (fail closed):
 #   just release-preflight-verify
 #   just release-preflight-status
+#
+# Once the bundle is archived on origin/evidence, whoever reads it records the receipt that
+# `verify` looks for: a committed delta in frontier/deltas/ carrying these lines (backticks
+# optional). `verify` re-judges the bundle from origin/evidence itself; the receipt only says
+# which bundle, so a verdict written in it is never trusted.
+#   - `preflight_candidate`: <40-hex candidate SHA>
+#   - `preflight_base`: <40-hex SHA of the previous vX.Y.Z tag>
+#   - `preflight_evidence_commit`: <40-hex origin/evidence commit holding the bundle>
+#   - `preflight_bundle`: <path of the .tar.gz on origin/evidence; its .sha256 sits beside it>
+#   - `preflight_sha256`: <the bundle's SHA-256>
+#   - `preflight_recalibration`: completed | not required   (§5c: "completed", with the two
+#     lines below, whenever worker-cost paths changed since the base tag)
+#   - `preflight_recalibration_commit`: <40-hex commit the §5c sweep measured>
+#   - `preflight_recalibration_evidence`: <its evidence commit and bundle>
+#   - `preflight_recovery_base`, `preflight_recovery_cells`: only to add to what `verify`
+#     auto-detects from bench/release-scaling/ (corpus:threads,...)
+# Paths outside the published crate's and wheels' build inputs (docs, frontier, bench, tests,
+# examples, recipes) may change after the candidate without staling the receipt; anything else
+# does (NON_PERFORMANCE_* in bench/release_preflight.py).
 
-# Paired pre-tag release-candidate comparison on the i9 (wikidata + text + secondary guards)
-bench-release-preflight CANDIDATE="" BASE="" RECOVERY_BASE="" ROUNDS="10" THREADS="":
+# Paired pre-tag release-candidate comparison on the i9 (wikidata + text + secondary guards).
+# 12 rounds: ab rotates the arms' order and balances positions over 2 x arms rounds, so 12
+# balances both the three-arm primary run (with a recovery base) and the two-arm guard run.
+bench-release-preflight CANDIDATE="" BASE="" RECOVERY_BASE="" ROUNDS="12" THREADS="":
     #!/usr/bin/env bash
     set -euo pipefail
     B=$PWD/target/release-preflight

@@ -60,13 +60,24 @@ SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA64_RE = re.compile(r"^[0-9a-f]{64}$")
 SEMVER_TAG_RE = re.compile(r"^v([0-9]+)\.([0-9]+)\.([0-9]+)$")
 
-# Strict allowlist of demonstrably non-performance-affecting paths (RELEASING §3.5).
-# Everything outside this allowlist — including src/, python/, Cargo.toml, Cargo.lock,
-# pyproject.toml, build.rs, rust-toolchain*, .cargo/, tests/, examples/, bench/,
-# workflows, recipes, and unknown paths — is treated as performance-relevant (fail closed).
+# Strict allowlist of demonstrably non-performance-affecting paths (RELEASING §3.5): paths that
+# are not inputs to the published crate's library or the Python wheels' build. The harness
+# (bench/, examples/, benches/), tests, research scratch, recipes and site config are measured
+# with, never compiled into, the shipped decoder; without them here every queue entry (the
+# preflight's own included) would stale the receipt it serves. Everything outside this
+# allowlist — src/, python/, Cargo.toml, Cargo.lock, pyproject.toml, uv.lock, build.rs,
+# rust-toolchain*, .cargo/, .github/ (CI.yml builds the wheels), and unknown paths — is
+# treated as performance-relevant (fail closed).
 NON_PERFORMANCE_PREFIXES = (
     "docs/",
     "frontier/",
+    "bench/",
+    "benches/",
+    "examples/",
+    "tests/",
+    "research/",
+    ".just/",
+    ".claude/",
 )
 NON_PERFORMANCE_EXACT = frozenset(
     {
@@ -79,6 +90,10 @@ NON_PERFORMANCE_EXACT = frozenset(
         "CLAUDE.md",
         "AGENTS.md",
         "GEMINI.md",
+        "CHATGPT.md",
+        "Justfile",
+        "zensical.toml",
+        "taplo.toml",
         ".gitignore",
         ".editorconfig",
         "SECURITY.md",
@@ -2037,7 +2052,7 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--base", default="")
     p_run.add_argument("--recovery-base", default="")
     p_run.add_argument("--recovery-cells", default="")
-    p_run.add_argument("--rounds", type=int, default=MIN_ROUNDS)
+    p_run.add_argument("--rounds", type=int, default=12)  # 2 x arms balance for 2 and 3 arms
     p_run.add_argument("--threads", default="")
     p_run.add_argument("--no-secondary", action="store_true")
 
