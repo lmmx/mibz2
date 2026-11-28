@@ -1,0 +1,28 @@
+id = "scanner-contention-residual"
+title = "Which shared resource slows the 8-worker scanner beyond the turbo-bin clock drop, and why the forward lanes double it"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "i9"]
+priority = 3
+status = "idea"
+owned_paths = []
+needs_louis = ""
+question = """
+The scanner's 1W-to-8W busy rise on the i9 is mostly the turbo bin (5.28 -> 4.91 GHz once three or more cores are busy; docs/notebook/2026-11-28-explore-scanner-inflation-is-clock.md). The clock-adjusted residual is about +4.5 ms (+2.7%) on base v0.5.17 and +11.1 ms (+6.6%) with `forward-anchor-lanes` (forward-lanes bundle `e98948b6`). That residual is the only part that faster workers cause. Which part of the scanner carries it (A3 lookups, A2 table builds, window maintenance memmoves, writes to the recycled symbol buffers), and through which shared resource (L3 occupancy, DRAM bandwidth, or the lanes' recycled slab pool)?
+"""
+why = """
+Scanner levers set the 8-worker Wikidata wall once the lanes ship. Whether that contention is about +7 ms that a memory-side change can remove (smaller symbol buffers, non-temporal stores, a smaller slab pool) or noise decides whether a scanner-side memory lever is worth a claim. The clock part cannot be removed: desktop Comet Lake cores share one clock.
+"""
+stop_test = """
+Frozen before data. On the i9, scanner pinned, ab's default settle, base vs `forward-anchor-lanes` at one commit: per-thread PMU counters on the scanner thread alone (cycles, ref-cycles, instructions, cycle_activity.stalls_l3_miss, offcore or LLC misses), at k = 1, 4 and 8, with at least 9 interleaved repeats a cell. Convert to clock-normalised scanner cycles. CONFIRMED if the 8W-over-4W scanner-cycle ratio's 95% CI excludes 1 for lanes, and at least half of its excess shows up in L3-miss stall cycles. REFUTED if the CI includes 1 for both builds, i.e. the residual is an artefact of a 1W baseline taken at n = 1. Either way, record the split in the notebook and in DECODER.md.
+"""
+done_when = """
+A notebook entry with the per-k scanner cycle split, a delta, and the surface `S` row updated. A new idea claim only if a specific memory-side lever is implicated.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-scanner-inflation-is-clock.md",
+  "docs/notebook/2026-11-27-synthesis-nineteenth-pass.md",
+]
+links = [
+  "frontier/claims/forward-emission-adopt.toml",
+]
