@@ -1,0 +1,43 @@
+id = "forward-emission-promote-decision"
+title = "Owner decision: promote #1312 bounded-slab forward-anchor-lanes on 22f2d7d6 or require fresh i9 C6 re-run"
+kind = "decision"
+zone = "smooth"
+needs = ["repo-write"]
+priority = 1
+status = "blocked"
+owned_paths = []
+mechanisms = ["forward-anchor-lanes-bounded-rss"]
+needs_louis = "Option 1 (Recommended): authorise promoting #1312 bounded-slab forward-anchor-lanes (575fa98a, #![forbid(unsafe_code)]) directly to default OpenCells on physical i9 bundle 22f2d7d6 (10/11 C6 clauses PASS: -12.3% 1W, -12.7% 6W, -8.13% 8W / -10.01% CPU, -8.25% 10W, -8.68% 12W, 12/12 guards clean, 6..12W RSS -132..-972 KiB, 1W RSS GM 1.0143x, floor +20 KiB; sole miss was sub-quantum +512 KiB median step on 3-thread mibz2-workers-lazy -t 1, +868 KiB = one ~900 KiB ready-block pipeline quantum; turnkey promotion PR ready). Option 2: require a fresh ~22 min physical i9 C6 adoption run under a calibrated 1T RSS rule (or composed with u8 SymBuf / #1328 -1.1 MiB 1W RSS)."
+question = """
+Physical i9-10900K C6 bundle `origin/evidence 22f2d7d6` (`forward-adopt-rescue/run-20261128T164925Z.tar.gz`, SHA-256 `01c248a0...`, recorded unrelaxed as `DO NOT ADOPT` under RULES C2 in `docs/notebook/2026-11-28-forward-adopt-rescue-i9-verdict.md`, PR `#1394`) proved `#1312` bounded-slab `forward-anchor-lanes` (`<= 80 KiB/worker`, `#![forbid(unsafe_code)]`) passes 10/11 frozen C6 clauses and every rule of `docs/team/PERFORMANCE-POLICY.md` §2:
+- `wikidata/1`: `0.8773 [0.8751, 0.8795]` (`-12.27%`, retired insns `18.34B -> 15.36B`), RSS GM `1.0143x <= 1.020x`;
+- `wikidata/6`: `0.8732 [0.8703, 0.8762]` (`-12.68%`), peak RSS `-972 KiB` (`0.9852x`);
+- `wikidata/8`: `0.9187 [0.9039, 0.9337]` (`-8.13%` wall, paired median `-8.47%`, CPU `-10.01%`), peak RSS `-722 KiB` (`0.9929x`);
+- `wikidata/10`: `0.9175 [0.8977, 0.9378]` (`-8.25%`), peak RSS `-132 KiB` (`0.9940x`);
+- `wikidata/12`: `0.9132 [0.8999, 0.9268]` (`-8.68%`), peak RSS `-462 KiB` (`0.9886x`);
+- All 12/12 guard wall and RSS cells clean (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` at `1T`/`8T`; every 1T guard `delta_rss` in `-80..+80 KiB`), `34/34` `AB_SHA256=1` parity + `544/544` timed repeats exact vs C `libbzip2`, CI Miri `0` UB.
+
+The sole failing sub-clause was `wikidata/1 delta_rss = +868.0 KiB > +512.0 KiB` (`33,116 -> 33,984 KiB`, `t_ci95 [0.9705, 1.0601]`), caused by one discrete `~900 KiB` ready-block pipeline-buffer mode shift on 3-thread `mibz2-workers-lazy -t 1` (`base` 11/2/3 vs `12.3%`-faster `cand` 6/6/4 across `32.9 / 34.0 / 37.2 MiB`, floor `32,860 -> 32,880 KiB` = `+20 KiB`).
+
+Under RULES C2, agents preserved `DO NOT ADOPT` without relaxing the frozen rule. Should we:
+- **Option 1 (Recommended):** authorise promoting `#1312` (`575fa98a`) directly to the default `OpenCells` walk on the strength of `22f2d7d6` (saving a redundant 22-minute i9 re-run on the exact same binary; turnkey promotion pre-build ready); or
+- **Option 2:** run a fresh ~22 min physical i9 C6 adoption under a calibrated 1T RSS rule (standalone or composed with `u8 SymBuf` / `#1328`)?
+"""
+why = """
+Avoids either unilaterally overriding a frozen C2 verdict (prohibited) or wasting ~22 minutes of physical i9 time re-benchmarking the identical `575fa98a` binary solely to remove a sub-quantum `+512 KiB` median-step sub-clause on 3-thread `mibz2-workers-lazy -t 1`.
+"""
+stop_test = """
+Owner decision (RULES D / C2): Louis selects Option 1 (direct promotion on `22f2d7d6`) or Option 2 (fresh C6 i9 registration).
+"""
+done_when = """
+Louis's decision recorded in a delta and either the default-promotion PR lands (Option 1) or the fresh C6 registration is queued (Option 2).
+"""
+premises = [
+  "docs/notebook/2026-11-28-forward-adopt-rescue-i9-verdict.md",
+  "frontier/deltas/2026-11-28-forward-adopt-rescue-i9-verdict.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "frontier/claims/forward-emission-bounded-slab-rescue.toml",
+  "docs/journal/2026-11-28-forward-emission-bounded-slab-rescue/registration.md",
+]
