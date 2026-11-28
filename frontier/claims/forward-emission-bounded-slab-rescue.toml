@@ -1,0 +1,48 @@
+id = "forward-emission-bounded-slab-rescue"
+title = "Rescue #1110/#1217 forward-anchor-lanes RSS (+1.72 MiB 1W / +6.71 MiB 8W) via bounded-slab / streaming emission (#![forbid(unsafe_code)])"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1
+status = "idea"
+owned_paths = ["Cargo.toml", "src/open.rs", "src/open/lanes.rs"]
+mechanisms = ["forward-anchor-lanes-bounded-rss"]
+needs_louis = ""
+question = """
+Physical i9-10900K C6 adoption run `origin/evidence ccfa473f` (`forward-adopt/run-20261128T020039Z.tar.gz`, SHA-256 `2514bb60...`, `docs/notebook/2026-11-28-forward-emission-adopt-i9-verdict.md`) proved the `#![forbid(unsafe_code)]` disjoint-slab four-lane forward walk (`#1110` + `#1217`) wins massively on wall/CPU with 12/12 guards clean (`wikidata/1` `-15.38%`, `wikidata/6` `-13.52%`, `wikidata/8` med `-4.47%` / CPU `-7.8%`, `wikidata/10` `-3.51%`, all 12 guard cells `0.9899–1.0143x` wall and `0.9965–1.0022x` RSS), but failed C6 adoption (`DO NOT ADOPT`, C2 preserved) on one clear root cause: `Arena::pool` + `Arena::used` retains an unbounded pool of `~32 × 32 KiB` slabs (`~0.84–1.0 MiB/worker`) on top of `out`, driving peak RSS to `+1.72 MiB` (`1.0541x`) at 1W and `+6.71–6.94 MiB` (`1.1049–1.1081x`) at 8–12W (exceeding both the `1.080x` gate and `PERFORMANCE-POLICY.md` §2's `10%` ceiling).
+
+Can we eliminate the retained per-worker slab pool and full-block double buffering in `#![forbid(unsafe_code)]` (keeping active worker slab scratch `<= 4 × 32 KiB = 128 KiB/worker` via bounded-slab / direct-to-`out` or streaming RLE1+CRC32 emission) so `forward-anchor-lanes` holds peak RSS `<= 1.020x` at 1W and `<= 1.030x` at 6/8/10/12W on i9 while preserving or improving its `-15%` 1W / `-13%` 6W / `-4..5%` 8–10W Wikidata speedup and 12/12 guard parity?
+"""
+why = """
+Research persistence on the single largest ready-to-ship software speedup in the repository (`-15.4%` 1W, `-13.5%` 6W, `-7.8%` 8W CPU, `-3.5%` 10W, 12/12 guards clean, zero `unsafe`). Fixing the `Arena::pool` double-buffer RSS tax directly removes the only structural blocker to default adoption in `v0.5.18` (and eliminates `+6.7 MiB` of 8-worker L3 pressure inside the 20 MiB L3 budget).
+"""
+stop_test = """
+Frozen pre-data C1a/C6 rescue rule (calibrated against `docs/notebook/2026-11-28-rss-bound-calibration.md` §5; C2 never relaxed):
+1. **Exactness & safety (`#![forbid(unsafe_code)]` in `src/open/lanes.rs`):** 100% byte-, CRC-, and error-exact parity across `cargo test`, `cargo clippy --all-targets -- -D warnings`, Miri (`open::lanes::tests::miri_*`, `0` UB), and all 7 corpora (`wikidata`, `text`, `records`, `random`, `runs`, `pattern`, `onebyte`) vs C `libbzip2`.
+2. **Local & CI RSS + speed gate (before any i9 spend):**
+   - Active per-worker lane slab scratch statically bounded (`<= 128 KiB/worker` / zero retained full-block slab pool);
+   - On paired `ab` (`wikidata` `1W` `mibz2-workers-lazy` + `4W`/`8W` `mibz2`): peak RSS `<= 1.020x` (`<= +0.5 MiB`) at `1W` and `<= 1.030x` at `4W`/`8W` vs shipped `master` (eliminating `>= 75%` of `#1217`'s `+1.72 MiB` 1W / `+6.71 MiB` 8W RSS overhead), while retaining `>= 90%` of `#1217`'s `1W` Wikidata CPU/wall speedup on both baseline and JCC-32B;
+   - CI `bench.yml` passes `PERFORMANCE-POLICY.md` §2 across all 7 corpora with `1T` RSS `<= 1.010x` (or `<= +0.5 MiB`) per `docs/notebook/2026-11-28-rss-bound-calibration.md` §5.
+3. **Physical i9-10900K C6 adoption run (independently reviewed before queueing, `n >= 16` paired rounds at `--settle 2`, `--prespin-ms 100`, `--machine-state`):**
+   - `wikidata/1` paired 95% CI upper bound `<= 0.900`;
+   - `wikidata/6` paired 95% CI upper bound `<= 0.900`;
+   - `wikidata/8` paired 95% CI upper bound `<= 0.975` (and paired median `<= 0.960`, CPU ratio `<= 0.940`);
+   - `wikidata/10` paired 95% CI upper bound `<= 0.985`;
+   - Zero guard corpus (`text`, `records`, `random`, `runs`, `pattern`, `onebyte` at `k = 1, 8`) has `t_ci95_lo > 1.020` or `paired_median > 1.020`;
+   - Peak RSS paired GM `<= 1.020x` at `wikidata/1` (`<= +0.5 MiB`), `<= 1.030x` at `wikidata/{6, 8, 10, 12}` (calibrated per `docs/notebook/2026-11-28-rss-bound-calibration.md` §5), and `<= 1.050x` across all 12 guard cells.
+Otherwise STOP and record a scoped dead-end row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Bounded-slab rescue passes local/CI gates (1, 2) and independently reviewed C6 physical i9 adoption (3), promoting the bounded-slab four-lane forward walk to the default `OpenCells` walk (opening the release claim) or recording a scoped non-adoption disposition.
+"""
+premises = [
+  "docs/notebook/2026-11-28-forward-emission-adopt-i9-verdict.md",
+  "docs/notebook/2026-11-28-rss-bound-calibration.md",
+  "frontier/deltas/2026-11-28-forward-emission-adopt-verdict.md",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "frontier/claims/forward-emission-adopt.toml",
+  "frontier/claims/lanes-disjoint-slabs-build.toml",
+  "frontier/claims/forward-rle1-crc-vectored-build.toml",
+]
