@@ -80,15 +80,15 @@ impl Reg {
         self.live -= n;
     }
 
-    /// Consume `e & 255` bits (`1..=10`) directly from a byte-aligned root LUT entry `e`
-    /// whose bits `4..7` are guaranteed zero (`x86_64` `shlq %cl` / BMI2 `shlx` mask the
-    /// shift count by `63` in hardware, and `(e as u8) as u32` prevents LLVM CSE from
-    /// hoisting `and $0x3f` onto the shift's critical dependency chain).
+    /// Consume `e & 15` bits (`1..=10`) directly from a root LUT entry `e` whose bits `4..5`
+    /// are guaranteed zero (`x86_64` `shlq %cl` / BMI2 `shlx` mask the shift count by `63` in
+    /// hardware, so the shift reads `e` itself with no `and` on its critical dependency chain;
+    /// only the off-chain `live` count masks).
     #[inline(always)]
-    pub(crate) fn skip_short_shl_u8(&mut self, e: u32) {
-        debug_assert!((e as u8) <= 10 && ((e as u8) as u32) <= self.live);
+    pub(crate) fn skip_short_shl_low4(&mut self, e: u32) {
+        debug_assert!(e & 0x30 == 0 && (e & 15) <= 10 && (e & 15) <= self.live);
         self.buf = self.buf.wrapping_shl(e);
-        self.live -= (e as u8) as u32;
+        self.live -= e & 15;
     }
 
     /// Consume `n` bits (at most those peeked)
