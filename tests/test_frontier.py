@@ -1533,6 +1533,147 @@ class TestFrontierStress(unittest.TestCase):
         self.assertTrue(fresh.live(holds["c4"][1]))
         self.assertEqual(sum(fresh.live(v) for _, v in holds.values()), 3)
 
+    def test_merged_integration_hold_at_descendant_head_releases_via_reconcile(self):
+        """Reconciling a merged integration hold whose head moved forward from pr_head releases it."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+
+        # Advance master independently, then merge master into PR #42 (moving head -> moved)
+        # and squash-merge onto master (creating an independent merge_sha on origin/master).
+        seed = self.sb.seed
+        _git(seed, "commit", "--allow-empty", "-m", "advance master during review")
+        _git(seed, "push", "origin", "master")
+        _git(author, "fetch", "-q", "origin", "master")
+        _git(author, "merge", "-q", "--no-edit", "origin/master")
+        moved = _git(author, "rev-parse", "HEAD")
+        self.assertNotEqual(moved, head)
+        _git(author, "push", "-q", "origin", f"{moved}:refs/pull/42/head")
+
+        self._squash_marking_done(seed)
+        merge_sha = _git(seed, "rev-parse", "HEAD")
+
+        merged = {
+            **pr,
+            "head": {"sha": moved},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+        # A --no-local clone copies only branches, so the moved head is reachable only through
+        # refs/pull/42/head: reconciliation must fetch it to prove ancestry, as in production.
+        dst = self.sb.tmp / "fresh"
+        _git(self.sb.tmp, "clone", "-q", "--no-local", str(self.sb.remote), str(dst))
+        _git(dst, "config", "--local", "user.name", GIT_ENV["GIT_AUTHOR_NAME"])
+        _git(dst, "config", "--local", "user.email", GIT_ENV["GIT_AUTHOR_EMAIL"])
+        self.assertNotEqual(subprocess.run(
+            ["git", "cat-file", "-e", f"{moved}^{{commit}}"], cwd=dst, capture_output=True
+        ).returncode, 0)
+        fresh = _load_frontier_module(dst)
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            # Passing the stale pre-merge head still fails closed.
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, head)
+            # Reconcile fetches refs/pull/42/head, verifies head -> moved ancestry, and releases.
+            fresh.reconcile_integrations(fresh.holds())
+            lease = fresh.holds()["c1"][1]
+            self.assertTrue(lease["released"])
+            self.assertEqual(lease["terminal"], merge_sha)
+            self.assertEqual(lease["moved_head"], [head, moved])
+            # Direct finish_review on the moved head is idempotent once released.
+            fresh.finish_review("c1", 42, moved)
+
+    def test_merged_integration_hold_at_descendant_head_releases_via_finish_review(self):
+        """Direct `finish_review` releases a merged moved-head integration reservation."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        _git(author, "commit", "--allow-empty", "-m", "integrator polish before squash")
+        moved = _git(author, "rev-parse", "HEAD")
+        _git(author, "push", "-q", "origin", f"{moved}:refs/pull/42/head")
+        self._squash_marking_done(self.sb.seed)
+        merge_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        merged = {
+            **pr,
+            "head": {"sha": moved},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            fresh.finish_review("c1", 42, moved)
+        lease = fresh.holds()["c1"][1]
+        self.assertTrue(lease["released"])
+        self.assertEqual(lease["terminal"], merge_sha)
+        self.assertEqual(lease["moved_head"], [head, moved])
+
+    def test_merged_integration_hold_at_unrelated_head_refuses_release(self):
+        """Fail closed when a merged PR head does not descend from the recorded pr_head."""
+        _, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+
+        # Create an unrelated branch off master (does NOT have `head` as an ancestor).
+        seed = self.sb.seed
+        _git(seed, "checkout", "-q", "-b", "unrelated-pr")
+        _git(seed, "commit", "--allow-empty", "-m", "unrelated replacement head")
+        unrelated = _git(seed, "rev-parse", "HEAD")
+        _git(seed, "push", "-q", "origin", f"+{unrelated}:refs/pull/42/head")
+        _git(seed, "checkout", "-q", "master")
+        self._squash_marking_done(seed)
+        merge_sha = _git(seed, "rev-parse", "HEAD")
+
+        merged = {
+            **pr,
+            "head": {"sha": unrelated},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, unrelated)
+            fresh.reconcile_integrations(fresh.holds())
+        self.assertFalse(fresh.holds()["c1"][1].get("released"))
+
+    def _squash_marking_done(self, seed):
+        """Land a squash of PR #42 on master that marks c1 done, as an integrator's merge does."""
+        card = seed / "frontier/claims/c1.toml"
+        card.write_text(card.read_text().replace('status = "open"', 'status = "done"\npr = 42'))
+        _git(seed, "commit", "-qam", "squash merge PR #42")
+        _git(seed, "push", "origin", "master")
+
+    def test_merged_integration_hold_at_descendant_head_retained_while_claim_live(self):
+        """A moved-head merge does not release while the claim is not terminal on master."""
+        author, _, head, pr = self._submitted_review()
+        reviewer = _load_frontier_module(self.sb.clone("reviewer"))
+        with mock.patch.object(reviewer, "read_pr", return_value=pr):
+            reviewer.take_review("c1", 42, head, "reviewer", 1)
+        _git(author, "commit", "--allow-empty", "-m", "integrator polish before squash")
+        moved = _git(author, "rev-parse", "HEAD")
+        _git(author, "push", "-q", "origin", f"{moved}:refs/pull/42/head")
+        _git(self.sb.seed, "commit", "--allow-empty", "-m", "squash merge PR #42, card not closed")
+        _git(self.sb.seed, "push", "origin", "master")
+        merge_sha = _git(self.sb.seed, "rev-parse", "HEAD")
+        merged = {
+            **pr,
+            "head": {"sha": moved},
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge_sha,
+        }
+        fresh = _load_frontier_module(self.sb.clone("fresh"))
+        with mock.patch.object(fresh, "read_pr", return_value=merged):
+            with self.assertRaises(SystemExit):
+                fresh.finish_review("c1", 42, moved)
+            fresh.reconcile_integrations(fresh.holds())
+        self.assertFalse(fresh.holds()["c1"][1].get("released"))
+
     def _stale_docs_team_pair(self):
         """Set up archive-team-strata holding docs/team/ and migrate-rules needing docs/team/RULES.md."""
         seed = self.sb.seed
