@@ -1,7 +1,7 @@
 claim: runs-front-i9-rescue
 by: claude-code
 outcome: done
-evidence: PR #1238 head 791ee4158120ab4f293e284fe1606d0baa26290f (base 32b0c9ecf83a; src/runs.rs unchanged on master since); docs/notebook/2026-11-28-runs-front-b5-fuzz.md
+evidence: PR #1238 head 791ee4158120ab4f293e284fe1606d0baa26290f (base 32b0c9ecf83a; src/runs.rs unchanged on master since); docs/notebook/2026-11-28-runs-front-b5-fuzz.md; review PR #1284
 
 **What was asked:** An independent, adversarial B5 memory-safety review of the `unsafe` AVX2 code PR #1238 adds to `src/runs.rs` (`front_avx2` and its use of `second()` and `STEPS`), as `runs-front-i9-rescue`'s `done_when` requires. This review reserves nothing on the claim and does not hold it.
 **Verdict: PASS, with no changes required.** I could not construct an out-of-bounds read or write, an uninitialised read, a misaligned access or an aliasing violation. Each implementer claim below was rechecked against the code, not taken from the deltas.
