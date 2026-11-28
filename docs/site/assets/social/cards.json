@@ -363,12 +363,33 @@
     "section": " · Research blog",
     "title": "Why compression ratio moves the scaling ceiling"
   },
+  "assets/social/blog-2026-11-28-clock-modes-and-memory-noise.png": {
+    "description": "A brief pause between runs can trap a desktop processor below full boost, while parallel queue jitter dominates peak memory across six server chips.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Why a brief pause throttled our Intel i9, and how we calibrated memory noise"
+  },
   "assets/social/blog-2026-11-28-four-lanes-forward.png": {
     "description": "Walking the inverse BWT cycle forward across four safe Rust lanes lets workers outrun the serial scanner, alongside three default speedups.",
     "foot": "lmmx.github.io/mibz2 · 28 November 2026",
     "kind": "result",
     "section": " · Research blog",
     "title": "Walking the Burrows–Wheeler cycle forward across four lanes"
+  },
+  "assets/social/blog-2026-11-28-python-line-delivery-stable-abi.png": {
+    "description": "Bypassing Python's redundant buffering layer and scanning newlines in safe Rust speeds up line reads up to twenty-six times while keeping one universal abi3 wheel.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Twenty-six times faster line iteration in Python without leaving the Stable ABI"
+  },
+  "assets/social/blog-2026-11-28-shrinking-worker-scratch-speeds-the-scanner.png": {
+    "description": "Shrinking each worker's slab scratch removes almost every extra cache stall on the serial scanner, making the whole eight-worker decode faster.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "How shrinking one thread's scratch memory sped up a different thread"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

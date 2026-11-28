@@ -4,7 +4,7 @@ kind = "ops"
 zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1      # a release is P1, always, once recognised (Louis, 27 November 2026)
-status = "blocked"
+status = "done"
 owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
 mechanisms = ["release"]
 needs_louis = ""
@@ -12,6 +12,10 @@ question = """
 Release mibz2 0.5.18 by docs/RELEASING.md, step by step. One software commit has merged to master since v0.5.17 (git log --first-parent v0.5.17..origin/master -- src python Cargo.toml Cargo.lock pyproject.toml build.rs), accepted under its own PR's rule:
 - #1234 default-path OpenCells output queue: QueuesOf::push_slow capped to a straight-line 4-rank unroll per outer step (safe code), removing all 11 vzeroupper and 56 ymm instructions it compiled to under -C target-cpu=native and JCC-aligned native builds; baseline x86-64 builds were already clean. The experimental mtf-fold measurement in the same PR stopped at its guard-corpus gate (off by default).
 RELEASING section 5c does not apply: the change does not alter a worker's admission, work per block, working set, scratch layout or DRAM traffic, only native-target instruction selection in one slow path. Section 5a's crossover runs anyway (src/open on the workers path changed).
+
+Candidate as of 28 November (twenty-fifth synthesis pass): master now also carries #1246, #1117, #1268, #1294, #1274 and #1312 (feature-gated). #1246 skips a pre-scan with routes unchanged and #1274 changes runs::front on the default path; both change a worker's work per block, which section 5c names, so the "5c does not apply" reasoning above covers #1234 only and must be reassessed before pinning.
+
+28 November, owner-directed release completion (§2a): publication remains gated, but preparation is actionable now. Resume this release at P1 rather than wait for another experimental optimisation. The accepted default-path batch already on master is sufficient. Review and integrate pre-release-i9-gate (#1256) through its existing claim; prepare the required §5c current-candidate worker-count sweep in parallel using the existing recalibration harness, within existing path and queue ownership (coordinate with plan-schedule-and-lazy-threshold's live src/parallel.rs hold; no forced transfer). Then pin the stable candidate, run the paired final CI and physical i9 preflight against v0.5.17 plus recovery cells against v0.5.16, read and record the verdict, publish only on PASS, and finish scaling/reporting. Use a reviewed equivalent harness if the mechanical preflight PR is not ready. Do not wait for forward-emission-bounded-slab-rescue or other unadopted experiments. Defer unrelated changes to pinned performance inputs during final validation under §2a; no global research freeze. If an actual dependency prevents further action, record its exact claim/PR, next action, evidence pin and resume condition rather than only changing status to blocked.
 """
 why = """
 P1 by rule: a release is P1 once recognised. Users building with -C target-cpu=native get an OpenCells output queue free of AVX-SSE transition penalties.
@@ -27,4 +31,4 @@ premises = [
   "CHANGELOG.md",
   "docs/team/PERFORMANCE-POLICY.md",
 ]
-links = ["https://github.com/lmmx/mibz2/pull/1234"]
+links = ["https://github.com/lmmx/mibz2/pull/1234", "frontier/claims/pre-release-i9-gate.toml", "https://github.com/lmmx/mibz2/pull/1256", "frontier/claims/plan-schedule-and-lazy-threshold.toml"]

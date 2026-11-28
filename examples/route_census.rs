@@ -17,6 +17,11 @@
 //! and checked byte-equal. The inverse's own time per route is summed from the probe's timers.
 //! A characterisation, not a benchmark (docs/journal/2026-11-27-explore/route-census.md).
 //!
+//! `ROUTE_FULL=N` counts blocks of at least N rows as full (default 100,000; a bzip2 -1 block has
+//! at most 99,981 rows). `ROUTE_SHADOW=1` also times `Segmented`'s inverse on each run-route
+//! block just after the probe's, `ROUTE_SHADOW=first` just before it (the order control), one
+//! line a block on stderr (docs/notebook/2026-11-28-explore-block-size-route.md).
+//!
 //! Without `moonshot` (the run records are crate-private) it only says so.
 #[cfg(feature = "moonshot")]
 mod imp {
@@ -78,8 +83,12 @@ mod imp {
     #[derive(Default)]
     struct Probe(OpenCells, Segmented, Vec<u8>);
 
+    fn shadow_first() -> bool {
+        std::env::var_os("ROUTE_SHADOW").is_some_and(|v| v == "first")
+    }
+
     fn shadow() -> bool {
-        std::env::var_os("ROUTE_SHADOW").is_some_and(|v| v == "1")
+        std::env::var_os("ROUTE_SHADOW").is_some_and(|v| v == "1" || v == "first")
     }
 
     impl InverseBwt for Probe {
@@ -152,6 +161,14 @@ mod imp {
         ) -> bool {
             #[cfg(feature = "census")]
             let _ = mibz2::census::take();
+            // ROUTE_SHADOW=first: `Segmented`'s shadow timed before the probe instead of after
+            // (the order bias: the second inverse meets the block's records warm)
+            let mut first_ns = None;
+            if shadow_first() {
+                let t = Instant::now();
+                assert!(self.1.invert_runs(r, n, p, &mut self.2, k));
+                first_ns = Some(t.elapsed().as_nanos());
+            }
             let t = Instant::now();
             let ok = self.0.invert_runs(r, n, p, out, k);
             let ns = t.elapsed().as_nanos();
@@ -166,7 +183,12 @@ mod imp {
                 n <= 900_000 && (p as usize) < n && rec * 64 >= n && rec * 25 < n * 7
             };
             let mut shadow_ns = 0;
-            if ok && shadow() {
+            if let Some(f) = first_ns {
+                shadow_ns = f;
+                if ok {
+                    assert!(self.2 == *out, "shadow differs");
+                }
+            } else if ok && shadow() {
                 let t = Instant::now();
                 assert!(self.1.invert_runs(r, n, p, &mut self.2, k));
                 shadow_ns = t.elapsed().as_nanos();
@@ -233,7 +255,13 @@ mod imp {
                 mibz2::decode_with::<LazyCells>(&data, k).expect("lazy")
             });
             assert!(out_p == out_s && out_p == out_l, "{f}: outputs differ");
-            let full: Vec<&Blk> = log.iter().filter(|b| b.n >= 100_000).collect();
+            // "full": at least ROUTE_FULL rows (default 100,000, Wikidata's -9 blocks; a
+            // bzip2 -1 block is at most 99,981 rows, so ROUTE_FULL=90000 counts those)
+            let min_full: usize = std::env::var("ROUTE_FULL")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100_000);
+            let full: Vec<&Blk> = log.iter().filter(|b| b.n >= min_full).collect();
             let cnt = |r: Route| full.iter().filter(|b| b.route == r).count();
             let mut rn: Vec<f64> = full
                 .iter()
@@ -263,7 +291,7 @@ mod imp {
             if shadow() {
                 for b in log
                     .iter()
-                    .filter(|b| b.route != Route::Column && b.n >= 100_000)
+                    .filter(|b| b.route != Route::Column && b.n >= min_full)
                 {
                     eprintln!(
                         "{name}\t{:?}\t{}\t{:.4}\t{:.3}\t{:.3}\t{}\t{}\t{}",

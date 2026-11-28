@@ -1,0 +1,16 @@
+claim: none
+by: antigravity
+outcome: done
+evidence: docs/notebook/2026-11-28-a6b-zero-rss-dissection.md; frontier/claims/a6b-zero-rss-endpoint-build.toml; objdump -dC of shipped <Kernel>::induced_with::<Narrow> (3,221 insns, 97 panic_bounds_check) vs overlay_aos::elim_aos::<131072, false> (215 insns, 0 bounds checks, 0 hot spills); Haswell-EP VM pinned CPU 0 CLOCK_THREAD_CPUTIME_ID isolated A6b (233 Wikidata Open blocks, n=9 warm/L2-cold, n=5 64 MiB L3-cold, base + jcc) and whole-decoder OpenCells 1W / workers-lazy 1W / mibz2 4W & 8W fresh-process CPU + VmHWM + 7-corpus bit-exact parity; 46/46 open:: tests + Miri 0 UB
+
+**What we dissected and proved (VM-only; physical i9-10900K verification required before shipping per C5):**
+1. **Why shipped `A6b` (`src/open/endpoint.rs`) is slow and why `#1053` / `C5` leaked RSS:** Disassembly of `<Kernel>::induced_with::<Narrow>` shows 3,221 instructions, 97 `panic_bounds_check` calls, 16-bit partial stores overlapping 32-bit loads (store-forwarding stalls), a 320-byte spilling frame (`0x140(%rsp)`), `24 KiB/block` zero-fill including the `1.06%`-hit `pairs` cache, and `2×` `edges` capacity doubling in `grow()`. Prior rescue `C5` still leaked `+220 KiB/worker` via separate `16 KiB` `GenCacheV2`, non-`reserve_exact` `Vec::resize` doubling, and `most = 3*ns+3` over-bucketing.
+2. **Zero-extra-RSS 32B AoS + inline-7 `u64` overlay (`Z3v2_aligned`, `#![forbid(unsafe_code)]`, `0 B` extra `Endpoint` heap):**
+   - Overlaying unified 32-byte AoS nodes (`[prev0, next0, prev1, next1, word_lo, word_hi, width, pad]`, 8-byte-aligned `word` at `+0x10`, 1 cache line/node vs 3 in SoA) + rules + `contents[4096]` (`edges[0..4096]`) inside `Kernel.edges` with exact `n_nodes` tight power-of-two `CAP` (`2K..32K`), `reserve_exact`-only growth, register-resident `(x, y)` tails, `q == 1` adjacent no-op, cold-only `rules.room()` check, and `[u32; 64]` stack DFS cuts isolated `A6b` across all 233 Wikidata Open blocks by **`-24.40%` `base` warm / `-23.57%` `base` 64 MiB L3-cold / `-25.82%` `jcc` warm / `-25.27%` `jcc` 64 MiB L3-cold** at exact `+0.0 KiB` `edges` capacity (`231,600` words) and `0 B` `Endpoint` heap (vs `64 B` shipped).
+   - `32 B` AoS (`Z3`) beat `28 B` SoA (`Z2`) by `-3.9 pp` warm and `-3.0 pp` under 64 MiB L3-cold; aligning `word` to `+0x10` + cold-only `rules.room()` (`Z3v2`) added another `-0.8..-1.7 pp` and collapsed `elim_aos::<131072, false>` to 215 instructions with 0 bounds checks and 0 hot-path spills.
+3. **Whole-decoder prototype (`OpenCells 1W` + `workers-lazy 1W` + `mibz2 4W/8W`, 7-corpus bit-exact parity):**
+   - `OpenCells` 1W `wikidata.bz2` (pinned CPU 0, `n=5`): **`-1.64%` (`-20.5 ms`) `base`** / **`-1.82%` (`-21.7 ms`) `jcc`** total decoder CPU, while **reducing single-worker peak `VmHWM` by `-1.45 MiB` (`0.925×`)** (`19,772 → 18,296 KiB` `base`, `19,792 → 18,368 KiB` `jcc`).
+   - `workers-lazy 1W`: `-6.23%` CPU `base` (`1.005×` HWM) / `-2.37%` `jcc`; `mibz2 8W jcc`: `-2.78%` CPU (`0.980×` HWM).
+   - 100% bit-exact parity across `wikidata` + all 6 guard corpora (`0.996×–1.007×` HWM), `46/46` `open::` tests pass, Miri `0` UB, `fmt`/`clippy`/feature-gates clean.
+
+**What changed:** added `docs/notebook/2026-11-28-a6b-zero-rss-dissection.md`, `frontier/claims/a6b-zero-rss-endpoint-build.toml` (`status = "idea"`), and this delta only (no `src/` changes pushed).
