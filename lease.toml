@@ -6,4 +6,4 @@ expires = "2026-11-29T03:57:36+00:00"
 owned_paths = ["src/crc.rs"]
 mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
 base = "0179ca9ddd74d49c83d3fe064c2f076a9d2f504a"
-released = false
+released = true
