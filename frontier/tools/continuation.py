@@ -841,12 +841,21 @@ def _live_read_pr(n):
     return _gh_json(f"repos/{_repo_name()}/pulls/{n}")
 
 
-def _live_read_checks(sha):
-    repo = _repo_name()
-    runs = _gh_json(f"repos/{repo}/commits/{sha}/check-runs?per_page=100").get("check_runs", [])
-    status = _gh_json(f"repos/{repo}/commits/{sha}/status")
+def summarise_checks(runs, status):
+    """Judge a head from its check runs and combined status: (success|failure|pending, time).
+
+    A re-run leaves its earlier attempt listed at the same head, so only the latest run of
+    each check name (by start time, then id) counts.
+    """
+    latest = {}
+    for r in runs:
+        k = (r.get("app", {}) or {}).get("id"), r.get("name")
+        order = (r.get("started_at") or "", r.get("id") or 0)
+        if k not in latest or order > latest[k][0]:
+            latest[k] = (order, r)
+    runs = [r for _, r in latest.values()]
     times = [_parse_time(r.get("completed_at")) for r in runs]
-    times += [_parse_time(s.get("updated_at")) for s in status.get("statuses", [])]
+    times += [_parse_time(x.get("updated_at")) for x in status.get("statuses", [])]
     at = max([x for x in times if x is not None], default=None)
     if any(r.get("status") != "completed" for r in runs):
         return "pending", None
@@ -858,6 +867,12 @@ def _live_read_checks(sha):
     if not runs and not status.get("statuses"):
         return "pending", None
     return "success", at
+
+
+def _live_read_checks(sha):
+    repo = _repo_name()
+    runs = _gh_json(f"repos/{repo}/commits/{sha}/check-runs?per_page=100").get("check_runs", [])
+    return summarise_checks(runs, _gh_json(f"repos/{repo}/commits/{sha}/status"))
 
 
 def _live_bundles(recipe):

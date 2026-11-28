@@ -809,6 +809,30 @@ class TestViewAfterFreeze(unittest.TestCase):
         self.assertEqual(rows[0]["class"], "held")
         self.assertIn("pin waiting: checks pending", rows[0]["detail"])
 
+    def test_rerun_supersedes_earlier_failed_attempt(self):
+        """Live finding on #1356: a re-run's old failed attempt stays listed at the head."""
+        runs = [
+            {
+                "name": "x",
+                "id": 2,
+                "status": "completed",
+                "conclusion": "success",
+                "started_at": "2026-11-28T12:02:34Z",
+                "completed_at": "2026-11-28T12:02:50Z",
+            },
+            {
+                "name": "x",
+                "id": 1,
+                "status": "completed",
+                "conclusion": "failure",
+                "started_at": "2026-11-28T11:41:16Z",
+                "completed_at": "2026-11-28T11:41:30Z",
+            },
+        ]
+        st = {"state": "success", "statuses": [{"state": "success"}]}
+        self.assertEqual(cont.summarise_checks(runs, st)[0], "success")
+        self.assertEqual(cont.summarise_checks(runs[::-1][:1], st)[0], "failure")
+
 
 if __name__ == "__main__":
     unittest.main()
