@@ -1114,7 +1114,7 @@ fn miri_runs_trusted_fill_parity_and_invalidation() {
     }
 }
 
-/// Edge-case and Miri verification for 64-symbol `u64` Pass 1, branchless 256-bit `YMM_STEPS`,
+/// Edge-case and Miri verification for 64-symbol `u64` Pass 1, 2-cycle 128-bit `(f0, f1)` `STEPS`,
 /// `second()` transitions, `s >= 0x8000` clamping, `RunTooLong`/`BlockTooLong`/`no-EOB`, dirty
 /// `Runs` reuse, and `cfg(test)` `per` parity across all available kernels.
 #[test]

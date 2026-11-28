@@ -419,10 +419,11 @@ fn front_scalar_with_syms(b: &Symbols, syms: &[u16], r: &mut Runs) -> Result<usi
 }
 
 /// `src/mtf.rs`'s first level, the list's bytes 0-31 as two 16-byte sub-lists in registers
-/// (`f0`, `f1`), with its move of an index nn < 32 as four byte shuffles and two ors: row nn
-/// holds `f0`'s new bytes' places in `f0` (`a`) and in `f1` (`b`), and `f1`'s in `f1` (`c`) and
-/// in `f0` (`d`). Kept for `src/runs/fold.rs` (`mtf-fold`).
-#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
+/// (`f0`, `f1`), with its move of an index nn < 32 as four 128-bit VEX byte shuffles and two ors:
+/// row nn holds `f0`'s new bytes' places in `f0` (`a`) and in `f1` (`b`), and `f1`'s in `f1` (`c`)
+/// and in `f0` (`d`). Keeps the loop-carried `(f0, f1)` critical path at 2 cycles (no cross-lane
+/// `vpermq` stall on dual-shuffle-pipe CPUs such as AMD Zen 3). Shared with `src/runs/fold.rs`.
+#[cfg(target_arch = "x86_64")]
 #[repr(C, align(64))]
 #[derive(Clone, Copy)]
 struct Step {
@@ -432,7 +433,7 @@ struct Step {
     d: [u8; 16],
 }
 
-#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
+#[cfg(target_arch = "x86_64")]
 const fn steps() -> [Step; 32] {
     const Z: u8 = 0x80; // a shuffle's zero
     let mut t = [Step {
@@ -478,67 +479,8 @@ const fn steps() -> [Step; 32] {
     t
 }
 
-#[cfg(all(target_arch = "x86_64", feature = "mtf-fold"))]
+#[cfg(target_arch = "x86_64")]
 static STEPS: [Step; 32] = steps();
-
-/// Branchless 256-bit first-level MTF table for `nn < 32`, holding `[f0 | f1]` in a single YMM
-/// register (`f01`): each move executes `vpermq $0x4e` (lane swap) + 2×`vpshufb` (`same` on
-/// `f01`, `cross` on swapped `f01`) + `vpor` — 3 Port-5 uops and 2 aligned 32-byte loads instead
-/// of 4 Port-5 uops and 4 loads across separate `(f0, f1)` XMM registers
-/// (`docs/journal/2026-11-27-explore/runs-front-and-fill-dissection.md`).
-#[cfg(target_arch = "x86_64")]
-#[repr(C, align(64))]
-#[derive(Clone, Copy)]
-struct YmmStep {
-    same: [u8; 32],
-    cross: [u8; 32],
-}
-
-#[cfg(target_arch = "x86_64")]
-const fn ymm_steps() -> [YmmStep; 32] {
-    const Z: u8 = 0x80; // vpshufb zero lane
-    let mut t = [YmmStep {
-        same: [0; 32],
-        cross: [Z; 32],
-    }; 32];
-    let mut nn = 0;
-    while nn < 32 {
-        let mut i = 0;
-        while i < 16 {
-            if nn < 16 {
-                // index nn to the front of f0; f1 unchanged; no cross-lane bytes
-                t[nn].same[i] = if i == 0 {
-                    nn as u8
-                } else if i <= nn {
-                    (i - 1) as u8
-                } else {
-                    i as u8
-                };
-                t[nn].same[16 + i] = i as u8;
-            } else {
-                // f1[nn - 16] crosses into f0[0]; f0[15] crosses into f1[0]; rest shift in-lane
-                t[nn].same[i] = if i == 0 { Z } else { (i - 1) as u8 };
-                t[nn].same[16 + i] = if i == 0 {
-                    Z
-                } else if i <= nn - 16 {
-                    (i - 1) as u8
-                } else {
-                    i as u8
-                };
-                if i == 0 {
-                    t[nn].cross[0] = (nn - 16) as u8;
-                    t[nn].cross[16] = 15;
-                }
-            }
-            i += 1;
-        }
-        nn += 1;
-    }
-    t
-}
-
-#[cfg(target_arch = "x86_64")]
-static YMM_STEPS: [YmmStep; 32] = ymm_steps();
 
 /// `src/mtf.rs`'s second level: the move of its byte t (the list's t + 32), returned; the
 /// bytes before it a byte on, `f1`'s last byte in at 0. Seven aligned rows of 32 at `tail`.
@@ -738,12 +680,14 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
         return None;
     }
 
-    // ---- Pass 2: literals via 256-bit `YMM_STEPS` and stack `[u32; 256]` counts ----
-    // Hold the first 32 bytes `[f0 | f1]` in one YMM register (`f01`), with the remaining 224
-    // bytes in 64-byte-aligned stack storage for `second()`.
+    // ---- Pass 2: literals via 2-cycle 128-bit `(f0, f1)` `STEPS` and stack `[u32; 256]` counts ----
+    // Hold the first 32 bytes as two 128-bit XMM registers `(f0, f1)` (2-cycle serial critical path
+    // with zero cross-lane `vpermq` latency on dual-shuffle-pipe CPUs), with the remaining 224 bytes
+    // in 64-byte-aligned stack storage for `second()`.
     let s2u = &b.seq_to_unseq;
-    // SAFETY: `s2u` has 256 bytes, so loading bytes `0..32` and copying `32..256` are in bounds.
-    let mut f01 = _mm256_loadu_si256(s2u.as_ptr() as *const __m256i);
+    // SAFETY: `s2u` has 256 bytes, so loading bytes `0..16`, `16..32` and copying `32..256` are in bounds.
+    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
+    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
     #[repr(align(64))]
     struct AlignedRows {
         _data: [u8; 224],
@@ -755,7 +699,7 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
-    let ymm_steps = YMM_STEPS.as_ptr();
+    let steps = STEPS.as_ptr();
     // A record for each literal and one for the block's first run, plus `slack` for runs > 127
     // rows: a block within `max_len` needs at most `max_len / 127` extra records.
     let mut slack = b.max_len / CAP as usize + 1;
@@ -763,7 +707,7 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
     f.runs.reserve(m + slack + 2);
     let out0 = f.runs.as_mut_ptr();
     let mut out = out0;
-    // Stack `[u32; 256]` (1 KiB, half of `[u64; 256]`): frees a GPR for hoisting `YMM_STEPS` and
+    // Stack `[u32; 256]` (1 KiB, half of `[u64; 256]`): frees a GPR for hoisting `STEPS` and
     // eliminates `movabs $0x100000000; or` on every literal. Cannot overflow `u32::MAX` (see doc).
     let mut cnt = [0u32; 256];
     let mut big = 0u64;
@@ -864,28 +808,25 @@ unsafe fn front_avx2(b: &Symbols, syms: &[u16], f: &mut Runs) -> Option<usize> {
             // SAFETY: bit `tz` was set in `lit[wi]`, so `wi * 64 + tz < end < m` and `s >= 2`.
             let s = *spw.add(tz) as usize;
             if s < 33 {
-                // SAFETY: `2 <= s <= 32`, so `s - 1 < 32` is within `YMM_STEPS: [YmmStep; 32]`;
-                // `YmmStep` is `#[repr(C, align(64))]`, so `same` (offset 0) and `cross`
-                // (offset 32) are 32-byte aligned for `_mm256_load_si256`.
-                let t = ymm_steps.add(s - 1);
-                let same = _mm256_load_si256((*t).same.as_ptr() as *const __m256i);
-                let cross = _mm256_load_si256((*t).cross.as_ptr() as *const __m256i);
-                let swapped = _mm256_permute4x64_epi64::<0x4e>(f01);
-                f01 = _mm256_or_si256(
-                    _mm256_shuffle_epi8(f01, same),
-                    _mm256_shuffle_epi8(swapped, cross),
-                );
+                // SAFETY: `2 <= s <= 32`, so `s - 1 < 32` is within `STEPS: [Step; 32]`;
+                // `Step` is `#[repr(C, align(64))]`, so `a` (+0), `b` (+16), `c` (+32), and
+                // `d` (+48) are 16-byte aligned for `_mm_load_si128`.
+                let t = steps.add(s - 1);
+                let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
+                let b = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
+                let c = _mm_load_si128((*t).c.as_ptr() as *const __m128i);
+                let d = _mm_load_si128((*t).d.as_ptr() as *const __m128i);
+                let nf0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, b));
+                f1 = _mm_or_si128(_mm_shuffle_epi8(f1, c), _mm_shuffle_epi8(f0, d));
+                f0 = nf0;
             } else {
-                let f0_l = _mm256_castsi256_si128(f01);
-                let f1_l = _mm256_extracti128_si256::<1>(f01);
                 // SAFETY: `s >= 33`, so `(s - 1).min(255) - 32 < 224`; `tail` is 64-byte aligned
                 // with 224 initialized bytes.
-                let v = second(tail, (s - 1).min(255) - 32, f1_l, idx);
-                let nf1 = _mm_alignr_epi8::<15>(f1_l, f0_l);
-                let nf0 = _mm_or_si128(_mm_slli_si128::<1>(f0_l), _mm_cvtsi32_si128(v as i32));
-                f01 = _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(nf0), nf1);
+                let v = second(tail, (s - 1).min(255) - 32, f1, idx);
+                f1 = _mm_alignr_epi8::<15>(f1, f0);
+                f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
             }
-            let c = _mm_cvtsi128_si32(_mm256_castsi256_si128(f01)) as u8 as u64;
+            let c = _mm_cvtsi128_si32(f0) as u8 as u64;
             if w != 0 {
                 // Next literal is in this word: run bits lie between `tz` and `t2`.
                 let t2 = w.trailing_zeros() as usize;
