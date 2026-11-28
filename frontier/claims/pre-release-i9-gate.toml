@@ -1,0 +1,26 @@
+id = "pre-release-i9-gate"
+title = "Enforce the physical i9 regression gate before publishing a performance-affecting release"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1
+status = "open"
+pr = 0
+owned_paths = [".github/workflows/deploy.yml", ".just/ship.just", ".just/release-preflight.just", "Justfile", "bench/release_preflight.py", "bench/test_release_preflight.py"]
+mechanisms = ["release-preflight"]
+needs_louis = ""
+question = """
+Implement the maintainer's new RELEASING §3.5 gate as a reusable pre-tag release-candidate comparison and fail-closed publication check. Reuse the existing release-scaling runner, paired protocol, queue and ready-signal authority, with exact candidate and prior-release full SHAs, shallow-safe sources, release-equivalent configuration, byte parity and evidence digest. No per-change hardware requirement: test the combined candidate before publication. Make the evidence readable and record an explicit disposition before release. The existing release claim remains P1 through queue, readback, repair and recalibration. Coordinate with #1241 result-to-release (its owner holds frontier/tools) so the preflight state is visible without a conflicting edit. Keep the implementation minimal and reuse the standard queue; own the queue file only through the existing queue claim/lease rules.
+Before version bump or tag/push, make the normal Deploy Release/just release path reject a required gate with missing, invalid, stale, unread or failing evidence. Bind it to the exact release inputs, previous published tag and applicable configuration; guard against master advancing during dispatch. No trust in an arbitrary user-supplied PASS string. A bypass requires explicit maintainer authority recorded in the existing decision mechanism, not an agent-set switch. Allow only demonstrated non-performance-affecting exceptions as §3.5 provides. Do not create a new recurring service or manual approval layer. Preserve per-PR frozen rules; the new requirement is for release publication, not a retrospective change to any adoption test.
+"""
+why = """
+v0.5.17 shipped after a neutral four-CPU CI comparison despite later i9 regressions at 8 and 10 threads (#1228). The pre-scan fix is already in #1246; the next release must validate it on the i9 and check recovery against v0.5.16 as well as non-regression against v0.5.17. A runbook alone is vulnerable to accidental early dispatch; enforce the owner's new gate in the existing release path.
+"""
+stop_test = """
+Freeze fixtures before implementation: exact candidate/base and passing verified receipt; simulated 0.5.17-style primary regression at 8 or 10 threads even with neutral CI and less than 3% loss; failed parity; secondary/memory trade outside policy; missing/unread/invalid/digest-mismatched or wrong-machine bundle; wrong base, stale source/build inputs or race at dispatch; non-performance metadata-only changes; explicit owner-authorised exception vs unauthorised bypass; shallow runner; required §5c recalibration before final candidate comparison; corrective candidate that beats the bad tag but fails recovery against the last known good tag. Verify rejection occurs before any version bump, tag, push or publish, and a valid pass flows through the existing release command with no second approval. No live test publishing, duplicate run, relaxed frozen rule, extra spending or unapproved credentials.
+"""
+done_when = """
+Independent review of the release-gate enforcement and frozen recipe, regression tests and exact-head CI; demonstrate the release preflight on the next real eligible candidate, prioritising the 0.5.17 correction and recording its actual result. If the workflow change is not yet merged, follow the runbook manually: no early publication.
+"""
+premises = ["docs/RELEASING.md", "docs/team/PERFORMANCE-POLICY.md", "frontier/claims/result-to-release.toml", "frontier/claims/open-cap-prescan-cost.toml"]
+links = ["https://github.com/lmmx/mibz2/pull/1228", "https://github.com/lmmx/mibz2/pull/1246", "https://github.com/lmmx/mibz2/pull/1241"]

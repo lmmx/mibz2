@@ -1,0 +1,13 @@
+claim: delivery-l3-working-set
+by: claude-code
+outcome: done
+evidence: docs/journal/2026-11-26-synthesis/delivery-l3-working-set.md (+ .py); origin/evidence c71c4a56 (sha256 97e397ad...8867) and cc8ba137 (10df0d89...5e34), both checked; frontier/dead-ends.tsv row "tighter READY_BYTES / SLOTS_PER_THREAD"
+
+**What was asked:** Price the frozen gates (>= 2.0% 8-10W wall on `none`, >= 4.0% on `S`/`SC`, k = 6..8 <= 0.5% worse) against the <= 2.2% / 2.5% ceiling before spending a workstation run.
+**What I found:** Neither gate is reachable, so no workstation run was spent and no striated tuning claim is admitted (C2 intact).
+- `none`: the 8-10W wall is the scanner's. With the scanner pinned (cc8), A2+A3 is 169.4-176.7 ms at k = 8..10 (170.8-171.3 at 10) while ready avg rises 0.36 -> 1.55 MiB and hwm 6.0 -> 16.3 MiB: ready L3 residency does not reach the critical station. Workers wait for the scanner (`job_wait` 5-25 ms/worker pinned), so A9 and `copy_out` cuts move no wall. The only wall terms a cap touches are `slot_wait` (0.8-9.7 ms) and drain, which tightening can only raise. The high-wall runs within a cell are the high-`slot_wait` runs. Bound ~0%.
+- `S` (workers critical): the slowest 1-5 workers in every k = 9..10 run sit on an SMT sibling with another busy thread, at 1.3-1.7x the per-block time. Their late blocks are what fills the ready queue (high-ready runs = worst collisions), and a cap can't change placement. The uniform part (the faster half of the workers) grows +6.7..9.9% at k = 10. Even if its whole within-cell slope (3.3%/MiB) were ready-caused and a cap pulled ready avg from 1.40 to the k = 9 level of 0.52-0.66 MiB with no stalls, the saving is <= 2.9%, under 4.0%. At 8 the cap never binds (hwm <= 8.6 MiB), and its k + 2 floor overrides lower caps.
+- `SC` is excluded: its blow-up needs the C oracle's cold store (third-pass §1).
+**What changed:** results note and script under `docs/journal/2026-11-26-synthesis/`; `dead-ends.tsv` row; `surface.tsv` row D (state); claim marked done.
+**What's next:** The 9-10W term is placement (SMT sibling sharing: mean worker +13..30% against +7..10% for the faster half in S at 10), which is `i9-clock-modes`'s pinned-vs-unpinned question; the note's §2 is evidence for it. The window's real cost runs the other way, toward looser runt-exempt slots (~1.21 ms at k = 8, already priced in the 8-worker coupling row). A future fast-worker bundle can re-price the `S` bound with the script.
+**Caveats:** Observational, with 3-4 traces a cell and ledgers on. The `S` bound deliberately overstates by treating all of the uniform slope as ready-caused. Only a capped i9 run would measure the intervention directly, and these bounds say it would not pay.

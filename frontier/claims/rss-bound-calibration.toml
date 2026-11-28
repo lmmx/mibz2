@@ -1,0 +1,24 @@
+id = "rss-bound-calibration"
+title = "Peak-RSS noise bands per corpus x threads x runner, from existing null and A/A data"
+kind = "probe"
+zone = "smooth"
+needs = ["shell", "long-context"]
+priority = 3
+status = "open"
+owned_paths = []
+mechanisms = ["evidence-method"]
+needs_louis = ""
+question = """
+Registrations freeze peak-RSS point bounds of 1.005-1.02x, but CI's 2-core runners show bimodal RSS on pattern 4T (+4-8 MB queued output; round 0 RSS 1.054x on strict nulls, ci-pattern-4t-arm-bias), and #1179's zero-heap CRC change moved cells -2.6..+2.2% in one run. What is the paired peak-RSS ratio's null distribution per corpus x thread count on CI (from the strict-null bench runs) and on the i9 (from the unchanged-guard cells of archived bundles on origin/evidence), and what bound would each recent RSS-gated verdict (#1179, #1119, #1053, #1117) have met?
+"""
+why = """
+Twentieth synthesis pass, section 3: two recent STOPs (#1179, partly #1119) hinge on RSS bounds below their own noise, while PERFORMANCE-POLICY section 4 allows 10% and the one real RSS effect (#1053, L3 cliff) was a hot working-set effect. crc32-avx2-ring-rescue needs a calibrated rule before it can be re-registered.
+"""
+stop_test = """
+A census, not gated: a notebook table of null 95% bands (with round-0 and the bimodal regime shown separately) and a short recommended rule for registrations to cite. It changes no frozen verdict (C2): past STOPs stand.
+"""
+done_when = """
+Notebook entry with the table and the data sources; delta; a pointer from crc32-avx2-ring-rescue.
+"""
+premises = ["frontier/deltas/2026-11-27-ci-pattern-4t-arm-bias.md", "frontier/deltas/2026-11-27-crc32-avx2-ring-barrett-build-2.md", "docs/notebook/2026-11-28-synthesis-twentieth-pass.md"]
+links = ["frontier/claims/crc32-avx2-ring-rescue.toml"]

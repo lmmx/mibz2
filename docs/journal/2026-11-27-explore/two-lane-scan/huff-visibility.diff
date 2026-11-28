@@ -1,0 +1,31 @@
+diff --git a/src/huff.rs b/src/huff.rs
+index ead87a1..2b35d05 100644
+--- a/src/huff.rs
++++ b/src/huff.rs
+@@ -37,7 +37,7 @@ pub(crate) const SYM1: u32 = 8;
+ pub(crate) const SYM2: u32 = 16;
+ pub(crate) const LEN1: u32 = 24;
+ pub(crate) const CNT_SH: u32 = 30;
+-const STEPS: usize = 5;
++pub(crate) const STEPS: usize = 5;
+ 
+ /// Fixed L1d-hot chunk buffer size (`2 KiB`) for [`Huff::decode_run`]: `ck` persists across
+ /// coalesced runs and flushes to `syms` only once `ck > CHUNK_STOP` or on `EOB`, cutting
+@@ -45,7 +45,7 @@ const STEPS: usize = 5;
+ /// `idx + 2 < CHUNK_LEN` (zero per-step bounds checks, zero `syms.resize` memset, safe Rust).
+ pub(crate) const CHUNK_LEN: usize = 1042;
+ const CHUNK_MASK: usize = 1023;
+-const CHUNK_STOP: usize = 1000;
++pub(crate) const CHUNK_STOP: usize = 1000;
+ 
+ pub(crate) struct Huff {
+     pub(crate) lut: [u32; LUT_LEN],
+@@ -434,7 +434,7 @@ impl Huff {
+ 
+     #[cold]
+     #[inline(never)]
+-    fn decode_entry_slow(&self, e: u32, mut r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
++    pub(crate) fn decode_entry_slow(&self, e: u32, mut r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
+         if (e & SUB_PTR) != 0 {
+             let _ = r.peek(data, 20);
+             let sub_off = (e & 0xffff) as usize;
