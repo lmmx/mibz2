@@ -1,0 +1,9 @@
+id = "rss-bound-calibration"
+holder = "antigravity"
+session = "9d2c42f899c9"
+claimed_at = "2026-11-28T01:11:53+00:00"
+expires = "2026-11-28T09:11:53+00:00"
+owned_paths = []
+mechanisms = ["evidence-method"]
+base = "3715f0e5e21508a1d8f3487fcbb60e709e071de0"
+released = false
