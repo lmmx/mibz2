@@ -62,11 +62,13 @@ SEMVER_TAG_RE = re.compile(r"^v([0-9]+)\.([0-9]+)\.([0-9]+)$")
 
 # Strict allowlist of demonstrably non-performance-affecting paths (RELEASING §3.5): paths that
 # are not inputs to the published crate's library or the Python wheels' build. The harness
-# (bench/, examples/, benches/), tests, research scratch, recipes and site config are measured
-# with, never compiled into, the shipped decoder; without them here every queue entry (the
+# (bench/, examples/, benches/; the gate's own code included, which runs from HEAD anyway),
+# tests, research scratch and site config are measured with, never compiled into, the shipped
+# decoder; without them here every queue entry (the
 # preflight's own included) would stale the receipt it serves. Everything outside this
 # allowlist — src/, python/, Cargo.toml, Cargo.lock, pyproject.toml, uv.lock, build.rs,
-# rust-toolchain*, .cargo/, .github/ (CI.yml builds the wheels), and unknown paths — is
+# rust-toolchain*, .cargo/, .github/ (CI.yml builds the wheels), .just/ and Justfile (Deploy
+# Release runs `just release`, which edits Cargo.toml and Cargo.lock), and unknown paths — is
 # treated as performance-relevant (fail closed).
 NON_PERFORMANCE_PREFIXES = (
     "docs/",
@@ -76,7 +78,6 @@ NON_PERFORMANCE_PREFIXES = (
     "examples/",
     "tests/",
     "research/",
-    ".just/",
     ".claude/",
 )
 NON_PERFORMANCE_EXACT = frozenset(
@@ -91,7 +92,6 @@ NON_PERFORMANCE_EXACT = frozenset(
         "AGENTS.md",
         "GEMINI.md",
         "CHATGPT.md",
-        "Justfile",
         "zensical.toml",
         "taplo.toml",
         ".gitignore",

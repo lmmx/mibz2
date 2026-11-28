@@ -565,7 +565,8 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
     def test_01b_harness_and_queue_churn_after_receipt_keeps_it_fresh(self) -> None:
         # Added at integration review (not one of the frozen fixtures): queueing the preflight
         # itself edits bench/workstation-queue.txt after the candidate is pinned, so harness,
-        # test and recipe paths must not stale a receipt; a build input still must.
+        # and test paths must not stale a receipt; a build input (the release recipes included)
+        # still must.
         self.repo.write("src/open/dense.rs", "// prescan removed\n")
         cand = self.repo.commit("perf(open): remove dense prescan")
         rows = make_paired_rows(wall_ratios={})
@@ -579,7 +580,6 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
             "bench/workstation-queue.txt",
             "tests/extra.rs",
             "examples/ab.rs",
-            ".just/x.just",
         ):
             self.repo.write(rel, "# churn\n")
         self.repo.commit("bench: queue the preflight; harness and test churn")
@@ -597,13 +597,23 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         self.assertTrue(res["allowed"], res)
         self.assertEqual(res["mode"], "verified-i9-pass")
 
-        for rel in (".cargo/config.toml", "uv.lock", ".github/workflows/CI.yml"):
+        # Each path must itself be named as the staling input (the commits accumulate, so a bare
+        # "stale" would hold vacuously after the first).
+        for rel in (
+            ".cargo/config.toml",
+            "uv.lock",
+            ".github/workflows/CI.yml",
+            ".just/ship.just",
+            "Justfile",
+        ):
             with self.subTest(rel=rel):
                 self.repo.write(rel, f"# build input change {rel}\n")
                 head = self.repo.commit(f"build: change {rel}")
                 res = rp.verify_release(self.repo.work, expected_head=head)
                 self.assertFalse(res["allowed"], res)
-                self.assertTrue(any("stale" in p for p in res["problems"]), res["problems"])
+                self.assertTrue(
+                    any("stale" in p and rel in p for p in res["problems"]), res["problems"]
+                )
 
     # ------------------------------------------------------------------
     # 2. Simulated 0.5.17-style primary regression at 8T / 10T (<3%, neutral CI)

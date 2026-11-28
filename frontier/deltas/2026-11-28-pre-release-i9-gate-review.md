@@ -1,7 +1,7 @@
 claim: pre-release-i9-gate
 by: claude-code
 outcome: partial
-evidence: PR #1256 (author head 653048a0, reviewed and integrated by a different agent); bench/release_preflight.py; bench/test_release_preflight.py (19 passed: 18 frozen + 1 added); .just/release-preflight.just
+evidence: PR #1256 (author head 653048a0, reviewed and integrated by a different agent); bench/release_preflight.py; bench/test_release_preflight.py (19 passed: 18 frozen + 1 added; cold second review of the widening); .just/release-preflight.just
 
 **What was asked:** Independently review the release gate (`deploy.yml` and `ship.just` fail-closed on `bench/release_preflight.py verify`) and the frozen recipe. Then integrate it.
 **What I found:**
@@ -11,7 +11,7 @@ evidence: PR #1256 (author head 653048a0, reviewed and integrated by a different
   - The PERFORMANCE-POLICY §2 secondary-wall and RSS bounds, the i9 topology and the toolchain parity all check out.
   - The verify runs before any bump, tag or push in all four ship recipes and in Deploy Release, and Deploy Release has no bypass input.
   - On live master, `status` and `verify` refuse, as they should.
-- **Blocking defect, fixed here:** only `docs/` and `frontier/` counted as non-performance. Queueing the preflight itself edits `bench/workstation-queue.txt` after the candidate is pinned, so every receipt was stale on arrival. Master also had 302 `bench/` file-changes in 72 h. The allowlist now covers paths that are not build inputs of the published crate or wheels: `bench/`, `benches/`, `examples/`, `tests/`, `research/`, `.just/`, `.claude/`, `Justfile`, site and lint config, and agent docs. `src/`, `python/`, `Cargo.*`, `pyproject.toml`, `uv.lock`, `build.rs`, `rust-toolchain*`, `.cargo/` and all of `.github/` stay performance-relevant. A new test, `test_01b`, checks both directions.
+- **Blocking defect, fixed here:** only `docs/` and `frontier/` counted as non-performance. Queueing the preflight itself edits `bench/workstation-queue.txt` after the candidate is pinned, so every receipt was stale on arrival. Master also had 302 `bench/` file-changes in 72 h. The allowlist now covers paths that are not build inputs of the published crate or wheels: `bench/`, `benches/`, `examples/`, `tests/`, `research/`, `.claude/`, site and lint config, and agent docs. `src/`, `python/`, `Cargo.*`, `pyproject.toml`, `uv.lock`, `build.rs`, `rust-toolchain*`, `.cargo/`, all of `.github/`, `.just/` and the `Justfile` stay performance-relevant. A cold second reviewer caught that `just release` (in `.just/ship.just`) edits `Cargo.toml` and `Cargo.lock` before the build, so I had wrongly exempted the recipes at first. A new test, `test_01b`, checks both directions: each build input must be named as the staling path. A mutation check confirms it fails if `.just/` is exempt.
 - **Also fixed:**
   - The recipe's rounds go from 10 to 12. ab balances the arms' positions over 2 × arms rounds, so 12 balances both the 3-arm run with a recovery base and the 2-arm guard run. The judged minimum stays 10.
   - The receipt fields `verify` reads are now documented in the recipe's header. They were defined only in code.

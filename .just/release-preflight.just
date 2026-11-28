@@ -24,8 +24,9 @@
 #   - `preflight_recovery_base`, `preflight_recovery_cells`: only to add to what `verify`
 #     auto-detects from bench/release-scaling/ (corpus:threads,...)
 # Paths outside the published crate's and wheels' build inputs (docs, frontier, bench, tests,
-# examples, recipes) may change after the candidate without staling the receipt; anything else
-# does (NON_PERFORMANCE_* in bench/release_preflight.py).
+# examples; not .just/ or the Justfile, which drive the release build) may change after the
+# candidate without staling the receipt; anything else does (NON_PERFORMANCE_* in
+# bench/release_preflight.py).
 
 # Paired pre-tag release-candidate comparison on the i9 (wikidata + text + secondary guards).
 # 12 rounds: ab rotates the arms' order and balances positions over 2 x arms rounds, so 12
