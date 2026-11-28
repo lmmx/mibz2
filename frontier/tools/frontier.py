@@ -94,6 +94,9 @@ DELTA_VERDICTS = {
     "ci-pass",
     "diagnostic-pass",
     "adoption-pass",
+    "preflight-pass",
+    "preflight-fail",
+    "recalibration-pass",
     "stop",
     "kill",
     "void",
@@ -107,6 +110,37 @@ RECALIBRATION_PATHS = (
     "src/parallel/",
     "src/bwt.rs",
     "src/block.rs",
+    "src/runs.rs",
+    "src/runs/",
+)
+PERFORMANCE_INPUT_PATHS = (
+    "src",
+    "python",
+    "Cargo.toml",
+    "Cargo.lock",
+    "pyproject.toml",
+    "build.rs",
+    "examples/ab.rs",
+)
+NON_PERFORMANCE_PREFIXES = (
+    "docs/",
+    "frontier/",
+    "tests/",
+    ".github/",
+    ".just/",
+    "bench/",
+)
+NON_PERFORMANCE_EXACT = frozenset(
+    {
+        "CHANGELOG.md",
+        "README.md",
+        "CLAUDE.md",
+        "AGENTS.md",
+        "GEMINI.md",
+        "Justfile",
+        "LICENSE",
+        "SECURITY.md",
+    }
 )
 NON_DEFAULT_LEDGER_STATES = {"experimental", "prototype", "target"}
 
@@ -1542,104 +1576,904 @@ def _commits_since_tag():
     }
 
 
-def release_pipeline_state(claims, queue_state):
-    """Classify the release end of the pipeline: merged-default, experimental-only, or released."""
+def _load_preflight_classifier():
+    """Dynamically reuse bench/release_preflight.py's classify_paths when present."""
+    mod_path = REPO / "bench" / "release_preflight.py"
+    if not mod_path.is_file():
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("_mibz2_release_preflight", mod_path)
+        if spec is None or spec.loader is None:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        fn = getattr(mod, "classify_paths", None)
+        return fn if callable(fn) else None
+    except Exception:
+        return None
+
+
+def classify_release_paths(paths):
+    """Classify changed paths into performance inputs, worker-cost (§5c), and safe metadata."""
+    norm = [str(p).strip().lstrip("./") for p in paths if str(p).strip()]
+    fn = _load_preflight_classifier()
+    if fn is not None:
+        try:
+            res = fn(norm)
+            if isinstance(res, dict):
+                perf = list(
+                    res.get("performance_relevant")
+                    or res.get("performance_paths")
+                    or res.get("performance")
+                    or []
+                )
+                worker = list(res.get("worker_cost_paths") or res.get("worker_cost") or [])
+                non_perf = list(res.get("non_performance_paths") or res.get("non_performance") or [])
+                if perf or worker or non_perf or not norm:
+                    return {
+                        "performance_inputs": perf,
+                        "worker_cost": worker,
+                        "non_performance": non_perf,
+                        "source": "bench/release_preflight.py",
+                    }
+        except Exception:
+            pass
+    perf, worker, non_perf = [], [], []
+    for p in norm:
+        if any(overlaps(p, rp) for rp in PERFORMANCE_INPUT_PATHS):
+            perf.append(p)
+            if any(overlaps(p, wp) for wp in RECALIBRATION_PATHS):
+                worker.append(p)
+        elif p in NON_PERFORMANCE_EXACT or any(p.startswith(pref) for pref in NON_PERFORMANCE_PREFIXES):
+            non_perf.append(p)
+        else:
+            # Fail closed: unknown top-level paths count as performance-relevant.
+            perf.append(p)
+    return {
+        "performance_inputs": perf,
+        "worker_cost": worker,
+        "non_performance": non_perf,
+        "source": "frontier-builtin",
+    }
+
+
+def performance_input_fingerprint(ref="origin/master"):
+    """Compute a stable SHA-256 fingerprint of performance-input files at `ref`."""
+    rc_c, commit = git("rev-parse", "--verify", "-q", f"{ref}^{{commit}}")
+    if rc_c != 0 or not commit:
+        return {
+            "fingerprint": None,
+            "full_sha256": None,
+            "ref": ref,
+            "commit": None,
+            "scope": list(PERFORMANCE_INPUT_PATHS),
+            "error": f"cannot resolve commit for {ref}",
+        }
+    rc_t, tree = git("ls-tree", "-r", "--full-tree", commit, "--", *PERFORMANCE_INPUT_PATHS)
+    if rc_t != 0:
+        return {
+            "fingerprint": None,
+            "full_sha256": None,
+            "ref": ref,
+            "commit": commit,
+            "scope": list(PERFORMANCE_INPUT_PATHS),
+            "error": f"git ls-tree failed for {ref}: {tree}",
+        }
+    lines = sorted(line for line in tree.splitlines() if line.strip())
+    digest = hashlib.sha256("\n".join(lines).encode("utf-8")).hexdigest()
+    return {
+        "fingerprint": digest[:16],
+        "full_sha256": digest,
+        "ref": ref,
+        "commit": commit,
+        "scope": list(PERFORMANCE_INPUT_PATHS),
+        "error": None,
+    }
+
+
+def candidate_invalidation_check(pinned_commit, current_ref="origin/master"):
+    """Check whether `current_ref` invalidates a candidate validated at `pinned_commit`."""
+    pin_fp = performance_input_fingerprint(pinned_commit)
+    cur_fp = performance_input_fingerprint(current_ref)
+    if pin_fp["error"] or cur_fp["error"]:
+        return {
+            "invalidated": None,
+            "safe_metadata_only": False,
+            "changed_perf_paths": [],
+            "changed_non_perf_paths": [],
+            "pinned_fp": pin_fp["fingerprint"],
+            "current_fp": cur_fp["fingerprint"],
+            "error": pin_fp["error"] or cur_fp["error"],
+        }
+    if pin_fp["commit"] == cur_fp["commit"]:
+        return {
+            "invalidated": False,
+            "safe_metadata_only": True,
+            "changed_perf_paths": [],
+            "changed_non_perf_paths": [],
+            "pinned_fp": pin_fp["fingerprint"],
+            "current_fp": cur_fp["fingerprint"],
+            "error": None,
+        }
+    rc, diff = git("diff", "--name-only", pin_fp["commit"], cur_fp["commit"])
+    if rc != 0:
+        return {
+            "invalidated": None,
+            "safe_metadata_only": False,
+            "changed_perf_paths": [],
+            "changed_non_perf_paths": [],
+            "pinned_fp": pin_fp["fingerprint"],
+            "current_fp": cur_fp["fingerprint"],
+            "error": f"git diff failed between {pinned_commit} and {current_ref}: {diff}",
+        }
+    changed = [line.strip() for line in diff.splitlines() if line.strip()]
+    classified = classify_release_paths(changed)
+    invalidated = pin_fp["full_sha256"] != cur_fp["full_sha256"] or bool(
+        classified["performance_inputs"]
+    )
+    return {
+        "invalidated": invalidated,
+        "safe_metadata_only": not invalidated,
+        "changed_perf_paths": classified["performance_inputs"],
+        "changed_non_perf_paths": classified["non_performance"],
+        "pinned_fp": pin_fp["fingerprint"],
+        "current_fp": cur_fp["fingerprint"],
+        "error": None,
+    }
+
+
+def _is_optional_experimental_claim(c):
+    """Whether `c` is an optional experimental/adoption candidate, not a release gate."""
+    cid = c.get("id", "")
+    if cid.startswith("release-"):
+        return False
+    vk = str(c.get("validation_kind", "")).strip().lower()
+    if vk in ("adoption", "diagnostic"):
+        return True
+    if c.get("kind") in ("probe", "explore", "synthesise"):
+        return True
+    mechs = " ".join(str(m).lower() for m in (c.get("mechanisms") or []))
+    if any(tok in mechs for tok in ("release", "preflight", "recalibration", "regression-gate")):
+        return False
+    if "forward-anchor-lanes" in mechs or "bounded-slab" in cid or "experimental" in mechs:
+        return True
+    return False
+
+
+def _is_release_gate_claim(c):
+    """Whether a linked claim is an actual release gate / recalibration dependency."""
+    if _is_optional_experimental_claim(c):
+        return False
+    if c.get("kind") == "ops":
+        return True
+    cid = str(c.get("id", "")).lower()
+    mechs = " ".join(str(m).lower() for m in (c.get("mechanisms") or []))
+    gate_tokens = ("release", "preflight", "recalibrat", "regression-gate", "crossover")
+    return any(tok in cid or tok in mechs for tok in gate_tokens)
+
+
+def _release_dependency_ids(rel, claims_by_id):
+    """Return (dep_ids, missing_dep_ids) from explicit `depends_on` or release-gate `links`."""
+    explicit = rel.get("depends_on")
+    if isinstance(explicit, list) and explicit:
+        present, missing = [], []
+        for raw in explicit:
+            dep_id = str(raw).strip()
+            if not dep_id or dep_id == rel["id"]:
+                continue
+            if dep_id in claims_by_id:
+                present.append(dep_id)
+            else:
+                missing.append(dep_id)
+        return list(dict.fromkeys(present)), list(dict.fromkeys(missing))
+    found = []
+    for link in rel.get("links") or []:
+        s = str(link).strip()
+        m = re.match(r"^frontier/claims/([a-z0-9._-]+)\.toml$", s)
+        if not m:
+            continue
+        dep_id = m.group(1)
+        if dep_id == rel["id"] or dep_id not in claims_by_id:
+            continue
+        if _is_release_gate_claim(claims_by_id[dep_id]):
+            found.append(dep_id)
+    return list(dict.fromkeys(found)), []
+
+
+def _claim_touches_performance_inputs(c):
+    """Whether a claim's `owned_paths` intersect candidate performance inputs."""
+    paths = c.get("owned_paths") or []
+    if not paths:
+        return False
+    return bool(classify_release_paths(paths)["performance_inputs"])
+
+
+def release_completion_state(
+    claims,
+    all_holds,
+    flags,
+    prs,
+    pr_error,
+    review_lines,
+    pending,
+    queue_state,
+    can=None,
+    *,
+    deltas_by_claim=None,
+    prs_by_claim=None,
+):
+    """Compute persistent P1 release completion state across all RELEASING §2a stages."""
+    result = {
+        "stage": "no-releasable-work",
+        "derived_p1": False,
+        "items": [],
+        "effective_priority": {},
+        "release_critical_ids": set(),
+        "candidate_validation": None,
+        "summary_lines": [],
+        "fail_closed": None,
+    }
     info = _commits_since_tag()
-    if info is None:
-        return []
-    tag = info["tag"]
-    items = []
+    claims_by_id = {c["id"]: c for c in claims}
     live_releases = [
         c
-        for c in claims
+        for c in sorted(claims, key=lambda x: x["id"])
         if c["id"].startswith("release-") and c.get("status") not in ("done", "dropped")
     ]
-    if info["default_commits"] and not live_releases:
-        recal_note = (
-            "; check pre-release worker-count recalibration / crossover (docs/RELEASING.md §5c)"
-            if info["recalibration"]
+    done_releases = [
+        c
+        for c in sorted(claims, key=lambda x: x["id"])
+        if c["id"].startswith("release-") and c.get("status") == "done"
+    ]
+    live_holds = {k: v for k, (_, v) in all_holds.items() if live(v)}
+    try:
+        local_cfg = config()
+        max_open = local_cfg.get("max_open_claims", 12)
+    except (OSError, ValueError):
+        local_cfg = {}
+        max_open = 12
+    try:
+        hold_cap = config("origin/master")["max_live_holds"]
+    except (OSError, ValueError):
+        hold_cap = local_cfg.get("max_live_holds", 20)
+    n_open = sum(c.get("status") == "open" for c in claims)
+    live_cap_reached = len(live_holds) >= hold_cap
+
+    if deltas_by_claim is None:
+        deltas_by_claim = {}
+        for p, h in _read_delta_records():
+            cid = h.get("claim", "").strip()
+            if cid and cid != "none":
+                deltas_by_claim.setdefault(cid, []).append((p, h))
+
+    pr_unavailable = prs is None or bool(
+        review_lines and review_lines[0].startswith("- UNAVAILABLE:")
+    )
+    queue_unavailable = queue_state.get("state") == "unknown"
+    dispatch_err = str(queue_state.get("workflow_dispatch_error") or "").strip()
+    if prs_by_claim is None:
+        prs_by_claim = {}
+        if prs is not None:
+            for pr in prs:
+                cid = claim_header(pr.get("body"))
+                if cid and cid != "none":
+                    prs_by_claim.setdefault(cid, []).append(pr)
+
+    def dep_blockers(c, *, allow_parked=False):
+        cid = c["id"]
+        b = []
+        if c.get("needs_louis"):
+            b.append(f"needs_louis: {c['needs_louis']}")
+        if any(_flag_matches(h, cid, c) for _, h in flags):
+            b.append("open flag")
+        if cid in live_holds:
+            holder = live_holds[cid].get("holder", "unknown")
+            if not (allow_parked and live_holds[cid].get("phase") == "parked"):
+                b.append(f"held by {holder}")
+        else:
+            paths = c.get("owned_paths", []) if c.get("zone") == "striated" else []
+            hit = conflicts(cid, paths, c.get("mechanisms", []), all_holds)
+            if hit:
+                other_id, holder, shared = hit[0]
+                b.append(f"blocked by live hold {other_id} ({holder}) on {', '.join(shared)}")
+            elif live_cap_reached and c.get("status") == "open":
+                b.append(f"live-hold cap ({len(live_holds)}/{hold_cap})")
+        if can:
+            missing = sorted(set(c.get("needs", [])) - can)
+            if missing:
+                b.append(f"capability-blocked (needs {', '.join(missing)})")
+        return b
+
+    # Fail-closed git tag lookup: never silently drop pressure if git describe fails.
+    if info is None:
+        reason = "cannot determine last release tag on origin/master"
+        result["stage"] = "unknown"
+        result["derived_p1"] = bool(live_releases)
+        result["fail_closed"] = f"unknown ({reason})"
+        rel_note = (
+            f"; unresolved release claim(s): {', '.join(r['id'] for r in live_releases)}"
+            if live_releases
             else ""
         )
-        items.append(
+        result["summary_lines"] = [f"- Release completion: unknown ({reason}{rel_note})"]
+        result["items"].append(
             {
-                "id": f"release-after-{tag}",
-                "stage": "merged-default",
-                "derived_p1": True,
-                "action": (
-                    f"{len(info['default_commits'])} default-path software commit(s) on master since "
-                    f"{tag}; open release-<version> at P1 and run docs/RELEASING.md{recal_note}"
-                ),
-                "blockers": [],
-                "evidence": tag,
+                "id": live_releases[0]["id"] if live_releases else "release-state",
+                "stage": "unknown",
+                "derived_p1": bool(live_releases),
+                "action": f"unknown ({reason}{rel_note})",
+                "blockers": ["release tag unavailable"],
+                "evidence": "",
             }
         )
-    elif info["experimental_only"] and not live_releases:
-        items.append(
-            {
-                "id": f"experimental-since-{tag}",
-                "stage": "experimental-only",
-                "derived_p1": False,
-                "action": (
-                    f"{len(info['exp_commits'])} experimental-only software commit(s) since {tag}; "
-                    "does not by itself imply a production performance release"
-                ),
-                "blockers": [],
-                "evidence": tag,
-            }
-        )
-    for rel in live_releases:
-        # A release claim is `released` only once its own version tag exists; before that it is
-        # in preparation, and the last tag says nothing about its scaling run.
-        own_tag = "v" + rel["id"].removeprefix("release-").replace("-", ".")
-        rc_t, tag_sha = git("rev-parse", "--verify", "-q", f"refs/tags/{own_tag}^{{commit}}")
-        if rc_t != 0 or not tag_sha:
-            items.append(
+        return result
+
+    tag = info["tag"]
+    fp_info = performance_input_fingerprint("origin/master")
+    fp_note = f"perf-fp {fp_info['fingerprint']}" if fp_info["fingerprint"] else "perf-fp unknown"
+    entries = queue_state.get("entries") or []
+    queued_recipes = {r for r, _, _ in entries}
+    ready_tags = queue_state.get("ready_tags") or {}
+    hold_tags = queue_state.get("hold_tags") or set()
+
+    # Case A: No live release claims
+    if not live_releases:
+        if info["default_commits"]:
+            recal_note = (
+                "; check pre-release worker-count recalibration / crossover (docs/RELEASING.md §5c)"
+                if info["recalibration"]
+                else ""
+            )
+            action = (
+                f"{len(info['default_commits'])} default-path software commit(s) on master since "
+                f"{tag} ({fp_note}); open release-<version> at P1 and run docs/RELEASING.md{recal_note}"
+            )
+            result["stage"] = "release-due-unclaimed"
+            result["derived_p1"] = True
+            result["summary_lines"] = [
+                f"- [release-due-unclaimed] (P1 persistent): {action}"
+            ]
+            result["items"].append(
                 {
-                    "id": rel["id"],
-                    "stage": "release-in-progress",
+                    "id": f"release-after-{tag}",
+                    "stage": "merged-default",
+                    "completion_stage": "release-due-unclaimed",
+                    "derived_p1": True,
+                    "action": action,
+                    "blockers": [],
+                    "evidence": tag,
+                }
+            )
+            return result
+        if info["experimental_only"]:
+            result["stage"] = "no-releasable-work"
+            result["derived_p1"] = False
+            result["summary_lines"] = ["- nothing"]
+            result["items"].append(
+                {
+                    "id": f"experimental-since-{tag}",
+                    "stage": "experimental-only",
+                    "completion_stage": "no-releasable-work",
                     "derived_p1": False,
-                    "action": f"{own_tag} not yet tagged (claim {rel.get('status')}; last tag {tag})",
-                    "blockers": [f"claim {rel.get('status')}"] if rel.get("status") != "open" else [],
+                    "action": (
+                        f"{len(info['exp_commits'])} experimental-only software commit(s) since {tag}; "
+                        "does not by itself imply a production performance release"
+                    ),
+                    "blockers": [],
+                    "evidence": tag,
+                }
+            )
+            return result
+        if done_releases:
+            result["stage"] = "complete"
+        else:
+            result["stage"] = "no-releasable-work"
+        result["derived_p1"] = False
+        result["summary_lines"] = ["- nothing"]
+        return result
+
+    # Case B: One or more live release claims -> persistent P1 completion pressure until done!
+    primary_stage = None
+    for rel in live_releases:
+        rel_id = rel["id"]
+        rel_status = rel.get("status", "open")
+        own_tag = "v" + rel_id.removeprefix("release-").replace("-", ".")
+        result["release_critical_ids"].add(rel_id)
+        rc_t, tag_sha = git("rev-parse", "--verify", "-q", f"refs/tags/{own_tag}^{{commit}}")
+
+        # B1. Published tag exists -> published-awaiting-reporting until claim is done
+        if rc_t == 0 and tag_sha:
+            scaling_note = "awaiting post-tag release-scaling/crossover recording"
+            blockers = dep_blockers(rel, allow_parked=True)
+            needs_scaling_dispatch = False
+            if queue_unavailable:
+                scaling_note = f"unknown ({queue_state.get('reason', 'queue unavailable')}); verify bench-release-scaling at {tag_sha[:8]}"
+            else:
+                ev = _inspect_recipe_evidence("bench-release-scaling", tag_sha, queue_state)
+                scaling_ready = ready_tags.get("bench-release-scaling")
+                if ev["error"]:
+                    scaling_note = f"unknown ({ev['error']})"
+                    blockers.append(f"unverified scaling evidence: {ev['error']}")
+                elif ev["matched"]:
+                    b = ev["matched"][0]
+                    scaling_note = (
+                        f"release-scaling evidence archived at origin/evidence {b['ev_commit'][:8]}; "
+                        "verify SHA-256 and record in CHANGELOG, then mark release done"
+                    )
+                elif scaling_ready == tag_sha:
+                    scaling_note = f"bench-release-scaling pinned at {tag_sha[:8]} awaiting i9 bundle"
+                elif scaling_ready and scaling_ready != tag_sha:
+                    needs_scaling_dispatch = True
+                    blockers.append(
+                        f"stale ready/bench-release-scaling tag ({scaling_ready[:8]} != {tag_sha[:8]})"
+                    )
+                    scaling_note = (
+                        f"stale ready/bench-release-scaling tag ({scaling_ready[:8]} != {tag_sha[:8]}); "
+                        f"re-dispatch run-signal.yml for bench-release-scaling at {tag_sha[:8]}"
+                    )
+                else:
+                    needs_scaling_dispatch = True
+                    sup_s = " (prior scaling receipt is stale/for older commit)" if ev["superseded"] else ""
+                    scaling_note = (
+                        f"queue/confirm bench-release-scaling at {tag_sha[:8]}{sup_s} and record in CHANGELOG"
+                    )
+            if needs_scaling_dispatch:
+                if dispatch_err:
+                    blockers.append(f"inaccessible workflow-dispatch ({dispatch_err})")
+                elif can is not None and "workflow-dispatch" not in can and not any(
+                    "workflow-dispatch" in b for b in blockers
+                ):
+                    blockers.append("capability-blocked (needs workflow-dispatch)")
+            if not blockers and rel_status == "open":
+                result["effective_priority"][rel_id] = 1
+            stage_key = "unknown" if queue_unavailable else "published-awaiting-reporting"
+            if primary_stage is None:
+                primary_stage = stage_key
+            result["derived_p1"] = True
+            action = f"tagged {own_tag} ({stage_key}): {scaling_note}"
+            b_str = f" [blocked: {'; '.join(blockers)}]" if blockers else ""
+            result["summary_lines"].append(
+                f"- **{rel_id}** [`{stage_key}`] (P1 persistent): {action}{b_str}"
+            )
+            result["items"].append(
+                {
+                    "id": rel_id,
+                    "stage": "released",
+                    "completion_stage": stage_key,
+                    "derived_p1": True,
+                    "action": action,
+                    "blockers": blockers,
+                    "evidence": own_tag,
+                }
+            )
+            continue
+
+        # B2. Untagged live release -> inspect dependencies, recalibration, preflight pin & evidence
+        rel_blockers = dep_blockers(rel, allow_parked=True)
+        rel_deltas = deltas_by_claim.get(rel_id, [])
+        rel_prs = prs_by_claim.get(rel_id, [])
+        if len(rel_prs) > 1:
+            dup_refs = ", ".join(f"#{p['number']}" for p in rel_prs)
+            rel_blockers.append(f"duplicate open PRs for {rel_id} ({dup_refs})")
+        rel_pr_failed = any(
+            p.get("checks_failed") is True or p.get("checks_state") in ("failure", "error")
+            for p in rel_prs
+        )
+        dep_ids, missing_dep_ids = _release_dependency_ids(rel, claims_by_id)
+        unmet_deps = []
+        done_deps = []
+        next_eligible_actions = []
+
+        for mid in missing_dep_ids:
+            rel_blockers.append(f"unknown dependency claim: {mid}")
+            next_eligible_actions.append(f"reconcile missing release dependency {mid}")
+
+        for dep_id in dep_ids:
+            dep = claims_by_id[dep_id]
+            dstatus = dep.get("status")
+            if dstatus == "done":
+                done_deps.append(dep_id)
+                continue
+            if dstatus == "dropped":
+                continue
+            unmet_deps.append(dep)
+            result["release_critical_ids"].add(dep_id)
+            d_prs = prs_by_claim.get(dep_id, [])
+            d_blockers = dep_blockers(dep, allow_parked=True)
+            d_failed = any(
+                p.get("checks_failed") is True or p.get("checks_state") in ("failure", "error")
+                for p in d_prs
+            )
+            if len(d_prs) > 1:
+                dup_refs = ", ".join(f"#{p['number']}" for p in d_prs)
+                next_eligible_actions.append(
+                    f"reconcile duplicate open PRs for {dep_id} ({dup_refs}) before taking another session"
+                )
+            elif d_prs:
+                pr0 = d_prs[0]
+                pr_num = pr0["number"]
+                pr_sha = pr0["head"]["sha"][:12]
+                if d_failed:
+                    next_eligible_actions.append(
+                        f"fix failing checks on release dependency {dep_id} (PR #{pr_num})"
+                    )
+                elif pr0.get("draft"):
+                    next_eligible_actions.append(
+                        f"finish draft PR #{pr_num} for {dep_id} (or use reviewed equivalent harness)"
+                    )
+                else:
+                    # Independent review transfer is eligible even when parked/unheld!
+                    if not dep.get("needs_louis") and not any(
+                        _flag_matches(h, dep_id, dep) for _, h in flags
+                    ):
+                        result["effective_priority"][dep_id] = 1
+                    transfer = f"take-review {dep_id} --pr {pr_num} --head {pr_sha} --by AGENT"
+                    held_note = (
+                        f" (currently held by {live_holds[dep_id].get('holder')})"
+                        if dep_id in live_holds and live_holds[dep_id].get("phase") != "parked"
+                        else ""
+                    )
+                    next_eligible_actions.append(
+                        f"review/integrate {dep_id} PR #{pr_num} ({transfer}){held_note}"
+                    )
+            elif dstatus == "review":
+                pr_num = dep.get("pr", "?")
+                next_eligible_actions.append(
+                    f"reconcile review state for {dep_id} (stored PR #{pr_num})"
+                )
+            elif dstatus == "open":
+                if not d_blockers:
+                    result["effective_priority"][dep_id] = 1
+                    next_eligible_actions.append(f"claim and complete release dependency {dep_id}")
+                else:
+                    next_eligible_actions.append(
+                        f"dependency {dep_id} blocked ({'; '.join(d_blockers)})"
+                    )
+            elif dstatus == "idea":
+                if n_open >= max_open:
+                    next_eligible_actions.append(
+                        f"dependency {dep_id} blocked by admission cap ({n_open}/{max_open})"
+                    )
+                else:
+                    next_eligible_actions.append(f"admit release dependency {dep_id} (currently idea)")
+            else:
+                next_eligible_actions.append(
+                    f"unblock release dependency {dep_id} (status {dstatus})"
+                )
+
+        # Check resumability if release claim itself is marked blocked
+        resumable = (
+            rel_status == "blocked"
+            and not unmet_deps
+            and not missing_dep_ids
+            and not rel.get("needs_louis")
+            and not any(_flag_matches(h, rel_id, rel) for _, h in flags)
+        )
+        # Also actionable for preparation while release claim is blocked
+        prep_resumable = rel_status == "blocked" and bool(next_eligible_actions) and not rel.get("needs_louis")
+
+        # Preflight recipe & candidate pin inspection
+        preflight_recipe = str(rel.get("preflight_recipe") or "bench-release-preflight").strip()
+        explicit_pin = str(rel.get("candidate_pin") or "").strip()
+        ready_pin = ready_tags.get(preflight_recipe)
+        stale_ready_pin = bool(explicit_pin and ready_pin and ready_pin != explicit_pin)
+        active_pin = explicit_pin or ready_pin or ""
+        pin_invalidation = (
+            candidate_invalidation_check(active_pin, "origin/master") if active_pin else None
+        )
+
+        # Fail-closed when queue or PR discovery is unavailable: retain visible release pressure!
+        if queue_unavailable or pr_unavailable:
+            missing_src = []
+            if queue_unavailable:
+                missing_src.append(queue_state.get("reason", "queue unavailable"))
+            if pr_unavailable:
+                missing_src.append(pr_error or "PR discovery unavailable")
+            why_unk = "; ".join(missing_src)
+            stage_key = "unknown"
+            action = (
+                f"release-in-progress: {own_tag} not yet tagged ({len(info['default_commits'])} default "
+                f"commit(s) since {tag}, {fp_note}); fail-closed on consequential actions ({why_unk})"
+            )
+            blockers = list(rel_blockers) + [f"unknown state: {why_unk}"]
+            if rel_status == "blocked":
+                blockers.insert(0, "claim blocked")
+            if primary_stage is None:
+                primary_stage = stage_key
+            result["derived_p1"] = True
+            result["fail_closed"] = f"unknown ({why_unk})"
+            result["summary_lines"].append(
+                f"- **{rel_id}** [`{stage_key}`] (P1 persistent): {action}"
+            )
+            result["items"].append(
+                {
+                    "id": rel_id,
+                    "stage": stage_key,
+                    "completion_stage": stage_key,
+                    "derived_p1": True,
+                    "action": action,
+                    "blockers": blockers,
                     "evidence": tag,
                 }
             )
             continue
-        scaling_note = "awaiting post-tag release-scaling/crossover recording"
-        if rc_t == 0 and queue_state.get("state") != "unknown":
-            ev = _inspect_recipe_evidence("bench-release-scaling", tag_sha, queue_state)
-            if ev["error"]:
-                scaling_note = f"unknown ({ev['error']})"
-            elif ev["matched"]:
-                b = ev["matched"][0]
-                scaling_note = f"release-scaling evidence archived at origin/evidence {b['ev_commit'][:8]}; verify and record in CHANGELOG"
-        items.append(
+
+        # Inspect preflight evidence if we have an active pin
+        ev_info = None
+        if active_pin:
+            ev_info = _inspect_recipe_evidence(preflight_recipe, active_pin, queue_state)
+
+        # Determine exact release completion stage
+        stage_key = "preparing"
+        action_parts = []
+        blockers = list(rel_blockers)
+        if rel_pr_failed:
+            blockers.append("failed checks on release PR")
+        if stale_ready_pin:
+            blockers.append(
+                f"stale ready/{preflight_recipe} tag ({ready_pin[:8]} != candidate_pin {explicit_pin[:8]})"
+            )
+
+        # Record candidate_validation lock info when a valid candidate is pinned
+        if active_pin and pin_invalidation and pin_invalidation["error"] is None:
+            result["candidate_validation"] = {
+                "release_id": rel_id,
+                "tag": own_tag,
+                "pin_sha": active_pin,
+                "fingerprint": pin_invalidation["pinned_fp"],
+                "current_fingerprint": pin_invalidation["current_fp"],
+                "invalidated": bool(pin_invalidation["invalidated"]),
+                "changed_perf_paths": pin_invalidation["changed_perf_paths"],
+                "scope": list(PERFORMANCE_INPUT_PATHS),
+            }
+
+        if missing_dep_ids:
+            stage_key = "unknown"
+            action_parts.append(
+                f"release-in-progress: {own_tag} not yet tagged; missing dependency claim(s): {', '.join(missing_dep_ids)}"
+            )
+        elif ev_info is not None and ev_info["error"]:
+            stage_key = "unknown"
+            blockers.append(f"unverified preflight evidence: {ev_info['error']}")
+            action_parts.append(
+                f"release-in-progress: {own_tag} not yet tagged; preflight evidence invalid/unreadable ({ev_info['error']}); fix/verify before advancing"
+            )
+        elif pin_invalidation is not None and pin_invalidation["error"]:
+            stage_key = "unknown"
+            blockers.append(pin_invalidation["error"])
+            action_parts.append(
+                f"release-in-progress: {own_tag} not yet tagged; candidate pin {active_pin[:8]} unverifiable ({pin_invalidation['error']})"
+            )
+        elif pin_invalidation is not None and pin_invalidation["invalidated"]:
+            stage_key = "gate-failed"
+            changed_s = ", ".join(pin_invalidation["changed_perf_paths"][:4]) or "performance inputs"
+            blockers.append(
+                f"candidate pin {active_pin[:8]} invalidated by {changed_s} "
+                f"(fp {pin_invalidation['pinned_fp']} -> {pin_invalidation['current_fp']})"
+            )
+            action_parts.append(
+                f"release-in-progress: {own_tag} candidate pin {active_pin[:8]} invalidated by {changed_s}; "
+                f"re-pin {preflight_recipe} at current master ({fp_note})"
+            )
+        elif rel_pr_failed:
+            stage_key = "gate-failed"
+            action_parts.append(
+                f"release-in-progress: {own_tag} release PR has failing checks; fix before publishing"
+            )
+        elif ev_info is not None and ev_info["matched"]:
+            bundle = ev_info["matched"][0]
+            disp = _delta_disposes_bundle(rel_deltas, bundle)
+            ev_ref = f"origin/evidence {bundle['ev_commit'][:8]} ({bundle['stamp']})"
+            if disp is None:
+                stage_key = "returned-unread"
+                if not blockers and rel_status == "open":
+                    result["effective_priority"][rel_id] = 1
+                action_parts.append(
+                    f"release-in-progress: {own_tag} preflight bundle returned unread ({ev_ref}); "
+                    f"read, verify SHA-256, and record explicit verdict for {preflight_recipe} (never infer pass from arrival)"
+                )
+            else:
+                _dp, dh = disp
+                verdict = dh.get("verdict", "")
+                if verdict in ("preflight-pass", "adoption-pass", "ci-pass"):
+                    if dispatch_err:
+                        blockers.append(f"inaccessible workflow-dispatch ({dispatch_err})")
+                    elif can is not None and "workflow-dispatch" not in can and not any(
+                        "workflow-dispatch" in b for b in blockers
+                    ):
+                        blockers.append("capability-blocked (needs workflow-dispatch)")
+                    if unmet_deps or blockers:
+                        stage_key = "blocked-on-named-gate"
+                        action_parts.append(
+                            f"release-in-progress: {own_tag} preflight passed ({ev_ref}) but blocked on remaining gate(s)"
+                        )
+                    else:
+                        stage_key = "ready-to-publish"
+                        if rel_status == "open":
+                            result["effective_priority"][rel_id] = 1
+                        action_parts.append(
+                            f"release-in-progress: {own_tag} verified ready to publish "
+                            f"(candidate {active_pin[:8]}, {fp_note}, {ev_ref}); run docs/RELEASING.md §4"
+                        )
+                elif verdict in ("preflight-fail", "stop", "kill", "not-adopted", "void", "incomplete"):
+                    stage_key = "gate-failed"
+                    if not blockers and rel_status == "open":
+                        result["effective_priority"][rel_id] = 1
+                    action_parts.append(
+                        f"release-in-progress: {own_tag} preflight {verdict} ({ev_ref}); "
+                        "fix regression/defect and re-pin candidate"
+                    )
+                else:
+                    stage_key = "unknown"
+                    blockers.append(f"disposing delta lacks structured verdict ({ev_ref})")
+                    action_parts.append(
+                        f"release-in-progress: {own_tag} bundle {ev_ref} lacks structured verdict; record explicit verdict"
+                    )
+        elif active_pin and ready_pin == active_pin and preflight_recipe in queued_recipes:
+            stage_key = "queued-exact-candidate"
+            sup_note = (
+                f"; prior evidence superseded by pin {active_pin[:8]}"
+                if ev_info and ev_info["superseded"]
+                else ""
+            )
+            hold_note = f"; hold/{preflight_recipe} set" if preflight_recipe in hold_tags else ""
+            action_parts.append(
+                f"release-in-progress: {own_tag} exact candidate {active_pin[:8]} ({fp_note}) queued via "
+                f"{preflight_recipe} awaiting i9 bundle{sup_note}{hold_note}; defer unrelated performance-input merges (branch/metadata work OK)"
+            )
+        else:
+            # Preparing or blocked on named gate(s)
+            if dispatch_err and not unmet_deps:
+                blockers.append(f"inaccessible workflow-dispatch ({dispatch_err})")
+            elif (
+                not unmet_deps
+                and preflight_recipe in queued_recipes
+                and ready_pin != active_pin
+                and can is not None
+                and "workflow-dispatch" not in can
+                and not any("workflow-dispatch" in b for b in blockers)
+            ):
+                blockers.append("capability-blocked (needs workflow-dispatch)")
+            if rel_status == "blocked" or unmet_deps or blockers:
+                stage_key = "blocked-on-named-gate"
+            else:
+                stage_key = "preparing"
+            if rel_status == "blocked" and "claim blocked" not in blockers:
+                blockers.insert(0, "claim blocked")
+            if not blockers and rel_status == "open":
+                result["effective_priority"][rel_id] = 1
+            commit_summary = (
+                f"{len(info['default_commits'])} default commit(s) since {tag}"
+                if info["default_commits"]
+                else f"last tag {tag}"
+            )
+            action_parts.append(
+                f"release-in-progress: {own_tag} not yet tagged ({commit_summary}, {fp_note})"
+            )
+            if stale_ready_pin:
+                action_parts.append(
+                    f"stale ready/{preflight_recipe} tag ({ready_pin[:8]} != {explicit_pin[:8]}); re-dispatch at {explicit_pin[:8]}"
+                )
+            elif ev_info and ev_info["superseded"]:
+                action_parts.append(
+                    f"stale receipt: prior {preflight_recipe} evidence superseded by {active_pin[:8]}; queue/re-pin current candidate"
+                )
+            if resumable:
+                action_parts.append(
+                    f"resumable now (dependencies done: {', '.join(done_deps) or 'none'}): "
+                    f"reopen via normal transition `frontier.py mark {rel_id} --status open` (never force lease)"
+                )
+            elif next_eligible_actions:
+                action_parts.append("next gate: " + "; ".join(next_eligible_actions))
+                if prep_resumable:
+                    action_parts.append(
+                        f"preparation actionable while {rel_id} is blocked; resume {rel_id} on dependency completion"
+                    )
+            if info["recalibration"]:
+                action_parts.append("§5c worker-count recalibration required before pinning")
+            if not unmet_deps and not resumable:
+                action_parts.append(
+                    f"pin candidate and queue {preflight_recipe} (or reviewed equivalent harness) with queue priority over discretionary runs"
+                )
+
+        if primary_stage is None:
+            primary_stage = stage_key
+        result["derived_p1"] = True
+        action = "; ".join(action_parts)
+        b_str = f" [blocked: {'; '.join(blockers)}]" if blockers else ""
+        result["summary_lines"].append(
+            f"- **{rel_id}** [`{stage_key}`] (P1 persistent): {action}{b_str}"
+        )
+        result["items"].append(
             {
-                "id": rel["id"],
-                "stage": "released",
+                "id": rel_id,
+                "stage": stage_key,
+                "completion_stage": stage_key,
                 "derived_p1": True,
-                "action": f"tagged {own_tag}: {scaling_note}",
-                "blockers": [],
-                "evidence": own_tag,
+                "resumable": resumable,
+                "action": action,
+                "blockers": blockers,
+                "evidence": active_pin[:8] if active_pin else tag,
             }
         )
-    return items
+
+    result["stage"] = primary_stage or "preparing"
+    return result
+
+
+def format_release_completion_lines(rel_state):
+    """Render persistent P1 release completion lines for `brief` and `STATUS.md`."""
+    lines = list(rel_state.get("summary_lines") or ["- nothing"])
+    cv = rel_state.get("candidate_validation")
+    if cv:
+        if cv.get("invalidated"):
+            lines.append(
+                f"- Candidate validation INVALIDATED: pin {cv['pin_sha'][:8]} "
+                f"(perf-fp {cv['fingerprint']} -> {cv['current_fingerprint']}); "
+                f"changed: {', '.join(cv['changed_perf_paths'][:5])}"
+            )
+        else:
+            lines.append(
+                f"- Candidate validation active for {cv['tag']} at {cv['pin_sha'][:8]} "
+                f"(perf-fp {cv['fingerprint']}, scope: {', '.join(cv['scope'])}): "
+                "defer unrelated performance-input merges until published; "
+                "independent branch work, required fixes, and metadata-only merges continue"
+            )
+    return lines
+
+
+def order_review_lines(review_lines, release_critical_ids):
+    """Order release-critical PRs ahead of ordinary PRs in the review list."""
+    if not review_lines or review_lines[0].startswith("- UNAVAILABLE:") or not release_critical_ids:
+        return review_lines
+    rel_lines, other_lines = [], []
+    for line in review_lines:
+        matched_cid = None
+        if line.startswith("- ") and ": " in line:
+            cid = line[2:].split(": ", 1)[0].strip()
+            if cid in release_critical_ids:
+                matched_cid = cid
+        if matched_cid:
+            rel_lines.append(f"{line} [P1 release-critical]")
+        else:
+            other_lines.append(line)
+    return rel_lines + other_lines
+
+
+def release_pipeline_state(claims, queue_state):
+    """Backward-compatible wrapper returning release pipeline items from release_completion_state."""
+    rel = release_completion_state(
+        claims, {}, [], [], None, ["- none"], set(), queue_state, can=None
+    )
+    return rel["items"]
 
 
 def result_to_release(
     claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure, can=None
 ):
     """Derive continuous result-to-release next actions, blockers, and effective P1 priority."""
+    rel_state = release_completion_state(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=can
+    )
     out = {
         "items": [],
-        "effective_priority": {},
+        "effective_priority": dict(rel_state["effective_priority"]),
+        "release_state": rel_state,
         "fail_closed": None,
     }
     if queue_state.get("state") == "unknown":
         out["fail_closed"] = f"unknown (fail-closed: {queue_state.get('reason', 'queue unavailable')})"
+        # Retain visible unresolved release pressure even when failing closed!
+        if rel_state["derived_p1"]:
+            out["items"].extend(rel_state["items"])
         return out
     if prs is None or (review_lines and review_lines[0].startswith("- UNAVAILABLE:")):
         reason = pr_error or "open PR discovery unavailable"
         out["fail_closed"] = f"unknown (fail-closed: {reason})"
+        if rel_state["derived_p1"]:
+            out["items"].extend(rel_state["items"])
         return out
 
     claims_by_id = {c["id"]: c for c in claims}
@@ -1951,19 +2785,26 @@ def result_to_release(
                 }
             )
 
-    # 4. Release pipeline entries (merged-default, experimental-only, released)
-    out["items"].extend(release_pipeline_state(claims, queue_state))
+    # 4. Release pipeline entries (persistent P1 completion state)
+    out["items"].extend(rel_state["items"])
     return out
 
 
 def format_result_to_release_lines(r2r):
     """Render compact plain-language result-to-release lines for brief and status."""
+    lines = []
     if r2r.get("fail_closed"):
-        return [f"- Pipeline state: {r2r['fail_closed']}"]
+        lines.append(f"- Pipeline state: {r2r['fail_closed']}")
+        for item in r2r.get("items") or []:
+            p1_note = " (P1 effective)" if item.get("derived_p1") else ""
+            b_note = f" [blocked: {'; '.join(item['blockers'])}]" if item.get("blockers") else ""
+            lines.append(
+                f"- **{item['id']}** [`{item['stage']}`]{p1_note}: {item['action']}{b_note}"
+            )
+        return lines
     items = r2r.get("items") or []
     if not items:
         return ["- none"]
-    lines = []
     for item in items:
         p1_note = " (P1 effective)" if item.get("derived_p1") else ""
         b_note = f" [blocked: {'; '.join(item['blockers'])}]" if item.get("blockers") else ""
@@ -1979,8 +2820,18 @@ def render():
     every = claims + cards
     queue_state = read_workstation_queue_state(fetch=True)
     all_holds = holds(strict=False)
+    flags = open_flags()
     prs, pr_error = read_open_prs()
     review_lines, pending = review_projection(every, prs, pr_error)
+    pressure = workstation_pressure(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state
+    )
+    r2r = result_to_release(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure
+    )
+    rel_state = r2r["release_state"]
+    eff_p = {**pressure["effective_priority"], **r2r["effective_priority"]}
+    ordered_reviews = order_review_lines(review_lines, rel_state["release_critical_ids"])
     _, head = git("rev-parse", "--short", "HEAD")
     out = ["# Frontier status", ""]
     out += [
@@ -1993,27 +2844,17 @@ def render():
     out += ["## Needs Louis", ""] + (
         [f"- **{c['id']}**: {c['needs_louis']}" for c in louis] or ["- nothing"]
     )
-    due = release_due(every)
-    out += ["", "## Release due (P1)", ""] + (
-        [f"- {len(due[1])} software commit(s) on master since {due[0]}; no release claim yet"]
-        if due
-        else ["- nothing"]
-    )
-    flags = open_flags()
+    out += ["", "## Release due (P1)", ""] + format_release_completion_lines(rel_state)
     out += ["", "## Open flags", ""] + (
         [f"- `{p.name}`: {h.get('flags')} ({h.get('invariant')})" for p, h in flags] or ["- none"]
     )
     out += ["", "## Population (observed presence, not reservations)", ""]
-    out += presence_population(holds(strict=False))
-    out += ["", "## Awaiting review or merge", ""] + review_lines
-    pressure = workstation_pressure(
-        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state
-    )
+    out += presence_population(all_holds)
+    out += ["", "## Awaiting review or merge", ""] + ordered_reviews
     out += ["", "## Workstation replenishment pressure", ""] + format_pressure_lines(pressure)
-    r2r = result_to_release(
-        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure
-    )
     out += ["", "## Result-to-release", ""] + format_result_to_release_lines(r2r)
+    cv = rel_state.get("candidate_validation")
+    cv_active = bool(cv and not cv.get("invalidated"))
     for state, title in (
         ("open", "Open claims, by priority"),
         ("blocked", "Blocked"),
@@ -2025,9 +2866,28 @@ def render():
                 for c in claims
                 if c.get("status") == state and (state != "open" or c["id"] not in pending)
             ],
-            key=lambda c: (c["priority"], c["id"]),
+            key=lambda c: (
+                eff_p.get(c["id"], c["priority"]) if state == "open" else c["priority"],
+                c["priority"],
+                c["id"],
+            ),
         )
-        out += ["", f"## {title}", ""] + ([row(c) for c in sel] or ["- none"])
+        rows = []
+        for c in sel:
+            ep = eff_p.get(c["id"]) if state == "open" else None
+            line = row(c, ep)
+            if (
+                cv_active
+                and state == "open"
+                and c["id"] not in rel_state["release_critical_ids"]
+                and _claim_touches_performance_inputs(c)
+            ):
+                line += (
+                    f" [defer merge until {cv['tag']} publishes: touches pinned perf-fp "
+                    f"{cv['fingerprint']}; branch work OK]"
+                )
+            rows.append(line)
+        out += ["", f"## {title}", ""] + (rows or ["- none"])
     cols = [[c["id"] for c in cards if c.get("stage") == s] for s in STAGES]
     out += ["", "## The blog board", ""]
     out += table(
@@ -2418,6 +3278,17 @@ def brief(can):
     all_holds = holds(strict=False)
     held = {k: v for k, (_, v) in all_holds.items() if live(v)}
     flags = open_flags(fetch=True, strict=False)
+    prs, pr_error = read_open_prs()
+    review_lines, pending = review_projection(claims + cards, prs, pr_error)
+    queue_state = read_workstation_queue_state(fetch=True)
+    pressure = workstation_pressure(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=can
+    )
+    r2r = result_to_release(
+        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure, can=can
+    )
+    rel_state = r2r["release_state"]
+    ordered_reviews = order_review_lines(review_lines, rel_state["release_critical_ids"])
     louis = [
         c
         for c in claims + cards
@@ -2427,16 +3298,7 @@ def brief(can):
         "\n## Needs Louis\n"
         + ("\n".join(f"- {c['id']}: {c['needs_louis']}" for c in louis) or "- nothing")
     )
-    due = release_due(claims)
-    print(
-        "\n## Release due (P1)\n"
-        + (
-            f"- {len(due[1])} software commit(s) on master since {due[0]}, and no release claim: "
-            "open `release-<version>` at priority 1 and take it (docs/RELEASING.md)"
-            if due
-            else "- nothing"
-        )
-    )
+    print("\n## Release due (P1)\n" + "\n".join(format_release_completion_lines(rel_state)))
     print(
         "\n## Open flags\n"
         + ("\n".join(f"- {p.name}: {h.get('flags')}" for p, h in flags) or "- none")
@@ -2452,27 +3314,31 @@ def brief(can):
         "\n## Population (observed presence, not reservations; `frontier.py arrive` to appear)\n"
         + "\n".join(presence_population(all_holds))
     )
-    prs, pr_error = read_open_prs()
-    review_lines, pending = review_projection(claims + cards, prs, pr_error)
-    print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(review_lines))
-    print("Independent integration: take-review ID --pr N --head SHA --by AGENT; "
-          "yield-review or finish-review. No additional work slot required.")
-    queue_state = read_workstation_queue_state(fetch=True)
+    print("\n## Awaiting review or merge (finish before starting)\n" + "\n".join(ordered_reviews))
+    print(
+        "Independent integration: take-review ID --pr N --head SHA --by AGENT; "
+        "yield-review or finish-review. No additional work slot required."
+    )
     rc, ev = git("log", "-5", "--format=%h %cs %s", "origin/evidence")
     print(
         "\n## Recent workstation evidence (origin/evidence)\n"
         + (ev if rc == 0 and ev else "- unavailable")
     )
-    pressure = workstation_pressure(
-        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, can=can
-    )
     print("\n## Workstation replenishment pressure\n" + "\n".join(format_pressure_lines(pressure)))
-    r2r = result_to_release(
-        claims, all_holds, flags, prs, pr_error, review_lines, pending, queue_state, pressure, can=can
-    )
     print("\n## Result-to-release\n" + "\n".join(format_result_to_release_lines(r2r)))
     eff_p = {**pressure["effective_priority"], **r2r["effective_priority"]}
     tiers = pressure["tiers"]
+    cv = rel_state.get("candidate_validation")
+    cv_active = bool(cv and not cv.get("invalidated"))
+    rel_crit = rel_state["release_critical_ids"]
+
+    def _is_deferred_perf(c):
+        return (
+            cv_active
+            and c["id"] not in rel_crit
+            and _claim_touches_performance_inputs(c)
+        )
+
     take = [
         c
         for c in claims + cards
@@ -2486,6 +3352,8 @@ def brief(can):
     take.sort(
         key=lambda c: (
             eff_p.get(c["id"], c["priority"]),
+            0 if c["id"] in rel_crit else 1,
+            1 if _is_deferred_perf(c) else 0,
             0 if c["priority"] == 1 else 1,
             tiers.get(c["id"], 9),
             c["priority"],
@@ -2496,7 +3364,13 @@ def brief(can):
     if review_lines[0].startswith("- UNAVAILABLE:"):
         print("- Review discovery unavailable: these local suggestions are not a verified queue.")
     for c in take:
-        print(row(c, eff_p.get(c["id"])) + (f", stage {c['stage']}" if "stage" in c else ""))
+        suffix = f", stage {c['stage']}" if "stage" in c else ""
+        if _is_deferred_perf(c):
+            suffix += (
+                f" [defer merge until {cv['tag']} publishes: touches pinned perf-fp "
+                f"{cv['fingerprint']}; branch work OK]"
+            )
+        print(row(c, eff_p.get(c["id"])) + suffix)
     other = [c for c in take if c["kind"] in ("explore", "synthesise")]
     if other:
         print(
