@@ -1,0 +1,42 @@
+id = "default-a5a6a-fast-build"
+title = "Fast safe-Rust A6a for default OpenCells: guarded 1008/1024 OutQ16, packed Slot8 with lazy thin[a], and batch-hoisted NO_MARK/NO_EPOCH"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/open.rs", "src/open/outq.rs", "src/runs.rs"]
+mechanisms = ["default-a5a6a-slot8-lazy-thin"]
+needs_louis = ""
+question = """
+Dissection of the shipped default (non-`mtf-fold`) `OpenCells` `A5 + A6a` path on `07ab2e7e` (`docs/notebook/2026-11-28-default-a5a6a-dissection.md`, 3,286/3,286 exact field-by-field parity checks across all 233 Wikidata Open blocks + 6 synthetic edge cases, 7/7 whole-decoder SHA-256 parity PASS) shows that after `#1274` (`runs::front_avx2` Pass 1), `#1294` (`A6c` wire), and `#1312` (`forward-anchor-lanes`), default `A5 + A6a` is `26.0%` (`base` bidi) / `28.8%` (`forward-anchor-lanes` `jcc`) of worker CPU — with `A6a` alone at `16.4%` (`131.09 ms`) / `18.2%` (`110.06 ms`), while `runs::front_avx2` Pass 2 is already near its microarchitectural floor (`R1` single-`u16` store is `+4.54%` slower under JCC-32B).
+
+Four 100% `#![forbid(unsafe_code)]` levers in `src/open/outq.rs` + `src/open.rs` (plus a zero-hot-loop-instruction `injective: bool` flag on `Runs` in `src/runs.rs`, zero new `unsafe`, `0 B` extra heap/RSS) cut `A6a` by **`-36.12%` (`jcc`) / `-37.12%` (`base`) warm** and **`-36.48%` (`jcc`) / `-39.13%` (`base`) L3-cold** (all disjoint) and cut real whole-decoder `ab` Wikidata CPU by **`-5.68%` (`JCC-32B`) / `-10.01%` (`base`) 1W `workers-lazy`** and **`-7.32%..-8.43%` 8W `mibz2`** (`-8.64%` 1W / `-7.62%` 8W under `--features forward-anchor-lanes`, all 11/11 disjoint at `1.0018x–1.0168x` peak RSS and `-1.30%..+1.12%` across all 6 guard corpora):
+1. Switch default `OutQ16` from unguarded `512/512` (`417,041` `push_slow` calls) to guarded `1008/1024` (`40,597` `push_slow` calls = `10.3x` fewer, `0` overflow chunks across all 233 Wikidata Open blocks, and half as many `A6c` chunk transitions; parameterizing `src/open/checks.rs::full_nonzero_tail_links_to_its_overflow_chunk`).
+2. Split `OutQ16` into stack-resident packed 8-byte `Slot8 { cur, end }` (`2 KiB`) and cold `OutQMeta` so LLVM hoists `out.ptr`/`out.len` in registers with `0` stack reloads and `0` `vzeroupper`/`0` `ymm` in `push_slow`.
+3. Eliminate all `14,386,581` random `thin[a] += w` read-modify-writes from the hot thin-run loop by deriving `thin[a] == meta.cap_thin[a] - ((slots[a].end - slots[a].cur) >> 1)` lazily at thick strips, epoch cuts, and end of Pass 1 (`-8.3%` additional `A6a` cut on top of `Slot8` + hoisting).
+4. Record `Runs::injective` (0 hot-loop instructions in `front_avx2`) so `OpenCells` runs a 256-record batch-hoisted `NO_MARK` / `NO_EPOCH` zero-lookahead loop (`process_chunk_slot8`) with outlined `#[cold] take_thick`, compiling to a 22-instruction (`107 B`) hot loop with `0` stack reloads, `0` stack stores, and `0` `records` bounds checks.
+
+Does shipping this zero-new-`unsafe` default `A6a` redesign on `master` pass all CI, Miri, exactness, disassembly, and whole-decoder performance gates?
+"""
+why = """
+Delivers `-5.7%..-10.0%` 1W and `-7.3%..-8.4%` 8W whole-decoder Wikidata CPU directly on the shipped default `OpenCells` path (and `-7.6%..-8.6%` on `--features forward-anchor-lanes`) without waiting for `mtf-fold`, with `#![forbid(unsafe_code)]` in `src/open.rs` and `src/open/outq.rs`, `0` new `unsafe`, `0 B` extra heap/RSS, and zero guard regressions.
+"""
+stop_test = """
+Frozen before data (C2 never relaxed):
+1. **Correctness & safety:** `#![forbid(unsafe_code)]` preserved in `src/open.rs` and `src/open/outq.rs`; zero new `unsafe` in `src/runs.rs`; 100% SHA-256 parity vs C `libbzip2` across all 7 corpora (`wikidata`, `text`, `runs`, `records`, `random`, `pattern`, `onebyte`) at 1W and 4W/8W; `cargo test --lib` (default, `--features forward-anchor-lanes`, `--features mtf-fold`), `fuzz-smoke`, and Miri (`0` UB) green.
+2. **Disassembly hygiene (`objdump -dC`):** `0` `vzeroupper` and `0` `ymm` in `process_chunk_slot8`, `take_thick`, and `OutQMeta::push_slow`, with `0` stack reloads inside `process_chunk_slot8::<true, true>`'s hot thin-run loop.
+3. **Whole-decoder paired A/B (`n >= 11` alternating pairs on VM/local, `base` and `JCC-32B`, plus CI `bench`):** cuts `wikidata` `workers-lazy` 1W and `mibz2` 8W CPU by `>= 4.0%` (95% CI upper bound `<= 0.960`) on both `base` and `JCC-32B` with peak RSS `<= 1.020x` (calibrated null-RSS band per `#1273`), zero guard regression (`ci_lo <= 1.020` across all 6 guard corpora), and CI `bench` passing `PERFORMANCE-POLICY` (no primary regression, Wikidata faster or neutral on AMD EPYC runner). Otherwise STOP and record a scoped dead-end row in `frontier/dead-ends.tsv`.
+"""
+done_when = """
+Striated PR on `src/open.rs`, `src/open/outq.rs`, `src/runs.rs` (zero new `unsafe`, ordinary author-owned CI integration once applicable checks pass), delta, and `frontier/ledger.tsv` row.
+"""
+premises = [
+  "docs/notebook/2026-11-28-default-a5a6a-dissection.md",
+  "docs/notebook/2026-11-28-explore-fold-a5a6a-dissection.md",
+]
+links = [
+  "frontier/claims/fold-a5a6a-fast-pass1-pass2.toml",
+  "frontier/claims/a6c-wire-redesign.toml",
+  "frontier/claims/runs-front-i9-rescue.toml",
+]

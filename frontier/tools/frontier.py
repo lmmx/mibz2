@@ -666,20 +666,36 @@ def yield_review(cid, session):
 TERMINAL_CLAIM_STATES = ("dropped", "done", "blocked")
 
 
+def _merged_pr_head_descends(number, recorded_head, actual_head, merge):
+    """Return True iff `recorded_head` is a verified git ancestor of `actual_head` or `merge`."""
+    if not (isinstance(recorded_head, str) and re.fullmatch(r"[0-9a-f]{40}", recorded_head)):
+        return False
+    # A merge-commit (non-squash) merge contains the recorded head; for a squash this passes only
+    # if the recorded head is already on master. The caller has matched the API head exactly,
+    # put the merge on origin/master and required the claim terminal there.
+    if git("merge-base", "--is-ancestor", recorded_head, merge)[0] == 0:
+        return True
+    if git("merge-base", "--is-ancestor", recorded_head, actual_head)[0] == 0:
+        return True
+    rc, _ = git("fetch", "-q", "--no-tags", "origin", f"refs/pull/{number}/head")
+    if rc == 0 and git("rev-parse", "FETCH_HEAD")[1] == actual_head:
+        return git("merge-base", "--is-ancestor", recorded_head, actual_head)[0] == 0
+    return False
+
+
 def finish_review(cid, number, head, *, cancelled=False):
     """Release exactly a verified terminal PR reservation, even after session loss."""
     sha, lease = holds().get(cid, (None, None))
-    # A dropped, done or blocked claim's closed-unmerged PR may have been rebased after its reservation
-    # recorded a head; the claim's terminal status on origin/master, not the stale head, then
-    # identifies the reservation (otherwise a parked lease would hold its paths forever).
-    moved_terminal = cancelled and _trunk_item(cid).get("status") in TERMINAL_CLAIM_STATES
-    if (
-        not lease or lease.get("phase") not in ("integration", "parked")
-        or lease.get("pr") != number
-        or (lease.get("pr_head") != head and not moved_terminal)
-    ):
+    if not lease or lease.get("phase") not in ("integration", "parked") or lease.get("pr") != number:
         sys.exit("no matching integration reservation")
+    head_moved = lease.get("pr_head") != head
     if cancelled:
+        # A dropped, done or blocked claim's closed-unmerged PR may have been rebased after its
+        # reservation recorded a head; the claim's terminal status on origin/master, not the
+        # stale head, then identifies the reservation (otherwise a parked lease would hold its
+        # paths forever).
+        if head_moved and _trunk_item(cid).get("status") not in TERMINAL_CLAIM_STATES:
+            sys.exit("no matching integration reservation")
         pr = read_pr(number)
         try:
             valid = (
@@ -700,6 +716,14 @@ def finish_review(cid, number, head, *, cancelled=False):
         _fetch_master(strict=True)
         if git("merge-base", "--is-ancestor", merge, "origin/master")[0]:
             sys.exit("merge commit is not on origin/master")
+        if head_moved:
+            # The merged bytes are not the head the integration recorded, so the release frees
+            # paths without certifying a verified-head merge: it needs the claim terminal on
+            # origin/master, a merged head descending from the recorded one, and a record of both.
+            if _trunk_item(cid).get("status") not in TERMINAL_CLAIM_STATES:
+                sys.exit("moved-head merge needs the claim terminal on origin/master")
+            if not _merged_pr_head_descends(number, lease.get("pr_head"), head, merge):
+                sys.exit("merged PR head does not descend from recorded integration head")
         terminal = merge
     if lease.get("released"):
         if lease.get("terminal") != terminal:
@@ -707,6 +731,8 @@ def finish_review(cid, number, head, *, cancelled=False):
         print(f"{cid}: already released for PR #{number}")
         return
     updated = {**lease, "released": True, "terminal": terminal}
+    if head_moved and not cancelled:
+        updated["moved_head"] = [lease.get("pr_head"), head]
     ok, out = write_lease(cid, updated, sha, sha)
     if not ok:
         sys.exit(f"integration not released: {out}")
@@ -775,7 +801,11 @@ def reconcile_integrations(all_holds, *, fetch_master=True):
                 pr = read_pr(lease["pr"])
                 if pr.get("state") == "closed" and isinstance(pr.get("merged"), bool):
                     head = lease["pr_head"]
-                    if not pr["merged"] and _trunk_item(cid).get("status") in TERMINAL_CLAIM_STATES:
+                    if pr["merged"]:
+                        pr_head = pr.get("head", {}).get("sha")
+                        if isinstance(pr_head, str) and re.fullmatch(r"[0-9a-f]{40}", pr_head):
+                            head = pr_head
+                    elif _trunk_item(cid).get("status") in TERMINAL_CLAIM_STATES:
                         head = pr["head"]["sha"]
                     finish_review(cid, lease["pr"], head, cancelled=not pr["merged"])
             except (SystemExit, KeyError, TypeError, ValueError):

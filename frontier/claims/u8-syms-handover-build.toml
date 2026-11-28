@@ -1,0 +1,50 @@
+id = "u8-syms-handover-build"
+title = "Compact unified u8 + sparse pos256 symbol handover across S, Shared pool, and W"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/block.rs", "src/huff.rs", "src/runs.rs", "src/mtf.rs", "src/parallel.rs", "src/stream.rs", "src/read.rs", "src/lib.rs"]
+mechanisms = ["scanner-u8-handover", "runs-front-u8-avx2", "mtf-u8-pos256", "shared-l3-footprint"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-explore-u8-syms-handover.md` proved across all 7 corpora that `100.0%` of blocks on `wikidata` (`431/431`, `max_niu = 102`), `text` (`27/27`, `142`), `runs`, `onebyte`, and `pattern` have `n_in_use <= 255` (`0` occurrences of `sym == 256`), while even on `n_in_use == 256` (`random` `18/18`, `records` `22/22`) `sym == 256` occurs on only `0.1563%` / `0.8743%` of symbols.
+
+Replacing the internal `Vec<u16>` handover buffer with a single unified `pub(crate) struct SymBuf { bytes: Vec<u8>, pos256: Vec<u32> }` (`EOB` implicit at `bytes.len()`, `255u8` placeholder at `pos256` indices, zero `pos256` allocation for `n_in_use <= 255`, keeping public `block::Symbols` semver-compatible via internal `CompactSymbols`) moves all three coupled stations simultaneously on the VM prototype (100% SHA-256 parity, portable fat-LTO):
+- **Station `S` (`decode_runs_bmi2`):** `0 vzeroupper`, `30 -> 22` `shlx`/`shrx`, `-7.45%..-7.78%` isolated `cold32` A3 (`-8.47%..-9.70%` `mibz2-scan` CPU on coupled 8T `wikidata-x4`), plus superlinear **`-6.75%..-10.19%` extra** on top of `#1153` (`K = 3` A3) by removing `flush_u8_patched` widening.
+- **Station `W` (`runs::front_avx2` + `mtf_avx2`):** `runs::front_avx2` Pass 1 drops from 4×32B loads + 6 `vpermq` + 6 `vpack` + `vptest` to 2×32B loads + `vpandn`/`vpcmpeqb`/`vpmovmskb` (`0 vpermq`, `0 vpack`, `0 vptest`, **`-50.3%..-51.4%`** Pass 1, `-7.70%` full `front_avx2` JCC-32B); `mtf_avx2` segmented `u8 + pos256` cuts `random`/`records` `-4.6%..-8.7%`; coupled 8T `wkr_sum` CPU drops **`-2.77%`** (default) / **`-3.64%`** (`forward-anchor-lanes`).
+- **Shared L3 / Peak RSS (`VmHWM`):** cuts `wikidata-x4` 8T RSS by **`-3.55..-4.43 MiB` (`0.932–0.947×`)**, `text` 8T by **`-5.21 MiB` (`0.948×`)**, `random` 8T by **`-4.31..-4.55 MiB` (`0.945–0.948×`)**, and `records` 8T by **`-2.53..-3.00 MiB` (`0.964–0.970×`)**, directly relieving the 99.4% L3-miss-stall 8W scanner contention residual measured in `1950f77f`.
+
+Does shipping internal `SymBuf` (`u8` + sparse `pos256`) across `S`, `Shared`, and `W` deliver a real physical i9-10900K speedup on `wikidata-x4` (scanner + multi-thread wall) and off-Wikidata (`text`, `random`, `records`) while cutting 8W peak RSS `<= 0.975×` with zero guard regressions?
+"""
+why = """
+Compact `u8` handover is a rare cross-station lever that simultaneously shrinks serial scanner CPU (`S`), worker MTF/front CPU (`W`), and active 8W L3 handover traffic (`-95 MiB` on `wikidata-x4`, `-3.5..-4.4 MiB` resident `VmHWM`), while also unblocking `#1153` (`K = 3` A3) by eliminating its `u8 -> u16` widening cost on all corpora including `random`/`records`. Keeping `SymBuf` internal preserves 100% public Rust semver compatibility.
+"""
+stop_test = """
+Frozen before building:
+1. Safety, compatibility & exactness: zero breaking changes to public `block::Symbols` / `block::read_item` / `stream::Scanner::next` signatures (internal `CompactSymbols` / `SymBuf` path), `#![forbid(unsafe_code)]` preserved in `src/huff.rs`, `0 vzeroupper` in `decode_runs_bmi2`, `0 vpermq` / `0 vpack*` / `0 vptest` in `runs::front_avx2`, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, full unit + integration + feature-gate (`forward-anchor-lanes`, `trace`, `mtf-fold`, `scan-oracle`) tests PASS, Miri `0` UB on `runs::front_avx2` (`u8`) and `mtf_avx2` (`u8 + pos256` including `n_in_use == 255` and `n_in_use == 256` edge cases), and 100% C `libbzip2` SHA-256 parity across all 7 corpora + `wikidata-x4`.
+2. Physical i9-10900K C6 verification (`--settle 2`, dict-safe `check_no_quota`, `n >= 12` paired alternating rounds, fresh processes, `AB_SHA256=1` parity):
+   - `wikidata` / `wikidata-x4` multi-thread (`6T` and `8T`, `mibz2` default and `mibz2-workers-lazy`): wall `<= 0.985×` (95% CI strictly `< 1.000`) on at least one of `6T`/`8T` (and `<= 0.995×` on the other) with `mibz2-scan` CPU `<= 0.970×`.
+   - `wikidata-x4` `8T` peak RSS (`VmHWM`): `<= 0.975×` baseline (`>= 2.5%` RSS reduction) AND `<= 1.005×` across all other cells (`1T, 4T, 6T, 8T, 10T`, all 7 corpora).
+   - Guard corpora (`text`, `random`, `records`, `runs`, `pattern`, `onebyte` across `1T` and multi-thread): zero regressions (`wall <= 1.010×`).
+Otherwise STOP/REVERT and record a scoped dead-end row preserving i9 evidence (C2).
+"""
+done_when = """
+Striated PR implementing internal `SymBuf` (`u8` + sparse `pos256`) across `S`, `Shared`, and `W` merged after passing all unit/Miri/CI gates and physical i9-10900K C6 verification under the frozen stop test, with delta and `frontier/ledger.tsv` entry.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-u8-syms-handover.md",
+  "frontier/DECODER.md",
+  "docs/notebook/2026-11-28-scanner-contention-bounded-recheck-verdict.md",
+  "src/block.rs",
+  "src/huff.rs",
+  "src/runs.rs",
+  "src/mtf.rs",
+  "src/parallel.rs",
+]
+links = [
+  "frontier/deltas/2026-11-28-explore-u8-syms-handover.md",
+  "frontier/claims/scanner-a3-k3-pipe-u8.toml",
+  "frontier/claims/runs-front-i9-rescue.toml",
+]

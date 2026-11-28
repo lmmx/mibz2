@@ -264,3 +264,245 @@ def test_bz2reader_readall_closed_and_corrupt(threads):
         with pytest.raises(mibz2.DecodeError):
             r.readall()
         assert not r.verified
+
+
+# Multi-block line corpus (100 kB blocks, no trailing newline)
+_LINE_RAW = b"alpha\nbeta\ngamma" * 70_000
+_LINE_COMPRESSED = bz2.compress(_LINE_RAW, compresslevel=1)
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_readline_limits_cross_block_and_eof(threads):
+    # Test both mibz2.open() and raw BZ2Reader with size=0, small limit, exact limit,
+    # large limit, negative/None, no-trailing-newline tail, and EOF persistence.
+    for opener in (
+        lambda: mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+        lambda: mibz2.BZ2Reader(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+    ):
+        with opener() as f:
+            raw_obj = f.raw if isinstance(f, io.BufferedReader) else f
+            assert not raw_obj.verified
+            assert f.readline(0) == b""
+            assert f.readline(3) == b"alp"
+            assert f.readline(3) == b"ha\n"
+            assert f.readline(5) == b"beta\n"
+            assert f.readline(100) == b"gammaalpha\n"
+            assert f.readline(-1) == b"beta\n"
+            assert f.readline(None) == b"gammaalpha\n"
+            out = bytearray(b"alpha\nbeta\ngammaalpha\nbeta\ngammaalpha\n")
+            while line := f.readline():
+                out += line
+            assert bytes(out) == _LINE_RAW
+            assert raw_obj.verified
+            assert f.readline() == b""
+            assert f.readline(10) == b""
+            assert f.readline(0) == b""
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_readline_very_long_cross_block_line(threads):
+    # A single line spanning >2 compressed blocks (250 kB with no newline until the end)
+    long_line = (b"x" * 250_000) + b"\n" + b"tail-no-nl"
+    comp = bz2.compress(long_line, compresslevel=1)
+    with mibz2.open(io.BytesIO(comp), threads=threads) as f:
+        assert f.readline(150_000) == b"x" * 150_000
+        assert f.readline() == (b"x" * 100_000) + b"\n"
+        assert f.readline() == b"tail-no-nl"
+        assert f.readline() == b""
+        assert f.raw.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_readlines_and_hint(threads):
+    expected = _LINE_RAW.splitlines(keepends=True)
+    for opener in (
+        lambda: mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+        lambda: mibz2.BZ2Reader(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+    ):
+        with opener() as f:
+            raw_obj = f.raw if isinstance(f, io.BufferedReader) else f
+            part = f.readlines(1234)
+            assert sum(len(x) for x in part) >= 1234
+            assert len(part) < len(expected)
+            assert not raw_obj.verified
+            rest = f.readlines(-1)
+            assert part + rest == expected
+            assert raw_obj.verified
+            assert f.readlines() == []
+            assert f.readlines(0) == []
+
+    # Empty stream readlines
+    with mibz2.open(io.BytesIO(bz2.compress(b"")), threads=threads) as f:
+        assert f.readlines() == []
+        assert f.raw.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_iter_and_next_raw_and_buffered(threads):
+    expected = _LINE_RAW.splitlines(keepends=True)
+    for opener in (
+        lambda: mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+        lambda: mibz2.BZ2Reader(io.BytesIO(_LINE_COMPRESSED), threads=threads),
+    ):
+        with opener() as f:
+            raw_obj = f.raw if isinstance(f, io.BufferedReader) else f
+            first = next(f)
+            assert first == expected[0]
+            rest = list(f)
+            assert [first, *rest] == expected
+            assert raw_obj.verified
+            with pytest.raises(StopIteration):
+                next(f)
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_buffered_reader_contract_peek_readinto_detach_and_text(threads):
+    with pytest.raises(ValueError, match="positive"):
+        mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads, buffer_size=0)
+
+    # isinstance(io.BufferedReader), peek non-advancing, read(size) cross-block, read1
+    with mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads) as f:
+        assert isinstance(f, io.BufferedReader)
+        assert isinstance(f.raw, mibz2.BZ2Reader)
+        p1 = f.peek(10)
+        p2 = f.peek(10)
+        assert p1 == p2 and p1.startswith(b"alpha\n")
+        assert f.read(0) == b""
+        # Cross-block bounded read (250 kB > 100 kB block)
+        head = f.read(250_000)
+        assert len(head) == 250_000
+        assert head == _LINE_RAW[:250_000]
+        # read1 returns up to one block
+        chunk1 = f.read1(10_000)
+        assert 0 < len(chunk1) <= 10_000
+        rest = f.read()
+        assert head + chunk1 + rest == _LINE_RAW
+        assert f.raw.verified
+        assert f.peek(10) == b""
+
+    # readinto / readinto1 with bytearray, memoryview, non-byte cast view, and 0-length
+    with mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads) as f:
+        assert f.readinto(bytearray(0)) == 0
+        assert f.readinto1(bytearray(0)) == 0
+        buf16 = memoryview(bytearray(200)).cast("H")
+        n_cast = f.readinto1(buf16)
+        assert 0 < n_cast <= 200
+        out = bytearray(buf16.cast("B")[:n_cast])
+        buf_big = bytearray(250_000)
+        while n := f.readinto(buf_big):
+            out += buf_big[:n]
+        assert bytes(out) == _LINE_RAW
+        assert f.raw.verified
+
+    # detach() returns BZ2Reader cleanly and invalidates detached wrapper
+    f_det = mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads)
+    first = f_det.readline()
+    assert first == b"alpha\n"
+    raw = f_det.detach()
+    assert isinstance(raw, mibz2.BZ2Reader)
+    for op in (
+        lambda x: x.read(10),
+        lambda x: x.read1(10),
+        lambda x: x.readinto(bytearray(10)),
+        lambda x: x.readinto1(bytearray(10)),
+        lambda x: x.readline(),
+        lambda x: x.readlines(),
+        lambda x: x.peek(),
+        lambda x: list(x),
+        lambda x: next(x),
+    ):
+        with pytest.raises(ValueError, match="detached"):
+            op(f_det)
+    rest_lines = list(raw)
+    assert first + b"".join(rest_lines) == _LINE_RAW
+    assert raw.verified
+    raw.close()
+
+    # io.TextIOWrapper interoperability
+    with mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads) as f:
+        text_out = io.TextIOWrapper(f, encoding="ascii").read()
+        assert text_out == _LINE_RAW.decode("ascii")
+        assert f.raw.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_line_and_buffered_closed_and_corrupt_errors(threads):
+    f = mibz2.open(io.BytesIO(_LINE_COMPRESSED), threads=threads)
+    f.close()
+    for op in (
+        lambda x: x.read(10),
+        lambda x: x.read1(10),
+        lambda x: x.readinto(bytearray(10)),
+        lambda x: x.readinto1(bytearray(10)),
+        lambda x: x.readline(),
+        lambda x: x.readlines(),
+        lambda x: x.peek(),
+        lambda x: list(x),
+        lambda x: next(x),
+    ):
+        with pytest.raises(ValueError, match="closed"):
+            op(f)
+
+    r = mibz2.BZ2Reader(io.BytesIO(_LINE_COMPRESSED), threads=threads)
+    r.close()
+    for op in (
+        lambda x: x.readline(),
+        lambda x: x.readlines(),
+        lambda x: x.readinto(bytearray(10)),
+        lambda x: list(x),
+        lambda x: next(x),
+    ):
+        with pytest.raises(ValueError, match="closed"):
+            op(r)
+
+    bad = bytearray(_LINE_COMPRESSED)
+    bad[len(bad) * 3 // 4] ^= 0x10
+    for mode in ("iter", "readline", "readlines", "read_full"):
+        with mibz2.open(io.BytesIO(bytes(bad)), threads=threads) as bf:
+            with pytest.raises(mibz2.DecodeError):
+                if mode == "iter":
+                    for _ in bf:
+                        pass
+                elif mode == "readline":
+                    while bf.readline():
+                        pass
+                elif mode == "readlines":
+                    bf.readlines()
+                else:
+                    while bf.read(250_000):
+                        pass
+            assert not bf.raw.verified
+
+
+@pytest.mark.parametrize("threads", [1, 4])
+def test_reader_nonblocking_lines_and_read_full(threads):
+    class NonBlocking(io.RawIOBase):
+        def __init__(self, payload: bytes) -> None:
+            super().__init__()
+            self.payload = payload
+            self.pos = 0
+            self.calls = 0
+
+        def readable(self) -> bool:
+            return True
+
+        def read(self, size: int = -1) -> bytes | None:
+            self.calls += 1
+            if self.calls % 3 == 1 and self.pos < len(self.payload):
+                return None
+            cap = 4096 if size < 0 else min(size, 4096)
+            chunk = self.payload[self.pos : self.pos + cap]
+            self.pos += len(chunk)
+            return chunk
+
+    with mibz2.open(NonBlocking(_LINE_COMPRESSED), threads=threads) as f:
+        assert f.readlines() == _LINE_RAW.splitlines(keepends=True)
+        assert f.raw.verified
+
+    with mibz2.open(NonBlocking(_LINE_COMPRESSED), threads=threads) as f:
+        out = bytearray()
+        while chunk := f.read(250_000):
+            out += chunk
+        assert bytes(out) == _LINE_RAW
+        assert f.raw.verified
+

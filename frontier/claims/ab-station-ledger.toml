@@ -1,0 +1,24 @@
+id = "ab-station-ledger"
+title = "Tooling: a per-station CPU ledger (scanner, workers per worker, residual) in ab's summary, so every bundle says which station binds"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "done"
+owned_paths = ["bench/station_ledger.py", "bench/test_station_ledger.py"]
+mechanisms = ["station-balance"]
+needs_louis = ""
+question = """
+Every ab child row already records per-thread CPU (`thread_cpu`: mibz2-scan, mibz2-N, main, mibz2-read). Read back by hand, the v0.5.18 recalibration bundle (f8b21e4, VOID verdicts but intact rows) showed that shipped Wikidata is worker-bound at every i9 plan, by 19-78 ms a worker, and that a 20-45 ms residual (wall − max(S, W/k)) sits outside both stations (docs/notebook/2026-11-28-explore-shipped-knee-worker-bound.md). No recipe reports this; each synthesis re-derives it, or takes a trace bundle to get it. Add a standalone reader, `bench/station_ledger.py BUNDLE_JSONL...`, that prints per (corpus, threads, arm): median wall, mean S, W, k, W/k, W/k − S and the residual, plus a flag when W grows by more than 10% between the smallest and largest k of an arm family (waiting or contention, not demand). It is read-only over archived JSONL, with no change to ab or any frozen recipe.
+"""
+why = """
+The binding station decides which levers pay, and DECODER.md's headline (a tie at 8 workers) was wrong for the shipped build for at least a day while the evidence sat in archived rows. A ledger beside every bundle turns that from a synthesis into a lookup and catches the corpus- and feature-conditional cases (text bound by neither station, lanes bound by the scanner) at readback time.
+"""
+stop_test = """
+Frozen before data: done when the reader reproduces this note's Wikidata table from recalibrate-0518/run-20261128T100510Z to within 0.1 ms on every cell and has a unit test over a 6-row synthetic JSONL (including an empty `thread_cpu` row, which it must skip and count). Dropped if a reviewer shows that an existing bench/*.py already prints these columns.
+"""
+done_when = """
+The reader and its test merged, and one delta that runs it over the two newest bundles that carry thread_cpu.
+"""
+premises = ["docs/notebook/2026-11-28-explore-shipped-knee-worker-bound.md", "frontier/DECODER.md"]
+links = ["examples/ab.rs", "examples/station_balance.rs"]
