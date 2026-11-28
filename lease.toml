@@ -6,4 +6,4 @@ expires = "2026-11-28T08:22:20+00:00"
 owned_paths = ["Cargo.toml", "src/open.rs", "src/open/lanes.rs", "bench/forward_adopt.py", "bench/test_forward_adopt.py", ".just/forward-adopt.just"]
 mechanisms = ["forward-anchor-lanes-default"]
 base = "e435074cacf4b83dacc4b986e964473478f22530"
-released = false
+released = true
