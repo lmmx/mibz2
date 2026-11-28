@@ -4,8 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "open"
-owned_paths = ["src/runs.rs"]
+status = "done"
+owned_paths = ["src/runs.rs", "src/runs/tests.rs", "bench/runs_front_i9.py", "bench/test_runs_front_i9.py"]
 mechanisms = ["runs-front-u64-vptest-p1", "runs-front-u32-counts", "runs-front-hoisted-steps"]
 needs_louis = ""
 question = """
@@ -28,6 +28,8 @@ premises = [
   "src/runs.rs",
 ]
 links = [
+  "docs/journal/2026-11-28-runs-front-i9/registration.md",
+  "bench/runs_front_i9.py",
   "frontier/claims/runs-front-and-fill-build.toml",
   "frontier/claims/rss-bound-calibration.toml",
   "examples/runs_front_fill_dissection.rs",
