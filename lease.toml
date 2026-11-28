@@ -1,6 +1,6 @@
 id = "pre-release-i9-gate"
 holder = "claude-code"
-session = "f19317741b78"
+session = "762b4f2d4491"
 claimed_at = "2026-11-28T00:01:14+00:00"
 expires = "2026-11-28T17:18:36+00:00"
 owned_paths = [".github/workflows/deploy.yml", ".just/ship.just", ".just/release-preflight.just", "Justfile", "bench/release_preflight.py", "bench/test_release_preflight.py"]
@@ -8,6 +8,6 @@ mechanisms = ["release-preflight"]
 base = "9de1d9f07a9bf93deddd9f495fd521aaade8c23d"
 released = false
 producer = "antigravity"
-phase = "integration"
+phase = "parked"
 pr = 1256
 pr_head = "653048a0cc8c44fa5004a46acf4e3159707b3d2b"
