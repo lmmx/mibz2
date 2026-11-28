@@ -262,6 +262,20 @@ kernel:
 
 A synthetic pre-screen is valid only for the bottleneck it reproduces.
 
+**Evidence scope** (24 November 2026, after the SSL-Coq work's discipline of never quoting a
+supplied state as a reached one). Every performance figure a record, LOG, PR or post quotes as
+evidence for a claim carries six labels, in one line:
+
+`inputs` (synthetic / toy / real blocks, which corpus) · `code path` (harness / research arm /
+shipped route, at a commit) · `machine` (container / CI / i9) · `workers` · `metric` (wall /
+CPU / ns a row / instructions / bytes) · `baseline` (against what).
+
+Then **what it does not establish**: each step between those labels and the claim's target
+(real blocks, the shipped path, the i9, the judged worker counts, wall time against master).
+A figure whose labels stop short of the target is evidence for a weaker claim, and is quoted as
+that. Bench reports, evidence bundles and verdict scripts already print most of these labels;
+quoting them is the rule, not new machinery.
+
 **The postmortem** (once the outcome is in):
 1. **Input assumptions:** which features held on the real blocks, and which did not.
 2. **Model assumptions:** which held, and which the outcome refuted.
