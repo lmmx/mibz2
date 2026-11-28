@@ -1,0 +1,9 @@
+id = "two-arm-multi-ref-port"
+holder = "claude-code"
+session = "2a8b0aaf8d2f"
+claimed_at = "2026-11-28T11:25:43+00:00"
+expires = "2026-11-28T15:25:43+00:00"
+owned_paths = ["bench/two_arm.py", "bench/test_two_arm.py", "bench/two_arm_fixtures/", "bench/counters.py", "examples/ab.rs"]
+mechanisms = ["recalibration-scorer"]
+base = "27c76f8a6126d1a01b86ab4108d52fb8866d65f5"
+released = false
