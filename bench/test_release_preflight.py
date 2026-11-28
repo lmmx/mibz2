@@ -1271,6 +1271,55 @@ class ReleasePreflightFrozenFixtures(unittest.TestCase):
         self.assertTrue(res_rec["allowed"], res_rec)
         self.assertEqual(res_rec["mode"], "verified-i9-pass")
 
+    def test_11d_malformed_recovery_cells_fail_closed(self) -> None:
+        # A recovery-cell spec in the wrong form (e.g. "wikidata@8") must never be
+        # silently dropped: that would skip the recovery check for those cells.
+        self.assertEqual(
+            rp._parse_recovery_cells(" wikidata:8, wikidata:10 ,"),
+            [("wikidata", 8), ("wikidata", 10)],
+        )
+        for bad in ("wikidata@8", "wikidata:8,text@10", ":8", "wikidata:", "wikidata:0"):
+            with self.assertRaises(rp.PreflightError, msg=bad):
+                rp._parse_recovery_cells(bad)
+
+        # judge CLI refuses a malformed spec rather than judging without recovery.
+        with tempfile.TemporaryDirectory() as td:
+            bundle = Path(td) / "missing.tar.gz"
+            rc = rp.main(["judge", "--recovery-cells", "wikidata@8", str(bundle)])
+        self.assertEqual(rc, 2)
+
+        # verify rejects a receipt whose preflight_recovery_cells is malformed,
+        # even when the bundle itself would pass.
+        self.repo.write("src/open/dense.rs", "// candidate\n")
+        cand = self.repo.commit("fix(open): candidate")
+        rows = make_paired_rows(
+            wall_ratios={("wikidata", 8): 0.974, ("wikidata", 10): 0.985},
+            include_recovery=True,
+            recovery_wall_ratios={("wikidata", 8): 1.000, ("wikidata", 10): 0.999},
+        )
+        tar, sha = build_tarball_bytes(
+            rows=rows,
+            candidate_sha=cand,
+            base_sha=self.repo.v0517_sha,
+            recovery_base_sha=self.repo.v0516_sha,
+        )
+        ev, _ = self.repo.publish_evidence("release-preflight/20261128T011700Z.tar.gz", tar)
+        head = self.repo.write_preflight_delta(
+            "2026-11-28-malformed-cells.md",
+            candidate_sha=cand,
+            base_sha=self.repo.v0517_sha,
+            ev_commit=ev,
+            bundle_path="release-preflight/20261128T011700Z.tar.gz",
+            sha256=sha,
+            recalibration="completed",
+            recalibration_commit=cand,
+            recovery_base=self.repo.v0516_sha,
+            recovery_cells="wikidata@8,wikidata@10",
+        )
+        res = rp.verify_release(self.repo.work, expected_head=head)
+        self.assertFalse(res["allowed"], res)
+        self.assertTrue(any("malformed recovery cell" in p for p in res["problems"]), res)
+
     # ------------------------------------------------------------------
     # 12. Rejection precedes version bump, tag, push, or publish in deploy.yml & ship.just
     # ------------------------------------------------------------------
