@@ -6,4 +6,4 @@ expires = "2026-11-28T05:11:31+00:00"
 owned_paths = ["bench/clock_modes.py", "bench/test_clock_modes.py", ".just/clock-modes.just"]
 mechanisms = ["measurement", "clock-modes"]
 base = "4bb6591087c3d007ff508905446c1b333096aa76"
-released = false
+released = true
