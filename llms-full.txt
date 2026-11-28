@@ -14773,7 +14773,7 @@ True: a reader is readable.
 ### readinto
 
 ```python
-readinto(b) -> int
+readinto(b: Any) -> int
 ```
 
 Read up to `len(b)` decoded bytes into `b`; 0 at the end (when verified).
@@ -14793,6 +14793,22 @@ read(size: int | None = -1) -> bytes
 ```
 
 Read up to `size` bytes, or all remaining bytes if `size` is negative or `None`.
+
+### readline
+
+```python
+readline(size: int | None = -1) -> bytes
+```
+
+Read and return one line, or up to `size` bytes if `size >= 0`.
+
+### readlines
+
+```python
+readlines(hint: int = -1) -> list[bytes]
+```
+
+Read and return a list of lines; stop after `hint` bytes if `hint > 0`.
 
 ### verified
 
