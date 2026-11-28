@@ -144,6 +144,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - record paired CI review evidence for AVX2 ring CRC #1179 ([#1207](https://github.com/lmmx/mibz2/pull/1207))
 - close the loop from promising results to releases (P1) ([#1224](https://github.com/lmmx/mibz2/pull/1224))
 
+- **Direct Rust `abi3-py310` Python line and streaming delivery (#1335).** `Reader` in
+  `src/python.rs` tracks `avail_rem` to avoid per-line GIL detach on lent `BzReader::fill_buf()`
+  slices, uses safe 8-byte SWAR newline scanning, and exposes `readline`, block-batched `readlines`,
+  `read_full`, `peek`, `__iter__`, and `__next__`. `mibz2.open()` returns
+  `_BZ2BufferedReader(io.BufferedReader)`, eliminating 3-copy double-buffering while preserving
+  `isinstance`, `.raw`, `.raw.verified`, `detach()`, and `TextIOWrapper` (`0` new `unsafe`, zero
+  packaging changes; frozen stop test PASS: `raw_iter_lines` −96.2%, `text` `open_readlines`
+  −27.6..−28.3%, `open_iter_lines` −13.3..−13.9%, Wikidata `open_read_64k` −6.2..−9.1% and 0.882×
+  1-thread HWM).
+- **Skip redundant `within_cap` pre-scan on `[0.10, 0.15)` blocks (#1246).** `OpenCellsOf::invert_runs`
+  skips the separate scalar pre-scan on `lazy_counts_admit` blocks while `Kernel::try_run` enforces
+  the exact same `Cap::dense(n)` inside Pass 1 with `Segmented` fallback (`0` new `unsafe`, 489/489
+  blocks across all 7 CI corpora 100% route-identical to 0.5.17), fixing 0.5.17's +2.6%/+1.5%
+  8/10-thread i9 regression.
+- **Faster block-header scanner (#1117).** Collapses consecutive identical selector runs into
+  `(table, remaining_symbols)` pairs, decodes multiple canonical code-length deltas per LUT lookup,
+  and populates the decode lookup table in a single write pass (`0` new `unsafe`; i9-10900K
+  `phases/wikidata/1` −4.52% wall, `0.9548 [0.9514, 0.9582]`).
+- **Safe `Cell` 4× `wire_xor` and overlapping-SIMD register-cursor wire (#1294).** Replaces
+  bounds-checked scalar wiring in `src/open` with safe `Cell` 4× `wire_xor` and overlapping-SIMD
+  register-cursor forward wiring (`0` new `unsafe`).
+- **AVX2 runs front-end (#1274).** 64-symbol `u64` `vptest` Pass 1 bitmap builder, `[u32; 256]`
+  stack counts (compiling out dead `Runs.per`), and hoisted 128-bit `(f0, f1)` XMM step table
+  (i9 C6 `bench-runs-front-i9` PASS: Wikidata 6T `0.989 [0.985, 0.993]`, zero primary loss, flat
+  peak RSS).
+- **Clean native `QueuesOf::push_slow` codegen (#1234).** Caps `push_slow` to a straight-line
+  4-rank (8-byte) unroll per outer step (`#![forbid(unsafe_code)]`), clearing all 11 `vzeroupper`
+  and 56 `ymm` instructions under `-C target-cpu=native` builds.
+- **Opt-in experimental features and metadata (off by default, zero default-build change):**
+  - `forward-anchor-lanes` (#1312): bounds `Arena` scratch strictly to `<= 80 KiB`/worker via
+    in-`out` 4 KiB chunk permutation (`0` new `unsafe`, eliminating 82–96% of #1217's RSS overhead).
+  - `Cargo.toml` feature retention notes (#1268): updated `mtf-fold` and `forward-anchor-lanes`
+    retention comments to match their verdicts.
+
+**The paired run on CI (RELEASING §3.2)** compared `v0.5.17` at `01acd74d` with candidate
+`7be50513` (Benchmark run [46131501937](https://github.com/lmmx/mibz2/actions/runs/46131501937),
+**AMD EPYC 9V45 96-Core Processor**, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench
+3.9.0). Master moved only in frontier/release-gate/queue metadata and version numbers from
+`7be50513` to the `v0.5.18` tag commit `edf2ceaf`.
+- **Outputs:** same bytes on all 420 runs; assessment: **no change detected** on the four measures
+  at this run's precision. Wikidata wall is −0.4% (−1.1%, +0.2%) at 1 thread (700 MB/s), +2.3%
+  (−2.8%, +7.6%) at 2 threads (1,214 MB/s), and −0.2% (−4.9%, +4.8%) at 4 threads (1,406 MB/s);
+  peak RSS is 28 / 55 / 83 MB (+0.6% / −1.0% / −0.3%). `text` wall is −0.2% (−3.2%, +3.0%) at 1
+  thread, +3.8% (−6.8%, +15.6%) at 2 threads, and −1.3% (−10.0%, +8.2%) at 4 threads (peak RSS
+  20 / 36 / 52 MB, −3.8% less at 4 threads). No corpus is slower beyond noise at any thread count.
+- **Stages (1-thread Wikidata, 4363 MHz):** total 6.88 → 6.73 c/B (−3.3% [−7.0%, +0.5%]): scanner
+  0.77 → 0.72 c/B (−6.2% [−8.5%, −3.9%] faster), MTF+RLE2 1.50 → 1.44 c/B (−3.6% [−5.4%, −1.8%]
+  faster), T-vector build 1.31 → 1.28 c/B (−1.8% [−3.3%, −0.2%] faster), walk 2.90 → 2.89 c/B
+  (−3.0% [−10.1%, +4.6%]), RLE1 0.16 → 0.15 c/B (−5.4%), CRC 0.26 → 0.25 c/B (−1.9%).
+- **Open-route diagnostic (`mibz2-workers-lazy`, 1 thread):** Wikidata wall and CPU `0.964 [0.933, 0.997]`
+  (−3.6% faster, 26 → 26 MB); `text` `1.005 [0.908, 1.113]` (23 → 23 MB).
+
+**Pre-release physical i9 regression gate (RELEASING §3.5): VALID PASS.** Candidate `7be50513`
+against `v0.5.17` (`01acd74d`) plus `v0.5.16` (`4e261140`) recovery on the i9-10900K
+(`release-preflight/20261128T111128Z.tar.gz`, evidence `c8489a45`, sha256 `64a382d2…4604`, 12
+paired rounds, 100% byte parity, zero primary regressions):
+- **Wikidata vs `v0.5.17`:** 1T `1.007 [0.963, 1.054]`, 2T `0.978 [0.955, 1.002]`, 4T `0.992 [0.965, 1.021]`,
+  **8T `0.967 [0.960, 0.974]` (−3.3%)**, **10T `0.969 [0.959, 0.979]` (−3.1%)**,
+  **12T `0.958 [0.925, 0.992]` (−4.2%)**, **16T `0.951 [0.921, 0.983]` (−4.9%)**,
+  **20T `0.941 [0.909, 0.976]` (−5.9%)**.
+- **Recovery vs `v0.5.16` (`4e261140`, last known good):** **8T `0.991 [0.984, 0.997]` (−0.9%)**,
+  **10T `0.987 [0.977, 0.997]` (−1.3%)** — full recovery and net faster beyond noise than 0.5.16.
+- **`text` vs `v0.5.17`:** 1T `0.992 [0.982, 1.002]`, 2T `0.996 [0.904, 1.099]`, 4T `1.009 [0.984, 1.035]`,
+  8T `0.982 [0.960, 1.005]`, **10T `0.985 [0.973, 0.997]` (−1.5%)**, 12T `0.968 [0.934, 1.004]`,
+  16T `0.991 [0.951, 1.032]`, 20T `0.991 [0.974, 1.008]`.
+- **Secondary guards and memory:** every secondary cell `<= 1.012` (`records:10` `+1.2%`, `runs:10`
+  `+1.2%`, well within the 5% policy tier); every peak RSS ratio `<= 1.023` (`+1.0 MB` max, well
+  within the 1.10× gate).
+
+**Worker counts (RELEASING §5c): recalibrated on `7be50513`; shipped trims unchanged.**
+`recalibrate-0518/run-20261128T100510Z.tar.gz` (evidence `f8b21e4c`, sha256 `51fb951b…97f2`):
+- **Pinned family (648/648 rows):** strictly valid; shipped trims hold at 10, 8, 6 and 4 threads
+  (`occ-8-32` at 10T is −8.9% Wikidata but +6.4% slower `text` → `A FINDING, NOT ADOPTED`).
+- **Unpinned family (1,152/1,152 rows, `bad = 0`, verified `Cpus_allowed_list: 0-19`,
+  `cpu_quota: null`):** strict scorer VOIDed only on field-format mismatch (`cpus: "all"` from
+  master `ab` vs `"0-19"` expected by the scorer; fixed for future runs in #1353). A labelled
+  diagnostic rewriting `"all"` → `0-19` rejects 0/25 Holm cells (the two nearest candidates exceed
+  the 1.10× RSS gate). Shipped trims stay unchanged.
+
+**Features reviewed (RELEASING §3.3):** none removed in the release; `[features]` holds the same
+20 research features as 0.5.17 (#1268 updated `mtf-fold` and `forward-anchor-lanes` retention
+notes). Follow-on removal candidates for separate PRs: `a6b-endpoint-redesign` (i9 STOPped;
+replaced by shipped #1294); `owned-writer` still has no retention note; and `memory-lever`,
+`phase-counters`, `wait-stats`, `walk-stats`, `induction-trace` and `grammar-replay` remain to be
+checked against their removal conditions (`forward-anchor-lanes` stays retained pending its C6
+adoption verdict).
+
+**Release scaling and team threshold (RELEASING §5, §5a):** `bench-release-scaling` and
+`bench-crossover` are queued at `v0.5.18` (`edf2ceaf`, #1360, ready tags confirmed on origin);
+their figures and verdicts will be recorded here once the i9 bundles return.
+
 ## [0.5.17](https://github.com/lmmx/mibz2/compare/v0.5.16...v0.5.17) - 2026-11-27
 
 ### <!-- 1 -->Features
