@@ -363,6 +363,13 @@
     "section": " · Research blog",
     "title": "Why compression ratio moves the scaling ceiling"
   },
+  "assets/social/blog-2026-11-28-clock-modes-and-memory-noise.png": {
+    "description": "A brief pause between runs can trap a desktop processor below full boost, while parallel queue jitter dominates peak memory across six server chips.",
+    "foot": "lmmx.github.io/mibz2 · 28 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Why a brief pause throttled our Intel i9, and how we calibrated memory noise"
+  },
   "assets/social/blog-2026-11-28-four-lanes-forward.png": {
     "description": "Walking the inverse BWT cycle forward across four safe Rust lanes lets workers outrun the serial scanner, alongside three default speedups.",
     "foot": "lmmx.github.io/mibz2 · 28 November 2026",
