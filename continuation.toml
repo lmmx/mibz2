@@ -1,0 +1,11 @@
+action = "await-own-ci"
+by = "claude-code"
+claim = "continuation-runbook"
+critical = false
+declared_at = 1795865946
+dep = "pr:1356@52e33af6b80714fdeef96a032ee45fb59cafc3da"
+independent = false
+key = "continuation-runbook--await-own-ci"
+next = "read CI; mark claim review with pr=1356"
+priority = 1
+state = "waiting"
