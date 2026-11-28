@@ -1,0 +1,44 @@
+//! scratch: the one-core move-to-front (`mtf::mtf`) on a file's first block, timed as the
+//! caller's counts move through 4 KiB in 64-byte steps (three passes, the least time a
+//! place). Prints each place's residue modulo 4 KiB and its time.
+//! mtfsweep2 FILE.bz2 [REPS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+#[repr(C, align(4096))]
+struct Page([u8; 8192]);
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let reps: usize = a.get(2).map_or(5, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() else {
+        panic!("no block")
+    };
+    let mut page = Box::new(Page([0; 8192]));
+    let mut ll = Vec::new();
+    let mut row = vec![f64::MAX; 64];
+    let mut n = 0;
+    for _pass in 0..3 {
+        for step in 0..64 {
+            let off = step * 64;
+            // SAFETY: off + 1024 <= 8192; the page is 4 KiB-aligned, so the counts are aligned
+            let counts: &mut [u32; 256] =
+                unsafe { &mut *(page.0.as_mut_ptr().add(off) as *mut [u32; 256]) };
+            for _ in 0..reps {
+                let t = std::time::Instant::now();
+                n = mtf::mtf(&b, &mut ll, counts, k).unwrap();
+                row[step] = row[step].min(t.elapsed().as_secs_f64());
+            }
+        }
+    }
+    let ns: Vec<f64> = row.iter().map(|x| x * 1e9 / n as f64).collect();
+    let lo = ns.iter().cloned().fold(f64::MAX, f64::min);
+    let hi = ns.iter().cloned().fold(0.0, f64::max);
+    println!("mtf::mtf, {n} rows: ns a row min {lo:.3} max {hi:.3} ratio {:.3}", hi / lo);
+    for (step, t) in ns.iter().enumerate() {
+        println!("{:#05x} {t:6.3} {}", step * 64, "#".repeat(((t - lo * 0.8) * 20.0) as usize));
+    }
+}

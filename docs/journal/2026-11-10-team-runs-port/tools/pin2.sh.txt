@@ -1,0 +1,25 @@
+#!/bin/bash
+# the port's evidence at the combined pin: local commit 15dfda95 on master 910472e
+cd SCRATCH/port2
+O=SCRATCH/pin2
+L=$O/verify.log
+: > $L
+git rev-parse HEAD >> $L
+run() { echo "== $*" >> $L; "$@" >> $L 2>&1; echo "== exit $? : $*" >> $L; }
+export CARGO_TARGET_DIR=SCRATCH/port2/target
+run cargo fmt --all --check
+run cargo clippy --all-targets -- -D warnings
+run cargo clippy --all-targets --features trace,wait-stats,walk-stats -- -D warnings
+run cargo build --profile fuzz --example fuzz
+F=SCRATCH/port2/target/fuzz/examples/fuzz
+for seed in 1 2; do $F 120 $seed $O/failures-teams-$seed teams > $O/fuzz-teams-seed$seed.log 2>&1; echo "== exit $? : fuzz 120 $seed teams" >> $L; done
+for m in classic pipeline service; do $F 30 1 $O/failures-$m $m > $O/fuzz-$m-seed1.log 2>&1; echo "== exit $? : fuzz 30 1 $m" >> $L; done
+run cargo test
+run cargo test --release
+run cargo test --features walk-stats --lib coop::
+export CARGO_TARGET_DIR=SCRATCH/port2/target-miri
+run cargo +nightly miri test --lib -- miri_runs miri_build_runs
+export RUSTFLAGS="-C target-feature=+avx2,+bmi1,+bmi2,+lzcnt,+popcnt"
+export CARGO_TARGET_DIR=SCRATCH/port2/target-miri-avx2
+run cargo +nightly miri test --lib -- miri_runs miri_build_runs
+echo DONE >> $L

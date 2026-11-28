@@ -1,0 +1,69 @@
+//! scratch: the two production inversions on a file's blocks of MIN rows or more, ns a row
+//! (best of ROUNDS a block, summed): the column's (`bwt::build` + `walk_segments_room`, from
+//! the column and its counts) and the records' (`runs::fill` + `walk_back_room`, from the run
+//! records; 0.2.8's path for a block `takes_runs` admits). The fronts are timed apart.
+//! invarms FILE.bz2 [MIN] [ROUNDS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{bwt, mtf, runs, Kernels};
+use std::time::Instant;
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let min: usize = a.get(2).map_or(65536, |s| s.parse().unwrap());
+    let rounds: usize = a.get(3).map_or(5, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    let mut r = runs::Runs::default();
+    let (mut tt, mut seg) = (bwt::TVector::new(), bwt::SegScratch::default());
+    let (mut tt2, mut seg2) = (bwt::TVector::new(), bwt::SegScratch::default());
+    let (mut out, mut out2) = (Vec::new(), Vec::new());
+    let mut syms = Vec::new();
+    // seconds: mtf, build, walk, front, fill, walk back
+    let mut t = [0f64; 6];
+    let (mut rows, mut blocks, mut recs, mut admitted) = (0usize, 0usize, 0usize, 0usize);
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        let n = mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if n >= min {
+            let mut best = [f64::MAX; 6];
+            for _ in 0..rounds {
+                let s = Instant::now();
+                mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+                best[0] = best[0].min(s.elapsed().as_secs_f64());
+                let s = Instant::now();
+                bwt::build(&ll, &counts, &mut tt);
+                best[1] = best[1].min(s.elapsed().as_secs_f64());
+                let s = Instant::now();
+                bwt::walk_segments_room(&mut tt, b.orig_ptr, &mut out, &mut seg);
+                best[2] = best[2].min(s.elapsed().as_secs_f64());
+                let s = Instant::now();
+                runs::front(&b, &mut r, k).unwrap();
+                best[3] = best[3].min(s.elapsed().as_secs_f64());
+                let s = Instant::now();
+                assert!(runs::fill(&r, n, &mut tt2, k));
+                best[4] = best[4].min(s.elapsed().as_secs_f64());
+                let s = Instant::now();
+                bwt::walk_back_room(&mut tt2, b.orig_ptr, &mut out2, &mut seg2);
+                best[5] = best[5].min(s.elapsed().as_secs_f64());
+            }
+            assert!(out == out2, "the two inversions differ");
+            for i in 0..6 {
+                t[i] += best[i];
+            }
+            rows += n;
+            blocks += 1;
+            recs += b.syms.iter().filter(|&&s| s > 1).count();
+            admitted += runs::takes_runs(&b) as usize;
+        }
+        syms = b.syms;
+    }
+    let ns = |x: f64| x * 1e9 / rows as f64;
+    println!("{blocks} blocks, {rows} rows, {admitted} admitted by takes_runs, literals/rows {:.4}", recs as f64 / rows as f64);
+    println!("column:  mtf {:.3}  build {:.3}  walk {:.3}  | build + walk {:.3}  | with its front {:.3}",
+        ns(t[0]), ns(t[1]), ns(t[2]), ns(t[1] + t[2]), ns(t[0] + t[1] + t[2]));
+    println!("records: front {:.3}  fill {:.3}  walk back {:.3}  | fill + walk {:.3}  | with its front {:.3}",
+        ns(t[3]), ns(t[4]), ns(t[5]), ns(t[4] + t[5]), ns(t[3] + t[4] + t[5]));
+    println!("records / column: inversion {:.3}, with fronts {:.3}",
+        (t[4] + t[5]) / (t[1] + t[2]), (t[3] + t[4] + t[5]) / (t[0] + t[1] + t[2]));
+}

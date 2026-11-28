@@ -1,0 +1,16 @@
+
+### random, 4 threads (16 MB out; ratios: arm / mibz2-team2@master, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2-team2 | 8 | 0.146 | 0.151 | 0.407 | 0.427 | 48 MB | 0.979 [0.896, 1.069] | 1.003 [0.945, 1.064] | 0.17 | yes |
+| mibz2-team2@master | 8 | 0.145 | 0.159 | 0.387 | 0.434 | 49 MB | 1 | 1 | 0.23 | yes |
+| mibz2-team2@port-alone | 8 | 0.163 | 0.170 | 0.440 | 0.465 | 49 MB | 1.077 [0.997, 1.165] | 1.082 [1.005, 1.165] | 0.15 | yes |
+
+### records, 4 threads (19 MB out; ratios: arm / mibz2-team2@master, paired by round)
+
+| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+| mibz2-team2 | 8 | 0.179 | 0.197 | 0.489 | 0.532 | 54 MB | 1.050 [0.998, 1.105] | 1.035 [0.996, 1.075] | 0.17 | yes |
+| mibz2-team2@master | 8 | 0.175 | 0.186 | 0.471 | 0.508 | 54 MB | 1 | 1 | 0.20 | yes |
+| mibz2-team2@port-alone | 8 | 0.236 | 0.257 | 0.623 | 0.665 | 54 MB | 1.395 [1.356, 1.436] | 1.301 [1.254, 1.349] | 0.33 | yes |

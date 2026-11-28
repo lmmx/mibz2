@@ -1,0 +1,15 @@
+//! scratch: how many of a file's blocks `runs::takes_runs` admits, and their sizes
+use mibz2::stream::{Event, Scanner, SliceSource};
+fn main() {
+    let data = std::fs::read(std::env::args().nth(1).unwrap()).unwrap();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let mut syms = Vec::new();
+    let (mut yes, mut no) = (Vec::new(), Vec::new());
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        let x = (b.syms.len(), b.max_len);
+        if mibz2::runs::takes_runs(&b) { yes.push(x) } else { no.push(x) }
+        syms = b.syms;
+    }
+    println!("by records: {} blocks {:?}", yes.len(), &yes[..yes.len().min(4)]);
+    println!("by column:  {} blocks {:?}", no.len(), &no[..no.len().min(4)]);
+}

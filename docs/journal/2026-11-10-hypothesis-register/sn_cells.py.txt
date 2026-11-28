@@ -1,0 +1,21 @@
+import json,statistics as st,re
+slots=[json.loads(l) for l in open('BUNDLE/slots.jsonl')]
+runs=[json.loads(l) for l in open('BUNDLE/runs.jsonl')]
+assert len(slots)==len(runs)
+cells={}
+for s,r in zip(slots,runs):
+    if s['role']!='cell' or s['round']==0: continue
+    tc=dict((k,float(v)) for k,v in (p.split('=') for p in r['thread_cpu'].split()))
+    w=sum(v for k,v in tc.items() if re.match(r'mibz2-\d+$',k))
+    cells.setdefault((s['corpus'],s['threads']),[]).append((r['cpu'],r['wall'],w,tc.get('mibz2-scan',0),tc.get('main',0),tc.get('mibz2-read',0)))
+med=lambda xs:st.median(xs)
+out={}
+print('corpus W n cpu wall MB/s workerCPU scan main read occ=(workerCPU/(W*wall)) cpu/wall')
+for (c,W),v in sorted(cells.items()):
+    cpu,wall,w,sc,mn,rd=[med([x[i] for x in v]) for i in range(6)]
+    out[(c,W)]=(cpu,wall,w,sc,mn)
+    print(c,W,len(v),'%.4f %.4f %6.0f  %.3f %.3f %.3f %.3f  occ %.3f  %.2f'%(cpu,wall,209.700196/wall,w,sc,mn,rd,w/(W*wall),cpu/wall))
+json.dump({f'{c}@{W}':v for (c,W),v in out.items()},open('sn-cells.json','w'))
+# sentinels
+sen=[r for s,r in zip(slots,runs) if s['role']=='sentinel' and s['round']>0]
+print('sentinel default: wall med %.4f -> %.0f MB/s, cpu %.3f'%(med([r['wall'] for r in sen]),209.700196/med([r['wall'] for r in sen]),med([r['cpu'] for r in sen])))

@@ -1,0 +1,54 @@
+import sys,re,collections,glob,os
+def parse(paths):
+    agg=collections.Counter()   # (fn, file, line) -> Ir (self)
+    for path in paths:
+        names={'fl':{}, 'fn':{}, 'ob':{}}
+        def nm(kind,val):
+            m=re.match(r'\((\d+)\)\s*(.*)',val)
+            if m:
+                i,n=m.group(1),m.group(2)
+                if n: names[kind][i]=n
+                return names[kind].get(i,'?')
+            return val
+        fl=fn=cur=None; skip=False; last=[0,0]; npos=2
+        for line in open(path, errors='replace'):
+            line=line.rstrip('\n')
+            if not line: continue
+            if line.startswith('positions:'): npos=len(line.split()[1:]); continue
+            m=re.match(r'(fl|fi|fe|fn|ob|cob|cfi|cfl|cfn)=(.*)',line)
+            if m:
+                k,v=m.groups()
+                if k=='fl': fl=nm('fl',v); cur=fl
+                elif k in('fi','fe'): cur=nm('fl',v)
+                elif k=='fn': fn=nm('fn',v)
+                elif k in('cfi','cfl'): nm('fl',v)
+                elif k=='cfn': nm('fn',v)
+                elif k in('ob','cob'): nm('ob',v)
+                continue
+            if line.startswith('calls='):
+                skip=True
+                # the calls line carries target positions; not needed
+                continue
+            c=line[0]
+            if c.isdigit() or c in '+-*':
+                parts=line.split()
+                pos=[]
+                for j in range(npos):
+                    p=parts[j]
+                    if p=='*': v=last[j]
+                    elif p[0]=='+': v=last[j]+int(p[1:],0)
+                    elif p[0]=='-': v=last[j]-int(p[1:],0)
+                    else: v=int(p,0)
+                    pos.append(v)
+                last=pos
+                if skip: skip=False; continue
+                ir=int(parts[npos]) if len(parts)>npos else 0
+                agg[(fn,os.path.basename(cur or '?'),pos[-1])]+=ir
+    return agg
+if __name__=='__main__':
+    agg=parse(sys.argv[2:]); D=float(sys.argv[1])
+    byfn=collections.Counter()
+    for (fn,f,l),v in agg.items(): byfn[fn]+=v
+    tot=sum(byfn.values())
+    print('total Ir',tot,'Ir/D %.3f'%(tot/D))
+    for fn,v in byfn.most_common(28): print('%8.3f  %s'%(v/D,fn[:110]))

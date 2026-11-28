@@ -1,0 +1,15 @@
+#!/bin/bash
+# Did the harness-only merges move the hot kernels? nm on `ab` at each merge and its parent (local toolchain).
+S=/tmp/claude-0/-home-user-mibz2/e6647659-039f-564b-ba35-f13ad4a0fdc3/scratchpad/ca; R=/home/user/mibz2
+cd $S; mkdir -p lk
+for pair in 219:49fc4a65:9c7b49c3 290:637ad34b:f96efbb8 298:5995a67a:4840f1e9 326:8c40bde6:9cab9bb3 74:c24437f9:04f288fc 69:2fa57b40:cc928203; do
+  IFS=: read pr m p <<< "$pair"
+  for c in $m $p; do
+    [ -f lk/$c.syms ] && continue
+    rm -rf wt-lk; git -C $R worktree prune; git -C $R worktree add --detach $S/wt-lk $c >/dev/null 2>&1 || { echo "$pr $c no-worktree"; continue; }
+    (cd wt-lk && CARGO_TARGET_DIR=$S/lk-target cargo build --release --example ab >/dev/null 2>lk-err.txt) && nm -S -C $S/lk-target/release/examples/ab | grep -E ' mibz2::(mtf::(mtf_avx2|STEPS)|block::read_item|bwt::build)$' > lk/$c.syms || echo "$pr $c build-failed"
+    git -C $R worktree remove --force $S/wt-lk >/dev/null 2>&1
+  done
+  echo "PR $pr merge $m parent $p"; for c in $m $p; do [ -f lk/$c.syms ] && awk -v c=$c '{a=strtonum("0x"$1); printf "  %s %-28s mod64=%2d mod4K=0x%03x\n", c, $4, a%64, a%4096}' lk/$c.syms; done
+done
+echo LINKS-DONE

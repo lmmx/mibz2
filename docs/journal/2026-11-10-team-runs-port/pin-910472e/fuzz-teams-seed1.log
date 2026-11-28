@@ -1,0 +1,24 @@
+1882 cases in 120 s (seed 1, mode teams), 0 failures
+      235  teams: both decode, same bytes
+      146  teams: both fail (BadBlockMagic), as the plain decoder
+      232  teams: both fail (BadCodeLength), as the plain decoder
+       40  teams: both fail (BadGroups), as the plain decoder
+      136  teams: both fail (BadHuffmanCode), as the plain decoder
+       40  teams: both fail (BadOrigPtr), as the plain decoder
+       70  teams: both fail (BadSelector), as the plain decoder
+      372  teams: both fail (BlockCrc), as the plain decoder
+       51  teams: both fail (BlockTooLong), as the plain decoder
+        1  teams: both fail (NoSymbols), as the plain decoder
+        7  teams: both fail (NotBz2), as the plain decoder
+       10  teams: both fail (Randomised), as the plain decoder
+        3  teams: both fail (RunTooLong), as the plain decoder
+       14  teams: both fail (RunUnfinished), as the plain decoder
+       80  teams: both fail (SelectorOverrun), as the plain decoder
+       47  teams: both fail (StreamCrc), as the plain decoder
+      398  teams: both fail (Truncated), as the plain decoder
+team cases: candidate, cases; cases with a block by records on the team's pool, by records on one core, by the column on the pool, by the column on one core; cases with an error; then the blocks by each route, and the blocks whose front stage fails, admitted to the records and not
+      376  1 plain team(s) of 2: records pooled 176, records alone 107, column pooled 110, column alone 114, errors 332; blocks 380 / 264 / 310 / 468; front errors 9 / 5
+      377  2 plain team(s) of 2: records pooled 163, records alone 106, column pooled 111, column alone 114, errors 329; blocks 360 / 227 / 313 / 375; front errors 14 / 10
+      377  1 plain team(s) of 3: records pooled 177, records alone 110, column pooled 102, column alone 110, errors 325; blocks 386 / 254 / 294 / 390; front errors 12 / 4
+      376  1 plain team(s) of 4: records pooled 166, records alone 118, column pooled 93, column alone 113, errors 334; blocks 381 / 271 / 253 / 430; front errors 11 / 6
+      376  1 plain team of 3, scalar kernels: records pooled 185, records alone 114, column pooled 81, column alone 105, errors 327; blocks 396 / 276 / 217 / 442; front errors 14 / 5

@@ -1,0 +1,27 @@
+//! scratch: the two move-to-front kernels on a file's first block, ns a row (best of REPS,
+//! and the median): `mtf::mtf` (the one-core path's) and `mtf::mtf_checkpoints` (the teams')
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let reps: usize = a.get(2).map_or(31, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() else { panic!("no block") };
+    let (mut ll, mut cps, mut counts) = (Vec::new(), Vec::new(), [0u32; 256]);
+    let (mut t1, mut t2) = (Vec::new(), Vec::new());
+    let mut n = 0;
+    for _ in 0..reps {
+        let t = std::time::Instant::now();
+        n = mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        t1.push(t.elapsed().as_secs_f64() * 1e9 / n as f64);
+        let t = std::time::Instant::now();
+        mtf::mtf_checkpoints(&b, &mut ll, &mut counts, &mut cps, k).unwrap();
+        t2.push(t.elapsed().as_secs_f64() * 1e9 / n as f64);
+    }
+    t1.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    t2.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    println!("{n} rows, {} symbols: mtf best {:.2} median {:.2} | mtf_checkpoints best {:.2} median {:.2} ns a row",
+        b.syms.len(), t1[0], t1[reps / 2], t2[0], t2[reps / 2]);
+}

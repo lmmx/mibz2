@@ -1,0 +1,14 @@
+#!/bin/bash
+# Untimed: the stack moved through 4 KiB in 256-byte steps, on a 200,000-byte block of `random`.
+S=/tmp/claude-0/-home-user-mibz2/e6647659-039f-564b-ba35-f13ad4a0fdc3/scratchpad
+cd $S/ca
+bzip2 -dc $S/corp/random.bz2 | head -c 200000 | bzip2 -9 > rand200k.bz2
+one() {
+  local bin=$S/ca/wt-$1/target/release/examples/ab B=0x108000
+  local args=$(nm -S -C $bin | grep -E ' (mibz2::mtf::mtf_avx2|mibz2::block::read_item)$' | while read a s ty name; do n=$(echo "$name" | sed 's/mibz2:://; s/::/./g'); printf '%s:%x:%x ' $n $((B+0x$a)) $((B+0x$a+0x$s)); done)
+  env PAD="$(head -c $2 /dev/zero | tr '\0' x)" valgrind --tool=lackey --trace-mem=yes --log-fd=9 $bin child mibz2 1 $3 9>&1 >/dev/null 2>/dev/null | ./agg3 $args | grep -v '^PAIRS' > s200-$1-$2.txt
+}
+for pad in $(seq 0 256 3840); do
+  one master $pad rand200k.bz2 & one head $pad rand200k.bz2 & wait
+done
+echo CA2-DONE
