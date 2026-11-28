@@ -1,0 +1,14 @@
+claim: segmented-fused-postwalk-rescue
+by: antigravity
+outcome: review
+evidence: src/bwt.rs; src/rle.rs; src/lib.rs; docs/notebook/2026-11-28-rss-bound-calibration.md; docs/notebook/2026-11-28-segmented-fused-postwalk-rss-pricing.md
+
+Rescued PR `#1183`'s B5-audited fused reverse + AVX2 RLE1 + L2-hot PCLMULQDQ CRC-32 post-walk by removing its `random` 1T slowdown and freezing a calibrated C1a rule before CI data (not reusing runs `46084269815` or `46085315398`).
+
+- **(a) Route census (`examples/route_census`, no timing):** CI scale-4 `random.bz2` (`8,000,000 B`): `9/9` full blocks take `Column` (`!takes_runs`, `0` Open, `0` RunsFallback, `3` RLE1 runs); `records.bz2`: `11/11` `Column` (`2` RLE1 runs); `text.bz2`: `11/12` `RunsFallback` + `1/12` Open + `0/12` `Column` (`270,836` RLE1 runs); `runs`/`onebyte`/`pattern`: `100%` `RunsFallback`; `wikidata`: `233/233` full blocks `Open` + `198` runts.
+- **(b) Pre-walk trigger fix:** `runs::takes_runs(b)` already separates high-entropy low-run `Column` blocks from `RunsFallback` before the walk at zero extra cost. Restricted `FusedPostwalk` exclusively to `Segmented::invert_runs`, and restored `column()`, `Segmented::invert_in_place()`, `build_lf()`, and `room_segments()` to exact `master` (zero `clear_start` parameter/codegen shift and strictly less `unsafe` than `#1183` by removing `invert_in_place`'s raw-pointer dereference while preserving `#1183`'s B5-audited `fused_rev_rle_crc_*` blocks).
+- **Local verification:** `cargo fmt --check`; `cargo clippy --all-targets -- -D warnings` (default & `trace,moonshot,ideal-parts`); `6/6` `bwt`/`rle` unit tests (including `Column`-unfused assertion), `7/7` `in_place`, `4/4` `service_default`, `14/14` `decode`, `12/12` `pipelined`; Miri `2/2` (`0` UB); `14/14` exact SHA-256 parity vs `libbzip2` across all 7 corpora (1T & 2T); local 9-round interleaved 1T check (`text -7.29%` CPU / `-3.14%` RSS, `random -0.14%` CPU / `0.9993x` RSS, `runs -6.80%`, `onebyte -6.50%`, `wikidata -4.33%`).
+- **(c) Frozen C1a CI decision rule (before CI data; runs `46084269815` / `46085315398` excluded):**
+  1. **Safety & parity:** 21/21 byte-exact parity, green CI (`rust`, `miri`, `fuzz-smoke`, `moonshot`, `python`, wheels, `pre-commit.ci`), independent B5 review.
+  2. **Calibrated RSS (`rss-bound-calibration.md` §5 rules 1 & 3 + `PERFORMANCE-POLICY.md` §2 rule 4):** static per-worker heap delta `Δ_w = 0 B` on `Column` (`random`/`records`) and `Open` (`wikidata`), `<= 0 B` at `1T` on `RunsFallback` (`s.rle_runs` removed, `4 KiB` stack `rev_buf`), and `<= +0.5 MiB/w` worst-case on expanding `onebyte` (`2T`/`4T` `grow_out` 1% + 16 KiB headroom). Gate: every `1T` cell `<= 1.010x` OR median delta `<= +0.5 MiB`; every `2T`/`4T` cell `<= 1.10x`.
+  3. **Timing:** `text` 1T 95% CI wholly `< 1.000`; no `wikidata`/`text` cell slower beyond noise (`ci_lo > 1.000`); no secondary cell `> +2.0%` with 95% CI excluding `1.000`.

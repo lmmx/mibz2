@@ -80,9 +80,44 @@ unsafe fn unrle_avx2(rle: &[u8], out: &mut Vec<u8>) -> Result<(), ErrorKind> {
 /// byte, and its count (0-255 more of it)
 pub(crate) type Run = (u32, u8, u8);
 
-/// The bytes the in-place RLE1 takes its CRC in as it writes them (`unrle_in_place`): a
+/// The bytes the in-place and fused RLE1 paths take their CRC in as they write them: a
 /// tile written is read again while it is still in the core's L2
-const TILE: usize = 64 << 10;
+pub(crate) const TILE: usize = 64 << 10;
+
+/// Streaming scalar RLE1 decoder over `src[..avail]`, appending decoded bytes to `out`.
+///
+/// When `is_eof` is false, stops once fewer than 5 bytes remain so a 4-byte run straddling
+/// a chunk boundary is never misclassified, returning the number of unprocessed tail bytes
+/// (`0..=4`) at `src[avail - rem..avail]` for the caller to carry to the next chunk.
+/// When `is_eof` is true, decodes all bytes and returns `Ok(0)` or `Err(ErrorKind::RunUnfinished)`.
+pub(crate) fn decode_chunk_scalar(
+    src: &[u8],
+    avail: usize,
+    is_eof: bool,
+    out: &mut Vec<u8>,
+) -> Result<usize, ErrorKind> {
+    let mut i = 0usize;
+    let limit = if is_eof {
+        avail
+    } else {
+        avail.saturating_sub(4)
+    };
+    while i < limit {
+        let c = src[i];
+        if i + 3 < avail && src[i + 1] == c && src[i + 2] == c && src[i + 3] == c {
+            if i + 4 >= avail {
+                return Err(ErrorKind::RunUnfinished);
+            }
+            let run = 4 + src[i + 4] as usize;
+            out.resize(out.len() + run, c);
+            i += 5;
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    Ok(avail - i)
+}
 
 /// RLE1 undone in place: `buf` holds a block's inverted bytes (`unrle`'s `rle`) and is left
 /// holding exactly `unrle`'s output for them. Returns that output's CRC (`crc::crc32`'s),
@@ -378,6 +413,69 @@ mod tests {
                         out_len += 1;
                     }
                     same(&v);
+                }
+            }
+        }
+    }
+
+    /// Streaming `decode_chunk_scalar` matches `unrle_scalar` across arbitrary chunk sizes
+    /// (including 1..=13 byte chunks that split 4-byte runs and counts across boundaries)
+    /// and returns `RunUnfinished` identically at EOF.
+    #[test]
+    fn miri_decode_chunk_scalar_splits() {
+        let cases: &[&[u8]] = &[
+            b"",
+            b"a",
+            b"aaaa",
+            b"aaaa\0",
+            b"aaaa\x01",
+            b"aaaa\xff",
+            b"xaaaa",
+            b"aaaa\0bbbb\x05cccc\x1fdddd\xffz",
+            b"abcdddd\x00efghhhhh\x03ijkl",
+            b"0123456789zzzz",
+        ];
+        for &case in cases {
+            let mut want = Vec::new();
+            let want_res = unrle_scalar(case, &mut want, 0);
+            for chunk_size in [1usize, 2, 3, 4, 5, 7, 13, 64] {
+                let mut buf = [0u8; 68];
+                let mut buf_len = 0usize;
+                let mut got = Vec::new();
+                let mut pos = 0usize;
+                let mut err = None;
+                while pos < case.len() {
+                    let take = chunk_size.min(case.len() - pos).min(buf.len() - buf_len);
+                    buf[buf_len..buf_len + take].copy_from_slice(&case[pos..pos + take]);
+                    buf_len += take;
+                    pos += take;
+                    let is_eof = pos == case.len();
+                    match decode_chunk_scalar(&buf, buf_len, is_eof, &mut got) {
+                        Ok(rem) => {
+                            assert!(rem <= 4);
+                            if rem > 0 {
+                                buf.copy_within(buf_len - rem..buf_len, 0);
+                            }
+                            buf_len = rem;
+                        }
+                        Err(e) => {
+                            err = Some(e);
+                            break;
+                        }
+                    }
+                }
+                if err.is_none() && buf_len > 0 {
+                    match decode_chunk_scalar(&buf, buf_len, true, &mut got) {
+                        Ok(rem) => assert_eq!(rem, 0),
+                        Err(e) => err = Some(e),
+                    }
+                }
+                match &want_res {
+                    Ok(()) => {
+                        assert_eq!(err, None, "chunk={chunk_size} case={case:?}");
+                        assert_eq!(got, want, "chunk={chunk_size} case={case:?}");
+                    }
+                    Err(e) => assert_eq!(err.as_ref(), Some(e), "chunk={chunk_size} case={case:?}"),
                 }
             }
         }
