@@ -1,9 +1,13 @@
 id = "continuation-runbook"
-holder = "claude-code"
-session = "688f5bc1b799"
+holder = "antigravity"
+session = "7e431af4d6b9"
 claimed_at = "2026-11-28T11:30:14+00:00"
-expires = "2026-11-28T17:30:14+00:00"
-owned_paths = []
+expires = "2026-11-28T21:40:19+00:00"
+owned_paths = ["frontier/tools/continuation.py", "tests/test_continuation.py", "frontier/CONTINUATIONS.md", ".github/workflows/frontier.yml", "frontier/README.md"]
 mechanisms = ["continuation-runbook"]
 base = "a5b51da269c11b028a614dfd3faa82c3feb92b47"
 released = false
+producer = "claude-code"
+phase = "integration"
+pr = 1356
+pr_head = "c1e2394d59d5df61745d89b852abd1c48afc6af9"
