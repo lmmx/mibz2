@@ -1,0 +1,9 @@
+id = "merged-hold-moved-head"
+holder = "claude-code"
+session = "a7c2280c4f23"
+claimed_at = "2026-11-28T09:25:02+00:00"
+expires = "2026-11-28T13:25:02+00:00"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+mechanisms = []
+base = "70101403e4ac33e97366d9690a44665f40d3484d"
+released = false
