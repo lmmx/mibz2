@@ -1,9 +1,9 @@
-id = "continuation-runbook"
+id = "synthesise"
 holder = "claude-code"
-session = "688f5bc1b799"
-claimed_at = "2026-11-28T11:30:14+00:00"
-expires = "2026-11-28T17:30:14+00:00"
+session = "9cc8bdebf389"
+claimed_at = "2026-11-28T11:49:02+00:00"
+expires = "2026-11-28T14:49:02+00:00"
 owned_paths = []
-mechanisms = ["continuation-runbook"]
+mechanisms = []
 base = "a5b51da269c11b028a614dfd3faa82c3feb92b47"
 released = false
