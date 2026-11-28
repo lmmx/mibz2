@@ -888,6 +888,54 @@ fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
 }
 
 #[cfg(test)]
+mod occ_arm_tests {
+    use super::{occ_arm, oce_arm};
+
+    #[test]
+    fn occupancy_arms_parse() {
+        assert_eq!(occ_arm("mibz2-occ-8-32"), Some((8, 32)));
+        assert_eq!(occ_arm("mibz2-occ-9-72"), Some((9, 72)));
+        assert_eq!(occ_arm("mibz2-occ-9-18"), Some((9, 18)));
+        assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28)));
+        assert_eq!(occ_arm("mibz2-occ-6-24"), Some((6, 24)));
+        assert_eq!(occ_arm("mibz2-occ-5-20"), Some((5, 20)));
+        assert_eq!(occ_arm("mibz2-occ-4-16"), Some((4, 16)));
+        assert_eq!(occ_arm("mibz2-occ-3-12"), Some((3, 12)));
+        assert_eq!(occ_arm("mibz2-occ-2-8"), Some((2, 8)));
+        for bad in [
+            "mibz2-occ-9",
+            "mibz2-occ-0-36",
+            "mibz2-occ-9-0",
+            "mibz2-occ-x-36",
+            "mibz2-occ--36",
+            "mibz2-occ-9-36-1",
+            "mibz2",
+        ] {
+            assert_eq!(occ_arm(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn eager_occupancy_arms_parse() {
+        assert_eq!(oce_arm("mibz2-oce-5-20"), Some((5, 20)));
+        assert_eq!(oce_arm("mibz2-oce-3-12"), Some((3, 12)));
+        assert_eq!(oce_arm("mibz2-oce-7-28"), Some((7, 28)));
+        assert_eq!(occ_arm("mibz2-oce-5-20"), None);
+        assert_eq!(oce_arm("mibz2-occ-5-20"), None);
+        for bad in [
+            "mibz2-oce-5",
+            "mibz2-oce-0-20",
+            "mibz2-oce-5-0",
+            "mibz2-oce-x-20",
+            "mibz2-oce--20",
+            "mibz2-oce-5-20-1",
+        ] {
+            assert_eq!(oce_arm(bad), None, "{bad}");
+        }
+    }
+}
+
+#[cfg(test)]
 mod json_field_tests {
     use super::*;
 
@@ -1153,6 +1201,23 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
     }
 }
 
+/// An occupancy arm's workers and blocks in flight: `mibz2-occ-N-S`, N and S at least 1
+fn occ_arm(arm: &str) -> Option<(usize, usize)> {
+    counts(arm.strip_prefix("mibz2-occ-")?)
+}
+
+/// An eager occupancy arm's workers and blocks in flight: `mibz2-oce-N-S`, N and S at least 1
+fn oce_arm(arm: &str) -> Option<(usize, usize)> {
+    counts(arm.strip_prefix("mibz2-oce-")?)
+}
+
+/// `N-S`, N and S at least 1
+fn counts(ns: &str) -> Option<(usize, usize)> {
+    let (n, s) = ns.split_once('-')?;
+    let (n, s) = (n.parse().ok()?, s.parse().ok()?);
+    (n >= 1 && s >= 1).then_some((n, s))
+}
+
 /// An in-process arm's decode of the file at `path`, every byte through `h`, `last` run
 /// after its last byte (`drain`)
 fn decode(
@@ -1380,6 +1445,24 @@ fn decode(
             };
             drain(
                 fbz::Reader::open(path, opts).map_err(|e| e.to_string())?,
+                h,
+                last,
+            )
+        }
+        a if a.starts_with("mibz2-occ-") => {
+            let (n, s) =
+                occ_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-occ-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), true),
+                h,
+                last,
+            )
+        }
+        a if a.starts_with("mibz2-oce-") => {
+            let (n, s) =
+                oce_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-oce-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), false),
                 h,
                 last,
             )
