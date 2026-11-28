@@ -5,6 +5,7 @@ zone = "striated"
 needs = ["shell", "repo-write"]
 priority = 1
 status = "done"
+pr = 1293
 owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
 needs_louis = ""
 question = """
