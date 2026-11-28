@@ -4,7 +4,8 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 2
-status = "open"
+status = "done"
+pr = 1117
 owned_paths = ["src/block.rs", "src/huff.rs"]
 mechanisms = ["scanner-a2-build"]
 needs_louis = ""
@@ -19,6 +20,7 @@ Once PR `#1034` (`scanner-coalesced-u8-decode`) lands on `src/block.rs` and `src
 3. `A2d_direct_g64` (or per-table `group_uses[g] >= 16` `A2d_direct_t16`): single-write fused `K=2` root LUT fill with `split_at_mut` and tail-only (`1024 - filled_to`, mean `9.1` entries on wikidata) long-code/sub-LUT construction, dropping `d_arr[0..1024]` and redundant `K=1` overwrites.
 """
 why = """
+Built, not merged (27 Nov, PR #1117, exact head 7b7a6bd): all CI green, exact, Miri clean, but the exact-head CI paired bench (run 45958407860, vs 4b53096) has no primary gain beyond noise (wikidata 1T -0.3% (-0.5, +0.0)), failing PERFORMANCE-POLICY §2 rule 1. Its phases stage table shows the lever working (scanner -4.5% (-5.7, -3.3)) and an untouched stage moving: MTF + RLE2 +7.6% (+7.0, +8.2), reproduced on the earlier run (37dc112: +7.7%) and locally (+2..+8%); with -align-loops=64 on both arms the MTF gap turns to noise (-7%, +3%, -1%), so it is a fat-LTO layout shift of src/mtf.rs, the sensitivity jcc-aligned-release-build documents (#1060). Next levers, in order: (1) once jcc-aligned-release-build lands (or any change pins MTF hot-loop alignment), re-run CI on #1117 unchanged; (2) find which placement moves mtf.rs (e.g. `#[inline(never)]` on the new readers, or `fill_lut` cold-split) and remeasure under the same bar; (3) the i9 run (scanner-a2-fast-i9-run) as C5 evidence. Do not retry the unchanged bench to get a pass. Correctness is settled: an independent cold review of 7b7a6bd (PR #1117 comment 7212627965) found no defects and re-ran the lib tests, clippy -D warnings and Miri clean; only the performance acceptance is open.
 Priority 3 -> 2 (synthesis ninth pass, 27 Nov): its value is conditional on the knee. At k = 8 the composed workers (W'/8 ~135-145 ms, #1067) bind and mask most of this cut; at k = 9 (8/9 x the worker demand, ~124-129 ms derived) the scanner binds again and this is the largest remaining serial lever. Admit as soon as #1034 lands on src/block.rs and src/huff.rs; it is the dependency.
 Post-`#1034` serial scan `S'` is `~145 ms` on i9-10900K, making `A2a..d` (`~13-14%` of `S'`) the largest unoptimized serial component on the scan critical path. Cutting `S'` by `-4.44%..-7.38%` removes `~6.4-10.7 ms` directly from serial `S'` (`~145 -> ~134-139 ms`) in 100% safe Rust with zero extra memory, lowering the 8-10W scan ceiling and relaxing the `140 ms` slack-hybrid contour.
 """
@@ -39,4 +41,7 @@ premises = [
 links = [
   "frontier/claims/scanner-coalesced-u8-decode.toml",
   "frontier/deltas/2026-11-27-explore-scanner-a2-dissection.md",
+  "frontier/deltas/2026-11-27-scanner-a2-fast-build.md",
+  "docs/notebook/2026-11-27-scanner-a2-fast-i9-verdict.md",
+  "frontier/deltas/2026-11-28-scanner-a2-fast-build-integrate.md",
 ]
