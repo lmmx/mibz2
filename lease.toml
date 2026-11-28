@@ -1,9 +1,9 @@
-id = "crc32-avx2-ring-rescue"
+id = "synthesise"
 holder = "claude-code"
-session = "68b546a7967f"
-claimed_at = "2026-11-28T03:20:45+00:00"
-expires = "2026-11-29T03:57:36+00:00"
-owned_paths = ["src/crc.rs"]
-mechanisms = ["avx2-vpshufb-ring-crc32", "zero-table-barrett-crc32"]
-base = "0179ca9ddd74d49c83d3fe064c2f076a9d2f504a"
+session = "c63bf255a52c"
+claimed_at = "2026-11-28T03:59:41+00:00"
+expires = "2026-11-28T06:59:41+00:00"
+owned_paths = []
+mechanisms = []
+base = "757a91b72eeaa127ad55a100a9a06bd28f3028f2"
 released = false
