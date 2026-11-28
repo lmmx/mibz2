@@ -9,3 +9,6 @@ key = "continuation-runbook--brief-after-1341"
 next = "embed continuation view in frontier.py brief/status (minimal follow-up)"
 priority = 2
 state = "waiting"
+waiter_holder = "claude-code"
+waiter_session = "w2"
+waiter_until = 1795866884
