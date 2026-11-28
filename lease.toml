@@ -1,0 +1,9 @@
+id = "vm-i9-transfer-ledger"
+holder = "antigravity"
+session = "657885e780b3"
+claimed_at = "2026-11-28T13:41:58+00:00"
+expires = "2026-11-28T15:41:58+00:00"
+owned_paths = []
+mechanisms = []
+base = "4bdd7386fb17eeff2db163a1f5ac7ee86b292e30"
+released = false
