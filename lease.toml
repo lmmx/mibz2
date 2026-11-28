@@ -1,9 +1,9 @@
-id = "prove-frontier-cold"
+id = "correspondence-kinds"
 holder = "antigravity"
-session = "a494b370f849"
-claimed_at = "2026-11-28T15:58:56+00:00"
-expires = "2026-11-28T23:58:56+00:00"
+session = "1447c84fc6de"
+claimed_at = "2026-11-28T16:37:34+00:00"
+expires = "2026-11-29T00:37:34+00:00"
 owned_paths = []
-mechanisms = ["frontier-protocol-test-cold"]
-base = "77de5b6984059f69fec551098f4757511f07c2b6"
+mechanisms = ["frontier-correspondence-kinds"]
+base = "9d1858c1655131c0978f12c83445182dfac95c48"
 released = false
