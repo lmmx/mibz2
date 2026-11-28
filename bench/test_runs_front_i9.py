@@ -149,6 +149,26 @@ class Source(unittest.TestCase):
         with self.assertRaises(rf.InvalidRun):
             rf.check_source(tmp2, base2)
 
+    def test_shallow_checkout_fetches_base_and_skips_ancestry(self):
+        src, git, base = self.repo()
+        for f in rf.CANDIDATE_FILES:
+            (src / f).write_text("b\n")
+        git("add", "-A")
+        git("commit", "-qm", "cand")
+        git("config", "uploadpack.allowAnySHA1InWant", "true")
+        dst = Path(tempfile.mkdtemp()) / "clone"
+        subprocess.run(
+            ["git", "clone", "-q", "--depth", "1", f"file://{src}", str(dst)],
+            check=True,
+            capture_output=True,
+        )
+        info = rf.check_source(dst, base)
+        self.assertTrue(info["shallow"])
+        self.assertIsNone(info["ancestry_checked"])
+        self.assertEqual(info["decoder_diff"], sorted(rf.CANDIDATE_FILES))
+        with self.assertRaises(rf.InvalidRun):
+            rf.check_source(dst, "0" * 40)
+
     def test_refuses_dirty_tree(self):
         tmp, git, base = self.repo()
         (tmp / "src/lib.rs").write_text("dirty\n")

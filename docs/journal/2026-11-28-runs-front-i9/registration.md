@@ -9,7 +9,7 @@
   - The dead `Runs.per` is compiled out in production, so counting uses a `[u32; 256]` stack array and frees a register to hoist the step table.
   - The step table is a two-cycle 128-bit `(f0, f1)` pair with no `vpermq` in the hot loop. Removing `vpermq` is what fixed Attempt 1's Zen 3 regression.
 - **Control:** `BASE = 4bb6591087c3d007ff508905446c1b333096aa76`, master when this was frozen. It includes #1117's scanner setup and #1279's fix to the quota check, which this recipe imports. The candidate was first drafted on `629222aa`; it was re-pinned before any data, because #1117 then touched `src/` and #1279 fixed a check that would have voided the run.
-- **The recipe refuses to run (VOID)** unless `BASE` is an ancestor of `HEAD`, and unless the only files that differ under `src/`, `examples/`, `benches/`, `Cargo.toml`, `Cargo.lock` and `build.rs` are exactly `src/runs.rs` and `src/runs/tests.rs`. Recipe, test and this file differ too, but no binary reads them. The base is built from a `git worktree` at `BASE`, the candidate from the tagged checkout itself.
+- **The recipe refuses to run (VOID)** unless `BASE` is an ancestor of `HEAD`, and unless the only files that differ under `src/`, `examples/`, `benches/`, `Cargo.toml`, `Cargo.lock` and `build.rs` are exactly `src/runs.rs` and `src/runs/tests.rs`. Recipe, test and this file differ too, but no binary reads them. On a shallow (`--depth 1`) checkout, `BASE` is fetched alone at depth 1, and the ancestor check, which a shallow history can't answer, is skipped and recorded (`provenance.json`: `shallow`, `ancestry_checked`). The tree diff alone fixes what each arm builds. A failed fetch is VOID. This follows the C6 review's required change (delta `2026-11-28-runs-front-i9-rescue-c6-review`). The base is built from a `git worktree` at `BASE`, the candidate from the tagged checkout itself.
 - **Arm:** `ab`'s `mibz2`, the production default, at every thread count. `runs::front` is reached through every path that takes runs:
   - `src/lib.rs:484`, `:665` and `:682` (sequential);
   - `src/parallel.rs:1650` (workers);
@@ -33,7 +33,7 @@
   - `front` is 132.4 ms of Wikidata's single-worker time (19.3 ms per worker at 8), and Pass 2 is 85–91% of it, so k = 1 is where the cut is largest.
   - At 8 and 10 threads the scanner and the workers tie, and the cut may be masked (`frontier/DECODER.md`). Those cells test for a paid gain or a loss, not for the mechanism.
   - The secondary corpora are guards. `runs`, `pattern` and `onebyte` take `front` too, with long-run profiles (`pattern` 10.6% in Pass 3).
-- **Prediction, written down but not part of the rule:** Wikidata 1T about 0.97 and text 1T about 0.97–0.98, from the VM's −2.9..−4.5% and the smaller i9 share. 8 and 10 threads near 1.00. Secondary within ±2%. Peak RSS unchanged (no heap change, −1 KiB of `Runs`).
+- **Prediction, written down but not part of the rule:** the C6 review recomputed it from this registration's own share at 1.7–2.3% for Wikidata at 1 thread, not 3%. That effect is still above 95% power on this grid, while text at 1 thread has about 50–70%. `records` and `random` never call `front_avx2`, so they guard only against changes elsewhere in the binary. The original estimate was Wikidata 1T about 0.97 and text 1T about 0.97–0.98, from the VM's −2.9..−4.5% and the smaller i9 share. 8 and 10 threads near 1.00. Secondary within ±2%. Peak RSS unchanged (no heap change, −1 KiB of `Runs`).
 
 ## 4. Decision (frozen)
 

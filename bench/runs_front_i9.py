@@ -81,19 +81,48 @@ CELLS = tuple(("wikidata", k) for k in WIKIDATA_COUNTS) + tuple(
 
 
 def check_source(root: Path = ROOT, base: str = BASE) -> dict[str, Any]:
-    """VOID unless HEAD is BASE plus exactly CANDIDATE_FILES under every decoder path."""
+    """VOID unless HEAD is BASE plus exactly CANDIDATE_FILES under every decoder path.
+
+    Works on a shallow (`--depth 1`) checkout too: BASE is fetched alone at depth 1, and the
+    ancestry check, which a shallow history cannot answer, is skipped and recorded. The tree diff
+    alone fixes what is built in each arm.
+    """
     if output("git", "status", "--porcelain", "--untracked-files=no", cwd=root):
         raise InvalidRun("recipe checkout has tracked changes")
     head = output("git", "rev-parse", "HEAD", cwd=root)
-    if subprocess.run(["git", "cat-file", "-e", f"{base}^{{commit}}"], cwd=root).returncode:
-        subprocess.run(["git", "fetch", "-q", "--no-tags", "origin", base], cwd=root, check=True)
-    if subprocess.run(["git", "merge-base", "--is-ancestor", base, head], cwd=root).returncode:
-        raise InvalidRun(f"BASE {base} is not an ancestor of HEAD {head}")
+    shallow = output("git", "rev-parse", "--is-shallow-repository", cwd=root) == "true"
+    if subprocess.run(
+        ["git", "cat-file", "-e", f"{base}^{{commit}}"], cwd=root, capture_output=True
+    ).returncode:
+        fetch = [
+            "git",
+            "fetch",
+            "-q",
+            "--no-tags",
+            *(["--depth=1"] if shallow else []),
+            "origin",
+            base,
+        ]
+        if subprocess.run(fetch, cwd=root).returncode:
+            raise InvalidRun(f"cannot fetch BASE {base} from origin")
+    ancestry: bool | None = None
+    if not shallow:
+        ancestry = not subprocess.run(
+            ["git", "merge-base", "--is-ancestor", base, head], cwd=root
+        ).returncode
+        if not ancestry:
+            raise InvalidRun(f"BASE {base} is not an ancestor of HEAD {head}")
     changed = output("git", "diff", "--name-only", base, head, "--", *DECODER_PATHS, cwd=root)
     changed_set = tuple(sorted(filter(None, changed.splitlines())))
     if changed_set != tuple(sorted(CANDIDATE_FILES)):
         raise InvalidRun(f"decoder paths changed between BASE and HEAD: {changed_set}")
-    return {"head": head, "base": base, "decoder_diff": list(changed_set)}
+    return {
+        "head": head,
+        "base": base,
+        "decoder_diff": list(changed_set),
+        "shallow": shallow,
+        "ancestry_checked": ancestry,
+    }
 
 
 def front_asm(exe: Path) -> str:
