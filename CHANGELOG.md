@@ -161,13 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Faster block-header scanner (#1117).** Collapses consecutive identical selector runs into
   `(table, remaining_symbols)` pairs, decodes multiple canonical code-length deltas per LUT lookup,
   and populates the decode lookup table in a single write pass (`0` new `unsafe`; i9-10900K
-  `phases/wikidata/1` −4.52% wall, `0.9548 [0.9514, 0.9582]`).
+  `phases/wikidata/1` −4.52% wall, 0.9548 [0.9514, 0.9582]).
 - **Safe `Cell` 4× `wire_xor` and overlapping-SIMD register-cursor wire (#1294).** Replaces
   bounds-checked scalar wiring in `src/open` with safe `Cell` 4× `wire_xor` and overlapping-SIMD
   register-cursor forward wiring (`0` new `unsafe`).
 - **AVX2 runs front-end (#1274).** 64-symbol `u64` `vptest` Pass 1 bitmap builder, `[u32; 256]`
   stack counts (compiling out dead `Runs.per`), and hoisted 128-bit `(f0, f1)` XMM step table
-  (i9 C6 `bench-runs-front-i9` PASS: Wikidata 6T `0.989 [0.985, 0.993]`, zero primary loss, flat
+  (i9 C6 `bench-runs-front-i9` PASS: Wikidata 6T 0.989 [0.985, 0.993], zero primary loss, flat
   peak RSS).
 - **Clean native `QueuesOf::push_slow` codegen (#1234).** Caps `push_slow` to a straight-line
   4-rank (8-byte) unroll per outer step (`#![forbid(unsafe_code)]`), clearing all 11 `vzeroupper`
@@ -193,24 +193,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   0.77 → 0.72 c/B (−6.2% [−8.5%, −3.9%] faster), MTF+RLE2 1.50 → 1.44 c/B (−3.6% [−5.4%, −1.8%]
   faster), T-vector build 1.31 → 1.28 c/B (−1.8% [−3.3%, −0.2%] faster), walk 2.90 → 2.89 c/B
   (−3.0% [−10.1%, +4.6%]), RLE1 0.16 → 0.15 c/B (−5.4%), CRC 0.26 → 0.25 c/B (−1.9%).
-- **Open-route diagnostic (`mibz2-workers-lazy`, 1 thread):** Wikidata wall and CPU `0.964 [0.933, 0.997]`
-  (−3.6% faster, 26 → 26 MB); `text` `1.005 [0.908, 1.113]` (23 → 23 MB).
+- **Open-route diagnostic (`mibz2-workers-lazy`, 1 thread):** Wikidata wall and CPU 0.964 [0.933, 0.997]
+  (−3.6% faster, 26 → 26 MB); `text` 1.005 [0.908, 1.113] (23 → 23 MB).
 
 **Pre-release physical i9 regression gate (RELEASING §3.5): VALID PASS.** Candidate `7be50513`
 against `v0.5.17` (`01acd74d`) plus `v0.5.16` (`4e261140`) recovery on the i9-10900K
 (`release-preflight/20261128T111128Z.tar.gz`, evidence `c8489a45`, sha256 `64a382d2…4604`, 12
 paired rounds, 100% byte parity, zero primary regressions):
-- **Wikidata vs `v0.5.17`:** 1T `1.007 [0.963, 1.054]`, 2T `0.978 [0.955, 1.002]`, 4T `0.992 [0.965, 1.021]`,
-  **8T `0.967 [0.960, 0.974]` (−3.3%)**, **10T `0.969 [0.959, 0.979]` (−3.1%)**,
-  **12T `0.958 [0.925, 0.992]` (−4.2%)**, **16T `0.951 [0.921, 0.983]` (−4.9%)**,
-  **20T `0.941 [0.909, 0.976]` (−5.9%)**.
-- **Recovery vs `v0.5.16` (`4e261140`, last known good):** **8T `0.991 [0.984, 0.997]` (−0.9%)**,
-  **10T `0.987 [0.977, 0.997]` (−1.3%)** — full recovery and net faster beyond noise than 0.5.16.
-- **`text` vs `v0.5.17`:** 1T `0.992 [0.982, 1.002]`, 2T `0.996 [0.904, 1.099]`, 4T `1.009 [0.984, 1.035]`,
-  8T `0.982 [0.960, 1.005]`, **10T `0.985 [0.973, 0.997]` (−1.5%)**, 12T `0.968 [0.934, 1.004]`,
-  16T `0.991 [0.951, 1.032]`, 20T `0.991 [0.974, 1.008]`.
-- **Secondary guards and memory:** every secondary cell `<= 1.012` (`records:10` `+1.2%`, `runs:10`
-  `+1.2%`, well within the 5% policy tier); every peak RSS ratio `<= 1.023` (`+1.0 MB` max, well
+- **Wikidata vs `v0.5.17`:** 1T 1.007 [0.963, 1.054], 2T 0.978 [0.955, 1.002], 4T 0.992 [0.965, 1.021],
+  **8T 0.967 [0.960, 0.974] (−3.3%)**, **10T 0.969 [0.959, 0.979] (−3.1%)**,
+  **12T 0.958 [0.925, 0.992] (−4.2%)**, **16T 0.951 [0.921, 0.983] (−4.9%)**,
+  **20T 0.941 [0.909, 0.976] (−5.9%)**.
+- **Recovery vs `v0.5.16` (`4e261140`, last known good):** **8T 0.991 [0.984, 0.997] (−0.9%)**,
+  **10T 0.987 [0.977, 0.997] (−1.3%)** — full recovery and net faster beyond noise than 0.5.16.
+- **`text` vs `v0.5.17`:** 1T 0.992 [0.982, 1.002], 2T 0.996 [0.904, 1.099], 4T 1.009 [0.984, 1.035],
+  8T 0.982 [0.960, 1.005], **10T 0.985 [0.973, 0.997] (−1.5%)**, 12T 0.968 [0.934, 1.004],
+  16T 0.991 [0.951, 1.032], 20T 0.991 [0.974, 1.008].
+- **Secondary guards and memory:** every secondary cell <= 1.012 (`records:10` +1.2%, `runs:10`
+  +1.2%, well within the 5% policy tier); every peak RSS ratio <= 1.023 (+1.0 MB max, well
   within the 1.10× gate).
 
 **Worker counts (RELEASING §5c): recalibrated on `7be50513`; shipped trims unchanged.**
