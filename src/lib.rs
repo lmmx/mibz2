@@ -492,10 +492,38 @@ pub fn decode_block<I: bwt::InverseBwt>(
             n as u64,
             trace::UNREAD,
         );
-        let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+        let start = out.len();
+        let (done, fused_crc) = if can_fuse_rle() {
+            let guard = bwt::FusedPostwalk::enter_append(out, k);
+            let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+            (done, guard.take())
+        } else {
+            (
+                s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k),
+                None,
+            )
+        };
         #[cfg(feature = "trace")]
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {
+            if let Some(computed) = fused_crc {
+                // Keep `s.ll` capacity model consistent with the non-fused `decode_block`
+                // Runs ledger (`trace.rs` / `tests/in_place.rs`) without writing any bytes.
+                s.ll.clear();
+                s.ll.reserve(n);
+                #[cfg(any(test, feature = "trace"))]
+                s.record_allocation(
+                    if s.inverse.took_cells() {
+                        trace::OutputRoute::Cells
+                    } else {
+                        trace::OutputRoute::Runs
+                    },
+                    n,
+                    b.max_len,
+                    k,
+                );
+                return finish_fused(computed, b.crc, start, out);
+            }
             #[cfg(any(test, feature = "trace"))]
             s.record_allocation(
                 if s.inverse.took_cells() {
@@ -696,7 +724,16 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
             n as u64,
             trace::UNREAD,
         );
-        let done = s.inverse.invert_runs(&s.runs, n, orig_ptr, &mut out, k);
+        let (done, fused_crc) = if can_fuse_rle() {
+            let guard = bwt::FusedPostwalk::enter_owned(k);
+            let done = s.inverse.invert_runs(&s.runs, n, orig_ptr, &mut out, k);
+            (done, guard.take())
+        } else {
+            (
+                s.inverse.invert_runs(&s.runs, n, orig_ptr, &mut out, k),
+                None,
+            )
+        };
         #[cfg(feature = "trace")]
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if !done {
@@ -704,6 +741,33 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
             return Err(ErrorKind::Internal(
                 "the run records don't tile the block".into(),
             ));
+        }
+        if let Some(computed) = fused_crc {
+            #[cfg(feature = "ideal-rle1")]
+            ideal::rle1::count_executed();
+            #[cfg(any(test, feature = "trace"))]
+            {
+                let route = if s.inverse.took_cells() {
+                    trace::OutputRoute::Cells
+                } else {
+                    trace::OutputRoute::Runs
+                };
+                s.record_owned(route, n, b.max_len, k, Some(&out), false);
+            }
+            let computed = computed?;
+            if computed != crc {
+                return Err(ErrorKind::BlockCrc {
+                    stored: crc,
+                    computed,
+                });
+            }
+            #[cfg(feature = "ideal-rle1")]
+            if ideal::rle1::mode() == ideal::Mode::Record {
+                if let Some(idx) = ideal::current_block() {
+                    ideal::rle1::record(idx, &out);
+                }
+            }
+            return Ok(out);
         }
         #[cfg(feature = "ideal-rle1")]
         if ideal::rle1::mode() == ideal::Mode::Replay {
@@ -838,6 +902,48 @@ fn column<I: bwt::InverseBwt>(
     let _ = n;
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
     finish(inverted, crc, k, out)
+}
+
+/// Whether the fused reverse+RLE1+CRC32 post-walk may run (disabled only when the research
+/// `ideal-rle1` oracle is in `Replay` mode, where RLE1 + CRC are replaced by recorded bytes).
+#[inline(always)]
+fn can_fuse_rle() -> bool {
+    #[cfg(feature = "ideal-rle1")]
+    if ideal::rle1::mode() == ideal::Mode::Replay {
+        return false;
+    }
+    true
+}
+
+/// Finalise a block whose RLE1 and CRC32 were already computed into `&mut out[start..]` by
+/// `Segmented`'s fused post-walk: checks `computed == stored`, restoring `out.truncate(start)`
+/// on any error (matching `finish`'s exact contract).
+fn finish_fused(
+    computed: Result<u32, ErrorKind>,
+    stored: u32,
+    start: usize,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    #[cfg(feature = "ideal-rle1")]
+    ideal::rle1::count_executed();
+    let computed = match computed {
+        Ok(c) => c,
+        Err(kind) => {
+            out.truncate(start);
+            return Err(kind);
+        }
+    };
+    if computed != stored {
+        out.truncate(start);
+        return Err(ErrorKind::BlockCrc { stored, computed });
+    }
+    #[cfg(feature = "ideal-rle1")]
+    if ideal::rle1::mode() == ideal::Mode::Record {
+        if let Some(idx) = ideal::current_block() {
+            ideal::rle1::record(idx, &out[start..]);
+        }
+    }
+    Ok(computed)
 }
 
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
