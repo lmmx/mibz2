@@ -1,6 +1,6 @@
 """The frontier: claims, holds, blog cards, deltas, flags and the surface.
 
-    frontier.py brief [--can shell,rust,...]        what to read, what is held, what you can take
+    frontier.py brief [--can shell,rust,...] [--rules]  the state; the rule when changed (or --rules)
     frontier.py status                              rewrite frontier/STATUS.md from files and open PRs
     frontier.py check                               validate the frontier's files
     frontier.py news                                list unposted default/experimental ledger changes
@@ -2410,10 +2410,45 @@ def check(pr_event=None):
     return 1 if errs else 0
 
 
-def brief(can):
-    """Print the loop, Needs Louis, flags, live holds, what can be taken, and recent deltas."""
+def brief_cursor():
+    """This checkout's local record of the last brief rule it printed (in the git dir, never committed)."""
+    rc, out = git("rev-parse", "--absolute-git-dir")
+    return pathlib.Path(out.splitlines()[0]) / "frontier-brief-rule" if rc == 0 and out else None
+
+
+def brief_rule(rules=False):
+    """The brief section of README.md, or one line naming its digest when this checkout already printed it.
+
+    The rule is printed in full on a checkout's first brief, on `--rules`, and whenever any byte of the
+    section differs from what this checkout last printed (with a note saying so). The cursor is a local,
+    disposable file: deleting it, or an unreadable one, only means the rule is printed again.
+    """
     m = re.search(r"<!-- brief -->(.*?)<!-- /brief -->", (ROOT / "README.md").read_text(), re.S)
-    print(m.group(1).strip())
+    text = m.group(1).strip()
+    digest = hashlib.sha256(text.encode()).hexdigest()[:12]
+    cursor = brief_cursor()
+    try:
+        seen = cursor.read_text().strip() if cursor else ""
+    except OSError:
+        seen = ""
+    if seen == digest and not rules:
+        return (
+            f"## The loop: unchanged since this checkout last printed it (rule {digest})\n"
+            "`frontier.py brief --rules` prints it again; the text is frontier/README.md's brief section."
+        )
+    if cursor:
+        try:
+            cursor.write_text(digest + "\n")
+        except OSError:
+            pass
+    if seen and seen != digest:
+        return f"**The loop changed since your last checkpoint** (rule {seen} -> {digest}): read it again.\n\n{text}"
+    return text
+
+
+def brief(can, rules=False):
+    """Print the loop, Needs Louis, flags, live holds, what can be taken, and recent deltas."""
+    print(brief_rule(rules))
     claims, cards = load("claims"), load("blog")
     all_holds = holds(strict=False)
     held = {k: v for k, (_, v) in all_holds.items() if live(v)}
@@ -3081,7 +3116,7 @@ def main(argv):
     can = [c for c in (opt("--can") or "").split(",") if c]
     if cmd == "brief":
         presence_checkpoint(caps=can or None)
-        brief(set(can))
+        brief(set(can), rules="--rules" in argv)
     elif cmd == "status":
         (ROOT / "STATUS.md").write_text(render())
         print("wrote frontier/STATUS.md")
