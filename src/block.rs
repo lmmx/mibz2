@@ -5,7 +5,7 @@
 //! the same way, in the same terms, so a stream libbzip2 refuses is refused here too.
 
 use super::bits::{Bits, Reg};
-use super::huff::{Huff, CHUNK_LEN, GROUP, MAX_ALPHA};
+use super::huff::{Huff, Patches, CHUNK_LEN, GROUP, MAX_ALPHA};
 use super::ErrorKind;
 use std::cell::RefCell;
 
@@ -20,6 +20,9 @@ const MAX_SELECTORS: usize = 18002;
 pub const MAX_SYMS: usize = MAX_SELECTORS * GROUP;
 /// Skip 2-symbol pair table pass on runt blocks with fewer than this many selectors.
 const PAIR_GATE_SEL: usize = 64;
+/// Skip the 3-symbol table pass on blocks with fewer than this many selectors: on Wikidata
+/// these are 46% of blocks but under 0.05% of symbols, too few to repay the pass.
+const TRIPLE_GATE_SEL: usize = 1024;
 
 /// A block's header and symbols (phase 1's output), for a worker to finish
 pub struct Symbols {
@@ -44,13 +47,15 @@ pub enum Item {
     End(u32),
 }
 
-/// Reusable front-end scratch (`72 KiB` of coalesced selector runs + `6 x 6 KiB` L1d-resident
-/// `Huff` tables + `2 KiB` L1d-hot symbol staging chunk).
+/// Reusable front-end scratch (`72 KiB` of coalesced selector runs + `6 x 7 KiB` L1d-resident
+/// `Huff` tables + `1 KiB` L1d-hot symbol staging chunk of bytes + its `2 KiB` cold list of
+/// symbol-`256` positions).
 pub struct ScanScratch {
     /// the block's selectors as `(group, count)` runs, adjacent runs of different groups
     runs: Box<[(u8, u16); MAX_SELECTORS]>,
     tables: Box<[Huff; MAX_GROUPS]>,
-    chunk: Box<[u16; CHUNK_LEN]>,
+    chunk: Box<[u8; CHUNK_LEN]>,
+    patches: Box<Patches>,
 }
 
 impl Default for ScanScratch {
@@ -58,7 +63,8 @@ impl Default for ScanScratch {
         Self {
             runs: Box::new([(0u8, 0u16); MAX_SELECTORS]),
             tables: Box::new(std::array::from_fn(|_| Huff::default())),
-            chunk: Box::new([0u16; CHUNK_LEN]),
+            chunk: Box::new([0u8; CHUNK_LEN]),
+            patches: Box::default(),
         }
     }
 }
@@ -87,11 +93,13 @@ fn decode_runs_inner(
     runs: &[(u8, u16)],
     mut r: Reg,
     data: &[u8],
-    chunk: &mut [u16; CHUNK_LEN],
+    chunk: &mut [u8; CHUNK_LEN],
+    patches: &mut Patches,
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
     let data_len = data.len();
     let mut ck = 0usize;
+    patches.clear();
     for &(g, n) in runs {
         let mut rem = n as usize;
         let t = &tables[g as usize];
@@ -110,7 +118,7 @@ fn decode_runs_inner(
                     (1, true)
                 }
             };
-            match t.decode_run(&mut r, data, chunk, &mut ck, syms, take * GROUP) {
+            match t.decode_run(&mut r, data, chunk, patches, &mut ck, syms, take * GROUP) {
                 Ok(true) => return (Ok(()), r),
                 Ok(false) => {}
                 Err(err) => return (Err(err), r),
@@ -134,10 +142,11 @@ unsafe fn decode_runs_bmi2(
     runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
-    chunk: &mut [u16; CHUNK_LEN],
+    chunk: &mut [u8; CHUNK_LEN],
+    patches: &mut Patches,
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
-    decode_runs_inner(tables, runs, r, data, chunk, syms)
+    decode_runs_inner(tables, runs, r, data, chunk, patches, syms)
 }
 
 fn decode_runs_scalar(
@@ -145,10 +154,11 @@ fn decode_runs_scalar(
     runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
-    chunk: &mut [u16; CHUNK_LEN],
+    chunk: &mut [u8; CHUNK_LEN],
+    patches: &mut Patches,
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
-    decode_runs_inner(tables, runs, r, data, chunk, syms)
+    decode_runs_inner(tables, runs, r, data, chunk, patches, syms)
 }
 
 fn decode_runs(
@@ -156,7 +166,8 @@ fn decode_runs(
     runs: &[(u8, u16)],
     r: Reg,
     data: &[u8],
-    chunk: &mut [u16; CHUNK_LEN],
+    chunk: &mut [u8; CHUNK_LEN],
+    patches: &mut Patches,
     syms: &mut Vec<u16>,
 ) -> (Result<(), ErrorKind>, Reg) {
     #[cfg(target_arch = "x86_64")]
@@ -164,9 +175,9 @@ fn decode_runs(
         // SAFETY: `std::is_x86_feature_detected!("bmi2")` guarantees the CPU executes BMI2
         // instructions (`shlx`/`shrx`). `decode_runs_bmi2` executes only safe Rust under
         // `#![deny(unsafe_op_in_unsafe_fn)]`.
-        return unsafe { decode_runs_bmi2(tables, runs, r, data, chunk, syms) };
+        return unsafe { decode_runs_bmi2(tables, runs, r, data, chunk, patches, syms) };
     }
-    decode_runs_scalar(tables, runs, r, data, chunk, syms)
+    decode_runs_scalar(tables, runs, r, data, chunk, patches, syms)
 }
 
 /// `LOW_MASK[j]`: the MTF list's bytes below position `j`
@@ -493,6 +504,7 @@ pub fn read_item_with_scratch(
         };
 
     let build_pairs = n_sel >= PAIR_GATE_SEL;
+    let build_triples = n_sel >= TRIPLE_GATE_SEL;
     let mut lens = [0u8; MAX_ALPHA];
     for g in 0..n_groups {
         if let Err(k) = read_lengths(&mut r, data, &mut lens[..alpha]) {
@@ -500,7 +512,7 @@ pub fn read_item_with_scratch(
             fail!(k);
         }
         if (used_groups >> g) & 1 != 0 {
-            scratch.tables[g].build_into(&lens[..alpha], build_pairs);
+            scratch.tables[g].build_into(&lens[..alpha], build_pairs, build_triples);
         }
     }
 
@@ -517,6 +529,7 @@ pub fn read_item_with_scratch(
         r,
         data,
         &mut scratch.chunk,
+        &mut scratch.patches,
         &mut syms,
     );
 
@@ -537,7 +550,7 @@ pub fn read_item_with_scratch(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::huff::{BAD, CNT_SH, EOB_FAST, LEN1, LUT_BITS, SUB_PTR, SYM1, SYM2, SYM256};
+    use crate::huff::{BAD, CNT_SH, EOB_FAST, LUT_BITS, SUB_PTR, SYM1, SYM2, SYM256, SYM3};
 
     /// A small xorshift, for the test's code lengths and bits
     struct Rng(u64);
@@ -611,17 +624,23 @@ mod tests {
         s
     }
 
-    /// The table's way: a pair taken where two or more symbols are still wanted
+    /// A fast entry's symbols, in order
+    fn entry_syms(e: u32) -> Vec<u16> {
+        [SYM1, SYM2, SYM3][..(e >> CNT_SH) as usize]
+            .iter()
+            .map(|&f| ((e >> f) & 0xff) as u16)
+            .collect()
+    }
+
+    /// The table's way: a whole entry taken where at least its symbols are still wanted
     fn by_table(h: &Huff, br: &mut Bits, want: usize, out: &mut Vec<u16>) -> Option<ErrorKind> {
         while out.len() < want {
-            if want - out.len() >= 2 {
-                let e = h.lut[br.peek(LUT_BITS) as usize];
-                if e >> CNT_SH == 2 {
-                    br.skip_short((e as u8) as u32);
-                    out.push(((e >> SYM1) as u8) as u16);
-                    out.push(((e >> SYM2) as u8) as u16);
-                    continue;
-                }
+            let e = h.lut[br.peek(LUT_BITS) as usize];
+            let c = (e >> CNT_SH) as usize;
+            if c >= 2 && want - out.len() >= c {
+                br.skip_short(e & 15);
+                out.extend(entry_syms(e));
+                continue;
             }
             match decode(h, br) {
                 Ok(s) => out.push(s),
@@ -856,7 +875,7 @@ mod tests {
                 lengths(&mut rng)
             };
             for pairs in [true, false] {
-                a.build_into(&lens, pairs);
+                a.build_into(&lens, pairs, false);
                 b.build_into_reference(&lens, pairs);
                 assert!(a.identical(&b), "case {case} pairs {pairs}: {lens:?}");
             }
@@ -873,7 +892,15 @@ mod tests {
                 lengths(&mut rng)
             };
             let mut h = Huff::default();
-            h.build_into(&lens, case % 4 != 0);
+            let (pairs, triples) = (case % 4 != 0, case % 3 != 0);
+            h.build_into(&lens, pairs, triples);
+            let k_max = if !pairs {
+                1
+            } else if triples {
+                3
+            } else {
+                2
+            };
             let eob = (lens.len() - 1) as u16;
             let data: Vec<u8> = (0..400).map(|_| rng.next() as u8).collect();
             let want = 1 + rng.below(120) as usize;
@@ -909,14 +936,15 @@ mod tests {
                         break match h.symbol(zn, zvec) {
                             Some(s) if s == eob => EOB_FAST | zn,
                             Some(256) => SYM256 | zn,
-                            Some(s) => (1 << CNT_SH) | (zn << LEN1) | ((s as u32) << SYM1) | zn,
+                            Some(s) => (1 << CNT_SH) | ((s as u32) << SYM1) | zn,
                             None => BAD,
                         };
                     }
                     zn += 1;
                 };
                 let first = if (e >> CNT_SH) != 0 {
-                    (1 << CNT_SH) | (e & (31 << LEN1)) | (e & (0xff << SYM1)) | ((e >> LEN1) & 31)
+                    let s = (e >> SYM1) & 0xff;
+                    (1 << CNT_SH) | (s << SYM1) | h.sym_len[s as usize] as u32
                 } else if (e & SUB_PTR) != 0 {
                     0
                 } else if e == BAD && lens.iter().copied().max().unwrap_or(0) as u32 <= LUT_BITS {
@@ -930,15 +958,48 @@ mod tests {
                     e
                 };
                 assert_eq!(first, want, "case {case}: entry {w}");
-                // a pair never begins or ends with the block's end
-                assert!(
-                    e >> CNT_SH != 2
-                        || (((e >> SYM1) as u8) as u16 != eob && ((e >> SYM2) as u8) as u16 != eob)
-                );
-                // fast entries keep bits 4..7 zero for low-byte skip_short_shl_u8
-                assert!(e >> CNT_SH == 0 || (e as u8) <= LUT_BITS as u8);
+                if (e >> CNT_SH) != 0 {
+                    // a fast entry is exactly the greedy decode of its 10 bits: as many whole
+                    // codes as fit, up to `k_max`, stopping before the end, `256`, an invalid
+                    // prefix or a code past the root
+                    assert_eq!(
+                        e,
+                        greedy_entry(&h, w as u32, k_max, eob),
+                        "case {case}: {w}"
+                    );
+                    // fast entries keep bits 4..5 zero for skip_short_shl_low4
+                    assert!(e & 0x30 == 0 && (e & 15) <= LUT_BITS);
+                }
             }
         }
+    }
+
+    /// The fast entry libbzip2's bit-by-bit loop gives for root index `w`, taking up to `k`
+    /// whole codes within its 10 bits (`symbol` only: none of the table's own entries)
+    fn greedy_entry(h: &Huff, w: u32, k: usize, eob: u16) -> u32 {
+        let (mut used, mut syms) = (0u32, Vec::new());
+        'codes: while syms.len() < k {
+            for zn in h.min_len..=LUT_BITS - used {
+                let zvec = ((w << used) & ((1 << LUT_BITS) - 1)) >> (LUT_BITS - zn);
+                if zvec as i32 <= h.limit[zn as usize] {
+                    match h.symbol(zn, zvec as i32) {
+                        Some(s) if s != eob && s < 256 => {
+                            syms.push(s as u32);
+                            used += zn;
+                            continue 'codes;
+                        }
+                        _ => break 'codes,
+                    }
+                }
+            }
+            break;
+        }
+        let fields = [SYM1, SYM2, SYM3];
+        let packed = syms
+            .iter()
+            .zip(fields)
+            .fold(0, |acc, (&s, f)| acc | (s << f));
+        ((syms.len() as u32) << CNT_SH) | packed | used
     }
 
     /// MSB-first bits, for a test's blocks
@@ -982,13 +1043,14 @@ mod tests {
             while left > 0 {
                 let e = t.lut[br.peek(LUT_BITS) as usize];
                 let c = (e >> CNT_SH) as usize;
-                if c == 2 && left >= 2 {
-                    br.skip_short((e as u8) as u32);
-                    out.extend([((e >> SYM1) as u8) as u16, ((e >> SYM2) as u8) as u16]);
-                    left -= 2;
+                if c >= 2 && left >= c {
+                    br.skip_short(e & 15);
+                    out.extend(entry_syms(e));
+                    left -= c;
                 } else if c != 0 {
-                    br.skip_short((e >> LEN1) & 31);
-                    out.push(((e >> SYM1) as u8) as u16);
+                    let s = (e >> SYM1) & 0xff;
+                    br.skip_short(t.sym_len[s as usize] as u32);
+                    out.push(s as u16);
                     left -= 1;
                 } else if (e & EOB_FAST) != 0 {
                     br.skip_short(e & 63);
@@ -1362,10 +1424,11 @@ mod tests {
             };
             let n_groups = 2 + rng.below(5) as usize;
             let build_pairs = case % 3 != 0;
+            let build_triples = case % 5 != 0;
             let lens: Vec<Vec<u8>> = (0..n_groups).map(|_| lengths_of(&mut rng, alpha)).collect();
             for (g, l) in lens.iter().enumerate() {
-                sc_a.tables[g].build_into(l, build_pairs);
-                sc_b.tables[g].build_into(l, build_pairs);
+                sc_a.tables[g].build_into(l, build_pairs, build_triples);
+                sc_b.tables[g].build_into(l, build_pairs, build_triples);
             }
             let n_sel = 1 + rng.below(80) as usize;
             let mut selectors = Vec::with_capacity(n_sel);
@@ -1386,26 +1449,58 @@ mod tests {
             syms_a.clear();
             syms_b.clear();
 
-            let (res_a, ra) =
-                decode_runs_scalar(&sc_a.tables, &runs, ra, &data, &mut sc_a.chunk, &mut syms_a);
+            let (res_a, ra) = decode_runs_scalar(
+                &sc_a.tables,
+                &runs,
+                ra,
+                &data,
+                &mut sc_a.chunk,
+                &mut sc_a.patches,
+                &mut syms_a,
+            );
+            let (tb, cb, pb) = (&sc_b.tables, &mut sc_b.chunk, &mut sc_b.patches);
             #[cfg(target_arch = "x86_64")]
             let (res_b, rb) = if std::is_x86_feature_detected!("bmi2") {
                 // SAFETY: guarded immediately by `is_x86_feature_detected!("bmi2")`.
-                unsafe {
-                    decode_runs_bmi2(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b)
-                }
+                unsafe { decode_runs_bmi2(tb, &runs, rb, &data, cb, pb, &mut syms_b) }
             } else {
-                decode_runs_scalar(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b)
+                decode_runs_scalar(tb, &runs, rb, &data, cb, pb, &mut syms_b)
             };
             #[cfg(not(target_arch = "x86_64"))]
-            let (res_b, rb) =
-                decode_runs_scalar(&sc_b.tables, &runs, rb, &data, &mut sc_b.chunk, &mut syms_b);
+            let (res_b, rb) = decode_runs_scalar(tb, &runs, rb, &data, cb, pb, &mut syms_b);
 
             assert_eq!(res_a, res_b, "case {case}");
             assert_eq!(ra.bit_pos(), rb.bit_pos(), "case {case}");
             assert_eq!(ra.overran(&data), rb.overran(&data), "case {case}");
             if res_a.is_ok() {
                 assert_eq!(syms_a, syms_b, "case {case}");
+            }
+            // and both as libbzip2's bit-by-bit loop, group by group (an overrun checked at
+            // each group's end, the end taken where it is decoded)
+            let mut br = Bits::at(&data, start_bit);
+            let eob = (alpha - 1) as u16;
+            let mut want = Vec::new();
+            let res_c = 'groups: {
+                for &g in &selectors {
+                    for _ in 0..GROUP {
+                        match by_bits(&sc_a.tables[g as usize], &mut br) {
+                            Ok(s) => want.push(s),
+                            Err(k) => break 'groups Err(k),
+                        }
+                        if want.last() == Some(&eob) {
+                            break 'groups Ok(());
+                        }
+                    }
+                    if br.overran() {
+                        break 'groups Err(ErrorKind::Truncated);
+                    }
+                }
+                Err(ErrorKind::SelectorOverrun)
+            };
+            assert_eq!(res_a, res_c, "case {case}");
+            assert_eq!(ra.bit_pos(), br.bit_pos(), "case {case}");
+            if res_a.is_ok() {
+                assert_eq!(syms_a, want, "case {case}");
             }
         }
     }
