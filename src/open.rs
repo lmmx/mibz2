@@ -895,6 +895,9 @@ pub struct OpenCellsOf<const FORCED: bool> {
     /// (test only) blocks refused by `within_cap` or the open kernel's first pass
     #[cfg(test)]
     pub(crate) capped: usize,
+    /// (test/trace only) whether the last `invert_runs` or `fold_runs` ran in `open`'s buffers
+    #[cfg(any(test, feature = "trace"))]
+    took: bool,
 }
 
 impl<const FORCED: bool> OpenCellsOf<FORCED> {
@@ -1231,9 +1234,22 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
         k: Kernels,
         admitted: &mut dyn FnMut(usize, Vec<u16>),
     ) -> crate::runs::fold::Outcome {
-        self.fold(b, scratch, buf, k, admitted)
+        let out = self.fold(b, scratch, buf, k, admitted);
+        #[cfg(any(test, feature = "trace"))]
+        {
+            self.took = matches!(out, crate::runs::fold::Outcome::Done(_));
+        }
+        out
+    }
+    #[cfg(any(test, feature = "trace"))]
+    fn took_cells(&self) -> bool {
+        self.took
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
+        #[cfg(any(test, feature = "trace"))]
+        {
+            self.took = false;
+        }
         let recs = r.records();
         if let Some(cap) = Self::cap(recs.len(), n, p) {
             // Skip the scalar `within_cap` pre-scan on `lazy_counts_admit` blocks
@@ -1262,6 +1278,10 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
                 {
                     self.opened += 1;
                 }
+                #[cfg(any(test, feature = "trace"))]
+                {
+                    self.took = true;
+                }
                 return true;
             }
             #[cfg(test)]
@@ -1270,6 +1290,10 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
             }
         }
         self.fallback.invert_runs(r, n, p, out, k)
+    }
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        self.fallback.buffers()
     }
     fn invert(&mut self, l: &[u8], c: &[u32; 256], p: u32, out: &mut Vec<u8>) {
         self.fallback.invert(l, c, p, out);
