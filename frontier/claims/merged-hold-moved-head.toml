@@ -1,0 +1,32 @@
+id = "merged-hold-moved-head"
+title = "Release an integration reservation whose PR merged at a head that moved after handoff"
+kind = "build"
+zone = "striated"
+needs = ["shell", "repo-write"]
+priority = 1
+status = "open"
+owned_paths = ["frontier/tools/frontier.py", "tests/test_frontier.py"]
+needs_louis = ""
+question = """
+`hold/scanner-a2-fast-build` is `phase = "integration"` for PR #1117 with `pr_head = eb1ec40f`, but #1117 merged (2026-11-28T01:55Z, merge 15c289b5) at head ef5b4233, a descendant of eb1ec40f made by later commits that merged master, closed the claim (da7070e3) and merged master again to resolve `frontier/surface.tsv` (ef5b4233). The claim is `done` on master. An integration lease is live regardless of expiry (`live()`), and `finish_review(merged)` and `reconcile_integrations` require `lease.pr_head == PR head`, so the reservation on `src/block.rs` and `src/huff.rs` can never be released: `claim scanner-a3-k3-pipe-u8` (P2, admitted in #1334) exits "would share ['src/block.rs', 'src/huff.rs'] with scanner-a2-fast-build", and `finish-review scanner-a2-fast-build --pr 1117 --head <either head>` refuses. `parked-hold-moved-head` (#1293) fixed the closed-unmerged mode and deliberately left the merged path refusing a moved head (its stop_test item 2), because finishing on a merge certifies that the merged bytes were the reviewed head. That certification and the release of paths are separate questions; this claim separates them.
+
+Proposed design (taker decides, reviewer checks): when the PR is the reservation's number, merged, its `Claim:` header is the claim, its merge commit is on origin/master, the claim is terminal on origin/master, and the merged head descends from the recorded `pr_head`, release the reservation with `terminal = <merge>` and record `moved_head = [<recorded>, <merged>]` in the release record, so the release does not read as a verified-head merge. Apply the same in `reconcile_integrations`. A merged head that does not descend from the recorded head stays refused. Optional: `brief` lists released-with-moved-head integrations for a post-hoc read of the extra commits (here `git show --cc ef5b4233 -- src/` is empty: the last merge hand-resolved nothing in src/, nor did da7070e3).
+"""
+why = """
+Recovers stranded capacity: the scanner's serial A3 redesign (scanner-a3-k3-pipe-u8, P2, -5.6..-7.7% paid A2d+A3 in the explore oracle) and anything else on src/block.rs or src/huff.rs cannot be claimed until this reservation is released, and the only other exits are hand-writing a lease or rewriting the hold branch, both barred. The same mode will recur whenever an integrator merges master into a PR after take-review.
+"""
+stop_test = """
+Frozen before code: (1) a regression fixture reproduces the stuck lease (integration, PR merged at a descendant of the recorded head, claim done on master) and shows it released by `finish-review` and by reconciliation, with `moved_head` recorded; (2) a merged PR whose head does not descend from the recorded head is still refused; (3) a moved-head merge whose claim is not terminal on master is still retained; (4) the full `tests/test_frontier.py` suite passes. Independent review by a different agent (lease-enforcement change), as for parked-hold-moved-head.
+"""
+done_when = """
+Merged after independent review; `hold/scanner-a2-fast-build` released by reconciliation (the next `claim` of anything on its paths does it); `claim scanner-a3-k3-pipe-u8` no longer refused on overlap.
+"""
+premises = [
+  "frontier/claims/parked-hold-moved-head.toml",
+  "frontier/claims/scanner-a2-fast-build.toml",
+  "frontier/tools/frontier.py",
+]
+links = [
+  "frontier/claims/scanner-a3-k3-pipe-u8.toml",
+  "frontier/deltas/2026-11-28-scanner-a3-k3-pipe-u8.md",
+]
