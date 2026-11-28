@@ -105,10 +105,15 @@ def check_baseline_env(env: dict[str, str] | None = None) -> None:
 
 
 def check_no_quota(facts: dict[str, Any]) -> None:
-    """VOID under a CPU quota (registration section 3): `ab env --facts` reports null when unlimited."""
-    quota = facts.get("cpu_quota")
-    if quota is not None:
-        raise InvalidRun(f"registered run requires no CPU quota; cgroup quota is {quota} CPUs")
+    """VOID under a CPU quota (registration section 3); supports scalar and dict `ab env --facts/1` shapes."""
+    if "cpu_quota" not in facts:
+        raise InvalidRun("registered run requires cpu_quota in env-facts.json")
+    quota = facts["cpu_quota"]
+    if quota is None:
+        return
+    if isinstance(quota, dict) and quota.get("state") == "unlimited" and quota.get("cpus") is None:
+        return
+    raise InvalidRun(f"registered run requires no CPU quota; cgroup quota is {quota!r}")
 
 
 def check_host_i9(out: Path, require_i9: bool = True) -> dict[str, Any]:

@@ -278,8 +278,27 @@ class IsolationAndWiringTests(unittest.TestCase):
 
     def test_quota_is_void(self):
         fa.check_no_quota({"cpu_quota": None})
-        with self.assertRaises(fa.InvalidRun):
-            fa.check_no_quota({"cpu_quota": 8.0})
+        fa.check_no_quota(
+            {
+                "facts": "ab env --facts/1",
+                "cpu_quota": {
+                    "state": "unlimited",
+                    "cpus": None,
+                    "hierarchy": "v2",
+                    "levels": ["/sys/fs/cgroup"],
+                    "why": None,
+                },
+            }
+        )
+        for bad in (
+            {},
+            {"cpu_quota": 8.0},
+            {"cpu_quota": {"state": "limited", "cpus": 4.0}},
+            {"cpu_quota": {"state": "unknown", "cpus": None}},
+            {"cpu_quota": {"state": "unlimited", "cpus": 8.0}},
+        ):
+            with self.subTest(bad=bad), self.assertRaises(fa.InvalidRun):
+                fa.check_no_quota(bad)
 
     def test_strict_run_refuses_overrides(self):
         with tempfile.TemporaryDirectory() as td, self.assertRaises(fa.InvalidRun) as ctx:
