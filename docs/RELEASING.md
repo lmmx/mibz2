@@ -147,6 +147,15 @@ three-team policy came from it). Every release gets one.
      the view remembers a reader's last choice. A run that is recorded but not shown first is
      not done (10 November 2026: the hero stayed on 0.2.4 against 0.2.1 after 0.2.9's run).
 3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The already-published release's reporting can remain incomplete; this is not a waiver of §3.5.
+4. **Read a step within mode as well as pooled.** The i9 runs in two modes, and a release can
+   change only how often it lands in each (`i9-clock-modes`,
+   `docs/notebook/2026-11-28-i9-clock-modes-verdict.md`). Beside each pooled ratio that moves,
+   report `python3 bench/clock_modes.py analyze runs.jsonl --threads <T>`: the within-mode and
+   same-mode paired ratios, and each build's mode occupancy. If the within-mode intervals span 1,
+   the step is a change in mode occupancy, not in the decoder. Say so beside the pooled figure,
+   as 0.5.15's 1-thread row does. Any comparison that idles between runs uses `--settle 2.0`, never
+   0.2: a 0.2 s gap lands in the clock's ramp-up hysteresis (13 of 13 slow 6-thread runs). This
+   recipe's back-to-back `--settle 0` showed no slow-clock runs.
 
 ## 5a. The team threshold: when it may have moved
 
