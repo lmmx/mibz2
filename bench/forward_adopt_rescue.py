@@ -1070,6 +1070,7 @@ def run_adoption(
             distinct_binaries=bin_meta["distinct_binaries"],
             host_ok=True,
         )
+        summary = mark_unregistered(summary, strict_i9)
 
     save(out / "summary.json", summary)
     txt = format_summary(summary)
@@ -1081,6 +1082,18 @@ def run_adoption(
     return summary
 
 
+def mark_unregistered(summary: dict[str, Any], registered: bool) -> dict[str, Any]:
+    """A smoke, non-i9 or overridden run never carries a live verdict: VOID, diagnostic only."""
+    if registered or summary["verdict"] == "VOID":
+        return summary
+    return {
+        **summary,
+        "verdict": "VOID",
+        "reason": "not the registered run (smoke, "
+        "non-i9 host or overridden parameters); diagnostic only: " + summary["reason"],
+    }
+
+
 def score_dir(out: Path) -> dict[str, Any]:
     """Re-score an existing run directory cleanly from its archived JSONL/JSON artifacts."""
     out = Path(out).resolve()
@@ -1088,7 +1101,10 @@ def score_dir(out: Path) -> dict[str, Any]:
     bins = json.loads((out / "binaries.json").read_text(encoding="utf-8"))
     refs = json.loads((out / "inputs.json").read_text(encoding="utf-8"))
     parity_path = out / "parity.jsonl"
-    if parity_path.exists():
+    parity_err: str | None = None
+    if not parity_path.exists():
+        parity_err = "missing parity.jsonl: timed hashes cannot be tied to libbzip2 parity"
+    else:
         for line in parity_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 rec = json.loads(line)
@@ -1137,15 +1153,16 @@ def score_dir(out: Path) -> dict[str, Any]:
         distinct_binaries=bool(bins.get("distinct_binaries", False)),
         host_ok=host_ok,
     )
+    if registered and parity_err is None:
+        unhashed = sorted(c for c in refs if not refs[c].get("hash"))
+        if unhashed:
+            parity_err = f"parity.jsonl has no 64-bit hash for {', '.join(unhashed)}"
     if not host_ok and quota_err:
         summary = {**summary, "verdict": "VOID", "reason": quota_err}
-    elif not registered and summary["verdict"] != "VOID":
-        summary = {
-            **summary,
-            "verdict": "VOID",
-            "reason": "not the registered run (smoke, "
-            "non-i9 host or overridden parameters); diagnostic only: " + summary["reason"],
-        }
+    elif registered and parity_err:
+        summary = {**summary, "verdict": "VOID", "reason": parity_err}
+    else:
+        summary = mark_unregistered(summary, registered)
     save(out / "summary.json", summary)
     txt = format_summary(summary)
     (out / "summary.txt").write_text(txt, encoding="utf-8")
