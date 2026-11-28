@@ -24,7 +24,7 @@ question = """
 Queued behind `#1341` (`ship-completion-pressure`) and `brief-state-first` on `frontier/tools/frontier.py`: do all 16 cold-walkthrough fixes pass hermetic pytest coverage (`tests/test_frontier.py`, `tests/test_continuation.py`) and a clean repeat cold run on a private bare remote?
 """
 why = """
-Every new harness or fresh session hits these defects immediately: silent typo acceptance on `claim`, 417-day unbounded lease TTLs, raw Python tracebacks on missing arguments, permanently stuck `manual:` continuations, copy-paste-broken `continuation.py done` instructions, and an inverted flag-resolution check that blocks flaggers while allowing self-dismissal. Fixing them mechanically hardens the swarm's shared coordination layer with zero new dependencies.
+Every new harness or fresh session hits these defects immediately: silent typo acceptance on `claim`, 417-day unbounded lease TTLs, raw Python tracebacks on missing arguments, permanently stuck `manual:` continuations, copy-paste-broken `continuation.py done` instructions, and an inverted flag-resolution check that blocks flaggers while allowing self-dismissal. Fixing them mechanically hardens the swarm's shared coordination layer with zero new dependencies. Note: the `continuation.py` / `CONTINUATIONS.md` items (`B1`, `B2` resume `--hours`, `M3`, `F5` `show`/`--next`) are already landed separately on `ops/continuation-hardening`, leaving the `frontier/tools/frontier.py` and `README.md` items once `#1341` and `brief-state-first` finish.
 """
 stop_test = """
 Frozen before building:

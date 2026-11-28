@@ -19,7 +19,7 @@ makes the boundary explicit and resumable without a coordinator:
   | `ref:<refname>@<sha>` | the ref (a `ready/` tag, a version tag) points at, or peels to, that commit | it points elsewhere |
   | `claim:<id>=<status>[,…]` | the claim on master has one of those statuses | — |
   | `hold-free:<id>` | no live hold on that claim | — |
-  | `manual:<text>` | never on its own: resume by hand | — |
+  | `manual:<text>` | never on its own: resume by hand with `resume --manual` | — |
 
   `failed` (a red check at the pin) and `unknown` (GitHub or the evidence branch unreadable) are
   reported as such. Unknown is never absence and never ready.
@@ -39,13 +39,15 @@ python3 $T declare release-0-5-18 merge-preflight merged:1256@<40-hex head> \
 #    12 superseded/failed, 13 another peer has acquired it, 14 lost the wait.
 python3 $T watch release-0-5-18--merge-preflight --by <agent> --timeout 3300
 # 3. Acquire execution (one peer wins; the pin is re-probed first; an independent gate
-#    refuses its author). It prints the ordinary next step: take the claim's hold with
-#    `frontier.py claim` or `take-review`, `verify`, then act under the usual gates.
+#    refuses its author; pass --manual only for manual:<text> pins; --hours in (0, 8]).
+#    It prints the ordinary next step: take the claim's hold with `frontier.py claim` or
+#    `take-review`, `verify`, then act under the usual gates.
 python3 $T resume release-0-5-18--merge-preflight --session <s> --by <agent>
 # 4. Record what you read and decided; optionally declare the chain's next gate in one step.
 python3 $T done release-0-5-18--merge-preflight --session <s> \
     --disposition "#1256 merged at <sha>; preflight recipe frozen" \
-    --next-action read-preflight --next-dep evidence:bench-release-preflight@<pin>
+    --next-action read-preflight --next-dep evidence:bench-release-preflight@<pin> \
+    --next "read preflight bundle and record disposition"
 ```
 
 `view` is the shared, read-only observation: `python3 $T view --can shell,repo-write [--probe]`.
