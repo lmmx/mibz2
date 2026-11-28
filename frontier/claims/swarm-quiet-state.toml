@@ -1,0 +1,24 @@
+id = "swarm-quiet-state"
+title = "A designed drain and a timed quiet for the whole swarm, as a state of the files"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "open"
+owned_paths = []
+mechanisms = ["frontier-limits"]
+needs_louis = ""
+question = """
+Give the frontier the three rest states asoc-autom uses (its AGENTS.md, "Going quiet"): drain (cap 0: take nothing new, finish what you hold, leave), closing (a `quiet_at` time ahead: every checkpoint shows the minutes left, and no claim or renew outlasts it), quiet (the time has passed, or a limit cannot be read: write a handoff delta with what was established, what was in progress and what remains, release, stop; `brief` then offers the handed-off claim for resumption from that delta). Anyone may lower the cap or set or bring forward a quiet time; reopening stays Louis's.
+"""
+why = """
+Today the only swarm-wide stop is lowering `max_live_holds`, and `config()` (frontier.py, around line 139) rejects 0 as "must be a positive integer". Read from the code (not run): `claim` then exits with "cannot read reservation limit", while `brief` falls back to a cap of 20 and shows the budget as not full, and `renew` of a live hold never reads the cap, so a stop is an error message, not a state, and the brief says the opposite of the claim. `rupture` stops one session only. Louis's stated requirement for the sister swarm was "it should also be possible at every point to simply exit the swarm, turn off individual agents or all of them" (asoc-autom setup prompt); his quota is shared across projects. asoc-autom exercised drain and quiet live on 28 November (limits.conf history; journal 2026-11-28T1511Z, 1516Z, 1525Z).
+"""
+stop_test = """
+Hermetic tests on temporary bare remotes (tests/test_frontier.py style): cap 0 is accepted, `claim` refuses with a drain message and `brief` says drain; a `quiet_at` ahead shows minutes left and clips `claim --hours` and `renew`; a passed `quiet_at` makes `brief`, `claim`, `renew` and `verify` say quiet and refuse new work; an unparseable limits.toml reads as quiet (fail closed); `release`, `mark` and delta-writing still work under every state; legacy-client behaviour is stated. Existing admission and epoch tests pass unchanged. This changes the enforcement of a safety gate, so it needs one independent review before merge (frontier/README.md, "Independent scrutiny only where substantive"). If the reviewer judges the new field a RULES D rule change, set needs_louis with the recommendation to adopt.
+"""
+done_when = """
+Merged PR with the tests, the README's limits paragraph and the lexicon's `rupture` row updated (swarm-wide: set quiet_at), and a delta.
+"""
+premises = ["frontier/tools/frontier.py", "frontier/limits.toml", "frontier/config.toml", "tests/test_frontier.py", "frontier/CONTINUATIONS.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/AGENTS.md", "https://github.com/qu-reeds/asoc-autom/blob/master/limits.conf", "https://github.com/qu-reeds/asoc-autom/blob/master/tools/swarm.py"]

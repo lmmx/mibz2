@@ -1,0 +1,24 @@
+id = "rule-budget"
+title = "When a rule is added to the loop, one is retired"
+kind = "decision"
+zone = "smooth"
+needs = ["shell"]
+priority = 3
+status = "idea"
+owned_paths = []
+mechanisms = ["frontier-rule-budget"]
+needs_louis = "RULES D (rule changes): adopt asoc-autom's discipline for frontier/README.md's brief section and CLAUDE.md, 'When you add a rule here, delete one. check stays at five checks or fewer' (asoc-autom AGENTS.md, 'Keeping this light'). Evidence: the brief section is now about 16 KB, its four top paragraphs (workstation supply, result-to-release, release completion, swarm) each restate standing authority already in CLAUDE.md. Recommended: adopt in a soft form, that a PR adding a paragraph to the brief section names the paragraph it retires or folds, or says why none can go; no hard count; a one-time consolidation pass under its own claim, preserving meaning, reviewed by a different agent."
+question = """
+Should the frontier adopt a rule budget, and if so in what form?
+"""
+why = """
+The protocol grows by paragraphs each carrying an owner instruction; none is ever retired, so the loop is now hard to read cold and expensive to reprint (see brief-state-first).
+"""
+stop_test = """
+Louis's decision recorded verbatim in a delta.
+"""
+done_when = """
+Decided and, if adopted, a consolidation claim opened.
+"""
+premises = ["frontier/README.md", "CLAUDE.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/AGENTS.md"]

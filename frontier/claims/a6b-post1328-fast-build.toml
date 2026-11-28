@@ -1,0 +1,51 @@
+id = "a6b-post1328-fast-build"
+title = "Post-#1328 A6b fast dict & zero-BC setup: per-ch disjoint L1d tables, O(1) long hash, and DictCtx outlining (0 B extra RSS)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/open/endpoint.rs"]
+mechanisms = ["a6b-per-ch-disjoint-l1d-dict", "a6b-o1-sampled-long-hash", "a6b-zero-bc-chunks-setup"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-post-1328-a6b-dict-dissection.md` dissected the remaining `18.0–18.6%` of `M5` worker CPU inside post-`#1328` `A6b` (`src/open/endpoint.rs::overlay_aos` at `37a2a37a`) paired with `#1312` (`--features forward-anchor-lanes`) across all 233 Wikidata Open blocks (`Haswell-EP` VM, pinned CPU 0, steal-free `CLOCK_THREAD_CPUTIME_ID`, both `base` and `JCC-32B`, L3-warm and true `64 MiB > 45 MiB` per-block L3-cold):
+
+1. **Exact sub-stage split of `37a2a37a`:** `dict_aos` is the `#1` largest sub-stage (`47.00 ms` / `40.0%` `base`, `47.70 ms` / `41.4%` `JCC-32B`), ahead of `elim_aos` (`46.42 ms` / `39.5%` `base`, `43.53 ms` / `37.7%` `JCC-32B`), `setup_aos` (`14.84 ms` / `12.6%`), `prepare_header` (`4.51 ms` / `3.8%`), and `assign_bottom` (`3.39 ms` / `2.9%`). `forward-anchor-lanes` wastes zero bidirectional work (`inline_back` does not exist; `wire_fwd_edges` already skips XOR).
+2. **Root causes in `dict_aos` (`721` insns, `9` panics/BC, `132` `(%rsp)` refs) & setup (`11` BC):**
+   - `106,866` long bands expand `10.24 MB` into `spelling` and hash all `10.24 MB` byte-by-byte with serial FNV-1a (`imul` 3-cycle latency × `10.24M` bytes ≈ `10–13 ms`).
+   - `dict_aos` uses a global `16 KiB` `contents[4096]` table that performs `lens[old]` + `inline16[old]` bounds-checked verify loads on every hit (`181K` hits), even though words in `for ch in 0..256` end in `ch` and are 100% disjoint across `ch` buckets (`tag == 1` alone is `84,072` bands = `39.3%` of `tag 1..7`).
+   - Inlining all three `tag` paths and `10` arguments into `dict_aos` causes `132` stack spill/reload references.
+3. **Zero-extra-RSS, `#![forbid(unsafe_code)]` prototype (`S1_setup + D2_dict_ctx`, `src/open/endpoint.rs` only):**
+   - Partition the existing overlaid `16 KiB` `edges[0..4096]` scratch into three per-`ch` generation-tagged L1d tables (`13 KiB` total, `0 B` extra heap): `two_byte[256]` (`1 KiB`, direct lookup for `tag == 1`), key-in-slot `short_tab[512 × 4 u32]` (`8 KiB`, 0 verify loads for `tag 2..7`), and `long_tab[1024]` (`4 KiB`, `tag >= 8`), plus 1-entry `(last_nwd, last_code)` register cache (`4.33%` hits).
+   - Replace 1-byte FNV-1a on long words (`>= 17 B`) with O(1) 4-word sampled hashing (`len`, first/mid/last `u64`, preserving exact `long_word == bytes` verification), outline `push_short` / `resolve_ge8` via single-pointer `DictCtx` (`721 → 379` insns in `dict_aos`), reserve `total_len + 1` once in `append_fast`, and use zero-BC `chunks_exact` + cached tail base in `prepare_header` / `setup_aos`.
+   - VM results (100% exact band/word/cursor & 7-corpus SHA-256 parity, `46/46` `open::` tests, `0` clippy warnings, identical `904.7 KiB` `edges_cap`):
+     - Isolated `A6b`: **`-14.42%`** `base` warm / **`-10.19%..-10.32%`** `base` 64 MiB L3-cold / **`-15.33%..-15.72%`** `JCC-32B` warm / **`-12.35%`** `JCC-32B` 64 MiB L3-cold (`dict` cut `-32.5%`, `47.70 → 32.18 ms`).
+     - Whole-decoder E2E (`wikidata`, `forward-anchor-lanes`, `n = 5` paired fresh processes): `8W base` **`-1.34%`** CPU (`1.0105×` HWM), `8W jcc` **`-2.56%`** CPU (`1.0019×` HWM), `1W` `VmHWM` `1.0020×–1.0040×`.
+
+Queued strictly behind `a6b-zero-rss-endpoint-build` (`#1328`): does layering `S1_setup + D2_dict_ctx` on top of `#1328` cut physical i9-10900K `A6b` by `>= 10%` and whole-decoder `wikidata/1` + `wikidata/8` worker CPU by `>= 1.0%` at `<= 1.005×` RSS with zero guard regressions?
+"""
+why = """
+After `#1328` (`overlay_aos`) lands, `A6b` still accounts for `18.0–18.6%` of `M5` worker CPU, with `dict_aos` alone taking `40–41%` of `A6b`. Per-`ch` disjoint L1d tables + O(1) sampled long hashing + `DictCtx` outlining cut another `-12%..-15.7%` off residual `A6b` (`-32.5%` off `dict_aos`) inside `src/open/endpoint.rs` alone with `#![forbid(unsafe_code)]` and `0 B` extra heap/RSS (`13 KiB` overlaid inside existing `edges[0..4096]`).
+"""
+stop_test = """
+Frozen before building:
+1. Sequencing & safety: built strictly after `a6b-zero-rss-endpoint-build` (`#1328`) lands on `master`. Preserves `#![forbid(unsafe_code)]` in `src/open/endpoint.rs`, `0 B` extra `Endpoint`/`Kernel` heap (`edges_cap <= 1.000×` baseline, no `bands.reserve(nodes_used)` bloat), `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` (plus `forward-anchor-lanes`, `census`, `induction-trace`), all `open::` + integration tests PASS, Miri `0` UB on `miri_a6b_overlay_aos`, and 100% C `libbzip2` SHA-256 parity across `wikidata` + all 6 guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte`).
+2. Physical i9-10900K C6 verification (`--settle 2`, `n >= 12` paired alternating rounds, fresh processes, `AB_SHA256=1`, paired with shipped/post-`#1328` flags):
+   - `wikidata/1` (and `wikidata/8` worker station `W`): `<= 0.990×` (`>= 1.0%` reduction, 95% CI strictly `< 1.000`) and `wikidata/8` wall `<= 1.000×` (or `<= 0.992×` if worker-bound).
+   - Resident RSS (`VmRSS` and `VmHWM`): `<= 1.005×` baseline across `1W, 4W, 6W, 8W, 10W` on `wikidata` and all 6 guard corpora.
+   - Zero guard regressions (`wall <= 1.010×` on `text`, `records`, `random`, `runs`, `pattern`, `onebyte`).
+Otherwise STOP/REVERT and record a scoped dead-end row preserving i9 evidence (C2).
+"""
+done_when = """
+Striated PR modifying `src/open/endpoint.rs` (layered on `#1328`) merged after passing all unit/Miri/CI gates and physical i9-10900K verification under the frozen stop test, with a delta and `frontier/ledger.tsv` entry.
+"""
+premises = [
+  "docs/notebook/2026-11-28-post-1328-a6b-dict-dissection.md",
+  "docs/notebook/2026-11-28-a6b-zero-rss-dissection.md",
+  "src/open/endpoint.rs",
+]
+links = [
+  "frontier/deltas/2026-11-28-post-1328-a6b-dict-dissection.md",
+  "frontier/claims/a6b-zero-rss-endpoint-build.toml",
+]

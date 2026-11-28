@@ -1,0 +1,24 @@
+id = "brief-state-first"
+title = "Make the brief a reading of the state, not a reprint of the rule"
+kind = "build"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["frontier-brief"]
+needs_louis = ""
+question = """
+`frontier.py brief --can shell` at 701366e printed 22,979 bytes, of which the state (from "## Needs Louis" on) was 6,925: the other 16 KB is the `<!-- brief -->` section of frontier/README.md, reprinted at every checkpoint by every participant. asoc-autom's brief is about 2 KB: a header line with the medium, live holds and the day's count, then pressures, holds and a draw; the rule lives in AGENTS.md and the checkpoint only says when it has changed. Can `brief` print the state first and the rule only when its digest differs from the one this checkout last saw (or on `--rules`), without any participant missing a rule change?
+"""
+why = """
+Every brief, renew and claim checkpoint by every agent pays for 16 KB it has usually already read; with twenty live holds and checkpoints every few minutes this is the frontier's largest fixed reading cost, and it buries Needs Louis and the pressures below the fold. It also hides drift: rules added as paragraphs are never seen next to the state they govern.
+"""
+stop_test = """
+Tests: a fresh checkout's first brief prints the rule; an unchanged rule is replaced by one line naming its digest and how to print it; any byte change to the brief section prints it again with a "changed since your last checkpoint" note; the state section is byte-identical to today's. No rule text is deleted or reworded in this claim (that is rule-budget). Measure brief bytes before and after on the same commit.
+"""
+done_when = """
+Merged PR with tests and the before/after byte counts in its delta.
+"""
+premises = ["frontier/tools/frontier.py", "frontier/README.md", "research/frontier-checkpoint/README.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/tools/swarm.py"]

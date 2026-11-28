@@ -1,0 +1,24 @@
+id = "prove-frontier-damaged"
+title = "A careless hand damages the frontier's files: what the tool notices"
+kind = "probe"
+zone = "smooth"
+needs = ["shell"]
+priority = 2
+status = "done"
+owned_paths = []
+mechanisms = ["frontier-protocol-test-damage"]
+needs_louis = ""
+question = """
+On a private bare remote, apply single damages a person editing by hand would make to frontier/ (a claim with a missing or duplicate key, a status typo, a hold ref with a malformed body, limits.toml mistyped or reordered, a delta edited after merge, a flag deleted, CRLF, a renamed claim while held, a non-numeric priority). For each: does `brief`, `check`, `claim` or `verify` notice, crash, or silently misread it?
+"""
+why = """
+asoc-autom's version of this (lines/proving-the-rule/damaged-by-hand.md) tried about 120 single damages and found 17 defects, two of them a crash on a malformed hold and a stop typed above the existing line being ignored; its tested patch was merged the same day. The frontier's invariants (conservation of evidence, bounded expenditure) are only as strong as the tool's reading of malformed files, and a fail-open misreading of limits is exactly the case swarm-quiet-state is about.
+"""
+stop_test = """
+Private bare remotes and clones only. Each finding: the damage, the command, the observed output, breaks/misleads/friction, a proposed fix; fixes tested on a scratch copy of the tool before being proposed. Stop after about forty minutes; the rest are threads in the delta.
+"""
+done_when = """
+A delta with the findings and a tested patch or follow-on claims at idea.
+"""
+premises = ["frontier/tools/frontier.py", "frontier/config.toml", "frontier/limits.toml", "frontier/flags/README.md", "frontier/deltas/README.md"]
+links = ["https://github.com/qu-reeds/asoc-autom/blob/master/lines/proving-the-rule/damaged-by-hand.md"]
