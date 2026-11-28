@@ -8,6 +8,13 @@ release bump_level="patch":
         exit 0
     fi
 
+    # 🛡️ Enforce the fail-closed RELEASING §3.5 i9 regression gate before any bump, tag, or push
+    preflight_args=()
+    if [[ -n "${RELEASE_EXPECTED_HEAD:-}" ]]; then
+        preflight_args+=(--expected-head "$RELEASE_EXPECTED_HEAD")
+    fi
+    python3 bench/release_preflight.py verify "${preflight_args[@]}"
+
     # 📈 Bump the version in pyproject.toml (patch/minor/major: {{bump_level}})
     uv version --frozen --bump {{bump_level}}
 
@@ -100,6 +107,9 @@ ship-rust-and-python bump="patch" mode="":
         exit 1
     fi
 
+    # 🛡️ Enforce the fail-closed RELEASING §3.5 i9 regression gate before any bump, tag, or publish
+    python3 bench/release_preflight.py verify
+
     # 📈 Setting both versions to $version
     if [[ "$version" != "$py_version" ]]; then
         uv version --frozen "$version"
@@ -175,6 +185,9 @@ ship-rust version="auto":
         exit 1
     fi
 
+    # 🛡️ Enforce the fail-closed RELEASING §3.5 i9 regression gate before any bump, tag, or publish
+    python3 bench/release_preflight.py verify
+
     # 🔍 Dry-run release...
     just publish-rust --dry-run
     # ✅ Dry-run went OK, proceeding to real release
@@ -221,6 +234,9 @@ publish-rust mode="":
 # For when release-plz isn't working
 ship-rust-manual:
     #!/usr/bin/env -S echo-comment --shell-flags="-euo pipefail" --color="\\033[38;5;202m"
+
+    # 🛡️ Enforce the fail-closed RELEASING §3.5 i9 regression gate before any bump, tag, or publish
+    python3 bench/release_preflight.py verify
 
     # Bump the patch version
     cargo set-version --bump patch
