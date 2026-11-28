@@ -3659,6 +3659,34 @@ class TestResultToRelease(unittest.TestCase):
         self.assertNotIn("merged-default", sec_c)
         self.assertNotIn("awaiting scaling", sec_c)
 
+    def test_r2r_08b_live_untagged_release_is_not_released(self) -> None:
+        """A live release claim whose own tag does not exist yet is in progress, not released."""
+        self._publish_evidence({})
+        self._reset_state({}, ledger_rows=[])
+        seed = self.sb.seed
+        _git(seed, "tag", "v0.5.17")
+        _git(seed, "push", "origin", "v0.5.17")
+        self._reset_state(
+            {
+                "release-0-5-18": _claim_toml(
+                    "release-0-5-18",
+                    kind="ops",
+                    zone="striated",
+                    status="blocked",
+                    priority=1,
+                    owned_paths=["CHANGELOG.md"],
+                ),
+            }
+        )
+        r = self.sb.clone("r2r-08d")
+        brief_out, status_out = self._run_brief_and_status(r, can={"shell", "repo-write"})
+        for text in (brief_out, status_out):
+            sec = self._section(text, "## Result-to-release")
+            self.assertIn("release-in-progress", sec)
+            self.assertIn("v0.5.18 not yet tagged", sec)
+            self.assertNotIn("`released`", sec)
+            self.assertNotIn("tagged v0.5.17", sec)
+
     # Fixture (9): experimental-only merge does not by itself imply a production performance release
     def test_r2r_09_experimental_only_merge_does_not_imply_production_release(self) -> None:
         """Experimental-only merge does not trigger a production performance release."""

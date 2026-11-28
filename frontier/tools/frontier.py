@@ -1545,7 +1545,22 @@ def release_pipeline_state(claims, queue_state):
             }
         )
     for rel in live_releases:
-        rc_t, tag_sha = git("rev-parse", "--verify", f"{tag}^{{commit}}")
+        # A release claim is `released` only once its own version tag exists; before that it is
+        # in preparation, and the last tag says nothing about its scaling run.
+        own_tag = "v" + rel["id"].removeprefix("release-").replace("-", ".")
+        rc_t, tag_sha = git("rev-parse", "--verify", "-q", f"refs/tags/{own_tag}^{{commit}}")
+        if rc_t != 0 or not tag_sha:
+            items.append(
+                {
+                    "id": rel["id"],
+                    "stage": "release-in-progress",
+                    "derived_p1": False,
+                    "action": f"{own_tag} not yet tagged (claim {rel.get('status')}; last tag {tag})",
+                    "blockers": [f"claim {rel.get('status')}"] if rel.get("status") != "open" else [],
+                    "evidence": tag,
+                }
+            )
+            continue
         scaling_note = "awaiting post-tag release-scaling/crossover recording"
         if rc_t == 0 and queue_state.get("state") != "unknown":
             ev = _inspect_recipe_evidence("bench-release-scaling", tag_sha, queue_state)
@@ -1559,9 +1574,9 @@ def release_pipeline_state(claims, queue_state):
                 "id": rel["id"],
                 "stage": "released",
                 "derived_p1": True,
-                "action": f"tagged {tag}: {scaling_note}",
+                "action": f"tagged {own_tag}: {scaling_note}",
                 "blockers": [],
-                "evidence": tag,
+                "evidence": own_tag,
             }
         )
     return items
