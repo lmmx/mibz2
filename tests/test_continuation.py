@@ -1,3 +1,4 @@
+# ruff: noqa: D101, D102, D103
 """Frozen fixtures for decentralised dependency continuations (claim continuation-runbook).
 
 Frozen before the implementation in `frontier/tools/continuation.py` existed. Each class maps
@@ -84,20 +85,40 @@ class CountingStore(cont.MemoryStore):
 class TestIndependentChains(unittest.TestCase):
     def test_two_chains_wait_and_resume_concurrently(self):
         store = cont.MemoryStore()
-        cont.declare(store, "release-0-5-18", "await-preflight-merge", f"merged:1256@{SHA_A}",
-                     next_text="queue preflight", critical=True, priority=1, by="a", clock=FakeClock())
-        cont.declare(store, "bench-x", "await-ci", f"pr:1400@{SHA_B}",
-                     next_text="merge", priority=3, by="b", clock=FakeClock())
+        cont.declare(
+            store,
+            "release-0-5-18",
+            "await-preflight-merge",
+            f"merged:1256@{SHA_A}",
+            next_text="queue preflight",
+            critical=True,
+            priority=1,
+            by="a",
+            clock=FakeClock(),
+        )
+        cont.declare(
+            store,
+            "bench-x",
+            "await-ci",
+            f"pr:1400@{SHA_B}",
+            next_text="merge",
+            priority=3,
+            by="b",
+            clock=FakeClock(),
+        )
         results = {}
 
         def run(key, session, ready_at):
             clock = FakeClock()
             probe = Script(clock, [(T0 + ready_at, obs("ready", at=T0 + ready_at))])
-            results[key] = cont.watch(store, key, session=session, holder=session,
-                                      probe=probe, clock=clock, timeout=3600)
+            results[key] = cont.watch(
+                store, key, session=session, holder=session, probe=probe, clock=clock, timeout=3600
+            )
 
-        th = [threading.Thread(target=run, args=("release-0-5-18--await-preflight-merge", "s1", 120)),
-              threading.Thread(target=run, args=("bench-x--await-ci", "s2", 600))]
+        th = [
+            threading.Thread(target=run, args=("release-0-5-18--await-preflight-merge", "s1", 120)),
+            threading.Thread(target=run, args=("bench-x--await-ci", "s2", 600)),
+        ]
         for t in th:
             t.start()
         for t in th:
@@ -130,8 +151,15 @@ class TestDeduplication(unittest.TestCase):
         ok, _ = cont.acquire_waiter(self.store, self.key, "s1", "h1", self.clock)
         self.assertTrue(ok)
         probe = Script(self.clock, [])
-        r = cont.watch(self.store, self.key, session="s2", holder="h2", probe=probe,
-                       clock=self.clock, timeout=600)
+        r = cont.watch(
+            self.store,
+            self.key,
+            session="s2",
+            holder="h2",
+            probe=probe,
+            clock=self.clock,
+            timeout=600,
+        )
         self.assertEqual(r.outcome, "duplicate")
         self.assertEqual(probe.calls, 0)
 
@@ -139,19 +167,34 @@ class TestDeduplication(unittest.TestCase):
         cont.acquire_waiter(self.store, self.key, "s1", "h1", self.clock, ttl=60)
         self.clock.t += 61
         probe = Script(self.clock, [(T0, obs("ready", at=T0))])
-        r = cont.watch(self.store, self.key, session="s2", holder="h2", probe=probe,
-                       clock=self.clock, timeout=600)
+        r = cont.watch(
+            self.store,
+            self.key,
+            session="s2",
+            holder="h2",
+            probe=probe,
+            clock=self.clock,
+            timeout=600,
+        )
         self.assertEqual(r.outcome, "ready")
 
     def test_only_one_peer_acquires_execution(self):
         probe = Script(self.clock, [(T0, obs("ready", at=T0))])
-        cont.watch(self.store, self.key, session="s1", holder="h1", probe=probe,
-                   clock=self.clock, timeout=60)
+        cont.watch(
+            self.store,
+            self.key,
+            session="s1",
+            holder="h1",
+            probe=probe,
+            clock=self.clock,
+            timeout=60,
+        )
         wins = []
 
         def go(s):
-            wins.append(cont.resume(self.store, self.key, session=s, by=s, probe=probe,
-                                    clock=self.clock).ok)
+            wins.append(
+                cont.resume(self.store, self.key, session=s, by=s, probe=probe, clock=self.clock).ok
+            )
 
         th = [threading.Thread(target=go, args=(f"p{i}",)) for i in range(8)]
         for t in th:
@@ -162,15 +205,31 @@ class TestDeduplication(unittest.TestCase):
 
     def test_abandoned_acquisition_expires_to_ready(self):
         probe = Script(self.clock, [(T0, obs("ready", at=T0))])
-        cont.watch(self.store, self.key, session="s1", holder="h1", probe=probe,
-                   clock=self.clock, timeout=60)
-        self.assertTrue(cont.resume(self.store, self.key, session="p1", by="p1", probe=probe,
-                                    clock=self.clock, ttl=300).ok)
-        self.assertFalse(cont.resume(self.store, self.key, session="p2", by="p2", probe=probe,
-                                     clock=self.clock).ok)
+        cont.watch(
+            self.store,
+            self.key,
+            session="s1",
+            holder="h1",
+            probe=probe,
+            clock=self.clock,
+            timeout=60,
+        )
+        self.assertTrue(
+            cont.resume(
+                self.store, self.key, session="p1", by="p1", probe=probe, clock=self.clock, ttl=300
+            ).ok
+        )
+        self.assertFalse(
+            cont.resume(
+                self.store, self.key, session="p2", by="p2", probe=probe, clock=self.clock
+            ).ok
+        )
         self.clock.t += 301
-        self.assertTrue(cont.resume(self.store, self.key, session="p2", by="p2", probe=probe,
-                                    clock=self.clock).ok)
+        self.assertTrue(
+            cont.resume(
+                self.store, self.key, session="p2", by="p2", probe=probe, clock=self.clock
+            ).ok
+        )
 
     def test_duplicate_declare_refused(self):
         with self.assertRaises(cont.ContinuationError):
@@ -184,11 +243,24 @@ class TestPinsAndJudgement(unittest.TestCase):
         self.clock = FakeClock()
 
     def test_evidence_ready_is_not_pass(self):
-        cont.declare(self.store, "r", "readback", f"evidence:bench-release-preflight@{SHA_A}",
-                     by="a", clock=self.clock)
+        cont.declare(
+            self.store,
+            "r",
+            "readback",
+            f"evidence:bench-release-preflight@{SHA_A}",
+            by="a",
+            clock=self.clock,
+        )
         probe = Script(self.clock, [(T0, obs("ready", at=T0, detail="returned-unread"))])
-        r = cont.watch(self.store, "r--readback", session="s", holder="h", probe=probe,
-                       clock=self.clock, timeout=60)
+        r = cont.watch(
+            self.store,
+            "r--readback",
+            session="s",
+            holder="h",
+            probe=probe,
+            clock=self.clock,
+            timeout=60,
+        )
         self.assertEqual(r.outcome, "ready")
         rec = self.store.get("r--readback")[1]
         self.assertNotIn("disposition", rec)
@@ -201,8 +273,7 @@ class TestPinsAndJudgement(unittest.TestCase):
             cont.parse_dep("pr:12@abcdef")
         with self.assertRaises(cont.ContinuationError):
             cont.parse_dep("evidence:bench-x@" + "a" * 39)
-        self.assertEqual(cont.parse_dep(f"merged:12@{SHA_A}"),
-                         ("merged", {"pr": 12, "sha": SHA_A}))
+        self.assertEqual(cont.parse_dep(f"merged:12@{SHA_A}"), ("merged", {"pr": 12, "sha": SHA_A}))
 
     def test_evidence_probe_ignores_other_pins(self):
         bundles = [{"pin": SHA_B, "rel": "x/old.tar.gz", "commit": "e" * 40, "at": T0}]
@@ -216,6 +287,7 @@ class TestPinsAndJudgement(unittest.TestCase):
     def test_evidence_probe_unavailable_is_unknown(self):
         def boom(recipe):
             raise OSError("no evidence branch")
+
         probe = cont.evidence_probe_from(boom)
         self.assertEqual(probe(("evidence", {"recipe": "bench-x", "sha": SHA_A})).state, "unknown")
 
@@ -224,11 +296,13 @@ class TestPinsAndJudgement(unittest.TestCase):
         probe = cont.pr_probe_from(lambda n: pr, lambda sha: ("success", T0))
         self.assertEqual(probe(("pr", {"pr": 5, "sha": SHA_A})).state, "superseded")
         cont.declare(self.store, "c", "ci", f"pr:5@{SHA_A}", by="a", clock=self.clock)
-        r = cont.watch(self.store, "c--ci", session="s", holder="h", probe=probe,
-                       clock=self.clock, timeout=60)
+        r = cont.watch(
+            self.store, "c--ci", session="s", holder="h", probe=probe, clock=self.clock, timeout=60
+        )
         self.assertEqual(r.outcome, "superseded")
-        self.assertFalse(cont.resume(self.store, "c--ci", session="p", by="p", probe=probe,
-                                     clock=self.clock).ok)
+        self.assertFalse(
+            cont.resume(self.store, "c--ci", session="p", by="p", probe=probe, clock=self.clock).ok
+        )
 
     def test_pr_green_and_red(self):
         pr = {"state": "open", "merged": False, "head": {"sha": SHA_A}}
@@ -243,7 +317,12 @@ class TestPinsAndJudgement(unittest.TestCase):
         self.assertEqual((o.state, o.authoritative_at), ("ready", T0 + 10))
 
     def test_merged_probe(self):
-        pr = {"state": "closed", "merged": True, "head": {"sha": SHA_A}, "merged_at": "2026-11-28T10:00:00Z"}
+        pr = {
+            "state": "closed",
+            "merged": True,
+            "head": {"sha": SHA_A},
+            "merged_at": "2026-11-28T10:00:00Z",
+        }
         probe = cont.pr_probe_from(lambda n: pr, lambda sha: ("success", T0))
         o = probe(("merged", {"pr": 5, "sha": SHA_A}))
         self.assertEqual(o.state, "ready")
@@ -253,20 +332,47 @@ class TestPinsAndJudgement(unittest.TestCase):
         self.assertEqual(probe2(("merged", {"pr": 5, "sha": SHA_A})).state, "superseded")
 
     def test_independent_review_respected(self):
-        cont.declare(self.store, "c", "review", f"pr:5@{SHA_A}", by="author-x",
-                     independent=True, clock=self.clock)
+        cont.declare(
+            self.store,
+            "c",
+            "review",
+            f"pr:5@{SHA_A}",
+            by="author-x",
+            independent=True,
+            clock=self.clock,
+        )
         probe = Script(self.clock, [(T0, obs("ready", at=T0))])
-        cont.watch(self.store, "c--review", session="s", holder="h", probe=probe,
-                   clock=self.clock, timeout=60)
-        self.assertFalse(cont.resume(self.store, "c--review", session="s1", by="author-x",
-                                     probe=probe, clock=self.clock).ok)
-        self.assertTrue(cont.resume(self.store, "c--review", session="s2", by="reviewer-y",
-                                    probe=probe, clock=self.clock).ok)
+        cont.watch(
+            self.store,
+            "c--review",
+            session="s",
+            holder="h",
+            probe=probe,
+            clock=self.clock,
+            timeout=60,
+        )
+        self.assertFalse(
+            cont.resume(
+                self.store, "c--review", session="s1", by="author-x", probe=probe, clock=self.clock
+            ).ok
+        )
+        self.assertTrue(
+            cont.resume(
+                self.store,
+                "c--review",
+                session="s2",
+                by="reviewer-y",
+                probe=probe,
+                clock=self.clock,
+            ).ok
+        )
 
     def test_resume_revalidates_pin(self):
         cont.declare(self.store, "c", "ci", f"pr:5@{SHA_A}", by="a", clock=self.clock)
         p1 = Script(self.clock, [(T0, obs("ready", at=T0))])
-        cont.watch(self.store, "c--ci", session="s", holder="h", probe=p1, clock=self.clock, timeout=60)
+        cont.watch(
+            self.store, "c--ci", session="s", holder="h", probe=p1, clock=self.clock, timeout=60
+        )
         p2 = Script(self.clock, [(T0, obs("superseded", detail="head moved"))])
         r = cont.resume(self.store, "c--ci", session="p", by="p", probe=p2, clock=self.clock)
         self.assertFalse(r.ok)
@@ -295,8 +401,14 @@ class TestView(unittest.TestCase):
             store.cas(k, tok, rec)
         claims = {"p2-i9": {"needs": ["shell", "i9"]}, "p2-owner": {"needs_louis": "decide"}}
         holds = {"p2-held": {"holder": "other", "live": True}}
-        rows = cont.view(store, clock=c, claims=claims, holds=holds, can={"shell", "repo-write"},
-                         probe=lambda dep: obs("unknown", detail="remote unavailable"))
+        rows = cont.view(
+            store,
+            clock=c,
+            claims=claims,
+            holds=holds,
+            can={"shell", "repo-write"},
+            probe=lambda dep: obs("unknown", detail="remote unavailable"),
+        )
         order = [r["key"] for r in rows]
         cls = {r["key"]: r["class"] for r in rows}
         self.assertEqual(cls["p2-i9--a"], "capability-blocked")
@@ -308,8 +420,14 @@ class TestView(unittest.TestCase):
         self.assertEqual(ready, ["p1-crit--a", "p1-plain--a", "p3-old--a"])
         self.assertEqual(order[0], "p1-crit--a")
         # deterministic
-        rows2 = cont.view(store, clock=c, claims=claims, holds=holds, can={"shell", "repo-write"},
-                          probe=lambda dep: obs("unknown"))
+        rows2 = cont.view(
+            store,
+            clock=c,
+            claims=claims,
+            holds=holds,
+            can={"shell", "repo-write"},
+            probe=lambda dep: obs("unknown"),
+        )
         self.assertEqual([r["key"] for r in rows2], order)
 
     def test_view_is_read_only(self):
@@ -341,8 +459,18 @@ class TestBoundedWait(unittest.TestCase):
         cont.declare(store, "c", "a", f"pr:1@{SHA_A}", by="x", clock=clock)
         w0 = store.writes
         probe = Script(clock, [(T0 + 3 * 3600, obs("ready", at=T0 + 3 * 3600))])
-        r = cont.watch(store, "c--a", session="s", holder="h", probe=probe, clock=clock,
-                       timeout=4 * 3600, interval=45, max_interval=300, waiter_ttl=1800)
+        r = cont.watch(
+            store,
+            "c--a",
+            session="s",
+            holder="h",
+            probe=probe,
+            clock=clock,
+            timeout=4 * 3600,
+            interval=45,
+            max_interval=300,
+            waiter_ttl=1800,
+        )
         self.assertEqual(r.outcome, "ready")
         self.assertGreaterEqual(min(clock.sleeps), 30)
         self.assertLessEqual(clock.sleeps[0], 60)
@@ -355,8 +483,15 @@ class TestBoundedWait(unittest.TestCase):
         store = cont.MemoryStore()
         clock = FakeClock()
         cont.declare(store, "c", "a", f"pr:1@{SHA_A}", next_text="merge it", by="x", clock=clock)
-        r = cont.watch(store, "c--a", session="s", holder="h", probe=Script(clock, []),
-                       clock=clock, timeout=600)
+        r = cont.watch(
+            store,
+            "c--a",
+            session="s",
+            holder="h",
+            probe=Script(clock, []),
+            clock=clock,
+            timeout=600,
+        )
         self.assertEqual(r.outcome, "timeout")
         rec = store.get("c--a")[1]
         self.assertEqual(rec["state"], "waiting")
@@ -368,9 +503,15 @@ class TestBoundedWait(unittest.TestCase):
         store = cont.MemoryStore()
         clock = FakeClock()
         cont.declare(store, "c", "a", f"pr:1@{SHA_A}", by="x", clock=clock)
-        r = cont.watch(store, "c--a", session="s", holder="h",
-                       probe=Script(clock, [(T0, obs("unknown", detail="api down"))]),
-                       clock=clock, timeout=300)
+        r = cont.watch(
+            store,
+            "c--a",
+            session="s",
+            holder="h",
+            probe=Script(clock, [(T0, obs("unknown", detail="api down"))]),
+            clock=clock,
+            timeout=300,
+        )
         self.assertEqual(r.outcome, "timeout")
         self.assertIn("unknown", r.detail)
 
@@ -380,7 +521,9 @@ class TestBoundedWait(unittest.TestCase):
         clock = FakeClock()
         cont.declare(store, "c", "a", f"pr:1@{SHA_A}", by="x", clock=clock)
         probe = Script(clock, [(T0 + 900, obs("ready", at=T0 + 900))])
-        r = cont.watch(store, "c--a", session="s", holder="h", probe=probe, clock=clock, timeout=7200)
+        r = cont.watch(
+            store, "c--a", session="s", holder="h", probe=probe, clock=clock, timeout=7200
+        )
         self.assertEqual(r.outcome, "ready")
         self.assertGreater(probe.calls, 3)
         self.assertEqual(r.polls, probe.calls)
@@ -409,30 +552,58 @@ class TestSequentialGates(unittest.TestCase):
 
         def release_chain():
             clock = FakeClock()
-            cont.declare(store, "release-0-5-18", gates[0][0], gates[0][1], critical=True,
-                         priority=1, by="rel", clock=clock)
+            cont.declare(
+                store,
+                "release-0-5-18",
+                gates[0][0],
+                gates[0][1],
+                critical=True,
+                priority=1,
+                by="rel",
+                clock=clock,
+            )
             for i, (action, dep) in enumerate(gates):
                 key = f"release-0-5-18--{action}"
                 probe = Script(clock, [(clock.now() + 200, obs("ready", at=clock.now() + 200))])
-                r = cont.watch(store, key, session="rel", holder="rel", probe=probe, clock=clock,
-                               timeout=3600)
+                r = cont.watch(
+                    store, key, session="rel", holder="rel", probe=probe, clock=clock, timeout=3600
+                )
                 assert r.outcome == "ready", r
                 assert cont.resume(store, key, session="rel", by="rel", probe=probe, clock=clock).ok
                 nxt = gates[i + 1] if i + 1 < len(gates) else None
-                cont.done(store, key, session="rel", disposition=f"{action} handled", clock=clock,
-                          next_action=nxt[0] if nxt else None, next_dep=nxt[1] if nxt else None,
-                          critical=True, priority=1)
+                cont.done(
+                    store,
+                    key,
+                    session="rel",
+                    disposition=f"{action} handled",
+                    clock=clock,
+                    next_action=nxt[0] if nxt else None,
+                    next_dep=nxt[1] if nxt else None,
+                    critical=True,
+                    priority=1,
+                )
                 with lock:
                     log.append(("rel", action))
 
         def ci_chain():
             clock = FakeClock()
-            cont.declare(store, "bench-y", "ci", f"pr:1401@{SHA_C}", priority=3, by="ci", clock=clock)
+            cont.declare(
+                store, "bench-y", "ci", f"pr:1401@{SHA_C}", priority=3, by="ci", clock=clock
+            )
             probe = Script(clock, [(T0 + 50, obs("ready", at=T0 + 50))])
-            r = cont.watch(store, "bench-y--ci", session="ci", holder="ci", probe=probe,
-                           clock=clock, timeout=3600)
+            r = cont.watch(
+                store,
+                "bench-y--ci",
+                session="ci",
+                holder="ci",
+                probe=probe,
+                clock=clock,
+                timeout=3600,
+            )
             assert r.outcome == "ready"
-            assert cont.resume(store, "bench-y--ci", session="ci", by="ci", probe=probe, clock=clock).ok
+            assert cont.resume(
+                store, "bench-y--ci", session="ci", by="ci", probe=probe, clock=clock
+            ).ok
             cont.done(store, "bench-y--ci", session="ci", disposition="merged", clock=clock)
             with lock:
                 log.append(("ci", "ci"))
@@ -457,12 +628,38 @@ class TestSequentialGates(unittest.TestCase):
         cont.declare(store, "stuck", "a", "manual:never", by="x", clock=c1)
         cont.declare(store, "moving", "a", f"pr:2@{SHA_A}", by="y", clock=c2)
         out = {}
-        t1 = threading.Thread(target=lambda: out.setdefault("stuck", cont.watch(
-            store, "stuck--a", session="s1", holder="h1", probe=Script(c1, []), clock=c1, timeout=7200)))
-        t2 = threading.Thread(target=lambda: out.setdefault("moving", cont.watch(
-            store, "moving--a", session="s2", holder="h2",
-            probe=Script(c2, [(T0 + 60, obs("ready", at=T0 + 60))]), clock=c2, timeout=7200)))
-        t1.start(); t2.start(); t1.join(); t2.join()
+        t1 = threading.Thread(
+            target=lambda: out.setdefault(
+                "stuck",
+                cont.watch(
+                    store,
+                    "stuck--a",
+                    session="s1",
+                    holder="h1",
+                    probe=Script(c1, []),
+                    clock=c1,
+                    timeout=7200,
+                ),
+            )
+        )
+        t2 = threading.Thread(
+            target=lambda: out.setdefault(
+                "moving",
+                cont.watch(
+                    store,
+                    "moving--a",
+                    session="s2",
+                    holder="h2",
+                    probe=Script(c2, [(T0 + 60, obs("ready", at=T0 + 60))]),
+                    clock=c2,
+                    timeout=7200,
+                ),
+            )
+        )
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
         self.assertEqual(out["moving"].outcome, "ready")
         self.assertEqual(out["stuck"].outcome, "timeout")
 
@@ -513,11 +710,17 @@ class TestTimings(unittest.TestCase):
 
 
 def _git(cwd, *args):
-    env = {"GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@example.invalid",
-           "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.invalid",
-           "PATH": "/usr/bin:/bin:/usr/local/bin", "HOME": str(cwd)}
-    return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True,
-                          env=env, check=True).stdout.strip()
+    env = {
+        "GIT_AUTHOR_NAME": "T",
+        "GIT_AUTHOR_EMAIL": "t@example.invalid",
+        "GIT_COMMITTER_NAME": "T",
+        "GIT_COMMITTER_EMAIL": "t@example.invalid",
+        "PATH": "/usr/bin:/bin:/usr/local/bin",
+        "HOME": str(cwd),
+    }
+    return subprocess.run(
+        ["git", "-C", str(cwd), *args], capture_output=True, text=True, env=env, check=True
+    ).stdout.strip()
 
 
 class TestGitRefStore(unittest.TestCase):
@@ -564,15 +767,24 @@ class TestGitRefStore(unittest.TestCase):
 class TestAuthorityBounds(unittest.TestCase):
     def test_source_has_no_consequential_calls(self):
         text = SRC.read_text()
-        for needle in ("merge_pull_request", "/merge", "workflow_dispatch", "dispatches",
-                       "create_session", "presence_", "git push origin master",
-                       "refs/heads/master:"):
+        for needle in (
+            "merge_pull_request",
+            "/merge",
+            "workflow_dispatch",
+            "dispatches",
+            "create_session",
+            "presence_",
+            "git push origin master",
+            "refs/heads/master:",
+        ):
             self.assertNotIn(needle, text)
 
     def test_resume_prints_ordinary_reservation(self):
         store = cont.MemoryStore()
         clock = FakeClock()
-        cont.declare(store, "c", "a", f"pr:1@{SHA_A}", next_text="merge under gates", by="x", clock=clock)
+        cont.declare(
+            store, "c", "a", f"pr:1@{SHA_A}", next_text="merge under gates", by="x", clock=clock
+        )
         probe = Script(clock, [(T0, obs("ready", at=T0))])
         cont.watch(store, "c--a", session="s", holder="h", probe=probe, clock=clock, timeout=60)
         r = cont.resume(store, "c--a", session="p", by="p", probe=probe, clock=clock)
