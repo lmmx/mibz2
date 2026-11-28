@@ -1,0 +1,11 @@
+action = "await-ci-1b04191"
+by = "claude-code"
+claim = "continuation-runbook"
+critical = false
+declared_at = 1795867533
+dep = "pr:1356@1b041915e8fc0c38496249f057174b3c72d48a29"
+independent = false
+key = "continuation-runbook--await-ci-1b04191"
+next = "record pickup latency; leave for independent review"
+priority = 1
+state = "waiting"
