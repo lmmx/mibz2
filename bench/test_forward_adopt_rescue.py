@@ -311,6 +311,7 @@ class IsolationAndWiringTests(unittest.TestCase):
         *,
         env_facts: dict | None = None,
         write_env_facts: bool = True,
+        write_parity: bool = True,
     ) -> None:
         rows = make_rows(rounds=int(prov["rounds"]))
         (out / "provenance.json").write_text(json.dumps(prov))
@@ -323,7 +324,18 @@ class IsolationAndWiringTests(unittest.TestCase):
                 }
             )
         )
-        (out / "inputs.json").write_text(json.dumps(REFS))
+        # As a real run writes them: inputs.json before parity (no 64-bit hash), then
+        # parity.jsonl carrying each corpus's hash.
+        inputs = {c: {k: v for k, v in ref.items() if k != "hash"} for c, ref in REFS.items()}
+        (out / "inputs.json").write_text(json.dumps(inputs))
+        if write_parity:
+            (out / "parity.jsonl").write_text(
+                "".join(
+                    json.dumps({"arm": arm, "corpus": c, "hash": ref["hash"]}) + "\n"
+                    for c, ref in REFS.items()
+                    for arm in ("base", "cand")
+                )
+            )
         (out / "runs.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
         if write_env_facts:
             facts = (
@@ -383,6 +395,48 @@ class IsolationAndWiringTests(unittest.TestCase):
                     self.assertEqual(res["verdict"], "VOID")
                     self.assertIn("not the registered run", res["reason"])
                     self.assertTrue((out / "outcome.txt").read_text().startswith("VOID:"))
+
+    def test_score_dir_registered_without_parity_is_void(self):
+        with mock.patch.object(far, "BOOT_SAMPLES", 200), tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            self._write_run_dir(out, self.registered_prov(), write_parity=False)
+            res = far.score_dir(out)
+            self.assertEqual(res["verdict"], "VOID")
+            self.assertIn("parity.jsonl", res["reason"])
+
+    def test_unregistered_run_outcome_is_void(self):
+        live = {"verdict": "ADOPT", "reason": "all frozen Clause 3 C6 adoption clauses passed"}
+        self.assertEqual(far.mark_unregistered(live, True)["verdict"], "ADOPT")
+        marked = far.mark_unregistered(live, False)
+        self.assertEqual(marked["verdict"], "VOID")
+        self.assertIn("not the registered run", marked["reason"])
+        void = {"verdict": "VOID", "reason": "x"}
+        self.assertEqual(far.mark_unregistered(void, False), void)
+
+    def test_non_strict_run_adoption_writes_void(self):
+        # `run --allow-any-host` (or `--smoke`) scores a full grid that passes every clause:
+        # its outcome must still read VOID, never a live ADOPT.
+        rows = make_rows(rounds=far.ROUNDS)
+        host = {"pin_cpu": 0}
+        bins = {"base_ab": Path("/tmp/base-ab"), "cand_ab": Path(CAND_EXE)}
+        meta = {"distinct_binaries": True}
+        files = {c: Path(f"/tmp/{c}.bz2") for c in REFS}
+        with (
+            mock.patch.object(far, "BOOT_SAMPLES", 200),
+            mock.patch.object(far, "check_host_i9", return_value=host),
+            mock.patch.object(far, "build_arms", return_value=(bins, meta)),
+            mock.patch.object(far, "prepare_inputs", return_value=(files, dict(REFS))),
+            mock.patch.object(far, "verify_parity", return_value=[]),
+            mock.patch.object(far, "output", return_value="{}"),
+            mock.patch.object(far, "run_ab_group", side_effect=[rows, [], [], []]),
+            tempfile.TemporaryDirectory() as td,
+        ):
+            out = Path(td)
+            res = far.run_adoption(out, allow_any_host=True)
+            self.assertEqual(res["verdict"], "VOID")
+            self.assertIn("not the registered run", res["reason"])
+            self.assertIn("all frozen Clause 3", res["reason"])
+            self.assertTrue((out / "outcome.txt").read_text().startswith("VOID:"))
 
     def test_score_dir_missing_or_limited_quota_is_void(self):
         with tempfile.TemporaryDirectory() as td:
