@@ -1,0 +1,47 @@
+id = "runt-exempt-window-rows"
+title = "Exempt verified low-row runts (exact BWT rows <= 1,200) from the decoder's full-block window"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 3
+status = "idea"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["runt-exempt-rows-admission"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-runt-exempt-window-dissection.md` supersedes the premise-defective symbol-bound heuristic (`n_sel x 50`) in `runt-exempt-window` with an exact BWT row-count classifier (`exact_rows_le(&symbols, RUNT_ROWS)` with `RUNT_ROWS = 1_200`) plus scanner-side `spare_syms` detachment (`<= 2.4 KiB` copy for exempt runts):
+
+1. **Exact classification & mathematical `< 64 KiB` bound:** Across 6 corpora, `RUNT_ROWS = 1_200` captures **198 / 198 (100.0%)** of Wikimedia `wikidata.bz2` runts (`rows = 1..1,185`, `out = 1..1,183 B`) while exempting **0 / 68 (0.0%)** of `onebyte`, `pattern`, `zeros-20blk`, and `runs` blocks (where `n_sel x 50` misclassified 100% of `onebyte`, `pattern`, and `zeros-20blk`). Worst-case RLE1 expansion (`1,200 x 259 / 5 = 62,160 B`) plus detached symbols (`<= 2,402 B`) stays strictly below `POOLED_FROM` (`64 KiB`) per exempt place, and `full_in_flight == ahead` identically on run-only streams (`zeros-20blk` 977 MB peak `VmHWM` = `1.000x` at `t = 4, s = 16` and `1.021x` at `t = 8, s = 32`).
+2. **`#1282` (`plan-schedule-fix`) does not fix runt dilution:** `#1282` lowers `LAZY_FROM_THREADS` to `4` (faster `OpenCells` workers at `t = 4`, tighter horizon) and scales `window()` down to `4 x phys` on oversubscribed `6C/8C/10C` machines.
+3. **VM paired A/B preview (`origin/master` `3c7212bb`, 2-vCPU VM, `n = 11` / `n = 9` alternating rounds, 72/72 SHA-256 parity across 9 corpora, 78/78 tests):**
+   - `wikidata` (`1x`): `t4 s8 lazy` **`-11.87%`** (`0.8813 [0.8331, 0.9324]`), `t4 s16 def` **`-4.90%`** (`0.9510 [0.9051, 0.9992]`), `t4 s16 lazy` **`-3.26%`** (`0.9674 [0.9410, 0.9946]`, RSS `1.004x`), `t8 s32 lazy` **`-2.29%`** base / **`-3.66%`** `forward-anchor-lanes`.
+   - `wikidata-x4`: `t8 s32 lazy` **`-0.90%`** base (matching `eight-worker-coupling.md`'s physical i9 counterfactual `-0.76%..-1.08%`) / **`-4.98%`** `forward-anchor-lanes`; `t4 s16 lazy` `-0.53%` on 2x-overcommitted 2-vCPU VM.
+   - Runt-free control `wikidata-bzip2-9.bz2`: flat within `+/-1%` (`0.9959` at `t4 s16`, `0.9920` at `t8 s32`).
+   - Caveat to guard: `t2 s8 def` showed `+3.46%..+4.50%` wall on the loaded 2-vCPU VM despite `0.999x` RSS and `1.009x` CPU.
+
+Queued strictly behind `#1282` (`plan-schedule-fix`) on `src/parallel.rs`: does landing rows-based runt-exempt admission (`RUNT_ROWS = 1_200`, optionally gated to `threads >= 4` / `slots >= 12` if `t = 2` regresses on quiet hardware) recover Wikimedia `t = 4` (`>= 3%` on quiet 4-vCPU runner) or physical i9 `k = 8` (`>= 0.5%`) with `<= 1.05x` peak RSS on `zeros-20blk`/`onebyte`/`runs`/`pattern` and zero regressions on `bzip2-9` control or `t = 2`?
+"""
+why = """
+Real Wikimedia dumps (`lbzip2`/`pbzip2`) contain ~46% tiny runts that halve the effective full-block window at `SLOTS_PER_THREAD = 4` (and more acutely at `2 x threads` or oversubscribed `4 x phys`). Rows-based exemption with scanner-side `spare_syms` detachment eliminates the premise defect of `runt-exempt-window` with a mathematical `< 64 KiB` per-place bound, zero `unsafe`, zero overhead on runt-free streams, and `1.000x` RSS on 977 MB all-zero blocks.
+"""
+stop_test = """
+Frozen before building:
+1. Sequencing, safety & memory bound: built strictly after `#1282` (`plan-schedule-fix`) releases `src/parallel.rs`. Zero new `unsafe`; `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, all `parallel::`, `pipelined`, `service`, `reader_panic` tests, Miri-safe tests for `exact_rows_le` and `full_in_flight` accounting, and 100% SHA-256 byte-exact parity across `wikidata`, `wikidata-bzip2-9`, `text`, `records`, `random`, `runs`, `pattern`, `onebyte`, and a multi-block all-zeros corpus (`>= 20` blocks, `~900+ MiB` decoded). Module doc restates the exact `< 64 KiB` combined `syms + out` bound per exempt place (`RUNT_ROWS = 1_200`). Peak `VmHWM` stays within `<= 1.05x` baseline on `zeros-20blk`, `onebyte`, `runs`, `pattern`, and `wikidata` at `t = 2, 4, 8` (and `bench-ledger` reserved bytes `<= 1.05x`).
+2. Paired A/B (`n >= 9` interleaved fresh-process rounds) on `corpora/wikidata.bz2` (1x and 4x), `wikidata-bzip2-9.bz2` (control), and `t = 2` guard:
+   - PASS if `wikidata` `t = 4` (default `4 x t` window) improves `>= 3.0%` (geometric mean ratio `<= 0.970`, 95% CI excluding `1.000`) on a quiet 4-vCPU runner OR physical i9-10900K `k = 8` (`wikidata x4`) improves `>= 0.5%` (95% CI excluding `1.000`);
+   - AND `wikidata-bzip2-9` control stays within `+/-1.0%`, `t = 2` does not regress by `> 1.0%` (gate exemption to `slots >= 12` / `threads >= 4` if needed before freezing the i9 arm), and no physical i9 `k = 6, 8, 10` arm regresses by `> 0.5%`.
+   Otherwise STOP and record a scoped dead-end row preserving all evidence (C2).
+"""
+done_when = """
+Striated PR on `src/parallel.rs` (after `#1282` merges) passing (1) and (2) with a delta; i9 leg queued under standing workstation authority only once reviewed and green.
+"""
+premises = [
+  "docs/notebook/2026-11-28-runt-exempt-window-dissection.md",
+  "docs/journal/2026-11-27-explore/encoder-dependence.md",
+  "docs/journal/2026-11-27-explore/eight-worker-coupling.md",
+  "docs/journal/2026-11-27-explore/expansive-block-memory.md",
+]
+links = [
+  "frontier/claims/runt-exempt-window.toml",
+  "frontier/deltas/2026-11-27-explore-encoder-dependence.md",
+]
