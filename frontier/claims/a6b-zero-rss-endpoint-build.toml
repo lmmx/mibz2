@@ -1,0 +1,49 @@
+id = "a6b-zero-rss-endpoint-build"
+title = "Zero-extra-RSS edges-overlaid 32B AoS + inline-7 u64 redesign of A6b (src/open/endpoint.rs)"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "open"
+owned_paths = ["src/open/endpoint.rs", "src/open.rs"]
+mechanisms = ["construction-induction-dict", "edges-overlay-aos-u64", "zero-extra-rss"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-a6b-zero-rss-dissection.md` dissected shipped `A6b` (`src/open/endpoint.rs`, ~20.3% of post-`B4` worker CPU, active on 100% of Wikidata Open blocks in both shipped bidirectional `OpenCells` and `forward-anchor-lanes`) and diagnosed why both `#1053` (`a6b-endpoint-build`, `+524 KiB/worker` fixed 64K slabs) and `a6b-compact-footprint-rescue` (`C5` unpacked, `+204 KiB/w` `edge_c/w` from `Vec::resize` doubling + `+16 KiB/w` `GenCacheV2`) leaked RSS:
+
+1. Disassembly (`objdump -dC`) of shipped `<Kernel>::induced_with::<Narrow>` shows 3,221 instructions, 97 `panic_bounds_check` calls, 16-bit partial stores overlapping 32-bit loads (store-forwarding stalls), heavy register spilling (`0x140(%rsp)` frame), `24 KiB/block` cache zeroing (including the `1.06%`-hit `pairs` cache), and `2×` `edges` capacity doubling in `grow()`.
+2. A 100% `#![forbid(unsafe_code)]`, `0 B` extra-heap (`Endpoint::scratch() == 0 B`) edges-overlaid 32-byte AoS + inline-7 `u64` design (`mod overlay_aos`, layout `[prev0, next0, prev1, next1, word_lo, word_hi, width, pad]` with 8-byte-aligned `word` at `+0x10`, exact `n_nodes` power-of-two `CAP` bucketing `2K..32K`, `reserve_exact`-only growth, register-resident `(x, y)` tails, `q == 1` adjacent no-op, cold-only `rules.room()` check, and `contents[4096]` overlaid in dead `edges[0..4096]`) compiles `elim_aos::<131072, false>` to 215 instructions with 0 bounds checks and 0 hot-path spills.
+3. On VM (`Haswell-EP`, pinned CPU 0, steal-free `CLOCK_THREAD_CPUTIME_ID`, all 233 Wikidata Open blocks, 100% bit/word/cursor parity across Wikidata + 6 guard corpora, `46/46` `open::` tests + Miri 0 UB):
+   - Isolated `A6b`: **`-24.40%`** `base` warm / **`-23.57%`** `base` 64 MiB L3-cold / **`-25.82%`** `jcc` warm / **`-25.27%`** `jcc` 64 MiB L3-cold (`edges_cap = 231,600` = `+0.0 KiB`, `Endpoint` heap = `0 B` vs `64 B`).
+   - Whole-decoder `OpenCells` 1W (`wikidata.bz2`): **`-1.64%` (`-20.5 ms`) `base`** / **`-1.82%` (`-21.7 ms`) `jcc`** total decoder CPU, while **reducing single-worker `VmHWM` by `-1.45 MiB` (`0.925×`)** via `reserve_exact` + halved rule count; `mibz2 8W jcc` `-2.78%` CPU (`0.980×` HWM).
+
+Does landing `overlay_aos` in `src/open/endpoint.rs` & `src/open.rs` deliver `>= 1.5%` whole-decoder `wikidata/1` speedup AND positive `wikidata/6` + `wikidata/8` worker/wall speedup on physical i9-10900K at `<= 1.005×` RSS across all thread counts (`1, 4, 6, 8, 10`) with zero guard regressions?
+"""
+why = """
+`A6b` is active on 100% of Wikidata Open blocks in both shipped bidirectional `OpenCells` and post-`#1217` `forward-anchor-lanes` (~20.3% of post-`B4` worker CPU). Unlike `#1053` (`+4.19 MiB` 8W RSS L3 cliff), `overlay_aos` obeys Wormhole W1 strictly (`0 B` extra `Endpoint` heap, `<= 1.000×` `edges` capacity, `-1.45 MiB` single-worker `VmHWM`) while cutting `A6b` by `-23.6%..-28.6%` even under 64 MiB L3-cold flushes.
+"""
+stop_test = """
+Frozen before shipping:
+1. Safety & exactness: `#![forbid(unsafe_code)]`, `0 B` extra `Endpoint` struct/heap (`endpoint.scratch() == 0` on Wikidata-shaped blocks), `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, all `open::` + integration + feature-gate (`census`, `induction-trace`, `a6b-endpoint-redesign`) tests PASS, Miri `0` UB on `miri_a6b_overlay_aos`, and 100% bit-/CRC-exact parity on `wikidata.bz2` + all 6 guard corpora (`text`, `records`, `random`, `runs`, `pattern`, `onebyte`).
+2. Physical i9-10900K verification (C5, paired alternating `ab` run, `base` + `jcc` / shipped flags, fresh processes):
+   - `wikidata/1` (and `mibz2-workers-lazy` 1W): `<= 0.985×` (`>= 1.5%` faster) with 95% CI strictly below `1.000`.
+   - `wikidata/6` and `wikidata/8` (`mibz2` default and `workers-lazy`): `worker_busy <= 0.990×` and wall `<= 1.000×` (no `#1053`-style 8W L3 regression).
+   - Resident RSS (`VmRSS` and `VmHWM`): `<= 1.005×` baseline across `1W, 4W, 6W, 8W, 10W` on `wikidata` and all 6 guard corpora.
+   - Zero guard regressions (`<= 1.010×` on `text`, `records`, `random`, `runs`, `pattern`, `onebyte`).
+Otherwise STOP/REVERT and record a scoped dead-end row preserving i9 evidence (C2).
+"""
+done_when = """
+Striated PR modifying `src/open/endpoint.rs` and `src/open.rs` merged after passing all unit/Miri/CI gates and physical i9-10900K verification under the frozen stop test, with a delta and `frontier/ledger.tsv` entry.
+"""
+premises = [
+  "docs/notebook/2026-11-28-a6b-zero-rss-dissection.md",
+  "docs/journal/2026-11-27-explore/a6b-compact-l3-rescue.md",
+  "frontier/deltas/2026-11-27-a6b-endpoint-i9-verdict.md",
+  "src/open/endpoint.rs",
+  "src/open.rs",
+]
+links = [
+  "frontier/deltas/2026-11-28-a6b-zero-rss-dissection.md",
+  "frontier/claims/a6b-endpoint-build.toml",
+  "frontier/claims/a6b-compact-footprint-rescue.toml",
+]

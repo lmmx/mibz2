@@ -114,6 +114,13 @@ combined candidate must pass the i9 regression gate when default-path performanc
 (`docs/RELEASING.md` §3.5), as well as any required worker-count recalibration (§5c). A returned
 bundle must be read and judged; a queued run or green CI alone is not a pass. A release is worth a delta.
 
+**Release priority persists through blockers** (RELEASING §2a). Follow the shortest eligible dependency
+through review, recalibration, queueing, result readback and publication before discretionary work.
+A blocked or held release does not discharge this pressure. Stabilise the candidate during final
+validation, deferring unrelated performance-input-changing merges without stopping branch work.
+Use the reviewed existing harness if mechanical helpers are pending; never waive the release gate.
+Resume on changed shared evidence, without requiring another maintainer instruction.
+
 ## Workstation recipes: one tarball back
 
 Every `just` recipe the maintainer runs on their own machine and sends results back from:
