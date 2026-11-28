@@ -1,9 +1,9 @@
-id = "a6c-wire-redesign"
+id = "explore"
 holder = "antigravity"
-session = "79c053af281e"
-claimed_at = "2026-11-28T01:53:06+00:00"
-expires = "2026-11-28T09:53:06+00:00"
-owned_paths = ["src/open/outq.rs", "src/open.rs"]
-mechanisms = ["a6c-wire", "outq-reader"]
-base = "663969e09f0192f7ae4d7b8cabd17c18bb93214d"
+session = "7acaf56f6ae4"
+claimed_at = "2026-11-28T02:10:14+00:00"
+expires = "2026-11-28T10:10:14+00:00"
+owned_paths = []
+mechanisms = []
+base = "85e4918b75849a91526d7ce7ec4c2ed3bfbc4acc"
 released = false
