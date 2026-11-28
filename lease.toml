@@ -1,9 +1,9 @@
-id = "pre-release-i9-gate"
+id = "python-abi3-delivery-build"
 holder = "antigravity"
-session = "de98815eb37e"
-claimed_at = "2026-11-28T00:01:14+00:00"
-expires = "2026-11-28T15:18:15+00:00"
-owned_paths = [".github/workflows/deploy.yml", ".just/ship.just", ".just/release-preflight.just", "Justfile", "bench/release_preflight.py", "bench/test_release_preflight.py"]
-mechanisms = ["release-preflight"]
-base = "9de1d9f07a9bf93deddd9f495fd521aaade8c23d"
+session = "eb6dfbe3fc1b"
+claimed_at = "2026-11-28T07:43:18+00:00"
+expires = "2026-11-28T11:43:18+00:00"
+owned_paths = ["src/python.rs", "python/mibz2/__init__.py", "python/mibz2/_mibz2.pyi", "python/tests/"]
+mechanisms = ["python-rust-line-iterator", "python-direct-buffered-reader", "python-swar-newline"]
+base = "6ce89cc5cb62c64cfed098b5fa01a16a528ad59d"
 released = false
