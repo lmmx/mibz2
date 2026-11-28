@@ -1,0 +1,36 @@
+id = "segmented-fused-postwalk-rescue"
+title = "Rescue the fused Segmented post-walk (PR #1183 code): price and remove its random 1T slowdown, then one CI run under the calibrated RSS rule"
+kind = "build"
+zone = "striated"
+needs = ["shell", "rust"]
+priority = 2
+status = "idea"
+owned_paths = ["src/bwt.rs", "src/rle.rs", "src/lib.rs"]
+mechanisms = ["segmented-fused-postwalk"]
+needs_louis = ""
+question = """
+PR #1183's fused reverse + RLE1 + CRC-32 post-walk is exact and B5-reviewed. It passed its timing gate: text wall -4.2% 1T, -8.9% 2T, -6.7% 4T, all faster; runs and onebyte -7..-20%; wikidata faster at every thread count. It was blocked only by the claim's frozen point bound of peak RSS <= 1.02x on every cell (pattern 4T +4.3%, wikidata 2T +3.0%; run 46084269815). The verdict stands (C2). But a later CI run on identical src (head 3c80d18, run 46085315398) put pattern 4T at -0.6%, with every 1T cell flat or lower (text -4.4%, pattern -4.8%). Both cells lie inside the RSS calibration census's null bands (docs/notebook/2026-11-28-rss-bound-calibration.md section 2.2). So the memory revisions proposed in the B5 delta (grow_out headroom, s.ll.reserve, out.reserve) have nothing measured to remove.
+What does need work: random 1T is slower in both runs, with the interval excluding zero: +1.5% (+0.8, +2.2) and then +2.2% (+1.4, +3.0). That sits on the +2% secondary bar.
+(a) Route census, no timing: which walk and post-walk does each random block take in the decoder? This decides whether the cost lies in the fused post-walk or in dispatch and build_lf.
+(b) If it is the post-walk, remove the cost, for example by falling back to the unfused path when the run density is low. The trigger must be decidable before the walk or cheaply within it.
+(c) Run one paired CI bench on the rescued head, registered under census section 5. Does the text win survive with no secondary cell above +2% beyond noise?
+"""
+why = """
+Segmented's assembly + RLE1 + CRC is 32% of text and 79-84% of runs/onebyte worker time. The fused path already shows a paid, replicated whole-decoder text win on CI. The registered arm stopped on an instrument-noise bound, and the one real cost (random 1T) is small and localisable. Twenty-second synthesis pass, docs/notebook/2026-11-28-synthesis-twenty-second-pass.md.
+"""
+stop_test = """
+To be frozen by the taker before any new data (RULES C1a). Cite census section 5 for RSS: the rule-1 1T heap-invariance check, plus a stated per-worker heap delta checked at 1T (rule 3), and PERFORMANCE-POLICY section 2 rule 4 at 2T/4T. Keep the original timing bars: text 1T 95% CI wholly below 1.000; no wikidata/text cell slower beyond noise; no secondary cell above +2% with its interval excluding no change. Do not reuse run 46084269815 or 46085315398 as evidence for it.
+"""
+done_when = """
+Merged with green CI under its frozen rule, or a scoped STOP recorded in frontier/dead-ends.tsv. Not claimable while hold/segmented-fused-postwalk is parked (see parked-hold-moved-head).
+"""
+premises = [
+  "docs/notebook/2026-11-28-synthesis-twenty-second-pass.md",
+  "docs/notebook/2026-11-28-rss-bound-calibration.md",
+  "frontier/claims/segmented-fused-postwalk.toml",
+  "docs/team/PERFORMANCE-POLICY.md",
+]
+links = [
+  "frontier/claims/parked-hold-moved-head.toml",
+  "frontier/claims/crc32-avx2-ring-rescue.toml",
+]
