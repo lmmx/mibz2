@@ -2,9 +2,17 @@
 
 The crate and the Python package are released at one version, from one commit.
 
+## Before publishing
+
+- **Release readiness and stable candidate inputs:** once accepted default-path changes land on `master`, bringing that release through validation and publication takes top priority rather than waiting for optional future optimisations. During final worker-count recalibration and pre-release validation of a pinned candidate, unrelated merges that change performance-relevant inputs (the decoder, dispatch, scheduling, memory traffic, Python delivery, or build and packaging flags) wait on their branches until publication so the validated candidate does not go stale, while reviews, documentation, and other non-invalidating changes continue in parallel. If a necessary repair or retune changes performance-relevant inputs, the candidate pin is updated and re-validated before publication.
+- **Physical many-core pre-release regression gate:** whenever a release batch can change default-path performance (or when uncertain), the pinned release candidate must pass a fail-closed paired regression gate on the physical 10-core/20-thread workstation against the current published release before any version bump or tag. A 1–4-thread CI bench alone cannot establish safety across many cores. The gate pins both builds to full commit SHAs with the release build configuration, exercises the scaling thread grid across all 20 logical CPUs (including 8 and 10) on both primary corpora (`wikidata` and `text`) with applicable secondary and memory guards, and verifies byte parity and the archived bundle digest.
+
+  - **Pass rule (fail-closed):** valid, current evidence with no statistically significant primary wall-time regression at any judged thread count (candidate/base 95% interval wholly above 1) and secondary/memory trade-offs within policy; a speed gain is not required for an otherwise worthwhile release. Invalid, missing, or stale evidence blocks publication, and `master` is re-checked at dispatch so only verified non-performance metadata changes may reuse a validated result. Docs-only or demonstrably non-performance changes are exempt, with the reason recorded.
+  - **Regression recovery:** if a regression is found, publication is blocked until the offending change is repaired or reverted and the resulting candidate passes validation. When shipping a fix for a known regression, the candidate must also demonstrate recovery against the last known good release in the affected cells, not only improvement over the regressed tag.
+
 ## Deploy Release
 
-Run the **Deploy Release** workflow (`deploy.yml`) with a bump (patch, minor or major). It runs `just release`, which:
+Run the **Deploy Release** workflow (`deploy.yml`) with a bump (patch, minor or major) only after all applicable pre-release checks—including the physical many-core regression gate on the exact release inputs—have passed. It runs `just release`, which:
 
 1. bumps the version in `pyproject.toml` (`uv version --bump`) and sets the crate's in `Cargo.toml` to match;
 2. writes the crate's changelog with release-plz;
@@ -18,6 +26,13 @@ CI on a `py-*` tag builds the wheels and the sdist and publishes them to PyPI, a
 - **Tag Release** (`tag.yml`): tags an existing commit `py-<version>` at the version its `pyproject.toml` and `Cargo.toml` already hold (no bump), and starts CI on the tag. Each registry is skipped where it already has the version.
 - **Release Notes** (`release-notes.yml`): makes a version's GitHub release (`v<version>`) at a given commit if it does not exist, or updates its notes, from that version's section of `CHANGELOG.md`.
 - **A wheel job that never got a runner** (0.1.6: both macOS jobs were cancelled after 15 minutes waiting, so Release was skipped and PyPI had nothing while crates.io had the crate): re-run the failed jobs on the tag's own CI run. Release then uploads with `--skip-existing`. Don't bump, re-tag or republish. CI reports a runner that never came the same way as a failed build ("cancelled"/"failure"), so check whether the job's steps ran at all before treating it as a build failure.
+
+## Post-release scaling and settle timing
+
+Once the new tag exists, queue the workstation release-scaling run (`bench-release-scaling`) comparing the new release against the previous tag to update the Benchmarks [History](<https://lmmx.github.io/mibz2/pr-preview/pr-1328/benchmarks/history/index.md>) page. This post-tag run records what shipped; it does not replace the mandatory pre-release regression gate.
+
+- **Settle timing (`--settle 2`):** any workstation comparison that idles between samples uses a 2-second settle (`--settle 2`), never `0.2` seconds. A `0.2 s` gap drops Intel HWP into a clock ramp-up hysteresis window that slows consecutive pinned samples, whereas a `2 s` gap resets cleanly (and back-to-back `--settle 0` release-scaling runs avoid the hysteresis gap).
+- **Reading mode shifts:** because the workstation runs in distinct clock/CPI operating modes, any pooled release-scaling ratio that moves is read alongside its within-mode and mode-occupancy breakdown (`python3 bench/clock_modes.py analyze runs.jsonl --threads <T>`) so mode-occupancy shifts are not mistaken for decoder changes.
 
 ## Release notes: the evidence
 

@@ -43,6 +43,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-28: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.18** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-28-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.18>)
+
+**`wikidata`**
+
+| threads | 0.5.18 wall (median) | lbzip2 2.5 wall (median) | 0.5.17 wall (median) | lbzip2 2.5 against 0.5.18 | 0.5.17 against 0.5.18 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.360 s | 2.511 s | 0.354 s | \+590.4% (+565.9, +615.8) **slower** | \+0.7% (−3.7, +5.4) |
+| 2 | 0.215 s | 1.335 s | 0.218 s | \+523.2% (+509.6, +537.0) **slower** | \+0.7% (−1.3, +2.8) |
+| 4 | 0.131 s | 0.713 s | 0.132 s | \+439.5% (+429.3, +449.8) **slower** | \+0.6% (−1.9, +3.1) |
+| 8 | 0.065 s | 0.513 s | 0.067 s | \+692.6% (+688.4, +696.7) **slower** | \+3.9% (+3.4, +4.4) **slower** |
+| 10 | 0.058 s | 0.505 s | 0.061 s | \+769.7% (+763.6, +775.9) **slower** | \+4.1% (+3.6, +4.6) **slower** |
+| 12 | 0.061 s | 0.508 s | 0.061 s | \+734.4% (+708.4, +761.3) **slower** | \+3.7% (−3.0, +10.8) |
+| 16 | 0.059 s | 0.501 s | 0.063 s | \+722.0% (+685.0, +760.6) **slower** | \+5.8% (−2.9, +15.2) |
+| 20 | 0.061 s | 0.492 s | 0.061 s | \+704.5% (+676.1, +733.9) **slower** | −0.5% (−3.4, +2.5) |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-27: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.17** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-27-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.17>)
@@ -606,6 +625,23 @@ With no releases named, it compares the newest release tag with the one before i
 ## What changed, release by release
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
+
+### 0.5.18
+
+28 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0518---2026-11-28>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.17...v0.5.18>)
+
+- Direct Rust `abi3-py310` Python line and streaming delivery (\#1335). `Reader` in `src/python.rs` tracks `avail_rem` to avoid per-line GIL detach on lent `BzReader::fill_buf()` slices, uses safe 8-byte SWAR newline scanning, and exposes `readline`, block-batched `readlines`, `read_full`, `peek`, `__iter__`, and…
+- Skip redundant `within_cap` pre-scan on `[0.10, 0.15)` blocks (\#1246). `OpenCellsOf::invert_runs` skips the separate scalar pre-scan on `lazy_counts_admit` blocks while `Kernel::try_run` enforces the exact same `Cap::dense(n)` inside Pass 1 with `Segmented` fallback (`0` new `unsafe`, 489/489 blocks across all 7 CI…
+- Faster block-header scanner (\#1117). Collapses consecutive identical selector runs into `(table, remaining_symbols)` pairs, decodes multiple canonical code-length deltas per LUT lookup, and populates the decode lookup table in a single write pass (`0` new `unsafe`; i9-10900K `phases/wikidata/1` −4.52% wall, 0.9548…
+- Safe `Cell` 4× `wire_xor` and overlapping-SIMD register-cursor wire (\#1294). Replaces bounds-checked scalar wiring in `src/open` with safe `Cell` 4× `wire_xor` and overlapping-SIMD register-cursor forward wiring (`0` new `unsafe`).
+- AVX2 runs front-end (\#1274). 64-symbol `u64` `vptest` Pass 1 bitmap builder, `[u32; 256]` stack counts (compiling out dead `Runs.per`), and hoisted 128-bit `(f0, f1)` XMM step table (i9 C6 `bench-runs-front-i9` PASS: Wikidata 6T 0.989 \[0.985, 0.993\], zero primary loss, flat peak RSS).
+- Clean native `QueuesOf::push_slow` codegen (\#1234).
+- The paired run on CI compared `v0.5.17` at `01acd74d` with candidate `7be50513` (Benchmark run 46131501937, AMD EPYC 9V45 96-Core Processor, 4 CPUs on 2 physical cores, 10 rounds, rustc 1.99.1, bench 3.9.0).
+- Pre-release physical i9 regression gate: VALID PASS.
+- Worker counts: recalibrated on `7be50513`; shipped trims unchanged.
+- Features reviewed: none removed in the release; `[features]` holds the same 20 research features as 0.5.17 (\#1268 updated `mtf-fold` and `forward-anchor-lanes` retention notes).
+
+**Changes:** direct Rust abi3-py310 line and streaming delivery ([\#1335](<https://github.com/lmmx/mibz2/pull/1335>)); release merged integration holds at moved descendant PR heads ([\#1303](<https://github.com/lmmx/mibz2/pull/1303>)); release a terminal claim's parked hold after its PR closed unmerged at a moved head ([\#1293](<https://github.com/lmmx/mibz2/pull/1293>)); accept unlimited dict shape from ab env --facts in forward\_adopt ([\#1279](<https://github.com/lmmx/mibz2/pull/1279>)); let take-review resume released or expired PR claims ([\#1215](<https://github.com/lmmx/mibz2/pull/1215>)); bound forward-anchor-lanes Arena to 80 KiB via in-out 4 KiB chunk permutation ([\#1312](<https://github.com/lmmx/mibz2/pull/1312>)); front\_avx2's 64-symbol vptest Pass 1, u32 counts and hoisted XMM steps ([\#1274](<https://github.com/lmmx/mibz2/pull/1274>)); safe Cell 4x wire\_xor and overlapping-SIMD register-cursor wire ([\#1294](<https://github.com/lmmx/mibz2/pull/1294>)); direct selector runs, multi-length code-length LUT and single-write table build ([\#1117](<https://github.com/lmmx/mibz2/pull/1117>)); skip within\_cap pre-scan on \[0.10, 0.15) lazy-admitted blocks, routes unchanged ([\#1246](<https://github.com/lmmx/mibz2/pull/1246>)); clear native push\_slow vzeroupper and record mtf-fold-batch-measure STOP ([\#1234](<https://github.com/lmmx/mibz2/pull/1234>)); the multi-reference scorer recalibration recipes invoke; ab run --unpinned names its CPUs ([\#1353](<https://github.com/lmmx/mibz2/pull/1353>)); bring the mtf-fold and forward-anchor-lanes notes up to their verdicts ([\#1268](<https://github.com/lmmx/mibz2/pull/1268>)).
 
 ### 0.5.17
 
