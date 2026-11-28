@@ -1,0 +1,28 @@
+records 1152; roster 1152 (the reference by count: mibz2-occ-8-32 at 10, mibz2-occ-8-32 at 12, mibz2-occ-8-32 at 16, mibz2-occ-8-32 at 20, mibz2-occ-8-32 at 8, mibz2-occ-6-24 at 6, mibz2-occ-4-16 at 4 and mibz2-occ-7-28 and mibz2-occ-6-24 and mibz2-occ-9-36 and mibz2-occ-9-27 and mibz2-occ-10-40 and mibz2-occ-10-48 and mibz2-occ-10-64 and mibz2-occ-10-80 and mibz2-occ-5-20 and mibz2-oce-6-24 and mibz2-occ-3-12 and mibz2-oce-4-16; wikidata-x4 and text, random; judged [10, 12, 16, 20, 8, 6, 4], controls []; 12 rounds); judged by count: mibz2-occ-7-28 at [8, 10, 12, 16, 20], mibz2-occ-6-24 at [10], mibz2-occ-9-36 at [10, 12, 16, 20], mibz2-occ-9-27 at [10, 12, 16, 20], mibz2-occ-10-40 at [10, 12, 16, 20], mibz2-occ-10-48 at [12], mibz2-occ-10-64 at [16], mibz2-occ-10-80 at [20], mibz2-occ-5-20 at [6], mibz2-oce-6-24 at [6], mibz2-occ-3-12 at [4], mibz2-oce-4-16 at [4]; sparse: each count's own arms alone; unpinned: every run on every CPU
+VOID: the records do not make the registered run (1152 problems); no verdict
+  unpinned-real.jsonl:1: ('wikidata-x4', 'mibz2-occ-8-32', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:2: ('wikidata-x4', 'mibz2-occ-7-28', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:3: ('wikidata-x4', 'mibz2-occ-6-24', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:4: ('wikidata-x4', 'mibz2-occ-9-36', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:5: ('wikidata-x4', 'mibz2-occ-10-40', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:6: ('wikidata-x4', 'mibz2-occ-9-27', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:7: ('text', 'mibz2-occ-8-32', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:8: ('text', 'mibz2-occ-7-28', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:9: ('text', 'mibz2-occ-6-24', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:10: ('text', 'mibz2-occ-9-36', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:11: ('text', 'mibz2-occ-10-40', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:12: ('text', 'mibz2-occ-9-27', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:13: ('random', 'mibz2-occ-8-32', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:14: ('random', 'mibz2-occ-7-28', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:15: ('random', 'mibz2-occ-6-24', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:16: ('random', 'mibz2-occ-9-36', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:17: ('random', 'mibz2-occ-10-40', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:18: ('random', 'mibz2-occ-9-27', 10, 0) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:19: ('wikidata-x4', 'mibz2-occ-7-28', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:20: ('wikidata-x4', 'mibz2-occ-6-24', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:21: ('wikidata-x4', 'mibz2-occ-9-36', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:22: ('wikidata-x4', 'mibz2-occ-10-40', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:23: ('wikidata-x4', 'mibz2-occ-9-27', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:24: ('wikidata-x4', 'mibz2-occ-8-32', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  unpinned-real.jsonl:25: ('text', 'mibz2-occ-7-28', 10, 1) its CPUs 'all' missing or malformed, not every CPU listed
+  ... and 1127 more
