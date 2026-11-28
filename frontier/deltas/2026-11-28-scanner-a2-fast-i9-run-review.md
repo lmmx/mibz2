@@ -12,6 +12,6 @@ evidence: origin/evidence 9dacc085 (scanner-a2-fast/run-20261127T233936Z.tar.gz,
   - Rule 2: guard scans 0.9560..1.0044, none above 1.020 with lower bound above 1. PASS.
   - Rule 3: median peak RSS ratio 1.0006..1.0068 at all nine real cells. PASS.
   - Rule 4: `real/wikidata` k=1/8/9/10 0.9930..1.0058, none above 1.020. PASS.
-**What changed:** merged master into #1252 (surface row S: kept master's two-lane interleave note beside #1252's A2 verdict), added this delta, merged #1252.
+**What changed:** added this delta to #1252 and merged master into it (surface row S keeps master's two-lane interleave and #1246 notes beside the A2 verdict; no other row touched), then merged #1252.
 **What's next:** #1117 (`scanner-a2-fast-build`) is cleared on its i9 gate; its integration is the next step.
 **Caveats:** two diagnostic, ungated cells lean slower beyond noise: `real/records/8` 1.0076 [1.0016, 1.0137] and `real/onebyte/8` 1.0288 [1.0038, 1.0544] (a ~12 ms single-block decode). Neither is a frozen gate (rule 4 covers Wikidata only) and C2 is not relaxed either way; they are worth watching in the release's i9 gate. At k = 8 Wikidata stays worker-bound (0.9999), so the -6.5 ms scanner cut is headroom, not wall, until worker-side cuts land.
