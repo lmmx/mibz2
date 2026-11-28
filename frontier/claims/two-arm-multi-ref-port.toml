@@ -1,0 +1,24 @@
+id = "two-arm-multi-ref-port"
+title = "Port the reviewed multi-reference two_arm.py scorer, ab run --unpinned and counters imc events to master"
+kind = "ops"
+zone = "striated"
+needs = ["shell", "rust", "repo-write"]
+priority = 1
+status = "done"
+owned_paths = ["bench/two_arm.py", "bench/test_two_arm.py", "bench/two_arm_fixtures/", "bench/counters.py", "examples/ab.rs"]
+mechanisms = ["recalibration-scorer"]
+needs_louis = ""
+question = """
+The v0.5.18 §5c recalibration (recalibrate-0518, delta 2026-11-28-recalibrate-0518-readback) returned no verdict, because its recipe invokes the multi-reference two_arm.py interface (--ref-at/--judge-at/--pair/--sparse/--primary/--check-workers/--unpinned/--rounds-at/--alpha) that exists only on origin/bench/open-port (a1dc5aeb, 157/157 checks), never merged to master; `ab run --unpinned` is not in master's examples/ab.rs (taken as a corpus path); `counters.py --events imc` does not exist. Port the open-port scorer and its fixtures to master as a strict superset of the current single-pair interface (every existing recipe's invocation and master's 52 checks unchanged), port open-port's `ab run --unpinned` (child affinity set to every online CPU, recorded as the explicit list) into master's examples/ab.rs, since the open-port scorer deliberately rejects an unpinned record of `"all"` (inherited affinity, not set: its reviewed check "a run recorded as 'all'"), and either add an imc event set to counters.py or make recipes use bench/imc.py.
+"""
+why = """
+Every §5c recalibration before a release goes through this scorer (RELEASING §5c is P1 release work). Without it the next recalibration recipe repeats the same 66-minute VOID on the i9, and the current release's unpinned family can be rerun only once it lands.
+"""
+stop_test = """
+Frozen before implementation: (1) master's test_two_arm.py 52 checks and open-port's 157 checks all pass on the ported scorer; (2) every two_arm.py invocation in .just/ on master parses unchanged (a test greps and dry-parses them); (3) `ab run --unpinned` records every online CPU as an explicit list, refuses --spread/--pin/--hold-cpu beside it, and its records pass the ported scorer's unpinned checks (ab's own unit tests); (4) the pinned re-score in docs/notebook/2026-11-28-recalibrate-0518-readback/pinned-verdict.txt is reproduced byte for byte. Otherwise STOP and record why.
+"""
+done_when = """
+PR merged with exact-head checks; recalibrate-0518's unpinned verdict re-scored with the merged scorer and recorded in a delta for release-0-5-18.
+"""
+premises = ["frontier/deltas/2026-11-28-recalibrate-0518-readback.md", "docs/journal/2026-11-28-recalibration-0518-registration.md"]
+links = ["docs/notebook/2026-11-28-recalibrate-0518-readback/README.md"]

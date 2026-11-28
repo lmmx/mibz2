@@ -4,7 +4,7 @@ kind = "build"
 zone = "striated"
 needs = ["shell", "rust"]
 priority = 3
-status = "idea"
+status = "dropped"
 owned_paths = ["src/parallel.rs"]
 mechanisms = ["runt-exempt-admission"]
 needs_louis = ""
@@ -14,6 +14,7 @@ question = """
 why = """
 A pipeline-starvation cost that the bench corpus shows only weakly at 8W on the i9, but that grows on small and oversubscribed machines, which is where many real users decode Wikimedia-style files. It is a few lines in admission, disjoint from scanner and worker kernels, and it complements them: a faster worker shortens the window's horizon further.
 Premise defect (synthesis eleventh pass, 27 Nov, before any data): the symbol bound (n_sel x 50) does not bound rows or decoded bytes. A run-only block is a runt by it (RUNA/RUNB code ~900,000 zeros in a few dozen symbols) yet decodes to ~46 MB, so "runt places holding <= 64 KiB" is false and the exemption would let up to 2 x slots such blocks in flight (docs/journal/2026-11-27-explore/expansive-block-memory.md). Classify by rows n after the scan, or land `ready-cap-worker-gate` first. Stop test 1's restated bound is therefore false on run-only input, and its corpora cannot reveal that; the stop test is frozen (C2) and is not edited here. A holder should either take `ready-cap-worker-gate` first or re-register with a rows-based runt test and a run-only RSS check.
+Superseded (28 Nov, docs/notebook/2026-11-28-runt-exempt-window-dissection.md): re-registered cleanly as `runt-exempt-window-rows` with an exact BWT row-count test (`RUNT_ROWS = 1_200`), scanner-side `spare_syms` detachment, and explicit expansive run-only RSS guards; frozen stop_test preserved intact.
 """
 stop_test = """
 Frozen before data:

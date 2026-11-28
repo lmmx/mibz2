@@ -1106,8 +1106,14 @@ def _parse_recovery_cells(spec: str) -> list[tuple[str, int]]:
         if not item:
             continue
         corpus, sep, threads_s = item.partition(":")
-        if sep and threads_s.isdigit():
-            out.append((corpus.strip(), int(threads_s)))
+        corpus, threads_s = corpus.strip(), threads_s.strip()
+        if not (sep and corpus and threads_s.isdigit() and int(threads_s) > 0):
+            # Fail closed: a dropped item would silently skip that cell's recovery check.
+            raise PreflightError(
+                f"malformed recovery cell {item!r} in {spec!r} (expected corpus:threads, "
+                "e.g. wikidata:8,wikidata:10)"
+            )
+        out.append((corpus, int(threads_s)))
     return out
 
 
@@ -1490,7 +1496,12 @@ def verify_release(
             )
         expected_recovery_base = expected_recovery_base or rec_from_receipt
     if receipt.get("preflight_recovery_cells"):
-        for pair in _parse_recovery_cells(receipt["preflight_recovery_cells"]):
+        try:
+            receipt_cells = _parse_recovery_cells(receipt["preflight_recovery_cells"])
+        except PreflightError as exc:
+            recal_problems.append(f"receipt preflight_recovery_cells: {exc}")
+            receipt_cells = []
+        for pair in receipt_cells:
             if pair not in recovery_cells:
                 recovery_cells.append(pair)
 
@@ -1976,7 +1987,11 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_judge(args: argparse.Namespace) -> int:
-    rec_cells = _parse_recovery_cells(args.recovery_cells or "")
+    try:
+        rec_cells = _parse_recovery_cells(args.recovery_cells or "")
+    except PreflightError as exc:
+        print(f"release-preflight judge: REFUSED: {exc}", file=sys.stderr)
+        return 2
     verdict = judge_bundle(
         Path(args.bundle),
         expected_candidate=args.candidate,

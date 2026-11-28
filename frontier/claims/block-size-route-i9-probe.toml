@@ -1,0 +1,40 @@
+id = "block-size-route-i9-probe"
+title = "Calibrate Open vs Segmented across bzip2 -1..-9 block sizes on the physical i9 (Step 1 of open-admission-block-size)"
+kind = "probe"
+zone = "striated"
+needs = ["shell", "rust", "workstation"]
+priority = 2
+status = "done"
+owned_paths = [
+  "bench/block_size_route.py",
+  "bench/test_block_size_route.py",
+  ".just/block-size-route.just",
+]
+mechanisms = ["block-size-route-i9-calibration"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-explore-block-size-route.md` found on a 2 MiB-L2 VM that `OpenCellsOf::cap` is block-size-blind and loses 6-20% to `Segmented` on bzip2 `-1..-2` blocks (`< 300k` rows) where `Segmented`'s row vector fits in L2. Does that crossover exist on the physical i9-10900K (256 KiB L2, 20 MiB L3), or is it an artefact of the VM's 8x larger L2? Run `examples/route_census` (`ROUTE_FULL=90000`, both `ROUTE_SHADOW=1` and `ROUTE_SHADOW=first`) on `wikidata` re-encoded at levels `-1, -2, -3, -5, -9` and `text` at `-1, -9` via frozen C1a diagnostic recipe `bench-block-size-route`.
+"""
+why = """
+Step 1 of `open-admission-block-size` explicitly requires calibrating per-block `Open/Seg` on a target machine before modifying `src/open.rs`. The i9 workstation queue is empty after v0.5.18, and this C1a diagnostic probe touches zero `src/` files (zero overlap with `#1328` on `src/open.rs`), runs in ~3-5 minutes, and immediately tells us whether to pursue a calibrated `(N0, t0)` rule or STOP `open-admission-block-size` as a VM-L2 artefact.
+"""
+stop_test = """
+Frozen before data (C1a diagnostic probe; decides no production default):
+1. Run frozen `just submit bench-block-size-route` on the unrestricted physical i9-10900K (core-0 pinned, `ROUTE_FULL=90000`, both `ROUTE_SHADOW=1` and `ROUTE_SHADOW=first`, 3 interleaved rounds x 2 orders = 6 order-balanced sweeps, 2 s settle, baseline x86-64 codegen, exact decoded SHA-256 parity on every re-encoded level) over `wikidata` at `-1, -2, -3, -5, -9` and `text` at `-1, -9`.
+2. VOID if any validity prerequisite fails (smoke mode, overrides, dirty tree, wrong toolchain, non-i9/restricted affinity, CPU quota, ambient RUSTFLAGS/CARGO_PROFILE_RELEASE_*, parity mismatch, or missing/non-finite data).
+3. CONFIRMED iff at least one `< 400k` row-count bin (`< 150k`, `150k..250k`, `250k..350k`, or `350k..400k`, requiring `>= 10` full Open blocks per sweep) shows pooled `Open/Seg >= 1.05` across both `ROUTE_SHADOW=1` and `ROUTE_SHADOW=first`; derive candidate `(N0, t0)` from the 2D `(row_bin, r/n_bin)` grid for `open-admission-block-size` Step 2.
+4. STOP otherwise: no `< 400k` row-count bin shows `Open/Seg >= 1.05` on the physical i9, ruling out the VM-L2 crossover on the i9 target and closing `open-admission-block-size` Step 1 with a scoped dead-end row.
+"""
+done_when = """
+Frozen C1a recipe `bench-block-size-route` merged, queued via `ready/bench-block-size-route` + `bench/workstation-queue.txt`, physical i9 bundle archived on `origin/evidence`, SHA-256 verified, scored (`CONFIRMED` with `(N0, t0)` or `STOP`), and recorded in a lab notebook entry and delta.
+"""
+premises = [
+  "docs/notebook/2026-11-28-explore-block-size-route.md",
+  "frontier/claims/open-admission-block-size.toml",
+  "examples/route_census.rs",
+]
+links = [
+  "docs/journal/2026-11-28-block-size-route-i9/registration.md",
+  "bench/block_size_route.py",
+  ".just/block-size-route.just",
+]

@@ -15,6 +15,7 @@ import ".just/text-knee.just"
 import ".just/clock-modes.just"
 import ".just/forward-adopt.just"
 import ".just/scanner-contention.just"
+import ".just/block-size-route.just"
 
 default: clippy
 

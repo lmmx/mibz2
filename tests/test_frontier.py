@@ -4971,6 +4971,66 @@ class TestShipCompletionPressure(unittest.TestCase):
             self.assertIn("pre-release-i9-gate", p1_lines[0])
 
 
+class TestBriefRule(unittest.TestCase):
+    """Claim brief-state-first: the brief prints the state first and the rule only when this checkout has not seen it."""
+
+    def setUp(self) -> None:
+        """Create a fresh isolated remote per test."""
+        self._td = tempfile.TemporaryDirectory(prefix="frontier-brief-rule-")
+        self.sb = FrontierSandbox(pathlib.Path(self._td.name))
+
+    def tearDown(self) -> None:
+        """Remove temporary directories after each test."""
+        self._td.cleanup()
+
+    def _brief(self, repo: pathlib.Path, *args: str) -> str:
+        r = self.sb.run_frontier(repo, "brief", "--can", "shell", *args)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        return r.stdout
+
+    @staticmethod
+    def _state(out: str) -> str:
+        return out[out.index("## Needs Louis") :]
+
+    def test_first_unchanged_changed_and_rules_flag(self) -> None:
+        repo = self.sb.clone("brief-rule")
+        rule = "Minimal brief block for tests."
+        first = self._brief(repo)
+        self.assertIn(rule, first, "a fresh checkout's first brief prints the rule")
+        self.assertNotIn("changed since", first)
+
+        second = self._brief(repo)
+        self.assertNotIn(rule, second, "an unchanged rule is not reprinted")
+        head = second.split("\n", 1)[0]
+        self.assertRegex(head, r"^## The loop: unchanged since this checkout last printed it \(rule [0-9a-f]{12}\)$")
+        self.assertIn("--rules", second.split("\n## ", 1)[0])
+        self.assertEqual(self._state(first), self._state(second), "the state section is byte-identical")
+
+        forced = self._brief(repo, "--rules")
+        self.assertIn(rule, forced, "--rules prints the rule even when unchanged")
+        self.assertEqual(self._state(first), self._state(forced))
+
+        readme = repo / "frontier" / "README.md"
+        readme.write_text(readme.read_text().replace(rule, rule.replace("tests.", "tests!")))
+        changed = self._brief(repo)
+        self.assertIn("Minimal brief block for tests!", changed, "any byte change prints the rule again")
+        self.assertIn("changed since your last checkpoint", changed.split("\n## ", 1)[0])
+        self.assertNotIn("Minimal brief block for tests!", self._brief(repo), "the change is printed once")
+
+    def test_cursor_is_per_checkout_and_disposable(self) -> None:
+        a, b = self.sb.clone("brief-a"), self.sb.clone("brief-b")
+        self._brief(a)
+        self.assertIn("Minimal brief block for tests.", self._brief(b), "another checkout has not seen the rule")
+        cursor = a / ".git" / "frontier-brief-rule"
+        self.assertTrue(cursor.exists())
+        self.assertEqual(_git(a, "status", "--porcelain"), "", "the cursor never dirties the work tree")
+        cursor.unlink()
+        self.assertIn("Minimal brief block for tests.", self._brief(a), "a lost cursor reprints the rule")
+        cursor.write_text("not a digest\n")
+        out = self._brief(a)
+        self.assertIn("Minimal brief block for tests.", out, "an unrecognised cursor reprints the rule")
+
+
 secrets_counter = [0]
 
 

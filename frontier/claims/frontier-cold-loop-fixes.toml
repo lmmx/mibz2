@@ -1,0 +1,47 @@
+id = "frontier-cold-loop-fixes"
+title = "Fix the 16 CLI, TTL, flag-resolution, and continuation defects found by prove-frontier-cold"
+kind = "ops"
+zone = "smooth"
+needs = ["shell", "repo-write"]
+priority = 2
+status = "idea"
+owned_paths = [
+  "frontier/tools/frontier.py",
+  "frontier/tools/continuation.py",
+  "frontier/README.md",
+  "frontier/CONTINUATIONS.md",
+  "frontier/flags/README.md",
+]
+mechanisms = ["frontier-cli-hardening", "continuation-manual-resume", "flag-resolution-check"]
+needs_louis = ""
+question = """
+`docs/notebook/2026-11-28-prove-frontier-cold.md` followed the frontier loop cold on a private bare remote and found 16 concrete defects (5 `breaks`, 6 `misleads`, 5 `friction`):
+- **`frontier.py` CLI & validation (`B2, B3, B5, M1, M2, M4, M5, F1, F3, F4`):** migrate `main()` from hand-rolled `opt` lambda / `argv[2]` indexing (8 raw `IndexError`/`ValueError` crashes, silent ignoring of unknown flags/typos, `--help` exiting `2`, missing `--by`/`--as` defaulting to `"unknown"`, missing `--session` printing `session None`) to stdlib `argparse`; bound `--hours` (`0 < hours <= 24`); add `--pr N` support to `mark --status review` (and align `--help`/`README.md:41`); distinguish released vs lapsed holds in `mine()`; make double `release` an idempotent no-op without pushing a duplicate commit.
+- **`frontier.py check` flag resolution (`B4`):** fix `frontier.py:2307–2312`, which checks `resolved_by != by` (flag filer) rather than != the flagged work's author, inverting `frontier/flags/README.md:18`.
+- **`continuation.py` & `CONTINUATIONS.md` (`B1, B2, M3, F5`):** add `--manual` to `resume` so `manual:<text>` pins can actually be resumed by hand instead of failing `EXIT=15` forever; bound `resume --hours` (`0 < hours <= 8`); include `--session <session>` in `_next_step`'s printed `done` command; print ISO timestamps in `show` and document `--next` in `CONTINUATIONS.md:48`.
+- **Docs (`M6, F2`):** note `.github/coordination/coord.py head-sha`, `GITHUB_TOKEN`, and `gh pr merge --match-head-commit` alongside `expectedHeadSha` in `frontier/README.md` (and separately `CLAUDE.md` only if owner-approved under RULES D / or via a narrow doc note), and note `long-context` for `explore`/`synthesise` in `README.md:22`.
+
+Queued behind `#1341` (`ship-completion-pressure`) and `brief-state-first` on `frontier/tools/frontier.py`: do all 16 cold-walkthrough fixes pass hermetic pytest coverage (`tests/test_frontier.py`, `tests/test_continuation.py`) and a clean repeat cold run on a private bare remote?
+"""
+why = """
+Every new harness or fresh session hits these defects immediately: silent typo acceptance on `claim`, 417-day unbounded lease TTLs, raw Python tracebacks on missing arguments, permanently stuck `manual:` continuations, copy-paste-broken `continuation.py done` instructions, and an inverted flag-resolution check that blocks flaggers while allowing self-dismissal. Fixing them mechanically hardens the swarm's shared coordination layer with zero new dependencies.
+"""
+stop_test = """
+Frozen before building:
+1. Sequenced after `#1341` (`ship-completion-pressure`) and `brief-state-first` finish with `frontier/tools/frontier.py` (no overlapping hold). Keep `CLAUDE.md` untouched unless owner-authorised (RULES D).
+2. Add hermetic regression tests in `tests/test_frontier.py` and `tests/test_continuation.py` covering every B1–B5, M1–M5, and F1/F3/F4 case; all existing + new tests pass (`pytest -v tests/test_frontier.py tests/test_continuation.py`), `ruff check`, and `python3 frontier/tools/frontier.py check` (`0 errors, 0 warnings`).
+3. Re-run the private-bare-remote cold walkthrough and verify 0 remaining `breaks` or `misleads` from `docs/notebook/2026-11-28-prove-frontier-cold.md`.
+"""
+done_when = """
+PR(s) landing the mechanical fixes and hermetic regression tests on `frontier/tools/frontier.py`, `frontier/tools/continuation.py`, and docs, with a delta confirming 0 remaining cold-walkthrough `breaks`.
+"""
+premises = [
+  "docs/notebook/2026-11-28-prove-frontier-cold.md",
+  "frontier/deltas/2026-11-28-prove-frontier-cold.md",
+  "frontier/tools/frontier.py",
+  "frontier/tools/continuation.py",
+]
+links = [
+  "frontier/claims/prove-frontier-cold.toml",
+  "frontier/claims/brief-state-first.toml",
+]

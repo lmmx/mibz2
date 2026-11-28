@@ -1,0 +1,230 @@
+records 1152; roster 1152 (the reference by count: mibz2-occ-8-32 at 10, mibz2-occ-8-32 at 12, mibz2-occ-8-32 at 16, mibz2-occ-8-32 at 20, mibz2-occ-8-32 at 8, mibz2-occ-6-24 at 6, mibz2-occ-4-16 at 4 and mibz2-occ-7-28 and mibz2-occ-6-24 and mibz2-occ-9-36 and mibz2-occ-9-27 and mibz2-occ-10-40 and mibz2-occ-10-48 and mibz2-occ-10-64 and mibz2-occ-10-80 and mibz2-occ-5-20 and mibz2-oce-6-24 and mibz2-occ-3-12 and mibz2-oce-4-16; wikidata-x4 and text, random; judged [10, 12, 16, 20, 8, 6, 4], controls []; 12 rounds); judged by count: mibz2-occ-7-28 at [8, 10, 12, 16, 20], mibz2-occ-6-24 at [10], mibz2-occ-9-36 at [10, 12, 16, 20], mibz2-occ-9-27 at [10, 12, 16, 20], mibz2-occ-10-40 at [10, 12, 16, 20], mibz2-occ-10-48 at [12], mibz2-occ-10-64 at [16], mibz2-occ-10-80 at [20], mibz2-occ-5-20 at [6], mibz2-oce-6-24 at [6], mibz2-occ-3-12 at [4], mibz2-oce-4-16 at [4]; sparse: each count's own arms alone; unpinned: every run on every CPU
+
+10 threads: the judged cells, each candidate over mibz2-occ-8-32, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-8-32's
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 1.0640 [1.0476, 1.0807] SLOWER; p 1.00e+00; memory 0.938
+    text (loss and memory guard): 0.9408 [0.9030, 0.9801] FASTER; memory 0.956
+    random (loss and memory guard): 1.0069 [0.9839, 1.0305] INCONCLUSIVE; memory 0.929
+  mibz2-occ-6-24
+    wikidata-x4 (gain family): 1.2135 [1.1943, 1.2331] SLOWER; p 1.00e+00; memory 0.899
+    text (loss and memory guard): 0.8648 [0.8403, 0.8900] FASTER; memory 0.834
+    random (loss and memory guard): 1.0050 [0.9901, 1.0202] INCONCLUSIVE; memory 0.863
+  mibz2-occ-9-36
+    wikidata-x4 (gain family): 0.9847 [0.9591, 1.0109] INCONCLUSIVE; p 1.11e-01; memory 1.077
+    text (loss and memory guard): 1.0680 [1.0258, 1.1120] SLOWER; memory 1.114
+    random (loss and memory guard): 1.0152 [0.9936, 1.0373] INCONCLUSIVE; memory 1.070
+  mibz2-occ-9-27
+    wikidata-x4 (gain family): 1.0723 [1.0440, 1.1013] SLOWER; p 1.00e+00; memory 0.987
+    text (loss and memory guard): 1.0684 [1.0148, 1.1248] SLOWER; memory 1.107
+    random (loss and memory guard): 1.0109 [0.9932, 1.0289] INCONCLUSIVE; memory 1.074
+  mibz2-occ-10-40
+    wikidata-x4 (gain family): 1.0001 [0.9736, 1.0273] INCONCLUSIVE; p 5.03e-01; memory 1.122
+    text (loss and memory guard): 1.1261 [1.0799, 1.1742] SLOWER; memory 1.195
+    random (loss and memory guard): 1.0206 [0.9970, 1.0448] INCONCLUSIVE; memory 1.140
+  Pairs at 10 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-occ-9-36 over mibz2-occ-8-32 wikidata-x4: 0.9847 [0.9591, 1.0109] INCONCLUSIVE; memory 1.077
+    mibz2-occ-9-36 over mibz2-occ-8-32 text: 1.0680 [1.0258, 1.1120] SLOWER; memory 1.114
+    mibz2-occ-9-36 over mibz2-occ-8-32 random: 1.0152 [0.9936, 1.0373] INCONCLUSIVE; memory 1.070
+    mibz2-occ-10-40 over mibz2-occ-9-36 wikidata-x4: 1.0157 [0.9823, 1.0501] INCONCLUSIVE; memory 1.042
+    mibz2-occ-10-40 over mibz2-occ-9-36 text: 1.0544 [1.0087, 1.1020] SLOWER; memory 1.073
+    mibz2-occ-10-40 over mibz2-occ-9-36 random: 1.0053 [0.9812, 1.0300] INCONCLUSIVE; memory 1.066
+    mibz2-occ-9-27 over mibz2-occ-9-36 wikidata-x4: 1.0890 [1.0438, 1.1362] SLOWER; memory 0.917
+    mibz2-occ-9-27 over mibz2-occ-9-36 text: 1.0004 [0.9645, 1.0376] INCONCLUSIVE; memory 0.993
+    mibz2-occ-9-27 over mibz2-occ-9-36 random: 0.9958 [0.9760, 1.0159] INCONCLUSIVE; memory 1.004
+
+12 threads: the judged cells, each candidate over mibz2-occ-8-32, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-8-32's
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 1.0504 [1.0237, 1.0777] SLOWER; p 9.99e-01; memory 0.924
+    text (loss and memory guard): 0.9419 [0.9246, 0.9594] FASTER; memory 0.954
+    random (loss and memory guard): 0.9914 [0.9839, 0.9990] FASTER; memory 0.931
+  mibz2-occ-9-36
+    wikidata-x4 (gain family): 0.9972 [0.9555, 1.0407] INCONCLUSIVE; p 4.43e-01; memory 1.062
+    text (loss and memory guard): 1.0718 [1.0529, 1.0911] SLOWER; memory 1.138
+    random (loss and memory guard): 0.9991 [0.9833, 1.0151] INCONCLUSIVE; memory 1.070
+  mibz2-occ-9-27
+    wikidata-x4 (gain family): 1.0769 [1.0277, 1.1284] SLOWER; p 9.97e-01; memory 0.978
+    text (loss and memory guard): 1.0736 [1.0519, 1.0957] SLOWER; memory 1.134
+    random (loss and memory guard): 0.9970 [0.9856, 1.0085] INCONCLUSIVE; memory 1.069
+  mibz2-occ-10-40
+    wikidata-x4 (gain family): 1.0194 [0.9818, 1.0583] INCONCLUSIVE; p 8.58e-01; memory 1.108
+    text (loss and memory guard): 1.0971 [1.0612, 1.1342] SLOWER; memory 1.217
+    random (loss and memory guard): 1.0179 [1.0042, 1.0317] SLOWER; memory 1.141
+  mibz2-occ-10-48
+    wikidata-x4 (gain family): 0.9769 [0.9564, 0.9978] FASTER; p 1.67e-02; memory 1.159
+    text (loss and memory guard): 1.0802 [1.0295, 1.1334] SLOWER; memory 1.222
+    random (loss and memory guard): 1.0170 [1.0019, 1.0324] SLOWER; memory 1.151
+  Pairs at 12 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-occ-9-36 over mibz2-occ-8-32 wikidata-x4: 0.9972 [0.9555, 1.0407] INCONCLUSIVE; memory 1.062
+    mibz2-occ-9-36 over mibz2-occ-8-32 text: 1.0718 [1.0529, 1.0911] SLOWER; memory 1.138
+    mibz2-occ-9-36 over mibz2-occ-8-32 random: 0.9991 [0.9833, 1.0151] INCONCLUSIVE; memory 1.070
+    mibz2-occ-10-40 over mibz2-occ-9-36 wikidata-x4: 1.0222 [0.9665, 1.0812] INCONCLUSIVE; memory 1.043
+    mibz2-occ-10-40 over mibz2-occ-9-36 text: 1.0236 [0.9937, 1.0545] INCONCLUSIVE; memory 1.069
+    mibz2-occ-10-40 over mibz2-occ-9-36 random: 1.0188 [1.0066, 1.0312] SLOWER; memory 1.067
+    mibz2-occ-10-48 over mibz2-occ-10-40 wikidata-x4: 0.9583 [0.9303, 0.9872] FASTER; memory 1.046
+    mibz2-occ-10-48 over mibz2-occ-10-40 text: 0.9846 [0.9234, 1.0498] INCONCLUSIVE; memory 1.004
+    mibz2-occ-10-48 over mibz2-occ-10-40 random: 0.9992 [0.9871, 1.0114] INCONCLUSIVE; memory 1.009
+    mibz2-occ-9-27 over mibz2-occ-9-36 wikidata-x4: 1.0799 [1.0390, 1.1225] SLOWER; memory 0.921
+    mibz2-occ-9-27 over mibz2-occ-9-36 text: 1.0016 [0.9806, 1.0231] INCONCLUSIVE; memory 0.997
+    mibz2-occ-9-27 over mibz2-occ-9-36 random: 0.9979 [0.9771, 1.0191] INCONCLUSIVE; memory 1.000
+
+16 threads: the judged cells, each candidate over mibz2-occ-8-32, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-8-32's
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 1.0506 [1.0104, 1.0925] SLOWER; p 9.91e-01; memory 0.947
+    text (loss and memory guard): 0.9512 [0.9268, 0.9762] FASTER; memory 0.941
+    random (loss and memory guard): 1.0123 [1.0007, 1.0242] SLOWER; memory 0.931
+  mibz2-occ-9-36
+    wikidata-x4 (gain family): 0.9894 [0.9502, 1.0302] INCONCLUSIVE; p 2.87e-01; memory 1.082
+    text (loss and memory guard): 1.0945 [1.0672, 1.1224] SLOWER; memory 1.128
+    random (loss and memory guard): 1.0225 [0.9994, 1.0462] INCONCLUSIVE; memory 1.074
+  mibz2-occ-9-27
+    wikidata-x4 (gain family): 1.0550 [0.9992, 1.1140] INCONCLUSIVE; p 9.74e-01; memory 0.998
+    text (loss and memory guard): 1.0587 [1.0076, 1.1125] SLOWER; memory 1.118
+    random (loss and memory guard): 1.0137 [0.9946, 1.0331] INCONCLUSIVE; memory 1.067
+  mibz2-occ-10-40
+    wikidata-x4 (gain family): 0.9952 [0.9499, 1.0426] INCONCLUSIVE; p 4.11e-01; memory 1.138
+    text (loss and memory guard): 1.1098 [1.0695, 1.1517] SLOWER; memory 1.213
+    random (loss and memory guard): 1.0256 [1.0110, 1.0405] SLOWER; memory 1.144
+  mibz2-occ-10-64
+    wikidata-x4 (gain family): 0.9624 [0.9314, 0.9945] FASTER; p 1.29e-02; memory 1.252
+    text (loss and memory guard): 1.1157 [1.0670, 1.1666] SLOWER; memory 1.242
+    random (loss and memory guard): 1.0315 [1.0171, 1.0460] SLOWER; memory 1.150
+  Pairs at 16 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-occ-9-36 over mibz2-occ-8-32 wikidata-x4: 0.9894 [0.9502, 1.0302] INCONCLUSIVE; memory 1.082
+    mibz2-occ-9-36 over mibz2-occ-8-32 text: 1.0945 [1.0672, 1.1224] SLOWER; memory 1.128
+    mibz2-occ-9-36 over mibz2-occ-8-32 random: 1.0225 [0.9994, 1.0462] INCONCLUSIVE; memory 1.074
+    mibz2-occ-10-40 over mibz2-occ-9-36 wikidata-x4: 1.0058 [0.9736, 1.0391] INCONCLUSIVE; memory 1.052
+    mibz2-occ-10-40 over mibz2-occ-9-36 text: 1.0140 [0.9809, 1.0483] INCONCLUSIVE; memory 1.076
+    mibz2-occ-10-40 over mibz2-occ-9-36 random: 1.0031 [0.9836, 1.0229] INCONCLUSIVE; memory 1.066
+    mibz2-occ-10-64 over mibz2-occ-10-40 wikidata-x4: 0.9671 [0.9290, 1.0068] INCONCLUSIVE; memory 1.100
+    mibz2-occ-10-64 over mibz2-occ-10-40 text: 1.0053 [0.9406, 1.0744] INCONCLUSIVE; memory 1.023
+    mibz2-occ-10-64 over mibz2-occ-10-40 random: 1.0057 [0.9916, 1.0200] INCONCLUSIVE; memory 1.005
+    mibz2-occ-9-27 over mibz2-occ-9-36 wikidata-x4: 1.0663 [1.0042, 1.1322] SLOWER; memory 0.923
+    mibz2-occ-9-27 over mibz2-occ-9-36 text: 0.9673 [0.9350, 1.0008] INCONCLUSIVE; memory 0.991
+    mibz2-occ-9-27 over mibz2-occ-9-36 random: 0.9914 [0.9691, 1.0142] INCONCLUSIVE; memory 0.994
+
+20 threads: the judged cells, each candidate over mibz2-occ-8-32, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-8-32's
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 1.0767 [1.0488, 1.1054] SLOWER; p 1.00e+00; memory 0.941
+    text (loss and memory guard): 0.9574 [0.9161, 1.0005] INCONCLUSIVE; memory 0.952
+    random (loss and memory guard): 1.0130 [0.9914, 1.0351] INCONCLUSIVE; memory 0.941
+  mibz2-occ-9-36
+    wikidata-x4 (gain family): 1.0154 [0.9790, 1.0531] INCONCLUSIVE; p 8.11e-01; memory 1.063
+    text (loss and memory guard): 1.1002 [1.0566, 1.1456] SLOWER; memory 1.104
+    random (loss and memory guard): 1.0119 [0.9989, 1.0250] INCONCLUSIVE; memory 1.094
+  mibz2-occ-9-27
+    wikidata-x4 (gain family): 1.0933 [1.0417, 1.1474] SLOWER; p 9.99e-01; memory 0.980
+    text (loss and memory guard): 1.1001 [1.0652, 1.1361] SLOWER; memory 1.102
+    random (loss and memory guard): 1.0157 [1.0072, 1.0243] SLOWER; memory 1.079
+  mibz2-occ-10-40
+    wikidata-x4 (gain family): 1.0290 [0.9826, 1.0775] INCONCLUSIVE; p 9.00e-01; memory 1.104
+    text (loss and memory guard): 1.1823 [1.1368, 1.2295] SLOWER; memory 1.207
+    random (loss and memory guard): 1.0193 [0.9994, 1.0397] INCONCLUSIVE; memory 1.161
+  mibz2-occ-10-80
+    wikidata-x4 (gain family): 1.0032 [0.9784, 1.0287] INCONCLUSIVE; p 6.09e-01; memory 1.254
+    text (loss and memory guard): 1.1384 [1.0806, 1.1993] SLOWER; memory 1.211
+    random (loss and memory guard): 1.0326 [1.0214, 1.0440] SLOWER; memory 1.151
+  Pairs at 20 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-occ-9-36 over mibz2-occ-8-32 wikidata-x4: 1.0154 [0.9790, 1.0531] INCONCLUSIVE; memory 1.063
+    mibz2-occ-9-36 over mibz2-occ-8-32 text: 1.1002 [1.0566, 1.1456] SLOWER; memory 1.104
+    mibz2-occ-9-36 over mibz2-occ-8-32 random: 1.0119 [0.9989, 1.0250] INCONCLUSIVE; memory 1.094
+    mibz2-occ-10-40 over mibz2-occ-9-36 wikidata-x4: 1.0134 [0.9542, 1.0763] INCONCLUSIVE; memory 1.039
+    mibz2-occ-10-40 over mibz2-occ-9-36 text: 1.0746 [1.0477, 1.1022] SLOWER; memory 1.094
+    mibz2-occ-10-40 over mibz2-occ-9-36 random: 1.0074 [0.9868, 1.0284] INCONCLUSIVE; memory 1.062
+    mibz2-occ-10-80 over mibz2-occ-10-40 wikidata-x4: 0.9750 [0.9170, 1.0366] INCONCLUSIVE; memory 1.136
+    mibz2-occ-10-80 over mibz2-occ-10-40 text: 0.9629 [0.9237, 1.0038] INCONCLUSIVE; memory 1.003
+    mibz2-occ-10-80 over mibz2-occ-10-40 random: 1.0130 [0.9966, 1.0298] INCONCLUSIVE; memory 0.991
+    mibz2-occ-9-27 over mibz2-occ-9-36 wikidata-x4: 1.0767 [1.0063, 1.1521] SLOWER; memory 0.922
+    mibz2-occ-9-27 over mibz2-occ-9-36 text: 0.9999 [0.9833, 1.0168] INCONCLUSIVE; memory 0.999
+    mibz2-occ-9-27 over mibz2-occ-9-36 random: 1.0038 [0.9912, 1.0166] INCONCLUSIVE; memory 0.987
+
+8 threads: the judged cells, each candidate over mibz2-occ-8-32, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-8-32's
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 1.0701 [1.0369, 1.1044] SLOWER; p 1.00e+00; memory 0.928
+    text (loss and memory guard): 0.9195 [0.8984, 0.9411] FASTER; memory 0.964
+    random (loss and memory guard): 1.0077 [0.9804, 1.0358] INCONCLUSIVE; memory 0.928
+
+6 threads: the judged cells, each candidate over mibz2-occ-6-24, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-6-24's
+  mibz2-occ-5-20
+    wikidata-x4 (gain family): 1.1869 [1.1791, 1.1948] SLOWER; p 1.00e+00; memory 0.925
+    text (loss and memory guard): 0.9964 [0.9629, 1.0311] INCONCLUSIVE; memory 0.889
+    random (loss and memory guard): 1.0090 [0.9908, 1.0275] INCONCLUSIVE; memory 0.923
+  mibz2-oce-6-24
+    wikidata-x4 (gain family): 1.3839 [1.3715, 1.3964] SLOWER; p 1.00e+00; memory 2.508
+    text (loss and memory guard): 1.0179 [0.9932, 1.0432] INCONCLUSIVE; memory 1.011
+    random (loss and memory guard): 1.0151 [1.0012, 1.0293] SLOWER; memory 0.998
+
+4 threads: the judged cells, each candidate over mibz2-occ-4-16, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2-occ-4-16's
+  mibz2-occ-3-12
+    wikidata-x4 (gain family): 1.3159 [1.3064, 1.3254] SLOWER; p 1.00e+00; memory 0.918
+    text (loss and memory guard): 1.1040 [1.0866, 1.1216] SLOWER; memory 0.836
+    random (loss and memory guard): 1.1464 [1.1373, 1.1557] SLOWER; memory 0.949
+  mibz2-oce-4-16
+    wikidata-x4 (gain family): 1.1015 [1.0909, 1.1123] SLOWER; p 1.00e+00; memory 2.001
+    text (loss and memory guard): 1.0023 [0.9732, 1.0322] INCONCLUSIVE; memory 0.999
+    random (loss and memory guard): 1.0069 [0.9967, 1.0172] INCONCLUSIVE; memory 0.988
+
+Holm at family α 0.025 over the 25 main-corpus cells: mibz2-occ-10-64 at 16 p 1.29e-02 does not, mibz2-occ-10-48 at 12 p 1.67e-02 does not, mibz2-occ-9-36 at 10 p 1.11e-01 does not, mibz2-occ-9-36 at 16 p 2.87e-01 does not, mibz2-occ-10-40 at 16 p 4.11e-01 does not, mibz2-occ-9-36 at 12 p 4.43e-01 does not, mibz2-occ-10-40 at 10 p 5.03e-01 does not, mibz2-occ-10-80 at 20 p 6.09e-01 does not, mibz2-occ-9-36 at 20 p 8.11e-01 does not, mibz2-occ-10-40 at 12 p 8.58e-01 does not, mibz2-occ-10-40 at 20 p 9.00e-01 does not, mibz2-occ-9-27 at 16 p 9.74e-01 does not, mibz2-occ-7-28 at 16 p 9.91e-01 does not, mibz2-occ-9-27 at 12 p 9.97e-01 does not, mibz2-occ-9-27 at 20 p 9.99e-01 does not, mibz2-occ-7-28 at 12 p 9.99e-01 does not, mibz2-occ-7-28 at 8 p 1.00e+00 does not, mibz2-occ-9-27 at 10 p 1.00e+00 does not, mibz2-occ-7-28 at 20 p 1.00e+00 does not, mibz2-occ-7-28 at 10 p 1.00e+00 does not, mibz2-oce-4-16 at 4 p 1.00e+00 does not, mibz2-occ-6-24 at 10 p 1.00e+00 does not, mibz2-occ-5-20 at 6 p 1.00e+00 does not, mibz2-oce-6-24 at 6 p 1.00e+00 does not, mibz2-occ-3-12 at 4 p 1.00e+00 does not
+
+VERDICT for mibz2-occ-7-28 at 10 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+VERDICT for mibz2-occ-6-24 at 10 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+VERDICT for mibz2-occ-9-36 at 10 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-9-27 at 10 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-10-40 at 10 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+THE CHOICE at 10 threads: none; the reference stays
+
+VERDICT for mibz2-occ-7-28 at 12 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+VERDICT for mibz2-occ-9-36 at 12 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-9-27 at 12 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-10-40 at 12 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text', 'random']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+VERDICT for mibz2-occ-10-48 at 12 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text', 'random']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+THE CHOICE at 12 threads: none; the reference stays
+
+VERDICT for mibz2-occ-7-28 at 16 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'random']
+
+VERDICT for mibz2-occ-9-36 at 16 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-9-27 at 16 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-10-40 at 16 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text', 'random']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+VERDICT for mibz2-occ-10-64 at 16 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text', 'random']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+THE CHOICE at 16 threads: none; the reference stays
+
+VERDICT for mibz2-occ-7-28 at 20 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+VERDICT for mibz2-occ-9-36 at 20 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-9-27 at 20 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'text', 'random']; memory above the gate on ['text']
+
+VERDICT for mibz2-occ-10-40 at 20 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+VERDICT for mibz2-occ-10-80 at 20 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['text', 'random']; memory above the gate on ['wikidata-x4', 'text', 'random']
+
+THE CHOICE at 20 threads: none; the reference stays
+
+VERDICT for mibz2-occ-7-28 at 8 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+THE CHOICE at 8 threads: none; the reference stays
+
+VERDICT for mibz2-occ-5-20 at 6 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']
+
+VERDICT for mibz2-oce-6-24 at 6 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'random']; memory above the gate on ['wikidata-x4']
+
+THE CHOICE at 6 threads: none; the reference stays
+
+VERDICT for mibz2-occ-3-12 at 4 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4', 'text', 'random']
+
+VERDICT for mibz2-oce-4-16 at 4 threads: NOT ADOPTED. No gain established (Holm does not reject); SLOWER on ['wikidata-x4']; memory above the gate on ['wikidata-x4']
+
+THE CHOICE at 4 threads: none; the reference stays
