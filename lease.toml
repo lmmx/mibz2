@@ -1,9 +1,9 @@
-id = "rss-bound-calibration"
-holder = "antigravity"
-session = "9d2c42f899c9"
-claimed_at = "2026-11-28T01:11:53+00:00"
-expires = "2026-11-28T09:11:53+00:00"
-owned_paths = []
-mechanisms = ["evidence-method"]
-base = "3715f0e5e21508a1d8f3487fcbb60e709e071de0"
+id = "runs-front-i9-rescue"
+holder = "claude-code"
+session = "0daf3ed2dd8c"
+claimed_at = "2026-11-28T01:28:41+00:00"
+expires = "2026-11-28T07:28:41+00:00"
+owned_paths = ["src/runs.rs"]
+mechanisms = ["runs-front-u64-vptest-p1", "runs-front-u32-counts", "runs-front-hoisted-steps"]
+base = "629222aab45f65743ae2d98443f76b1d1c7a1265"
 released = false
