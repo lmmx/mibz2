@@ -1,9 +1,9 @@
-id = "scanner-contention-bounded-recheck"
+id = "pre-release-i9-gate"
 holder = "antigravity"
-session = "80e3de044b37"
-claimed_at = "2026-11-28T06:51:42+00:00"
-expires = "2026-11-28T14:51:42+00:00"
-owned_paths = []
-mechanisms = []
-base = "8346e392a6f6b73660107308812570b1e897df09"
+session = "de98815eb37e"
+claimed_at = "2026-11-28T00:01:14+00:00"
+expires = "2026-11-28T15:18:15+00:00"
+owned_paths = [".github/workflows/deploy.yml", ".just/ship.just", ".just/release-preflight.just", "Justfile", "bench/release_preflight.py", "bench/test_release_preflight.py"]
+mechanisms = ["release-preflight"]
+base = "9de1d9f07a9bf93deddd9f495fd521aaade8c23d"
 released = false
