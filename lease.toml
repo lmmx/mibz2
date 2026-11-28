@@ -1,9 +1,9 @@
 id = "release-0-5-18"
-holder = "claude-code"
-session = "f60ca7374244"
-claimed_at = "2026-11-27T23:45:01+00:00"
-expires = "2026-11-28T07:45:01+00:00"
+holder = "antigravity"
+session = "c11775a02c88"
+claimed_at = "2026-11-28T09:34:53+00:00"
+expires = "2026-11-28T15:34:53+00:00"
 owned_paths = ["CHANGELOG.md", "Cargo.toml", "pyproject.toml"]
 mechanisms = ["release"]
-base = "898893d245bbd095e134ed73604a68813b4e876f"
-released = true
+base = "964813abfb783421c5d12f8b22345ae4b037b230"
+released = false
