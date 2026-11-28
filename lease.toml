@@ -1,9 +1,9 @@
-id = "explore"
-holder = "antigravity"
-session = "7acaf56f6ae4"
-claimed_at = "2026-11-28T02:10:14+00:00"
-expires = "2026-11-28T10:10:14+00:00"
-owned_paths = []
-mechanisms = []
-base = "85e4918b75849a91526d7ce7ec4c2ed3bfbc4acc"
+id = "i9-clock-modes"
+holder = "claude-code"
+session = "07b49a080edd"
+claimed_at = "2026-11-28T02:11:31+00:00"
+expires = "2026-11-28T05:11:31+00:00"
+owned_paths = ["bench/clock_modes.py", "bench/test_clock_modes.py", ".just/clock-modes.just"]
+mechanisms = ["measurement", "clock-modes"]
+base = "4bb6591087c3d007ff508905446c1b333096aa76"
 released = false
