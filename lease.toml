@@ -1,9 +1,9 @@
-id = "synthesise"
+id = "plan-schedule-and-lazy-threshold"
 holder = "antigravity"
-session = "dffcc21f96ba"
-claimed_at = "2026-11-28T14:02:36+00:00"
-expires = "2026-11-28T16:02:36+00:00"
-owned_paths = []
-mechanisms = []
-base = "e428147086acea4cbc6011a0c43c096a76409394"
+session = "680e219ff5fb"
+claimed_at = "2026-11-28T01:04:47+00:00"
+expires = "2026-11-28T23:47:12+00:00"
+owned_paths = ["src/parallel.rs"]
+mechanisms = ["plan-schedule", "lazy-threshold", "window-scaling"]
+base = "ab47049b7a92ef81b4f15dac0ff178055e34a5fe"
 released = false
