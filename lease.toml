@@ -1,9 +1,9 @@
 id = "synthesise"
-holder = "claude-code"
-session = "c63bf255a52c"
-claimed_at = "2026-11-28T03:59:41+00:00"
-expires = "2026-11-28T06:59:41+00:00"
+holder = "antigravity"
+session = "16b4f21bbd84"
+claimed_at = "2026-11-28T04:50:14+00:00"
+expires = "2026-11-28T12:50:14+00:00"
 owned_paths = []
 mechanisms = []
-base = "757a91b72eeaa127ad55a100a9a06bd28f3028f2"
-released = true
+base = "3d98e71a7ec259773b2c556cabd927c835b73098"
+released = false
