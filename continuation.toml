@@ -4,11 +4,10 @@ claim = "continuation-runbook"
 critical = false
 declared_at = 1795866001
 dep = "pr:1356@e63a07687c9fa35f9580a1fae94c7ffd4a3105a4"
+ended_observed = 1795866083
 independent = false
 key = "continuation-runbook--await-ci-e63a076"
+last_detail = "#1356 head moved to 775de062"
 next = "read CI; mark claim review with pr=1356"
 priority = 1
-state = "waiting"
-waiter_holder = "claude-code"
-waiter_session = "w3"
-waiter_until = 1795866903
+state = "superseded"
