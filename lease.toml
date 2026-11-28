@@ -1,9 +1,9 @@
-id = "forward-emission-bounded-slab-rescue"
-holder = "antigravity"
-session = "6e5156005cd7"
-claimed_at = "2026-11-28T04:07:24+00:00"
-expires = "2026-11-28T19:08:15+00:00"
-owned_paths = ["src/open/lanes.rs"]
-mechanisms = ["forward-anchor-lanes-bounded-rss"]
-base = "b0b788717b505711b6899b2d7dc413cb40763445"
+id = "two-arm-multi-ref-port"
+holder = "claude-code"
+session = "2a8b0aaf8d2f"
+claimed_at = "2026-11-28T11:25:43+00:00"
+expires = "2026-11-28T15:25:43+00:00"
+owned_paths = ["bench/two_arm.py", "bench/test_two_arm.py", "bench/two_arm_fixtures/", "bench/counters.py", "examples/ab.rs"]
+mechanisms = ["recalibration-scorer"]
+base = "27c76f8a6126d1a01b86ab4108d52fb8866d65f5"
 released = false
